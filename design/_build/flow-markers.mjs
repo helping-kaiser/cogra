@@ -951,6 +951,43 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* The settings round's three boards. A `SettingsRow` is anchored on its own
+   label — the words are what a reader presses, and the row is the element the
+   marker walks back to whichever variant it is (a button, or the label around
+   a choice's radio). The stance choice's three radios share one number the way
+   the chronicle's three tabs do: one control, one edge. */
+Object.assign(FLOW_MARKERS, {
+  Settings: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">Light</button>", tag: "button" },
+    { n: 2, find: ">Dark</button>", tag: "button" },
+    { n: 2, find: ">Auto</button>", tag: "button" },
+    { n: 3, find: 'name="settings-stance-input"', tag: "input", all: true },
+    { n: 4, find: ">Confirm multi-action submits</span>", tag: "button" },
+    { n: 5, find: ">Default license</span>", tag: "button" },
+    { n: 6, find: ">What your feed shows</span>", tag: "button" },
+    { n: 7, find: ">Recovery code</span>", tag: "button" },
+    { n: 8, find: ">Your key</span>", tag: "button" },
+    { n: 9, find: ">Revoke</button>", tag: "button", all: true },
+    { n: 10, find: ">Sign out everywhere else</span>", tag: "button" },
+    { n: 11, find: ">Password</span>", tag: "button" },
+    { n: 12, find: ">Handle</span>", tag: "button" },
+    { n: 13, find: ">Email</span>", tag: "button" },
+    { n: 14, find: ">Don&#x27;t remember this account on this device</span>", tag: "button" },
+    { n: 15, find: ">Sign out</span>", tag: "button" },
+  ],
+  SettingsBackup: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'id="settings-rekey-code"', tag: "input" },
+    { n: 3, find: ">Create a new recovery code</button>", tag: "button" },
+  ],
+  YourKey: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'aria-label="Copy the PEM block"', tag: "button" },
+    { n: 3, find: 'aria-label="Copy the raw hex"', tag: "button" },
+  ],
+});
+
 // The entry round's boards, componentized off the real masters (input-errors
 // bite 1, 2026-09-03): PasswordField and Checkbox bring their own real
 // <input>/<button> elements the hand markup only drew as shapes, so every

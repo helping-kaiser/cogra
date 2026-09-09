@@ -1077,7 +1077,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 2346,
+      "h": 2368,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1149,7 +1149,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 1329,
+      "h": 2054,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1239,6 +1239,33 @@
       "title": "Profile · the comments view",
       "x": 2400,
       "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "Settings.dc.html",
+      "title": "Settings · the whole page",
+      "x": 0,
+      "y": 1928,
+      "w": 390,
+      "h": 1774,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsBackup.dc.html",
+      "title": "Settings · a new recovery code",
+      "x": 480,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "YourKey.dc.html",
+      "title": "Settings · your key",
+      "x": 960,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "profile"

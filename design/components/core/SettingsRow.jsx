@@ -48,6 +48,13 @@ import { QuietNote } from "./QuietNote.jsx";
    exception is a switch, where the line has to say what turning it on does,
    because the label alone cannot.
 
+   A `bare` GROUP DROPS THE CARD, for the one case that earns it: a group whose
+   whole content is a control that draws its own container. A segmented pill
+   inside a filled card is a bordered box on a filled surface — two containers
+   saying the same thing a few pixels apart. Only the fill goes: the heading and
+   the footnote keep their inset, so a page of groups keeps one left edge for
+   its words and another for its containers.
+
    AN ACTION ROW IS A ROW, NOT A BUTTON DROPPED IN A CARD. `action` puts the
    label on `primary` and drops the chevron: Sign out, Sign out everywhere else.
    It is not `error`-coloured — `error` is for failure only (readme §4), and
@@ -246,7 +253,7 @@ export function SettingsRow({
   );
 }
 
-export function SettingsGroup({ label, footnote, children, ariaLabel }) {
+export function SettingsGroup({ label, footnote, children, ariaLabel, bare = false }) {
   const rows = React.Children.toArray(children).filter(Boolean);
   return (
     <section aria-label={label ? undefined : ariaLabel} style={{ display: "flex", flexDirection: "column" }}>
@@ -266,14 +273,18 @@ export function SettingsGroup({ label, footnote, children, ariaLabel }) {
         </h2>
       )}
       <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          borderRadius: "var(--radius-medium)",
-          background: "var(--surface-card)",
-          color: "var(--on-surface)",
-          overflow: "hidden",
-        }}
+        style={
+          bare
+            ? { display: "flex", flexDirection: "column" }
+            : {
+                display: "flex",
+                flexDirection: "column",
+                borderRadius: "var(--radius-medium)",
+                background: "var(--surface-card)",
+                color: "var(--on-surface)",
+                overflow: "hidden",
+              }
+        }
       >
         {rows.map((row, index) => (
           <React.Fragment key={index}>

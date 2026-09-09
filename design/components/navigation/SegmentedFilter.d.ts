@@ -15,6 +15,12 @@ export interface SegmentedFilterProps {
   onChange?: (value: string) => void;
   /** What the group filters, e.g. "Filter the chronicle". */
   ariaLabel?: string;
+  /**
+   * Span the container instead of hugging the labels — a settings group, where
+   * the control is the group's whole content and a short pill reads as
+   * unfinished. Segments stay equal width.
+   */
+  block?: boolean;
 }
 
 export declare function SegmentedFilter(props: SegmentedFilterProps): JSX.Element | null;
