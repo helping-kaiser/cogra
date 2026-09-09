@@ -363,6 +363,13 @@ export async function preparePostEdit(
      */
     sensitive: boolean;
     sensitiveReason?: string;
+    /**
+     * The gallery the edit LEAVES STANDING — complete, not a delta, and
+     * required for the same reason the mark is. An omitted gallery is an empty
+     * gallery on the wire, so an edit that forgot to re-state it would replace
+     * an image post's body with the words in the form and destroy the media.
+     */
+    attachments: readonly GalleryEntryDraft[];
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -375,6 +382,7 @@ export async function preparePostEdit(
             title: fields.title,
             description: fields.description,
             content: fields.content,
+            attachments: attachmentInputs(fields.attachments),
             ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
           },
         },

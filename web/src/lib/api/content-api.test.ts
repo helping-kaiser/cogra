@@ -249,6 +249,7 @@ describe("preparePostEdit", () => {
       title: null,
       description: null,
       content: "B",
+      attachments: [],
       sensitive: true,
     });
     expect(variables).toEqual({
@@ -257,11 +258,49 @@ describe("preparePostEdit", () => {
         title: null,
         description: null,
         content: "B",
+        // A words post has no gallery; an empty one travels as null.
+        attachments: null,
         // An edit re-states the mark rather than dropping it.
         sensitive: true,
         sensitiveReason: null,
       },
     });
+  });
+
+  // The gallery is complete state on the wire, exactly like the mark: an edit
+  // that omitted it would empty an image post's body.
+  it("re-states the gallery it was handed, in order", async () => {
+    let variables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.mutation("PreparePostEdit", ({ variables: v }) => {
+        variables = v;
+        return HttpResponse.json({
+          data: {
+            preparePostEdit: {
+              __typename: "PrepareContentPayload",
+              node: "p1",
+              writes: [],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    await preparePostEdit(client(), {
+      id: "p1",
+      title: "T",
+      description: null,
+      content: "",
+      attachments: [
+        { mediaId: "m-1", altText: "A jetty" },
+        { mediaId: "m-2", altText: null },
+      ],
+      sensitive: false,
+    });
+    expect((variables as unknown as { input: { attachments: unknown } }).input.attachments).toEqual([
+      { mediaId: "m-1", displayOrder: 0, isCover: true, altText: "A jetty" },
+      { mediaId: "m-2", displayOrder: 1, isCover: false, altText: null },
+    ]);
   });
 });
 

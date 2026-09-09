@@ -12,6 +12,18 @@
 // reachable again is a product call, not a cleanup: it is tested behaviour,
 // and most of this file's suite exercises it.
 //
+// THE EDIT NEVER TOUCHES THE GALLERY, AND THAT IS WHY IT RE-STATES IT. An edit
+// is COMPLETE STATE — `PreparePostEditInput.attachments` is "the gallery the
+// edit leaves standing", so an omitted gallery is an EMPTY one on the wire and
+// saving would replace an image post's body with whatever the form holds. This
+// surface has no picture controls (their rebuild is the wizard-generation
+// editor), so it carries the post's own gallery through untouched and shows it,
+// which is what makes "the edit changed nothing I could see" true.
+//
+// A MEDIA POST HAS NO WORDS FIELD HERE. A post's body is words XOR media
+// (api-spec.md `PreparePostEditInput.content`), so on an image or video post
+// every keystroke in a body field could only ever end as a server refusal.
+//
 // Tagging lives here and nowhere else (F3): cards and detail views show
 // read-only chips, and the author changes their tags on the screen where
 // they change the rest. Tags are still never FIELDS of the edit record
@@ -20,7 +32,7 @@
 // pass, so the submit either stages everything or stages nothing.
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { PUBLIC_DOMAIN, type License } from "@/lib/license";
@@ -28,6 +40,8 @@ import {
   fetchPostDetail,
   preparePost,
   preparePostEdit,
+  type GalleryEntryDraft,
+  type PostDetailView,
 } from "@/lib/api/content-api";
 import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
 import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
@@ -58,6 +72,7 @@ import { Button } from "@/lib/ui/button";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { LicenseChooser } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
+import { hasMedia, PostMedia } from "@/lib/ui/post-media";
 import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-actions";
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
@@ -122,6 +137,9 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   // What the post being edited carries today; re-stated on the edit so a
   // complete-state write does not drop it.
   const [sensitive, setSensitive] = useState(false);
+  // The post as it stands, kept for the one thing this surface cannot author:
+  // its gallery, which the edit has to carry through and show.
+  const [loadedPost, setLoadedPost] = useState<PostDetailView | null>(null);
 
   useEffect(() => {
     if (editingId === null) return;
@@ -135,6 +153,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         setNotFound(true);
       } else {
         const post = outcome.value.post;
+        setLoadedPost(post);
         const loaded = {
           title: post.title.value ?? "",
           description: post.description.value ?? "",
@@ -194,6 +213,21 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       cancelled = true;
     };
   }, [client, prefillReference, editingId]);
+
+  // The gallery the edit leaves standing: exactly the one the post carries,
+  // in its own order, with the alt text each placement already witnessed.
+  const attachments: readonly GalleryEntryDraft[] = useMemo(
+    () =>
+      loadedPost === null
+        ? []
+        : loadedPost.attachments.map((attachment) => ({
+            mediaId: attachment.id,
+            altText: attachment.altText ?? null,
+          })),
+    [loadedPost],
+  );
+  // Words XOR media: an image or video post has no words half to edit.
+  const mediaBody = loadedPost !== null && hasMedia(loadedPost);
 
   // What an edit would actually stage: the record only when the content
   // moved, one Tag act per tag change, and one Reference act per
@@ -290,6 +324,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
           title: title.trim() === "" ? null : title,
           description: description.trim() === "" ? null : description,
           content: body,
+          attachments,
           sensitive,
         }),
       );
@@ -466,27 +501,39 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         onChange={setDescription}
         testId="compose-description"
       />
-      <div className="flex flex-col gap-1">
-        <label htmlFor="compose-body" className="text-label-large">
-          What do you want to publish?
-        </label>
-        <textarea
-          id="compose-body"
-          data-testid="compose-body"
-          value={body}
-          onChange={(event) => {
-            setBody(event.target.value);
-            setEmptyBody(false);
-          }}
-          rows={8}
-          className="rounded-extra-small border border-outline p-2"
-        />
-        {emptyBody && (
-          <p role="alert" data-testid="compose-empty-body" className="text-body-medium text-error">
-            The post needs a body.
+      {mediaBody && loadedPost !== null ? (
+        // The body this post already has, shown rather than described — and
+        // carried through the edit untouched.
+        <div className="flex flex-col gap-1">
+          <span className="text-label-large">Pictures</span>
+          <PostMedia node={loadedPost} bleed="none" testId="compose-media" />
+          <p className="text-body-medium text-on-surface-variant">
+            A post&rsquo;s body is words or media, never both.
           </p>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1">
+          <label htmlFor="compose-body" className="text-label-large">
+            What do you want to publish?
+          </label>
+          <textarea
+            id="compose-body"
+            data-testid="compose-body"
+            value={body}
+            onChange={(event) => {
+              setBody(event.target.value);
+              setEmptyBody(false);
+            }}
+            rows={8}
+            className="rounded-extra-small border border-outline p-2"
+          />
+          {emptyBody && (
+            <p role="alert" data-testid="compose-empty-body" className="text-body-medium text-error">
+              The post needs a body.
+            </p>
+          )}
+        </div>
+      )}
       {/* Creation batches its tags onto the minting record, so the batch
           cap applies; an edit stages one act per change, which is not a
           batch and carries no cap. */}
