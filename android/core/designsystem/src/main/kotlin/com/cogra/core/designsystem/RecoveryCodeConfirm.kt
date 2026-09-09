@@ -100,29 +100,14 @@ fun RecoveryCodeConfirm(
                 )
             }
         }
-        // A code that has been typed but does not match is answered where
-        // it was typed: a disabled button with no reason reads as a broken
-        // screen, and this is the one screen a reader cannot come back to.
-        val mismatched = typedBack.isNotBlank() && !matches(typedBack)
-        OutlinedTextField(
-            value = typedBack,
-            onValueChange = { typedBack = it },
-            label = { Text(stringResource(R.string.recovery_code_type_back)) },
-            singleLine = true,
-            isError = mismatched,
-            supportingText = if (mismatched) {
-                {
-                    Text(
-                        text = stringResource(R.string.recovery_code_mismatch),
-                        modifier = Modifier.testTag("recovery_code_mismatch"),
-                    )
-                }
-            } else {
-                null
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("recovery_code_typed_back"),
+        ConfirmField(
+            typedBack = typedBack,
+            onTypedBackChange = { typedBack = it },
+            // A code typed but not matching is answered where it was
+            // typed: a disabled button with no reason reads as a broken
+            // screen, and this is the one screen a reader cannot come
+            // back to for the code.
+            mismatched = typedBack.isNotBlank() && !matches(typedBack),
         )
         Button(
             onClick = onConfirmed,
@@ -134,6 +119,39 @@ fun RecoveryCodeConfirm(
             Text(stringResource(R.string.recovery_code_saved))
         }
     }
+}
+
+/**
+ * The field the code is typed back into, wearing the mismatch as its
+ * own supporting line — Material's arrangement, which also puts the
+ * message inside the field's accessible name rather than beside it.
+ */
+@Composable
+private fun ConfirmField(
+    typedBack: String,
+    onTypedBackChange: (String) -> Unit,
+    mismatched: Boolean,
+) {
+    OutlinedTextField(
+        value = typedBack,
+        onValueChange = onTypedBackChange,
+        label = { Text(stringResource(R.string.recovery_code_type_back)) },
+        singleLine = true,
+        isError = mismatched,
+        supportingText = if (mismatched) {
+            {
+                Text(
+                    text = stringResource(R.string.recovery_code_mismatch),
+                    modifier = Modifier.testTag("recovery_code_mismatch"),
+                )
+            }
+        } else {
+            null
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("recovery_code_typed_back"),
+    )
 }
 
 /**
