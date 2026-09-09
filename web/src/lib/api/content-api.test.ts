@@ -313,6 +313,11 @@ describe("prepareComment", () => {
         // inventing the policy.
         pDirected: null,
         pInterest: null,
+        // The mark is COMPLETE STATE, so a caller that names none says so
+        // rather than omitting it — the same rule an edit follows, and the
+        // reason a reason never travels without its mark.
+        sensitive: false,
+        sensitiveReason: null,
       },
     });
   });
