@@ -24,8 +24,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -46,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.PasswordTextField
@@ -171,9 +170,7 @@ fun SettingsScreen(
             }
         },
         snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                Snackbar(snackbarData = data, modifier = Modifier.testTag("settings_snackbar"))
-            }
+            CograSnackbarHost(snackbarHostState, testTag = "settings_snackbar")
         },
     ) { padding ->
         Column(
