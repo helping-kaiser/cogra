@@ -1009,7 +1009,20 @@ const BAND_HEIGHT = 64;
    THE ROW IS THE CONTROL, the way `Checkbox` makes it one: a real radio input,
    visually hidden, with the drawn dot and the words inside the label that names
    it. The dot is `SettingsRow`'s, to the pixel — a license axis and a settings
-   choice are the same question asked twice. */
+   choice are the same question asked twice.
+
+   THE READING KEEPS ITS LINE; THE CONSEQUENCE TAKES WHAT IS LEFT. The reading is
+   what a reader is choosing between, so it is measured by its own words and
+   never squeezed — `Credit commercially` and `Record commercially` are two words
+   wide and stay one line. The consequence is the flexible half: it fills the
+   rest of the row, wraps into that column when its sentence is longer than one
+   line, and sets ragged to the LEFT so its right edge lands where a one-line
+   consequence's does. A trailing column that wrapped ragged-right would end each
+   row in a different place and the axis would stop reading as a column at all.
+
+   THE ROW IS ALIGNED TO THE READING'S FIRST LINE, not to its own middle: the dot
+   and the consequence centre on the 20px line the reading occupies, so a
+   three-line consequence grows the row downward and nothing above it moves. */
 function LicenseAxisLabel({ children }) {
   return (
     <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
@@ -1025,28 +1038,32 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
         /* The ROW carries the flow number, not the input inside it: a visually
            hidden radio cannot show a badge, and the row is what a reader
            presses. */
-        <label key={tier.label} data-axis={axis} className="cg-state cg-focus" style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 24, position: "relative", cursor: "pointer", borderRadius: "var(--radius-small)" }}>
+        <label key={tier.label} data-axis={axis} className="cg-state cg-focus" style={{ display: "flex", alignItems: "flex-start", gap: 10, minHeight: 24, position: "relative", cursor: "pointer", borderRadius: "var(--radius-small)" }}>
           <input
             type="radio"
             name={name}
             defaultChecked={index === chosen}
             style={{ position: "absolute", opacity: 0, width: "1px", height: "1px", margin: 0 }}
           />
+          {/* 1px and 2px are the halves of what the 20px reading line has over an
+              18px dot and a 16px consequence line — each centres on the reading's
+              first line rather than on the row. */}
           <span
             aria-hidden="true"
             style={{
               width: 18,
               height: 18,
               flex: "none",
+              marginTop: 1,
               boxSizing: "border-box",
               borderRadius: "var(--radius-full)",
               border: index === chosen ? "5px solid var(--primary)" : "1px solid var(--border-field)",
             }}
           />
-          <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
+          <span style={{ flex: "0 1 auto", minWidth: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
             {tier.label}
           </span>
-          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+          <span style={{ flex: 1, minWidth: 0, marginTop: 2, textAlign: "right", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
             {tier.hint}
           </span>
         </label>
