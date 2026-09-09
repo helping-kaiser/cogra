@@ -37,6 +37,16 @@ This is greppable and should be enforced as a check over Android's
 `strings.xml` and the web copy, rather than left to review — the check
 does not exist yet.
 
+## Ages
+
+One vocabulary for every timestamp, everywhere (ruled 2026-09-09): the
+minutes/hours/days ladder — `now`, `35m`, `2h`, `3d` — up to 30 days,
+and the date (`06.09.2024`) past it. No other words: no "today", no
+weeks, no months. Recency is a feeling and gets the ladder; history is
+a date. The removal mark's `when` speaks this vocabulary like any
+other timestamp — it is the redaction's own moment, not the content's
+age.
+
 ## Register
 
 Write from the reader's side. Active voice. **A control says what will

@@ -667,6 +667,12 @@ type Record {
    after payload removal — the one-way erasure that leaves the
    structural record as the visible mark (substrate.md §7)."
   payloadState: PayloadState!
+  "When the payload went REDUCED; null while FULL. The mark's own
+   moment — never-erase-silently makes the mark the trace removal
+   leaves, and a mark that cannot say when is half a mark. Distinct
+   from updatedAt, which documents the fold-winning revision's
+   promotion."
+  redactedAt: DateTime
   "The content witness reference — L1's evidence that the carried
    payload matches what was committed; verification material, never
    content."
