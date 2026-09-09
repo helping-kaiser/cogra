@@ -94,8 +94,6 @@ author for account deletion to touch.
   anywhere else and change nothing about the Type: no semantics,
   no tags, no standing, no gates
   ([comment.md](comment.md)).
-- **References** — a Message or any other artifact citing a
-  topic does so with a Reference targeting the Type.
 
 ---
 
@@ -195,6 +193,6 @@ tagged with it, and vice versa.
   [feed-ranking.md](../primitive/feed-ranking.md).
 - **Not the moderation mechanism.** Verdict flow and tombstone
   mechanics live in [moderation.md](moderation.md).
-- **Not the edge catalog.** Tag, Affinity, and Reference
+- **Not the edge catalog.** Tag and Affinity
   semantics with census pointers live in
   [edges.md](../primitive/edges.md).
