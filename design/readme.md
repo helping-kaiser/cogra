@@ -2862,6 +2862,71 @@ component said different things and each app picked a different one.
   prefix in its field, and `MapEntry`, which is 13px taller because the
   reworded edge wraps.
 
+### The settings round — 2026-09-09
+
+The surface three shipped "?" texts had been promising and no board had
+ever drawn. Both apps have shipped a full settings screen since slice 1;
+the design owed it a shape, and 2.5.3's default-license preference owed
+it a home. Ruled by jakob the same day (backlog item 20).
+
+- **One scrolling page, ordered by use.** Theme, taking a stance,
+  writing, reading, key backup, sessions, credentials, sign out — a
+  frequency ranking, not a taxonomy, which is why credentials sit near
+  the bottom where a taxonomist would have led with them. It is a task
+  the reader leaves rather than a place they live in, so it carries no
+  bottom bar and the back arrow goes where the gear was. The board draws
+  the whole scroll: the ruling this round records is an order, and an
+  order cut off at 844px is an order nobody can review.
+- **`SettingsGroup` and `SettingsRow` are the anatomy**, minted here
+  because eight groups improvising eight layouts is the page the ruling
+  asked us to leave behind. A quiet heading above, a filled card of
+  rows, a footnote under it — and the footnote is what keeps a row
+  short: the fact a group owes the reader is said once, beneath it,
+  instead of inside every row. The trailing edge is the variant, and
+  the chevron means one thing only: this opens another surface. The
+  **house switch** joins them: drawn once on the sensitive sheet, and a
+  component the moment a second surface wanted one.
+- **No leading icons, and that is §5 rather than taste.** The page
+  would want brightness, palette, key, devices, logout, and the
+  system has none of them; icons here are exported from Material's set,
+  never drawn. Grouping and headings do the scanning work an inset
+  grouped list asks of them anyway.
+- **Theme is drawn on the page, not behind a picker.** It is the one
+  setting whose effect is the surface the reader is standing on, so a
+  chooser covering the page would hide the very thing it changes. Three
+  one-word readings need no explaining and take the segmented control,
+  which sheds the group's card: a bordered pill inside a filled card is
+  two containers saying the same thing a few pixels apart. The stance
+  input's three readings each need a line, so they stay rows.
+- **Credentials become rows.** Both apps stack three whole forms — six
+  fields, three commitments — on the settings page itself. Each is now
+  a row showing where it stands, and the three screens behind them are
+  gaps, honestly named. That is the round's one deliberate subtraction
+  from what ships.
+- **The default license is the contract's first account preference.**
+  It joins `UserPreferences`, the cross-device type `api-spec.md`
+  already carried, and its row opens the sheet the seal opens — one
+  license surface, never a second. Theme and the stance input stay
+  device-local and out of the contract.
+- **The backup ceremony splits in two.** The settings card stops
+  showing a code inline (item 41.1): `SettingsBackup` states the
+  consequence and takes the proof, and the drawn `RecoveryCode` board
+  is what the commitment leads to, trap and all. It is `Restore`'s
+  shape on purpose — the two screens ask for the same secret in the
+  same words for opposite reasons. **The proof step is the platform's**:
+  a screen-lock gate where the OS offers one, the current code where it
+  cannot.
+- **`YourKey` draws the revealed state**, because what no other surface
+  shows is what an export looks like: two encodings of one secret, each
+  named exactly — PEM, PKCS#8, hex, Ed25519, §3's stated exception. The
+  gate in front of it is the platform's, like the backup's.
+- **The gate**: 128 → **131 screens**, 958 → **979 edges**, 81 → **82
+  gaps**, and **flows 58/53/5** unchanged. The three new boards carry 21
+  edges; two gaps closed where the profile's gear had pointed at
+  nothing, and three opened where the credential rows now point at
+  screens the round did not draw. No board outside the round's own moved
+  a pixel — only the generated maps, which grew with the edges.
+
 ## 14. Index
 
 **Root**
