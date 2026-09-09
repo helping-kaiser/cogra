@@ -16,11 +16,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.StanceFieldLabels
 import com.cogra.core.designsystem.StancePadField
 import com.cogra.core.designsystem.StancePoint
+import com.cogra.core.designsystem.nearestStanceAnchor
+import com.cogra.core.designsystem.pair
+import com.cogra.core.designsystem.reading
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
@@ -68,7 +75,7 @@ internal fun ColumnScope.ReplySealStepBody(
         // opens the two-axis pad rather than the post seal's slider.
         SettingRow(
             label = "Toward what you answer",
-            value = stancePair(state.pDirected, state.pInterest),
+            value = stanceRowReading(StancePoint(state.pDirected, state.pInterest)),
             actionText = "Adjust",
             onAction = { onOpenSheet(ReplySealSheet.Stance) },
             testTag = "reply_seal_stance",
@@ -333,12 +340,7 @@ internal fun ReplyPadSheet(
         // someone else's content and both axes are the author's. A dot
         // that opens wrong words is worse than no dot.
         SheetTitle(text = "Toward \"${target?.title.orEmpty()}\"")
-        Text(
-            text = stancePair(pDirected, pInterest),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.testTag("reply_pad_reading"),
-        )
+        StanceReading(StancePoint(pDirected, pInterest), large = true)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
             StancePadField(
                 pick = StancePoint(pDirected, pInterest),
@@ -357,9 +359,58 @@ internal fun ReplyPadSheet(
     }
 }
 
-/** The pair the seal and the pad both read, as the boards write it. */
-private fun stancePair(directed: Double, interest: Double): String =
-    "%+.2f / %+.2f".format(directed, interest)
+/**
+ * The seal row's own reading: the face, then the pair, in the one string
+ * a settings row carries (`ReplySeal`, `_shared.jsx:785`). The row's
+ * announcement therefore names the emoji rather than the anchor's words
+ * — the pad's readout, which is where the pick is actually made, says
+ * both.
+ */
+@Composable
+private fun stanceRowReading(pick: StancePoint): String =
+    "${nearestStanceAnchor(pick).emoji} ${pick.pair()}"
+
+/**
+ * THE PAIR WITH THE FACE IT READS AS — the anchor nearest the pick, one
+ * type step up, beside the numbers (`ReplyPad`, `_shared.jsx:738-745`).
+ *
+ * A stance is always accompanied by words (design.md §10) and the face
+ * rides on top of them, so the emoji leaves the semantics tree and the
+ * readout announces the anchor's words plus both axes — the same split
+ * the bloomed stance control's own readout runs, off the same twenty
+ * anchors, so one face means one thing across the app.
+ */
+@Composable
+private fun StanceReading(pick: StancePoint) {
+    val anchor = nearestStanceAnchor(pick)
+    val words = stringResource(anchor.label)
+    val spoken = pick.reading()
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        // One readout, announced once and in words: the face's own name
+        // and a bare pair of numbers are both noise read aloud.
+        modifier = Modifier
+            .semantics(mergeDescendants = true) { contentDescription = "$words, $spoken" }
+            .testTag("reply_pad_reading"),
+    ) {
+        Text(
+            text = anchor.emoji,
+            style = if (large) {
+                MaterialTheme.typography.titleLarge
+            } else {
+                MaterialTheme.typography.bodyMedium
+            },
+            modifier = Modifier.clearAndSetSemantics { },
+        )
+        Text(
+            text = pick.pair(),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.clearAndSetSemantics { },
+        )
+    }
+}
 
 private val PAD_LABELS = StanceFieldLabels(
     start = "Against",
