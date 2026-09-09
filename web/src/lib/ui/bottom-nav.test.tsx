@@ -34,6 +34,16 @@ describe("BottomNav", () => {
     expect(bar.className).toContain("pb-[env(safe-area-inset-bottom)]");
   });
 
+  // The shell pins the bar by being a viewport-tall column with a scrolling
+  // middle; a `fixed` band is laid out against a mobile browser's layout
+  // viewport and slides under the fold on a long page. It must never come back.
+  it("stays in flow and gives no height to the scroller beside it", () => {
+    render(<BottomNav active="feed" signedIn />);
+    const bar = screen.getByTestId("bottom-nav");
+    expect(bar.className).toContain("flex-none");
+    expect(bar.className).not.toContain("fixed");
+  });
+
   // Selection shows in colour and in the filled icon cut — never an indicator
   // pill, and never colour alone: `aria-current` carries it for a reader who
   // sees none of it.

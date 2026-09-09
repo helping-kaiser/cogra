@@ -295,6 +295,8 @@ export function ReplyWizard({
         references: state.references,
         attachments: commentAttachmentClaims(state.media) ?? undefined,
         stance: state.stance,
+        sensitive: state.sensitive,
+        sensitiveReason: state.sensitiveReason,
       }),
     );
 
@@ -445,6 +447,9 @@ export function ReplyWizard({
           }}
           onTags={(tags) => dispatch({ type: "tags", tags })}
           onReferences={(references) => dispatch({ type: "references", references })}
+          onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
+          onSensitiveReason={(reason) => dispatch({ type: "sensitiveReason", reason })}
+          onSensitiveHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
           onSign={() => void submit()}
           onBack={() => dispatch({ type: "back" })}
           onRestoreKey={() => router.push("/restore")}

@@ -40,7 +40,13 @@ export default function RootLayout({
       lang="en"
       className={`${figtree.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      {/* THE DOCUMENT DOES NOT SCROLL — the shell's middle does (`shell.tsx`).
+          A percentage height resolves against the LARGE viewport, so a body
+          left at `min-h-full` stands taller than the shell's `100dvh` by
+          exactly the address bar, and the document keeps that much scroll to
+          give away. Pinned to the dynamic viewport and closed, it has none,
+          which is also what keeps the address bar from moving at all. */}
+      <body className="h-dvh overflow-hidden flex flex-col">
         <SessionProvider>
           <ApolloWrapper>
             <AuthRuntimeProvider>

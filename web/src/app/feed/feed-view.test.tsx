@@ -8,6 +8,10 @@ import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
 import { FeedView } from "./feed-view";
+import { forgetFeed, recallFeed } from "./feed-memory";
+import { ScrollHostProvider } from "@/lib/ui/scroll-host";
+import type { RegistrationFlow } from "@/lib/signing/registration-flow";
+import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 
 // The feed reads `?compose=` to say that the last post did not land, and
 // rewrites the URL when the notice is dismissed.
@@ -110,6 +114,9 @@ describe("FeedView", () => {
     window.localStorage.clear();
     searchParams = new URLSearchParams();
     replace.mockClear();
+    // The feed's memory is module scope, which is the point of it — so each
+    // test starts from a reader who has not been here yet.
+    forgetFeed();
   });
 
   it("lists posts newest-first as served and links the composer when signed in", async () => {
@@ -334,6 +341,134 @@ describe("FeedView", () => {
     expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
     expect(afters).toEqual([null, "c1"]);
     expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
+  });
+
+  // HT-2. The restore ask and the key ceremony are different accounts'
+  // problems, and no board carries both: `KeyElsewhere` is for a key that
+  // exists somewhere else, `KeyCeremony` for one that does not exist yet.
+  describe("the key ask above the feed", () => {
+    function flowAt(progress: RegistrationProgress | null): RegistrationFlow {
+      return {
+        progress: () => progress,
+        subscribe: () => () => {},
+        ensureAdvancing: () => {},
+        consumeLanded: () => false,
+        reset: () => {},
+      };
+    }
+
+    function renderFeed(progress: RegistrationProgress | null) {
+      server.use(
+        graphql.query("Posts", () =>
+          HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) }),
+        ),
+      );
+      return renderWithProviders(<FeedView store={fakeIdentityStore()} />, {
+        store: signedInStore(),
+        flow: flowAt(progress),
+      });
+    }
+
+    it("offers nothing to restore to an account whose key was never made", async () => {
+      renderFeed({
+        kind: "awaitingApproval",
+        emailVerified: false,
+        keyAttached: false,
+        keyOnDevice: false,
+      });
+      expect(await screen.findByTestId("feed-post-p1")).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument(),
+      );
+    });
+
+    it("asks an account whose key is attached elsewhere to restore it", async () => {
+      renderFeed({
+        kind: "awaitingApproval",
+        emailVerified: true,
+        keyAttached: true,
+        keyOnDevice: false,
+      });
+      expect(await screen.findByTestId("home_restore")).toHaveAttribute("href", "/restore");
+    });
+
+    // A member's loop never reports, so a null progress must not withhold the
+    // one card that tells them why they cannot act.
+    it("keeps asking a member with no key here, progress or none", async () => {
+      renderFeed(null);
+      expect(await screen.findByTestId("home_restore")).toBeInTheDocument();
+    });
+  });
+
+  // HT-1. Opening a post unmounts the feed, so a re-mount used to start at
+  // page one and the top. Both halves come back from the feed's own memory,
+  // and they come back on the FIRST render — the pages have to be there
+  // before the offset means anything.
+  describe("coming back to it", () => {
+    function pagedPosts(afters: (string | null)[]) {
+      return graphql.query("Posts", ({ variables }) => {
+        afters.push((variables.after as string | null) ?? null);
+        return HttpResponse.json({
+          data:
+            variables.after == null
+              ? postsPage([post("p1", "First")], "c1", true)
+              : postsPage([post("p2", "Second")], null, false),
+        });
+      });
+    }
+
+    it("lands the reader back on every page they had loaded", async () => {
+      const afters: (string | null)[] = [];
+      server.use(pagedPosts(afters));
+      const first = renderWithProviders(<FeedView />);
+      fireEvent.click(await screen.findByTestId("feed-load-more"));
+      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      first.unmount();
+
+      renderWithProviders(<FeedView />);
+      // Synchronously, on the first render: no `find`, no await.
+      expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
+      expect(screen.getByTestId("feed-post-p2")).toBeInTheDocument();
+      // And nothing was re-fetched — a cursorless refresh would have answered
+      // with page one and dropped page two.
+      await waitFor(() => expect(afters).toEqual([null, "c1"]));
+    });
+
+    it("restores the scroller's offset before anything is painted", async () => {
+      const afters: (string | null)[] = [];
+      server.use(pagedPosts(afters));
+      const scroller = document.createElement("div");
+      document.body.append(scroller);
+      const host = { current: scroller };
+
+      const first = renderWithProviders(
+        <ScrollHostProvider value={host}>
+          <FeedView />
+        </ScrollHostProvider>,
+      );
+      await screen.findByTestId("feed-post-p1");
+      scroller.scrollTop = 1240;
+      fireEvent.scroll(scroller);
+      await waitFor(() => expect(recallFeed()?.offset).toBe(1240));
+      first.unmount();
+
+      scroller.scrollTop = 0;
+      renderWithProviders(
+        <ScrollHostProvider value={host}>
+          <FeedView />
+        </ScrollHostProvider>,
+      );
+      expect(scroller.scrollTop).toBe(1240);
+      scroller.remove();
+    });
+
+    it("starts over for a reader who has not been here this load", async () => {
+      const afters: (string | null)[] = [];
+      server.use(pagedPosts(afters));
+      renderWithProviders(<FeedView />);
+      expect(await screen.findByTestId("feed-post-p1")).toBeInTheDocument();
+      expect(afters).toEqual([null]);
+    });
   });
 
   it("marks a pending post and leaves a landed one unmarked", async () => {
