@@ -79,7 +79,8 @@ export function galleryIsRedacted(node: Bearer): boolean {
 /**
  * Whether the record's payload has been removed.
  *
- * REDACTION IS RECORD-GRANULAR (design/components/content/PostCard.jsx:16-17):
+ * REDACTION IS RECORD-GRANULAR (design/components/content/PostCard.prompt.md,
+ * "`redacted` renders the skeleton, not a field"):
  * an illegal verdict removes the payload, so title, description, body, media
  * and the license go at once. There is no redacted title beside a surviving
  * body, and no field is veiled or blanked on its own — the card draws the
