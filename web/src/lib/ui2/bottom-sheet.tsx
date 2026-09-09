@@ -36,18 +36,25 @@ export function BottomSheet({
   // A DISMISSAL EXITS THE EDGE IT ENTERED FROM (design/tokens/transitions.css).
   // `close()` drops the element out of the top layer at once, so the sheet is
   // held open for the length of its exit animation and closed after.
+  //
+  // Which way it is going is derived from the prop as it changes, adjusted
+  // during render rather than in an effect — React's own "you might not need an
+  // effect": an effect that sets state on every open would cascade a render.
   const [closing, setClosing] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    setClosing(!open);
+  }
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
     if (open) {
-      setClosing(false);
       if (!dialog.open) dialog.showModal();
       return;
     }
     if (!dialog.open) return;
-    setClosing(true);
     const timer = setTimeout(() => {
       setClosing(false);
       dialog.close();

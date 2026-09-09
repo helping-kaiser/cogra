@@ -124,76 +124,76 @@ export function FeedView({
         </CograBand>
       </CollapsingTop>
       <div className="flex flex-col gap-4 px-6">
-      {/* The account-status banners ride the active tab (design.md §6). */}
-      {phase === "signedIn" && <StatusBanners />}
-      {/* What the wizard just did, if anything. Dismissing drops the query
-          value, so the notice cannot come back on a reload. */}
-      {outcome !== null && <ComposeNotice onDismiss={() => router.replace("/feed")} />}
-      {transportFault === "refresh" && (
-        <div className="flex items-center gap-3">
-          {/* With posts on screen the fault means "stale", not "gone":
-              the loaded posts stay readable under this banner. A failed
-              page fetch surfaces at the load-more slot instead (web.md
-              "Design guidelines", the Android twin). */}
-          <TransportError
-            testId="feed-transport-error"
-            message={
-              posts.length > 0
-                ? "Can't reach the server — new posts can't load right now."
-                : undefined
-            }
-          />
-          <Button
-            testId="feed-retry"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setLoading(true);
-              refresh();
-            }}
-          >
-            Retry
-          </Button>
-        </div>
-      )}
-      {loading && <p data-testid="feed-loading">Loading…</p>}
-      {!loading && transportFault === null && posts.length === 0 && (
-        <p data-testid="feed-empty">Nothing here yet — write the first post.</p>
-      )}
-      <ul className="flex flex-col gap-3" data-testid="feed-list">
-        {posts.map((post) => (
-          <li key={post.id}>
-            <PostCard post={post} prefix="feed" />
-          </li>
-        ))}
-      </ul>
-      {hasNextPage &&
-        (transportFault === "append" ? (
-          <div className="flex items-center justify-center gap-3">
+        {/* The account-status banners ride the active tab (design.md §6). */}
+        {phase === "signedIn" && <StatusBanners />}
+        {/* What the wizard just did, if anything. Dismissing drops the query
+            value, so the notice cannot come back on a reload. */}
+        {outcome !== null && <ComposeNotice onDismiss={() => router.replace("/feed")} />}
+        {transportFault === "refresh" && (
+          <div className="flex items-center gap-3">
+            {/* With posts on screen the fault means "stale", not "gone":
+                the loaded posts stay readable under this banner. A failed
+                page fetch surfaces at the load-more slot instead (web.md
+                "Design guidelines", the Android twin). */}
             <TransportError
-              testId="feed-load-more-error"
-              message="Can't reach the server — new posts can't load right now."
+              testId="feed-transport-error"
+              message={
+                posts.length > 0
+                  ? "Can't reach the server — new posts can't load right now."
+                  : undefined
+              }
             />
             <Button
-              testId="feed-load-more-retry"
+              testId="feed-retry"
               variant="outline"
               size="sm"
-              onClick={() => void onLoadMore()}
-              disabled={loadingMore}
+              onClick={() => {
+                setLoading(true);
+                refresh();
+              }}
             >
               Retry
             </Button>
           </div>
-        ) : (
-          <Button
-            testId="feed-load-more"
-            variant="outline"
-            onClick={() => void onLoadMore()}
-            disabled={loadingMore}
-          >
-            Load more
-          </Button>
-        ))}
+        )}
+        {loading && <p data-testid="feed-loading">Loading…</p>}
+        {!loading && transportFault === null && posts.length === 0 && (
+          <p data-testid="feed-empty">Nothing here yet — write the first post.</p>
+        )}
+        <ul className="flex flex-col gap-3" data-testid="feed-list">
+          {posts.map((post) => (
+            <li key={post.id}>
+              <PostCard post={post} prefix="feed" />
+            </li>
+          ))}
+        </ul>
+        {hasNextPage &&
+          (transportFault === "append" ? (
+            <div className="flex items-center justify-center gap-3">
+              <TransportError
+                testId="feed-load-more-error"
+                message="Can't reach the server — new posts can't load right now."
+              />
+              <Button
+                testId="feed-load-more-retry"
+                variant="outline"
+                size="sm"
+                onClick={() => void onLoadMore()}
+                disabled={loadingMore}
+              >
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <Button
+              testId="feed-load-more"
+              variant="outline"
+              onClick={() => void onLoadMore()}
+              disabled={loadingMore}
+            >
+              Load more
+            </Button>
+          ))}
       </div>
     </main>
   );
