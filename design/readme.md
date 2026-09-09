@@ -460,7 +460,7 @@ is a different thing from a piece the apps have not reached yet.
 
 | Directory | Components |
 |---|---|
-| `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
+| `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SettingsGroup`, `SettingsRow`, `Switch`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton`, `NodeMark` |
 | `components/forms/` | `TextField`, `FieldLabel`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
@@ -621,6 +621,16 @@ paper over:
   hairline (M3's 2px checkbox border loses to §4's one-weight rule),
   `primary` fill with the inlined `check` glyph when checked, and the whole
   row — label included — as the 48px target.
+- `SettingsGroup` / `SettingsRow` / `Switch` — the settings anatomy, and the
+  house switch with it. Both apps ship a settings screen whose sections each
+  invented a layout, and the design had drawn none of it; one row shape is
+  what lets a page of eight groups read as a page. A quiet heading above, a
+  filled card of rows, a footnote under — the footnote being what keeps a row
+  to one line of status. The trailing edge is the variant (a switch, a value
+  and a chevron, a chevron, or a control of the row's own), and the chevron
+  means one thing only: this opens another surface. The switch was drawn once
+  on the sensitive sheet and stayed a control while there was one of it; a
+  second surface is what makes it a component.
 - `BorrowedViewBand` — §13's borrowed vantage point, as a component: names
   whose view a guest or applicant feed is ranked from, carries the one
   sign-in-or-join entry, and subsumes the guest notice on those surfaces.
