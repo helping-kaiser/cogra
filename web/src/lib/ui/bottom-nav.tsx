@@ -18,6 +18,14 @@
 // safe-area padding at the bottom. Selection shows in COLOUR
 // (`onSurfaceVariant` → `onSurface`) and in the filled icon cut — never an
 // indicator pill.
+//
+// THE BAND IS IN FLOW, and the shell is what pins it: it is the last child of
+// a viewport-tall column whose middle scrolls (`shell.tsx`), so it needs no
+// coordinates of its own. It was `fixed bottom-0` before, which a mobile
+// browser lays out against a layout viewport taller than the visible one and
+// so pushed the bar under the fold on any page long enough to scroll.
+// `flex-none` is the whole instruction: never give away height to the
+// scroller beside it.
 
 import Link from "next/link";
 import { useState } from "react";
@@ -88,7 +96,7 @@ export function BottomNav({
     <nav
       data-testid="bottom-nav"
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-10 flex min-h-[var(--bottom-bar-height)] border-t border-outline-variant bg-surface-container pb-[env(safe-area-inset-bottom)]"
+      className="z-10 flex min-h-[var(--bottom-bar-height)] flex-none border-t border-outline-variant bg-surface-container pb-[env(safe-area-inset-bottom)]"
     >
       {slots.map((slot) => {
         const href = DESTINATIONS[slot];

@@ -22,12 +22,11 @@
 // draft is untouched — that ruling is about comments only. This is why `leave`
 // is not modelled as a state at all: the flow simply ends.
 //
-// THE SENSITIVE SELF-MARK IS NOT HERE, and its absence is deliberate and
-// approved (jakob 2026-09-01). ReplySeal boards a "Mark (sensitive)" row, but a
-// sensitive-marked COMMENT has no veiled read state yet (design backlog item
-// 25.4), so shipping the switch would promise a veil the reader never gets.
-// `PrepareCommentInput.sensitive` stays on the wire, defaulted by the server —
-// the contract is untouched, only the control is held back.
+// THE SENSITIVE SELF-MARK RIDES HERE, as ReplySeal's third term row draws it.
+// It was held back while a sensitive-marked COMMENT had no veiled read state
+// to promise; design backlog item 25.4 built that on 2026-09-02 — "the
+// reply-wizard lanes can implement ReplySeal 1:1" — so the switch keeps its
+// word now. It is complete state on the wire, exactly as it is on an edit.
 
 import type { License } from "@/lib/license";
 import { PUBLIC_DOMAIN } from "@/lib/license";
@@ -88,6 +87,10 @@ export type ReplyState = {
   readonly license: License;
   /** Where the author stands on what they answer — the genesis Review's pair. */
   readonly stance: StancePair;
+  /** The author's own sensitive mark — ReplySeal's third term row. */
+  readonly sensitive: boolean;
+  /** The line the veil shows; empty is no reason, never an empty string. */
+  readonly sensitiveReason: string;
 };
 
 /** The policy default the seal shows before anyone opens the pad (+0.10 / +0.10). */
@@ -104,6 +107,8 @@ export function emptyReply(target: ReplyTarget): ReplyState {
     references: [],
     license: PUBLIC_DOMAIN,
     stance: DEFAULT_REPLY_STANCE,
+    sensitive: false,
+    sensitiveReason: "",
   };
 }
 
@@ -222,6 +227,8 @@ export type ReplyAction =
   | { type: "references"; references: readonly ReferenceDraft[] }
   | { type: "license"; license: License }
   | { type: "stance"; stance: StancePair }
+  | { type: "sensitive"; sensitive: boolean }
+  | { type: "sensitiveReason"; reason: string }
   | { type: "advance" }
   | { type: "back" };
 
@@ -275,6 +282,14 @@ export function replyReducer(state: ReplyState, action: ReplyAction): ReplyState
 
     case "license":
       return { ...state, license: action.license };
+
+    case "sensitive":
+      // Unmarking keeps the words: the sheet greys the reason rather than
+      // clearing it, so a mark taken off and put back on says the same thing.
+      return { ...state, sensitive: action.sensitive };
+
+    case "sensitiveReason":
+      return { ...state, sensitiveReason: action.reason };
 
     case "stance":
       // Clamped here rather than trusted from a control: the contract's

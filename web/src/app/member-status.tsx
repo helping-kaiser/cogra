@@ -14,6 +14,7 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
+import { Snackbar } from "@/lib/ui/snackbar";
 import { DIRECTED_LABEL, INTEREST_LABEL } from "@/lib/ui/stance-format";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 
@@ -41,7 +42,12 @@ export function MemberStatus({
   const [signing, setSigning] = useState(false);
   const [signingFailed, setSigningFailed] = useState(false);
   const [reciprocated, setReciprocated] = useState(false);
+  // The confirmation is a separate flag from the fact: `reciprocated` keeps
+  // the card away for good, this one only says so once.
+  const [confirming, setConfirming] = useState(false);
   const [resuming, setResuming] = useState(false);
+  // Stable, so the snackbar's timer is not restarted by every render around it.
+  const dismissConfirmation = useCallback(() => setConfirming(false), []);
 
   const readDevice = useCallback(() => {
     return Promise.all([
@@ -90,6 +96,7 @@ export function MemberStatus({
       // No device mark: the in-flight staged write already answers
       // hasReciprocated on the next profile read.
       setReciprocated(true);
+      setConfirming(true);
     } else {
       setSigningFailed(true);
     }
@@ -154,11 +161,18 @@ export function MemberStatus({
           </div>
         </Card>
       )}
-      {reciprocated && (
-        <p role="status" data-testid="home_reciprocated" className="text-body-medium">
-          Your vouch is on its way onto the graph.
-        </p>
-      )}
+      {/* A COMPLETED ACTION IS CONFIRMED BY A SNACKBAR (design/readme.md §3:
+          "The snackbar is the confirmation; a line of the layout turned green
+          is not one"). This was a line that appeared and never left — it
+          outlived the act it confirmed by the whole session. The card it
+          replaces stays gone on `reciprocated`, which is a fact about the
+          graph; the sentence is the transient half and goes with the
+          snackbar's own timer. */}
+      <Snackbar
+        testId="home_reciprocated"
+        message={confirming ? "Your vouch is on its way onto the graph." : null}
+        onDismiss={dismissConfirmation}
+      />
       {device.pendingCount > 0 && (
         <Card testId="home_pending">
           <p className="text-body-medium text-on-surface-variant">
