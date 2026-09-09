@@ -4,14 +4,22 @@
 
 package com.cogra.feature.content
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.media.MediaGallery
@@ -29,6 +37,7 @@ import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
+import com.cogra.feature.content.R
 
 /**
  * Which surface the body is drawn on, and therefore how its pictures sit.
@@ -65,8 +74,10 @@ internal enum class BodySurface { Post, Comment }
  * 2026-08-31) — none of which a `remember` keyed to one card can do. It
  * is hoisted to `SensitiveReveals`, and arrives here already decided.
  *
- * @param maxBodyLines the feed card's clamp; null in the detail, where
- *   the whole body is shown.
+ * @param collapsed the summary card's reading: the body clamps to
+ *   [TEXT_BODY_CLAMP_LINES], the description to
+ *   [DESCRIPTION_CLAMP_LINES], and an opener unfolds whatever that hid.
+ *   False on the detail, which is the read surface and clamps nothing.
  * @param revealed whether this reader has already chosen to look.
  * @param onReveal fired when they choose to; null where the surface
  *   holds no reveal state, which leaves the veil closed.
@@ -80,7 +91,7 @@ internal fun PostBody(
     moderation: ModerationState,
     testTagPrefix: String,
     modifier: Modifier = Modifier,
-    maxBodyLines: Int? = null,
+    collapsed: Boolean = false,
     onOpenMedia: (() -> Unit)? = null,
     surface: BodySurface = BodySurface.Post,
     revealed: Boolean = false,
@@ -96,6 +107,12 @@ internal fun PostBody(
     }
 
     val veiled = !revealed && isSensitive(content, description, attachmentsStatus)
+    // What the clamp hid, remembered from the reading that hid it: once
+    // the opener has unfolded the text nothing overflows any more, so a
+    // live measurement would take the opener away with the fold.
+    var folded by remember(testTagPrefix) { mutableStateOf(false) }
+    var open by remember(testTagPrefix) { mutableStateOf(false) }
+    val clamping = collapsed && !open
 
     SensitiveVeil(
         veiled = veiled,
@@ -117,28 +134,93 @@ internal fun PostBody(
             // words and its pictures join them.
             if (surface == BodySurface.Post) gallery()
 
-            content.value?.takeIf { it.isNotEmpty() }?.let { words ->
-                Text(
-                    text = words,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = maxBodyLines ?: Int.MAX_VALUE,
-                    overflow = TextOverflow.Ellipsis,
+            // WORDS XOR MEDIA (D16): the picture IS the body, so a media
+            // post draws no `content` even when the record carries one.
+            // The words beside a picture are the description, and the
+            // card draws them under it. Handed both — an impossible post
+            // — the documented media reading wins: the manifest is the
+            // body, and half a card is better than an invented one.
+            val words = content.value
+                ?.takeIf { it.isNotEmpty() && !(surface == BodySurface.Post && attachments.isNotEmpty()) }
+            words?.let {
+                ClampedText(
+                    text = it,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = if (clamping) TEXT_BODY_CLAMP_LINES else Int.MAX_VALUE,
+                    onOverflow = { folded = true },
+                    testTag = "${testTagPrefix}_words",
                 )
             }
 
             if (surface == BodySurface.Comment) gallery()
 
             description?.value?.takeIf { it.isNotEmpty() }?.let { note ->
-                Text(
+                ClampedText(
                     text = note,
-                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = maxBodyLines ?: Int.MAX_VALUE,
-                    overflow = TextOverflow.Ellipsis,
+                    maxLines = if (clamping) DESCRIPTION_CLAMP_LINES else Int.MAX_VALUE,
+                    onOverflow = { folded = true },
+                    testTag = "${testTagPrefix}_description",
+                )
+            }
+
+            // Only where there is something folded away. A text control,
+            // not a link: it opens the text in place and never
+            // navigates.
+            if (collapsed && folded) {
+                Text(
+                    text = stringResource(if (open) R.string.content_less else R.string.content_more),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .clickable { open = !open }
+                        .testTag("${testTagPrefix}_opener"),
                 )
             }
         }
     }
+}
+
+/**
+ * THE DESCRIPTION IS TWO LINES in the feed, on both kinds of post. It is
+ * the caption, not the body: enough to say what the thing is, never
+ * enough to become the reading.
+ */
+internal const val DESCRIPTION_CLAMP_LINES = 2
+
+/**
+ * THE TEXT BODY'S CEILING — a text post stands about as tall as a media
+ * post, never taller, so a feed of both keeps one rhythm. Derived from
+ * the tokens rather than chosen: on the 390×844 board, 844 less the 44px
+ * safe area, the 64px bottom bar and the 360px worst-case chrome leaves
+ * 376px, and `body-medium`'s line height is 20px — floor(376 / 20) = 18.
+ */
+internal const val TEXT_BODY_CLAMP_LINES = 18
+
+/**
+ * A paragraph that reports whether the clamp hid anything.
+ *
+ * Measured rather than estimated from a character count: the board's
+ * estimate exists because a static render cannot measure a paragraph,
+ * and the rule it serves is "only where there is something folded away".
+ */
+@Composable
+private fun ClampedText(
+    text: String,
+    color: Color,
+    maxLines: Int,
+    onOverflow: () -> Unit,
+    testTag: String,
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = color,
+        maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis,
+        onTextLayout = { if (it.hasVisualOverflow) onOverflow() },
+        modifier = Modifier.testTag(testTag),
+    )
 }
 
 /**

@@ -23,9 +23,11 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
 import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.ModeratedField
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testContentTarget
 import com.cogra.domain.testing.testMentionTarget
@@ -39,6 +41,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
 class ContentScreensTest {
@@ -981,6 +984,48 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
     }
 
+    // -- Words XOR media, the clamps, and the opener --
+    //
+    // The rules themselves are pinned in `PostBodyTest`; these two say
+    // the two surfaces ask for the right reading.
+
+    /** Past the clamp the opener stands, and it unfolds in place. */
+    @Test
+    // Real glyph metrics: legacy graphics measure every string at zero
+    // width, so nothing would ever overflow the clamp. The tall
+    // viewport puts the opener — eighteen lines down — on screen.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "+h1600dp")
+    fun aFoldedFeedBodyOpensWhereItStands() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(content = ModeratedField(LONG_BODY, FieldStatus.NORMAL)),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_opener", useUnmergedTree = true)
+            .assertTextEquals("More")
+        compose.onNodeWithTag("feed_post_p1_opener", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("feed_post_p1_opener", useUnmergedTree = true)
+            .assertTextEquals("Less")
+    }
+
+    /** The detail is the read surface: it clamps nothing, so it never opens. */
+    @Test
+    fun theDetailCarriesNoOpener() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    content = ModeratedField(LONG_BODY, FieldStatus.NORMAL),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("detail_opener", useUnmergedTree = true).assertDoesNotExist()
+    }
+
     // -- The card header: author left, age right --
 
     /** The boards' compact age — a number and its unit, no word between. */
@@ -1601,3 +1646,6 @@ class ContentScreensTest {
         compose.onNodeWithTag("compose_confirm_withdrawal").assertDoesNotExist()
     }
 }
+
+/** Well past the 18-line ceiling at any plausible card width. */
+private val LONG_BODY = "Salt maps of the coast road, walked at low tide. ".repeat(80)
