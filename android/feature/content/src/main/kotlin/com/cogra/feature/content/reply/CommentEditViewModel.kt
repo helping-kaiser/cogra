@@ -130,6 +130,8 @@ class CommentEditViewModel @Inject constructor(
                             ),
                             sensitive = loaded.selfMark.sensitive,
                             sensitiveReason = loaded.selfMark.reason,
+                            loadedSensitive = loaded.selfMark.sensitive,
+                            loadedSensitiveReason = loaded.selfMark.reason,
                         )
                     }
                 } ?: _state.update { it.copy(loading = false, refusal = GONE) }
@@ -179,6 +181,20 @@ class CommentEditViewModel @Inject constructor(
     fun onAltTextChange(uri: String, text: String) = _state.update { it.withAltText(uri, text) }
 
     fun onOpenActs() = _state.update { it.copy(actsOpen = true) }
+
+    fun onOpenSensitive() = _state.update { it.copy(sensitiveOpen = true) }
+
+    /**
+     * Unmarking clears the reason with it: a reason without the mark is
+     * refused on `["sensitiveReason"]`, and one kept out of sight would
+     * come back with the switch as words the author never re-read.
+     */
+    fun onSensitiveChange(marked: Boolean) = _state.update {
+        it.copy(sensitive = marked, sensitiveReason = if (marked) it.sensitiveReason else null)
+    }
+
+    fun onSensitiveReasonChange(reason: String) =
+        _state.update { it.copy(sensitiveReason = reason) }
 
     fun onCloseSheet() = _state.update { it.closedSheets() }
 
@@ -277,10 +293,9 @@ class CommentEditViewModel @Inject constructor(
                                 AttachmentClaim(it, asset.altText.ifBlank { null })
                             }
                         },
-                        // The standing mark, re-stated. The screen offers
-                        // no switch, so this is exactly what was read when
-                        // the edit opened — an edit must never unveil a
-                        // comment its author marked.
+                        // Complete state: whatever the Mark row leaves
+                        // standing, touched or not. An edit that omitted
+                        // it would unveil a comment its author marked.
                         sensitive = current.sensitive,
                         sensitiveReason = current.sensitiveReason,
                     )

@@ -694,6 +694,8 @@ class ContentRepositoryImpl @Inject constructor(
         attachments: List<AttachmentClaim>,
         pDirected: Double?,
         pInterest: Double?,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> = guard.run {
         client.mutation(
             PrepareCommentMutation(
@@ -708,6 +710,13 @@ class ContentRepositoryImpl @Inject constructor(
                     // seal's pad always names both.
                     pDirected = Optional.presentIfNotNull(pDirected),
                     pInterest = Optional.presentIfNotNull(pInterest),
+                    sensitive = Optional.present(sensitive),
+                    // Blank counts as none, and a reason without the
+                    // switch is refused on `["sensitiveReason"]` — so the
+                    // reason rides only under its own mark.
+                    sensitiveReason = Optional.present(
+                        sensitiveReason?.takeIf { sensitive && it.isNotBlank() },
+                    ),
                 ),
             ),
         ).payloadOutcome({ it.prepareComment.userErrors.map { e -> e.userErrorFields } }) { data ->
