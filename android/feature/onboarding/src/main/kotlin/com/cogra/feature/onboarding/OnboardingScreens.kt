@@ -376,4 +376,3 @@ fun KeyCeremonyScreen(
         )
     }
 }
-

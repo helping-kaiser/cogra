@@ -9,34 +9,34 @@
         <error line="91" column="5" source="standard:class-signature" />
         <error line="91" column="28" source="standard:class-signature" />
         <error line="196" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="215" column="5" source="standard:class-signature" />
-        <error line="216" column="5" source="standard:class-signature" />
-        <error line="216" column="29" source="standard:class-signature" />
-        <error line="237" column="5" source="standard:class-signature" />
-        <error line="238" column="5" source="standard:class-signature" />
-        <error line="238" column="28" source="standard:class-signature" />
-        <error line="445" column="9" source="standard:class-signature" />
-        <error line="446" column="9" source="standard:class-signature" />
-        <error line="447" column="9" source="standard:class-signature" />
-        <error line="447" column="34" source="standard:class-signature" />
-        <error line="481" column="5" source="standard:class-signature" />
-        <error line="482" column="5" source="standard:class-signature" />
-        <error line="482" column="26" source="standard:class-signature" />
-        <error line="545" column="1" source="standard:kdoc" />
-        <error line="553" column="1" source="standard:spacing-between-declarations-with-comments" />
-        <error line="562" column="5" source="standard:class-signature" />
-        <error line="563" column="5" source="standard:class-signature" />
-        <error line="563" column="32" source="standard:class-signature" />
-        <error line="574" column="5" source="standard:class-signature" />
-        <error line="575" column="5" source="standard:class-signature" />
-        <error line="575" column="37" source="standard:class-signature" />
-        <error line="586" column="5" source="standard:class-signature" />
-        <error line="587" column="5" source="standard:class-signature" />
-        <error line="587" column="28" source="standard:class-signature" />
-        <error line="610" column="5" source="standard:class-signature" />
-        <error line="611" column="5" source="standard:class-signature" />
-        <error line="611" column="41" source="standard:class-signature" />
-        <error line="614" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="231" column="5" source="standard:class-signature" />
+        <error line="232" column="5" source="standard:class-signature" />
+        <error line="232" column="29" source="standard:class-signature" />
+        <error line="253" column="5" source="standard:class-signature" />
+        <error line="254" column="5" source="standard:class-signature" />
+        <error line="254" column="28" source="standard:class-signature" />
+        <error line="465" column="9" source="standard:class-signature" />
+        <error line="466" column="9" source="standard:class-signature" />
+        <error line="467" column="9" source="standard:class-signature" />
+        <error line="467" column="34" source="standard:class-signature" />
+        <error line="501" column="5" source="standard:class-signature" />
+        <error line="502" column="5" source="standard:class-signature" />
+        <error line="502" column="26" source="standard:class-signature" />
+        <error line="565" column="1" source="standard:kdoc" />
+        <error line="573" column="1" source="standard:spacing-between-declarations-with-comments" />
+        <error line="582" column="5" source="standard:class-signature" />
+        <error line="583" column="5" source="standard:class-signature" />
+        <error line="583" column="32" source="standard:class-signature" />
+        <error line="594" column="5" source="standard:class-signature" />
+        <error line="595" column="5" source="standard:class-signature" />
+        <error line="595" column="37" source="standard:class-signature" />
+        <error line="606" column="5" source="standard:class-signature" />
+        <error line="607" column="5" source="standard:class-signature" />
+        <error line="607" column="28" source="standard:class-signature" />
+        <error line="630" column="5" source="standard:class-signature" />
+        <error line="631" column="5" source="standard:class-signature" />
+        <error line="631" column="41" source="standard:class-signature" />
+        <error line="634" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/com/cogra/domain/compose/ComposeDraft.kt">
         <error line="22" column="5" source="standard:class-signature" />
