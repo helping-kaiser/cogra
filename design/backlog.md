@@ -299,7 +299,8 @@ attribution on every card. Deliberately late.
 The graph as a navigable universe: a 3D view from your position, other
 profiles as spheres varying in size, colour and brightness by their
 weight. Mostly its own thing and mostly outside this system — last on
-purpose.
+purpose. **It lands with slice 2.7's search backend** (ruled 2026-09-09):
+no surface is built against the exact-match lookup before then.
 
 ### 20 · Settings — the whole surface · *design* · **gates 2.5.3**
 Three shipped "?" texts already promise it: "Your default lives in
@@ -483,7 +484,7 @@ Two follow-ups the round surfaces, still open:
   comments-sheet shell (factored — `_shared.jsx`'s `CommentsSheet`,
   drawn by `ReplyMedia` and the thread sheet).
 
-  Three are still held:
+  Two are still held:
   - **The reply seal's staged reference** — stays a fact in the acts
     card as drawn, or becomes a `StagedReference` row like the
     post's. Drawn as an acts row and blessed as one in
@@ -492,29 +493,25 @@ Two follow-ups the round surfaces, still open:
     comment edits vs bare word on the reply seal. Every board now
     spells `FactRow … action="Mark"`, which reads settled in
     practice and is recorded nowhere as ruled.
-  - **The wizard footer's shape** — see the entry below; the
-    slice-2.5 round reopened it on a count.
 
-- **A `WizardFooter` master needs one more ruling before it can be
-  adopted** (slice-2.5 round). The held note's count is off, and the
-  correction changes the question. **Thirteen** boards draw a Next.
-  **Four** wrap it in a footer of its own — `ComposePick`,
-  `ComposePickVideo`, `ComposePicked`, `ComposePickedErrors` — and
-  they are exactly the four whose content above runs edge to edge,
-  so the footer is where their padding has to come from. The other
-  **nine** put the Next inside a column that already carries the
-  24px sides, each ending on its own bottom value: 16px on the
-  details and crop boards, 24px on `ComposeWords`, and a 12px or
-  16px margin above the button on `ComposeWords` and
-  `ComposePickWeb`. A master owning `12px 24px 16px` therefore
-  cannot land on those nine as drawn — inside the column it doubles
-  the sides to 48px, and outside it lifts the button past the
-  column's `overflow: hidden` and resets nine different bottom
-  rhythms to one. Which of those two, and what each board loses, is
-  the ruling. (`ComposeLicense`'s hand-assembled row is a third
-  anatomy again — a sheet's action row, hairline · summary · Done —
-  not a wizard footer; its raw `0.5px` was in `AxisLabel` and is
-  fixed under §7.)
+- ~~**A `WizardFooter` master needs one more ruling before it can be
+  adopted**~~ (slice-2.5 round) — closed 2026-09-09 by jakob's R9:
+  the master is scoped to the edge-to-edge anatomy. **Thirteen**
+  boards draw a Next. **Four** wrap it in a footer of its own —
+  `ComposePick`, `ComposePickVideo`, `ComposePicked`,
+  `ComposePickedErrors` — and they are exactly the four whose
+  content above runs edge to edge, so the footer is where their
+  padding has to come from. Those four now take `WizardFooter`,
+  which owns `12px 24px 16px`, and no pixel moved. The other
+  **nine** keep their column-owned spacing: their Next sits inside a
+  column that already carries the 24px sides, each ending on its own
+  bottom value, and a padding-owning master cannot land there — it
+  would double the sides to 48px inside the column, or lift the
+  button past the column's `overflow: hidden` outside it and reset
+  nine different bottom rhythms to one. (`ComposeLicense`'s
+  hand-assembled row is a third anatomy again — a sheet's action
+  row, hairline · summary · Done — not a wizard footer; its raw
+  `0.5px` was in `AxisLabel` and is fixed under §7.)
 - **One question the body-XOR pass left open (2026-09-04)**,
   drawing-level: a media post's DETAIL view now shows only its
   description, at body-medium on `text-secondary` where a body-large
@@ -530,7 +527,12 @@ Two follow-ups the round surfaces, still open:
   `UploadNotice`, `EarnedChart`, `PayoutAddress` ×2, `WalletBalance`
   — each a conform item under §7's rule that a component never states
   a raw type value, and each moves pixels, so the sweep wants one eye
-  over its boards; board-glue still duplicated in twos and fours (the license lock
+  over its boards. **Eight more sites spell the token's own `0.5px`**
+  and move nothing when they take it — `ActsCard`, `MediaThumb` ×2,
+  `PickTray`, `Chip`, `WalletBalance`, and `ComposePick`'s board ×2 —
+  and **three are not tracking at all**: `MediaThumb`'s `12px`/`16px`
+  pair and `TopicsLine`'s `30px` leading, which need a rung named
+  before they can take one. Board-glue still duplicated in twos and fours (the license lock
   ×4, the seal avatar row ×2, the vouch card head ×2);
   `_ds_manifest.json` frozen at the import commit (only the claude.ai
   app refreshes it); `_adherence.oxlintrc.json` has no wired runner
@@ -1266,7 +1268,24 @@ the fields, or the client staging the three prepares and sealing the
 batch. The boards and the contract are both satisfied by the second,
 which is why the contract is not moving to meet the first.
 
-### 38 · The recovery code's two loose ends · *design*
+### 38 · The desktop round · *design*
+
+Held open by the scope ruling of 2026-09-09 (readme §2): the mobile set
+is what this system draws, and a desktop visitor gets the mobile-derived
+layout unoptimized until this round runs. What parked into it:
+
+1. **The card idiom above phone width** — whether the full-bleed card and
+   its 8px seam belong to the 42rem column's edge or to the viewport's.
+2. **The fullscreen viewer on desktop** — there is no rotate, no pinch
+   and no swipe-down; Escape and the arrows already exist in the master
+   and ship as they are, so the round decides what stands in for rotate
+   and whether the browser's own fullscreen is offered.
+3. **The share fallback's desktop dress.** Copy-the-link with a *Link
+   copied* snackbar is ruled and ships now, unoptimized like the rest.
+
+Nothing desktop-specific is built before this round.
+
+### 39 · The recovery code's two loose ends · *design*
 
 Filed by the W0 conform lane 2026-09-09 (questions 29 and 30 of the
 conformance audit's design-session list). Both sit on the recovery
@@ -1305,7 +1324,7 @@ code; neither blocked the fixes that shipped.
    typed prefix the code doesn't start with can never become right,
    while a correct partial shows nothing.
 
-### 39 · The sensitive sheet's line is post-shaped · *design*
+### 40 · The sensitive sheet's line is post-shaped · *design*
 
 Filed by the w0-web lane 2026-09-09. Item 25.2's Mark row is now on
 the comment editor, and it opens the same ComposeSensitive sheet the

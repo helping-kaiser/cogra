@@ -12,7 +12,12 @@
    THE FRESH-START LINE IS NOT `PickPrompt`. That master pairs the instruction
    with the way out of the media path, and both halves are required; here there
    is no escape to offer — the draft's own pair is the choice on this board —
-   so the line is spelled at the master's caption values and nothing else. */
+   so the line is spelled at the master's caption values and nothing else.
+
+   THE LINE ENDS ON ITS DASH (jakob's ruling, 2026-08-31, recorded 2026-09-09):
+   the grid below is the rest of the sentence — how you start a new post is
+   obvious from what the dash points at, and a clause spelling it out would
+   repeat the fresh composer's caption. */
 
 const TILE = { position: "relative", width: 125, height: 125 };
 const FILL = { width: "100%", height: "100%", objectFit: "cover", display: "block" };
@@ -54,7 +59,7 @@ export function Screen() {
 
       <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 8, padding: "8px 24px" }}>
         <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-          Or start fresh — pick one picture, several, or one video.
+          Or start fresh —
         </p>
       </div>
 
