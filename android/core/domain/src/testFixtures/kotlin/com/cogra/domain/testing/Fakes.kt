@@ -471,6 +471,8 @@ open class ThrowingContentRepository : ContentRepository {
         attachments: List<AttachmentClaim>,
         pDirected: Double?,
         pInterest: Double?,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun commentForEdit(id: String): Outcome<CommentForEdit?> =
         throw UnsupportedOperationException()

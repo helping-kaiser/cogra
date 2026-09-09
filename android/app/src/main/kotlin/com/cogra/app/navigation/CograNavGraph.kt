@@ -252,6 +252,20 @@ private fun <T> NavController.reportToCurrent(key: NavResultKey<T>, value: T) {
     currentBackStackEntry?.savedStateHandle?.set(key.name, value)
 }
 
+/**
+ * Reports [value] to the named destination further down the stack.
+ *
+ * The avatar flow needs this: it is pushed from the edit screen, so
+ * [report] hands its result to that screen — which reads no results at
+ * all, so a signed picture was answered by nothing. The news belongs to
+ * the profile two entries down, whether the reader saves the rest of
+ * the edit afterwards or simply walks back.
+ */
+private inline fun <reified R : Any, T> NavController.reportTo(key: NavResultKey<T>, value: T) {
+    val entry = runCatching { getBackStackEntry<R>() }.getOrNull() ?: return
+    entry.savedStateHandle[key.name] = value
+}
+
 /** The activity-scoped auth-state holder: the token store decides. */
 @HiltViewModel
 class AuthStateViewModel @Inject constructor(
@@ -760,7 +774,7 @@ private fun CograNavGraphContent(
                 AvatarFlowRoute(
                     uri = entry.toRoute<AvatarFlow>().uri,
                     onSigned = {
-                        navController.report(profileSavedKey, true)
+                        navController.reportTo<Profile, _>(profileSavedKey, true)
                         navController.popBackStack()
                     },
                     onLeave = { navController.popBackStack() },

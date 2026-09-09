@@ -267,6 +267,13 @@ private fun KeyAbsentCard(onRestoreKey: () -> Unit, onKeepDraft: () -> Unit) {
  * sheet says what it does in one line. The reason is optional and
  * public: it is shown *on* the veil, which is the only place a reader
  * meets it, so the corner says so rather than a paragraph explaining it.
+ *
+ * **One sheet for every surface that marks** — the post seal, the reply
+ * seal, and both edit surfaces. Its line reads for both scales (ruling
+ * 42: "a comment has no description to name, and a post's description
+ * is words"), so a second copy would only be the place the two drift
+ * apart. Only [testTagPrefix] varies, so a test can still say which
+ * surface opened it.
  */
 @Composable
 internal fun SensitiveSheet(
@@ -276,8 +283,9 @@ internal fun SensitiveSheet(
     onReasonChange: (String) -> Unit,
     onDone: () -> Unit,
     onHelp: () -> Unit,
+    testTagPrefix: String = "wizard",
 ) {
-    CograSheetSurface(testTag = "wizard_sensitive_sheet") {
+    CograSheetSurface(testTag = "${testTagPrefix}_sensitive_sheet") {
         SheetTitle(
             text = "Mark as sensitive",
             onHelp = onHelp,
@@ -286,7 +294,7 @@ internal fun SensitiveSheet(
                 Switch(
                     checked = marked,
                     onCheckedChange = onMarkedChange,
-                    modifier = Modifier.testTag("wizard_sensitive_switch"),
+                    modifier = Modifier.testTag("${testTagPrefix}_sensitive_switch"),
                 )
             },
         )
@@ -305,10 +313,10 @@ internal fun SensitiveSheet(
             // field is only live once the switch is on: offering a box
             // that would be refused is worse than not offering it.
             enabled = marked,
-            testTag = "wizard_sensitive_reason",
+            testTag = "${testTagPrefix}_sensitive_reason",
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            CograButton("Done", onDone, testTag = "wizard_sensitive_done")
+            CograButton("Done", onDone, testTag = "${testTagPrefix}_sensitive_done")
         }
     }
 }

@@ -83,13 +83,19 @@ fun ProfileRoute(
             viewModel.refresh()
         }
     }
+    // The re-read is separated from the confirmation on purpose. The
+    // screen consumes the result only once its snackbar has run its
+    // course (the house one-shot shape), and hanging the refetch off
+    // that consume made the profile sit on the picture it had just
+    // replaced for the whole four seconds — and drop the refetch
+    // entirely whenever the snackbar was cancelled early.
+    LaunchedEffect(profileSavedResult) {
+        if (profileSavedResult) viewModel.refresh()
+    }
     ProfileScreen(
         state = state,
         profileSavedResult = profileSavedResult,
-        onProfileSavedResultConsumed = {
-            onProfileSavedResultConsumed()
-            viewModel.refresh()
-        },
+        onProfileSavedResultConsumed = onProfileSavedResultConsumed,
         onFilterChange = viewModel::onFilterChange,
         onLoadMore = viewModel::onLoadMore,
         onRetry = viewModel::refresh,
@@ -126,14 +132,15 @@ fun ProfileScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val savedMessage = stringResource(R.string.profile_saved)
+    // Consumed only after the snackbar is done: clearing first would flip
+    // the LaunchedEffect key and cancel the showing coroutine, so the
+    // confirmation was torn down in the frame it was posted and the
+    // reader saw nothing. The refetch does not ride this effect — the
+    // route fires it the moment the result arrives.
     LaunchedEffect(profileSavedResult) {
         if (profileSavedResult) {
-            // Consume and re-read first: `showSnackbar` suspends until the
-            // snackbar is dismissed, so waiting on it left the profile
-            // showing the picture that was just replaced — and a
-            // cancellation before dismissal dropped the refresh entirely.
-            onProfileSavedResultConsumed()
             snackbarHostState.showSnackbar(savedMessage)
+            onProfileSavedResultConsumed()
         }
     }
     // Acting is gated for applicants, but the surface stays visible and
@@ -153,7 +160,8 @@ fun ProfileScreen(
     Scaffold(
         modifier = Modifier.collapsingTop(collapsingTop),
         snackbarHost = {
-            CograSnackbarHost(snackbarHostState) },
+            CograSnackbarHost(snackbarHostState, testTag = "profile_snackbar")
+        },
         topBar = {
             Column {
                 TopAppBar(

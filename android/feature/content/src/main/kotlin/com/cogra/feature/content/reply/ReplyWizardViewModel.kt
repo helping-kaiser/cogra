@@ -381,6 +381,17 @@ class ReplyWizardViewModel @Inject constructor(
     fun onStanceChange(directed: Double, interest: Double) =
         _state.update { it.copy(pDirected = directed, pInterest = interest) }
 
+    /**
+     * Unmarking clears the reason with it: a reason without the mark is
+     * refused on `["sensitiveReason"]`, and one kept out of sight would
+     * come back with the switch as words the author never re-read.
+     */
+    fun onSensitiveChange(marked: Boolean) = _state.update {
+        it.copy(sensitive = marked, sensitiveReason = if (marked) it.sensitiveReason else "")
+    }
+
+    fun onSensitiveReasonChange(reason: String) = _state.update { it.copy(sensitiveReason = reason) }
+
     fun onOpenHelp(topic: HelpTopic) = _state.update { it.copy(help = topic) }
 
     fun onCloseHelp() = _state.update { it.copy(help = null) }
@@ -459,6 +470,8 @@ class ReplyWizardViewModel @Inject constructor(
                     },
                     pDirected = current.pDirected,
                     pInterest = current.pInterest,
+                    sensitive = current.sensitive,
+                    sensitiveReason = current.sensitiveReason.ifBlank { null },
                 )
             ) {
                 is Outcome.Success -> outcome.value

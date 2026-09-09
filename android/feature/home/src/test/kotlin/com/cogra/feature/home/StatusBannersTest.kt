@@ -53,6 +53,8 @@ class StatusBannersTest {
                 onActorRestoredShown = onShown,
                 onApprovedShown = onShown,
                 onWelcomeShown = onShown,
+                onReciprocatedShown = onShown,
+                onResentShown = onShown,
             )
             SnackbarHost(host, modifier = Modifier.testTag("home_snackbar"))
         }
@@ -173,6 +175,33 @@ class StatusBannersTest {
     fun theApprovalAndWelcomeOneShotsShowTheSnackbar() {
         renderOneShots(HomeUiState(loading = false, approved = true))
         compose.onNodeWithTag("home_snackbar").assertExists()
+    }
+
+    @Test
+    fun aSignedVouchConfirmsThroughTheSnackbar() {
+        renderOneShots(HomeUiState(loading = false, reciprocated = true))
+        compose.onNodeWithTag("home_snackbar").assertExists()
+    }
+
+    @Test
+    fun aResentTokenConfirmsThroughTheSnackbar() {
+        renderOneShots(HomeUiState(loading = false, resent = true))
+        compose.onNodeWithTag("home_snackbar").assertExists()
+    }
+
+    @Test
+    fun aSignedVouchLeavesNoStandingLineInTheStack() {
+        // design/readme.md §3: a completed action is confirmed by a
+        // snackbar — the stack has no dismissal, so a line here stood
+        // until the app died (HT-4).
+        render(HomeUiState(loading = false, reciprocated = true))
+        compose.onNodeWithTag("home_reciprocated").assertDoesNotExist()
+    }
+
+    @Test
+    fun aResentTokenLeavesNoStandingLineOnTheVerifyCard() {
+        render(applicant(awaiting(emailVerified = false)).copy(resent = true))
+        compose.onNodeWithTag("verify_resent").assertDoesNotExist()
     }
 
     @Test

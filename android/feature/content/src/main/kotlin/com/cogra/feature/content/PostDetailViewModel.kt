@@ -6,6 +6,7 @@ import com.cogra.domain.CommentView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.content.LandingSignal
+import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.di.WebOrigin
@@ -39,7 +40,14 @@ data class ReplyThread(
 enum class TagTarget { COMMENT, REPLY, EDIT }
 
 data class PostDetailUiState(
+    /**
+     * There is nothing to show yet. Distinct from [refreshing]: a post
+     * the device had already read paints while its own read is still
+     * out, so the screen is busy without being empty (HT-10).
+     */
     val loading: Boolean = true,
+    /** A read is in flight — what the pull-to-refresh indicator says. */
+    val refreshing: Boolean = false,
     val post: PostView? = null,
     val comments: List<CommentView> = emptyList(),
     val commentsEndCursor: String? = null,
@@ -80,6 +88,7 @@ class PostDetailViewModel @Inject constructor(
     private val content: ContentRepository,
     private val landings: LandingSignal,
     private val reveals: SensitiveReveals,
+    private val seen: SeenPosts,
     @WebOrigin private val webOrigin: String,
 ) : ViewModel() {
 
@@ -109,6 +118,11 @@ class PostDetailViewModel @Inject constructor(
     fun start(id: String) {
         if (postId == id) return
         postId = id
+        // The post the reader just tapped is already on this device, so
+        // the screen opens on it and the read catches up behind. Only
+        // the post: the thread is always the fresh read's, so a comment
+        // never shows from a page nobody asked for.
+        seen.lastSeen(id)?.let { held -> _state.update { it.copy(loading = false, post = held) } }
         refresh()
     }
 
@@ -128,7 +142,7 @@ class PostDetailViewModel @Inject constructor(
 
     fun refresh() {
         val id = postId ?: return
-        _state.update { it.copy(loading = true) }
+        _state.update { it.copy(loading = it.post == null, refreshing = true) }
         val includePending = _state.value.includePending
         viewModelScope.launch {
             when (
@@ -139,7 +153,12 @@ class PostDetailViewModel @Inject constructor(
                     val detail = outcome.value
                     if (detail == null) {
                         _state.update {
-                            it.copy(loading = false, notFound = true, transportFault = null)
+                            it.copy(
+                                loading = false,
+                                refreshing = false,
+                                notFound = true,
+                                transportFault = null,
+                            )
                         }
                     } else {
                         // This read is the device's freshest word on
@@ -147,9 +166,13 @@ class PostDetailViewModel @Inject constructor(
                         // reader came from is still holding the state
                         // its own page carried.
                         landings.observed(detail.post.id, detail.post.landing, includePending)
+                        // The freshest word this device has: the next
+                        // open of this post starts from it.
+                        seen.saw(detail.post)
                         _state.update {
                             it.copy(
                                 loading = false,
+                                refreshing = false,
                                 transportFault = null,
                                 post = detail.post,
                                 comments = detail.comments.items,
@@ -160,9 +183,11 @@ class PostDetailViewModel @Inject constructor(
                         }
                     }
                 }
-                is Outcome.Refused -> _state.update { it.copy(loading = false, notFound = true) }
+                is Outcome.Refused -> _state.update {
+                    it.copy(loading = false, refreshing = false, notFound = true)
+                }
                 is Outcome.Failed -> _state.update {
-                    it.copy(loading = false, transportFault = TransportFault.REFRESH)
+                    it.copy(loading = false, refreshing = false, transportFault = TransportFault.REFRESH)
                 }
             }
         }

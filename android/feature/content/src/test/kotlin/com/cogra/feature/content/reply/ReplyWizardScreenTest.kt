@@ -65,6 +65,7 @@ class ReplyWizardScreenTest {
     private val sheets = mutableListOf<ReplySealSheet>()
     private val helps = mutableListOf<HelpTopic>()
     private val stances = mutableListOf<Pair<Double, Double>>()
+    private val marks = mutableListOf<Boolean>()
 
     @Composable
     private fun Wizard(state: ReplyWizardState) {
@@ -89,6 +90,8 @@ class ReplyWizardScreenTest {
             onCloseSheet = {},
             onLicenseChange = {},
             onStanceChange = { d, i -> stances += d to i },
+            onSensitiveChange = { marks += it },
+            onSensitiveReasonChange = {},
             onOpenHelp = { helps += it },
             onCloseHelp = {},
             onSign = { signs += 1 },
@@ -203,21 +206,64 @@ class ReplyWizardScreenTest {
     // -- `ReplySeal` --
 
     /**
-     * The seal draws the acts, the two rows it still lets the author
-     * change, and the two pills — and **not** a Sensitive row: the
-     * approved deviation of 2026-09-01, kept honest by a test so it
-     * cannot creep back in unnoticed before the veiled comment exists.
+     * The seal draws the acts, the three rows it still lets the author
+     * change, and the two pills — `ReplySeal` 1:1, the Mark row
+     * included now that a veiled comment has a face (backlog 25.4).
      */
     @Test
-    fun theSealDrawsItsRowsAndNoSensitiveRow() {
+    fun theSealDrawsItsRows() {
         compose.setContent { Wizard(sealWithWords()) }
 
         compose.onNodeWithTag("reply_seal_acts").assertIsDisplayed()
         compose.onNodeWithTag("reply_seal_total").assertExists()
         compose.onNodeWithTag("reply_seal_stance").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("reply_seal_license").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("wizard_seal_sensitive").assertDoesNotExist()
-        compose.onNodeWithTag("reply_seal_sensitive").assertDoesNotExist()
+        compose.onNodeWithTag("reply_seal_sensitive").performScrollTo().assertIsDisplayed()
+    }
+
+    /** `ReplySeal` 8: Mark opens the one sensitive sheet. */
+    @Test
+    fun markOpensTheSensitiveSheet() {
+        compose.setContent { Wizard(sealWithWords()) }
+
+        compose.onNodeWithTag("reply_seal_sensitive_action").performScrollTo().performClick()
+
+        assertThat(sheets).containsExactly(ReplySealSheet.Sensitive)
+    }
+
+    /**
+     * The sheet is the post seal's own, at the reply's tags — and its
+     * reason field is dead until the switch is on, because a reason
+     * without the mark is refused on `["sensitiveReason"]`.
+     */
+    @Test
+    fun theSensitiveSheetsReasonIsDeadUntilTheSwitchIsOn() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(sheet = ReplySealSheet.Sensitive))
+        }
+
+        compose.onNodeWithTag("reply_sensitive_sheet").assertExists()
+        compose.onNodeWithTag("reply_sensitive_switch").assertExists()
+        compose.onNodeWithTag("reply_sensitive_reason").assertIsNotEnabled()
+    }
+
+    @Test
+    fun theSensitiveSheetsReasonLivesUnderItsOwnMark() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(sheet = ReplySealSheet.Sensitive, sensitive = true))
+        }
+
+        compose.onNodeWithTag("reply_sensitive_reason").assertIsEnabled()
+    }
+
+    /** The row reads its state both ways (`Not marked · Mark` / `Marked · Change`). */
+    @Test
+    fun theMarkRowReadsWhereTheMarkStands() {
+        compose.setContent { Wizard(sealWithWords().copy(sensitive = true)) }
+
+        // "Not marked" is a different string, so an exact match pins
+        // which reading the row is showing.
+        compose.onNodeWithText("Marked").assertExists()
     }
 
     /** `ReplySeal` 6: Adjust opens the pad. */

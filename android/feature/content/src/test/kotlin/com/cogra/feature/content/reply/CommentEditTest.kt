@@ -38,6 +38,8 @@ class CommentEditTest {
     private var keeps = 0
     private var discards = 0
     private var actsOpens = 0
+    private var sensitiveOpens = 0
+    private val marks = mutableListOf<Boolean>()
     private var pickerOpens = 0
     private var describes = 0
     private val removals = mutableListOf<Int>()
@@ -55,6 +57,9 @@ class CommentEditTest {
             onKeepWriting = { keeps += 1 },
             onDiscard = { discards += 1 },
             onOpenActs = { actsOpens += 1 },
+            onOpenSensitive = { sensitiveOpens += 1 },
+            onSensitiveChange = { marks += it },
+            onSensitiveReasonChange = {},
             onCloseSheet = {},
             onOpenHelp = { helps += it },
             onCloseHelp = {},
@@ -98,16 +103,41 @@ class CommentEditTest {
     }
 
     /**
-     * **The board has no sensitive Mark row**, and unlike `ReplySeal`
-     * that is 1:1 rather than a deviation: `graph.json` gives
-     * `CommentEdit` twelve edges and none is a mark.
+     * The board's last term row, beside the locked license: the license
+     * is fixed by contract at signing, while the mark is the author's
+     * ongoing judgment about their own words (backlog 25.2).
      */
     @Test
-    fun theEditDrawsNoSensitiveRow() {
+    fun theEditDrawsTheSensitiveRowBesideTheLockedLicense() {
         compose.setContent { Edit(edited()) }
 
-        compose.onNodeWithTag("comment_edit_sensitive").assertDoesNotExist()
-        compose.onNodeWithTag("wizard_seal_sensitive").assertDoesNotExist()
+        compose.onNodeWithTag("comment_edit_sensitive").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("comment_edit_sensitive_action").assertExists()
+    }
+
+    /** Mark opens the one sensitive sheet, at this surface's tags. */
+    @Test
+    fun markOpensTheSensitiveSheet() {
+        compose.setContent { Edit(edited()) }
+
+        compose.onNodeWithTag("comment_edit_sensitive_action").performScrollTo().performClick()
+
+        assertThat(sensitiveOpens).isEqualTo(1)
+    }
+
+    @Test
+    fun theSensitiveSheetsReasonIsDeadUntilTheSwitchIsOn() {
+        compose.setContent { Edit(edited().copy(sensitiveOpen = true)) }
+
+        compose.onNodeWithTag("comment_edit_sensitive_sheet").assertExists()
+        compose.onNodeWithTag("comment_edit_sensitive_reason").assertIsNotEnabled()
+    }
+
+    @Test
+    fun theSensitiveSheetsReasonLivesUnderItsOwnMark() {
+        compose.setContent { Edit(edited().copy(sensitiveOpen = true, sensitive = true)) }
+
+        compose.onNodeWithTag("comment_edit_sensitive_reason").assertIsEnabled()
     }
 
     /** The licence never changes, so the row shows it and offers nothing. */

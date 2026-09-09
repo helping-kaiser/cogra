@@ -620,25 +620,32 @@ private fun StancePadOverlay(
                     Text("?", style = MaterialTheme.typography.titleMedium)
                 }
             }
+            // The help REPLACES the readouts and the input rather than
+            // growing below them (StanceControl.jsx, StanceCoachMark.prompt.md):
+            // the pad is parked and operated by muscle memory, and a panel
+            // that pushes Set further from the thumb defeats the parking.
+            // Appending it also grew the card past the window on a phone,
+            // where PadAtLowerCentre's clamp gives up on the lower anchor
+            // and snaps the whole pad to the top — the jump jakob saw.
             if (explaining) {
-                Text(
-                    text = stringResource(R.string.stance_explain_body),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.testTag("${testTagPrefix}_stance_explanation"),
+                StancePadHelp(
+                    onBack = { explaining = false },
+                    testTagPrefix = testTagPrefix,
                 )
+            } else {
+                StanceReadout(state.pick, testTagPrefix)
+                // The chosen surface replaces the pad, it does not sit beside
+                // it: an alternate is the input, not a second opinion
+                // (design.md §8.6).
+                if (state.inputMode == StanceInputSurface.PAD) {
+                    StancePadField(state.pick, onPick = onPick, enabled = !state.busy)
+                }
+                StanceLandingLine(state.landing, testTagPrefix)
             }
-            StanceReadout(state.pick, testTagPrefix)
-            // The chosen surface replaces the pad, it does not sit beside
-            // it: an alternate is the input, not a second opinion
-            // (design.md §8.6).
-            if (state.inputMode == StanceInputSurface.PAD) {
-                StancePadField(state.pick, onPick = onPick, enabled = !state.busy)
-            }
-            StanceLandingLine(state.landing, testTagPrefix)
             if (sticky) {
                 // The alternates are the accessible path, so the way into
                 // them is present whatever the stored preference is.
-                if (state.exactValues || state.inputMode != StanceInputSurface.PAD) {
+                if (!explaining && (state.exactValues || state.inputMode != StanceInputSurface.PAD)) {
                     StanceExactValues(state.inputMode, state.pick, onPick, testTagPrefix)
                 }
                 if (state.failed) {
@@ -646,8 +653,10 @@ private fun StancePadOverlay(
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
+                        // Help can never be signed through: the field it
+                        // explains is not on screen to check against.
                         onClick = onCommit,
-                        enabled = !state.busy,
+                        enabled = !state.busy && !explaining,
                         modifier = Modifier.testTag("${testTagPrefix}_stance_set"),
                     ) {
                         Text(stringResource(R.string.stance_set))
@@ -684,6 +693,45 @@ private fun StancePadOverlay(
                     Text(stringResource(R.string.stance_severance_open))
                 }
             }
+        }
+    }
+}
+
+/**
+ * The pad's own help, standing in the field's place while it is up.
+ *
+ * Four lines, in the order a reader needs them
+ * (`design/components/stance/StanceCoachMark.jsx`): what the field
+ * means, what commits, why the three readouts differ, and what the way
+ * out costs. The third is the one nobody can guess — that a pick ADDS
+ * to what was said before — and it is why "Your pick" and the resulting
+ * stance are two different numbers.
+ */
+@Composable
+private fun StancePadHelp(onBack: () -> Unit, testTagPrefix: String) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("${testTagPrefix}_stance_explanation"),
+    ) {
+        listOf(
+            R.string.stance_explain_field,
+            R.string.stance_explain_commit,
+            R.string.stance_explain_adds,
+            R.string.stance_explain_sever,
+        ).forEach { line ->
+            Text(
+                text = stringResource(line),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        TextButton(
+            onClick = onBack,
+            modifier = Modifier.testTag("${testTagPrefix}_stance_explain_back"),
+        ) {
+            Text(stringResource(R.string.stance_explain_back))
         }
     }
 }
