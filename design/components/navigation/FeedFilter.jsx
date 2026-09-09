@@ -40,7 +40,12 @@ import { HelpDot } from "../core/HelpDot.jsx";
    and offers to switch it back — it is not refused at the chip. */
 
 /* Every kind the network ranks — ONE list, shared by the feed and search
-   (ruled 2026-08-28: parity, and the word is "Profiles" everywhere). */
+   (ruled 2026-08-28: parity, and the word is "Profiles" everywhere).
+
+   THE VALUE IS THE RECORD'S WORD, THE LABEL IS THE SCREEN'S (the naming law,
+   readme §13, the tag round). `topics` keys the kind the graph carries and
+   `Tags` is what the reader is shown. The two never have to agree, and this
+   list is the one place the difference is assigned. */
 export const FEED_KINDS = [
   { value: "posts", label: "Posts" },
   { value: "comments", label: "Comments" },
@@ -48,7 +53,7 @@ export const FEED_KINDS = [
   { value: "messages", label: "Messages" },
   { value: "profiles", label: "Profiles" },
   { value: "proposals", label: "Proposals" },
-  { value: "topics", label: "Topics" },
+  { value: "topics", label: "Tags" },
   { value: "items", label: "Items" },
   { value: "campaigns", label: "Campaigns" },
   { value: "offers", label: "Offers" },

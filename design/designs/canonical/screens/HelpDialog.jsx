@@ -24,7 +24,7 @@ export function Screen() {
             Signed actions
           </h2>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Each piece of a post — the post itself, every topic, every citation — is its own signed action, written in your
+            Each piece of a post — the post itself, every tag, every citation — is its own signed action, written in your
             name. They sign together: all of them land, or none does.
           </p>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>

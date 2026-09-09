@@ -25,6 +25,7 @@ import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
+import { Snackbar } from "@/lib/ui/snackbar";
 import { DIRECTED_LABEL, INTEREST_LABEL } from "@/lib/ui/stance-format";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 import { TransportError } from "@/lib/ui/transport-error";
@@ -60,6 +61,8 @@ export function InvitesView() {
   const [transportFailed, setTransportFailed] = useState(false);
   const [signIncomplete, setSignIncomplete] = useState(false);
   const [vouchSigned, setVouchSigned] = useState(false);
+  // Stable, so the snackbar's timer is not restarted by every render under it.
+  const dismissVouchSigned = useCallback(() => setVouchSigned(false), []);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copyFailedId, setCopyFailedId] = useState<string | null>(null);
 
@@ -235,11 +238,13 @@ export function InvitesView() {
           {invitesMessage(error)}
         </p>
       )}
-      {vouchSigned && (
-        <p role="status" data-testid="invites_vouch_signed" className="text-body-medium">
-          Approved — your vouch is signed and on its way.
-        </p>
-      )}
+      {/* The inviter's half of the same rule: a completed action is confirmed
+          by a snackbar, never by a line that stays (design/readme.md §3). */}
+      <Snackbar
+        testId="invites_vouch_signed"
+        message={vouchSigned ? "Approved — your vouch is signed and on its way." : null}
+        onDismiss={dismissVouchSigned}
+      />
       {signIncomplete && (
         <p role="alert" data-testid="invites_sign_incomplete" className="text-body-medium text-error">
           The approval went through, but the vouch didn&apos;t finish signing. It&apos;s saved on

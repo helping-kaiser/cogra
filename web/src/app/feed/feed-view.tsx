@@ -5,6 +5,11 @@
 // ranked feed. Reading needs no session (web.md "Routes"), so the
 // surface lives outside the (app) gate; only the write affordance
 // swaps on the auth phase.
+//
+// IT REMEMBERS WHERE THE READER WAS — the pages they had loaded and the
+// offset they had reached — in `feed-memory.ts`, which says why an external
+// store and not the router. Both are read at mount and applied before the
+// first paint, so opening a post and coming back is not a fresh feed.
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -16,6 +21,7 @@ import { appendDeduped } from "@/lib/api/pagination";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthPhase } from "@/lib/session/provider";
+import { useRegistrationProgress } from "@/lib/signing/provider";
 import { RestoreCard } from "@/app/applicant-status";
 import { StatusBanners } from "@/app/status-banners";
 import { Button, buttonClassName } from "@/lib/ui/button";
@@ -23,9 +29,12 @@ import { Card } from "@/lib/ui/card";
 import { CograBand } from "@/lib/ui/cogra-band";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PostCard } from "@/lib/ui/post-card";
+import { useMeasureEffect } from "@/lib/ui/measure-effect";
+import { scrollElementOf, useScrollHost } from "@/lib/ui/scroll-host";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
+import { recallFeed, rememberFeed, rememberFeedOffset } from "./feed-memory";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 function GuestBanner() {
@@ -54,14 +63,28 @@ export function FeedView({
   store?: IdentityStore;
 } = {}) {
   const keyOnDevice = useKeyOnDevice(store);
+  // A KEY THAT WAS NEVER MADE IS NOT A KEY TO RESTORE. This card used to ask
+  // on "no key in this browser" alone, so a just-created account — which has
+  // no key anywhere yet — was told to restore one AND offered the ceremony in
+  // the applicant stack below it, both at once. The boards keep the two
+  // apart: `KeyElsewhere` is for an account whose key exists somewhere else,
+  // `KeyCeremony` for one that has none, and no board carries both.
+  const progress = useRegistrationProgress();
+  const noKeyYet = progress?.kind === "awaitingApproval" && !progress.keyAttached;
   const client = useApolloClient();
   const phase = useAuthPhase();
   const router = useRouter();
   const outcome = composeOutcomeOf(useSearchParams().get("compose"));
-  const [posts, setPosts] = useState<readonly PostView[]>([]);
-  const [endCursor, setEndCursor] = useState<string | null>(null);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const host = useScrollHost();
+  // Read ONCE, at mount, through a lazy state initializer — the one thing
+  // that may be read during render and never changes under it. What the feed
+  // left behind last time it was on screen; seeding the state below from it is
+  // what makes the pages come back on the FIRST render, before any paint.
+  const [remembered] = useState(recallFeed);
+  const [posts, setPosts] = useState<readonly PostView[]>(remembered?.posts ?? []);
+  const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
+  const [hasNextPage, setHasNextPage] = useState(remembered?.hasNextPage ?? false);
+  const [loading, setLoading] = useState(remembered === null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -94,7 +117,49 @@ export function FeedView({
     };
   }, [client]);
 
-  useEffect(() => refresh(), [refresh]);
+  // A remembered feed is not re-fetched. A refresh takes no cursor, so it
+  // would answer with page one and throw away every page after it — which is
+  // the loss this whole file exists to stop. The reader gets new posts from a
+  // reload or from Retry, both of which are deliberate.
+  useEffect(() => {
+    if (remembered !== null) return;
+    return refresh();
+  }, [refresh, remembered]);
+
+  // The pages, kept for the next mount. Written from an effect rather than
+  // from each fetch so no path can set state and forget to record it.
+  useEffect(() => {
+    if (loading) return;
+    rememberFeed({ posts, endCursor, hasNextPage });
+  }, [loading, posts, endCursor, hasNextPage]);
+
+  // The place. Restored before the browser paints — the pages are already in
+  // this render, so the scroller is as tall now as it was when the reader
+  // left, and the offset lands where they were rather than at the end of a
+  // shorter list.
+  useMeasureEffect(() => {
+    const scroller = scrollElementOf(host);
+    if (scroller === null || remembered === null) return;
+    scroller.scrollTop = remembered.offset;
+  }, [host, remembered]);
+
+  // Kept on the way past rather than on unmount: a mobile browser may never
+  // run an unmount, and one assignment per frame is cheaper than a render.
+  useEffect(() => {
+    const scroller = scrollElementOf(host);
+    if (scroller === null) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        rememberFeedOffset(scroller.scrollTop);
+        ticking = false;
+      });
+    };
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => scroller.removeEventListener("scroll", onScroll);
+  }, [host]);
 
   const onLoadMore = async () => {
     if (loadingMore || !hasNextPage) return;
@@ -122,7 +187,7 @@ export function FeedView({
           <div className="flex flex-col gap-4 px-6">
             {/* Must-act, so it collapses into the header and follows the
                 reader back up instead of living only at the top. */}
-            {phase === "signedIn" && keyOnDevice === false && <RestoreCard />}
+            {phase === "signedIn" && keyOnDevice === false && !noKeyYet && <RestoreCard />}
             {/* The signed-out reader's card rides the same slot: the one
                 sign-in-or-join entry, in place of a header action. */}
             {phase === "signedOut" && <GuestBanner />}

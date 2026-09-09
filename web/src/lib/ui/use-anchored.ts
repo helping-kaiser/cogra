@@ -14,18 +14,10 @@
 // Re-measuring on resize covers the on-screen keyboard and rotation,
 // which change the viewport under an already-open surface.
 
-import { useEffect, useLayoutEffect, useState, type CSSProperties, type RefObject } from "react";
+import { useState, type CSSProperties, type RefObject } from "react";
 
 import { placePad, type PadPlacement } from "@/lib/stance/pad-placement";
-
-/**
- * `useLayoutEffect` on the client, `useEffect` on the server. Next
- * prerenders client components, and React warns that a layout effect
- * cannot run there — correctly, since there is nothing to measure. The
- * branch is on the environment, not on a render, so the hook order is
- * the same every time either build runs.
- */
-const useMeasureEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+import { useMeasureEffect } from "./measure-effect";
 
 export function useAnchoredPlacement(
   anchor: RefObject<HTMLElement | null>,

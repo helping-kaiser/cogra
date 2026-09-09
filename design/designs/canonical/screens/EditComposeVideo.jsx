@@ -38,11 +38,11 @@ export function Screen() {
         <TextField label="Description" corner="Optional" rows={2} value="Took the coast road instead of the tunnel. Four hours longer, worth every minute." />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Topics</FieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <TopicRemovable topic="coastroad" />
-            <Button variant="outline" size="sm">Add a topic</Button>
+            <TopicRemovable topic="coastroad" onEdit={() => {}} />
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>

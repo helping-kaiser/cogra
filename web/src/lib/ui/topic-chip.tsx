@@ -22,7 +22,6 @@ import Link from "next/link";
 export function TopicChip({
   name,
   href,
-  pending = false,
   onRemove,
   removeLabel,
   onSelect,
@@ -35,8 +34,6 @@ export function TopicChip({
   name: string;
   /** Omit for a draft chip not yet backed by a route (composer). */
   href?: string;
-  /** The winning record is still in flight (`TopicClaim.pending`). */
-  pending?: boolean;
   /** Present only for a removable chip. */
   onRemove?: () => void;
   removeLabel?: string;
@@ -46,10 +43,10 @@ export function TopicChip({
   /** Whether `onSelect`'s panel is open, for the label's `aria-expanded`. */
   expanded?: boolean;
   /**
-   * The one-line form `TopicsLine` uses: capped at 96px and ellipsised, so
-   * two whole chips always fit beside the counts. `inline-block` rather than
-   * `inline-flex` because `text-overflow` needs an inline formatting context
-   * — the same swap `design/components/content/TopicsLine.jsx:21-28` makes.
+   * The one-line form `TopicsLine` uses: the label on one line, the chip
+   * sized to it. It carries NO width ceiling — a chip that cannot fit its
+   * line is dropped from it rather than cut (jakob's ruling, 2026-09-09), so
+   * the only thing this shape adds is the promise never to wrap or shrink.
    */
   capped?: boolean;
   testId?: string;
@@ -60,7 +57,7 @@ export function TopicChip({
       data-testid={testId}
       className={
         capped
-          ? "inline-block max-w-24 flex-none overflow-hidden text-ellipsis whitespace-nowrap rounded-full bg-secondary-container px-3 py-1 align-middle text-label-medium text-on-secondary-container"
+          ? "inline-block flex-none whitespace-nowrap rounded-full bg-secondary-container px-3 py-1 align-middle text-label-medium text-on-secondary-container"
           : "inline-flex items-center gap-1 rounded-full bg-secondary-container px-3 py-1 text-label-medium text-on-secondary-container"
       }
     >
@@ -81,15 +78,6 @@ export function TopicChip({
         </button>
       ) : (
         <span>{label}</span>
-      )}
-      {pending && (
-        <span
-          aria-hidden="true"
-          data-testid={testId !== undefined ? `${testId}-pending` : undefined}
-          className="text-on-surface-variant"
-        >
-          …
-        </span>
       )}
       {onRemove !== undefined && (
         <button
