@@ -853,6 +853,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "Three weekends of walking the same stretch", tag: "button" },
     ...nav(10),
   ],
+  // The failed next page is this board's whole subject; the profile beneath it
+  // is `Profile`'s and is wired there (the pattern-exemplar exemption).
+  ProfileMoreFailed: [{ n: 1, find: ">Retry</button>", tag: "button" }],
+  ProfileNotFound: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  ProfileUnreachable: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Retry</button>", tag: "button" },
+    ...nav(3),
+  ],
   ProfileApplicant: [
     ...ownProfile(),
     { n: 9, find: "First light over the flats", tag: "button" },
@@ -1035,6 +1044,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
     { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
   ],
+  InviteEntryError: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'id="invite-link"', tag: "input" },
+    { n: 3, find: ">Continue</button>", tag: "button" },
+    { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
+    { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
+  ],
   JoinInvalid: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'id="invite-link"', tag: "input" },
@@ -1046,6 +1062,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'id="reset-email"', tag: "input" },
     { n: 3, find: ">Send reset link</button>", tag: "button" },
+  ],
+  // No back arrow: a mail link has no previous screen of ours behind it.
+  ResetNew: [
+    { n: 1, find: 'id="new-password"', tag: "input" },
+    { n: 2, find: 'aria-label="Show password"', tag: "button" },
+    { n: 3, find: ">Set the new password</button>", tag: "button" },
   ],
   KeyCeremony: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -1065,6 +1087,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Go back</button>", tag: "button" },
   ],
   Verified: [{ n: 1, find: ">Back to CoGra</button>", tag: "button" }],
+  // Neither draws a back arrow: a mail link has no previous screen of ours.
+  VerifiedApp: [{ n: 1, find: ">Go to the feed</button>", tag: "button" }],
+  VerifyExpired: [
+    { n: 1, find: ">Resend the link</button>", tag: "button" },
+    { n: 2, find: ">Go to the feed</button>", tag: "button" },
+  ],
   // The ask over the borrowed view, also scanExempt. TWO "Sign in or join"
   // buttons stand on this board — the band's and the ask's — and both take
   // the number, the way the comments page's under-scrim repeats do: one edge
@@ -1144,6 +1172,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Keep it pending, restore later</button>", tag: "button" },
   ],
   HelpDialog: [
+    { n: 1, find: ">Close</button>", tag: "button" },
+    { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ReplyPadHelp: [
     { n: 1, find: ">Close</button>", tag: "button" },
     { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
