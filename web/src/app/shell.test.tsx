@@ -110,7 +110,8 @@ describe("AppShell", () => {
     const scroller = await screen.findByTestId("app-scroller");
     expect(scroller.className).toContain("overflow-y-auto");
     expect(scroller.className).toContain("flex-1");
-    expect(scroller.parentElement?.className).toContain("h-dvh");
+    // The column fills a body the root layout pins to the dynamic viewport.
+    expect(scroller.parentElement?.className).toContain("h-full");
     // The content scrolls INSIDE that middle; the band is its sibling, so no
     // amount of content can reach it.
     expect(scroller).toContainElement(screen.getByText("content"));
