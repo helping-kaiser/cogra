@@ -344,42 +344,14 @@ internal fun CommentEditScreen(
         }
     }
 
-    if (state.anySheetOpen) {
-        val sheetState = rememberModalBottomSheetState()
-        ModalBottomSheet(onDismissRequest = onCloseSheet, sheetState = sheetState) {
-            val describing = state.describingIndex?.let { state.picked.getOrNull(it) }
-            when {
-                describing != null -> DescribeSheet(
-                    item = MediaItem(
-                        describing.uri,
-                        describing.sourceRatio ?: 1f,
-                        describing.altText.ifBlank { null },
-                    ),
-                    value = describing.altText,
-                    onValueChange = { onAltTextChange(describing.uri, it) },
-                    onDone = onCloseSheet,
-                    onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
-                    testTag = "comment_edit_describe_sheet",
-                )
-
-                state.actsOpen -> CommentEditActsSheet(state = state, onDone = onCloseSheet)
-
-                // The post seal's own sheet — one sheet for every
-                // surface that marks (ruling 42).
-                state.sensitiveOpen -> SensitiveSheet(
-                    marked = state.sensitive,
-                    reason = state.sensitiveReason.orEmpty(),
-                    onMarkedChange = onSensitiveChange,
-                    onReasonChange = onSensitiveReasonChange,
-                    onDone = onCloseSheet,
-                    onHelp = { onOpenHelp(HelpTopic.MarkingAsSensitive) },
-                    testTagPrefix = "comment_edit",
-                )
-
-                else -> Unit
-            }
-        }
-    }
+    CommentEditSheets(
+        state = state,
+        onAltTextChange = onAltTextChange,
+        onSensitiveChange = onSensitiveChange,
+        onSensitiveReasonChange = onSensitiveReasonChange,
+        onCloseSheet = onCloseSheet,
+        onOpenHelp = onOpenHelp,
+    )
 
     state.help?.let { topic ->
         HelpDialog(
@@ -388,6 +360,60 @@ internal fun CommentEditScreen(
             onClose = onCloseHelp,
             testTag = "comment_edit_help_dialog",
         )
+    }
+}
+
+/**
+ * Every drawer the edit can open, in one place.
+ *
+ * They are one at a time by construction ([CommentEditState.anySheetOpen]),
+ * so they share the one `ModalBottomSheet` rather than each mounting a
+ * sheet of its own.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CommentEditSheets(
+    state: CommentEditState,
+    onAltTextChange: (String, String) -> Unit,
+    onSensitiveChange: (Boolean) -> Unit,
+    onSensitiveReasonChange: (String) -> Unit,
+    onCloseSheet: () -> Unit,
+    onOpenHelp: (HelpTopic) -> Unit,
+) {
+    if (!state.anySheetOpen) return
+    val sheetState = rememberModalBottomSheetState()
+    ModalBottomSheet(onDismissRequest = onCloseSheet, sheetState = sheetState) {
+        val describing = state.describingIndex?.let { state.picked.getOrNull(it) }
+        when {
+            describing != null -> DescribeSheet(
+                item = MediaItem(
+                    describing.uri,
+                    describing.sourceRatio ?: 1f,
+                    describing.altText.ifBlank { null },
+                ),
+                value = describing.altText,
+                onValueChange = { onAltTextChange(describing.uri, it) },
+                onDone = onCloseSheet,
+                onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
+                testTag = "comment_edit_describe_sheet",
+            )
+
+            state.actsOpen -> CommentEditActsSheet(state = state, onDone = onCloseSheet)
+
+            // The post seal's own sheet — one sheet for every surface
+            // that marks (ruling 42).
+            state.sensitiveOpen -> SensitiveSheet(
+                marked = state.sensitive,
+                reason = state.sensitiveReason.orEmpty(),
+                onMarkedChange = onSensitiveChange,
+                onReasonChange = onSensitiveReasonChange,
+                onDone = onCloseSheet,
+                onHelp = { onOpenHelp(HelpTopic.MarkingAsSensitive) },
+                testTagPrefix = "comment_edit",
+            )
+
+            else -> Unit
+        }
     }
 }
 

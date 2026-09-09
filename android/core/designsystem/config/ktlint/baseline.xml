@@ -26,11 +26,11 @@
         <error line="545" column="5" source="standard:class-signature" />
         <error line="546" column="5" source="standard:class-signature" />
         <error line="546" column="31" source="standard:class-signature" />
-        <error line="864" column="5" source="standard:class-signature" />
-        <error line="865" column="5" source="standard:class-signature" />
-        <error line="866" column="5" source="standard:class-signature" />
-        <error line="867" column="5" source="standard:class-signature" />
-        <error line="867" column="24" source="standard:class-signature" />
+        <error line="912" column="5" source="standard:class-signature" />
+        <error line="913" column="5" source="standard:class-signature" />
+        <error line="914" column="5" source="standard:class-signature" />
+        <error line="915" column="5" source="standard:class-signature" />
+        <error line="915" column="24" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/core/designsystem/TagParameterSliders.kt">
         <error line="46" column="1" source="standard:no-consecutive-blank-lines" />
@@ -105,21 +105,21 @@
     </file>
     <file name="src/test/kotlin/com/cogra/core/designsystem/StancePadTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="678" column="41" source="standard:argument-list-wrapping" />
-        <error line="678" column="53" source="standard:argument-list-wrapping" />
-        <error line="678" column="58" source="standard:argument-list-wrapping" />
-        <error line="678" column="61" source="standard:argument-list-wrapping" />
-        <error line="678" column="64" source="standard:argument-list-wrapping" />
-        <error line="678" column="86" source="standard:argument-list-wrapping" />
-        <error line="678" column="109" source="standard:argument-list-wrapping" />
-        <error line="678" column="121" source="standard:max-line-length" />
-        <error line="678" column="126" source="standard:argument-list-wrapping" />
-        <error line="691" column="41" source="standard:argument-list-wrapping" />
-        <error line="691" column="61" source="standard:argument-list-wrapping" />
-        <error line="691" column="83" source="standard:argument-list-wrapping" />
-        <error line="691" column="105" source="standard:argument-list-wrapping" />
-        <error line="691" column="121" source="standard:argument-list-wrapping" />
-        <error line="691" column="121" source="standard:max-line-length" />
+        <error line="700" column="41" source="standard:argument-list-wrapping" />
+        <error line="700" column="53" source="standard:argument-list-wrapping" />
+        <error line="700" column="58" source="standard:argument-list-wrapping" />
+        <error line="700" column="61" source="standard:argument-list-wrapping" />
+        <error line="700" column="64" source="standard:argument-list-wrapping" />
+        <error line="700" column="86" source="standard:argument-list-wrapping" />
+        <error line="700" column="109" source="standard:argument-list-wrapping" />
+        <error line="700" column="121" source="standard:max-line-length" />
+        <error line="700" column="126" source="standard:argument-list-wrapping" />
+        <error line="713" column="41" source="standard:argument-list-wrapping" />
+        <error line="713" column="61" source="standard:argument-list-wrapping" />
+        <error line="713" column="83" source="standard:argument-list-wrapping" />
+        <error line="713" column="105" source="standard:argument-list-wrapping" />
+        <error line="713" column="121" source="standard:argument-list-wrapping" />
+        <error line="713" column="121" source="standard:max-line-length" />
     </file>
     <file name="src/test/kotlin/com/cogra/core/designsystem/TagParameterSlidersTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
