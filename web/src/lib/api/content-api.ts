@@ -400,6 +400,14 @@ export async function prepareComment(
      * server applies the +0.1 policy default to each.
      */
     stance?: StancePair;
+    /**
+     * The author's own sensitive mark, as ReplySeal's third term row sets it.
+     * Stated rather than omitted for the reason an edit states it: the mark is
+     * complete state on the wire, and a comment that carries one has to say so
+     * on the record that mints it.
+     */
+    sensitive?: boolean;
+    sensitiveReason?: string;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -414,6 +422,7 @@ export async function prepareComment(
             // A comment is words PLUS optional pictures — the words-or-media
             // XOR is the post's rule alone (D16), so both travel together.
             attachments: attachmentInputs(fields.attachments),
+            ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
             // Tagging is part of the compose gesture on a comment as on
             // a post (api-spec.md `PrepareCommentInput.tags`, "same rules
             // as on a Post") — one batch on the minting record.
