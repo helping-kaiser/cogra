@@ -517,3 +517,66 @@ listener the verb and not the object. Under them:
 `Nothing here is sent anywhere — the key is read from this browser and
 shown.`
 
+The six subpages the round's review added come up for blessing in the
+same pass. A sheet opened from settings is titled by the row that opened
+it, so each heading below is a row's own words.
+
+**The default license** (`SettingsLicense`) is titled `Default license`
+and says what a default does, which the seal's sheet cannot: `Where
+every new post starts. A post's terms settle when it is first signed, so
+changing this never reaches one you have already published.` The seal's
+`Terms for anyone who reuses this.` is written for the post in front of
+it and stays there. The reading under the axes names the pair the way
+the read surfaces do — `Public domain — nobody owes you a name, and uses
+go unlogged.`, the two tier hints joined, so the word and what it means
+arrive together.
+
+**What your feed shows** (`SettingsReading`) is titled with the row and
+the filter's accessible name, and carries the group footnote's first
+sentence where a covering sheet hides the footnote: `Every feed starts
+from this.` The second sentence stays under the row, where the reader
+meets it first. Nothing else in the sheet changes — the sections, hints
+and `Reset` are the feed's own.
+
+**Change your password** (`ChangePassword`) opens with the row's
+footnote said where the act is, plus the half it could not say there:
+`Changing your password signs out every other device. This one stays
+signed in.` `ResetNew`'s *every device* is not a drift — a reset
+revokes the session doing it and a change does not, and the two lines
+exist to keep that difference visible. Fields `Current password` and
+`New password` with `At least 12 characters.`, the commitment `Change
+password`, and last, the reason the first field is there at all:
+`Your current password is asked for even though you are signed in: a
+live session is not proof enough to change the credential behind it.`
+
+**Change your handle** (`ChangeHandle`) says the calm part before the
+costly one. `@sol is how people mention and find you. Everything you
+have published stays yours — the handle is a name, not the account.`
+The field is `New handle` with the rules where they are typed:
+`3 to 30 characters: letters, numbers and underscore. Handles are always
+lowercase.` — the fold is said because a reader who types capitals will
+otherwise think the field ate them. The commitment is `Change handle`,
+and the cost is last and unsoftened: `Links to your old handle stop
+working the moment you change it, and anyone can claim it afterwards.`
+
+**Change your email** (`ChangeEmail`) names why it is guarded: `Your
+email signs you in, and it is the only way back if you lose your
+password — so a change is proved from both ends.` Fields `New email` and
+`Current password`, the commitment `Change email`, and what happens
+next, with the address named rather than described: `A code goes to
+sol@solferreira.art and a link to the new address. Your email is
+unchanged until both have been answered.`
+
+**Confirm the change** (`ChangeEmailConfirm`) replaces a shipped line
+that is not true. Both apps say *Check both inboxes — either message's
+code confirms the change*, which reads as one message being enough;
+`auth.md` and `api-spec.md` say the change applies only once both sides
+have landed, and that the two sides are not the same errand. The board
+says so: `A code went to sol@solferreira.art and a link to
+sol@ferreira.studio. Both have to be answered, in either order, before
+your email moves.` The field keeps its shipped name, `Confirmation
+code`, with `From the message to sol@solferreira.art.` under it so the
+reader knows which message to open; `Confirm email change` keeps its
+own. Last: `Until both sides land your account keeps the address it
+has, and a reset still goes there.`
+
