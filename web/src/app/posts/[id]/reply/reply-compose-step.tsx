@@ -17,6 +17,7 @@
 
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
 import { PillButton } from "@/lib/ui2/pill-button";
+import { FIELD_BOX } from "@/lib/ui2/text-field";
 import {
   CommentAttachments,
   commentDropHandlers,
@@ -86,16 +87,26 @@ export function ReplyComposeStep({
     >
       <ReplyTargetChip target={state.target} />
 
-      {/* The words carry no label box: the screen is titled "Reply" and the
-          target sits directly above, so a second naming would be noise. The
-          accessible name says it instead. */}
+      {/* The words carry no label ABOVE them: the screen is titled "Reply" and
+          the target sits directly on top, so a second naming would be noise —
+          the accessible name says it instead. They do carry the field's own
+          BOX: `TextField.prompt.md` puts every composer textarea on the
+          extra-small rung with a 1px outline at rest, and a field with no
+          edge until it is focused does not read as somewhere to write.
+
+          WHERE THE SLACK GOES, exactly as Android decides it
+          (`ReplyComposeStep.kt:79-95`): the words fill the column while they
+          are the only thing in it, and take a tall natural height once a clip
+          or a refusal needs the room below them. */}
       <textarea
         data-testid="reply-words"
         aria-label={`Your reply to ${state.target.label}`}
         value={state.words}
         rows={4}
         onChange={(event) => onWords(event.target.value)}
-        className="cg-focus w-full resize-none border-0 bg-transparent p-0 text-body-large text-on-surface outline-none placeholder:text-on-surface-variant"
+        className={`${FIELD_BOX} resize-none ${
+          video || refusals.length > 0 ? "min-h-32" : "min-h-48 flex-1"
+        }`}
         placeholder="Your reply"
       />
 
