@@ -209,6 +209,15 @@
       "page": "entry"
     },
     {
+      "file": "ResetNew.dc.html",
+      "title": "Set a new password",
+      "x": 0,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "ComposePick.dc.html",
       "title": "Compose · pick the body",
       "x": 0,
@@ -1023,7 +1032,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 3284,
+      "h": 3532,
       "page": "entry",
       "title": "Entry · flow map"
     },

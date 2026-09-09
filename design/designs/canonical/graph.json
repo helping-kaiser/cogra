@@ -60,7 +60,8 @@
     "ReplyCited": "the reply's seal with a reference staged — the picker hands its pick back to the composer it was opened from, so this is a state of the seal, not a screen a tap navigates to",
     "ProfileMoreFailed": "the chronicle scrolled on and the next page didn't arrive — scrolling and a fault, not a tap",
     "ProfileNotFound": "a shared profile link whose handle resolves to nothing — a link from outside the app, not a tap; an author chip inside it always names a profile that exists",
-    "ProfileUnreachable": "a profile opened and the read never reached the server — a fault, not a tap"
+    "ProfileUnreachable": "a profile opened and the read never reached the server — a fault, not a tap",
+    "ResetNew": "opened from the reset mail's link — the destination `Reset` promised, reached from the mail app and not by a tap of ours"
   },
   "boardKinds": {
     "Theme": "reference",
@@ -274,6 +275,10 @@
     { "from": "Reset", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "SignIn" }] },
     { "from": "Reset", "via": 2, "kind": "advance", "label": "Email field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Reset", "via": 3, "kind": "advance", "label": "Send reset link", "to": [{ "terminal": "self", "case": "the status line confirms — always, no account enumeration" }] },
+
+    { "from": "ResetNew", "via": 1, "kind": "advance", "label": "New password field", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ResetNew", "via": 2, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
+    { "from": "ResetNew", "via": 3, "kind": "advance", "label": "Set the new password", "to": [{ "board": "SignIn", "case": "set — every device is signed out, so signing in again is the next thing" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
 
     { "from": "Restore", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
     { "from": "Restore", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
