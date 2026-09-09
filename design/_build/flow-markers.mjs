@@ -951,6 +951,98 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* The settings round's three boards. A `SettingsRow` is anchored on its own
+   label — the words are what a reader presses, and the row is the element the
+   marker walks back to whichever variant it is (a button, or the label around
+   a choice's radio). The stance choice's three radios share one number the way
+   the chronicle's three tabs do: one control, one edge. */
+Object.assign(FLOW_MARKERS, {
+  Settings: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">Light</button>", tag: "button" },
+    { n: 2, find: ">Dark</button>", tag: "button" },
+    { n: 2, find: ">Auto</button>", tag: "button" },
+    { n: 3, find: 'name="settings-stance-input"', tag: "input", all: true },
+    { n: 4, find: ">Confirm multi-action submits</span>", tag: "button" },
+    { n: 5, find: ">Default license</span>", tag: "button" },
+    { n: 6, find: ">What your feed shows</span>", tag: "button" },
+    { n: 7, find: ">Recovery code</span>", tag: "button" },
+    { n: 8, find: ">Your key</span>", tag: "button" },
+    { n: 9, find: ">Revoke</button>", tag: "button", all: true },
+    { n: 10, find: ">Sign out everywhere else</span>", tag: "button" },
+    { n: 11, find: ">Password</span>", tag: "button" },
+    { n: 12, find: ">Handle</span>", tag: "button" },
+    { n: 13, find: ">Email</span>", tag: "button" },
+    { n: 14, find: ">Don&#x27;t remember this account on this device</span>", tag: "button" },
+    { n: 15, find: ">Sign out</span>", tag: "button" },
+  ],
+  SettingsBackup: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'id="settings-rekey-code"', tag: "input" },
+    { n: 3, find: ">Create a new recovery code</button>", tag: "button" },
+  ],
+  YourKey: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'aria-label="Copy the PEM block"', tag: "button" },
+    { n: 3, find: 'aria-label="Copy the raw hex"', tag: "button" },
+  ],
+});
+
+// The settings subpages (jakob's review 2026-09-09): the two sheets its rows
+// open, and the three credential screens behind its Credentials rows.
+//
+// THE TWO SHEETS DRAW THE SETTINGS PAGE BENEATH THEM, which is why neither
+// takes `FeedSheet`'s or `ComposeLicense`'s markers verbatim: the page under
+// the wash has switches and a segmented pill of its own, so a `role="switch"`
+// or `aria-pressed=` sweep would badge the theme control through the scrim.
+// The sheet's own controls are matched by what only they carry — the chip's
+// pill geometry, the order options' words.
+Object.assign(FLOW_MARKERS, {
+  SettingsLicense: [
+    { n: 1, find: 'aria-label="License"', tag: "button" },
+    { n: 2, find: 'data-axis="credit"', tag: "label", all: true },
+    { n: 3, find: 'data-axis="record"', tag: "label", all: true },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  SettingsReading: [
+    { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
+    { n: 2, find: 'style="display:inline-flex;align-items:center;position:relative;height:32px', tag: "button", all: true },
+    { n: 3, find: ">Ranked</button>", tag: "button" },
+    { n: 3, find: ">Newest</button>", tag: "button" },
+    { n: 4, find: "already seen", tag: "label" },
+    { n: 5, find: ">Reset</button>", tag: "button" },
+    { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // Two password fields, one reveal affordance: the toggle is the same control
+  // drawn twice, so it carries one number on both — the rule the repeated
+  // per-post controls keep.
+  ChangePassword: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'id="current-password"', tag: "input" },
+    { n: 3, find: 'id="change-new-password"', tag: "input" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
+    { n: 5, find: ">Change password</button>", tag: "button" },
+  ],
+  ChangeHandle: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'id="new-handle"', tag: "input" },
+    { n: 3, find: ">Change handle</button>", tag: "button" },
+  ],
+  ChangeEmail: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'id="new-email"', tag: "input" },
+    { n: 3, find: 'id="email-current-password"', tag: "input" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: ">Change email</button>", tag: "button" },
+  ],
+  ChangeEmailConfirm: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'id="email-change-code"', tag: "input" },
+    { n: 3, find: ">Confirm the code</button>", tag: "button" },
+  ],
+});
+
 // The entry round's boards, componentized off the real masters (input-errors
 // bite 1, 2026-09-03): PasswordField and Checkbox bring their own real
 // <input>/<button> elements the hand markup only drew as shapes, so every
