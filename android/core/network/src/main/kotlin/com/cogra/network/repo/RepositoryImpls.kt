@@ -649,7 +649,8 @@ class ContentRepositoryImpl @Inject constructor(
         id: String,
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
+        attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
     ): Outcome<PreparedContentView> = guard.run {
@@ -663,6 +664,10 @@ class ContentRepositoryImpl @Inject constructor(
                     title = Optional.present(title),
                     description = Optional.present(description),
                     content = Optional.present(content),
+                    // The gallery included, for the same reason the mark
+                    // is: an absent one is an empty one, so an edit that
+                    // did not re-state it would clear a media post's body.
+                    attachments = attachments.toEditInput(),
                     // The mark included: an omitted switch unmarks the
                     // post, so carrying the author's own mark through is
                     // the difference between an edit and a silent
@@ -823,6 +828,28 @@ private fun List<ReferenceClaim>.toInput(): Optional<List<ReferenceInput>?> =
 private fun List<AttachmentClaim>.toInput(): Optional<List<AttachmentInput>?> =
     Optional.presentIfNotNull(
         takeIf { it.isNotEmpty() }?.mapIndexed { index, claim ->
+            AttachmentInput(
+                mediaId = claim.mediaId,
+                displayOrder = index,
+                isCover = Optional.present(index == 0),
+                altText = Optional.presentIfNotNull(claim.altText),
+            )
+        },
+    )
+
+/**
+ * A post edit's gallery on the wire.
+ *
+ * The same derived order and cover a creation sends, but **always
+ * present**: an edit's gallery is the complete state, so an absent field
+ * is an empty gallery rather than "leave it alone". Sending `[]` is how
+ * removing the last picture is said, and sending the post's own entries
+ * is how everything else keeps its pictures.
+ */
+@JvmName("postEditAttachmentClaimsToInput")
+private fun List<AttachmentClaim>.toEditInput(): Optional<List<AttachmentInput>?> =
+    Optional.present(
+        mapIndexed { index, claim ->
             AttachmentInput(
                 mediaId = claim.mediaId,
                 displayOrder = index,

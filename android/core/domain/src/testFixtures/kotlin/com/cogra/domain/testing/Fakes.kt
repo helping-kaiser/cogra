@@ -458,7 +458,8 @@ open class ThrowingContentRepository : ContentRepository {
         id: String,
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
+        attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()

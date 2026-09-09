@@ -2,8 +2,11 @@ package com.cogra.feature.content
 
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.Family
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
@@ -57,6 +60,12 @@ class ComposePostViewModelTest {
         var lastEdit: List<Any?> = emptyList()
         var editCalls = 0
 
+        /** The gallery the last edit re-stated (HT-18's whole subject). */
+        var lastEditAttachments: List<AttachmentClaim> = emptyList()
+
+        /** The gallery the edited post already carries. */
+        var loadedAttachments: List<MediaAssetView> = emptyList()
+
         /** The author's own mark the edited post already carries. */
         var selfMark: SelfMarkView? = SelfMarkView(sensitive = false, reason = null)
         var selfMarkOutcome: Outcome<SelfMarkView?>? = null
@@ -77,8 +86,11 @@ class ComposePostViewModelTest {
             includePending: Boolean,
         ): Outcome<PostDetail?> = Outcome.Success(
             PostDetail(
-                post = testPost(id, title = "Loaded title", body = "Loaded body")
-                    .copy(topics = loadedTopics, references = loadedReferences),
+                post = testPost(id, title = "Loaded title", body = "Loaded body").copy(
+                    topics = loadedTopics,
+                    references = loadedReferences,
+                    attachments = loadedAttachments,
+                ),
                 comments = Page(emptyList(), null, hasNextPage = false),
             ),
         )
@@ -108,12 +120,14 @@ class ComposePostViewModelTest {
             id: String,
             title: String?,
             description: String?,
-            content: String,
+            content: String?,
+            attachments: List<AttachmentClaim>,
             sensitive: Boolean,
             sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
             editCalls += 1
             lastEdit = listOf(id, title, description, content)
+            lastEditAttachments = attachments
             lastEditMark = sensitive to sensitiveReason
             return editOutcome ?: Outcome.Success(
                 PreparedContentView(id, listOf(sealer.stage(Family.PUBLISH))),
@@ -280,6 +294,97 @@ class ComposePostViewModelTest {
         // A blanked title rides as null — the clear (post.md §4).
         assertThat(content.lastEdit).containsExactly("post-9", null, null, "Edited body").inOrder()
     }
+
+    /**
+     * HT-18. The edit record is the post's complete content state, so a
+     * gallery it does not re-state is a gallery it clears: this surface
+     * authors no pictures, and carrying the post's own through is the
+     * difference between an edit and a silent destruction of the media.
+     */
+    @Test
+    fun anEditCarriesThePostsOwnGalleryThrough() = runTest(dispatcher) {
+        content.loadedAttachments = listOf(picture("m1", "A salt crust"), picture("m2", null))
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.mediaBody).isTrue()
+        assertThat(vm.state.value.attachments.map { it.id }).containsExactly("m1", "m2").inOrder()
+
+        vm.onTitleChange("A new title")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.saved).isTrue()
+        assertThat(content.lastEditAttachments)
+            .containsExactly(AttachmentClaim("m1", "A salt crust"), AttachmentClaim("m2", null))
+            .inOrder()
+    }
+
+    /**
+     * Words XOR media (api-spec.md "The body XOR"): a media post's words
+     * half would be refused on `["content"]`, so the edit sends none —
+     * and the form draws no field that could put one there.
+     */
+    @Test
+    fun aMediaPostsEditSendsNoWords() = runTest(dispatcher) {
+        content.loadedAttachments = listOf(picture("m1", null))
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onDescriptionChange("A newer caption")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastEdit)
+            .containsExactly("post-9", "Loaded title", "A newer caption", null).inOrder()
+    }
+
+    /** A words post still re-states its (empty) gallery, and its words. */
+    @Test
+    fun aWordsPostsEditRestatesAnEmptyGallery() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.mediaBody).isFalse()
+
+        vm.onBodyChange("Edited body")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastEditAttachments).isEmpty()
+        assertThat(content.lastEdit.last()).isEqualTo("Edited body")
+    }
+
+    /**
+     * A words post saved wordless is a body that is neither words nor
+     * media — the server's own refusal, said on the field that caused it
+     * rather than after a pointless round trip.
+     */
+    @Test
+    fun aWordsPostsEditRefusesAnEmptyBody() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onBodyChange("   ")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.emptyBody).isTrue()
+        assertThat(content.editCalls).isEqualTo(0)
+    }
+
+    private fun picture(id: String, altText: String?) = MediaAssetView(
+        id = id,
+        url = "https://media.example/$id",
+        altText = altText,
+        status = FieldStatus.NORMAL,
+        aspectRatio = 1f,
+        mimeType = "image/webp",
+    )
 
     @Test
     fun anEditKeepsTheAuthorsOwnSensitiveMarkAndItsReason() = runTest(dispatcher) {
