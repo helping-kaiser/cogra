@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -82,11 +83,13 @@ fun FeedRoute(
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     if (refreshSignal) {
         onRefreshSignalConsumed()
         viewModel.refresh()
     }
     FeedScreen(
+        onShare = { postId -> context.sharePost(viewModel.shareUrl(postId)) },
         state = state,
         signedIn = signedIn,
         expiredLabel = expiredLabel,
@@ -118,6 +121,8 @@ fun FeedScreen(
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
+    /** Hands a post to the platform's own share sheet. */
+    onShare: (String) -> Unit = {},
     onChats: (() -> Unit)? = null,
     keyBanner: @Composable () -> Unit = {},
     borrowedViewBand: @Composable () -> Unit = {},
@@ -272,6 +277,7 @@ fun FeedScreen(
                                     onClick = { onOpenPost(post.id) },
                                     onOpenActor = onOpenActor,
                                     onOpenTopic = onOpenTopic,
+                                    onShare = onShare,
                                     revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
                                     onReveal = { onReveal(post.id, post.sensitiveMark()) },
                                     stanceControl = stanceControl,
@@ -400,6 +406,8 @@ private fun PostCard(
     onClick: () -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    /** The platform's own share sheet, for this post. */
+    onShare: (String) -> Unit,
     revealed: Boolean,
     onReveal: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
@@ -454,8 +462,18 @@ private fun PostCard(
                 onOpenTopic = onOpenTopic,
                 testTagPrefix = "feed_post_${post.id}",
             )
-            // The post card carries the stance control (design.md §6).
-            stanceControl(post.id, "feed_post_${post.id}")
+            // Stance, comment, share — the master's row, minus the two
+            // it gates (see `PostAffordanceRow`). The comment count
+            // opens the post, which is the master's own fallback and is
+            // where this app's thread lives until W3's sheet.
+            PostAffordanceRow(
+                commentCount = post.commentCount,
+                onOpenComments = onClick,
+                onShare = { onShare(post.id) },
+                testTagPrefix = "feed_post_${post.id}",
+            ) {
+                stanceControl(post.id, "feed_post_${post.id}")
+            }
         }
     }
 }

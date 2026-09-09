@@ -220,7 +220,7 @@ class PostDetailViewModelTest {
         }
     }
 
-    private fun viewModel() = PostDetailViewModel(content, landings, reveals)
+    private fun viewModel() = PostDetailViewModel(content, landings, reveals, WEB_ORIGIN)
 
     @Before
     fun setUp() {
@@ -428,3 +428,6 @@ class PostDetailViewModelTest {
     }
 
 }
+
+/** The build's web origin, as the share link is built from it. */
+private const val WEB_ORIGIN = "https://cogra.example"

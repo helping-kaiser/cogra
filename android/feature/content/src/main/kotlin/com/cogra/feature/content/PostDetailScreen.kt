@@ -33,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -92,6 +93,7 @@ fun PostDetailRoute(
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     LaunchedEffect(postId) { viewModel.start(postId) }
     if (refreshSignal) {
         onRefreshSignalConsumed()
@@ -119,6 +121,7 @@ fun PostDetailRoute(
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
         onReference = onReference,
+        onShare = { id -> context.sharePost(viewModel.shareUrl(id)) },
         onSignInOrJoin = onSignInOrJoin,
         onBack = onBack,
         stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
@@ -147,6 +150,8 @@ fun PostDetailScreen(
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onReference: (String) -> Unit,
+    /** Hands this post to the platform's own share sheet. */
+    onShare: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
     /** The stance control the post and every comment carry (design.md §6). */
@@ -277,6 +282,7 @@ fun PostDetailScreen(
                             onOpenActor = onOpenActor,
                             onOpenTopic = onOpenTopic,
                             onReference = onReference,
+                            onShare = onShare,
                             onSignInOrJoin = onSignInOrJoin,
                             stanceControl = stanceControl,
                         )
@@ -303,6 +309,8 @@ private fun PostWithThread(
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onReference: (String) -> Unit,
+    /** Hands this post to the platform's own share sheet. */
+    onShare: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
@@ -362,17 +370,25 @@ private fun PostWithThread(
                 // on a comment: every content node can be referenced, so
                 // the affordance lives on the node and opens the
                 // composer with the chip already staged (D20).
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                // The same row the card wears (`PostCard.jsx`): stance,
+                // comment, share. The count states rather than opens —
+                // the thread it counts is directly below it, and its
+                // sheet is W3's.
+                PostAffordanceRow(
+                    commentCount = post.commentCount,
+                    onOpenComments = null,
+                    onShare = { onShare(post.id) },
+                    testTagPrefix = "detail_post",
+                    actions = {
+                        TextButton(
+                            onClick = { onReference(post.id) },
+                            modifier = Modifier.testTag("detail_post_reference_action"),
+                        ) {
+                            Text(stringResource(R.string.content_reference_action))
+                        }
+                    },
                 ) {
                     stanceControl(post.id, "detail_post")
-                    TextButton(
-                        onClick = { onReference(post.id) },
-                        modifier = Modifier.testTag("detail_post_reference_action"),
-                    ) {
-                        Text(stringResource(R.string.content_reference_action))
-                    }
                 }
                 HorizontalDivider()
                 Text(

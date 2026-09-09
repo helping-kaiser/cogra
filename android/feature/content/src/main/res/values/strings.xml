@@ -27,6 +27,17 @@
         <item quantity="one">%d reference</item>
         <item quantity="other">%d references</item>
     </plurals>
+    <!-- The affordance row. The comment count is spoken rather than
+         drawn as a word — the row is glyph-plus-number, and the label
+         lives in the accessibility tree instead. -->
+    <plurals name="content_comment_count">
+        <item quantity="one">%d comment</item>
+        <item quantity="other">%d comments</item>
+    </plurals>
+    <!-- The completed name, never a bare "Share": a glyph with one word
+         beside it tells a listener the verb but not the object
+         (guidelines/copy-voice.md). -->
+    <string name="content_share_post">Share this post</string>
     <!-- What a topic name may be — L1\'s identifier atom (D3). -->
     <!-- The references section (D18, D20). The word is always
          Reference — a reference to a profile is a mention — and never
