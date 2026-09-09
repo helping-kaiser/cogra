@@ -865,17 +865,44 @@ pub async fn plan_profile_image(
     let Some(id) = chosen else {
         return Ok(Some(None));
     };
-    let path = vec![field.to_string()];
     let rows = store::assets_by_ids(pool, std::slice::from_ref(&id))
         .await
         .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
-    let asset = usable_asset(
+    Ok(Some(Some(checked_profile_image(
         rows.first(),
+        author,
+        field,
+    )?)))
+}
+
+/// The half of profile-image planning that reads the asset row: the
+/// anti-hijack rule, and the slot's own shape.
+///
+/// **A profile picture is a still**, so the slot answers to the picture
+/// cap and nothing wider. A video would otherwise reach an avatar through
+/// the video cap — ten times a picture's — and no profile surface plays
+/// one: the profile carries "one image, the avatar", picked and cropped
+/// circular 1:1 (design.md "Profile header"). The refusal is the one a
+/// poster already gives for the same reason, said against the field that
+/// carried the id.
+fn checked_profile_image(
+    asset: Option<&store::MediaAttachment>,
+    author: Uuid,
+    field: &'static str,
+) -> Result<common::envelope::MediaAsset, GalleryPlanError> {
+    let path = vec![field.to_string()];
+    let asset = usable_asset(
+        asset,
         author,
         &path,
         "a profile picture must be an asset you uploaded",
     )?;
-    Ok(Some(Some(manifest_entry(asset, None)?)))
+    if asset.mime_type != webp::MIME {
+        return Err(
+            GalleryError::at(path, "a profile picture must be an image, not a video").into(),
+        );
+    }
+    manifest_entry(asset, None)
 }
 
 /// The asset one profile image slot's manifest entry names, resolved the
@@ -1254,6 +1281,45 @@ mod planning_tests {
                 .expect_err("past the parent's video cap")
             ),
             gallery_path(0, "mediaId")
+        );
+    }
+
+    /// The slot's own rules: the author's own asset, still there, and a
+    /// picture rather than a video.
+    ///
+    /// A profile picture is a still the account uploaded itself, refused against the field that named it.
+    /// ´claim:media:a-profile-picture-is-the-authors-own-still´
+    #[test]
+    fn a_profile_picture_is_the_authors_own_still() {
+        let author = Uuid::new_v4();
+        let mine = asset(author, webp::MIME);
+        checked_profile_image(Some(&mine), author, "avatarMediaId")
+            .expect("an author's own picture is a profile picture");
+
+        let slot = vec!["avatarMediaId".to_string()];
+        assert_eq!(
+            path_of(
+                &checked_profile_image(
+                    Some(&asset(Uuid::new_v4(), webp::MIME)),
+                    author,
+                    "avatarMediaId"
+                )
+                .expect_err("someone else's asset")
+            ),
+            slot
+        );
+        assert_eq!(
+            path_of(
+                &checked_profile_image(Some(&asset(author, video::MIME)), author, "avatarMediaId")
+                    .expect_err("a video is not a profile picture")
+            ),
+            slot
+        );
+        assert_eq!(
+            path_of(
+                &checked_profile_image(None, author, "avatarMediaId").expect_err("no such asset")
+            ),
+            slot
         );
     }
 }
