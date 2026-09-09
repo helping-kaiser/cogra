@@ -483,7 +483,7 @@ Two follow-ups the round surfaces, still open:
   comments-sheet shell (factored — `_shared.jsx`'s `CommentsSheet`,
   drawn by `ReplyMedia` and the thread sheet).
 
-  Three are still held:
+  Two are still held:
   - **The reply seal's staged reference** — stays a fact in the acts
     card as drawn, or becomes a `StagedReference` row like the
     post's. Drawn as an acts row and blessed as one in
@@ -492,29 +492,25 @@ Two follow-ups the round surfaces, still open:
     comment edits vs bare word on the reply seal. Every board now
     spells `FactRow … action="Mark"`, which reads settled in
     practice and is recorded nowhere as ruled.
-  - **The wizard footer's shape** — see the entry below; the
-    slice-2.5 round reopened it on a count.
 
-- **A `WizardFooter` master needs one more ruling before it can be
-  adopted** (slice-2.5 round). The held note's count is off, and the
-  correction changes the question. **Thirteen** boards draw a Next.
-  **Four** wrap it in a footer of its own — `ComposePick`,
-  `ComposePickVideo`, `ComposePicked`, `ComposePickedErrors` — and
-  they are exactly the four whose content above runs edge to edge,
-  so the footer is where their padding has to come from. The other
-  **nine** put the Next inside a column that already carries the
-  24px sides, each ending on its own bottom value: 16px on the
-  details and crop boards, 24px on `ComposeWords`, and a 12px or
-  16px margin above the button on `ComposeWords` and
-  `ComposePickWeb`. A master owning `12px 24px 16px` therefore
-  cannot land on those nine as drawn — inside the column it doubles
-  the sides to 48px, and outside it lifts the button past the
-  column's `overflow: hidden` and resets nine different bottom
-  rhythms to one. Which of those two, and what each board loses, is
-  the ruling. (`ComposeLicense`'s hand-assembled row is a third
-  anatomy again — a sheet's action row, hairline · summary · Done —
-  not a wizard footer; its raw `0.5px` was in `AxisLabel` and is
-  fixed under §7.)
+- ~~**A `WizardFooter` master needs one more ruling before it can be
+  adopted**~~ (slice-2.5 round) — closed 2026-09-09 by jakob's R9:
+  the master is scoped to the edge-to-edge anatomy. **Thirteen**
+  boards draw a Next. **Four** wrap it in a footer of its own —
+  `ComposePick`, `ComposePickVideo`, `ComposePicked`,
+  `ComposePickedErrors` — and they are exactly the four whose
+  content above runs edge to edge, so the footer is where their
+  padding has to come from. Those four now take `WizardFooter`,
+  which owns `12px 24px 16px`, and no pixel moved. The other
+  **nine** keep their column-owned spacing: their Next sits inside a
+  column that already carries the 24px sides, each ending on its own
+  bottom value, and a padding-owning master cannot land there — it
+  would double the sides to 48px inside the column, or lift the
+  button past the column's `overflow: hidden` outside it and reset
+  nine different bottom rhythms to one. (`ComposeLicense`'s
+  hand-assembled row is a third anatomy again — a sheet's action
+  row, hairline · summary · Done — not a wizard footer; its raw
+  `0.5px` was in `AxisLabel` and is fixed under §7.)
 - **One question the body-XOR pass left open (2026-09-04)**,
   drawing-level: a media post's DETAIL view now shows only its
   description, at body-medium on `text-secondary` where a body-large

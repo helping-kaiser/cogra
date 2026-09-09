@@ -2619,15 +2619,20 @@ could close. These are the answers, and what each one moved.
   a rule nobody can predict. Markup only: no pixel moved, proved
   by the renders, whose every changed byte is one of those four
   attributes.
-- **The wizard footer is NOT ruled** — the question came back with
-  its premise corrected. Thirteen boards draw a Next, not twelve;
-  four hand-draw the padded footer, not three, and they are
-  exactly the four whose content runs edge to edge. The other nine
-  sit in a column that already owns the padding, each ending on
-  its own bottom value, so a master owning `12px 24px 16px` either
-  doubles their sides to 48px or lifts the button out of the
-  column and flattens nine rhythms into one. Which, and what each
-  board gives up, is still jakob's (backlog).
+- **The wizard footer came back with its premise corrected, and
+  was ruled the day after.** Thirteen boards draw a Next, not
+  twelve; four hand-draw the padded footer, not three, and they
+  are exactly the four whose content runs edge to edge. The other
+  nine sit in a column that already owns the padding, each ending
+  on its own bottom value, so a master owning `12px 24px 16px`
+  either doubles their sides to 48px or lifts the button out of
+  the column and flattens nine rhythms into one. Ruled 2026-09-09:
+  `WizardFooter` is scoped to the edge-to-edge anatomy. The four
+  take it and no pixel moves; the nine keep their column-owned
+  spacing. The padding is what separates the three feet — this one
+  owns its sides because nothing above it does, `SealFooter` owns
+  none because it sits in a padded column, and a sheet's Done row
+  is a third shape again.
 - **The docs say what is true now.** The sensitive self-mark's
   contract field ships and 2.5.3 stops claiming it does not; the
   stream is slice 3's, not 2.7's, which is Search; share is on the
