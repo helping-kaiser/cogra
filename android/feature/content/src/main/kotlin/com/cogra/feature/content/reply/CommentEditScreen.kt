@@ -48,6 +48,7 @@ import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.Hairline
 import com.cogra.core.designsystem.v2.atom.HelpDialog
 import com.cogra.core.designsystem.v2.atom.InlineAction
+import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.SummaryRow
 import com.cogra.core.designsystem.v2.atom.WizardHeader
@@ -62,6 +63,7 @@ import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
+import com.cogra.feature.content.wizard.SensitiveSheet
 import com.cogra.feature.content.wizard.WizardBody
 import com.cogra.feature.content.wizard.WizardFooter
 
@@ -107,6 +109,9 @@ fun CommentEditRoute(
         onDescribePictures = viewModel::onDescribeFirst,
         onAltTextChange = viewModel::onAltTextChange,
         onOpenActs = viewModel::onOpenActs,
+        onOpenSensitive = viewModel::onOpenSensitive,
+        onSensitiveChange = viewModel::onSensitiveChange,
+        onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
         onCloseSheet = viewModel::onCloseSheet,
         onOpenHelp = viewModel::onOpenHelp,
         onCloseHelp = viewModel::onCloseHelp,
@@ -142,11 +147,12 @@ fun CommentEditRoute(
  * The post's one-screen-one-batch scaled to a comment's anatomy: words,
  * pictures (uncropped, four max, described through the same counter line
  * the reply composer wears), topics, citations, **and the license shown
- * locked** — an edit can never change it.
+ * locked** — an edit can never change it — and the Sensitive row beside
+ * it, which is not locked.
  *
- * The standing sensitive mark rides in state rather than on screen: the
- * edit contract is complete-state, so an edit that omits the mark
- * unmarks — see [CommentEditState.sensitive].
+ * The edit contract is complete-state, so every field the row leaves
+ * standing rides the edit whether or not the author touched it: an edit
+ * that omitted the mark would unmark ([CommentEditState.sensitive]).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -158,6 +164,9 @@ internal fun CommentEditScreen(
     onDescribePictures: () -> Unit,
     onAltTextChange: (String, String) -> Unit,
     onOpenActs: () -> Unit,
+    onOpenSensitive: () -> Unit,
+    onSensitiveChange: (Boolean) -> Unit,
+    onSensitiveReasonChange: (String) -> Unit,
     onCloseSheet: () -> Unit,
     onOpenHelp: (HelpTopic) -> Unit,
     onCloseHelp: () -> Unit,
@@ -297,6 +306,18 @@ internal fun CommentEditScreen(
             }
 
             LockedLicenseRow()
+            // The license keeps its lock; this row does not. The
+            // license is fixed by contract the moment it is signed,
+            // while the mark is the author's ongoing judgment about
+            // their own words (design/backlog.md item 25 part 2).
+            SettingRow(
+                label = "Sensitive",
+                value = if (state.sensitive) "Marked" else "Not marked",
+                actionText = if (state.sensitive) "Change" else "Mark",
+                onAction = onOpenSensitive,
+                testTag = "comment_edit_sensitive",
+            )
+            Hairline()
 
             state.problem()?.let { message ->
                 Text(
@@ -342,6 +363,18 @@ internal fun CommentEditScreen(
                 )
 
                 state.actsOpen -> CommentEditActsSheet(state = state, onDone = onCloseSheet)
+
+                // The post seal's own sheet — one sheet for every
+                // surface that marks (ruling 42).
+                state.sensitiveOpen -> SensitiveSheet(
+                    marked = state.sensitive,
+                    reason = state.sensitiveReason.orEmpty(),
+                    onMarkedChange = onSensitiveChange,
+                    onReasonChange = onSensitiveReasonChange,
+                    onDone = onCloseSheet,
+                    onHelp = { onOpenHelp(HelpTopic.MarkingAsSensitive) },
+                    testTagPrefix = "comment_edit",
+                )
 
                 else -> Unit
             }

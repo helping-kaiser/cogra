@@ -269,6 +269,15 @@ interface ContentRepository {
          */
         pDirected: Double? = null,
         pInterest: Double? = null,
+        /**
+         * The author's own sensitive mark, and the reason that rides the
+         * veil with it — the reply seal's Mark row (`ReplySeal`), the
+         * same switch a post's seal carries. Omitted means unmarked; a
+         * reason without the mark is refused on `["sensitiveReason"]`,
+         * and a blank one counts as none.
+         */
+        sensitive: Boolean = false,
+        sensitiveReason: String? = null,
     ): Outcome<PreparedContentView>
 
     /**

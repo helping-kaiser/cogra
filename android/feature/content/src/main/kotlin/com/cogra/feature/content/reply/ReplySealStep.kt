@@ -41,14 +41,10 @@ import com.cogra.feature.content.wizard.sealLabel
  * names what the batch carries, the rows under it are what the seal
  * still lets the author change, and the two pills commit or step back.
  *
- * **The "Sensitive · Mark" row is deliberately absent** (jakob
- * 2026-09-01). `graph.json` carries it as `ReplySeal` edge 8, and it is
- * the one thing on this board that does not ship: no board draws a
- * veiled *comment*, so the row would be a switch whose result nothing
- * renders. `design/backlog.md` item 25 part 4 names this lane as the one
- * it blocks. `PrepareCommentInput.sensitive` keeps its default and this
- * screen never sets it, so nothing about the contract changes when the
- * veiled comment is drawn and the row arrives.
+ * The Sensitive row is the board's third term row (`ReplySeal` edge 8),
+ * and it opens the one `ComposeSensitive` sheet the post's seal opens —
+ * one sheet for every surface that marks, because a second copy is
+ * where the two would silently drift apart.
  */
 @Composable
 internal fun ColumnScope.ReplySealStepBody(
@@ -83,6 +79,13 @@ internal fun ColumnScope.ReplySealStepBody(
             actionText = "Change",
             onAction = { onOpenSheet(ReplySealSheet.License) },
             testTag = "reply_seal_license",
+        )
+        SettingRow(
+            label = "Sensitive",
+            value = if (state.sensitive) "Marked" else "Not marked",
+            actionText = if (state.sensitive) "Change" else "Mark",
+            onAction = { onOpenSheet(ReplySealSheet.Sensitive) },
+            testTag = "reply_seal_sensitive",
         )
         Hairline()
     }

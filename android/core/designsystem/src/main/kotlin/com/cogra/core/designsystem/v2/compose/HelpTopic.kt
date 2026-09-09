@@ -50,11 +50,15 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
         ),
     ),
 
-    /** The sensitive self-mark sheet. */
+    /**
+     * The sensitive self-mark sheet — the post's, the reply's, and both
+     * edit surfaces'. One wording for both scales (ruling 42): a comment
+     * has no description to name, and a post's description is words.
+     */
     MarkingAsSensitive(
         title = "Marking as sensitive",
         paragraphs = listOf(
-            "The mark veils the pictures and the description until a reader chooses " +
+            "The mark veils the pictures and the words until a reader chooses " +
                 "to look. The title stays readable, so choosing is informed.",
             "Your reason, if you give one, is shown on the veil. The mark is public " +
                 "and travels with the post.",
