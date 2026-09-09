@@ -580,19 +580,16 @@ private fun CommentThread(
                     .padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                comment.author?.let { author ->
-                    // The picture the boards draw on a comment card
-                    // (Q49). Null is the monogram — the designed
-                    // fallback for an author who has set none, not a gap
-                    // waiting for a photo.
-                    ActorChip(
-                        handle = author.handle,
-                        displayName = author.displayName,
-                        onOpen = { onOpenActor(author.handle) },
-                        avatarUrl = author.avatar?.url,
-                        testTag = "comment_author_${comment.id}",
-                    )
-                }
+                // The picture the boards draw on a comment card (Q49),
+                // and the age beside it. Null is the monogram — the
+                // designed fallback for an author who has set none, not
+                // a gap waiting for a photo.
+                ContentCardHeader(
+                    author = comment.author,
+                    at = comment.createdAt,
+                    onOpenActor = onOpenActor,
+                    testTagPrefix = "comment_${comment.id}",
+                )
                 // A comment is text **plus** optional media (D16),
                 // so its body is never the exclusive-or a post's
                 // is — but it veils and redacts as one region all

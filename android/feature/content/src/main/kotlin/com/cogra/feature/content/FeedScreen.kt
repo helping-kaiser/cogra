@@ -424,15 +424,12 @@ private fun PostCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            post.author?.let { author ->
-                ActorChip(
-                    handle = author.handle,
-                    displayName = author.displayName,
-                    onOpen = { onOpenActor(author.handle) },
-                    avatarUrl = author.avatar?.url,
-                    testTag = "feed_author_${post.id}",
-                )
-            }
+            ContentCardHeader(
+                author = post.author,
+                at = post.createdAt,
+                onOpenActor = onOpenActor,
+                testTagPrefix = "feed_${post.id}",
+            )
             // The title stays outside the veil (D12): a reader has to
             // be able to tell what they are choosing not to look at.
             post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
