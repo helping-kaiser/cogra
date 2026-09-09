@@ -48,6 +48,7 @@ import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.token.Layout
+import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
@@ -178,7 +179,10 @@ fun PostDetailScreen(
                 expandedHeight = Layout.TopBarHeight,
                 colors = surfaceTopAppBarColors(),
                 scrollBehavior = collapsingTop.scrollBehavior,
-                title = { Text(state.post?.title?.value.orEmpty()) },
+                // No title in the band: the post's title is the card's
+                // heading, above its media (`_shared.jsx:287-289` — the
+                // detail header takes no title prop).
+                title = {},
                 navigationIcon = {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("detail_back")) {
                         Icon(
@@ -189,7 +193,11 @@ fun PostDetailScreen(
                 },
                 actions = {
                     val post = state.post
-                    if (post != null && viewerId != null && post.author?.id == viewerId) {
+                    // A removed post has no menu left — back is the whole
+                    // header. There is nothing of it to edit.
+                    val editable = post != null &&
+                        !isRemoved(post.content, post.attachments, post.attachmentsStatus)
+                    if (editable && viewerId != null && post!!.author?.id == viewerId) {
                         TextButton(
                             onClick = { onEdit(post.id) },
                             modifier = Modifier.testTag("detail_edit"),
@@ -314,82 +322,121 @@ private fun PostWithThread(
     onSignInOrJoin: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
+    // A removed post keeps its skeleton and loses everything the payload
+    // carried: the license, the topics and the citations rode it away.
+    val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
+    // The post is a card here too, edge to edge with its 8dp seam —
+    // on the boards the post wears the card and the comments sit under
+    // it, not the inverse the app had.
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .testTag("detail_list"),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(top = Space.x2, bottom = Space.x4),
+        verticalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Media, words and description are one region because
-                // the veil covers them as one state (D12); the title
-                // stays outside it, on the bar above.
-                PostBody(
-                    content = post.content,
-                    description = post.description,
-                    attachments = post.attachments,
-                    attachmentsStatus = post.attachmentsStatus,
-                    moderation = post.moderation,
-                    testTagPrefix = "detail",
-                    modifier = Modifier.testTag("detail_body"),
-                    // The same set the feed reads: a reader who already
-                    // chose to look at this post is not asked again on
-                    // the way in.
-                    revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
-                    onReveal = { onReveal(post.id, post.sensitiveMark()) },
-                )
-                post.author?.let { author ->
-                    ActorChip(
-                        handle = author.handle,
-                        displayName = author.displayName,
-                        onOpen = { onOpenActor(author.handle) },
-                        avatarUrl = author.avatar?.url,
-                        testTag = "detail_author",
-                    )
-                }
-                Text(
-                    licenseTerms(post.license),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.testTag("detail_license_terms"),
-                )
-                if (post.landing.isPending) {
-                    PendingMarker(testTag = "detail_pending")
-                }
-                TopicsLine(
-                    topics = post.topics,
-                    references = post.references,
-                    onOpenTopic = onOpenTopic,
-                    testTagPrefix = "detail_post",
-                )
-                // The stance control rides the post itself here, the way
-                // it rides the card in the feed (design.md §6), and the
-                // Reference affordance sits beside it exactly as it does
-                // on a comment: every content node can be referenced, so
-                // the affordance lives on the node and opens the
-                // composer with the chip already staged (D20).
-                // The same row the card wears (`PostCard.jsx`): stance,
-                // comment, share. The count states rather than opens —
-                // the thread it counts is directly below it, and its
-                // sheet is W3's.
-                PostAffordanceRow(
-                    commentCount = post.commentCount,
-                    onOpenComments = null,
-                    onShare = { onShare(post.id) },
-                    testTagPrefix = "detail_post",
-                    actions = {
-                        TextButton(
-                            onClick = { onReference(post.id) },
-                            modifier = Modifier.testTag("detail_post_reference_action"),
-                        ) {
-                            Text(stringResource(R.string.content_reference_action))
-                        }
-                    },
+            Card(modifier = Modifier.fillMaxWidth().testTag("detail_card")) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Space.x4),
+                    verticalArrangement = Arrangement.spacedBy(Space.x1),
                 ) {
-                    stanceControl(post.id, "detail_post")
+                    // PEOPLE FIRST: the author leads, above the content
+                    // and never below it as a byline — including on a
+                    // media post.
+                    ContentCardHeader(
+                        author = post.author,
+                        at = post.createdAt,
+                        onOpenActor = onOpenActor,
+                        testTagPrefix = "detail",
+                    )
+                    // The title titles the thing, so it stands above the
+                    // media rather than in the bar: below the picture it
+                    // would read as a caption, and the caption as a
+                    // second one. The detail is the read surface, so it
+                    // never clamps.
+                    post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.testTag("detail_title"),
+                        )
+                    }
+                    // Media, words and description are one region because
+                    // the veil covers them as one state (D12); the title
+                    // stays outside it.
+                    PostBody(
+                        content = post.content,
+                        description = post.description,
+                        attachments = post.attachments,
+                        attachmentsStatus = post.attachmentsStatus,
+                        moderation = post.moderation,
+                        testTagPrefix = "detail",
+                        modifier = Modifier.testTag("detail_body"),
+                        bleed = Space.x4,
+                        // The same set the feed reads: a reader who
+                        // already chose to look at this post is not asked
+                        // again on the way in.
+                        revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
+                        onReveal = { onReveal(post.id, post.sensitiveMark()) },
+                    )
+                    // The license rode the payload, so a redacted record
+                    // has none to show.
+                    if (!removed) {
+                        Text(
+                            licenseTerms(post.license),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("detail_license_terms"),
+                        )
+                    }
+                    if (post.landing.isPending) {
+                        PendingMarker(testTag = "detail_pending")
+                    }
+                    if (!removed) {
+                        TopicsLine(
+                            topics = post.topics,
+                            references = post.references,
+                            onOpenTopic = onOpenTopic,
+                            testTagPrefix = "detail_post",
+                        )
+                    }
+                    // The same row the card wears (`PostCard.jsx`):
+                    // stance, comment, share — the skeleton a removal
+                    // leaves standing, because no record leaves the graph
+                    // and no removal is silent. The count states rather
+                    // than opens: the thread is directly below it, and
+                    // its sheet is W3's.
+                    PostAffordanceRow(
+                        commentCount = post.commentCount,
+                        onOpenComments = null,
+                        onShare = { onShare(post.id) },
+                        testTagPrefix = "detail_post",
+                        actions = {
+                            // Every content node can be referenced, so
+                            // the affordance lives on the node and opens
+                            // the composer with the chip already staged
+                            // (D20). Its drawn home is the ⋮'s "Cite in a
+                            // new post" row, which W3 builds.
+                            if (!removed) {
+                                TextButton(
+                                    onClick = { onReference(post.id) },
+                                    modifier = Modifier.testTag("detail_post_reference_action"),
+                                ) {
+                                    Text(stringResource(R.string.content_reference_action))
+                                }
+                            }
+                        },
+                    ) {
+                        stanceControl(post.id, "detail_post")
+                    }
                 }
+            }
+        }
+        item {
+            Column(Modifier.padding(horizontal = Space.x4)) {
                 HorizontalDivider()
                 Text(
                     stringResource(R.string.content_comments_heading),
@@ -401,12 +448,15 @@ private fun PostWithThread(
             item {
                 Text(
                     stringResource(R.string.content_comments_empty),
-                    modifier = Modifier.testTag("detail_no_comments"),
+                    modifier = Modifier
+                        .padding(horizontal = Space.x4)
+                        .testTag("detail_no_comments"),
                 )
             }
         }
         items(state.comments, key = { it.id }) { comment ->
             CommentThread(
+                modifier = Modifier.padding(horizontal = Space.x4),
                 comment = comment,
                 depth = 0,
                 state = state,
@@ -549,6 +599,7 @@ private const val MAX_INDENT_DEPTH = 1
 private fun CommentThread(
     comment: CommentView,
     depth: Int,
+    modifier: Modifier = Modifier,
     state: PostDetailUiState,
     viewerId: String?,
     signedIn: Boolean?,
@@ -564,7 +615,7 @@ private fun CommentThread(
 ) {
     val indent = (minOf(depth, MAX_INDENT_DEPTH) * 12).dp
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(start = indent),
         verticalArrangement = Arrangement.spacedBy(8.dp),

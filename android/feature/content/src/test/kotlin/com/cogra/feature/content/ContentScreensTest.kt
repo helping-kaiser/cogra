@@ -12,8 +12,10 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -931,6 +933,9 @@ class ContentScreensTest {
      * comment, rather than growing a box under it.
      */
     @Test
+    // The post now wears its own card, header and title, so the default
+    // viewport no longer composes as far as the second comment.
+    @Config(qualifiers = "+h1600dp")
     fun replyOpensTheComposerPreTargetedAtThatComment() {
         var replied: com.cogra.domain.CommentView? = null
         renderDetail(
@@ -983,6 +988,85 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
     }
+
+    // -- The detail is a card, author first, title above the media --
+
+    @Test
+    fun theDetailDrawsThePostAsACard() {
+        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_card").assertExists()
+    }
+
+    /** PEOPLE FIRST: the author leads, above the title and the body. */
+    @Test
+    fun theAuthorLeadsTheDetailRatherThanTrailingIt() {
+        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+
+        val author = compose.onNodeWithTag("detail_author", useUnmergedTree = true)
+            .fetchSemanticsNode().positionInRoot.y
+        val title = compose.onNodeWithTag("detail_title", useUnmergedTree = true)
+            .fetchSemanticsNode().positionInRoot.y
+        val body = compose.onNodeWithTag("detail_body", useUnmergedTree = true)
+            .fetchSemanticsNode().positionInRoot.y
+        assertThat(author).isLessThan(title)
+        assertThat(title).isLessThan(body)
+    }
+
+    /** The title titles the thing, so it is the card's heading, not the band's. */
+    @Test
+    fun theDetailTitleIsTheCardsHeadingAndNotTheBands() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    title = ModeratedField("Salt maps", FieldStatus.NORMAL),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("detail_title", useUnmergedTree = true)
+            .assertTextEquals("Salt maps")
+        compose.onAllNodesWithText("Salt maps").assertCountEquals(1)
+    }
+
+    // -- What a removal leaves standing (Removed.jsx) --
+
+    /** The license rode the payload, so a redacted record has none to show. */
+    @Test
+    fun aRemovedPostPrintsNoLicenseAndNoTopics() {
+        renderDetail(PostDetailUiState(loading = false, post = removedPost()))
+
+        // The body region carries the caller's own tag, so the mark is
+        // read by the line it draws.
+        compose.onNodeWithText("Removed by its author").assertExists()
+        compose.onNodeWithTag("detail_license_terms", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("detail_post_topics_line", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /** A removed post has no menu left — back is the whole header. */
+    @Test
+    fun aRemovedOwnPostLosesItsEditAction() {
+        renderDetail(
+            PostDetailUiState(loading = false, post = removedPost()),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("detail_edit").assertDoesNotExist()
+    }
+
+    /** The skeleton survives: author, age, stance, comments, share. */
+    @Test
+    fun aRemovedPostKeepsItsSkeleton() {
+        renderDetail(PostDetailUiState(loading = false, post = removedPost().copy(commentCount = 2)))
+
+        compose.onNodeWithTag("detail_author", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("detail_age", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("detail_post_comments", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("detail_post_share", useUnmergedTree = true).assertExists()
+    }
+
+    private fun removedPost() = testPost("p1").copy(
+        content = ModeratedField(null, FieldStatus.REDACTED),
+        attachments = emptyList(),
+    )
 
     // -- Words XOR media, the clamps, and the opener --
     //

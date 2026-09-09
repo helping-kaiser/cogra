@@ -21,7 +21,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.v2.atom.bleedHorizontally
 import com.cogra.core.designsystem.v2.media.MediaGallery
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.RemovalReason
@@ -92,6 +94,12 @@ internal fun PostBody(
     testTagPrefix: String,
     modifier: Modifier = Modifier,
     collapsed: Boolean = false,
+    /**
+     * The card padding a post's gallery cancels so it runs to the
+     * card's edges (`PostCard.jsx:263`, `margin: 0 calc(-1 *
+     * var(--card-padding))`). Zero where there is none to escape.
+     */
+    bleed: Dp = 0.dp,
     onOpenMedia: (() -> Unit)? = null,
     surface: BodySurface = BodySurface.Post,
     revealed: Boolean = false,
@@ -126,7 +134,7 @@ internal fun PostBody(
         ) {
             val gallery: @Composable () -> Unit = {
                 if (attachments.isNotEmpty()) {
-                    Gallery(attachments, surface, onOpenMedia, "${testTagPrefix}_gallery")
+                    Gallery(attachments, surface, onOpenMedia, bleed, "${testTagPrefix}_gallery")
                 }
             }
 
@@ -235,13 +243,21 @@ private fun Gallery(
     attachments: List<MediaAssetView>,
     surface: BodySurface,
     onOpenMedia: (() -> Unit)?,
+    bleed: Dp,
     testTag: String,
 ) {
     val items = attachments.map { it.toItem() }
     when (surface) {
+        // FULL-BLEED, on the card and on the detail alike (design
+        // backlog item 35, ruled 2026-09-08). The media cancels the
+        // card's own padding so it runs to the card's edges and drops
+        // its side radii — it meets the card's straight sides, never its
+        // corners, so nothing needs clipping. It is the largest thing in
+        // the card by a wide margin, which is the point.
         BodySurface.Post -> MediaGallery(
             items = items,
             onOpen = onOpenMedia,
+            modifier = if (bleed > 0.dp) Modifier.bleedHorizontally(bleed) else Modifier,
             testTag = testTag,
         )
 
