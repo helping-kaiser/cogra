@@ -48,6 +48,10 @@ export type PickOutcome = {
 // here — the board states it in the refusal and nowhere else, so a reader is
 // told the limit at the moment it matters instead of being warned in advance
 // about a file they may never pick.
+//
+// The picture sentence is spoken by the UPLOAD (`runUpload`, and the avatar's
+// own resolve), never by this screening: the cap governs the encoded bytes, and
+// the encode is what makes it unreachable for an ordinary photo.
 export const TOO_BIG_PICTURE = `That picture is too big — a picture can be up to ${megabytes(PICTURE_MAX_BYTES)}.`;
 export const UNREADABLE = "That file isn't a picture or a video CoGra can read.";
 
@@ -138,10 +142,15 @@ export async function screenPick(
     }
 
     if (isPictureType(file)) {
-      if (file.size > PICTURE_MAX_BYTES) {
-        refuse(file, TOO_BIG_PICTURE);
-        continue;
-      }
+      // NO SIZE CHECK ON A PICTURE HERE. The cap is on the bytes that are
+      // UPLOADED, and a picture is downscaled and re-encoded before any of them
+      // leave (`encode-image.ts`: 1080 wide, WebP at 0.8), so a phone camera's
+      // 12 MB original becomes a few hundred kilobytes. Screening the SOURCE
+      // against the upload cap refused ordinary camera photos the product would
+      // have taken happily — `runUpload` weighs the encoded blob instead, which
+      // is the thing the server actually measures. A video carries no such pass,
+      // which is why it is still screened above.
+      //
       // AN ANIMATED GIF IS REFUSED IN WORDS rather than flattened in silence.
       // The encoder draws one frame onto a canvas, so an animation that went
       // down that path arrived as a still with nothing said; the browser has
