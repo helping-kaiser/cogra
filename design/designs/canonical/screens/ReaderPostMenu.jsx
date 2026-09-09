@@ -10,9 +10,9 @@
    and a menu row for a function nothing answers is a promise the sheet cannot
    keep.
 
-   The license row does not leave this surface. It closes the sheet and unfolds
-   the terms on the card beneath, and the row it leaves behind reads Hide
-   license — a reveal in place, never a view of its own. */
+   The license row closes this sheet and raises the terms over the surface the
+   reader asked from — `PostLicense`, a drawer they drop by the scrim, the swipe
+   or Escape. The terms are never a state of the card. */
 export function Screen() {
   return (
     <>

@@ -152,6 +152,7 @@
     { "from": "ApplicantWaiting", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "ProfileApplicant" }] },
     { "from": "ApplicantWaiting", "via": 15, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "ApplicantWaiting", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "ApplicantWaiting", "via": 17, "kind": "back", "label": "Got it", "to": [{ "terminal": "self", "case": "the waiting card steps aside, and stays away on this device" }] },
 
     { "from": "VouchBack", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "VouchBack", "via": 2, "kind": "back", "label": "Not now", "to": [{ "terminal": "self", "case": "the vouch card steps aside" }] },
