@@ -177,6 +177,14 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
     edges {
       node {
         ...PostFields
+        # The count the card's comment affordance reads. An aliased
+        # empty page rather than a field on `PostFields`: that fragment
+        # is spread again per comment in the detail read, and the count
+        # is a post's fact alone. `totalCount` costs one aggregate per
+        # connection and is priced at zero complexity.
+        commentCount: comments(first: 0, includePending: $includePending) {
+          totalCount
+        }
       }
     }
     pageInfo {
@@ -239,6 +247,9 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $incl
   post(id: $id) {
     ...PostFields
     comments(first: $commentsFirst, after: $commentsAfter, includePending: $includePending) {
+      # The whole thread's size, cursor-independent — what the card's
+      # comment affordance states on the detail too.
+      totalCount
       edges {
         node {
           ...CommentFields

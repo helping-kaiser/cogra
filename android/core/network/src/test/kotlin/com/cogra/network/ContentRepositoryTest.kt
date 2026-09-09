@@ -70,6 +70,7 @@ class ContentRepositoryTest {
         landing: String = landingJson("LANDED", 7),
         attachments: String = "[]",
         moderationStatus: String = "NORMAL",
+        commentCount: Int = 0,
     ) = """
         {"__typename":"Post","id":"$id",
          "title":{"__typename":"ModeratedText","value":${title?.let { "\"$it\"" } ?: "null"},"status":"NORMAL"},
@@ -86,7 +87,8 @@ class ContentRepositoryTest {
          "moderationStatus":"$moderationStatus",
          "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
          "topics":[],
-         "references":[]}
+         "references":[],
+         "commentCount":{"__typename":"CommentConnection","totalCount":$commentCount}}
     """.trimIndent()
 
     /**
@@ -127,13 +129,16 @@ class ContentRepositoryTest {
     fun theListingMapsPostsAndPageInfo() = runTest {
         enqueue(
             """{"data":{"posts":{"__typename":"PostConnection",
-               "edges":[{"__typename":"PostEdge","node":${postJson("p1", "Hello")}}],
+               "edges":[{"__typename":"PostEdge","node":${postJson("p1", "Hello", commentCount = 3)}}],
                "pageInfo":{"__typename":"PageInfo","hasNextPage":true,"endCursor":"c1"}}}}""",
         )
         val page = (repo().posts(20, null) as Outcome.Success).value
         assertThat(page.items).hasSize(1)
         val post = page.items.single()
         assertThat(post.id).isEqualTo("p1")
+        // The thread's whole size, not the page's — what the card's
+        // comment affordance states.
+        assertThat(post.commentCount).isEqualTo(3)
         assertThat(post.title.value).isEqualTo("Hello")
         assertThat(post.author?.handle).isEqualTo("alice")
         assertThat(post.license).isEqualTo(LicenseChoice(attribution = 0.5, provenance = 1.0))
@@ -216,7 +221,7 @@ class ContentRepositoryTest {
                "license":{"__typename":"License","attribution":0.0,"provenance":0.0},
                "topics":[],
                "references":[],
-               "comments":{"__typename":"CommentConnection",
+               "comments":{"__typename":"CommentConnection","totalCount":1,
                  "edges":[{"__typename":"CommentEdge","node":{"__typename":"Comment","id":"c1",
                    "content":{"__typename":"ModeratedText","value":"hi","status":"NORMAL"},
                    "attachments":[${mediaJson("cm1")}],
@@ -235,6 +240,10 @@ class ContentRepositoryTest {
         val detail = (repo().post("p1", 20, null) as Outcome.Success).value
         checkNotNull(detail)
         assertThat(detail.post.author).isNull()
+        // The thread's own count rides the connection that served the
+        // page, so the detail's affordance reads the same number the
+        // card did.
+        assertThat(detail.post.commentCount).isEqualTo(1)
         assertThat(detail.comments.items.single().content.value).isEqualTo("hi")
         assertThat(detail.comments.items.single().author?.handle).isEqualTo("bob")
         // Replies are counted, not carried (Q49): the thread read brings

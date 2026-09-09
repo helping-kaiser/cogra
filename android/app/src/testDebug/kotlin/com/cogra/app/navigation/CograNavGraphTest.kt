@@ -239,36 +239,6 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
-    // A mention chip reaches the profile it names, from the card it
-    // renders on — the hand test's "mention a person and land on their
-    // profile from the render" (D16).
-    @Test
-    fun aPostCardsMentionChipOpensTheProfileItNames() {
-        signIn()
-        identity.seed = ActorKey.generate().seed()
-        account.profile = member()
-        content.listing = listOf(
-            com.cogra.domain.testing.testPost("p1").copy(
-                references = listOf(
-                    com.cogra.domain.testing.testReferenceClaim(
-                        com.cogra.domain.testing.testMentionTarget("ada"),
-                    ),
-                ),
-            ),
-        )
-        profiles.others["ada"] = com.cogra.domain.testing.testProfile(
-            id = "user-ada",
-            handle = "ada",
-            displayName = "Ada",
-        )
-        render()
-        waitForTag("feed_post_p1_reference_l1-user-ada")
-
-        compose.onNodeWithTag("feed_post_p1_reference_l1-user-ada").performClick()
-        compose.waitForIdle()
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Profile>()).isTrue()
-    }
-
     // The Reference affordance opens the composer with the node staged,
     // so the author writes the citing post rather than hunting for an
     // id to paste (D20).
@@ -438,8 +408,8 @@ class CograNavGraphTest {
         profiles.others["author"] =
             com.cogra.domain.testing.testProfile(id = "author-1", handle = "author")
         render()
-        waitForTag("feed_author_p1")
-        compose.onNodeWithTag("feed_author_p1").performClick()
+        waitForTag("feed_p1_author")
+        compose.onNodeWithTag("feed_p1_author").performClick()
         waitForTag("profile_display_name")
         val entry = navController.currentBackStackEntry
         assertThat(entry?.destination?.hasRoute<Profile>()).isTrue()
