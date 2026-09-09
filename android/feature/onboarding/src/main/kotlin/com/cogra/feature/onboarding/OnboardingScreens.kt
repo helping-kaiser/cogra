@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.core.designsystem.RecoveryCodeConfirm
+import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.identity.recoveryCodeTypedBack
 
@@ -51,6 +52,7 @@ fun InviteEntryRoute(
     onUsableLink: (String) -> Unit,
     onLogInInstead: () -> Unit,
     onBrowseFeed: () -> Unit,
+    onBack: () -> Unit,
     viewModel: InviteEntryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -64,6 +66,7 @@ fun InviteEntryRoute(
         onContinue = { state.inviteId?.let(onUsableLink) },
         onLogInInstead = onLogInInstead,
         onBrowseFeed = onBrowseFeed,
+        onBack = onBack,
     )
 }
 
@@ -75,8 +78,9 @@ fun InviteEntryScreen(
     onContinue: () -> Unit,
     onLogInInstead: () -> Unit,
     onBrowseFeed: () -> Unit,
+    onBack: () -> Unit = {},
 ) {
-    Scaffold { padding ->
+    Scaffold(topBar = { PageHeader(onBack = onBack, testTag = "invite_header") }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -88,7 +92,7 @@ fun InviteEntryScreen(
         ) {
             Text(
                 text = stringResource(R.string.invite_title),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.semantics { heading() },
             )
             Text(stringResource(R.string.invite_explainer))
@@ -155,6 +159,7 @@ fun InviteEntryScreen(
 @Composable
 fun ApplyRoute(
     inviteId: String,
+    onBack: () -> Unit,
     viewModel: ApplyViewModel = hiltViewModel(),
 ) {
     viewModel.inviteId = inviteId
@@ -165,6 +170,7 @@ fun ApplyRoute(
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
         onSubmit = viewModel::onSubmit,
+        onBack = onBack,
     )
 }
 
@@ -175,8 +181,9 @@ fun ApplyScreen(
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSubmit: () -> Unit,
+    onBack: () -> Unit = {},
 ) {
-    Scaffold { padding ->
+    Scaffold(topBar = { PageHeader(onBack = onBack, testTag = "apply_header") }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -187,7 +194,7 @@ fun ApplyScreen(
         ) {
             Text(
                 text = stringResource(R.string.apply_title),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.semantics { heading() },
             )
             OutlinedTextField(
@@ -260,6 +267,7 @@ private fun ErrorCode.applyMessage(): Int = when (this) {
 @Composable
 fun KeyCeremonyRoute(
     onDone: () -> Unit,
+    onBack: () -> Unit,
     viewModel: KeyCeremonyViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -273,6 +281,7 @@ fun KeyCeremonyRoute(
         onDeclineBackup = viewModel::onDeclineBackup,
         onCancelDecline = viewModel::onCancelDecline,
         onConfirmDecline = viewModel::onConfirmDecline,
+        onBack = onBack,
     )
 }
 
@@ -284,6 +293,7 @@ fun KeyCeremonyScreen(
     onDeclineBackup: () -> Unit,
     onCancelDecline: () -> Unit,
     onConfirmDecline: () -> Unit,
+    onBack: () -> Unit = {},
 ) {
     // While the code is on screen this is a trap (design/readme.md, the
     // entry flow): the code is shown once and never stored, so a back
@@ -292,7 +302,16 @@ fun KeyCeremonyScreen(
     // answered — there is nowhere safe for it to go.
     BackHandler(enabled = state.recoveryCode != null) {}
 
-    Scaffold { padding ->
+    Scaffold(
+        topBar = {
+            // The band's arrow is the same door the gesture is: while the
+            // trap holds, it is not drawn either.
+            PageHeader(
+                onBack = onBack.takeIf { state.recoveryCode == null },
+                testTag = "key_ceremony_header",
+            )
+        },
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -303,7 +322,7 @@ fun KeyCeremonyScreen(
         ) {
             Text(
                 text = stringResource(R.string.backup_title),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.semantics { heading() },
             )
             Text(stringResource(R.string.backup_explainer))

@@ -101,7 +101,7 @@ export function ReferenceFinder({
       ref={ref}
       data-testid={`${testIdPrefix}-finder`}
       onClose={onClose}
-      className="m-auto w-[min(90vw,26rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
+      className="cg-dialog-in m-auto w-[min(90vw,26rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
       <h2 className="text-headline-small">Add a reference</h2>
       {/* D21: a topic is tagged, never referenced — the finder offers
@@ -162,7 +162,7 @@ export function ReferenceFinder({
                     disabled={already}
                     data-testid={`${testIdPrefix}-finder-candidate-${candidate.targetId}`}
                     onClick={() => onPick(candidate)}
-                    className="flex w-full flex-col items-start rounded-extra-small px-2 py-2 text-left disabled:opacity-50"
+                    className="flex w-full flex-col items-start rounded-extra-small px-2 py-2 text-left disabled:opacity-[var(--state-disabled)]"
                   >
                     <span className="text-body-medium">{candidate.target.label}</span>
                     <span className="text-label-small text-on-surface-variant">
