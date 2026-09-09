@@ -44,13 +44,17 @@ class RecoveryCodeConfirmTest {
     private val clipboard = FakeClipboard()
     private var confirmed = 0
 
-    private fun show(matches: (String) -> Boolean = { it.trim() == CODE }) {
+    private fun show(
+        matches: (String) -> Boolean = { it.trim() == CODE },
+        diverged: (String) -> Boolean = { typed -> typed.isNotEmpty() && !CODE.startsWith(typed) },
+    ) {
         compose.setContent {
             CompositionLocalProvider(LocalClipboard provides clipboard) {
                 RecoveryCodeConfirm(
                     code = CODE,
                     explainer = "keep it",
                     matches = matches,
+                    diverged = diverged,
                     onConfirmed = { confirmed++ },
                 )
             }

@@ -20,3 +20,18 @@ fun recoveryCodeTypedBack(shown: String, typed: String): Boolean {
     val answer = RecoveryCode.normalize(typed)
     return answer.isNotEmpty() && answer == RecoveryCode.normalize(shown)
 }
+
+/**
+ * Whether [typed] is a prefix that can no longer become [shown] — not
+ * merely incomplete, but already wrong. Reads both through the same
+ * [RecoveryCode.normalize] call [recoveryCodeTypedBack] uses to decide
+ * the match itself: a divergence line folding confusables on some
+ * other rule could flag a prefix the button would still accept once
+ * completed, or stay silent on one the button will reject — the line
+ * has to agree with the button it sits next to. An empty answer is
+ * not yet a mistake.
+ */
+fun recoveryCodePrefixDiverged(shown: String, typed: String): Boolean {
+    val prefix = RecoveryCode.normalize(typed)
+    return prefix.isNotEmpty() && !RecoveryCode.normalize(shown).startsWith(prefix)
+}

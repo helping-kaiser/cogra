@@ -40,4 +40,27 @@ class RecoveryCodeConfirmationTest {
         assertThat(recoveryCodeTypedBack(shown, "")).isFalse()
         assertThat(recoveryCodeTypedBack(shown, "  --  ")).isFalse()
     }
+
+    @Test
+    fun aConfusableCharacterIsNotADivergedPrefix() {
+        // `O` reads back as `0` under the same folding the button uses,
+        // so this is the exact code, not a prefix that went wrong.
+        assertThat(recoveryCodePrefixDiverged(shown, "ABCDE-FGHJK-MNPQR-STVWX-YZO123")).isFalse()
+    }
+
+    @Test
+    fun aGenuinelyWrongCharacterDiverges() {
+        assertThat(recoveryCodePrefixDiverged(shown, "ABCDE-FGHJK-MNPQR-STVWX-YZ0124")).isTrue()
+    }
+
+    @Test
+    fun anEmptyAnswerHasNotYetDiverged() {
+        assertThat(recoveryCodePrefixDiverged(shown, "")).isFalse()
+        assertThat(recoveryCodePrefixDiverged(shown, "  --  ")).isFalse()
+    }
+
+    @Test
+    fun aCorrectPartialHasNotYetDiverged() {
+        assertThat(recoveryCodePrefixDiverged(shown, "ABCDE-FGHJK")).isFalse()
+    }
 }
