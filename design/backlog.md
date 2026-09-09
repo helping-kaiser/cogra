@@ -299,7 +299,8 @@ attribution on every card. Deliberately late.
 The graph as a navigable universe: a 3D view from your position, other
 profiles as spheres varying in size, colour and brightness by their
 weight. Mostly its own thing and mostly outside this system — last on
-purpose.
+purpose. **It lands with slice 2.7's search backend** (ruled 2026-09-09):
+no surface is built against the exact-match lookup before then.
 
 ### 20 · Settings — the whole surface · *design* · **gates 2.5.3**
 Three shipped "?" texts already promise it: "Your default lives in
@@ -526,7 +527,12 @@ Two follow-ups the round surfaces, still open:
   `UploadNotice`, `EarnedChart`, `PayoutAddress` ×2, `WalletBalance`
   — each a conform item under §7's rule that a component never states
   a raw type value, and each moves pixels, so the sweep wants one eye
-  over its boards; board-glue still duplicated in twos and fours (the license lock
+  over its boards. **Eight more sites spell the token's own `0.5px`**
+  and move nothing when they take it — `ActsCard`, `MediaThumb` ×2,
+  `PickTray`, `Chip`, `WalletBalance`, and `ComposePick`'s board ×2 —
+  and **three are not tracking at all**: `MediaThumb`'s `12px`/`16px`
+  pair and `TopicsLine`'s `30px` leading, which need a rung named
+  before they can take one. Board-glue still duplicated in twos and fours (the license lock
   ×4, the seal avatar row ×2, the vouch card head ×2);
   `_ds_manifest.json` frozen at the import commit (only the claude.ai
   app refreshes it); `_adherence.oxlintrc.json` has no wired runner
@@ -1261,3 +1267,35 @@ the implementation session's own decision** — one prepare that grows
 the fields, or the client staging the three prepares and sealing the
 batch. The boards and the contract are both satisfied by the second,
 which is why the contract is not moving to meet the first.
+
+### 38 · The desktop round · *design*
+
+Held open by the scope ruling of 2026-09-09 (readme §2): the mobile set
+is what this system draws, and a desktop visitor gets the mobile-derived
+layout unoptimized until this round runs. What parked into it:
+
+1. **The card idiom above phone width** — whether the full-bleed card and
+   its 8px seam belong to the 42rem column's edge or to the viewport's.
+2. **The fullscreen viewer on desktop** — there is no rotate, no pinch
+   and no swipe-down; Escape and the arrows already exist in the master
+   and ship as they are, so the round decides what stands in for rotate
+   and whether the browser's own fullscreen is offered.
+3. **The share fallback's desktop dress.** Copy-the-link with a *Link
+   copied* snackbar is ruled and ships now, unoptimized like the rest.
+
+Nothing desktop-specific is built before this round.
+
+### 39 · The compose fresh-start line disagrees across the repos · *design*
+
+`ComposeDraft` draws *"Or start fresh — pick one picture, several, or one
+video."* and has since the compose section was drawn (2026-08-27), kept
+deliberately whole when the board was componentized (2026-09-04): the
+grid beneath the offer carries no caption of its own, so the short form
+would leave the sentence pointing at nothing.
+
+Android has shipped *"Or start fresh —"* since 2026-08-31, attributed
+in its own source to a jakob ruling of that day. **No such ruling is
+recorded here** — not in §13, not in this file, not in the board's
+history — and the web applied the same round thirteen minutes later with
+the full line. One of the two readings is wrong; jakob's word settles
+which, and the loser conforms.
