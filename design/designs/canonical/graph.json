@@ -206,13 +206,13 @@
     { "from": "KeyElsewhere", "via": 17, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "KeyElsewhere", "via": 18, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
-    { "from": "InviteEntry", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "InviteEntry", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "FeedBare", "case": "the arrow is a link, not history — from a root of the funnel, up is the public front door" }] },
     { "from": "InviteEntry", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "InviteEntry", "via": 3, "kind": "advance", "label": "Continue", "to": [{ "board": "Join", "case": "the link checks out" }, { "board": "JoinInvalid", "case": "unusable link" }, { "board": "InviteEntryError", "case": "nothing that reads as a link — the field says so in place" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "InviteEntry", "via": 4, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
     { "from": "InviteEntry", "via": 5, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "Main", "case": "an inviter's link seen — their borrowed view" }, { "board": "FeedBare", "case": "no usable link — the bare view" }] },
 
-    { "from": "InviteEntryError", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "InviteEntryError", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "FeedBare", "case": "the arrow is a link, not history — from a root of the funnel, up is the public front door" }] },
     { "from": "InviteEntryError", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing — the field re-checks itself once it is already marked" }] },
     { "from": "InviteEntryError", "via": 3, "kind": "advance", "label": "Continue", "to": [{ "board": "Join", "case": "the link checks out" }, { "board": "JoinInvalid", "case": "unusable link" }, { "terminal": "self", "case": "still nothing that reads as a link — the line updates in place" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "InviteEntryError", "via": 4, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
@@ -234,7 +234,7 @@
     { "from": "JoinErrors", "via": 6, "kind": "advance", "label": "Create account", "to": [{ "board": "ApplicantFeed", "case": "account created — applicant days begin" }, { "terminal": "self", "case": "still failing — the line updates in place" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "JoinErrors", "via": 7, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
 
-    { "from": "JoinInvalid", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "JoinInvalid", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "FeedBare", "case": "the arrow is a link, not history — from a root of the funnel, up is the public front door" }] },
     { "from": "JoinInvalid", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "JoinInvalid", "via": 3, "kind": "advance", "label": "Continue", "to": [{ "board": "Join", "case": "a different link checks out" }, { "board": "JoinInvalid", "case": "still unusable" }] },
     { "from": "JoinInvalid", "via": 4, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
@@ -265,7 +265,7 @@
     { "from": "KeyDecline", "via": 1, "kind": "cancel", "label": "I accept the risk", "to": [{ "terminal": "back", "case": "key without backup — returns where the ceremony began" }] },
     { "from": "KeyDecline", "via": 2, "kind": "back", "label": "Go back", "to": [{ "board": "KeyCeremony" }] },
 
-    { "from": "SignIn", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "SignIn", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "FeedBare", "case": "the arrow is a link, not history — from a root of the funnel, up is the public front door" }] },
     { "from": "SignIn", "via": 2, "kind": "advance", "label": "Email field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "SignIn", "via": 3, "kind": "advance", "label": "Password field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "SignIn", "via": 4, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
@@ -276,7 +276,7 @@
     { "from": "SignIn", "via": 9, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "FeedBare" }] },
     { "from": "SignIn", "via": 10, "kind": "advance", "label": "Download the app (APK)", "to": [{ "terminal": "os", "case": "the browser downloads the APK" }] },
 
-    { "from": "SignInError", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "SignInError", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "FeedBare", "case": "the arrow is a link, not history — from a root of the funnel, up is the public front door" }] },
     { "from": "SignInError", "via": 2, "kind": "advance", "label": "Email field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "SignInError", "via": 3, "kind": "advance", "label": "Password field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "SignInError", "via": 4, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
@@ -295,12 +295,12 @@
     { "from": "ResetNew", "via": 2, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
     { "from": "ResetNew", "via": 3, "kind": "advance", "label": "Set the new password", "to": [{ "board": "SignIn", "case": "set — every device is signed out, so signing in again is the next thing" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
 
-    { "from": "Restore", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "Restore", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "KeyElsewhere", "case": "the arrow is a link, not history — restore is reached signed in with the key absent, so up is that reader's own home" }] },
     { "from": "Restore", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Restore", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
     { "from": "Restore", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "board": "RestoreError", "case": "the code doesn't check out" }] },
 
-    { "from": "RestoreError", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "RestoreError", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "KeyElsewhere", "case": "the arrow is a link, not history — restore is reached signed in with the key absent, so up is that reader's own home" }] },
     { "from": "RestoreError", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "RestoreError", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
     { "from": "RestoreError", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "terminal": "self", "case": "still failing — the line updates in place" }] },
