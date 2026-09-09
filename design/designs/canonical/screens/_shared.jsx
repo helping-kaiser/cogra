@@ -41,6 +41,7 @@ const {
   SegmentedFilter,
   Checkbox,
   FeedFilter,
+  FeedFilterSheet,
   FilterTrigger,
   FilterSection,
   OrderSection,
@@ -997,4 +998,190 @@ const MIRA_CLIP_POST = {
 
 /* The bottom bar's height — what the stream's own chrome has to clear. */
 const BAND_HEIGHT = 64;
+
+/* ── The license sheet's axis rows (the seal's, and the account default's) ──
+   The chooser master draws the two axes as a wrapped row of native radios — a
+   form control for a settings page — where a sheet is a decision surface: one
+   axis per section, one reading per row, the consequence spelled at the end of
+   its own line. Two boards now ask the same question of one reader, so the rows
+   are written once and neither can say a shorter version of the other.
+
+   THE ROW IS THE CONTROL, the way `Checkbox` makes it one: a real radio input,
+   visually hidden, with the drawn dot and the words inside the label that names
+   it. The dot is `SettingsRow`'s, to the pixel — a license axis and a settings
+   choice are the same question asked twice. */
+function LicenseAxisLabel({ children }) {
+  return (
+    <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+      {children}
+    </span>
+  );
+}
+
+function LicenseAxis({ axis, name, tiers, chosen }) {
+  return (
+    <div role="radiogroup" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {tiers.map((tier, index) => (
+        /* The ROW carries the flow number, not the input inside it: a visually
+           hidden radio cannot show a badge, and the row is what a reader
+           presses. */
+        <label key={tier.label} data-axis={axis} className="cg-state cg-focus" style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 24, position: "relative", cursor: "pointer", borderRadius: "var(--radius-small)" }}>
+          <input
+            type="radio"
+            name={name}
+            defaultChecked={index === chosen}
+            style={{ position: "absolute", opacity: 0, width: "1px", height: "1px", margin: 0 }}
+          />
+          <span
+            aria-hidden="true"
+            style={{
+              width: 18,
+              height: 18,
+              flex: "none",
+              boxSizing: "border-box",
+              borderRadius: "var(--radius-full)",
+              border: index === chosen ? "5px solid var(--primary)" : "1px solid var(--border-field)",
+            }}
+          />
+          <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
+            {tier.label}
+          </span>
+          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+            {tier.hint}
+          </span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+/* ── The settings page's body ──────────────────────────────────────────────
+   What `Settings` draws, and what the two sheets it opens are drawn over. The
+   ruling the round records is an ORDER, and a sheet board that redrew a few of
+   its rows by hand would be a second order nobody ratified — so the page lives
+   here once, and a sheet board shows the top of it under the wash exactly as a
+   reader would.
+
+   `Settings` frames the whole scroll; a sheet board keeps the phone's 844 and
+   lets the page run past it, which is what a scrolling page under a sheet does.
+   The three boards therefore differ in what covers the page and in nothing
+   else. */
+function SettingsBody() {
+  return (
+    <>
+      <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 24, padding: "8px 24px 32px" }}>
+        <SettingsGroup
+          bare
+          label="Theme"
+          footnote="Auto follows your device's own setting, and the choice stays on this device."
+        >
+          <div>
+            <SegmentedFilter
+              block
+              ariaLabel="Theme"
+              value="auto"
+              options={[
+                { value: "light", label: "Light" },
+                { value: "dark", label: "Dark" },
+                { value: "auto", label: "Auto" },
+              ]}
+            />
+          </div>
+        </SettingsGroup>
+
+        <SettingsGroup
+          label="Taking a stance"
+          footnote="A tap always adds a small positive one. This is what a longer press opens, everywhere."
+        >
+          <SettingsRow
+            name="settings-stance-input"
+            selected
+            label="The pad"
+            status="Press and hold, then drift to where you stand."
+          />
+          <SettingsRow
+            name="settings-stance-input"
+            selected={false}
+            label="Sliders"
+            status="One slider per side of the stance."
+          />
+          <SettingsRow
+            name="settings-stance-input"
+            selected={false}
+            label="Typed values"
+            status="Type both numbers exactly."
+          />
+        </SettingsGroup>
+
+        <SettingsGroup
+          label="Writing"
+          footnote="Every signed action is paid for separately. A post's license is settled when it is first signed and never changes."
+        >
+          <SettingsRow
+            checked
+            label="Confirm multi-action submits"
+            status="Ask first when one submit signs more than one action."
+            onOpen={() => {}}
+          />
+          <SettingsRow label="Default license" value="Public domain" onOpen={() => {}} />
+        </SettingsGroup>
+
+        <SettingsGroup
+          label="Reading"
+          footnote="Every feed starts from this. A change made inside a feed lasts until you change it back, on that device only."
+        >
+          <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} />
+        </SettingsGroup>
+
+        <SettingsGroup
+          label="Key backup"
+          footnote="Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
+        >
+          <SettingsRow label="Recovery code" status="Last created 12 August" onOpen={() => {}} />
+          <SettingsRow label="Your key" onOpen={() => {}} />
+        </SettingsGroup>
+
+        <SettingsGroup
+          label="Sessions"
+          footnote="A device you sign out can stay signed in for up to 15 minutes."
+        >
+          <SettingsRow label="Firefox on Ubuntu" status="This browser" inert />
+          <SettingsRow
+            label="Pixel 8"
+            status="Last used 2 days ago"
+            inert
+            trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
+          />
+          <SettingsRow
+            label="Unnamed device"
+            status="Last used 12 August"
+            inert
+            trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
+          />
+          <SettingsRow action label="Sign out everywhere else" onOpen={() => {}} />
+        </SettingsGroup>
+
+        <SettingsGroup
+          label="Credentials"
+          footnote="Changing your password signs out every other device."
+        >
+          <SettingsRow label="Password" status="Changed 3 weeks ago" onOpen={() => {}} />
+          <SettingsRow label="Handle" value="@sol" onOpen={() => {}} />
+          <SettingsRow label="Email" value="sol@solferreira.art" onOpen={() => {}} />
+        </SettingsGroup>
+
+        <SettingsGroup ariaLabel="Sign out">
+          <SettingsRow
+            checked={false}
+            label="Don't remember this account on this device"
+            status="Your key and your draft are cleared from this browser when you sign out."
+            onOpen={() => {}}
+          />
+          <SettingsRow action label="Sign out" onOpen={() => {}} />
+        </SettingsGroup>
+      </div>
+    </>
+  );
+}
 
