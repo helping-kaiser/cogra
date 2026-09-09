@@ -519,7 +519,7 @@ which is what makes a guess expensive.
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
-| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and topics outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
+| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
 fixes the slots and their order, so `BottomNav` simply accepts
@@ -566,13 +566,13 @@ paper over:
   the segments are equal width, and the control is only for two to four
   **mutually exclusive** options over one list.
 - `Chip` and `TopicChip` — the combinable counterpart, and a topic. Same
-  pill, told apart by what they do: a chip acts, a topic navigates. 32px
+  pill, told apart by what they do: a chip acts, a tag navigates. 32px
   drawn, 48px tapped, selection colour only with no check glyph (a check
   reflows every label in the row as the reader picks).
 - `FeedFilter` (+ `FilterTrigger`, `OrderSection`, `FilterSection`) —
   **what the feed actually needs**, and the reason the
   segmented row was the wrong control. Ten kinds of ranked content that
-  combine (posts, comments, chats, messages, profiles, proposals, topics,
+  combine (posts, comments, chats, messages, profiles, proposals, tags,
   items, campaigns, offers — `FEED_KINDS`, one list shared with search),
   forms of post that combine (photos and video with no text posts is a
   legitimate feed), an order that does not (ranked, the default, or
@@ -724,7 +724,7 @@ Nothing vanishes silently, and none of these use `error` colouring.
   it. — `RedactedContent`, and `PostCard`'s `redacted` prop
 - **Sensitive** — a gentle blur with tap to reveal, warm wording.
   **The whole body veils as one**: media, text and description under a
-  single veil, the title and topics outside it and readable, so a
+  single veil, the title and tags outside it and readable, so a
   reader can decide from the frame without touching the content. One
   tap reveals everything — the reader decided once, and asking again
   per item turns one decision into five. **The veil names its source** —
@@ -1086,7 +1086,7 @@ lands whole or not at all (resolves Q43). License collapses to one
 line reading the author's default (an account setting; Public domain
 until changed) and opens as a bottom sheet — immutable after
 signing. Sensitive self-marking is one switch opening a bottom
-sheet: it veils the body and the description; the title and topics
+sheet: it veils the body and the description; the title and tags
 stay readable so choosing to look is informed; an optional reason is
 shown on the veil. Every stance a write signs is disclosed and
 adjustable: the post's own attachment on a one-axis pad (For/Against
@@ -1182,12 +1182,12 @@ the detail view is just about the post.
 
 ### Reference rows and signed pairs — 2026-08-28
 
-A card never lists its references inline, and its topics line is
+A card never lists its references inline, and its tags line is
 **one line on every variant: at most two chips, then the counts in
-words** — `#coastroad #saltmarsh · 23 topics · 3 references`. A
+words** — `#coastroad #saltmarsh · 23 tags · 3 references`. A
 clipped parade of half-chips says nothing; the counts are the
 readable fact and the way in. They open the
-**topics-and-references sheet** (on a detail surface the whole line
+**tags-and-references sheet** (on a detail surface the whole line
 is the opener; in a feed the chips still navigate). The sheet is
 the full set's home: every signed act gets one row — **leading
 mark · name · the signed pair** — one row shape across every node
@@ -1195,18 +1195,21 @@ kind (`ReferenceRow`), reused by search's results (item 9).
 
 - **The leading mark says the kind, without a word beside it.** A
   person keeps their avatar; a media post its cover; a text post the
-  letter T as a tile; a topic its #; the rest carry node-type glyphs
+  letter T as a tile; a tag its #; the rest carry node-type glyphs
   — proposal `how_to_vote`, item `inventory_2`, campaign `campaign`,
   offer `sell`, chat `forum`, comment `chat_bubble`. Item and offer
   deliberately do not share a silhouette (box vs price tag).
-- **The pair is public record**: set at compose on each picked topic
-  and reference (a changeable default of +0.10 / +0.10), edited
-  through the reader's chosen stance input (the pad, or whatever
-  their settings swap in), and displayed on the row for any reader.
+- **The pair is public record**: set at compose on each picked tag and
+  reference, and displayed on the row for any reader. The changeable
+  defaults differ because the census does — a reference is +0.10 /
+  +0.10 with both axes signed, a tag is **+0.1 / 1**, its confidence
+  bounded to [0, 1] and starting full. A reference's pair is edited
+  through the reader's chosen stance input; a tag's is edited on two
+  sliders, for the reason the tag round records.
 - A signed reference is a compose-time act; an @handle typed in text
   is only coloured text, never a record. They must not look identical
   — the typed handle is colour, the reference is a row in the sheet.
-- Comments wear the same topics-and-citations line as posts
+- Comments wear the same tags-and-citations line as posts
   (`TopicsLine`, shared) and the same overflow menu.
 
 ### The search rulings — 2026-08-28
@@ -1227,7 +1230,7 @@ as Q46 in docs/open-questions.md):
   shared transiently with the viewer's chosen ranker. **The feed
   carries this same ordering section** (backlog item 19 — the
   canonical feed screens never drew the filter at all).
-- **Scope operators**: `@handle <text>` and `#topic <text>` scope
+- **Scope operators**: `@handle <text>` and `#tag <text>` scope
   the query; the remainder matches the scoped author's own content
   AND the names of their acts' targets — a comment through its
   post's title, an offer through its item's name, a message through
@@ -1272,7 +1275,7 @@ The rulings that put it on screen:
   "Everything".
 - **One kind list.** `FEED_KINDS` grows to search's ten and both
   surfaces share it — posts, comments, chats, messages, profiles,
-  proposals, topics, items, campaigns, offers — and the word is
+  proposals, tags, items, campaigns, offers — and the word is
   **"Profiles"** everywhere, never "People".
 - **One ordering section.** `OrderSection` — the Ranked/Newest swap
   with "Show what you've already seen" (default off — what you've
@@ -1691,7 +1694,7 @@ entry first". What stands:
   Profile page joined 2026-09-01 — 699 edges over all 93 boards, no
   board unreached, no interactable unedged). The 108 gaps are the
   visible to-do: the reader's post / comment / profile menus, the
-  topic page (ruled — a search subpage) and the topic picker,
+  tag page (ruled — a search subpage) and the tag picker,
   field/mismatch error states, the applicant's once-each
   acting boards (ruled), the settlement/tip/rail record views the
   wallet's traceability promise owes,
@@ -1702,8 +1705,8 @@ entry first". What stands:
   gated seal, the license / sensitive sheets, the key-absent seal,
   the stance pad, and the three pattern boards — the guest gate, the
   network error, key-absent acting) rather than duplicated boards.
-- **The topic picker's interim entry** (jakob 2026-09-02): until the
-  picker board exists, the apps' entry is the existing topic field,
+- **The tag picker's interim entry** (jakob 2026-09-02): until the
+  picker board exists, the apps' entry is the existing tag field,
   opened as a sheet from the seal. The gap and the blocked
   `add-a-topic` flow stand — the interim is what the apps ship, not
   the design owed.
@@ -2351,12 +2354,12 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   there is no attaching one to a post that landed — the row starts a
   new post pointing at the old one.
 - **Referencing from any other kind lives inside that kind's own
-  wizard.** The reply seal already carries Add a topic and Cite
+  wizard.** The reply seal already carries + Add a tag and Cite
   something side by side: with only two stages, the seal *is* where a
-  comment's topics and references are named. `ReplyCited` draws that
+  comment's tags and references are named. `ReplyCited` draws that
   surface once a citation is staged — the reference joining the acts
   card rather than sitting beside it, because a staged reference is an
-  act and the total has to count it. Staged topics and references are
+  act and the total has to count it. Staged tags and references are
   unstageable everywhere: the reply's staged rows carry the same
   remove the post's details rows do, and ReplySeal's componentize pass
   inherits it. It is a declared **entry**: the picker hands its pick
@@ -2397,7 +2400,7 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   pair alone, and the ×.
 - **The gate**: 103 → 82 gaps and 897 → 938 edges. The twenty-four
   closed, and three reopened as fresh instances of surfaces already
-  owed — the topic picker on the new composer board and again on the
+  owed — the tag picker on the new composer board and again on the
   reply's cited seal, the score drill-down on the new detail state.
 
 ### The conformance round — 2026-09-04
@@ -3095,6 +3098,116 @@ is a thing the drawing said that the surface would not hold.
   route. Four boards moved: the three reviewed, plus `ComposeLicense`
   through the shared axis. `FeedSheet`'s only diff is a generated
   `useId` value, which followed the master's new branch and no pixel.
+
+### The tag round — 2026-09-09
+
+Every `#chip` in the system pointed at a gap, and there were
+twenty-four of them — the most any one undrawn surface had ever
+carried. Slice 2.3 shipped the topic page, the picker and the pair
+sliders in both apps in August; the canvas had drawn none of them, so
+what the apps ship had never been ruled. Ruled by jakob the same day.
+
+- **"Tag" is the word on screen; "topic" is the word in the record.**
+  Tags is what people already call these, and *topic* came in from the
+  L1 author — so it stays where it belongs, in the contract, the docs
+  and the graph, and never reaches a label, a count, a placeholder, an
+  accessible name or a "?" text. The sweep took `FieldLabel`,
+  `FEED_KINDS`' label, `TopicsLine`'s worded counts, the sheet's title
+  and accessible name, Explore's placeholder, four blessed "?" strings,
+  the graph's own edge labels and case texts, and both flow
+  descriptions. **The law stops at the code's names**: `TopicChip`,
+  `TopicsLine`, `TopicRemovable`, the `topics` prop, `kind="topic"`,
+  the `NODE_GLYPHS` keys and the `open-a-topic` / `add-a-topic` flow
+  names all stay, because they name the record and nobody using the
+  product reads them. `FEED_KINDS` is the law in one line — value
+  `topics`, label `Tags`. One word keeps its ordinary sense: a help
+  dialog's *topic* is its subject, which is why `ReplyPad`'s case text
+  was left alone.
+- **One spelling, and it is the bare word.** `+ Add a tag`, drawn as
+  `InlineAction` on all nine composers that offer it, retiring the
+  outline button seven of them wore. The tag block now takes the
+  References block's exact anatomy — label, the staged set, the bare
+  word under it — because staging a tag and staging a citation are the
+  same errand and two shapes for it was an accident of when each was
+  drawn. The nine also collapse the marker table's two pins into one.
+- **The page is a subpage of search**, so its arrow is a link to
+  Explore and it carries no bottom bar — the settings round's rule for
+  a surface a reader arrives at, reads and leaves. Its title is the tag
+  with its `#`.
+- **No order control, and the contract is the reason.** `taggedContent`
+  is limit-bounded and returns a plain list, newest claim first; the
+  schema says a Relay connection "would promise a pagination the read
+  cannot honour", and a Ranked/Newest swap would promise an ordering it
+  cannot serve either. So there is no order section, no pagination and
+  no load-more. In the end state the ranker orders this list — a
+  staging note, never a control.
+- **Following is a stance, and its surface waits for slice 3.**
+  hashtag.md §3 makes a follow an **Affinity** record toward the Type,
+  parameters signed over [-1, +1], so the stance control is its input —
+  but a stance anchor on the page header's trailing edge read as a
+  stance readout for the post the reader arrived from, and jakob's
+  review removed it. The tag page carries no follow control; the
+  gesture gets its surface in slice 3's round, which is also when the
+  roadmap first lets it ship (topic follow is client-hidden until the
+  topic feed lands).
+- **Every row carries its claim's pair, plainly.** A signed act is
+  public record, so `TaggedRow` simply shows it — and the reveal
+  gesture on content surfaces stays the tags-and-references sheet.
+  A chip's tap goes to the tag's page, on every surface, always.
+- **The empty page is contractual, not an error.** Every well-formed
+  name already denotes a Type, so `hashtag(name)` resolves without a
+  registry row; the board says the tag exists and the list does not
+  yet, and never "not found".
+- **The picker has no creation gesture, and cannot.** A Type anchors
+  vacuously and is a commons — a never-used name is unused, not
+  missing — so there is no `Create #foo` anywhere, and the footnote
+  carries the mechanic instead. Its candidate list is the end state:
+  Hashtag `name` is indexed, but only from 2.7, and
+  `referenceCandidates` explicitly refuses to offer topics today, so
+  the apps ship type-only until then. The legality gate is stated under
+  the field and canonicalization is previewed live, because a reader is
+  choosing a permanent public endpoint.
+- **The pair editor is two sliders, not the pad**, and the census is
+  why: a Tag carries relevance `r ∈ [-1, 1]` and confidence
+  `c ∈ [0, 1]`, so half the pad's square would be unreachable and a
+  control with a dead half lies about its range. It also reconciles the
+  drawing with what shipped — 2.3 shipped sliders. Defaults are
+  `TagInput`'s, **+0.1 and 1**. `StanceSlider` gained `min`/`max` for
+  it, and the staged chip became a button for the first time: the
+  conformance round left the pill inert because removal was the only
+  thing a tag was for, and now it is not.
+- **A tag's pair is written unlike a stance's, deliberately.**
+  Relevance keeps its sign because the sign is the content; confidence
+  drops it, because a `+` on a value with no negative half advertises a
+  pole that does not exist. `+0.40 / 0.90`, assigned once in
+  `formatTagPair`. The compose default for a tag is **+0.1 / 1**;
+  references keep +0.10 / +0.10, both axes being signed there.
+- **A tag is a search result kind**, wearing the `#` tile and a rank on
+  its right edge — never a use count, which would be nobody's view in
+  particular and unexplainable.
+- **The looks bar.** Mastodon's hashtag page gives the shape: the tag
+  as the title, a chronological column of whole posts (its header
+  follow was taken first and removed at review — above). Refused: its
+  "N people talking"
+  figure (a global popularity count is the badge farming §3 rules out);
+  Instagram's media grid (this list is not all media) though not its
+  absent order switcher, which we reach by the opposite route — it
+  curates algorithmically and we cannot; X's Top / Latest / People tabs
+  (a segmented row of tiers the contract cannot serve, on a page that
+  would then be search again); Tumblr's "post this tag" button (a
+  compose entrance nothing has ruled). The no-creation rule is where
+  this product parts from all four, and the contract forces it.
+- **The gate**: 137 → **142 screens**, 1006 → **1039 edges** (1043
+  drawn, then jakob's review removed the follow anchors and the
+  comment's reply affordances), 79 →
+  **56 gaps**, and flows 58/53/5 → **58/55/3**. The twenty-four close
+  and one opens — `TagPage`'s own Post Score row, which every board
+  drawing a post card carries. `open-a-topic` and `add-a-topic` resolve
+  for the first time, which is the round's headline: both had been
+  blocked since the flow set was authored. No hand-drawn board moved a
+  pixel it was not sent to move — the nine composers took the spelling,
+  the six that stage a tag took a via stamp, and the maps followed the
+  edges.
 
 ## 14. Index
 
