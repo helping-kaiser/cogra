@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -44,6 +45,7 @@ import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograBandChats
 import com.cogra.core.designsystem.v2.atom.CograBandIdentity
 import com.cogra.core.designsystem.v2.token.Layout
+import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
@@ -82,11 +84,13 @@ fun FeedRoute(
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     if (refreshSignal) {
         onRefreshSignalConsumed()
         viewModel.refresh()
     }
     FeedScreen(
+        onShare = { postId -> context.sharePost(viewModel.shareUrl(postId)) },
         state = state,
         signedIn = signedIn,
         expiredLabel = expiredLabel,
@@ -118,6 +122,8 @@ fun FeedScreen(
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
+    /** Hands a post to the platform's own share sheet. */
+    onShare: (String) -> Unit = {},
     onChats: (() -> Unit)? = null,
     keyBanner: @Composable () -> Unit = {},
     borrowedViewBand: @Composable () -> Unit = {},
@@ -244,14 +250,18 @@ fun FeedScreen(
                                 }
                             }
                         }
+                        // A feed post spans the screen edge to edge,
+                        // and 8dp of surface between cards is the seam
+                        // (design/readme.md §13). Only the rows that are
+                        // not cards keep the gutter.
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .testTag("feed_list"),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(top = Space.x2),
+                            verticalArrangement = Arrangement.spacedBy(Space.x2),
                         ) {
-                            item(key = "feed_banners") { banners() }
+                            item(key = "feed_banners") { Gutter { banners() } }
                             // "Your post didn't land." The canonical
                             // `ComposeExpired` board puts this here, at
                             // the top of the feed the author returns
@@ -259,11 +269,13 @@ fun FeedScreen(
                             // already left.
                             expiredLabel?.let { label ->
                                 item(key = "feed_expired") {
-                                    ExpiredCard(
-                                        label = label,
-                                        onDismiss = onExpiredDismissed,
-                                        onOpenDraft = onOpenDraft,
-                                    )
+                                    Gutter {
+                                        ExpiredCard(
+                                            label = label,
+                                            onDismiss = onExpiredDismissed,
+                                            onOpenDraft = onOpenDraft,
+                                        )
+                                    }
                                 }
                             }
                             items(state.posts, key = { it.id }) { post ->
@@ -272,7 +284,7 @@ fun FeedScreen(
                                     onClick = { onOpenPost(post.id) },
                                     onOpenActor = onOpenActor,
                                     onOpenTopic = onOpenTopic,
-                                    onOpenPost = onOpenPost,
+                                    onShare = onShare,
                                     revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
                                     onReveal = { onReveal(post.id, post.sensitiveMark()) },
                                     stanceControl = stanceControl,
@@ -280,31 +292,33 @@ fun FeedScreen(
                             }
                             if (state.hasNextPage) {
                                 item {
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                    ) {
-                                        when {
-                                            state.loadingMore -> CircularProgressIndicator(
-                                                modifier = Modifier.padding(8.dp),
-                                            )
-                                            state.transportFault == TransportFault.APPEND -> {
-                                                ErrorLine(
-                                                    R.string.content_feed_stale,
-                                                    "feed_load_more_error",
+                                    Gutter {
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                        ) {
+                                            when {
+                                                state.loadingMore -> CircularProgressIndicator(
+                                                    modifier = Modifier.padding(8.dp),
                                                 )
-                                                TextButton(
-                                                    onClick = onLoadMore,
-                                                    modifier = Modifier.testTag("feed_load_more_retry"),
-                                                ) {
-                                                    Text(stringResource(R.string.content_retry))
+                                                state.transportFault == TransportFault.APPEND -> {
+                                                    ErrorLine(
+                                                        R.string.content_feed_stale,
+                                                        "feed_load_more_error",
+                                                    )
+                                                    TextButton(
+                                                        onClick = onLoadMore,
+                                                        modifier = Modifier.testTag("feed_load_more_retry"),
+                                                    ) {
+                                                        Text(stringResource(R.string.content_retry))
+                                                    }
                                                 }
-                                            }
-                                            else -> TextButton(
-                                                onClick = onLoadMore,
-                                                modifier = Modifier.testTag("feed_load_more"),
-                                            ) {
-                                                Text(stringResource(R.string.content_feed_load_more))
+                                                else -> TextButton(
+                                                    onClick = onLoadMore,
+                                                    modifier = Modifier.testTag("feed_load_more"),
+                                                ) {
+                                                    Text(stringResource(R.string.content_feed_load_more))
+                                                }
                                             }
                                         }
                                     }
@@ -318,8 +332,17 @@ fun FeedScreen(
     }
 }
 
-/** What a card shows of a long body before the detail takes over. */
-private const val FEED_BODY_LINES = 4
+/**
+ * The gutter the cards no longer take.
+ *
+ * Words never touch the screen edge — only media does — so everything
+ * in the list that is not a full-width card keeps the 16dp inset the
+ * card now owns internally.
+ */
+@Composable
+private fun Gutter(content: @Composable () -> Unit) {
+    Box(Modifier.padding(horizontal = Space.x4)) { content() }
+}
 
 /**
  * `ComposeExpired` — a staged batch collected before it landed.
@@ -395,14 +418,35 @@ private fun GuestBanner(onSignInOrJoin: () -> Unit) {
     }
 }
 
+/**
+ * The summary card's heading.
+ *
+ * It stays outside the veil (D12): a reader has to be able to tell what
+ * they are choosing not to look at. And it clamps to ONE line — the
+ * collapse order gives the title away before media or the affordance
+ * row ever shrink.
+ */
+@Composable
+private fun SummaryTitle(post: PostView) {
+    post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.testTag("feed_post_title_${post.id}"),
+        )
+    }
+}
+
 @Composable
 private fun PostCard(
     post: PostView,
     onClick: () -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
-    /** A referenced post opens on its own detail, not this card's. */
-    onOpenPost: (String) -> Unit,
+    /** The platform's own share sheet, for this post. */
+    onShare: (String) -> Unit,
     revealed: Boolean,
     onReveal: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
@@ -419,20 +463,13 @@ private fun PostCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            post.author?.let { author ->
-                ActorChip(
-                    handle = author.handle,
-                    displayName = author.displayName,
-                    onOpen = { onOpenActor(author.handle) },
-                    avatarUrl = author.avatar?.url,
-                    testTag = "feed_author_${post.id}",
-                )
-            }
-            // The title stays outside the veil (D12): a reader has to
-            // be able to tell what they are choosing not to look at.
-            post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
-                Text(title, style = MaterialTheme.typography.titleMedium)
-            }
+            ContentCardHeader(
+                author = post.author,
+                at = post.createdAt,
+                onOpenActor = onOpenActor,
+                testTagPrefix = "feed_${post.id}",
+            )
+            SummaryTitle(post)
             PostBody(
                 content = post.content,
                 description = post.description,
@@ -440,7 +477,8 @@ private fun PostCard(
                 attachmentsStatus = post.attachmentsStatus,
                 moderation = post.moderation,
                 testTagPrefix = "feed_post_${post.id}",
-                maxBodyLines = FEED_BODY_LINES,
+                collapsed = true,
+                bleed = Space.x4,
                 // The whole gallery is one target opening the post: a
                 // reader scrolling the feed is choosing between posts,
                 // not looking at one picture.
@@ -451,15 +489,24 @@ private fun PostCard(
             if (post.landing.isPending) {
                 PendingMarker(testTag = "feed_post_pending_${post.id}")
             }
-            TopicChipRow(post.topics, onOpenTopic, "feed_post_${post.id}")
-            ReferenceChipRow(
+            TopicsLine(
+                topics = post.topics,
                 references = post.references,
-                onOpenActor = onOpenActor,
-                onOpenPost = onOpenPost,
+                onOpenTopic = onOpenTopic,
                 testTagPrefix = "feed_post_${post.id}",
             )
-            // The post card carries the stance control (design.md §6).
-            stanceControl(post.id, "feed_post_${post.id}")
+            // Stance, comment, share — the master's row, minus the two
+            // it gates (see `PostAffordanceRow`). The comment count
+            // opens the post, which is the master's own fallback and is
+            // where this app's thread lives until W3's sheet.
+            PostAffordanceRow(
+                commentCount = post.commentCount,
+                onOpenComments = onClick,
+                onShare = { onShare(post.id) },
+                testTagPrefix = "feed_post_${post.id}",
+            ) {
+                stanceControl(post.id, "feed_post_${post.id}")
+            }
         }
     }
 }

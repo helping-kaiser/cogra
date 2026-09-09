@@ -661,7 +661,6 @@ private fun CograNavGraphContent(
                     },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
                     onOpenTopic = { name -> navController.navigate(Topic(name)) },
-                    onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onReference = { id ->
                         navController.navigate(ComposePost(referenceTargetId = id))
                     },
