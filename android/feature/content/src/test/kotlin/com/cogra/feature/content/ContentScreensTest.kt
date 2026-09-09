@@ -1319,6 +1319,46 @@ class ContentScreensTest {
             .assertDoesNotExist()
     }
 
+    /** A chip is never cut — jakob's ruling, 2026-09-09 (HT-14). */
+    @Test
+    fun aNameTooLongForItsPillIsStatedByTheCountsInstead() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(
+                        topics = listOf(testTopicClaim(OVERLONG_TOPIC), testTopicClaim("rust")),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topic_$OVERLONG_TOPIC").assertDoesNotExist()
+        compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
+        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+            .assertTextEquals("· 1 topic")
+    }
+
+    /** Neither fits: the line falls all the way back to the counts. */
+    @Test
+    fun twoUnfittableNamesLeaveTheCountsAlone() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(
+                        topics = listOf(
+                            testTopicClaim(OVERLONG_TOPIC),
+                            testTopicClaim(OVERLONG_TOPIC + "two"),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topics_line", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+            .assertTextEquals("· 2 topics")
+    }
+
     /** Nothing to say, nothing drawn. */
     @Test
     fun aPostWithNoTopicsOrReferencesDrawsNoLine() {
@@ -1733,3 +1773,14 @@ class ContentScreensTest {
 
 /** Well past the 18-line ceiling at any plausible card width. */
 private val LONG_BODY = "Salt maps of the coast road, walked at low tide. ".repeat(80)
+
+/**
+ * A topic name that cannot draw whole inside the chip's cap.
+ *
+ * Longer than a real one needs to be: the JVM sandbox has no real fonts,
+ * so Robolectric measures every glyph at roughly a pixel, and a name
+ * that overflows on a phone still fits here. The mechanism under test is
+ * the measurement against the cap, and this length crosses it in both
+ * places.
+ */
+private val OVERLONG_TOPIC = "saltmarsh".repeat(12)
