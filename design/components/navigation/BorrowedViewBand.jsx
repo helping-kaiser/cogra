@@ -13,7 +13,11 @@ import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
    nothing the public record does not already carry.
 
    `action` drops away for the signed-in applicant, where the line changes
-   ("… while your application lands.") but the vantage point does not. */
+   ("… while your application lands.") but the vantage point does not.
+
+   The band names a borrowed *ranking* vantage, so it lands with the ranker
+   that makes one true (roadmap slice 3) and the guest notice stands until
+   then — readme §2's staging rule, not a divergence. */
 
 export function BorrowedViewBand({ handle, displayName, avatarSrc, line, actionLabel, onAction }) {
   const text = line ?? `Browsing from @${handle}'s view — join to build your own.`;
