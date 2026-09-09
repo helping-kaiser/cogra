@@ -13,7 +13,7 @@ export function Screen() {
           rows={[
             { label: "Post", value: "Sunday at the tide market", count: "1 action" },
             {
-              label: "Topics",
+              label: "Tags",
               value: (
                 <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
                   <Chip label="#tidemarket" tone="readout" />

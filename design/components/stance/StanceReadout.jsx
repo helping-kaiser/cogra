@@ -157,9 +157,30 @@ export function formatDimension(value) {
   }).format(value);
 }
 
+/** Unsigned, two decimals — for a value whose range has no negative half. */
+export function formatUnsigned(value) {
+  return new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
 /** `+0.40 / +0.20`-style. Valence first, matching the pad's horizontal-then-vertical order. */
 export function formatStancePair(pair) {
   return `${formatDimension(pair.pDirected)} / ${formatDimension(pair.pInterest)}`;
+}
+
+/* A TAG'S PAIR IS NOT A STANCE'S, AND IT MUST NOT LOOK LIKE ONE (jakob's
+   ruling, the tag round). Relevance is a signed Dimension over [-1, +1] and
+   keeps the sign, which is the whole content of the value. Confidence is
+   census-bounded to [0, 1] (hashtag.md §4, `TagInput` in api-spec.md), so a
+   `+` on it advertises a pole that does not exist — it reads unsigned:
+   `+0.40 / 0.90`. Two decimals either way, the system's one number format.
+   The difference between the two shapes is the point: a reader who can tell a
+   tag's pair from a stance's at a glance is being told the truth about which
+   family they are looking at. */
+export function formatTagPair(pair) {
+  return `${formatDimension(pair.pDirected)} / ${formatUnsigned(pair.pInterest)}`;
 }
 
 /** The same two values with their axes named, for surfaces without the pad's layout. */
