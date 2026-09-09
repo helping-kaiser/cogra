@@ -18,6 +18,8 @@
 
 import type { ReactNode } from "react";
 
+import { Icon } from "@/lib/ui/icons";
+
 // TWO WAYS OUT, each doing one thing (jakob, round 4): the ARROW steps ONE
 // STAGE BACK and never leaves the flow, and the X LEAVES the whole flow from any
 // stage — draft kept, no confirmation, because nothing is lost and the draft
@@ -57,7 +59,7 @@ export function HeaderBar({
           onClick={onBack}
           className="cg-state cg-focus flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
         >
-          <BackGlyph />
+          <Icon name="arrow_back" />
         </button>
       )}
       <h1 className="m-0 min-w-0 truncate text-title-large">{title}</h1>
@@ -70,31 +72,12 @@ export function HeaderBar({
           onClick={onLeave}
           className="cg-state cg-focus flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
         >
-          <CloseGlyph />
+          <Icon name="close" />
         </button>
       )}
       {help}
       {action}
     </div>
-  );
-}
-
-// Material's `arrow_back`, the filled 24px cut the product already inlines.
-// There is no icon font and no external fetch (design.md §5).
-export function BackGlyph({ size = 24 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
-      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
-    </svg>
-  );
-}
-
-// Material's `close`, the same 24px cut the composer already inlines.
-export function CloseGlyph({ size = 24 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true">
-      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
-    </svg>
   );
 }
 

@@ -87,6 +87,7 @@ import { CommentEditView } from "./edit/comment-edit-view";
 import { MultiActionConfirm } from "@/lib/ui/signed-actions";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { TopicChipRow, type TopicChipEntry } from "@/lib/ui/topic-chip-row";
+import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 /**
@@ -208,6 +209,9 @@ export function PostView({
   // the wizard's own machine, and nothing of a discarded comment survives here.
   const [replying, setReplying] = useState<ReplyTarget | null>(null);
   const [commentSigned, setCommentSigned] = useState(false);
+  // Stable, so the snackbar's own timer is not restarted by every render of
+  // the thread underneath it.
+  const dismissCommentSigned = useCallback(() => setCommentSigned(false), []);
 
   // Reply threads expanded past their prefetched page, keyed by comment.
   const [replyThreads, setReplyThreads] = useState<Record<string, ReplyThread>>({});
@@ -967,11 +971,16 @@ export function PostView({
           Sign in or join to comment
         </Link>
       )}
-      {commentSigned && (
-        <p data-testid="comment-signed" className="text-body-medium text-success">
-          Signed — it&apos;s in the thread now, still settling.
-        </p>
-      )}
+      {/* A completed action is confirmed by a SNACKBAR on both platforms
+          (design.md §6, and readme §13's audit answers name the coloured line
+          this replaced as the deviation). The region is mounted whether or not
+          it has anything to say, so assistive technology is already watching
+          it when the confirmation arrives. */}
+      <Snackbar
+        testId="comment-signed"
+        message={commentSigned ? "Signed — it's in the thread now, still settling." : null}
+        onDismiss={dismissCommentSigned}
+      />
       {/* ReplyEntry's entry row, pinned at the foot of the thread: the door
           that pins the POST as what the comment answers. The board draws the
           viewer's own avatar beside it; drawing one here would mean a profile

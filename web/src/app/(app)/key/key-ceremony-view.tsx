@@ -151,7 +151,7 @@ export function KeyCeremonyView() {
               aria-describedby="decline-consequence"
               className="flex flex-col gap-3 rounded-extra-large bg-surface-container-high p-4"
             >
-              <h2 id="decline-title" className="text-title-medium">
+              <h2 id="decline-title" className="text-headline-small">
                 Continue without a backup?
               </h2>
               <p
