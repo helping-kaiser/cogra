@@ -6,7 +6,12 @@
     <string name="storage_notice_title">Secure storage problem</string>
     <string name="storage_notice_body">Some of this device\'s securely stored data could not be read and was treated as lost. You may have been signed out. If your actor key is missing after signing in, restore it from your backup.</string>
     <string name="bar_feed">Feed</string>
+    <!-- The discovery slot is keyed `search` — its route, its glyph — but
+         reads "Explore": design.md §7 keeps implementation vocabulary off
+         the screen, and "Explore" says what the reader is doing. -->
+    <string name="bar_explore">Explore</string>
     <string name="bar_compose">New post</string>
+    <string name="bar_wallet">Wallet</string>
     <string name="bar_profile">Profile</string>
     <string name="join_prompt_title">Join the conversation</string>
     <string name="join_prompt_body">Posting and profiles need an account.</string>

@@ -51,6 +51,7 @@ import com.cogra.core.designsystem.TopicChip
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.topics.TagNameProblem
 import com.cogra.domain.topics.canonicalTagName
@@ -146,6 +147,9 @@ fun ComposePostScreen(
         topBar = {
             Column {
                 TopAppBar(
+                    // The 48dp band every board draws; M3's small bar
+                    // defaults to 64dp (F-10).
+                    expandedHeight = Layout.TopBarHeight,
                     colors = surfaceTopAppBarColors(),
                     scrollBehavior = collapsingTop.scrollBehavior,
                     title = {

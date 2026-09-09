@@ -273,7 +273,7 @@ data class ComposeWizardState(
     /**
      * The author's own sensitive mark (`ComposeSensitive`).
      *
-     * It veils the pictures and the description until a reader chooses
+     * It veils the pictures and the words until a reader chooses
      * to look; the title stays readable, so choosing is informed.
      */
     val sensitive: Boolean = false,

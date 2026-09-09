@@ -9,11 +9,11 @@
     </file>
     <file name="src/main/kotlin/com/cogra/app/navigation/CograNavGraph.kt">
         <error line="11" column="1" source="standard:import-ordering" />
-        <error line="117" column="5" source="standard:class-signature" />
         <error line="118" column="5" source="standard:class-signature" />
-        <error line="118" column="43" source="standard:class-signature" />
-        <error line="257" column="5" source="standard:class-signature" />
-        <error line="257" column="24" source="standard:class-signature" />
+        <error line="119" column="5" source="standard:class-signature" />
+        <error line="119" column="43" source="standard:class-signature" />
+        <error line="258" column="5" source="standard:class-signature" />
+        <error line="258" column="24" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/app/ui/SecurityNoticeDialog.kt">
         <error line="10" column="1" source="standard:import-ordering" />

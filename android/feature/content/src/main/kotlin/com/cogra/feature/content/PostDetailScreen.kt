@@ -21,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -41,11 +40,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
+import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.domain.CommentView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
@@ -171,9 +172,15 @@ fun PostDetailScreen(
     }
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = { CograSnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
+                // The 48dp band every board draws (`spacing.css`
+                // `--top-bar-height`, `PageHeader.jsx`); M3's small bar
+                // defaults to 64dp, which is a rung the design does not
+                // have. `expandedHeight` is the documented way to set it,
+                // and the collapse arithmetic follows it.
+                expandedHeight = Layout.TopBarHeight,
                 colors = surfaceTopAppBarColors(),
                 scrollBehavior = collapsingTop.scrollBehavior,
                 title = { Text(state.post?.title?.value.orEmpty()) },
