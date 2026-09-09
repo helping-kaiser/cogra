@@ -2937,6 +2937,76 @@ it a home. Ruled by jakob the same day (backlog item 20).
   screens the round did not draw. No board outside the round's own moved
   a pixel — only the generated maps, which grew with the edges.
 
+Reviewed the same day, and finished on the review's own ruling. The
+page had five rows pointing at nothing of its own: two borrowed a board
+from another screen, three ended in an honest gap.
+jakob's reading was that a canonical canvas which stops at the row is
+a canvas implementation finishes by guessing, and guessing is where a
+settings page starts looking improvised. Six boards close it, and none
+of them invents a control.
+
+- **A borrowed sheet is not a drawn board.** Pointing the license row
+  at `ComposeLicense` and the reading row at `FeedSheet` was true about
+  the control and silent about the surface: those boards draw the seal
+  and the feed beneath their sheets, and neither is what a reader is
+  standing on when they open the row. `SettingsLicense` and
+  `SettingsReading` draw the same sheets over the settings page, which
+  is what the product actually shows.
+- **The page beneath is the page, not a few of its rows.** Both boards
+  render `SettingsBody` — the same body `Settings` draws — because the
+  ruling this round records is an ORDER, and a hand-made handful of
+  rows under a wash would be a second order nobody ratified. `Settings`
+  frames the whole scroll; these two keep the phone's 844 and let the
+  page run past it, the way a scrolling page under a sheet does.
+- **A settings sheet is titled by the row that opened it.** The seal's
+  sheet needs no heading — the composer is still visible around it —
+  but a sheet that covers the surface it came from has to say what it
+  is. The title is the row's own words, so the two cannot drift, and
+  the "?" moves onto the heading's row, which is `SheetTitle`'s own
+  rule. Neither sheet gained a control; one gained a heading.
+- **The license sheet's settings reading is the one line it owed.**
+  *Terms for anyone who reuses this* is written for the post being
+  signed and stays there. The account default says what it actually
+  does: where every new post starts, binding nothing already
+  published — `api-spec.md`'s own wording, said to a reader. It keeps
+  `Done`, because a license has nothing to show until it is used,
+  where the filter applies live and can be watched.
+- **The filter's two ends now meet.** The help text has always said
+  *your default lives in settings*; this is settings, and it is the
+  same sheet — `FeedFilterSheet`, the half of `FeedFilter` that is not
+  the pill. Search took the trigger alone because it owns its sheet;
+  settings takes the sheet alone because its row is the trigger. The
+  order section keeps §13's standing obligation: the drawn default is
+  `Ranked`, and until slice 3's ranker ships the shipped one reads
+  Newest, here as in the feed.
+- **Three credential screens, one family.** `ChangePassword`,
+  `ChangeHandle` and `ChangeEmail` take `Restore`'s column, which
+  `SettingsBackup` already took: heading, the consequence, the fields,
+  one commitment, the thing to know last. Each carries a fact the apps
+  leave to be discovered — the password change keeps THIS device signed
+  in where a reset does not, a freed handle is claimable and its links
+  die, and an email change is proved from both ends.
+- **The email change is two boards, and the line both apps ship is
+  wrong.** *Check both inboxes — either message's code confirms the
+  change* tells a reader one message finishes the job. `auth.md` and
+  `api-spec.md` agree it does not: the mutation takes either side's
+  proof in either order, but the change applies only once BOTH have
+  landed — and the two errands differ, a code to type from the current
+  address and a link to click at the new one. The code field does not
+  exist until the messages have gone, so the request and the
+  confirmation are two states and two boards.
+- **What is drawn is the resting state.** Validation is on submit
+  (§13's timing rule), so an untouched form has nothing marked. The
+  marked states of all four task screens are undrawn, and so is the
+  half-confirmed email — the graph carries that one as an outcome of
+  the confirm rather than a board.
+- **The gate**: 131 → **137 screens**, 979 → **1006 edges**, 82 → **79
+  gaps**, and **flows 58/53/5** unchanged. The six boards carry 27
+  edges and close exactly the three credential gaps, opening none. No
+  hand-drawn board moved a pixel — not even `Settings`, whose body
+  moved to `_shared.jsx` byte for byte; only the five generated maps,
+  which follow the edges.
+
 ## 14. Index
 
 **Root**

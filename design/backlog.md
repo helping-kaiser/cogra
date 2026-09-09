@@ -324,11 +324,26 @@ on this device" joining the sign-out section as well as the login
 form; the snackbar as the only feedback; and the aesthetic bar —
 current settings-surface anatomy in this system's own skin.
 
+Ruled again at review the same day: a canonical canvas that stops at
+the row leaves implementation to guess the surface behind it, so
+every row that opens something now opens a drawn board.
+
 **Drawn**: `Settings` (the whole page, eight groups in the ruled
-order), `SettingsBackup`, `YourKey`; `SettingsGroup`/`SettingsRow`
-and the house `Switch` as masters; `api-spec.md`'s
+order), `SettingsBackup`, `YourKey`; the six subpages its rows open —
+`SettingsLicense` and `SettingsReading` (the license and filter sheets
+over the settings page, titled by the row that opened them),
+`ChangePassword`, `ChangeHandle`, `ChangeEmail` and
+`ChangeEmailConfirm`; `SettingsGroup`/`SettingsRow` and the house
+`Switch` as masters, with `FeedFilterSheet` split off `FeedFilter` so
+one control serves the feed and the default; `api-spec.md`'s
 `UserPreferences.defaultLicense`; the round's copy in
 `copy-voice.md`, awaiting blessing.
+
+**Not drawn**: the marked states of the four task screens
+(validation is on submit, so the resting form is the one state that
+always exists), and the half-confirmed email, which the graph carries
+as an outcome of the confirm rather than a board. Both are their own
+items when they are wanted.
 
 **What implementation owes** — the boards are ahead of both apps on
 every line below:
@@ -339,37 +354,49 @@ every line below:
 2. **Every setting takes the row anatomy** — group heading, card of
    rows, footnote under. Today both apps draw section cards with body
    paragraphs inside them.
-3. **Credentials move off the page.** The boards draw three rows
-   toward three screens nobody has drawn yet (`Settings/11`, `/12`,
-   `/13` are the gaps); the apps still stack three forms inline. The
-   screens themselves are a design item of their own.
-4. **The theme override exists nowhere.** Both apps and
+3. **Credentials move off the page.** The apps stack three forms
+   inline; the boards draw three rows and, behind them, four task
+   screens in `Restore`'s column. Each screen says a consequence the
+   apps leave to be discovered: a change from settings keeps THIS
+   device signed in where a reset signs out everything, a freed handle
+   is immediately claimable and links to the old one die, and an email
+   change is proved from both ends.
+4. **The email confirmation's shipped line is wrong.** Both apps say
+   *Check both inboxes — either message's code confirms the change*,
+   which reads as one message being enough. `auth.md` and
+   `api-spec.md` are explicit: either side's proof may arrive first,
+   but the change applies only once BOTH have landed, and the two
+   sides are not the same errand — a code from the current address,
+   typed; a link at the new address, clicked.
+   `ChangeEmailConfirm` carries the corrected words.
+5. **The theme override exists nowhere.** Both apps and
    `tokens/colors.css` carry full dark palettes; what is missing is
    the hook that overrides the system preference, plus the per-device
    store behind it.
-5. **The default license needs the contract**: `UserPreferences`
-   and `SetPreferencesInput` are specified, `schema.graphql` carries
-   no preference field at all, and the license sheet needs a second
-   caller that writes the account default instead of one post's terms.
-6. **The backup card stops showing a code inline** and leads to the
+6. **The default license needs the contract**: `UserPreferences`
+   and `SetPreferencesInput` are specified and `schema.graphql`
+   carries no preference field at all. `SettingsLicense` is the
+   second caller the sheet was always going to need — the same
+   control, writing the account default instead of one post's terms.
+7. **The backup card stops showing a code inline** and leads to the
    dedicated screen; the replace proof stays each platform's own.
-7. **The drifted lines**: Writing vs Signing, the multi-action hint,
+8. **The drifted lines**: Writing vs Signing, the multi-action hint,
    "(this device)" vs "(this browser)", the verb-shaped row labels —
    `copy-voice.md`'s settings section carries the settled line for
    each.
-8. **Feedback is the snackbar** (ruling Q14), and web's five inline
+9. **Feedback is the snackbar** (ruling Q14), and web's five inline
    per-section lines are not it. Nothing on the page draws a
    confirmation of its own: every act — revoked, signed out
    everywhere, changed — answers in the snackbar the shell already
    carries, and the boards draw the page at rest for that reason.
-9. **The preference stores disagree, and web's is wrong.** Android
-   keys the stance input and the multi-action confirmation by
-   `accountId`; web keeps both in unscoped `localStorage`
-   (`cogra.stanceInputMode`, `cogra.confirmMultiActionSubmits`), so
-   on a shared browser the next account inherits the last one's
-   choices. Web should scope them by account the way Android does —
-   and the theme, being genuinely per-device rather than per-account,
-   is the one that should not be.
+10. **The preference stores disagree, and web's is wrong.** Android
+    keys the stance input and the multi-action confirmation by
+    `accountId`; web keeps both in unscoped `localStorage`
+    (`cogra.stanceInputMode`, `cogra.confirmMultiActionSubmits`), so
+    on a shared browser the next account inherits the last one's
+    choices. Web should scope them by account the way Android does —
+    and the theme, being genuinely per-device rather than per-account,
+    is the one that should not be.
 
 ### 22 · Canvas flows + pages · *process*
 The canonical canvas has outgrown one flat plane (77+ boards):
