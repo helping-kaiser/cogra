@@ -61,10 +61,30 @@ describe("fetchOutcome", () => {
     expect(hasCode(outcome, "RATE_LIMITED")).toBe(true);
   });
 
-  it("keeps other GraphQL errors in the transport tier", async () => {
+  // HT-7. An acting mutation refuses a non-member at the transport tier, so
+  // an applicant who has not verified their email was told the server could
+  // not be reached. It was reached; it answered.
+  it("lifts a FORBIDDEN out of the transport tier — it is an answer, not a fault", async () => {
     const outcome = await fetchOutcome(async () => ({
       data: undefined,
       error: forbiddenError(),
+    }));
+    expect(hasCode(outcome, "FORBIDDEN")).toBe(true);
+  });
+
+  it("classifies a thrown FORBIDDEN the same as a returned one", async () => {
+    const outcome = await fetchOutcome(async () => {
+      throw forbiddenError();
+    });
+    expect(hasCode(outcome, "FORBIDDEN")).toBe(true);
+  });
+
+  it("keeps a GraphQL error with no code it knows in the transport tier", async () => {
+    const outcome = await fetchOutcome(async () => ({
+      data: undefined,
+      error: new CombinedGraphQLErrors({
+        errors: [{ message: "boom", extensions: { code: "INTERNAL" } }],
+      }),
     }));
     expect(outcome.kind).toBe("failed");
   });

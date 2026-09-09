@@ -181,6 +181,21 @@ describe("the reply wizard", () => {
       );
     });
 
+    // HT-6. `TextField.prompt.md` puts every composer textarea on the
+    // extra-small rung with a 1px outline AT REST; a field with no edge until
+    // it is focused does not read as somewhere to write. The height follows
+    // Android's `ReplyComposeStep.kt`: the words fill the column when they are
+    // the only thing in it.
+    it("draws the words in a real field — outlined at rest, and tall", () => {
+      draw();
+      const words = screen.getByTestId("reply-words");
+      expect(words.className).toContain("border-outline");
+      expect(words.className).toContain("rounded-extra-small");
+      expect(words.className).not.toContain("border-0");
+      expect(words.className).toContain("min-h-48");
+      expect(words.className).toContain("flex-1");
+    });
+
     it("names what the words answer, for a reader who cannot see the chip", () => {
       draw();
       expect(screen.getByTestId("reply-words")).toHaveAttribute(
@@ -286,14 +301,26 @@ describe("the reply wizard", () => {
       expect(screen.getByTestId("reply-open-license")).toBeInTheDocument();
     });
 
-    // THE APPROVED DEVIATION (jakob 2026-09-01). The board draws a "Mark
-    // (sensitive)" row; a sensitive-marked comment has no veiled read state
-    // yet, so the row is held back rather than promising a veil nobody gets.
-    it("ships no sensitive row, and offers no way to mark one", async () => {
+    // The board's third term row, held back only while a marked comment had
+    // no veil to promise. Design backlog item 25.4 built that on 2026-09-02.
+    it("carries the mark row the board draws, unmarked to begin with", async () => {
       draw();
       await toSeal();
-      expect(screen.getByTestId("reply-seal")).not.toHaveTextContent("Sensitive");
-      expect(screen.queryByTestId("reply-open-sensitive")).not.toBeInTheDocument();
+      expect(screen.getByTestId("reply-sensitive-value")).toHaveTextContent("Not marked");
+      expect(screen.getByTestId("reply-open-sensitive")).toHaveTextContent("Mark");
+    });
+
+    it("marks the comment through the same sheet every seal opens", async () => {
+      draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-open-sensitive"));
+      const sheet = await screen.findByTestId("reply-sensitive-sheet");
+      expect(sheet).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId("reply-sensitive-switch"));
+      await waitFor(() =>
+        expect(screen.getByTestId("reply-sensitive-value")).toHaveTextContent("Marked"),
+      );
+      expect(screen.getByTestId("reply-open-sensitive")).toHaveTextContent("Change");
     });
 
     it("offers the topic and citation rows the board draws, with their price", async () => {
