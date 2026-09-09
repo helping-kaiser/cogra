@@ -29,6 +29,7 @@ import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
 import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testContentTarget
@@ -453,6 +454,44 @@ class ContentScreensTest {
             },
         )
         compose.onNodeWithTag("key_banner").assertExists()
+    }
+
+    /**
+     * HT-18. A media post's body IS its gallery, so its edit shows the
+     * pictures and draws no words field: the field it used to draw was
+     * one whose every value the server refuses, and saving it replaced
+     * the media the surface never showed.
+     */
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "+h1600dp")
+    @Test
+    fun aMediaPostsEditShowsItsGalleryInsteadOfAWordsField() {
+        renderComposer(
+            ComposePostUiState(
+                editingId = "p1",
+                attachments = listOf(
+                    MediaAssetView(
+                        id = "m1",
+                        url = "https://media/m1",
+                        altText = "A salt crust",
+                        status = FieldStatus.NORMAL,
+                        aspectRatio = 4f / 5f,
+                        mimeType = "image/webp",
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("compose_media").performScrollTo().assertExists()
+        compose.onNodeWithTag("compose_media_note").performScrollTo().assertExists()
+        compose.onNodeWithTag("compose_body").assertDoesNotExist()
+    }
+
+    /** A words post keeps the field its body actually lives in. */
+    @Test
+    fun aWordsPostsEditKeepsItsWordsField() {
+        renderComposer(ComposePostUiState(editingId = "p1", body = "Salt maps"))
+        compose.onNodeWithTag("compose_body").assertExists()
+        compose.onNodeWithTag("compose_media").assertDoesNotExist()
     }
 
     @Test
