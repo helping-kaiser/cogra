@@ -33,6 +33,28 @@ export interface FeedFilterProps {
 
 export declare function FeedFilter(props: FeedFilterProps): JSX.Element;
 
+/** The sheet alone, for a surface that owns its trigger — the settings page's
+ *  Reading row opens this directly, so the filter stays one control. */
+export interface FeedFilterSheetProps {
+  value?: FeedFilterValue;
+  onChange?: (value: FeedFilterValue) => void;
+  onHelp?: () => void;
+  open?: boolean;
+  onClose?: () => void;
+  ariaLabel?: string;
+  /** What a titled sheet says first — a heading carrying the "?" on its own
+   *  row, and the reading the surface owes. Omitted, the sheet is the feed's:
+   *  no heading, the "?" in the corner. */
+  lead?: JSX.Element;
+  /** The Done row a sheet takes when nothing reacts behind it to be watched.
+   *  Given one, the sheet owns its height, the sections scroll inside it and
+   *  this stays pinned under them. Omitted, the sheet is the feed's: the
+   *  filter applies live and there is nothing to commit. */
+  foot?: JSX.Element;
+}
+
+export declare function FeedFilterSheet(props: FeedFilterSheetProps): JSX.Element;
+
 /** The trigger's words, within a pill's budget: the kinds always, then either the
  *  exceptions spelled out ("newest", "showing seen") or a count of them. Past
  *  `budget` characters the detail collapses — "far from the default" is the

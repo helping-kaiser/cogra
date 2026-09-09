@@ -22,6 +22,8 @@ import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
+import { LINK_COPIED } from "@/lib/ui/share";
+import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError } from "@/lib/ui/transport-error";
 
 export function TopicView({ name }: { name: string }) {
@@ -29,6 +31,8 @@ export function TopicView({ name }: { name: string }) {
   const [hashtag, setHashtag] = useState<HashtagDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
 
   const refresh = useCallback(() => {
     let cancelled = false;
@@ -115,7 +119,15 @@ export function TopicView({ name }: { name: string }) {
           if (node.__typename === "Post") {
             return (
               <li key={node.id}>
-                <PostCard post={node} prefix="topic" />
+                <PostCard
+                  post={node}
+                  href={`/posts/${node.id}`}
+                  testId={`topic-post-${node.id}`}
+                  authorTestId={`topic-author-${node.id}`}
+                  stanceTestId={`topic-stance-${node.id}`}
+                  comments={node.comments.totalCount}
+                  onLinkCopied={() => setLinkCopied(true)}
+                />
               </li>
             );
           }
@@ -151,6 +163,12 @@ export function TopicView({ name }: { name: string }) {
           return null;
         })}
       </ul>
+      {/* One region for the list: a card that copied a link says so here. */}
+      <Snackbar
+        testId="topic-link-copied"
+        message={linkCopied ? LINK_COPIED : null}
+        onDismiss={dismissLinkCopied}
+      />
     </main>
   );
 }
