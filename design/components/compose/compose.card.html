@@ -8,7 +8,7 @@
 <style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:360px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { MediaThumb, PickPrompt, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
+const { MediaThumb, PickPrompt, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, WizardFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
 const P = "../../assets/photos/";
 
 function Demo(){return (
@@ -65,6 +65,8 @@ function Demo(){return (
     <span className="lbl">SealFooter disabled — the upload's gate, always with the line that says why</span>
     <UploadStatusLine done={2} total={4}/>
     <SealFooter signLabel="Sign and publish" disabled/>
+    <span className="lbl">WizardFooter — the pick step's foot; it carries the side padding an edge-to-edge step has nowhere else to put</span>
+    <WizardFooter onNext={()=>{}}/>
   </div>
   <div className="col" style={{width:400}}>
     <span className="lbl">PickedSheet — Show all, the per-picture manager (reorder, cover, remove, describe)</span>
