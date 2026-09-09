@@ -357,7 +357,12 @@ every line below:
    "(this device)" vs "(this browser)", the verb-shaped row labels —
    `copy-voice.md`'s settings section carries the settled line for
    each.
-8. **The preference stores disagree, and web's is wrong.** Android
+8. **Feedback is the snackbar** (ruling Q14), and web's five inline
+   per-section lines are not it. Nothing on the page draws a
+   confirmation of its own: every act — revoked, signed out
+   everywhere, changed — answers in the snackbar the shell already
+   carries, and the boards draw the page at rest for that reason.
+9. **The preference stores disagree, and web's is wrong.** Android
    keys the stance input and the multi-action confirmation by
    `accountId`; web keeps both in unscoped `localStorage`
    (`cogra.stanceInputMode`, `cogra.confirmMultiActionSubmits`), so
