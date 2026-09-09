@@ -426,7 +426,6 @@ class PostDetailViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.replyThreads["c1"]?.failed).isTrue()
     }
-
 }
 
 /** The build's web origin, as the share link is built from it. */

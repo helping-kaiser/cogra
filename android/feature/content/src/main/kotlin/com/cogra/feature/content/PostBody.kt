@@ -114,16 +114,18 @@ internal fun PostBody(
         return
     }
 
-    val veiled = !revealed && isSensitive(content, description, attachmentsStatus)
-    // What the clamp hid, remembered from the reading that hid it: once
-    // the opener has unfolded the text nothing overflows any more, so a
-    // live measurement would take the opener away with the fold.
-    var folded by remember(testTagPrefix) { mutableStateOf(false) }
-    var open by remember(testTagPrefix) { mutableStateOf(false) }
-    val clamping = collapsed && !open
+    // WORDS XOR MEDIA (D16): the picture IS the body, so a media post
+    // draws no `content` even when the record carries one. The words
+    // beside a picture are the description, and the card draws them
+    // under it. Handed both — an impossible post — the documented media
+    // reading wins: the manifest is the body, and half a card is better
+    // than an invented one. A comment is words PLUS pictures, so the
+    // exclusion is a post's alone.
+    val mediaIsTheBody = surface == BodySurface.Post && attachments.isNotEmpty()
+    val words = content.value?.takeIf { it.isNotEmpty() && !mediaIsTheBody }
 
     SensitiveVeil(
-        veiled = veiled,
+        veiled = !revealed && isSensitive(content, description, attachmentsStatus),
         onReveal = onReveal,
         modifier = modifier.fillMaxWidth(),
         testTag = "${testTagPrefix}_veil",
@@ -137,55 +139,73 @@ internal fun PostBody(
                     Gallery(attachments, surface, onOpenMedia, bleed, "${testTagPrefix}_gallery")
                 }
             }
+            val caption: @Composable () -> Unit = {
+                Caption(words, description?.value, collapsed, testTagPrefix)
+            }
 
             // A post leads with its pictures; a comment leads with its
             // words and its pictures join them.
-            if (surface == BodySurface.Post) gallery()
-
-            // WORDS XOR MEDIA (D16): the picture IS the body, so a media
-            // post draws no `content` even when the record carries one.
-            // The words beside a picture are the description, and the
-            // card draws them under it. Handed both — an impossible post
-            // — the documented media reading wins: the manifest is the
-            // body, and half a card is better than an invented one.
-            val words = content.value
-                ?.takeIf { it.isNotEmpty() && !(surface == BodySurface.Post && attachments.isNotEmpty()) }
-            words?.let {
-                ClampedText(
-                    text = it,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = if (clamping) TEXT_BODY_CLAMP_LINES else Int.MAX_VALUE,
-                    onOverflow = { folded = true },
-                    testTag = "${testTagPrefix}_words",
-                )
-            }
-
-            if (surface == BodySurface.Comment) gallery()
-
-            description?.value?.takeIf { it.isNotEmpty() }?.let { note ->
-                ClampedText(
-                    text = note,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = if (clamping) DESCRIPTION_CLAMP_LINES else Int.MAX_VALUE,
-                    onOverflow = { folded = true },
-                    testTag = "${testTagPrefix}_description",
-                )
-            }
-
-            // Only where there is something folded away. A text control,
-            // not a link: it opens the text in place and never
-            // navigates.
-            if (collapsed && folded) {
-                Text(
-                    text = stringResource(if (open) R.string.content_less else R.string.content_more),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .clickable { open = !open }
-                        .testTag("${testTagPrefix}_opener"),
-                )
+            if (surface == BodySurface.Post) {
+                gallery()
+                caption()
+            } else {
+                caption()
+                gallery()
             }
         }
+    }
+}
+
+/**
+ * The body's words and the caption under them, with the opener that
+ * unfolds whatever the clamp hid.
+ *
+ * BODY FIRST, DESCRIPTION UNDER IT, on both kinds of post — so the two
+ * shapes read as one card re-proportioned rather than two layouts.
+ */
+@Composable
+private fun Caption(
+    words: String?,
+    description: String?,
+    collapsed: Boolean,
+    testTagPrefix: String,
+) {
+    // What the clamp hid, remembered from the reading that hid it: once
+    // the opener has unfolded the text nothing overflows any more, so a
+    // live measurement would take the opener away with the fold.
+    var folded by remember(testTagPrefix) { mutableStateOf(false) }
+    var open by remember(testTagPrefix) { mutableStateOf(false) }
+    val clamping = collapsed && !open
+
+    words?.let {
+        ClampedText(
+            text = it,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = if (clamping) TEXT_BODY_CLAMP_LINES else Int.MAX_VALUE,
+            onOverflow = { folded = true },
+            testTag = "${testTagPrefix}_words",
+        )
+    }
+    description?.takeIf { it.isNotEmpty() }?.let {
+        ClampedText(
+            text = it,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = if (clamping) DESCRIPTION_CLAMP_LINES else Int.MAX_VALUE,
+            onOverflow = { folded = true },
+            testTag = "${testTagPrefix}_description",
+        )
+    }
+    // Only where there is something folded away. A text control, not a
+    // link: it opens the text in place and never navigates.
+    if (collapsed && folded) {
+        Text(
+            text = stringResource(if (open) R.string.content_less else R.string.content_more),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .clickable { open = !open }
+                .testTag("${testTagPrefix}_opener"),
+        )
     }
 }
 

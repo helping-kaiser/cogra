@@ -270,11 +270,11 @@ fun FeedScreen(
                             expiredLabel?.let { label ->
                                 item(key = "feed_expired") {
                                     Gutter {
-                                    ExpiredCard(
-                                        label = label,
-                                        onDismiss = onExpiredDismissed,
-                                        onOpenDraft = onOpenDraft,
-                                    )
+                                        ExpiredCard(
+                                            label = label,
+                                            onDismiss = onExpiredDismissed,
+                                            onOpenDraft = onOpenDraft,
+                                        )
                                     }
                                 }
                             }
@@ -293,34 +293,34 @@ fun FeedScreen(
                             if (state.hasNextPage) {
                                 item {
                                     Gutter {
-                                    Column(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                    ) {
-                                        when {
-                                            state.loadingMore -> CircularProgressIndicator(
-                                                modifier = Modifier.padding(8.dp),
-                                            )
-                                            state.transportFault == TransportFault.APPEND -> {
-                                                ErrorLine(
-                                                    R.string.content_feed_stale,
-                                                    "feed_load_more_error",
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                        ) {
+                                            when {
+                                                state.loadingMore -> CircularProgressIndicator(
+                                                    modifier = Modifier.padding(8.dp),
                                                 )
-                                                TextButton(
+                                                state.transportFault == TransportFault.APPEND -> {
+                                                    ErrorLine(
+                                                        R.string.content_feed_stale,
+                                                        "feed_load_more_error",
+                                                    )
+                                                    TextButton(
+                                                        onClick = onLoadMore,
+                                                        modifier = Modifier.testTag("feed_load_more_retry"),
+                                                    ) {
+                                                        Text(stringResource(R.string.content_retry))
+                                                    }
+                                                }
+                                                else -> TextButton(
                                                     onClick = onLoadMore,
-                                                    modifier = Modifier.testTag("feed_load_more_retry"),
+                                                    modifier = Modifier.testTag("feed_load_more"),
                                                 ) {
-                                                    Text(stringResource(R.string.content_retry))
+                                                    Text(stringResource(R.string.content_feed_load_more))
                                                 }
                                             }
-                                            else -> TextButton(
-                                                onClick = onLoadMore,
-                                                modifier = Modifier.testTag("feed_load_more"),
-                                            ) {
-                                                Text(stringResource(R.string.content_feed_load_more))
-                                            }
                                         }
-                                    }
                                     }
                                 }
                             }
@@ -418,6 +418,27 @@ private fun GuestBanner(onSignInOrJoin: () -> Unit) {
     }
 }
 
+/**
+ * The summary card's heading.
+ *
+ * It stays outside the veil (D12): a reader has to be able to tell what
+ * they are choosing not to look at. And it clamps to ONE line — the
+ * collapse order gives the title away before media or the affordance
+ * row ever shrink.
+ */
+@Composable
+private fun SummaryTitle(post: PostView) {
+    post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.testTag("feed_post_title_${post.id}"),
+        )
+    }
+}
+
 @Composable
 private fun PostCard(
     post: PostView,
@@ -448,19 +469,7 @@ private fun PostCard(
                 onOpenActor = onOpenActor,
                 testTagPrefix = "feed_${post.id}",
             )
-            // The title stays outside the veil (D12): a reader has to
-            // be able to tell what they are choosing not to look at. It
-            // clamps to one line — the collapse order gives the title
-            // away before media or the affordance row ever shrink.
-            post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.testTag("feed_post_title_${post.id}"),
-                )
-            }
+            SummaryTitle(post)
             PostBody(
                 content = post.content,
                 description = post.description,
