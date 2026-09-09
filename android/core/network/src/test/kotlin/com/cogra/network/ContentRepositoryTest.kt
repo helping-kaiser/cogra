@@ -11,6 +11,7 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.ModerationState
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.testing.FakeIdentityStore
@@ -68,6 +69,7 @@ class ContentRepositoryTest {
         redacted: Boolean = false,
         landing: String = landingJson("LANDED", 7),
         attachments: String = "[]",
+        moderationStatus: String = "NORMAL",
     ) = """
         {"__typename":"Post","id":"$id",
          "title":{"__typename":"ModeratedText","value":${title?.let { "\"$it\"" } ?: "null"},"status":"NORMAL"},
@@ -81,7 +83,7 @@ class ContentRepositoryTest {
          "createdAt":"2026-08-12T10:00:00+00:00",
          "updatedAt":"2026-08-12T11:00:00+00:00",
          "landing":$landing,
-         "moderationStatus":"NORMAL",
+         "moderationStatus":"$moderationStatus",
          "license":{"__typename":"License","attribution":0.5,"provenance":1.0},
          "topics":[],
          "references":[]}
@@ -139,6 +141,21 @@ class ContentRepositoryTest {
         assertThat(post.landing.isPending).isFalse()
         assertThat(page.hasNextPage).isTrue()
         assertThat(page.endCursor).isEqualTo("c1")
+    }
+
+    @Test
+    fun aVerdictOnANodeSurvivesTheMappingRatherThanBeingDropped() = runTest {
+        // Whether a removal was the author's or a passed proposal's is
+        // only readable off this field; dropping it collapses the two.
+        enqueue(
+            """{"data":{"posts":{"__typename":"PostConnection",
+               "edges":[{"__typename":"PostEdge","node":${
+                postJson("p1", "Hello", redacted = true, moderationStatus = "ILLEGAL")
+            }}],
+               "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
+        )
+        val post = (repo().posts(20, null) as Outcome.Success).value.items.single()
+        assertThat(post.moderation).isEqualTo(ModerationState.ILLEGAL)
     }
 
     @Test
