@@ -68,10 +68,9 @@ export const BUTTON_CLASS = "cg-state cg-focus cg-hit";
    has to match the sentence it sits inside, or it reads as a button that fell
    into a paragraph.
 
-   `sm` spells its letter-spacing `0.5px` rather than
-   `var(--text-label-small--letter-spacing)`. The token is `0.03125rem`, the
-   same half-pixel at a 16px root; every call site was written with the
-   literal, and the rung is extracted from them value for value. */
+   Both rungs take all four tokens of their role: a role is size, leading,
+   weight and tracking together (§7), and a rung that spells one of them as a
+   number leaves the ramp for a value nothing maintains. */
 const INLINE_SIZES = {
   lg: {
     fontSize: "var(--text-label-large)",
@@ -83,7 +82,7 @@ const INLINE_SIZES = {
     fontSize: "var(--text-label-small)",
     lineHeight: "var(--text-label-small--line-height)",
     fontWeight: "var(--text-label-small--font-weight)",
-    letterSpacing: "0.5px",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
   },
 };
 

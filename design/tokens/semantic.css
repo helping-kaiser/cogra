@@ -32,4 +32,8 @@
 
   /* The resting stance face with no standing behind it: muted and translucent. */
   --opacity-resting-face: 0.4; /* @kind other */
+  /* The stance face over media. The emoji is a mark, sized to the line face
+     that stands in for it rather than to a type rung — the two glyphs are the
+     same control in two states and have to read at one size. */
+  --size-face-over-media: 26px;
 }
