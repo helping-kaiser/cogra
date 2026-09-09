@@ -10,6 +10,8 @@ import { stanceHandlers } from "@/test/stance";
 import { FeedView } from "./feed-view";
 import { forgetFeed, recallFeed } from "./feed-memory";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
+import type { RegistrationFlow } from "@/lib/signing/registration-flow";
+import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 
 // The feed reads `?compose=` to say that the last post did not land, and
 // rewrites the URL when the notice is dismissed.
@@ -339,6 +341,63 @@ describe("FeedView", () => {
     expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
     expect(afters).toEqual([null, "c1"]);
     expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
+  });
+
+  // HT-2. The restore ask and the key ceremony are different accounts'
+  // problems, and no board carries both: `KeyElsewhere` is for a key that
+  // exists somewhere else, `KeyCeremony` for one that does not exist yet.
+  describe("the key ask above the feed", () => {
+    function flowAt(progress: RegistrationProgress | null): RegistrationFlow {
+      return {
+        progress: () => progress,
+        subscribe: () => () => {},
+        ensureAdvancing: () => {},
+        consumeLanded: () => false,
+        reset: () => {},
+      };
+    }
+
+    function renderFeed(progress: RegistrationProgress | null) {
+      server.use(
+        graphql.query("Posts", () =>
+          HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) }),
+        ),
+      );
+      return renderWithProviders(<FeedView store={fakeIdentityStore()} />, {
+        store: signedInStore(),
+        flow: flowAt(progress),
+      });
+    }
+
+    it("offers nothing to restore to an account whose key was never made", async () => {
+      renderFeed({
+        kind: "awaitingApproval",
+        emailVerified: false,
+        keyAttached: false,
+        keyOnDevice: false,
+      });
+      expect(await screen.findByTestId("feed-post-p1")).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument(),
+      );
+    });
+
+    it("asks an account whose key is attached elsewhere to restore it", async () => {
+      renderFeed({
+        kind: "awaitingApproval",
+        emailVerified: true,
+        keyAttached: true,
+        keyOnDevice: false,
+      });
+      expect(await screen.findByTestId("home_restore")).toHaveAttribute("href", "/restore");
+    });
+
+    // A member's loop never reports, so a null progress must not withhold the
+    // one card that tells them why they cannot act.
+    it("keeps asking a member with no key here, progress or none", async () => {
+      renderFeed(null);
+      expect(await screen.findByTestId("home_restore")).toBeInTheDocument();
+    });
   });
 
   // HT-1. Opening a post unmounts the feed, so a re-mount used to start at
