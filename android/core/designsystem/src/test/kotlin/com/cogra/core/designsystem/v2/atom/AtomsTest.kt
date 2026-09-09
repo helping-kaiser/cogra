@@ -3,12 +3,16 @@ package com.cogra.core.designsystem.v2.atom
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertTouchHeightIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -220,6 +224,30 @@ class AtomsTest {
         compose.onNodeWithTag("words").assertTouchHeightIsEqualTo(48.dp).performClick()
 
         assertThat(clicked).isTrue()
+    }
+
+    @Test
+    fun theWayBackTakesTheDialogsEmphasisRatherThanTheDiscard() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                DiscardConfirm(
+                    subject = DiscardSubject.Reply,
+                    onKeepWriting = {},
+                    onDiscard = {},
+                    testTag = "discard",
+                )
+            }
+        }
+
+        // Material composes `dismissButton` before `confirmButton`, and the
+        // confirm slot is the filled, last-drawn one. The board puts the way
+        // back there, so the answer this dialog exists to slow down cannot
+        // hold the heaviest control on the screen.
+        val buttons = compose.onAllNodes(
+            hasClickAction() and hasAnyAncestor(hasTestTag("discard")),
+        )
+        buttons[0].assert(hasTestTag("discard_discard"))
+        buttons[1].assert(hasTestTag("discard_keep"))
     }
 }
 

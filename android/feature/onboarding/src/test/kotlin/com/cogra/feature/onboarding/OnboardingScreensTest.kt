@@ -1,7 +1,8 @@
 package com.cogra.feature.onboarding
 
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -16,8 +17,10 @@ private const val CEREMONY_CODE = "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE"
 @RunWith(RobolectricTestRunner::class)
 class OnboardingScreensTest {
 
+    // A real activity, because the code screen's trap is asserted against
+    // the back dispatcher the system would actually hand the gesture to.
     @get:Rule
-    val compose = createComposeRule()
+    val compose = createAndroidComposeRule<ComponentActivity>()
 
     @Test
     fun anUnusableInviteShowsTheRefusalAndNoContinue() {
@@ -170,6 +173,22 @@ class OnboardingScreensTest {
         compose.onNodeWithTag("ceremony_attach_error").assertDoesNotExist()
     }
 
+    @Test
+    fun theCodeOnScreenRefusesTheSystemBackGesture() {
+        showCeremony(KeyCeremonyUiState(recoveryCode = CEREMONY_CODE))
+
+        // A code shown once and never stored cannot survive a back gesture,
+        // so the screen holds an enabled callback that answers with nothing.
+        assertThat(compose.activity.onBackPressedDispatcher.hasEnabledCallbacks()).isTrue()
+    }
+
+    @Test
+    fun theBackupOfferBeforeTheCodeIsNotATrap() {
+        showCeremony(KeyCeremonyUiState())
+
+        assertThat(compose.activity.onBackPressedDispatcher.hasEnabledCallbacks()).isFalse()
+    }
+
     private fun showCeremonyCode(onCodeSaved: () -> Unit = {}) {
         compose.setContent {
             KeyCeremonyScreen(
@@ -181,5 +200,19 @@ class OnboardingScreensTest {
                 onConfirmDecline = {},
             )
         }
+    }
+
+    private fun showCeremony(state: KeyCeremonyUiState) {
+        compose.setContent {
+            KeyCeremonyScreen(
+                state = state,
+                onAcceptBackup = {},
+                onCodeSaved = {},
+                onDeclineBackup = {},
+                onCancelDecline = {},
+                onConfirmDecline = {},
+            )
+        }
+        compose.waitForIdle()
     }
 }
