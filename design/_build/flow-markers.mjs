@@ -65,6 +65,7 @@ export const FLOW_MARKERS = {
     ...post({ author: 1, menu: 2, media: 3, more: 4, topic: 5, refs: 6, stance: 7, score: 8, comments: 9 }),
     secondComments(9),
     ...nav(10),
+    { n: 17, find: ">Got it</button>", tag: "button" },
   ],
   VouchBack: [
     filter,

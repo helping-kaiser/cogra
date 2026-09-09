@@ -196,7 +196,9 @@ const MIRA_GALLERY_POST = {
 /* CograBand moved into the system (components/navigation/CograBand.jsx) the
    moment a second canvas needed it — destructured above like every master. */
 
-/* The dev-phase APK line riding the collapsing top (readme §13, entry). */
+/* The dev-phase APK line riding the collapsing top (readme §13, entry). The
+   web draws it and the app does not: the line offers a browser visitor the app
+   they are not in. */
 function ApkLine() {
   return (
     <div style={{ padding: "0 16px 12px 16px" }}>

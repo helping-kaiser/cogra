@@ -148,7 +148,8 @@
    leading, tracking, and weight together. Unclassed text lands on body-large.
 
    Which role a surface takes (design.md §3):
-     page titles          headline-small
+     page titles          title-large
+     dialog headings      headline-small
      card/section heads   title-medium
      form labels, buttons label-large
      body and status      body-medium
@@ -426,7 +427,6 @@
   --surface-card: var(--surface-container-highest);
   --surface-dialog: var(--surface-container-high);
   --surface-bar: var(--surface-container);
-  --surface-field: var(--surface-container-highest);
   --surface-loud: var(--primary-container);
   --on-surface-loud: var(--on-primary-container);
   --surface-snackbar: var(--inverse-surface);
@@ -446,10 +446,12 @@
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
 
-  /* Disabled state, as the clients draw it. */
-  --opacity-disabled: 0.4; /* @kind other */
   /* The resting stance face with no standing behind it: muted and translucent. */
   --opacity-resting-face: 0.4; /* @kind other */
+  /* The stance face over media. The emoji is a mark, sized to the line face
+     that stands in for it rather than to a type rung — the two glyphs are the
+     same control in two states and have to read at one size. */
+  --size-face-over-media: 26px;
 }
 
 /* Interaction states.
@@ -721,7 +723,8 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
    leading, tracking, and weight together. Unclassed text lands on body-large.
 
    Which role a surface takes (design.md §3):
-     page titles          headline-small
+     page titles          title-large
+     dialog headings      headline-small
      card/section heads   title-medium
      form labels, buttons label-large
      body and status      body-medium
@@ -999,7 +1002,6 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --surface-card: var(--surface-container-highest);
   --surface-dialog: var(--surface-container-high);
   --surface-bar: var(--surface-container);
-  --surface-field: var(--surface-container-highest);
   --surface-loud: var(--primary-container);
   --on-surface-loud: var(--on-primary-container);
   --surface-snackbar: var(--inverse-surface);
@@ -1019,10 +1021,12 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
 
-  /* Disabled state, as the clients draw it. */
-  --opacity-disabled: 0.4; /* @kind other */
   /* The resting stance face with no standing behind it: muted and translucent. */
   --opacity-resting-face: 0.4; /* @kind other */
+  /* The stance face over media. The emoji is a mark, sized to the line face
+     that stands in for it rather than to a type rung — the two glyphs are the
+     same control in two states and have to read at one size. */
+  --size-face-over-media: 26px;
 }
 
 /* Interaction states.
@@ -1168,7 +1172,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 </div>
 <div style="position:relative;flex:1;"><div style="position:absolute;left:20px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Entry<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">26 boards · 194 edges · <span style="color:var(--error);">16 gaps</span></div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">26 boards · 195 edges · <span style="color:var(--error);">16 gaps</span></div>
 <div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 10</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 24</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 10</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 18</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 6</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 7</div>
 </div>
 <div style="position:absolute;left:340px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
