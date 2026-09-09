@@ -914,8 +914,8 @@ changes no count today, all eleven such origins carrying gaps. The
 honest claim on design owed, but a gap on a START fails, since a journey
 that can begin from no existing screen is an authoring error. Two flows
 came off the bench, both blocked on purpose: `search-and-open-a-post`
-(the standalone post detail) and `add-a-topic` (the topic picker, whose
-«Add a topic» is offered on four boards but reaches only that gap from
+(the standalone post detail) and `add-a-topic` (the tag picker, whose
+«+ Add a tag» is offered on nine boards but reaches only that gap from
 every one of them, so a control start would fail rather than block).
 Fifty-two declared, forty-six resolved, six blocked, the census at
 seventeen.
