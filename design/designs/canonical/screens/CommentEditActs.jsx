@@ -24,11 +24,11 @@ export function Screen() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Topics</FieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <TopicRemovable topic="glovebox" />
-            <Button variant="outline" size="sm">Add a topic</Button>
+            <TopicRemovable topic="glovebox" onEdit={() => {}} />
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -59,7 +59,7 @@ export function Screen() {
           <ActsCard
             rows={[
               { label: "Edit", value: "The glovebox camera earns its keep — this is the print…", count: "1 action" },
-              { label: "Topic added", value: "#glovebox", count: "1 action" },
+              { label: "Tag added", value: "#glovebox", count: "1 action" },
             ]}
             note="They land together, or none does."
           />

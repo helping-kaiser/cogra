@@ -263,6 +263,11 @@ const REASONS = {
  * What is left around it is the skeleton, and the skeleton is the point: the
  * author, the timestamp, the thread position, the standing, the stance a reader
  * can still take. No record leaves the graph, and no removal is silent.
+ *
+ * `when` is the redaction's own moment (the contract's `redactedAt`), never
+ * the content's age, and it speaks the one age vocabulary every timestamp
+ * speaks (ruled 2026-09-09): the minutes/hours/days ladder to 30 days, the
+ * date past it.
  */
 export function RedactedContent({ reason = "illegal", when, note }) {
   const copy = REASONS[reason] ?? REASONS.illegal;

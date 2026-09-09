@@ -184,7 +184,7 @@ const searchShell = (fieldText, nRow) => [
 
 Object.assign(FLOW_MARKERS, {
   Explore: [
-    { n: 1, find: "Search people, posts, topics", tag: "div" },
+    { n: 1, find: "Search people, posts, tags", tag: "div" },
     { n: 2, find: ">Enter the Sky</button>", tag: "button" },
     { n: 3, find: ">@sol salt</span>", tag: "button" },
     { n: 3, find: ">#saltmaps</span>", tag: "button" },
@@ -192,6 +192,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(4),
   ],
   ExploreSearch: [
+    { n: 14, find: ">saltmaps<", tag: "button" },
     ...searchShell("@sol salt", 9),
     { n: 4, find: "Salt maps of the coast road", tag: "button" },
     { n: 4, find: "First try at a rubbing", tag: "button" },
@@ -281,6 +282,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   CommentEdit: [
+    { n: 14, find: "aria-label=\"#glovebox — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
@@ -289,7 +291,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "+ Add pictures · 1 of 4", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
-    { n: 9, find: ">Add a topic</button>", tag: "button" },
+    { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     { n: 11, find: "This creates 2 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
@@ -410,12 +412,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: "<input", tag: "input" },
     { n: 4, find: "<textarea", tag: "textarea" },
-    { n: 5, find: ">Add a topic</button>", tag: "button" },
+    { n: 5, find: "+ Add a tag", tag: "button" },
     { n: 6, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 7, find: "+ Cite something", tag: "button" },
     { n: 8, find: ">Next</button>", tag: "button" },
   ],
   ComposeDetails: [
+    { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 12, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
@@ -423,7 +427,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: "<textarea", tag: "textarea" },
     { n: 6, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
     { n: 6, find: 'aria-label="Remove #coastroad"', tag: "button" },
-    { n: 7, find: ">Add a topic</button>", tag: "button" },
+    { n: 7, find: "+ Add a tag", tag: "button" },
     { n: 8, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 9, find: "+ Cite something", tag: "button" },
     { n: 10, find: ">Next</button>", tag: "button" },
@@ -448,7 +452,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 3, find: '<a href="/u/', tag: "a", all: true },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
-    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 6, find: 'aria-label="Your stance on this post', tag: "button", all: true },
     { n: 6, find: ">Choose your stance</button>", tag: "button", all: true },
     { n: 7, find: ">Post Score</span>", tag: "button", all: true },
@@ -646,6 +650,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: 'class="cg-cover-own"', tag: "div" },
   ],
   CommentEditVideo: [
+    { n: 14, find: "aria-label=\"#glovebox — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
@@ -654,13 +659,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Describe the video</button>", tag: "button" },
     { n: 7, find: ">Change the cover</button>", tag: "button" },
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
-    { n: 9, find: ">Add a topic</button>", tag: "button" },
+    { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     { n: 11, find: "This creates 2 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
   ],
   EditComposeVideo: [
+    { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
@@ -670,12 +676,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: 'value="The long way home"', tag: "input" },
     { n: 8, find: 'rows="2"', tag: "textarea" },
     { n: 9, find: 'aria-label="Remove #coastroad"', tag: "button" },
-    { n: 10, find: ">Add a topic</button>", tag: "button" },
+    { n: 10, find: "+ Add a tag", tag: "button" },
     { n: 11, find: "This creates 3 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
   ],
   ComposeUploading: [
+    { n: 12, find: "aria-label=\"#tidemarket — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
@@ -685,14 +692,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: 'type="text"', tag: "input" },
     { n: 8, find: 'rows="2"', tag: "textarea" },
     { n: 9, find: 'aria-label="Remove #tidemarket"', tag: "button" },
-    { n: 10, find: ">Add a topic</button>", tag: "button" },
+    { n: 10, find: "+ Add a tag", tag: "button" },
     { n: 11, find: ">Next</button>", tag: "button" },
   ],
   ReplyCited: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
-    { n: 4, find: "+ Add a topic", tag: "button" },
+    { n: 4, find: "+ Add a tag", tag: "button" },
     { n: 5, find: "+ Cite something", tag: "button" },
     { n: 6, find: ">Adjust</button>", tag: "button" },
     { n: 7, find: ">Change</button>", tag: "button" },
@@ -778,7 +785,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More on this post"', tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a" },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
-    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 6, find: 'aria-label="Take a stance on this post"', tag: "button" },
     { n: 6, find: ">Choose your stance</button>", tag: "button" },
     { n: 7, find: ">Post Score</span>", tag: "button" },
@@ -794,7 +801,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Seek"', tag: "div" },
     { n: 6, find: 'aria-label="Turn sound on"', tag: "button" },
     { n: 7, find: '<a href="/u/', tag: "a" },
-    { n: 8, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 8, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 9, find: 'aria-label="Take a stance on this post"', tag: "button" },
     { n: 9, find: ">Choose your stance</button>", tag: "button" },
     { n: 10, find: ">Post Score</span>", tag: "button" },
@@ -1225,7 +1232,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
-    { n: 4, find: "+ Add a topic", tag: "button" },
+    { n: 4, find: "+ Add a tag", tag: "button" },
     { n: 5, find: "+ Cite something", tag: "button" },
     { n: 6, find: ">Adjust</button>", tag: "button" },
     { n: 7, find: ">Change</button>", tag: "button" },
@@ -1234,6 +1241,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: ">Back</button>", tag: "button" },
   ],
   EditCompose: [
+    { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
@@ -1242,7 +1251,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "paper against the salt crust.</textarea>", tag: "textarea" },
     { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
     { n: 7, find: 'aria-label="Remove #saltmaps"', tag: "button" },
-    { n: 8, find: ">Add a topic</button>", tag: "button" },
+    { n: 8, find: "+ Add a tag", tag: "button" },
     { n: 9, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     { n: 11, find: "This creates 3 signed actions", tag: "button" },
@@ -1305,6 +1314,62 @@ const CARD_SHARE = {
 for (const [board, n] of Object.entries(CARD_SHARE)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Share this post"', tag: "button", all: true });
 }
+
+/* THE TAG ROUND'S FIVE BOARDS. The page borrows the feed card's whole anatomy,
+   so it borrows the feed boards' numbering with it; the two picker states
+   borrow `ReferencePicker`'s.
+
+   ONE VIA CARRIES EVERY "Choose your stance" ON THE PAGE. The skip-link is the
+   same control wherever it sits — it opens the alternates for the stance it
+   belongs to — and its text names no target, so the four on this page cannot
+   be told apart by a `find` at all. One number for the accessible path is the
+   honest reading of what they share, and each FACE beside them is numbered by
+   what it actually stances: the tag, a post, a comment. That the skip-link
+   does not name its target where the face does is a defect worth its own fix,
+   and it is bigger than this round: it is one line in `StanceControl` and a
+   repin on all thirty-four boards that draw a stance. */
+Object.assign(FLOW_MARKERS, {
+  TagPage: [
+    { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
+    { n: 2, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 3, find: '<a href="/u/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 5, find: ">More</button>", tag: "button", all: true },
+    { n: 6, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 7, find: '<a href="/t/', tag: "a", all: true },
+    { n: 8, find: 'aria-label="Your stance on this post', tag: "button", all: true },
+    { n: 9, find: ">Post Score</span>", tag: "button", all: true },
+    { n: 10, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
+    { n: 12, find: ">On \u201c", tag: "button", all: true },
+    { n: 13, find: 'aria-label="More on this comment"', tag: "button" },
+    { n: 14, find: 'aria-label="Your stance on this comment', tag: "button" },
+  ],
+  TagPageEmpty: [
+    { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
+  ],
+  TagPicker: [
+    { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
+    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 3, find: ">salt<", tag: "div" },
+    { n: 4, find: ">saltmaps<", tag: "button" },
+    { n: 4, find: ">saltmarsh<", tag: "button" },
+    { n: 4, find: ">saltcrust<", tag: "button" },
+    { n: 4, find: ">saltflats<", tag: "button" },
+  ],
+  TagPickerTyping: [
+    { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
+    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 3, find: ">#SaltMaps<", tag: "div" },
+    { n: 4, find: ">saltmaps<", tag: "button" },
+  ],
+  TagPair: [
+    { n: 1, find: 'type="range"', tag: "input", all: true },
+    { n: 2, find: ">Done</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+});
 
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];

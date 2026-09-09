@@ -22,7 +22,7 @@ export function Screen() {
         <ReferenceRow kind="offer" name="Offer on Salt cellar, hand-carved" sub="by @ada" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
         <div style={{ flex: 1 }} />
         <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
-          @handle and #topic reach comments and messages too.
+          @handle and #tag reach comments and messages too.
         </p>
       </div>
     </>

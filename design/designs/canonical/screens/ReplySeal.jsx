@@ -1,6 +1,6 @@
 /* THE REPLY'S SEAL (legacy conversion, lane C): the comment wizard's last
    stage, where everything the signature commits is read back before it is
-   given. Two stages, so this is also the stage where a comment's topics and
+   given. Two stages, so this is also the stage where a comment's tags and
    references are named — which is why the card carries two add-rows where a
    post's seal carries none.
 

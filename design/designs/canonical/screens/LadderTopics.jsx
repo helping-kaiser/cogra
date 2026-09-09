@@ -1,6 +1,6 @@
-/* The post ladder — a post wearing MANY topics (50 is legal). ONE line
+/* The post ladder — a post wearing MANY tags (50 is legal). ONE line
    whatever the count, on both variants: two chips, then the counts in words;
-   on detail the line is the topics-and-references sheet's opener — the sheet
+   on detail the line is the tags-and-references sheet's opener — the sheet
    is the full set's home. */
 const MANY_TOPICS = [
   "coastroad", "saltmarsh", "headland", "lowtide", "fieldnotes", "placenames",
