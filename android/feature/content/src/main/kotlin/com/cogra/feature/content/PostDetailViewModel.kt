@@ -61,19 +61,6 @@ data class PostDetailUiState(
     val commentSigned: Boolean = false,
     /** Reply threads a reader has opened (Q49). */
     val replyThreads: Map<String, ReplyThread> = emptyMap(),
-    /**
-     * Which chip rows have been asked to show their claim parameters
-     * (F8), keyed by the post or comment the row belongs to. Anyone may
-     * see how strongly a tag is claimed — but only when they ask, so
-     * the set starts empty on every visit.
-     */
-    val revealedTagRows: Set<String> = emptySet(),
-    /**
-     * Which reference rows have been asked to show their parameters,
-     * keyed the same way [revealedTagRows] is. A citation's two
-     * parameters are its own question, so the two rows reveal apart.
-     */
-    val revealedReferenceRows: Set<String> = emptySet(),
 )
 
 
@@ -239,17 +226,6 @@ class PostDetailViewModel @Inject constructor(
         }
     }
 
-    /** The reveal is per row and per reading (F8) — one row saying yes says nothing about the next. */
-    fun onToggleTagValues(ownerId: String) = _state.update {
-        it.copy(
-            revealedTagRows = if (ownerId in it.revealedTagRows) {
-                it.revealedTagRows - ownerId
-            } else {
-                it.revealedTagRows + ownerId
-            },
-        )
-    }
-
     /**
      * A comment or an edit came back signed from the wizard.
      *
@@ -264,17 +240,4 @@ class PostDetailViewModel @Inject constructor(
     }
 
     fun onCommentSignedShown() = _state.update { it.copy(commentSigned = false) }
-
-
-    /** The reference row's reveal, which toggles apart from the tag row's. */
-    fun onToggleReferenceValues(ownerId: String) = _state.update {
-        it.copy(
-            revealedReferenceRows = if (ownerId in it.revealedReferenceRows) {
-                it.revealedReferenceRows - ownerId
-            } else {
-                it.revealedReferenceRows + ownerId
-            },
-        )
-    }
-
 }

@@ -272,7 +272,6 @@ fun FeedScreen(
                                     onClick = { onOpenPost(post.id) },
                                     onOpenActor = onOpenActor,
                                     onOpenTopic = onOpenTopic,
-                                    onOpenPost = onOpenPost,
                                     revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
                                     onReveal = { onReveal(post.id, post.sensitiveMark()) },
                                     stanceControl = stanceControl,
@@ -401,8 +400,6 @@ private fun PostCard(
     onClick: () -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
-    /** A referenced post opens on its own detail, not this card's. */
-    onOpenPost: (String) -> Unit,
     revealed: Boolean,
     onReveal: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
@@ -451,11 +448,10 @@ private fun PostCard(
             if (post.landing.isPending) {
                 PendingMarker(testTag = "feed_post_pending_${post.id}")
             }
-            TopicChipRow(post.topics, onOpenTopic, "feed_post_${post.id}")
-            ReferenceChipRow(
+            TopicsLine(
+                topics = post.topics,
                 references = post.references,
-                onOpenActor = onOpenActor,
-                onOpenPost = onOpenPost,
+                onOpenTopic = onOpenTopic,
                 testTagPrefix = "feed_post_${post.id}",
             )
             // The post card carries the stance control (design.md §6).

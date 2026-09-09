@@ -75,8 +75,6 @@ fun PostDetailRoute(
     onEditComment: (commentId: String, parentTitle: String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
-    /** A referenced post opens on its own detail. */
-    onOpenPost: (String) -> Unit,
     /** The Reference affordance (D20): compose a post citing this node. */
     onReference: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
@@ -116,13 +114,10 @@ fun PostDetailRoute(
         },
         onCommentSignedShown = viewModel::onCommentSignedShown,
         onLoadMoreReplies = viewModel::onLoadMoreReplies,
-        onToggleTagValues = viewModel::onToggleTagValues,
-        onToggleReferenceValues = viewModel::onToggleReferenceValues,
         onReveal = viewModel::onReveal,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
-        onOpenPost = onOpenPost,
         onReference = onReference,
         onSignInOrJoin = onSignInOrJoin,
         onBack = onBack,
@@ -146,16 +141,11 @@ fun PostDetailScreen(
     onEditComment: (CommentView) -> Unit,
     onCommentSignedShown: () -> Unit,
     onLoadMoreReplies: (CommentView) -> Unit,
-    /** One chip row asking to show its claim parameters, by owner id (F8). */
-    onToggleTagValues: (String) -> Unit,
-    /** A reference row asking to show its parameters, by owner id (D16). */
-    onToggleReferenceValues: (String) -> Unit,
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
     onEdit: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
-    onOpenPost: (String) -> Unit,
     onReference: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
@@ -283,12 +273,9 @@ fun PostDetailScreen(
                             onReplyTo = onReplyTo,
                             onEditComment = onEditComment,
                             onLoadMoreReplies = onLoadMoreReplies,
-                            onToggleTagValues = onToggleTagValues,
-                            onToggleReferenceValues = onToggleReferenceValues,
                             onReveal = onReveal,
                             onOpenActor = onOpenActor,
                             onOpenTopic = onOpenTopic,
-                            onOpenPost = onOpenPost,
                             onReference = onReference,
                             onSignInOrJoin = onSignInOrJoin,
                             stanceControl = stanceControl,
@@ -311,13 +298,10 @@ private fun PostWithThread(
     onReplyTo: (CommentView) -> Unit,
     onEditComment: (CommentView) -> Unit,
     onLoadMoreReplies: (CommentView) -> Unit,
-    onToggleTagValues: (String) -> Unit,
-    onToggleReferenceValues: (String) -> Unit,
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
-    onOpenPost: (String) -> Unit,
     onReference: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
@@ -366,22 +350,11 @@ private fun PostWithThread(
                 if (post.landing.isPending) {
                     PendingMarker(testTag = "detail_pending")
                 }
-                // The reveal is a detail-view gesture (F8): here the
-                // reader has already chosen this piece of content.
-                TopicChipRow(
+                TopicsLine(
                     topics = post.topics,
+                    references = post.references,
                     onOpenTopic = onOpenTopic,
                     testTagPrefix = "detail_post",
-                    valuesRevealed = post.id in state.revealedTagRows,
-                    onToggleValues = { onToggleTagValues(post.id) },
-                )
-                ReferenceChipRow(
-                    references = post.references,
-                    onOpenActor = onOpenActor,
-                    onOpenPost = onOpenPost,
-                    testTagPrefix = "detail_post",
-                    valuesRevealed = post.id in state.revealedReferenceRows,
-                    onToggleValues = { onToggleReferenceValues(post.id) },
                 )
                 // The stance control rides the post itself here, the way
                 // it rides the card in the feed (design.md §6), and the
@@ -426,12 +399,9 @@ private fun PostWithThread(
                 onLoadMoreReplies = onLoadMoreReplies,
                 onReplyTo = onReplyTo,
                 onEditComment = onEditComment,
-                onToggleTagValues = onToggleTagValues,
-                onToggleReferenceValues = onToggleReferenceValues,
                 onReveal = onReveal,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
-                onOpenPost = onOpenPost,
                 onReference = onReference,
                 stanceControl = stanceControl,
             )
@@ -569,13 +539,10 @@ private fun CommentThread(
     onLoadMoreReplies: (CommentView) -> Unit,
     onReplyTo: (CommentView) -> Unit,
     onEditComment: (CommentView) -> Unit,
-    onToggleTagValues: (String) -> Unit,
-    onToggleReferenceValues: (String) -> Unit,
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
-    onOpenPost: (String) -> Unit,
     onReference: (String) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
@@ -643,20 +610,12 @@ private fun CommentThread(
                 if (comment.landing.isPending) {
                     PendingMarker(testTag = "comment_pending_${comment.id}")
                 }
-                TopicChipRow(
+                // The same one line a post wears (`CommentCard.jsx`).
+                TopicsLine(
                     topics = comment.topics,
+                    references = comment.references,
                     onOpenTopic = onOpenTopic,
                     testTagPrefix = "comment_${comment.id}",
-                    valuesRevealed = comment.id in state.revealedTagRows,
-                    onToggleValues = { onToggleTagValues(comment.id) },
-                )
-                ReferenceChipRow(
-                    references = comment.references,
-                    onOpenActor = onOpenActor,
-                    onOpenPost = onOpenPost,
-                    testTagPrefix = "comment_${comment.id}",
-                    valuesRevealed = comment.id in state.revealedReferenceRows,
-                    onToggleValues = { onToggleReferenceValues(comment.id) },
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     // A comment carries the control too (design.md §6).
@@ -709,12 +668,9 @@ private fun CommentThread(
                 onLoadMoreReplies = onLoadMoreReplies,
                 onReplyTo = onReplyTo,
                 onEditComment = onEditComment,
-                onToggleTagValues = onToggleTagValues,
-                onToggleReferenceValues = onToggleReferenceValues,
                 onReveal = onReveal,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
-                onOpenPost = onOpenPost,
                 onReference = onReference,
                 stanceControl = stanceControl,
             )

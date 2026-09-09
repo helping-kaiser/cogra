@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import java.util.Locale
 
@@ -74,13 +75,16 @@ fun TopicChip(
     val chipModifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
     val chipLabel: @Composable () -> Unit = {
         if (reading == null) {
-            Text(label)
+            // A chip label is one line by Material's own spec, so a caller
+            // that caps the chip's width — the topics line's 96dp — trims
+            // the name with an ellipsis instead of wrapping the pill.
+            Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
         } else {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Text(label)
+                Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     reading,
                     style = MaterialTheme.typography.labelSmall,
