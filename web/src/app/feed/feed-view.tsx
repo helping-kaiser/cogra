@@ -21,6 +21,7 @@ import { appendDeduped } from "@/lib/api/pagination";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthPhase } from "@/lib/session/provider";
+import { useRegistrationProgress } from "@/lib/signing/provider";
 import { RestoreCard } from "@/app/applicant-status";
 import { StatusBanners } from "@/app/status-banners";
 import { Button, buttonClassName } from "@/lib/ui/button";
@@ -61,6 +62,14 @@ export function FeedView({
   store?: IdentityStore;
 } = {}) {
   const keyOnDevice = useKeyOnDevice(store);
+  // A KEY THAT WAS NEVER MADE IS NOT A KEY TO RESTORE. This card used to ask
+  // on "no key in this browser" alone, so a just-created account — which has
+  // no key anywhere yet — was told to restore one AND offered the ceremony in
+  // the applicant stack below it, both at once. The boards keep the two
+  // apart: `KeyElsewhere` is for an account whose key exists somewhere else,
+  // `KeyCeremony` for one that has none, and no board carries both.
+  const progress = useRegistrationProgress();
+  const noKeyYet = progress?.kind === "awaitingApproval" && !progress.keyAttached;
   const client = useApolloClient();
   const phase = useAuthPhase();
   const router = useRouter();
@@ -176,7 +185,7 @@ export function FeedView({
           <div className="flex flex-col gap-4 px-6">
             {/* Must-act, so it collapses into the header and follows the
                 reader back up instead of living only at the top. */}
-            {phase === "signedIn" && keyOnDevice === false && <RestoreCard />}
+            {phase === "signedIn" && keyOnDevice === false && !noKeyYet && <RestoreCard />}
             {/* The signed-out reader's card rides the same slot: the one
                 sign-in-or-join entry, in place of a header action. */}
             {phase === "signedOut" && <GuestBanner />}
