@@ -11,7 +11,12 @@
    in it, and one instance is a control, not a component.
 
    THE HEADING ROW IS `SheetTitle`, and the "?" and the switch ride its
-   `trailing` slot — the name and what the line carries besides it. */
+   `trailing` slot — the name and what the line carries besides it.
+
+   ONE LINE FOR BOTH SCALES. The comment editor's Mark row opens this same
+   sheet, so the explainer names what the veil covers on either — the pictures
+   and the words. A comment has no description to name, and a post's
+   description is words. */
 export function Screen() {
   return (
     <>
@@ -39,7 +44,7 @@ export function Screen() {
         </SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px" }}>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
-            Veils the pictures and the description until a reader chooses to look.
+            Veils the pictures and the words until a reader chooses to look.
           </p>
 
           <TextField label="Why?" corner="Optional — shown on the veil" value="One rubbing includes a dead seabird." />
