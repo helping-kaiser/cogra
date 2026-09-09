@@ -379,6 +379,25 @@ mod pictures {
         id
     }
 
+    async fn video_asset(pool: &PgPool, author: Uuid, fill: u8) -> Uuid {
+        let id = Uuid::new_v4();
+        media_store::insert(
+            pool,
+            id,
+            author,
+            &[fill; 32],
+            "sha256",
+            &format!("{id}.mp4"),
+            "video/mp4",
+            1024,
+            &serde_json::json!({ "v": 1, "aspect_ratio": "1:1" }),
+            None,
+        )
+        .await
+        .expect("asset row");
+        id
+    }
+
     fn with_picture(avatar: Option<Option<Uuid>>) -> ProfileUpdateDraft {
         ProfileUpdateDraft {
             avatar_media_id: avatar,
@@ -450,6 +469,26 @@ mod pictures {
             .update(actor, with_picture(Some(Some(Uuid::new_v4()))))
             .await
         {
+            Err(ProfileError::Media(e)) => {
+                assert_eq!(e.path, vec!["avatarMediaId".to_string()]);
+            }
+            other => panic!("expected a media refusal, got {other:?}"),
+        }
+    }
+
+    /// The slot takes the picture cap and nothing wider: a video would
+    /// otherwise reach an avatar through a cap ten times a picture's, and
+    /// no profile surface plays one.
+    ///
+    /// An avatar is a still, so the slot answers to the picture cap rather than the wider video one.
+    /// ´claim:profile:an-avatar-is-a-still´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn a_picture_slot_refuses_a_video(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, _key) = rig.registered_actor("ada").await;
+        let clip = video_asset(&rig.pool, actor, 4).await;
+
+        match rig.update(actor, with_picture(Some(Some(clip)))).await {
             Err(ProfileError::Media(e)) => {
                 assert_eq!(e.path, vec!["avatarMediaId".to_string()]);
             }
