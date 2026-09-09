@@ -12,6 +12,9 @@ function draw(overrides: Partial<Parameters<typeof CommentEditView>[0]> = {}) {
     previews: {},
     tags: [],
     references: [],
+    sensitive: false,
+    sensitiveReason: "",
+    sensitiveOpen: false,
     acts: 1,
     actsOpen: false,
     busy: false,
@@ -19,6 +22,10 @@ function draw(overrides: Partial<Parameters<typeof CommentEditView>[0]> = {}) {
     refusal: null,
     failed: false,
     onWords: vi.fn(),
+    onSensitive: vi.fn(),
+    onSensitiveReason: vi.fn(),
+    onSensitiveOpen: vi.fn(),
+    onSensitiveHelp: vi.fn(),
     onPick: vi.fn(),
     onRemovePicture: vi.fn(),
     onDescribe: vi.fn(),
@@ -53,11 +60,45 @@ describe("CommentEdit", () => {
     );
   });
 
-  // FIDELITY, not a deviation: the CommentEdit board draws no sensitive row.
-  // The author's own mark still travels on the wire, untouched.
-  it("draws no sensitive row — the board has none", () => {
+  it("reads the mark back and offers to set one", () => {
     draw();
-    expect(screen.getByTestId("comment-edit")).not.toHaveTextContent("Sensitive");
+    expect(screen.getByTestId("comment-edit-sensitive-value")).toHaveTextContent("Not marked");
+    expect(screen.getByTestId("comment-edit-open-sensitive")).toHaveTextContent("Mark");
+  });
+
+  it("a marked comment says so, and the row offers the change", () => {
+    draw({ sensitive: true });
+    expect(screen.getByTestId("comment-edit-sensitive-value")).toHaveTextContent("Marked");
+    expect(screen.getByTestId("comment-edit-open-sensitive")).toHaveTextContent("Change");
+  });
+
+  it("the row opens the mark sheet", () => {
+    const props = draw();
+    fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
+    expect(props.onSensitiveOpen).toHaveBeenCalledWith(true);
+  });
+
+  it("the sheet flips the mark, and its reason waits for one", () => {
+    const props = draw({ sensitiveOpen: true });
+    fireEvent.click(screen.getByTestId("comment-edit-sensitive-switch"));
+    expect(props.onSensitive).toHaveBeenCalledWith(true);
+    // A reason without the mark is a refusal, so the field waits for it.
+    expect(screen.getByTestId("comment-edit-sensitive-reason")).toBeDisabled();
+  });
+
+  it("the sheet's reason is live once the comment is marked", () => {
+    const props = draw({ sensitiveOpen: true, sensitive: true });
+    const reason = screen.getByTestId("comment-edit-sensitive-reason");
+    expect(reason).not.toBeDisabled();
+    fireEvent.change(reason, { target: { value: "A dead seabird." } });
+    expect(props.onSensitiveReason).toHaveBeenCalledWith("A dead seabird.");
+  });
+
+  it("the sheet's help is the mark's own topic, not the editor's", () => {
+    const props = draw({ sensitiveOpen: true });
+    fireEvent.click(screen.getByTestId("comment-edit-sensitive-help"));
+    expect(props.onSensitiveHelp).toHaveBeenCalled();
+    expect(props.onHelp).not.toHaveBeenCalled();
   });
 
   it("states the license and locks it — an edit has nothing to change it to", () => {

@@ -154,5 +154,6 @@ query CommentSelfMark($id: UUID!) {
   comment(id: $id) {
     id
     sensitiveSelfMark
+    sensitiveReason
   }
 }

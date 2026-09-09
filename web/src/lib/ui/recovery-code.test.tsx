@@ -22,12 +22,34 @@ describe("RecoveryCode", () => {
     show();
     expect(screen.getByTestId("code")).toHaveTextContent(CODE);
     expect(screen.getByTestId("code_saved")).toBeDisabled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("leaves the confirmation closed on a wrong answer", () => {
+  it("names the mismatch on a wrong answer instead of going quiet", () => {
     const onConfirmed = show();
     fireEvent.change(screen.getByTestId("code_typed_back"), { target: { value: "ABCDE" } });
-    expect(screen.getByTestId("code_saved")).toBeDisabled();
+    // Nothing is said before the reader answers.
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("code_saved"));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("That doesn't match the code above.");
+    expect(screen.getByTestId("code_typed_back")).toHaveAttribute("aria-invalid", "true");
+    expect(onConfirmed).not.toHaveBeenCalled();
+  });
+
+  it("re-reads a marked field as the reader types, and clears it on the code", () => {
+    const onConfirmed = show();
+    const field = screen.getByTestId("code_typed_back");
+    fireEvent.change(field, { target: { value: "ABCDE" } });
+    fireEvent.click(screen.getByTestId("code_saved"));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    fireEvent.change(field, { target: { value: "ABCDE-FGHJK" } });
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    fireEvent.change(field, { target: { value: CODE } });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(onConfirmed).not.toHaveBeenCalled();
   });
 
