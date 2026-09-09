@@ -852,6 +852,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "Three weekends of walking the same stretch", tag: "button" },
     ...nav(10),
   ],
+  // The failed next page is this board's whole subject; the profile beneath it
+  // is `Profile`'s and is wired there (the pattern-exemplar exemption).
+  ProfileMoreFailed: [{ n: 1, find: ">Retry</button>", tag: "button" }],
   ProfileApplicant: [
     ...ownProfile(),
     { n: 9, find: "First light over the flats", tag: "button" },

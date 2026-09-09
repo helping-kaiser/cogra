@@ -1145,6 +1145,15 @@
       "page": "profile"
     },
     {
+      "file": "ProfileMoreFailed.dc.html",
+      "title": "Profile · the chronicle can't load more",
+      "x": 960,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ProfilePosts.dc.html",
       "title": "Profile · the posts view",
       "x": 1920,
