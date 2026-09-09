@@ -152,6 +152,24 @@ describe("type", () => {
     }
   });
 
+  // The role table's two rungs the audit found the apps disagreeing on
+  // (readme §13, the audit answers): a page title is `title-large` — every
+  // board's band title, and M3's top-app-bar spec — and `headline-small`'s home
+  // is a dialog heading. `title-medium` belongs to a card or a section head.
+  it("sets every dialog heading at headline-small", () => {
+    const offenders: string[] = [];
+    for (const file of sourceFiles()) {
+      const source = readFileSync(file, "utf-8");
+      // A modal surface: the native element, or the role a hand-built one takes.
+      if (!/<dialog|role="(?:alert)?dialog"/.test(source)) continue;
+      // Sheets are not dialogs: a sheet's own heading is `title-medium`
+      // (design/components/core/BottomSheet.jsx, SheetTitle).
+      if (/BottomSheet|bottom-sheet/.test(source)) continue;
+      if (/<h2[^>]*text-title-medium/.test(source)) offenders.push(file);
+    }
+    expect(offenders).toEqual([]);
+  });
+
   it("leaves no ad-hoc size, weight, or tracking in any screen", () => {
     // The analogue of palette.test.ts's no-raw-hex rule: a screen that sets its
     // own size is what makes the next scale change a rewrite instead of a token
