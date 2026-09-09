@@ -49,7 +49,8 @@ function SecretBlock({ label, value, copyLabel }) {
           fontFamily: "var(--font-mono)",
           fontSize: "var(--text-body-small)",
           lineHeight: "var(--text-body-small--line-height)",
-          wordBreak: "break-all",
+          whiteSpace: "pre-wrap",
+          overflowWrap: "anywhere",
           color: "var(--text-body)",
         }}
       >
