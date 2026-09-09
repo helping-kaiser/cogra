@@ -9,6 +9,17 @@
     <string name="recovery_code_mismatch">That doesn\'t match the code above.</string>
     <string name="pending_settling">Still settling</string>
 
+    <!-- The borrowed-view band (design.md §13, 2026-08-27). The band names
+         the vantage point a guest or applicant feed is ranked from; the
+         three readings differ only in what the reader can do about it. -->
+    <string name="borrowed_view_join">Browsing from @%1$s\'s view — join to build your own.</string>
+    <string name="borrowed_view_applicant">Browsing from @%1$s\'s view while your application lands.</string>
+    <string name="borrowed_view_vouch_back">Browsing from @%1$s\'s view — vouch back to start your own.</string>
+    <string name="borrowed_view_sign_in_or_join">Sign in or join</string>
+
+    <!-- The read shell's band (design.md §6). -->
+    <string name="cogra_band_chats">Chats</string>
+
     <!-- The topic chip (design.md §6). -->
     <string name="topic_chip_remove">Remove %1$s</string>
     <!-- A revealed claim: compact on screen, spelled out for TalkBack (F8). -->
