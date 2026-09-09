@@ -29,8 +29,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     pathname === "/feed" ? "feed" : pathname === "/profile" ? "profile" : null;
   return (
     <div
+      // The bar's own height, read as the token rather than respelled as a
+      // number — a second copy of 64px is how the band and the space kept for
+      // it drift apart.
       className={`flex min-h-full flex-1 flex-col ${
-        showBar ? "pb-[calc(4rem+env(safe-area-inset-bottom))]" : ""
+        showBar
+          ? "pb-[calc(var(--bottom-bar-height)+env(safe-area-inset-bottom))]"
+          : ""
       }`}
     >
       {children}
