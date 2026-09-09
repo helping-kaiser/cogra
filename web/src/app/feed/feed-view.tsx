@@ -23,6 +23,8 @@ import { Card } from "@/lib/ui/card";
 import { CograBand } from "@/lib/ui/cogra-band";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PostCard } from "@/lib/ui/post-card";
+import { LINK_COPIED } from "@/lib/ui/share";
+import { Snackbar } from "@/lib/ui/snackbar";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
@@ -62,6 +64,10 @@ export function FeedView({
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
+  // Stable, so the snackbar's own timer is not restarted by every render of
+  // the feed underneath it.
+  const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
 
   // Effect-invoked, so no synchronous setState here; the retry button
   // resets the loading state in its own handler. The fault reflects
@@ -160,13 +166,31 @@ export function FeedView({
         {!loading && transportFault === null && posts.length === 0 && (
           <p data-testid="feed-empty">Nothing here yet — write the first post.</p>
         )}
-        <ul className="flex flex-col gap-3" data-testid="feed-list">
-          {posts.map((post) => (
-            <li key={post.id}>
-              <PostCard post={post} prefix="feed" />
-            </li>
-          ))}
-        </ul>
+      </div>
+      {/* A FEED POST IS A FULL-WIDTH CONTAINER (design/readme.md, "Feed
+          containers — rounded full-width cards"): the filled card keeps its
+          corners, tone and 16px text inset but spans the screen edge to edge,
+          and 8px of surface between cards is the seam. So the list leaves the
+          gutter its neighbours keep — the
+          board's own `FeedList`, `gap: 8, padding: "8px 0 0 0"`. What the
+          42rem column shows above phone width is whatever it shows: desktop is
+          out of design scope until the mobile set is complete (readme §2). */}
+      <ul className="flex flex-col gap-2" data-testid="feed-list">
+        {posts.map((post) => (
+          <li key={post.id}>
+            <PostCard
+              post={post}
+              href={`/posts/${post.id}`}
+              testId={`feed-post-${post.id}`}
+              authorTestId={`feed-author-${post.id}`}
+              stanceTestId={`feed-stance-${post.id}`}
+              comments={post.comments.totalCount}
+              onLinkCopied={() => setLinkCopied(true)}
+            />
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-col gap-4 px-6">
         {hasNextPage &&
           (transportFault === "append" ? (
             <div className="flex items-center justify-center gap-3">
@@ -194,6 +218,13 @@ export function FeedView({
               Load more
             </Button>
           ))}
+        {/* One region for the whole feed: a card that copied a link says so
+            here rather than each card mounting a live region of its own. */}
+        <Snackbar
+          testId="feed-link-copied"
+          message={linkCopied ? LINK_COPIED : null}
+          onDismiss={dismissLinkCopied}
+        />
       </div>
     </main>
   );

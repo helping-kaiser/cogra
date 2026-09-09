@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
@@ -188,6 +188,8 @@ function detail(
       references: postReferences,
       comments: {
         __typename: "CommentConnection",
+        // The card's affordance counts the WHOLE thread, not this page.
+        totalCount: comments.length,
         edges: comments.map((comment) => ({
           __typename: "CommentEdge",
           node: commentNode(comment),
@@ -861,6 +863,63 @@ describe("PostView", () => {
     expect(screen.queryByTestId("comment-c1-tag-input")).not.toBeInTheDocument();
   });
 
+  // DV-18/20/21: the post is a card here too, the author leads it, and the
+  // title is the card's heading rather than the app bar's.
+  it("draws the post as a card, the author leading it", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    const { container } = renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+    });
+    const card = await screen.findByTestId("post");
+    expect(card.tagName).toBe("SECTION");
+    expect(card.className).toContain("bg-surface-container-highest");
+    expect(card).toContainElement(screen.getByTestId("post-author"));
+    expect(card).toContainElement(screen.getByTestId("post-title"));
+    expect(card).toContainElement(screen.getByTestId("post-stance"));
+    const order = Array.from(
+      container.querySelectorAll("[data-testid]"),
+      (node) => node.getAttribute("data-testid"),
+    );
+    expect(order.indexOf("post-author")).toBeLessThan(order.indexOf("post-title"));
+    expect(order.indexOf("post-author")).toBeLessThan(order.indexOf("post-body"));
+  });
+
+  // The count takes the reader to the thread; the sheet that will own it is
+  // not drawn here yet, and the thread is on this page in the meantime.
+  it("carries the comments affordance, counting the whole thread", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    const comments = await screen.findByTestId("post-comments");
+    expect(comments).toHaveAccessibleName("1 comment");
+    const heading = document.getElementById("post-comments");
+    const scrollIntoView = vi.fn();
+    if (heading !== null) heading.scrollIntoView = scrollIntoView;
+    fireEvent.click(comments);
+    expect(scrollIntoView).toHaveBeenCalled();
+  });
+
+  // CR-20: both apps read `createdAt` for the Edited comparison and drew none
+  // of it.
+  it("carries every comment's age beside its author", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    const stamp = await screen.findByTestId("comment-c1-timestamp");
+    expect(stamp).toHaveAttribute("datetime");
+    expect(stamp.textContent).toMatch(/^(now|\d+[mhd])$/);
+  });
+
   it("links authors as chips into their profiles", async () => {
     server.use(
       graphql.query("PostDetail", () =>
@@ -872,26 +931,32 @@ describe("PostView", () => {
     expect(screen.getByTestId("comment-author-c1")).toHaveAttribute("href", "/u/bob");
   });
 
-  // F8: the detail view is where a reader may ask how strongly a topic
-  // is claimed — on the post and on every comment in the thread.
-  it("reveals the post's topic values on request", async () => {
+  // ONE LINE, TWO CHIPS, THEN THE COUNTS on the post and on every comment
+  // (`TopicsLine.jsx`). The values a reader can ask for live in the
+  // topics-and-references sheet, which is not drawn here yet — so the line
+  // states the counts and opens nothing, rather than growing a toggle the
+  // boards do not carry.
+  it("states the post's topics on one line, the rest as a count", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({
           data: detail("u1", [], { hasNextPage: false, endCursor: null }, false, [
             topicClaim("rust", 0.4, 0.9),
+            topicClaim("wasm", 0.2, 0.8),
+            topicClaim("axum", 0.1, 0.7),
           ]),
         }),
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-    const toggle = await screen.findByTestId("post-topics-reveal");
-    expect(screen.queryByTestId("post-topic-rust-values")).not.toBeInTheDocument();
-    fireEvent.click(toggle);
-    expect(screen.getByTestId("post-topic-rust-values")).toHaveTextContent("+0.40 · 0.90");
+    expect(await screen.findByTestId("post-topic-rust")).toBeInTheDocument();
+    expect(screen.getByTestId("post-topic-wasm")).toBeInTheDocument();
+    expect(screen.queryByTestId("post-topic-axum")).not.toBeInTheDocument();
+    expect(screen.getByTestId("post-topics-counts")).toHaveTextContent("· 1 topic");
+    expect(screen.queryByTestId("post-topics-reveal")).not.toBeInTheDocument();
   });
 
-  it("reveals a comment's topic values independently of the post's", async () => {
+  it("gives every comment the same line", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({
@@ -906,10 +971,9 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-    fireEvent.click(await screen.findByTestId("comment-c1-topics-reveal"));
-    expect(screen.getByTestId("comment-c1-topic-wasm-values")).toHaveTextContent("-0.25 · 0.50");
-    // Each row answers for itself; revealing one does not reveal the rest.
-    expect(screen.queryByTestId("post-topic-rust-values")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("comment-c1-topic-wasm")).toBeInTheDocument();
+    expect(screen.getByTestId("post-topic-rust")).toBeInTheDocument();
+    expect(screen.queryByTestId("comment-c1-topics-reveal")).not.toBeInTheDocument();
   });
 
   // ---- F9: tagging is part of the comment compose gesture ----
@@ -1316,46 +1380,29 @@ describe("PostView — references", () => {
     }));
   }
 
-  it("renders the post's references under the body, values hidden until asked", async () => {
+  // A CARD NEVER LISTS ITS REFERENCES INLINE (design/readme.md, "Reference
+  // rows and signed pairs — 2026-08-28"):
+  // the count is on the topics line, and the full set — with each claim's
+  // pair — is the topics-and-references sheet's, which is not drawn yet.
+  it("states the post's references as a count, never as chips", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({
           data: detail("u1", [], undefined, false, [], [
             referenceClaim(userTarget("u-ada", "ada"), 0.4, -0.2),
-          ]),
-        }),
-      ),
-    );
-    renderWithProviders(<PostView postId="p1" />);
-
-    const chip = await screen.findByTestId("post-reference-l1-u-ada-link");
-    expect(chip).toHaveAttribute("href", "/u/ada");
-    expect(screen.queryByTestId("post-reference-l1-u-ada-values")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId("post-references-reveal"));
-    expect(screen.getByTestId("post-reference-l1-u-ada-values")).toHaveTextContent(
-      "+0.40 · -0.20",
-    );
-  });
-
-  it("opens a referenced post on its own detail", async () => {
-    server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("u1", [], undefined, false, [], [
             referenceClaim(postTarget("p-quoted", "On folding")),
           ]),
         }),
       ),
     );
     renderWithProviders(<PostView postId="p1" />);
-    expect(await screen.findByTestId("post-reference-l1-p-quoted-link")).toHaveAttribute(
-      "href",
-      "/posts/p-quoted",
-    );
+
+    expect(await screen.findByTestId("post-topics-counts")).toHaveTextContent("· 2 references");
+    expect(screen.queryByTestId("post-reference-l1-u-ada-link")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-references-reveal")).not.toBeInTheDocument();
   });
 
-  it("renders a comment's own references on the thread", async () => {
+  it("counts a comment's own references the same way", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({
@@ -1370,9 +1417,10 @@ describe("PostView — references", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />);
-    expect(
-      await screen.findByTestId("comment-c1-reference-l1-u-ada-link"),
-    ).toHaveAttribute("href", "/u/ada");
+    expect(await screen.findByTestId("comment-c1-topics-counts")).toHaveTextContent(
+      "· 1 reference",
+    );
+    expect(screen.queryByTestId("comment-c1-reference-l1-u-ada-link")).not.toBeInTheDocument();
   });
 
   it("offers the Reference affordance on the post and on each comment", async () => {
@@ -1520,7 +1568,10 @@ describe("PostView — references", () => {
       expect(screen.getByAltText("paper against the salt crust")).toBeInTheDocument();
     });
 
-    it("shows the Removed mark in place of bytes that are gone", async () => {
+    // REDACTION IS RECORD-GRANULAR: the payload goes at once — title, body,
+    // description, media and the license together — and what is left is the
+    // skeleton, which is the point.
+    it("shows the Removed mark in place of the whole payload", async () => {
       server.use(
         withBody({
           content: null,
@@ -1530,9 +1581,21 @@ describe("PostView — references", () => {
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-      const mark = await screen.findByTestId("post-media");
+      const mark = await screen.findByTestId("post-removed");
       expect(mark).toHaveTextContent("Removed by its author");
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("post-title")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("post-media")).not.toBeInTheDocument();
+      // The license rode the payload, so a redacted record has none to show.
+      expect(screen.queryByTestId("post-license-terms")).not.toBeInTheDocument();
+      // A removed post has no menu left — back is the whole header.
+      expect(screen.queryByTestId("post-edit")).not.toBeInTheDocument();
+      // What survives: the author, the timestamp, and the stance a reader can
+      // still take, beside the count that proves nothing was quietly deleted.
+      expect(screen.getByTestId("post-author")).toBeInTheDocument();
+      expect(screen.getByTestId("post-timestamp")).toBeInTheDocument();
+      expect(screen.getByTestId("post-stance")).toBeInTheDocument();
+      expect(screen.getByTestId("post-comments")).toBeInTheDocument();
     });
 
     it("names a platform removal differently from an author's own", async () => {
@@ -1546,7 +1609,7 @@ describe("PostView — references", () => {
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-      expect(await screen.findByTestId("post-media")).toHaveTextContent(
+      expect(await screen.findByTestId("post-removed")).toHaveTextContent(
         "Removed under the platform's rules",
       );
     });
@@ -1565,10 +1628,13 @@ describe("PostView — references", () => {
       expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
       const veil = screen.getByTestId("post-veil");
       expect(veil).toBeInTheDocument();
-      // One reveal answers for the whole body, media and words together.
+      // One reveal answers for the whole body — the media and the words
+      // beside it, which on a media post are the description (the XOR).
       fireEvent.click(within(veil).getByRole("button"));
       expect(screen.getByTestId("post-media")).toBeInTheDocument();
-      expect(screen.getByTestId("post-body")).toHaveTextContent("The body");
+      expect(screen.getByTestId("post-description")).toHaveTextContent(
+        "Rubbings from three weekends.",
+      );
     });
 
     it("renders a comment's picture beside its words, which a comment keeps", async () => {
