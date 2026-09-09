@@ -1475,17 +1475,14 @@ question the boards leave open; none blocked the rest of the shell.
    land with slice 3's ranker, and the guest notice stands until then.
    Roadmap slice 3 carries it.
 
-**One board to confirm:** stop 1's ruling named `Main` for `Restore`,
-but `Main` is the signed-out invite-link feed — every act on it
-guest-gates — so it cannot be the signed-in home the same sentence
-asks for. `KeyElsewhere` is that home, is the app-open entry for a
-key-absent reader, and is what the edge draws; if `Feed` was meant,
-the edge is a one-word fix.
+**`KeyElsewhere` is confirmed** (jakob, same day): `Main` is the
+signed-out invite-link feed — every act on it guest-gates — so the
+signed-in home the ruling's reason names is `KeyElsewhere`, the
+app-open entry for a key-absent reader, and the edge draws it.
 
-**Not reached by the ruling**, and left open on purpose: the error
-twins of those entry screens — `InviteEntryError`, `SignInError`,
-`RestoreError` — and `JoinInvalid` still draw `{"terminal": "back"}` on
-the same arrow their parents now resolve, so one screen and its error
-state describe one control two ways. Reading stop 1 as being about the
-screen rather than the board would close all four the same way, but
-that reading is jakob's to give.
+**The error twins keep their screens' arrows** (jakob, same day —
+stop 1 is about the screen, not the board): `InviteEntryError`,
+`SignInError` and `JoinInvalid` resolve to `FeedBare` and
+`RestoreError` to `KeyElsewhere`, each wearing its parent's case
+verbatim, because a screen and its error state are one control and
+one control reads one way.
