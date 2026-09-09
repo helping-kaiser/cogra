@@ -381,6 +381,13 @@ data class PostView(
     val attachmentsStatus: FieldStatus = FieldStatus.NORMAL,
     /** This post's own moderation state — what names a removal's reason. */
     val moderation: ModerationState = ModerationState.NORMAL,
+    /**
+     * How many comments this post holds, across every page — the number
+     * the card's comment affordance states, on the feed and the detail
+     * alike. Cursor-independent, so it is the thread's size and not the
+     * page's.
+     */
+    val commentCount: Int = 0,
 ) {
     /** The body is media rather than words (D16). */
     val isMediaPost: Boolean get() = attachments.isNotEmpty()

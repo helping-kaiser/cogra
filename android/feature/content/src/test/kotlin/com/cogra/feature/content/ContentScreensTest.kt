@@ -60,10 +60,12 @@ class ContentScreensTest {
         keyBanner: @Composable () -> Unit = {},
         borrowedViewBand: @Composable () -> Unit = {},
         onChats: (() -> Unit)? = null,
+        onShare: (String) -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
     ) {
         compose.setContent {
             FeedScreen(
+                onShare = onShare,
                 stanceControl = { target, tag -> onStance(target, tag) },
                 state = state,
                 signedIn = signedIn,
@@ -525,6 +527,7 @@ class ContentScreensTest {
         onEditComment: (com.cogra.domain.CommentView) -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
         onReference: (String) -> Unit = {},
+        onShare: (String) -> Unit = {},
     ) {
         compose.setContent {
             PostDetailScreen(
@@ -543,6 +546,7 @@ class ContentScreensTest {
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onReference = onReference,
+                onShare = onShare,
                 onSignInOrJoin = onSignInOrJoin,
                 onReveal = { _, _ -> },
                 onBack = {},
@@ -975,6 +979,89 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
+    }
+
+    // -- The affordance row (PostCard.jsx 300-358) --
+
+    /** Stance, comment, share — and the two the staging rule gates. */
+    @Test
+    fun theCardWearsTheAffordanceRowAndNoGatedControl() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 3))),
+        )
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertExists()
+        // The Post Score's drill-down is an acknowledged gap and the
+        // contract carries no score; the ⋮ opens a menu W3 builds.
+        compose.onNodeWithTag("feed_post_p1_score", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("feed_post_p1_overflow", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /** The count is spoken, never drawn as a word — the row is glyphs. */
+    @Test
+    fun theCommentAffordanceSpeaksItsCount() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 1))),
+        )
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true)
+            .assertContentDescriptionEquals("1 comment")
+    }
+
+    /** No number beside the glyph where there is none to state. */
+    @Test
+    fun anUncommentedPostDrawsTheGlyphAlone() {
+        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true)
+            .assertContentDescriptionEquals("0 comments")
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true)
+            .assertTextEquals()
+    }
+
+    /** On the feed the count opens the post — the master's own fallback. */
+    @Test
+    fun theCommentCountOpensThePostFromTheFeed() {
+        var opened: String? = null
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 2))),
+            onOpenPost = { opened = it },
+        )
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true).performClick()
+        assertThat(opened).isEqualTo("p1")
+    }
+
+    /** On the detail the thread is already below it, so the count states. */
+    @Test
+    fun theCommentCountStatesRatherThanActsOnTheDetail() {
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1").copy(commentCount = 2)),
+        )
+        compose.onNodeWithTag("detail_post_comments", useUnmergedTree = true)
+            .assert(hasClickAction().not())
+    }
+
+    @Test
+    fun shareHandsThePostOnFromBothSurfaces() {
+        val shared = mutableListOf<String>()
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            onShare = { shared += it },
+        )
+        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).performClick()
+        assertThat(shared).containsExactly("p1")
+    }
+
+    @Test
+    fun theShareControlNamesWhatItShares() {
+        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_post_share", useUnmergedTree = true)
+            .assertContentDescriptionEquals("Share this post")
+    }
+
+    /** The web page, not an in-app route: the receiver may have no app. */
+    @Test
+    fun theSharedLinkIsThePostsPageOnTheWeb() {
+        assertThat(postShareUrl("https://cogra.example", "p1"))
+            .isEqualTo("https://cogra.example/posts/p1")
     }
 
     // -- The topics line: two chips, then the counts in words --
