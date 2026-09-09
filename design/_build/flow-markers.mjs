@@ -1039,7 +1039,7 @@ Object.assign(FLOW_MARKERS, {
   ChangeEmailConfirm: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: 'id="email-change-code"', tag: "input" },
-    { n: 3, find: ">Confirm email change</button>", tag: "button" },
+    { n: 3, find: ">Confirm the code</button>", tag: "button" },
   ],
 });
 
