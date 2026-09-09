@@ -45,6 +45,7 @@ import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograBandChats
 import com.cogra.core.designsystem.v2.atom.CograBandIdentity
 import com.cogra.core.designsystem.v2.token.Layout
+import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
@@ -249,14 +250,18 @@ fun FeedScreen(
                                 }
                             }
                         }
+                        // A feed post spans the screen edge to edge,
+                        // and 8dp of surface between cards is the seam
+                        // (design/readme.md §13). Only the rows that are
+                        // not cards keep the gutter.
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .testTag("feed_list"),
-                            contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(top = Space.x2),
+                            verticalArrangement = Arrangement.spacedBy(Space.x2),
                         ) {
-                            item(key = "feed_banners") { banners() }
+                            item(key = "feed_banners") { Gutter { banners() } }
                             // "Your post didn't land." The canonical
                             // `ComposeExpired` board puts this here, at
                             // the top of the feed the author returns
@@ -264,11 +269,13 @@ fun FeedScreen(
                             // already left.
                             expiredLabel?.let { label ->
                                 item(key = "feed_expired") {
+                                    Gutter {
                                     ExpiredCard(
                                         label = label,
                                         onDismiss = onExpiredDismissed,
                                         onOpenDraft = onOpenDraft,
                                     )
+                                    }
                                 }
                             }
                             items(state.posts, key = { it.id }) { post ->
@@ -285,6 +292,7 @@ fun FeedScreen(
                             }
                             if (state.hasNextPage) {
                                 item {
+                                    Gutter {
                                     Column(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -313,6 +321,7 @@ fun FeedScreen(
                                             }
                                         }
                                     }
+                                    }
                                 }
                             }
                         }
@@ -321,6 +330,18 @@ fun FeedScreen(
             }
         }
     }
+}
+
+/**
+ * The gutter the cards no longer take.
+ *
+ * Words never touch the screen edge — only media does — so everything
+ * in the list that is not a full-width card keeps the 16dp inset the
+ * card now owns internally.
+ */
+@Composable
+private fun Gutter(content: @Composable () -> Unit) {
+    Box(Modifier.padding(horizontal = Space.x4)) { content() }
 }
 
 /**
@@ -448,6 +469,7 @@ private fun PostCard(
                 moderation = post.moderation,
                 testTagPrefix = "feed_post_${post.id}",
                 collapsed = true,
+                bleed = Space.x4,
                 // The whole gallery is one target opening the post: a
                 // reader scrolling the feed is choosing between posts,
                 // not looking at one picture.
