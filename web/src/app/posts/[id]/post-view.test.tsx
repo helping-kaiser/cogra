@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
@@ -188,6 +188,8 @@ function detail(
       references: postReferences,
       comments: {
         __typename: "CommentConnection",
+        // The card's affordance counts the WHOLE thread, not this page.
+        totalCount: comments.length,
         edges: comments.map((comment) => ({
           __typename: "CommentEdge",
           node: commentNode(comment),
@@ -859,6 +861,63 @@ describe("PostView", () => {
     });
     expect(await screen.findByTestId("comment-c1-topic-rust")).toBeInTheDocument();
     expect(screen.queryByTestId("comment-c1-tag-input")).not.toBeInTheDocument();
+  });
+
+  // DV-18/20/21: the post is a card here too, the author leads it, and the
+  // title is the card's heading rather than the app bar's.
+  it("draws the post as a card, the author leading it", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    const { container } = renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+    });
+    const card = await screen.findByTestId("post");
+    expect(card.tagName).toBe("SECTION");
+    expect(card.className).toContain("bg-surface-container-highest");
+    expect(card).toContainElement(screen.getByTestId("post-author"));
+    expect(card).toContainElement(screen.getByTestId("post-title"));
+    expect(card).toContainElement(screen.getByTestId("post-stance"));
+    const order = Array.from(
+      container.querySelectorAll("[data-testid]"),
+      (node) => node.getAttribute("data-testid"),
+    );
+    expect(order.indexOf("post-author")).toBeLessThan(order.indexOf("post-title"));
+    expect(order.indexOf("post-author")).toBeLessThan(order.indexOf("post-body"));
+  });
+
+  // The count takes the reader to the thread; the sheet that will own it is
+  // not drawn here yet, and the thread is on this page in the meantime.
+  it("carries the comments affordance, counting the whole thread", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    const comments = await screen.findByTestId("post-comments");
+    expect(comments).toHaveAccessibleName("1 comment");
+    const heading = document.getElementById("post-comments");
+    const scrollIntoView = vi.fn();
+    if (heading !== null) heading.scrollIntoView = scrollIntoView;
+    fireEvent.click(comments);
+    expect(scrollIntoView).toHaveBeenCalled();
+  });
+
+  // CR-20: both apps read `createdAt` for the Edited comparison and drew none
+  // of it.
+  it("carries every comment's age beside its author", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    const stamp = await screen.findByTestId("comment-c1-timestamp");
+    expect(stamp).toHaveAttribute("datetime");
+    expect(stamp.textContent).toMatch(/^(now|\d+[mhd])$/);
   });
 
   it("links authors as chips into their profiles", async () => {

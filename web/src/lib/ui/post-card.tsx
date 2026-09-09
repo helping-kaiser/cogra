@@ -303,7 +303,10 @@ export function PostCard({
       {/* THE AFFORDANCE ROW. Stance leads — it is the gesture the product lives
           on — then the Post Score, then comments, then share. ONE LINE, NEVER
           WRAPPING. */}
-      <div className="flex min-w-0 flex-nowrap items-center gap-2">
+      <div
+        data-testid={`${testId}-affordances`}
+        className="flex min-w-0 flex-nowrap items-center gap-2"
+      >
         <StanceControl
           target={{ id: post.id, kind: "post", label: "this post" }}
           testIdPrefix={stanceTestId}
