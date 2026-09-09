@@ -36,8 +36,9 @@
 // neither, the counts are a plain fact and nothing here is a control that goes
 // nowhere.
 
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
+import { useMeasureEffect } from "./measure-effect";
 import { TopicChip } from "./topic-chip";
 
 export type TopicsLineEntry = {
@@ -143,7 +144,7 @@ export function TopicsLine({
     );
   }, []);
 
-  useLayoutEffect(() => {
+  useMeasureEffect(() => {
     measure();
     const line = lineRef.current;
     // The card's width follows the viewport, and a rotation must not leave a

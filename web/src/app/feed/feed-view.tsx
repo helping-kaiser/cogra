@@ -12,7 +12,7 @@
 // first paint, so opening a post and coming back is not a fresh feed.
 
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -29,6 +29,7 @@ import { Card } from "@/lib/ui/card";
 import { CograBand } from "@/lib/ui/cogra-band";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PostCard } from "@/lib/ui/post-card";
+import { useMeasureEffect } from "@/lib/ui/measure-effect";
 import { scrollElementOf, useScrollHost } from "@/lib/ui/scroll-host";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
@@ -136,7 +137,7 @@ export function FeedView({
   // this render, so the scroller is as tall now as it was when the reader
   // left, and the offset lands where they were rather than at the end of a
   // shorter list.
-  useLayoutEffect(() => {
+  useMeasureEffect(() => {
     const scroller = scrollElementOf(host);
     if (scroller === null || remembered === null) return;
     scroller.scrollTop = remembered.offset;

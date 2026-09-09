@@ -15,8 +15,9 @@
 // is taller than the visible one whenever its address bar is showing. Short
 // pages never scroll, so they never showed it; long ones did, which is exactly
 // the shape of the report. `100dvh` is the unit that tracks the address bar
-// (CSS Values 4, "dynamic viewport"), so the column is that tall, the bar is
-// the column's last child, and the content between them is what scrolls. The
+// (CSS Values 4, "dynamic viewport"), and the root layout pins the BODY to it
+// so the document has no scroll of its own to give; this column fills that
+// body, the bar is its last child, and the content between them scrolls. The
 // bar is then chrome by STRUCTURE rather than by coordinates, and no content
 // length can reach it — which is how the boards draw it
 // (`design/designs/canonical/screens/_shared.jsx`: a `flex: 1` scroller with
@@ -45,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     pathname === "/feed" ? "feed" : pathname === "/profile" ? "profile" : null;
   const scroller = useRef<HTMLDivElement>(null);
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="flex h-full flex-col">
       <ScrollHostProvider value={scroller}>
         <div
           ref={scroller}
