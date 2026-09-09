@@ -2237,14 +2237,18 @@ gaps, closed onto boards (jakob's rulings the same day).
   marked.** A field only re-validates as the reader types once it
   already carries an error — an unmarked field stays quiet until the
   next submit, so typing never produces a field that turns red out of
-  nowhere.
+  nowhere. **The recovery gate is the rule's one named exception**:
+  its confirm button never enables on a diverged prefix, so there is
+  no submit to wait for and a signal held for one would never come.
+  The mismatch line answers the typing itself, the moment the typed
+  text stops being a prefix of the code.
 
 Four boards drawn: `JoinErrors` (Handle taken, Password too short —
 Email untouched), `SignInError` (the form-level fault line),
 `RestoreError` (the recovery-code field), and `RecoveryCodeMismatch`
 (the confirm field — `RecoveryCode` grew an `error` pass-through to
-reach it, mirroring `TextField`'s own anatomy, since the component
-draws its own field rather than composing `TextField`). Each board's
+reach it, since the confirm field belongs to the master and a surface
+has no other way through to `TextField`'s error state). Each board's
 submit control keeps its parent's other outcomes and replaces only
 the gap with a `self` case — the line updates in place rather than
 sending the reader anywhere. Census 114
