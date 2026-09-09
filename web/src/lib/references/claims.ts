@@ -1,5 +1,10 @@
 // `ReferenceClaim[]` off any content node, projected down to what the
-// two surfaces need: the read-only chip row, and the editable section.
+// editable section needs.
+//
+// A CARD NEVER LISTS ITS REFERENCES INLINE (design/readme.md:1148-1150): a
+// content card states them as a count on its topics line, and the full set —
+// with the pair each claim carries — lives in the topics-and-references sheet.
+// So there is no read-only row shape here any more, only the drafts.
 //
 // The two identifiers are NOT interchangeable, and this is the seam that
 // keeps them apart. A claim's `targetId` is the raw L1 identifier — a
@@ -15,8 +20,7 @@
 // this client cannot address.
 
 import { newReferenceDraft, type ReferenceDraft } from "./draft";
-import { targetView, untypedTargetView } from "./normalize";
-import type { ReferenceChipEntry } from "@/lib/ui/reference-chip-row";
+import { targetView } from "./normalize";
 import type { ReferenceTargetNode } from "./normalize";
 
 /** A `ReferenceClaim` as the wire serves it. */
@@ -37,22 +41,6 @@ export type ReferenceClaimNode = {
   /** Null when CoGra carries no display row for the referenced node. */
   readonly target?: ReferenceTargetNode | null;
 };
-
-/** The row's shape: every claim renders, typed or not. */
-export function referenceChipEntries(
-  claims: readonly ReferenceClaimNode[],
-): readonly ReferenceChipEntry[] {
-  return claims.map((claim) => ({
-    targetId: claim.targetId,
-    target:
-      claim.target === null || claim.target === undefined
-        ? untypedTargetView(claim.targetId)
-        : targetView(claim.target, claim.targetId),
-    pending: claim.pending,
-    relevance: claim.relevance,
-    support: claim.support,
-  }));
-}
 
 /**
  * The section's shape: only claims this client can name back to the

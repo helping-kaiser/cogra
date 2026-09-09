@@ -54,10 +54,10 @@ export async function shareLink(url: string, title?: string): Promise<ShareOutco
     }
     return "shared";
   }
-  const writeText = nav?.clipboard?.writeText;
-  if (typeof writeText === "function") {
+  const clipboard = nav?.clipboard;
+  if (typeof clipboard?.writeText === "function") {
     try {
-      await writeText.call(nav.clipboard, url);
+      await clipboard.writeText(url);
       return "copied";
     } catch {
       return "unavailable";

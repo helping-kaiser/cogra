@@ -58,6 +58,13 @@ type Bearer = {
   moderationStatus?: string;
 };
 
+/** A bearer plus the authored text fields, which carry their own statuses. */
+type Payload = Bearer & {
+  title?: { status: string } | null;
+  description?: { status: string } | null;
+  content?: { status: string } | null;
+};
+
 export function hasMedia(node: Bearer): boolean {
   return node.attachments.length > 0;
 }
@@ -66,6 +73,25 @@ export function galleryIsRedacted(node: Bearer): boolean {
   return (
     node.attachmentsStatus === "REDACTED" ||
     node.attachments.some((attachment) => attachment.status === "REDACTED")
+  );
+}
+
+/**
+ * Whether the record's payload has been removed.
+ *
+ * REDACTION IS RECORD-GRANULAR (design/components/content/PostCard.jsx:16-17):
+ * an illegal verdict removes the payload, so title, description, body, media
+ * and the license go at once. There is no redacted title beside a surviving
+ * body, and no field is veiled or blanked on its own — the card draws the
+ * skeleton instead. Any field answering REDACTED therefore says the whole
+ * payload is gone.
+ */
+export function payloadIsRedacted(node: Payload): boolean {
+  return (
+    galleryIsRedacted(node) ||
+    node.title?.status === "REDACTED" ||
+    node.description?.status === "REDACTED" ||
+    node.content?.status === "REDACTED"
   );
 }
 
