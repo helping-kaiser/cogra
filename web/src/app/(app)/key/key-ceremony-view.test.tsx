@@ -65,6 +65,30 @@ describe("KeyCeremonyView", () => {
     expect(replace).toHaveBeenCalledWith("/");
   });
 
+  it("traps the code screen: Back is absorbed, and leaving asks first", async () => {
+    const pushState = vi.spyOn(window.history, "pushState");
+    renderWithProviders(<KeyCeremonyView />, { store: signedInStore(), ceremony: fakeCeremony() });
+
+    // The offer screen is an ordinary surface; nothing is held.
+    const early = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(early);
+    expect(early.defaultPrevented).toBe(false);
+
+    fireEvent.click(screen.getByTestId("backup_accept"));
+    await screen.findByTestId("backup_code");
+
+    // One entry the Back press can land on, and another put back for the next.
+    expect(pushState).toHaveBeenCalledOnce();
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    expect(pushState).toHaveBeenCalledTimes(2);
+
+    const leaving = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(leaving);
+    expect(leaving.defaultPrevented).toBe(true);
+
+    pushState.mockRestore();
+  });
+
   it("a failed attach surfaces and no code is created", async () => {
     const ceremony = fakeCeremony({
       attachActorKey: vi.fn(() => Promise.resolve({ kind: "failed" as const, cause: new Error("net") })),
