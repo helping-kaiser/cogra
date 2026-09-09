@@ -96,13 +96,20 @@ fun PostDetailRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     LaunchedEffect(postId) { viewModel.start(postId) }
-    if (refreshSignal) {
-        onRefreshSignalConsumed()
-        viewModel.refresh()
+    // In an effect, not the composition body: a recomposition that never
+    // commits would otherwise consume the signal and fire the refetch
+    // anyway.
+    LaunchedEffect(refreshSignal) {
+        if (refreshSignal) {
+            onRefreshSignalConsumed()
+            viewModel.refresh()
+        }
     }
-    if (commentSignedSignal) {
-        onCommentSignedSignalConsumed()
-        viewModel.onCommentSigned()
+    LaunchedEffect(commentSignedSignal) {
+        if (commentSignedSignal) {
+            onCommentSignedSignalConsumed()
+            viewModel.onCommentSigned()
+        }
     }
     PostDetailScreen(
         state = state,
@@ -210,7 +217,11 @@ fun PostDetailScreen(
         },
     ) { padding ->
         PullToRefreshBox(
-            isRefreshing = state.loading,
+            // The read in flight, not the empty screen: a post opened
+            // from the feed is already drawn while its read runs, and
+            // an indicator over content the reader can see says the
+            // screen is still arriving when it has arrived (HT-10).
+            isRefreshing = state.refreshing,
             onRefresh = onRefresh,
             modifier = Modifier
                 .padding(padding)

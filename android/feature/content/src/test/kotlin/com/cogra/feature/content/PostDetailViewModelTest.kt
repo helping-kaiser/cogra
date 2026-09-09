@@ -18,6 +18,7 @@ import com.cogra.domain.SelfMarkView
 import com.cogra.domain.UserError
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
+import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
@@ -53,6 +54,7 @@ class PostDetailViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val landings = LandingSignal()
     private val reveals = SensitiveReveals()
+    private val seenPosts = SeenPosts()
     private val actor = ActorKey.generate()
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val sealer = SealingWriteRepository(actor)
@@ -220,7 +222,7 @@ class PostDetailViewModelTest {
         }
     }
 
-    private fun viewModel() = PostDetailViewModel(content, landings, reveals, WEB_ORIGIN)
+    private fun viewModel() = PostDetailViewModel(content, landings, reveals, seenPosts, WEB_ORIGIN)
 
     @Before
     fun setUp() {
@@ -241,6 +243,45 @@ class PostDetailViewModelTest {
         assertThat(state.post?.id).isEqualTo("post-1")
         assertThat(state.comments.map { it.id }).containsExactly("c1")
         assertThat(state.commentsHaveMore).isTrue()
+    }
+
+    @Test
+    fun aPostTheDeviceHasAlreadyReadPaintsBeforeItsOwnReadReturns() = runTest(dispatcher) {
+        // HT-10: opening from the feed used to show a spinner over
+        // nothing for a round trip, so the forward slide had nothing to
+        // carry. The held copy is the first frame, never the answer.
+        seenPosts.saw(testPost("post-1"))
+        val vm = viewModel()
+        vm.start("post-1")
+
+        // Before the read has had a chance to come back.
+        assertThat(vm.state.value.post?.id).isEqualTo("post-1")
+        assertThat(vm.state.value.loading).isFalse()
+        // The thread is only ever the fresh read's.
+        assertThat(vm.state.value.comments).isEmpty()
+        // And the read still runs, so the indicator has something to say.
+        assertThat(vm.state.value.refreshing).isTrue()
+
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.detailReads).isEqualTo(1)
+        assertThat(vm.state.value.comments.map { it.id }).containsExactly("c1")
+        assertThat(vm.state.value.refreshing).isFalse()
+    }
+
+    @Test
+    fun aPostTheDeviceHasNotSeenStillOpensEmptyAndLoading() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        assertThat(vm.state.value.post).isNull()
+        assertThat(vm.state.value.loading).isTrue()
+    }
+
+    @Test
+    fun eachReadHoldsThePostForTheNextOpen() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(seenPosts.lastSeen("post-1")?.id).isEqualTo("post-1")
     }
 
     // Every read of the post is the device's freshest word on where it
