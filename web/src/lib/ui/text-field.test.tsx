@@ -17,4 +17,22 @@ describe("TextField", () => {
     render(<TextField label="Code" value="" onChange={() => {}} testId="field" mono />);
     expect(screen.getByTestId("field").className).toContain("font-mono");
   });
+
+  it("stays quiet with no error", () => {
+    render(<TextField label="Email" value="" onChange={() => {}} testId="field" />);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.getByTestId("field")).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("announces an error and points the field at it", () => {
+    render(
+      <TextField label="Email" value="" onChange={() => {}} testId="field" error="Not an email." />,
+    );
+    const input = screen.getByTestId("field");
+    const message = screen.getByRole("alert");
+    expect(message).toHaveTextContent("Not an email.");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input.getAttribute("aria-describedby")).toBe(message.id);
+    expect(input.className).toContain("border-error");
+  });
 });
