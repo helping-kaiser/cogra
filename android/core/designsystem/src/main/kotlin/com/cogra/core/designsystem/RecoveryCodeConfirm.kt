@@ -12,7 +12,7 @@
 //
 // The typed-back text is pure view state, so it lives here rather than
 // in a ViewModel; the rule for reading it belongs to the domain, which
-// is why [matches] arrives as a parameter.
+// is why [matches] and [diverged] both arrive as parameters.
 
 package com.cogra.core.designsystem
 
@@ -48,7 +48,9 @@ import kotlinx.coroutines.launch
 /**
  * Renders [code] with its [explainer] and the confirmation that
  * dismisses it, calling [onConfirmed] once the reader has answered with
- * the code itself. [matches] decides what counts as that code.
+ * the code itself. [matches] decides what counts as that code;
+ * [diverged] decides when a still-incomplete answer has already gone
+ * wrong.
  *
  * Test tags: `recovery_code`, `recovery_code_copy`,
  * `recovery_code_copied`, `recovery_code_typed_back`,
@@ -59,6 +61,7 @@ fun RecoveryCodeConfirm(
     code: String,
     explainer: String,
     matches: (String) -> Boolean,
+    diverged: (String) -> Boolean,
     onConfirmed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -109,9 +112,7 @@ fun RecoveryCodeConfirm(
             // for the code. The line fires on divergence, not on every
             // non-match — a correct-so-far partial is still on its way
             // to being right (design/components/forms/RecoveryCode.jsx).
-            diverged = readRecoveryCodeText(typedBack).let { typed ->
-                typed.isNotEmpty() && !readRecoveryCodeText(code).startsWith(typed)
-            },
+            diverged = diverged(typedBack),
         )
         Button(
             onClick = onConfirmed,
@@ -157,18 +158,6 @@ private fun ConfirmField(
             .testTag("recovery_code_typed_back"),
     )
 }
-
-/**
- * The reading rule for the diverged-prefix check: whitespace stripped,
- * case folded. Mirrors the master's own `read()`
- * (design/components/forms/RecoveryCode.jsx) rather than the stronger
- * confusable-folding codec [matches] delegates to for the real
- * unlock — divergence is a display-only judgment the component can own
- * outright, while the button's match state stays on the production
- * codec untouched by this function.
- */
-private fun readRecoveryCodeText(input: String): String =
-    input.filterNot { it.isWhitespace() }.uppercase()
 
 /**
  * The clip carrying a recovery code. `EXTRA_IS_SENSITIVE` is what makes
