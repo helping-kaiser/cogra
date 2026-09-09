@@ -142,6 +142,48 @@ class OnboardingScreensTest {
     }
 
     @Test
+    fun theCodeScreensTrapClosesTheBandsDoorToo() {
+        compose.setContent {
+            KeyCeremonyScreen(
+                state = KeyCeremonyUiState(recoveryCode = CEREMONY_CODE),
+                onAcceptBackup = {},
+                onCodeSaved = {},
+                onDeclineBackup = {},
+                onCancelDecline = {},
+                onConfirmDecline = {},
+                onBack = {},
+            )
+        }
+
+        // The code is shown once and never stored, so a way out that is
+        // not the typed-back confirmation takes the actor with it — and
+        // the band's arrow is the same door the gesture is.
+        compose.onNodeWithTag("key_ceremony_header_back").assertDoesNotExist()
+    }
+
+    @Test
+    fun anEntryScreenOpensWithTheBandsWayBack() {
+        var back = false
+        compose.setContent {
+            InviteEntryScreen(
+                state = InviteEntryUiState(),
+                onInputChange = {},
+                onCheck = {},
+                onContinue = {},
+                onLogInInstead = {},
+                onBrowseFeed = {},
+                onBack = { back = true },
+            )
+        }
+
+        // Every entry board draws the header band; without it the drawn
+        // back edges had no control at all (EK-01).
+        compose.onNodeWithTag("invite_header_back").performClick()
+
+        assertThat(back).isTrue()
+    }
+
+    @Test
     fun aFailedAttachRendersItsError() {
         compose.setContent {
             KeyCeremonyScreen(
