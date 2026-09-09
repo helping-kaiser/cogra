@@ -148,7 +148,7 @@ private fun CograSheetSurfacePreview() {
             CograSheetSurface {
                 SheetTitle("Mark as sensitive", onHelp = {})
                 Text(
-                    "Veils the pictures and the description until a reader chooses to look.",
+                    "Veils the pictures and the words until a reader chooses to look.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )

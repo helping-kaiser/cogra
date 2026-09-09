@@ -55,6 +55,7 @@ import com.cogra.core.designsystem.rememberKeyGate
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.MIN_HANDLE_LENGTH
+import com.cogra.domain.identity.recoveryCodePrefixDiverged
 import com.cogra.domain.identity.recoveryCodeTypedBack
 import com.cogra.domain.stance.StanceInputMode
 
@@ -365,6 +366,7 @@ private fun BackupSection(
                         code = code,
                         explainer = stringResource(R.string.settings_backup_code_explainer),
                         matches = { recoveryCodeTypedBack(code, it) },
+                        diverged = { recoveryCodePrefixDiverged(code, it) },
                         onConfirmed = onBackupCodeSaved,
                     )
                 }

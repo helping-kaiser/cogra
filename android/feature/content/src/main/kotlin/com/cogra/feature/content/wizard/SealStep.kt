@@ -291,7 +291,7 @@ internal fun SensitiveSheet(
             },
         )
         Text(
-            text = "Veils the pictures and the description until a reader chooses to look.",
+            text = "Veils the pictures and the words until a reader chooses to look.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
