@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.PasswordTextField
+import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.ErrorCode
 
 @Composable
@@ -35,10 +36,12 @@ fun LoginRoute(
     onForgotPassword: () -> Unit,
     onJoin: () -> Unit,
     onBrowse: () -> Unit,
+    onBack: (() -> Unit)? = null,
     viewModel: LoginViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LoginScreen(
+        onBack = onBack,
         state = state,
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
@@ -60,8 +63,14 @@ fun LoginScreen(
     onForgotPassword: () -> Unit,
     onJoin: () -> Unit,
     onBrowse: () -> Unit,
+    /**
+     * Null draws no arrow: sign-in is the signed-out root, and a root has
+     * nothing behind it. The board's arrow is for the visitor who reached
+     * it from somewhere.
+     */
+    onBack: (() -> Unit)? = null,
 ) {
-    Scaffold { padding ->
+    Scaffold(topBar = { PageHeader(onBack = onBack, testTag = "login_header") }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -73,7 +82,7 @@ fun LoginScreen(
         ) {
             Text(
                 text = stringResource(R.string.login_title),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.semantics { heading() },
             )
             OutlinedTextField(
