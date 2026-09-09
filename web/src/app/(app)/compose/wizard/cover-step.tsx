@@ -2,12 +2,15 @@
 
 // ComposeCover — "The video's face".
 //
-// The board draws exactly four choices and this screen offers exactly four: the
-// three frames pulled off the clip, and a picture of the author's own. NOT a
-// scrubber. A timeline that lets an author land on any frame is the obvious
-// web idiom and it is NOT what the board asks for — three offers and a picture
-// tile is a smaller decision to make, and the "A picture" route already covers
-// the author who wants a face the clip does not contain.
+// The choices are the frames pulled off the clip and a picture of the author's
+// own. The board asks for four frames — "1s, 10%, 50%, 90%" (`CoverRow`) — and
+// this screen offers the three fractional ones; the opening offer is a time
+// rather than a fraction, which `FRAME_POINTS` has no duration to resolve.
+//
+// NOT a scrubber. A timeline that lets an author land on any frame is the
+// obvious web idiom and it is NOT what the board asks for — a handful of offers
+// and a picture tile is a smaller decision to make, and the "A picture" route
+// already covers the author who wants a face the clip does not contain.
 //
 // THE COVER IS ITS OWN ASSET, never an attachment. It is uploaded first, and
 // the video names it on its own upload (`coverMediaId`), because an asset row
@@ -16,7 +19,7 @@
 //
 // The captured frames are not held in the draft. They are derived from the clip
 // and cost one decode to rebuild, so re-capturing them when the screen opens is
-// cheaper than writing three stills to IndexedDB on every keystroke — and it
+// cheaper than writing the stills to IndexedDB on every keystroke — and it
 // cannot go stale. What the draft DOES keep is the choice: which offer was
 // taken, and the bytes it produced.
 

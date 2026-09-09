@@ -29,6 +29,36 @@ export function KeyCeremonyView() {
     if (attached && recoveryCode === null && !inProgress) router.replace("/");
   }, [attached, recoveryCode, inProgress, router]);
 
+  // THE CODE SCREEN IS A TRAP (design/readme.md §13, entry): no back
+  // affordance, and the only way out is the code typed or pasted back. The
+  // code is minted here, shown exactly once and never stored, so a
+  // navigation that leaves this screen destroys it — on the web that is the
+  // Back gesture and the reload, neither of which a drawn screen can refuse
+  // by simply omitting a control.
+  //
+  // Back is absorbed by an extra history entry: the press lands on the
+  // sentinel, which is this same URL, and the handler puts another one back.
+  // Next.js documents `window.history.pushState` as router-integrated, so
+  // the entry stays in step with the App Router
+  // (node_modules/next/dist/docs/01-app/01-getting-started/04-linking-and-navigating.md
+  // "Native History API"). Reload and tab-close get `beforeunload`, whose
+  // `preventDefault` is MDN's own way to ask the browser for its
+  // leave-this-page confirmation
+  // (https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event).
+  const showingCode = recoveryCode !== null;
+  useEffect(() => {
+    if (!showingCode) return;
+    const hold = () => window.history.pushState(null, "", window.location.href);
+    const confirmLeaving = (event: BeforeUnloadEvent) => event.preventDefault();
+    hold();
+    window.addEventListener("popstate", hold);
+    window.addEventListener("beforeunload", confirmLeaving);
+    return () => {
+      window.removeEventListener("popstate", hold);
+      window.removeEventListener("beforeunload", confirmLeaving);
+    };
+  }, [showingCode]);
+
   const finish = () => {
     flow.ensureAdvancing();
     router.replace("/");
