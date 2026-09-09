@@ -18,7 +18,7 @@
    add control that went missing; the edit surface has labelled fields instead,
    and Video sitting above Cover says the shape of the body without a sentence.
 
-   The words, topics, citations and the license row are unchanged from
+   The words, tags, citations and the license row are unchanged from
    CommentEdit: one screen, one batch, the license locked. */
 
 export function Screen() {
@@ -47,11 +47,11 @@ export function Screen() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Topics</FieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <TopicRemovable topic="glovebox" />
-            <Button variant="outline" size="sm">Add a topic</Button>
+            <TopicRemovable topic="glovebox" onEdit={() => {}} />
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

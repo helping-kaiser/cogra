@@ -1,8 +1,8 @@
 /* THE REPLY'S SEAL WITH A REFERENCE STAGED (readme §13, the menus round).
    Referencing from inside a comment lives inside the comment's own wizard: the
-   seal already carries "+ Add a topic" and "+ Cite something" side by side,
+   seal already carries "+ Add a tag" and "+ Cite something" side by side,
    because in a two-stage wizard the seal IS the stage where a comment's
-   topics and references are named. This is what that surface looks like once
+   tags and references are named. This is what that surface looks like once
    the picker has handed one back.
 
    A STAGED REFERENCE IS AN ACT, so it joins the acts card rather than sitting

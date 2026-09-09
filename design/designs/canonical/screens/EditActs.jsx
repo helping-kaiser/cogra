@@ -6,9 +6,9 @@
    THE EDIT BENEATH IS THE EDIT — `EditComposeBody`, the same body
    `EditCompose` draws. What a sheet covers is inert, not shortened.
 
-   THE ACTS ARE THE POST'S THREE: the edit itself, the topic added, the topic
+   THE ACTS ARE THE POST'S THREE: the edit itself, the tag added, the tag
    withdrawn. Withdrawing is an act like adding — nothing is deleted, a later
-   layer says the topic no longer stands — which is why the card counts it. */
+   layer says the tag no longer stands — which is why the card counts it. */
 export function Screen() {
   return (
     <>
@@ -20,8 +20,8 @@ export function Screen() {
           <ActsCard
             rows={[
               { label: "Edit", value: "Salt maps of the coast road", count: "1 action" },
-              { label: "Topics added", value: "#saltmaps", count: "1 action" },
-              { label: "Topics withdrawn", value: "#coastroad", count: "1 action" },
+              { label: "Tags added", value: "#saltmaps", count: "1 action" },
+              { label: "Tags withdrawn", value: "#coastroad", count: "1 action" },
             ]}
             note="They land together, or none does."
           />
