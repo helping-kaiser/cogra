@@ -20,6 +20,21 @@
 export const PICTURE_MAX_BYTES = 10 * 1024 * 1024;
 
 /**
+ * Whether an ENCODED still is over the cap — the only form of the question
+ * worth asking.
+ *
+ * The cap governs the bytes that are SENT, and every still is downscaled to
+ * 1080 and re-encoded to WebP first (`encode-image.ts`), so a phone camera's
+ * 12 MB original arrives at a few hundred kilobytes. Weighing the picked file
+ * instead refused the ordinary photo the product would have taken — so every
+ * path that uploads a still asks this about the encode's output, and the
+ * refusal is unreachable in practice rather than merely rare.
+ */
+export function pictureTooBig(encoded: Blob): boolean {
+  return encoded.size > PICTURE_MAX_BYTES;
+}
+
+/**
  * One video in a post, matching the server's `DEFAULT_MAX_VIDEO_UPLOAD_BYTES`.
  *
  * The parity is with the post's BODY rather than with one picture: ten stills

@@ -75,11 +75,10 @@ describe("the board's own words", () => {
 describe("screenPick", () => {
   it("takes the pictures that pass and refuses only the ones that do not", async () => {
     // THE BATCH CARRIES ON. This is the ComposePickedErrors shape: two
-    // accepted beside two refusals, not a whole batch lost to one bad file.
+    // accepted beside one refusal, not a whole batch lost to one bad file.
     const outcome = await screenPick(
       [
         picture("a.jpg"),
-        picture("huge.jpg", PICTURE_MAX_BYTES + 1),
         picture("b.jpg"),
         file("notes.txt", "text/plain", new Uint8Array(new ArrayBuffer(4))),
       ],
@@ -88,9 +87,17 @@ describe("screenPick", () => {
 
     expect(outcome.accepted.map((f) => f.name)).toEqual(["a.jpg", "b.jpg"]);
     expect(outcome.refusals.map((r) => [r.name, r.reason])).toEqual([
-      ["huge.jpg", TOO_BIG_PICTURE],
       ["notes.txt", UNREADABLE],
     ]);
+  });
+
+  // HT-17: a phone camera's photo is bigger than the upload cap and smaller
+  // than it once encoded, so screening the SOURCE refused the ordinary case.
+  // The encode is the answer; the cap belongs to the bytes that are sent.
+  it("takes a picture far over the upload cap, because the encode is still to come", async () => {
+    const outcome = await screenPick([picture("camera.jpg", PICTURE_MAX_BYTES * 3)], EMPTY);
+    expect(outcome.accepted.map((f) => f.name)).toEqual(["camera.jpg"]);
+    expect(outcome.refusals).toHaveLength(0);
   });
 
   it("gives every refusal its own identity, so each can be dismissed alone", async () => {
@@ -199,12 +206,13 @@ describe("screenPick at comment scale", () => {
     expect(outcome.refusals[0]!.reason).toBe("A comment carries pictures or one video, not both.");
   });
 
-  it("keeps the picture cap and the unreadable line unchanged", async () => {
+  it("lets a big picture through here too, and keeps the unreadable line", async () => {
     const outcome = await screenPick(
       [picture("big.jpg", PICTURE_MAX_BYTES + 1), file("x.txt", "text/plain", new Uint8Array(new ArrayBuffer(2)))],
       EMPTY,
       COMMENT_SCALE,
     );
-    expect(outcome.refusals.map((r) => r.reason)).toEqual([TOO_BIG_PICTURE, UNREADABLE]);
+    expect(outcome.accepted.map((f) => f.name)).toEqual(["big.jpg"]);
+    expect(outcome.refusals.map((r) => r.reason)).toEqual([UNREADABLE]);
   });
 });
