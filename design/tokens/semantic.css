@@ -31,8 +31,6 @@
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
 
-  /* Disabled state, as the clients draw it. */
-  --opacity-disabled: 0.4; /* @kind other */
   /* The resting stance face with no standing behind it: muted and translucent. */
   --opacity-resting-face: 0.4; /* @kind other */
 }
