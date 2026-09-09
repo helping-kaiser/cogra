@@ -1567,7 +1567,32 @@ because the round's pixel bar admits only the round's own boards.
 Swap it, re-render, and confirm the board is byte-identical; a copy
 is never the answer.
 
-### 45 · What the tag round left standing · *design + system*
+### 45 · What the post-card round could not finish · *design*
+
+Filed by the W1/W2 conform lanes 2026-09-09. Three questions; none
+blocked the card that shipped.
+
+1. **The removal's `when` has neither a word nor a field.** `Removed`
+   draws `when: "today"`, but the contract carries no removal
+   timestamp (`updatedAt` documents the fold-winning update's
+   promotion, a different fact), and "today" is a vocabulary the apps
+   use nowhere else — every drawn age reads `now/35m/2h/3d`. Two
+   rulings: the field (backend work rides on it) and the word.
+2. **What a card older than three days reads.** No card board draws
+   an age past `3d`; the date form (`06.09.2024`) is drawn only on
+   `ReferenceRow` for the Explore surface. The apps ship the
+   minutes/hours/days ladder unbounded, so a 90-day-old card reads
+   `90d` today. Bless that, or draw the rung where the ladder ends.
+3. **The collapsing top's "one non-shrinking block" wording vs the
+   list's re-clamp.** Android's W1 lane found that collapsing the
+   band and the bar as one 96dp block re-clamps the list, and the
+   leftover scroll reads back as "at the top" — the region returned
+   the instant it left. The shipped reading (the band rides the bar
+   the top region already collapses) behaves as the boards intend;
+   the master's wording could name it so the next builder doesn't
+   re-derive the trap.
+
+### 46 · What the tag round left standing · *design + system*
 
 Filed by the tag round 2026-09-09. Four things it surfaced and did not
 settle, each named where it was found rather than folded into the round.
