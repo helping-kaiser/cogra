@@ -167,9 +167,11 @@ export function FeedView({
           <p data-testid="feed-empty">Nothing here yet — write the first post.</p>
         )}
       </div>
-      {/* A FEED POST IS A FULL-WIDTH CONTAINER (design/readme.md:1113-1118):
-          it spans the screen edge to edge, and 8px of surface between cards is
-          the seam. So the list leaves the gutter its neighbours keep — the
+      {/* A FEED POST IS A FULL-WIDTH CONTAINER (design/readme.md, "Feed
+          containers — rounded full-width cards"): the filled card keeps its
+          corners, tone and 16px text inset but spans the screen edge to edge,
+          and 8px of surface between cards is the seam. So the list leaves the
+          gutter its neighbours keep — the
           board's own `FeedList`, `gap: 8, padding: "8px 0 0 0"`. What the
           42rem column shows above phone width is whatever it shows: desktop is
           out of design scope until the mobile set is complete (readme §2). */}

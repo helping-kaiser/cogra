@@ -1,7 +1,8 @@
 // `ReferenceClaim[]` off any content node, projected down to what the
 // editable section needs.
 //
-// A CARD NEVER LISTS ITS REFERENCES INLINE (design/readme.md:1148-1150): a
+// A CARD NEVER LISTS ITS REFERENCES INLINE (design/readme.md, "Reference rows
+// and signed pairs — 2026-08-28"): a
 // content card states them as a count on its topics line, and the full set —
 // with the pair each claim carries — lives in the topics-and-references sheet.
 // So there is no read-only row shape here any more, only the drafts.

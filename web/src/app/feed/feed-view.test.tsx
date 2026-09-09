@@ -125,8 +125,8 @@ describe("FeedView", () => {
   });
 
   // A FEED POST IS A FULL-WIDTH CONTAINER with 8px of surface as the seam
-  // (design/readme.md:1113-1118): the list leaves the gutter its neighbours
-  // keep, so a card runs edge to edge.
+  // (design/readme.md, "Feed containers — rounded full-width cards"): the list
+  // leaves the gutter its neighbours keep, so a card runs edge to edge.
   it("runs its cards edge to edge with the ruled 8px seam", async () => {
     server.use(
       graphql.query("Posts", () =>

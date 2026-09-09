@@ -1380,7 +1380,8 @@ describe("PostView — references", () => {
     }));
   }
 
-  // A CARD NEVER LISTS ITS REFERENCES INLINE (design/readme.md:1148-1150):
+  // A CARD NEVER LISTS ITS REFERENCES INLINE (design/readme.md, "Reference
+  // rows and signed pairs — 2026-08-28"):
   // the count is on the topics line, and the full set — with each claim's
   // pair — is the topics-and-references sheet's, which is not drawn yet.
   it("states the post's references as a count, never as chips", async () => {
