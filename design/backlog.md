@@ -1592,6 +1592,22 @@ blocked the card that shipped.
    the master's wording could name it so the next builder doesn't
    re-derive the trap.
 
+**Ruled by jakob 2026-09-09**, all three:
+
+1. **The field is `redactedAt: DateTime`** on the record — null while
+   FULL, set when the payload went REDUCED; the mark's own moment,
+   distinct from `updatedAt` (in api-spec.md; backend work rides on
+   it). **The word is the ladder's**: the mark's `when` speaks the
+   same age vocabulary as every timestamp — `Removed` now draws `2h`,
+   and "today" exists nowhere.
+2. **The ladder ends at 30 days.** Ages read `now/35m/2h/3d` up to
+   `30d`; anything older reads the date (`06.09.2024`, the form
+   `ReferenceRow` already draws). One vocabulary, recorded in
+   copy-voice.md "Ages". The apps' unbounded ladder is a conform gap.
+3. **The wording is named** in `CograBand`'s docblock: the band rides
+   the bar the top region already collapses — never a second
+   collapsing block — with the re-clamp trap spelled out.
+
 ### 46 · What the tag round left standing · *design + system*
 
 Filed by the tag round 2026-09-09. Four things it surfaced and did not
