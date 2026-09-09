@@ -1055,6 +1055,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'id="reset-email"', tag: "input" },
     { n: 3, find: ">Send reset link</button>", tag: "button" },
   ],
+  // No back arrow: a mail link has no previous screen of ours behind it.
+  ResetNew: [
+    { n: 1, find: 'id="new-password"', tag: "input" },
+    { n: 2, find: 'aria-label="Show password"', tag: "button" },
+    { n: 3, find: ">Set the new password</button>", tag: "button" },
+  ],
   KeyCeremony: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Create my recovery code</button>", tag: "button" },
