@@ -101,7 +101,7 @@ export function ReferenceFinder({
       ref={ref}
       data-testid={`${testIdPrefix}-finder`}
       onClose={onClose}
-      className="m-auto w-[min(90vw,26rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
+      className="cg-dialog-in m-auto w-[min(90vw,26rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
       <h2 className="text-headline-small">Add a reference</h2>
       {/* D21: a topic is tagged, never referenced — the finder offers

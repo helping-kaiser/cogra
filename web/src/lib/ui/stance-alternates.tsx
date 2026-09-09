@@ -97,7 +97,7 @@ export function StanceAlternates({
       ref={ref}
       data-testid="stance-alternates"
       onClose={onCancel}
-      className="m-auto w-[min(90vw,24rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
+      className="cg-dialog-in m-auto w-[min(90vw,24rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
       <h2 className="text-title-large">Choose your stance</h2>
       {children}
