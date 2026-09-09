@@ -2237,14 +2237,18 @@ gaps, closed onto boards (jakob's rulings the same day).
   marked.** A field only re-validates as the reader types once it
   already carries an error — an unmarked field stays quiet until the
   next submit, so typing never produces a field that turns red out of
-  nowhere.
+  nowhere. **The recovery gate is the rule's one named exception**:
+  its confirm button never enables on a diverged prefix, so there is
+  no submit to wait for and a signal held for one would never come.
+  The mismatch line answers the typing itself, the moment the typed
+  text stops being a prefix of the code.
 
 Four boards drawn: `JoinErrors` (Handle taken, Password too short —
 Email untouched), `SignInError` (the form-level fault line),
 `RestoreError` (the recovery-code field), and `RecoveryCodeMismatch`
 (the confirm field — `RecoveryCode` grew an `error` pass-through to
-reach it, mirroring `TextField`'s own anatomy, since the component
-draws its own field rather than composing `TextField`). Each board's
+reach it, since the confirm field belongs to the master and a surface
+has no other way through to `TextField`'s error state). Each board's
 submit control keeps its parent's other outcomes and replaces only
 the gap with a `self` case — the line updates in place rather than
 sending the reader anywhere. Census 114
@@ -2819,6 +2823,44 @@ an answer — and where two apps invent, they disagree.
 
 The two rounds landed together, and the canvas at their close:
 **128 screens · 958 edges · 81 gaps · flows 58/53/5**.
+
+### The recovery and sensitive rulings — 2026-09-09
+
+Two loose ends the W0 conform lanes filed, ruled by jakob the same day
+(backlog items 41 and 42). Both are places where a board and a
+component said different things and each app picked a different one.
+
+- **The earned button stands, and the mismatch is a diverged prefix.**
+  "I've written it down" keeps `disabled={!matches}` — the code is
+  shown once, so leaving the screen is earned by typing it back, not
+  by pressing past it. That makes the press no trigger for anything,
+  so the mismatch line answers the typing instead: it appears the
+  moment the typed text stops being a prefix of the code, and never
+  before. An empty field says nothing, and a correct partial says
+  nothing — it is still on its way to being right, while a prefix that
+  has diverged never can be. The two halves are owned apart: the
+  surface words the line, the master decides the moment. The entry
+  map's edge reads the divergence, and `RecoveryCodeMismatch` now
+  holds a real diverged prefix — the line answers typing, so a board
+  drawing it over an empty field drew a state the surface cannot
+  reach.
+- **The recovery gate is the timing rule's one named exception.** *On
+  submit, then live only where already marked* is the rule, and it is
+  written for a form with a submit to wait for. This gate has none:
+  the confirm button never enables while the prefix is diverged, so a
+  signal held for submit is a signal that never comes.
+- **The sensitive sheet says the words, not the description.** *Veils
+  the pictures and the words until a reader chooses to look.* One line
+  for both scales, because the comment editor's Mark row opens the
+  same sheet: a comment has no description to name, and a post's
+  description is words. The "?" behind the sheet is separately blessed
+  copy and still says *the description* — item 42 carries it.
+- **The gate**: **128 screens**, **958 edges**, **81 gaps** and **flows
+  58/53/5**, every one unchanged — nothing was drawn or pointed at that
+  was not there before. Three boards moved a pixel and no more:
+  `ComposeSensitive` for its line, `RecoveryCodeMismatch` for the
+  prefix in its field, and `MapEntry`, which is 13px taller because the
+  reworded edge wraps.
 
 ## 14. Index
 

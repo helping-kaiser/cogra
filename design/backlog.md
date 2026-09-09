@@ -319,10 +319,27 @@ surface is being designed around existing furniture, not onto an
 empty page. **Then the whole surface** — its sections, its
 navigation, and the pattern every later setting follows; a defaults
 page designed alone is a page the next setting breaks. **Then the
-default license on top**, as the first setting that pattern carries,
+default license joins the surface** as one setting among the others,
 with the account-preference shape `api-spec.md` still owes it.
 Added 2026-08-28 out of item 19's review; reshaped by the slice-2.5
 round.
+
+Ruled 2026-09-09 (jakob), shaping the surface before it is drawn:
+
+- **Order by use, most- to least-used.** The page's order is a
+  frequency ranking, not a taxonomy — what a reader reaches for
+  often sits high, regardless of which section a taxonomist would
+  file it under.
+- **The default license is one setting among the others**, placed by
+  the same frequency rule — "on top" in the roadmap meant on top of
+  the round's work, never literally first on the page.
+- **A theme setting joins the surface**: light, dark, and auto
+  (device default). Likely high on the page. It implies the census
+  answers what dark support exists today — in the apps and in the
+  design tokens.
+- **The settings backup card becomes a dedicated screen** riding the
+  drawn RecoveryCode board (item 41.1's ruling): same stakes, same
+  screen; the round draws it in context.
 
 ### 22 · Canvas flows + pages · *process*
 The canonical canvas has outgrown one flat plane (77+ boards):
@@ -1322,7 +1339,7 @@ the field's wrapper (and the boards move it where it paints), or the
 readme's "the gate verifies the attribute, not the paint" stays the
 stated rule and this item closes as written.
 
-### 41 · The recovery code's two loose ends · *design*
+### 41 · The recovery code's two loose ends · *design* · **ruled**
 
 Filed by the W0 conform lane 2026-09-09 (questions 29 and 30 of the
 conformance audit's design-session list). Both sit on the recovery
@@ -1361,7 +1378,26 @@ code; neither blocked the fixes that shipped.
    typed prefix the code doesn't start with can never become right,
    while a correct partial shows nothing.
 
-### 42 · The sensitive sheet's line is post-shaped · *design*
+**Ruled by jakob 2026-09-09**, both ends:
+
+1. **The settings backup gets its own screen**, riding the drawn
+   RecoveryCode board — same stakes, same screen. Item 20 carries it:
+   the settings round draws it in context.
+2. **The earned button stands, and the mismatch is a diverged
+   prefix.** "I've written it down" keeps `disabled={!matches}`, so
+   the line answers the typing rather than a press that cannot
+   happen: it appears the moment the typed text stops being a prefix
+   of the code, never on an empty field and never on a correct
+   partial, because a partial is still on its way to being right and
+   a diverged prefix never can be. `graph.json`'s edge reads the
+   divergence, `RecoveryCodeMismatch` holds a real diverged prefix,
+   and readme §13 names the recovery gate as the on-submit timing
+   rule's one exception — the button never enables on a divergence,
+   so a signal held for submit never comes. Both apps conform: web's
+   button stops being live before the code matches, and Android's
+   line waits for divergence instead of firing on any partial.
+
+### 42 · The sensitive sheet's line is post-shaped · *design* · **ruled**
 
 Filed by the w0-web lane 2026-09-09. Item 25.2's Mark row is now on
 the comment editor, and it opens the same ComposeSensitive sheet the
@@ -1371,3 +1407,12 @@ post. On a comment the veil covers the words and pictures as one.
 The apps show the drawn line verbatim rather than invent comment
 copy. Ruling: one line for both scales, or a comment wording — and
 if the latter, its words.
+
+**Ruled by jakob 2026-09-09: one line for both scales.** The sheet
+says `Veils the pictures and the words until a reader chooses to
+look.` — a comment has no description to name, and a post's
+description is words. **The "?" behind the sheet still says *the
+description***: the dialog's paragraph is separately blessed copy in
+`guidelines/copy-voice.md`, and this ruling reached the sheet's line
+only, so the same mark is explained two ways until that text is
+blessed again.
