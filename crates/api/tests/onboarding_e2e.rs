@@ -314,7 +314,7 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     let me = rig
         .gql(
             Some(&joiner_token),
-            r#"query { me { accountState emailVerified
+            r#"query { me { accountState emailVerified invitedBy { id handle }
                  application { emailVerified keyAttached approvedAt } } }"#,
             json!({}),
         )
@@ -322,6 +322,13 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     assert_eq!(me["me"]["accountState"], "APPLICANT");
     assert_eq!(me["me"]["emailVerified"], false);
     assert_eq!(me["me"]["application"]["keyAttached"], false);
+    assert_eq!(
+        me["me"]["invitedBy"]["handle"], "inviter",
+        "the borrowed view persists through the applicant days \
+         (open-questions.md Q44), so provenance reads from the application \
+         rather than from a landing that has not happened yet"
+    );
+    assert_eq!(me["me"]["invitedBy"]["id"], inviter_id.to_string());
 
     let refused = rig
         .gql_raw(
