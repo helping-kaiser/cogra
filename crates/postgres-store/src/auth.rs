@@ -722,9 +722,18 @@ pub async fn land_account(pool: &PgPool, account_id: Uuid) -> Result<bool, sqlx:
     Ok(true)
 }
 
-/// The actor that issued the invite link this account's landed
-/// application came through — landing provenance; None for accounts
-/// without an application trace (genesis actors).
+/// The actor that issued the invite link this account's newest
+/// application came through — the provenance behind the borrowed view an
+/// applicant is shown and behind the reciprocation gesture a member
+/// makes; None for accounts without an application trace (genesis
+/// actors).
+///
+/// The newest row is the account's current application, the same rule
+/// [`latest_application_for`] reads `User.application` by, and it answers
+/// both states with one ordering: an applicant has only live or dead
+/// rows, and a landed member's last row is the one they landed through —
+/// `apply_with_invite` refuses an account that is not an applicant, so no
+/// row can be created after the landing.
 pub async fn inviter_of(
     pool: &PgPool,
     account_id: Uuid,
@@ -735,8 +744,8 @@ pub async fn inviter_of(
          FROM auth_applications ap
          JOIN auth_invite_links l ON l.id = ap.invite_link_id
          JOIN actors i ON i.id = l.inviter_id
-         WHERE ap.account_id = $1 AND ap.landed_at IS NOT NULL
-         ORDER BY ap.landed_at DESC LIMIT 1",
+         WHERE ap.account_id = $1
+         ORDER BY ap.created_at DESC LIMIT 1",
         account_id,
     )
     .fetch_optional(pool)
