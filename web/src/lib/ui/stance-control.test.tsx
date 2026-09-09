@@ -1298,6 +1298,18 @@ describe("the alternate inputs", () => {
     alreadyTaught();
   });
 
+  // readme §13, the stance round: the route is `Choose your stance`, visually
+  // hidden until focused — one tab away, never printed beside every stance in
+  // a feed, and never in front of the card's affordance row.
+  it("stand behind a route that is named but not drawn", async () => {
+    mount();
+    await settle();
+    const route = screen.getByTestId(`${PREFIX}-choose`);
+    expect(route).toHaveTextContent("Choose your stance");
+    expect(route.className).toContain("sr-only");
+    expect(route.className).toContain("focus:not-sr-only");
+  });
+
   it("are reachable without ever dragging", async () => {
     mount();
     await settle();

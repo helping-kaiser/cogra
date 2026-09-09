@@ -562,7 +562,17 @@ export function StanceControl({
           )}
         </button>
         {/* The non-drag equivalent, present whatever the stored input is
-            (design.md §8.6, §10) — a drag gesture always has one. */}
+            (design.md §8.6, §10) — a drag gesture always has one.
+
+            NOT DRAWN, AND RENAMED (design/readme.md §13, the stance round):
+            "`Choose values` was a `primary` text button beside every stance,
+            so a feed of twenty posts carried twenty copies of a control
+            duplicating the one next to it — and 'values' named nothing a
+            reader could place. It is now `Choose your stance`, visually
+            hidden until focused." §10 is satisfied by the equivalent existing
+            and being reachable in one tab, not by it being on screen twenty
+            times — and the affordance row cannot hold its ruled four
+            affordances on one line with a text button in front of them. */}
         {phase === "signedIn" && (
           <button
             type="button"
@@ -574,9 +584,9 @@ export function StanceControl({
               markTaught();
               setAlternates(true);
             }}
-            className={buttonClassName({ variant: "text", size: "sm" })}
+            className={`sr-only focus:not-sr-only ${buttonClassName({ variant: "text", size: "sm" })}`}
           >
-            Choose values
+            Choose your stance
           </button>
         )}
       </div>
