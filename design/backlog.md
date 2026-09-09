@@ -135,16 +135,28 @@ ideation canvases stay frozen records.
 
 ### 18 · Reference rows + per-act standing display · *system* · **built**
 Ruled and built 2026-08-28 (readme §13 *Reference rows and signed
-pairs*): the counts open the topics-and-references sheet;
+pairs*): the counts open the tags-and-references sheet;
 `ReferenceRow` is the one row shape (leading mark · name · signed
 pair) with glyph-led kinds (five node-type glyphs exported verbatim
 from material-design-icons; a text post wears a T tile, a person
 their avatar, a media post its cover); `TopicsLine` is shared by
-post and comment cards. Drawn on the "Topics & references · the
-sheet" board. **Remaining:** the compose-side pair setting (each
-picked chip shows its default pair, tap edits via the reader's
-chosen stance input) lands when the compose wizard boards convert
-to the screens pipeline (item 17).
+post and comment cards. Drawn on the "Tags & references · the
+sheet" board.
+
+**The tag half is closed** (the tag round, 2026-09-09): a staged tag
+chip is a button, it opens `TagPair`, and the pair it sets is drawn
+back on the chip whenever it deviates from the contract's +0.1 / 1.
+The editor is two sliders rather than the reader's chosen stance
+input — a Tag's confidence is census-bounded to [0, 1] and the pad
+is a square over two signed axes, so half of it would be dead.
+
+**Remaining: the reference half.** `StagedReference` shows the pair
+it carries and offers nothing that changes it — its only control is
+the remove ×. A citation's two axes are both signed (`ReferenceInput`,
+api-spec.md), so unlike a tag's it is the pad's own shape, and the
+question the tag round did not answer is whether the composer opens
+the pad there or a sheet of its own beside `TagPair`. Undrawn, and
+jakob's to rule.
 
 ### 9 · Search + results · *design* · **built**
 `designs/canonical/` — the Explore row (2026-08-28): at rest (the
@@ -426,10 +438,10 @@ no board unreached, no interactable unedged, check-flows green.
 Readme §13 *Canvas pages and flows* records the shape. **The wiring
 is done; what remains is design work the 125 gaps name**: the
 guest-gate and network-error pattern boards, the reader's post and
-comment menus, the topic picker, field/mismatch error states, the
+comment menus, the tag picker, field/mismatch error states, the
 key-absent acting paths, the wallet's owed record views (settlement /
 tip / rail), the standalone post detail, the item/chat/offer
-surfaces, and two rulings for jakob (topic destination; applicant
+surfaces, and two rulings for jakob (tag destination; applicant
 acting rights). The profile screen and the Sky stay their own items.
 Closing those gaps is item 23.
 
@@ -460,7 +472,7 @@ slice already shipped (graph.json's gap list is the inventory:
 grep `"gap"`). Surfaces the closed slices already SHIPPED without a
 canonical design are the most overdue of all — the profile screen
 leads that list. Rounds take the rulings they need before drawing
-(topic destination and applicant acting rights are open and block
+(tag destination and applicant acting rights are open and block
 early gaps — ask first), design the boards, wire them so the gap
 count falls, and land with check-flows green.
 
@@ -479,7 +491,7 @@ WalletGuest) left the `nav · New post` and `stance face` selector
 starts, and KeyElsewhere left the stance-face one: a control start
 must mean one thing everywhere, and those taps now start a gate.
 
-Still owed on this item: the topic page and picker, the chat surface,
+Still owed on this item: the chat surface,
 the settlement/tip/rail record views, the settings and invites screens,
 the item / offer surfaces, the Sky (item 16), and item 13's Post Score
 drill-down.
@@ -553,7 +565,7 @@ Two follow-ups the round surfaces, still open:
   Five are answered in the sources: ChipMini's tone (`Chip` gained
   the borderless `readout` tone and the seal board adopted it), the
   "+ Cite something" three voices (the bare small word on all five
-  sites), the topic chip's × (the × is the button, not the pill),
+  sites), the tag chip's × (the × is its own button),
   the acts line's target (the whole line is the button), and the
   comments-sheet shell (factored — `_shared.jsx`'s `CommentsSheet`,
   drawn by `ReplyMedia` and the thread sheet).
@@ -635,7 +647,8 @@ Readme §13 *The menus round* records jakob's rulings.
 
 The three gaps the round reopened are fresh instances of surfaces
 already owed, not new debts: `ComposeCited/5` and `ReplyCited/4` want
-the topic picker, `PostLicense/7` the score drill-down.
+the tag picker — both closed in the tag round — and `PostLicense/7`
+the score drill-down.
 
 **The cite entry point gets a revisit trigger.** Citing opens the post
 wizard because the post is the only untargeted creation — offers point
@@ -765,12 +778,13 @@ the header carries only the ways out** (`← Title … X`), recorded in
 `WizardHeader.jsx`. Android (and web compose surfaces) must catch
 up to the updated boards.
 
-**Item-23 rulings (jakob 2026-09-01):** (a) *Topic destination* — a
-topic chip always leads to the topic page; the page shipped in 2.3
-but is itself undesigned, and is conceived as a subpage of search
-(reachable from search directly by tapping a tag). The values'
-reveal (relevance/confidence) is its own gesture — an expand
-affordance — never the chip tap. (b) *Applicant acting rights* — an
+**Item-23 rulings (jakob 2026-09-01):** (a) *Tag destination* — a tag
+chip always leads to the tag page, which is a subpage of search
+(reachable from search directly by tapping a tag). Drawn in the tag
+round, 2026-09-09. The pair's reveal is the tags-and-references sheet
+that already lists a node's tags — there is no expand affordance on a
+chip anywhere, and the chip's tap is the page, always. (b) *Applicant
+acting rights* — an
 applicant may stage each kind of action **once** (one post, one
 stance, one comment, …): not browse-only, and never unlimited
 staging while approval waits. **Process:** after each slice's
@@ -788,7 +802,7 @@ the stances page shows each record's own value read-only
 ride the band on every tab root (edged to the chat-surface gap);
 the avatar's two flows (standalone badge → its own seal; via the
 edit screen → the edit's ONE seal covers everything); the chronicle
-as wallet-style containers; the comment's target pointer; the topic
+as wallet-style containers; the comment's target pointer; the tag
 and applicant gaps renamed to carry their rulings. New overdue
 surfaces the round exposed as gaps: the settings screen, the invites
 screen, the profile menus. Next: round 2, the pattern boards
@@ -817,7 +831,7 @@ the seeds: `sign-in-with-the-key-elsewhere`, `join-with-an-invite`,
 `publish-your-payout-address`, `change-your-payout-address`,
 `trace-a-payout-to-what-paid-it` and `see-a-campaigns-money` on
 money. Nineteen declared, seventeen resolved, two blocked on
-purpose — the topic page and the paying settlement's view. The round
+purpose — the tag page and the paying settlement's view. The round
 also restructured the master stance pad on jakob's ruling: the pad
 is reached from posts, comments and profiles, so `VouchBackPad/4`
 now signs to the `back` terminal and leaves you where you were,
@@ -1504,18 +1518,6 @@ question the boards leave open; none blocked the rest of the shell.
    Implementation's input: the band lands with the ranker (and the
    schema field it needs), and the guest card stands until then.
 
-<<<<<<< HEAD
-### 44 · The sensitive sheet still draws its own switch · *system*
-
-Filed by the settings round 2026-09-09. `ComposeSensitive` drew the
-system's only switch inline, correctly — one instance is a control,
-not a component. There are now several, so `Switch` is a master
-(`components/core/SettingsRow.jsx`), built to the sheet's own
-geometry so the swap moves no pixel. The sheet has not taken it yet,
-because the round's pixel bar admits only the round's own boards.
-Swap it, re-render, and confirm the board is byte-identical; a copy
-is never the answer.
-=======
 **Ruled by jakob 2026-09-09**, all three stops:
 
 1. **The three arrows name boards.** `InviteEntry` and `SignIn` are
@@ -1553,4 +1555,47 @@ stop 1 is about the screen, not the board): `InviteEntryError`,
 `RestoreError` to `KeyElsewhere`, each wearing its parent's case
 verbatim, because a screen and its error state are one control and
 one control reads one way.
->>>>>>> origin/main
+
+### 44 · The sensitive sheet still draws its own switch · *system*
+
+Filed by the settings round 2026-09-09. `ComposeSensitive` drew the
+system's only switch inline, correctly — one instance is a control,
+not a component. There are now several, so `Switch` is a master
+(`components/core/SettingsRow.jsx`), built to the sheet's own
+geometry so the swap moves no pixel. The sheet has not taken it yet,
+because the round's pixel bar admits only the round's own boards.
+Swap it, re-render, and confirm the board is byte-identical; a copy
+is never the answer.
+
+### 45 · What the tag round left standing · *design + system*
+
+Filed by the tag round 2026-09-09. Four things it surfaced and did not
+settle, each named where it was found rather than folded into the round.
+
+1. **The accessible stance path does not name its target.**
+   `StanceControl`'s skip-link reads `Choose your stance` on every
+   instance while the face beside it names what it stances ("Your
+   stance on this post", "…on this tag"). `TagPage` draws four stance
+   controls, so it carries four identically-named buttons — the exact
+   defect `TopicRemovable`'s aria-label ruling fixed for the × ("a row
+   of these is a row of identically-named controls otherwise"). The fix
+   is one line in the master and a repin across the thirty-four boards
+   that draw a stance, which is why the round did not take it: its
+   pixel bar admits only its own boards. Until then the tag page gives
+   the accessible path one via of its own, which is honest about what
+   those four buttons share.
+2. **A staged reference still has no pair editor** — item 18's
+   remaining half. A citation's axes are both signed, so unlike a tag's
+   it is the pad's own shape; whether the composer opens the pad there
+   or a sheet beside `TagPair` is jakob's to rule.
+3. **The picker's refused-name state is undrawn.** What an illegal
+   character does at the field is the input-error round's shape and
+   belongs to a validation pass. `TagPickerTyping` states the gate and
+   previews the canonical name; it does not draw the refusal.
+4. **Whether an @-scoped search returns a tag is not settled anywhere.**
+   §13's scope operators say the remainder matches "the names of their
+   acts' targets", and a Type is the target of a Tag act — but the
+   result could as easily be the content tagged as the tag itself. The
+   round drew the tag as an indirect hit whose second line says the
+   route out loud ("tagged by @sol") rather than let the row imply an
+   answer. A ruling would settle the row's shape.
