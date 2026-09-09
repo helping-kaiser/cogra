@@ -46,6 +46,11 @@ export interface FeedFilterSheetProps {
    *  row, and the reading the surface owes. Omitted, the sheet is the feed's:
    *  no heading, the "?" in the corner. */
   lead?: JSX.Element;
+  /** The Done row a sheet takes when nothing reacts behind it to be watched.
+   *  Given one, the sheet owns its height, the sections scroll inside it and
+   *  this stays pinned under them. Omitted, the sheet is the feed's: the
+   *  filter applies live and there is nothing to commit. */
+  foot?: JSX.Element;
 }
 
 export declare function FeedFilterSheet(props: FeedFilterSheetProps): JSX.Element;
