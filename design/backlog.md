@@ -1286,18 +1286,32 @@ code; neither blocked the fixes that shipped.
    dedicated screen — same stakes, same screen; the other two either
    invent a trap no board draws or leave the loss open.
 
-2. **`graph.json` fires the mismatch on a press the master forbids.**
-   The RecoveryCode→RecoveryCodeMismatch edge triggers on pressing
-   "I've written it down" with a wrong code, but the RecoveryCode
-   master draws that button `disabled={!matches}` — the press cannot
-   happen. The apps ship the only reading all three sources support:
-   the button stays disabled and the line appears in place while the
-   field is non-empty and wrong. Two rulings would close it: bless
-   the in-place reading and repoint the edge's trigger, and say when
-   the line appears — today it is the first wrong character, which
-   also flags a reader mid-way through typing the code correctly,
-   since a partial code never matches the whole. The honest eager
-   signal is prefix divergence — a typed prefix the code doesn't
-   start with can never become right, a correct partial shows
-   nothing — but choosing between type-through, blur, and
-   prefix-divergence is a drawing-level call.
+2. **`graph.json` fires the mismatch on a press the master forbids —
+   and the platforms split on it.** The RecoveryCode→
+   RecoveryCodeMismatch edge triggers on pressing "I've written it
+   down" with a wrong code, but the RecoveryCode master draws that
+   button `disabled={!matches}` — the press cannot happen. Each W0
+   lane resolved the contradiction toward a different source.
+   Android follows the master: the button stays disabled until the
+   code matches and the line appears in place from the first wrong
+   character — which also flags a reader mid-way through typing
+   correctly, since a partial never matches the whole. Web follows
+   the readme's validation timing ("on submit, then live only where
+   already marked") and the edge: the button is live once anything
+   is typed, a wrong press puts the line on the field, and from then
+   on it re-reads live. The ruling picks the reading — the losing
+   platform is a one-line fix — and settles the timing with it. If
+   an eager signal is wanted, the honest one is prefix divergence: a
+   typed prefix the code doesn't start with can never become right,
+   while a correct partial shows nothing.
+
+### 39 · The sensitive sheet's line is post-shaped · *design*
+
+Filed by the w0-web lane 2026-09-09. Item 25.2's Mark row is now on
+the comment editor, and it opens the same ComposeSensitive sheet the
+post seal uses — whose one explanatory line, "Veils the pictures and
+the description until a reader chooses to look", is written for the
+post. On a comment the veil covers the words and pictures as one.
+The apps show the drawn line verbatim rather than invent comment
+copy. Ruling: one line for both scales, or a comment wording — and
+if the latter, its words.
