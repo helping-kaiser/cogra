@@ -1,6 +1,6 @@
 /* Edit comment (media slice): the post's one-screen-one-batch, scaled to the
    comment's anatomy — words, pictures (uncropped, four max, described via the
-   same counter line the reply composer wears), topics, citations, the license
+   same counter line the reply composer wears), tags, citations, the license
    locked. Entered from Edit on an own comment. The acts footer is the
    affordance into the acts sheet (the CommentEditActs board — the EditActs
    pattern at comment scale). */
@@ -24,11 +24,11 @@ export function Screen() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Topics</FieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <TopicRemovable topic="glovebox" />
-            <Button variant="outline" size="sm">Add a topic</Button>
+            <TopicRemovable topic="glovebox" onEdit={() => {}} />
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

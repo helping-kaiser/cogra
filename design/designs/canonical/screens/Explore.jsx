@@ -7,7 +7,7 @@ export function Screen() {
   return (
     <>
       <CograBand>
-        <SearchBar query="" placeholder="Search people, posts, topics…" />
+        <SearchBar query="" placeholder="Search people, posts, tags…" />
       </CograBand>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "0 0 8px 0" }}>

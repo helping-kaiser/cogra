@@ -27,10 +27,10 @@ export function Screen() {
         <TextField label="Description" corner="Optional" rows={3} value="" />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Topics</FieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Button variant="outline" size="sm">Add a topic</Button>
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
