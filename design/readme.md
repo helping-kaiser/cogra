@@ -99,6 +99,12 @@ What that means for design work:
 | Android app (Compose, Material 3) | not recreated; its design rules are identical by contract, and the web kit is the faithful surface |
 | Marketing site, docs site | none exist in the source |
 
+**Desktop is out of design scope until the mobile set is complete.** Both
+clients render at phone width and that is what this system draws. A
+desktop visitor gets whatever the mobile-derived layout gives — not
+optimized, and accepted as such. The desktop variant is a design round of
+its own, later.
+
 ---
 
 ## 3. Content fundamentals
@@ -111,6 +117,9 @@ will happen; the confirmation says what happened.
 
 - Control: `Sign and publish` · `Sign comment` · `Sign the edit` · `Set`
 - Confirmation: `Signed — it's in the thread now, still settling.`
+
+**A completed action is confirmed by a snackbar, on both platforms.** The
+snackbar is the confirmation; a line of the layout turned green is not one.
 
 **Second person for the reader, first-person plural only for the
 system's own acts.** "You" is the reader; "we" appears only where the
@@ -321,10 +330,11 @@ rule covers all three button variants:
 - **Press** — state layer at **10%**. Never a scale-down, never a shadow
   change: the direction is calm, and a control that shrinks under the
   thumb performs.
-- **Focus** — a 2px `onSurface` ring at 2px offset (`:focus-visible`).
-  `onSurface` rather than `primary` because a primary ring vanishes
-  against a filled primary button, and this one reads on the page ground
-  and on the loud surface alike, in both themes. Nothing removes it.
+- **Focus** — the platform's own indicator: on the web a 2px `onSurface`
+  ring at 2px offset (`:focus-visible`), on Android Compose's M3 focus
+  treatment. `onSurface` rather than `primary` because a primary ring
+  vanishes against a filled primary button, and this one reads on the page
+  ground and on the loud surface alike, in both themes. Nothing removes it.
 - **Disabled** — **38%** opacity on the whole control (Material's value,
   and the one place the AA guarantee is waived by convention: a disabled
   control is not an available target).
@@ -2657,6 +2667,78 @@ could close. These are the answers, and what each one moved.
   reply seal's three boards, which gained the line, and the
   license sheet's two axis labels, which swapped a raw `0.5px` for
   the tracking token that is the same half-pixel.
+
+### The audit answers — 2026-09-09
+
+The implementation session's UI-conformance audit closed with a queue:
+eight places where the boards or the docs contradicted themselves, and a
+row of questions the apps could not build past. These are the answers.
+
+**The scope ruling comes first, because it reframes several of them.**
+*Desktop is out of design scope until the mobile set is complete* — jakob:
+"we currently dont design and build for desktop.. if someone uses desktop
+they will see whatever there is, not optimized". The statement lives in
+§2. The desktop card idiom and the desktop fullscreen viewer park into a
+desktop round of their own.
+
+- **The board was right and the prose was stale, three times over.**
+  `DiscardConfirm` fills *Keep writing*, the safe answer, and the entry
+  record says so; `ReaderPostMenu`'s docblock still carried the in-place
+  license reveal the menus round replaced with a sheet; §7's component
+  inventory had fallen behind its own directories, and the documentation
+  pair belongs to the module file, not to each component it exports.
+- **`ReplyMediaErrors` takes its siblings' foot line.** Pictures are in
+  its tray uploading, so "…and they upload while you write" is true
+  there; no rule ever suppressed the upload half on a refusal.
+- **One add control, one voice.** `CommentEditActs` drew "+ Add · 1 of 4"
+  as a text button where `CommentEdit` drew the ruled InlineAction. The
+  ruled line wins on both.
+- **The display-name field says `Optional`** — item 36 ruled the name
+  optional, and Bio and Website already say it.
+- **Page titles are `title-large`**: every board's band title, and M3's
+  top-app-bar spec. `headline-small`'s home is a dialog heading, and the
+  type table names both.
+- **0.38 is the one disabled opacity**, Material's own. `--opacity-disabled`
+  had no reader left and is retired; `--opacity-resting-face` carries the
+  same number for a different purpose and stays.
+- **`--surface-field` is retired.** It named a fill `TextField` reversed
+  away from, and its only readers were the stance pad's field, which take
+  `surfaceContainerHighest` direct.
+- **§7's two named breakers take tokens.** `InlineAction`'s `sm` rung
+  reads `--text-label-small--letter-spacing`, the same half-pixel it spelled;
+  the over-media stance face takes `--size-face-over-media`, because the
+  emoji is a mark sized to the line face that stands in for it rather than
+  a rung of the type ramp.
+- **The details stage's Next is full-width**, like every other stage.
+  `ComposeDetails` and `ComposeCited` leaned on the column's stretch
+  instead of saying so, which is how the two apps came to differ.
+- **The waiting card can be put away.** It is the one task card naming
+  nothing to do, so it gains `Got it` in `TaskCard`'s secondary dress, and
+  **the dismissal is remembered on the device**: putting it away twice
+  would say the first tap did nothing.
+- **The APK line is the web's alone.** It offers a browser visitor the app
+  they are not in, and the app never carries it.
+- **Where `navigator.share` is absent the control copies the link**, and a
+  snackbar says *Link copied*. One action, never a menu of ours.
+- **Android's autoplay-suppressed signal is named**: *Remove animations*
+  (an animator duration scale of 0), or Data Saver restricting background
+  data. Those two are what the play-disc card reads.
+- **Focus is a platform split** — Compose's M3 focus treatment on Android,
+  the 2px `:focus-visible` ring on the web (§4).
+- **A completed action is confirmed by a snackbar on both platforms** (§3).
+  Web's coloured success line is the deviation and conforms in its catch-up.
+- **Explore and search land with slice 2.7's backend** — no surface built
+  against the exact-match lookup before it.
+- **The feed's filter honestly reads Newest until slice 3's ranker
+  ships**; the label and the behaviour never silently diverge.
+- **Which affordance folds into the ⋮ first was already answered** by the
+  share record above: the action row's order is also its queue, and share
+  is the first to move.
+- **The gate**: 930 → **931 edges**, with **120 screens**, **81 gaps** and
+  **flows 58/53/5** unchanged. The one edge is the waiting card's `Got
+  it`. Nothing else moved a pixel — the type table and the retired tokens
+  are comments and declarations, the tracking token is the half-pixel the
+  literal was, and no board draws the over-media face.
 
 ## 14. Index
 
