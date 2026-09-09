@@ -41,6 +41,9 @@ import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.atom.CograBandChats
+import com.cogra.core.designsystem.v2.atom.CograBandIdentity
+import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
@@ -55,7 +58,16 @@ fun FeedRoute(
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
+    /**
+     * The band's chats affordance. Null draws no control: the signed-in
+     * reader's chat surface is an explicit gap on the canvas
+     * (`graph.json`, `"the chat surface (not designed)"`), and a control
+     * that opens nothing teaches the reader the band lies.
+     */
+    onChats: (() -> Unit)? = null,
     keyBanner: @Composable () -> Unit = {},
+    /** The borrowed-view band, for the reader whose feed is not their own. */
+    borrowedViewBand: @Composable () -> Unit = {},
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
     banners: @Composable () -> Unit = {},
@@ -87,7 +99,9 @@ fun FeedRoute(
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
         onSignInOrJoin = onSignInOrJoin,
+        onChats = onChats,
         keyBanner = keyBanner,
+        borrowedViewBand = borrowedViewBand,
         banners = banners,
         stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
     )
@@ -104,7 +118,9 @@ fun FeedScreen(
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
+    onChats: (() -> Unit)? = null,
     keyBanner: @Composable () -> Unit = {},
+    borrowedViewBand: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
     expiredLabel: String? = null,
     onExpiredDismissed: () -> Unit = {},
@@ -121,17 +137,38 @@ fun FeedScreen(
     // and returns after a third of a screen of upward scroll; the key
     // banner — or the guest notice, for the signed-out reader — rides
     // the same region and gate, so the card follows the reader.
+    //
+    // The band's two pieces sit IN the bar rather than in a block of
+    // their own above it. Nesting band and cards inside one gate makes
+    // the whole 96dp region leave in a single step, which re-clamps the
+    // list underneath, and the leftover scroll that produces reads back
+    // to the gate as "the reader is at the top" — the region returned
+    // the moment it left.
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
         topBar = {
             Column {
                 TopAppBar(
-                    title = { Text(stringResource(R.string.content_feed_title)) },
+                    // A tab root wears the band, never a page title: its
+                    // name is the bar slot the reader tapped to get here
+                    // (FE-09). The 48dp band is the drawn one (F-10).
+                    title = { CograBandIdentity(testTag = "feed_band") },
+                    actions = {
+                        onChats?.let { CograBandChats(it, testTag = "feed_band") }
+                    },
+                    expandedHeight = Layout.TopBarHeight,
                     colors = surfaceTopAppBarColors(),
                     scrollBehavior = collapsingTop.scrollBehavior,
                 )
                 CollapsingTopBanner(collapsingTop) {
-                    if (signedIn == false) GuestBanner(onSignInOrJoin) else keyBanner()
+                    if (signedIn == false) {
+                        GuestBanner(onSignInOrJoin)
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            borrowedViewBand()
+                            keyBanner()
+                        }
+                    }
                 }
             }
         },
