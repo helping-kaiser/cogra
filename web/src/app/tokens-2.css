@@ -106,7 +106,6 @@
   --surface-card: var(--surface-container-highest);
   --surface-dialog: var(--surface-container-high);
   --surface-bar: var(--surface-container);
-  --surface-field: var(--surface-container-highest);
   --surface-reserved: var(--surface-container-high);
   --surface-loud: var(--primary-container);
   --on-surface-loud: var(--on-primary-container);
@@ -124,8 +123,6 @@
   --border-hairline: var(--outline-variant);
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
-
-  --opacity-disabled: 0.4;
 }
 
 /* ----------------------------------------------------------------- states --

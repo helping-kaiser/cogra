@@ -12,9 +12,10 @@ import type { ReactNode } from "react";
 // text (transparent, `primary`, no border). A control that performs an action
 // is one of these three; a control that navigates stays a link.
 const VARIANTS = {
-  primary: "bg-primary text-on-primary disabled:opacity-40",
-  outline: "border border-outline text-primary disabled:opacity-40",
-  text: "text-primary disabled:opacity-40",
+  primary: "bg-primary text-on-primary disabled:opacity-[var(--state-disabled)]",
+  outline:
+    "border border-outline text-primary disabled:opacity-[var(--state-disabled)]",
+  text: "text-primary disabled:opacity-[var(--state-disabled)]",
 } as const;
 
 // label-large is Material's button role, so both sizes carry the same type and
