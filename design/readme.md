@@ -2734,10 +2734,17 @@ desktop round of their own.
 - **Which affordance folds into the ⋮ first was already answered** by the
   share record above: the action row's order is also its queue, and share
   is the first to move.
+- **The draft board's fresh-start line ends on its dash** — *"Or start
+  fresh —"*. The ruling is jakob's of 2026-08-31, recorded here now: the
+  grid below the offer is the rest of the sentence, and a clause spelling
+  out how a new post starts would repeat the fresh composer's caption.
+  Android has drawn it since that day; `ComposeDraft` takes it with this
+  round, and the web conforms in its catch-up.
 - **The gate**: 930 → **931 edges**, with **120 screens**, **81 gaps** and
   **flows 58/53/5** unchanged. The one edge is the waiting card's `Got
-  it`. Nothing else moved a pixel — the type table and the retired tokens
-  are comments and declarations, the tracking token is the half-pixel the
+  it`. The fresh-start line is the one other drawn change; beyond those,
+  nothing moved a pixel — the type table and the retired tokens are
+  comments and declarations, the tracking token is the half-pixel the
   literal was, and no board draws the over-media face.
 
 ## 14. Index

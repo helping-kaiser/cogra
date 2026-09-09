@@ -1285,17 +1285,3 @@ layout unoptimized until this round runs. What parked into it:
 
 Nothing desktop-specific is built before this round.
 
-### 39 · The compose fresh-start line disagrees across the repos · *design*
-
-`ComposeDraft` draws *"Or start fresh — pick one picture, several, or one
-video."* and has since the compose section was drawn (2026-08-27), kept
-deliberately whole when the board was componentized (2026-09-04): the
-grid beneath the offer carries no caption of its own, so the short form
-would leave the sentence pointing at nothing.
-
-Android has shipped *"Or start fresh —"* since 2026-08-31, attributed
-in its own source to a jakob ruling of that day. **No such ruling is
-recorded here** — not in §13, not in this file, not in the board's
-history — and the web applied the same round thirteen minutes later with
-the full line. One of the two readings is wrong; jakob's word settles
-which, and the loser conforms.
