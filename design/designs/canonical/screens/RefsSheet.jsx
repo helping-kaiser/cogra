@@ -1,7 +1,19 @@
-/* The topics-and-references sheet (readme §13, 2026-08-28): the card's counts
+/* The tags-and-references sheet (readme §13, 2026-08-28): the card's counts
    open it, and every signed act gets a full row — leading mark, name, and the
    pair the author signed on it. One row shape across every node kind; search
-   (backlog item 9) reuses it. */
+   (backlog item 9) reuses it.
+
+   THIS SHEET IS THE REVEAL, AND THE ONLY ONE (jakob's ruling, the tag round).
+   A chip's tap goes to the tag's page on every surface, so there is no
+   expanding chip and no second gesture that shows a value: what a node's tags
+   are worth is read here, in the list that already exists to hold them.
+
+   THE TWO SECTIONS COUNT IN DIFFERENT UNITS, and the rows say so. A tag's
+   confidence is census-bounded to [0, 1] (hashtag.md §4), so it wears no sign
+   — `+0.40 / 0.90`. A reference's second axis is enthusiasm over [-1, +1]
+   (`ReferenceInput`, api-spec.md), so it keeps one. The sheet used to draw
+   tags in the reference shape, which promised a negative half that the census
+   does not carry. `formatTagPair` is where the difference is assigned. */
 export function Screen() {
   return (
     <>
@@ -11,12 +23,12 @@ export function Screen() {
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 
-      <BottomSheet open ariaLabel="Topics and references" maxHeight="88%">
-        <SheetTitle>Topics &amp; references</SheetTitle>
+      <BottomSheet open ariaLabel="Tags and references" maxHeight="88%">
+        <SheetTitle>Tags &amp; references</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          <SectionLabel>Topics</SectionLabel>
-          <ReferenceRow kind="topic" name="photography" pair="+0.40 / +0.20" onOpen={() => {}} />
-          <ReferenceRow kind="topic" name="coastroad" pair="+0.10 / +0.10" onOpen={() => {}} />
+          <SectionLabel>Tags</SectionLabel>
+          <ReferenceRow kind="topic" name="photography" pair="+0.40 / 0.90" onOpen={() => {}} />
+          <ReferenceRow kind="topic" name="coastroad" pair="+0.10 / 1.00" onOpen={() => {}} />
           <SectionLabel>References</SectionLabel>
           <ReferenceRow kind="person" name="Mira Voss" src="inviter.jpg" pair="+0.10 / +0.10" onOpen={() => {}} />
           <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" pair="+0.55 / +0.20" onOpen={() => {}} />

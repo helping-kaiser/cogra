@@ -53,7 +53,7 @@
     },
     {
       "name": "open-a-topic",
-      "description": "A topic chip on a post opens that topic's page — the page itself is still owed.",
+      "description": "A tag chip on a post opens that tag's page — everything its author tagged, newest claim first, each row carrying the pair it was tagged with.",
       "start": { "board": "Feed" },
       "end": { "board": "Feed", "via": 6 }
     },
@@ -397,7 +397,7 @@
     },
     {
       "name": "add-a-topic",
-      "description": "Add a topic on the details step opens the picker over every topic a post can carry — the picker itself is still owed.",
+      "description": "+ Add a tag on the details step opens the picker, where any legal name is pickable — used or not, since nothing is ever created.",
       "start": { "board": "ComposeDetails" },
       "end": { "board": "ComposeDetails", "via": 7 }
     },

@@ -75,6 +75,7 @@ const TEXT_BODY_CLAMP_LINES = 18;
 const CHARS_PER_LINE = 51;
 
 export function PostCard({
+  attach = false,
   author,
   title,
   description,
@@ -360,5 +361,12 @@ export function PostCard({
     </>
   );
 
-  return <Card>{veil ? <SensitiveScope>{body}</SensitiveScope> : body}</Card>;
+  /* `attach` squares the top-left corner so a row flag (TaggedRow) fuses with
+     the card instead of floating beside its curve (jakob's review, the tag
+     round). */
+  return (
+    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined}>
+      {veil ? <SensitiveScope>{body}</SensitiveScope> : body}
+    </Card>
+  );
 }

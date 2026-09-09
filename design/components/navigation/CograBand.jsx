@@ -10,6 +10,11 @@ import { Icon } from "./Icon.jsx";
    space (ruled 2026-08-28), so `trailing` puts the tab's one working control —
    the feed's filter trigger — on the band's right edge. The whole band scrolls
    away with the top region and returns with it; the control rides along.
+   THE BAND RIDES THE BAR THE TOP REGION ALREADY COLLAPSES — it is not a
+   second collapsing block. Collapse band and bar as one taller block instead
+   and the list re-clamps under it: the leftover scroll reads back as "at the
+   top" and the region returns the instant it left (found by Android's
+   post-card lane, ruled 2026-09-09).
 
    CHATS RIDE THE BAND (jakob 2026-09-01): messaging must be reachable from any
    major screen, so every tab root's band carries the chats affordance built in.

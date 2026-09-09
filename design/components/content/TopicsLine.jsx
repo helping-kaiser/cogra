@@ -1,20 +1,25 @@
 import React from "react";
 import { TopicChip } from "../core/Chip.jsx";
 
-/* The topics-and-citations line a content card wears, shared by PostCard and
+/* The tags-and-citations line a content card wears, shared by PostCard and
    CommentCard — it appeared on a second surface, so it moved here (the repo's
    own rule; a copy is never the answer).
 
    AT MOST TWO CHIPS, THEN THE COUNTS (readme §13, 2026-08-28): a clipped
-   parade of half-chips says nothing, so the line shows up to two topics whole
+   parade of half-chips says nothing, so the line shows up to two tags whole
    — each capped so both always fit beside the counts — and states the rest in
-   words: "· 23 topics · 3 references". The counts are the readable fact AND
-   the way in: the topics-and-references sheet is the full set's home. Never a
+   words: "· 23 tags · 3 references". The counts are the readable fact AND
+   the way in: the tags-and-references sheet is the full set's home. Never a
    wrap, never a second row (readme §13's collapse order).
 
+   THE FILE AND ITS PROPS KEEP THE RECORD'S WORD (the naming law, readme §13,
+   the tag round): `TopicsLine`, `topics` — what the graph carries is a topic.
+   Every string it renders says "tag", which is what the reader calls it.
+
    Two tap models, never mixed: in a summary card the chips navigate to their
-   topics and the counts open the sheet; on a detail surface pass `onOpen` and
-   the WHOLE LINE is one control opening the sheet, the chips inert inside it. */
+   tag pages and the counts open the sheet; on a detail surface pass `onOpen`
+   and the WHOLE LINE is one control opening the sheet, the chips inert
+   inside it. */
 
 const VISIBLE_CHIPS = 2;
 /* Two capped chips + the counts fit a 390px card at its 16px insets. */
@@ -37,7 +42,7 @@ const COUNT_STYLE = {
 
 function countsText(hiddenTopics, references) {
   const parts = [];
-  if (hiddenTopics > 0) parts.push(hiddenTopics === 1 ? "1 topic" : `${hiddenTopics} topics`);
+  if (hiddenTopics > 0) parts.push(hiddenTopics === 1 ? "1 tag" : `${hiddenTopics} tags`);
   if (references > 0) parts.push(references === 1 ? "1 reference" : `${references} references`);
   if (parts.length === 0) return null;
   return `· ${parts.join(" · ")}`;
@@ -62,7 +67,7 @@ export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferenc
       <button
         type="button"
         onClick={onOpen}
-        aria-label="Topics and references"
+        aria-label="Tags and references"
         className="cg-state cg-focus"
         style={{
           ...LINE,

@@ -37,6 +37,16 @@ This is greppable and should be enforced as a check over Android's
 `strings.xml` and the web copy, rather than left to review — the check
 does not exist yet.
 
+## Ages
+
+One vocabulary for every timestamp, everywhere (ruled 2026-09-09): the
+minutes/hours/days ladder — `now`, `35m`, `2h`, `3d` — up to 30 days,
+and the date (`06.09.2024`) past it. No other words: no "today", no
+weeks, no months. Recency is a feeling and gets the ladder; history is
+a date. The removal mark's `when` speaks this vocabulary like any
+other timestamp — it is the redaction's own moment, not the content's
+age.
+
 ## Register
 
 Write from the reader's side. Active voice. **A control says what will
@@ -87,6 +97,26 @@ The product is **CoGra** in prose. The wordmark is lowercase `cogra`.
 Handles are shown with `@`. A person or group is an *actor* internally
 and never on screen — on screen they have a name and a handle.
 
+**A `#name` is a TAG on screen and a topic in the record** (jakob's
+ruling, 2026-09-09). *Tags* is the word people already use for this;
+*topic* is the L1 author's word for the node, and it belongs to the
+contract, the docs and the graph — never to a label, a count, a
+placeholder, an accessible name, or a "?" text. So the reader is shown
+`Tags`, `+ Add a tag`, `23 tags`, `Tags & references`, `#tag` in a
+search hint.
+
+The law stops at the code's own names. `TopicChip`, `TopicsLine`,
+`TopicRemovable`, the `topics` prop, `FEED_KINDS`' `topics` value,
+`ReferenceRow`'s `kind="topic"`, the `NODE_GLYPHS` keys and the
+`open-a-topic` / `add-a-topic` flow names all stay as they are: they
+name the record, they are not read by anyone using the product, and
+churning them would cost every cross-reference to the contract for
+nothing. `FEED_KINDS` is where the two meet — value `topics`, label
+`Tags` — and that pairing is the law in one line.
+
+One word keeps its ordinary sense throughout: a help dialog's *topic*
+is its subject, not a `#name`.
+
 ## Platform nouns
 
 The key lives on a device, and the device is named as the reader sees
@@ -103,7 +133,7 @@ title, at most two short paragraphs, Close. The texts, verbatim
 (browser wording shown; the app variant swaps the platform noun):
 
 - **Signed actions** (the seal, post and reply): Each piece of a post —
-  the post itself, every topic, every citation — is its own signed
+  the post itself, every tag, every citation — is its own signed
   action, written in your name. They sign together: all of them land,
   or none does. / You don't pay for these — a shared community pool
   covers members' signings. The pool is real and finite, so each
@@ -151,17 +181,17 @@ title, at most two short paragraphs, Close. The texts, verbatim
   for or against, and how much. Nothing is signed until Set.
 - **Editing**: An edit replaces the whole post; earlier versions stay
   public under "Edited" unless you remove them. An edit never bumps
-  the post as new. / Topic and citation changes ride the same signing,
+  the post as new. / Tag and citation changes ride the same signing,
   each as its own signed action. The license never changes.
 - **Citing**: A citation is its own signed action and carries where
   you stand on what you cite. You can cite anything on CoGra — start
-  with @handle or #topic to reach comments, messages, and offers. /
+  with @handle or #tag to reach comments, messages, and offers. /
   Comments and chat messages can also be cited from themselves —
   open one and choose "Cite in a new post".
 - **Searching** (the Explore tab's results): Search reads names and
   titles, never bodies. Start with @handle to search one person's
   work — including their comments and offers, found through what
-  they point at. Start with #topic to search inside a topic. /
+  they point at. Start with #tag to search inside a tag. /
   Results put what's closest to you first — the numbers are your
   view, no one else's. Below the line, what's still beyond your
   reach, newest first. Your searches stay on this device.
@@ -590,3 +620,65 @@ does — *Confirm email change* is what a reader would have believed it
 did, and a control says what will happen. Last: `Until both sides land
 your account keeps the address it has, and a reset still goes there.`
 
+
+## Awaiting blessing — the tag round
+
+Drawn on `TagPage`, `TagPageEmpty`, `TagPicker`, `TagPickerTyping` and
+`TagPair`, and up for review in the same pass. The naming law above is
+part of the same ruling and is written where it belongs; these are the
+new lines.
+
+**The page carries no preamble.** The list opens directly under the
+title (jakob's review removed the explanatory line): the rows say what
+they are, and a sentence restating the contract was noise where the
+title and the claims already carry it.
+
+**A row says which act put it there.** `Tagged` and then the pair, on
+a flag attached to every card's top edge — the word names the act, the
+numbers say what it claimed, and the tag itself is not repeated because
+the page is titled by it.
+
+**An unused tag is not a miss.** `Nothing carries this tag yet. The name
+is still a place — anyone can be the first to use it.` No "not found",
+because the tag was found; what is empty is the list. *Still a place*
+is the fact the contract guarantees, said without saying Type, node or
+vacuous anchoring.
+
+**The picker refuses to imply a creation step.** `Any name works, used
+or not — nobody owns a tag. It is yours the moment you sign.` This is
+the round's most load-bearing line: it has to make a missing "Create
+#foo" button feel like an absence of ceremony rather than a missing
+feature. *Nobody owns a tag* is the commons said plainly; *the moment
+you sign* puts the act where it really is.
+
+**The field asks for a name, not a search.** Placeholder `Name a tag`.
+A picker that said *Search tags* would promise that a name it cannot
+show you is a name you cannot have.
+
+**Canonicalization is previewed, never silent.** `Signs as #saltmaps`
+under the field while `#SaltMaps` is typed, and under that the shape a
+name may take: `Letters, digits, dot, dash and underscore. Capitals
+become lowercase.` A reader is choosing a permanent public endpoint;
+one that quietly becomes a different string is the surprise §9 exists
+to stop.
+
+**The pair editor names its axes in the reader's words.** `How much it
+is about this` with `Barely` / `Entirely`, and `How sure you are` with
+`Guessing` / `Certain`. These are api-spec's own glosses — relevance is
+how much the tag is the content's, confidence is how firmly the claim
+is held — said without `p_d`, `p_i`, relevance or confidence, which §3
+keeps off the screen. The second track starts at its top because that
+is the contract's default, and the poles say why that is not
+overconfidence: an author is *certain* of a declaration they are making
+about their own post.
+
+**And it says when it costs.** `Signed with the post, as its own
+action.` The sheet stages; the seal signs. A slider that moved a number
+with no word about it would read as free.
+
+**The "?" · Tagging** (the picker's one dialog): `A tag is a name
+anyone can use — nobody owns one, and using a name nobody has used
+before takes no extra step. Tagging is its own signed action, and it
+carries how much the post is about that tag. / Names are lowercased,
+and a name can hold letters, digits, dot, dash and underscore. Tap a
+tag you have added to set how it relates.`

@@ -24,11 +24,11 @@ export function Screen() {
         <TextField label="Description" corner="Optional" rows={2} value="Everything the flats give up in one morning." />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Topics</FieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <TopicRemovable topic="tidemarket" />
-            <Button variant="outline" size="sm">Add a topic</Button>
+            <TopicRemovable topic="tidemarket" onEdit={() => {}} />
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
         </div>
 
         <div style={{ flex: 1 }} />
