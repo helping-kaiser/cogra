@@ -79,7 +79,7 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true 
         width: "100%",
         touchAction: "none",
         borderRadius: "var(--radius-large)",
-        background: "var(--surface-field)",
+        background: "var(--surface-container-highest)",
       }}
     >
       <div aria-hidden="true" style={{ position: "absolute", left: 0, top: "50%", height: "1px", width: "100%", background: "var(--border-hairline)" }} />

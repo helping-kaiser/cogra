@@ -72,7 +72,7 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <QuietNote>Words first — pictures can join them.</QuietNote>
+        <QuietNote>Words first — pictures can join them, and they upload while you write.</QuietNote>
         <Button style={{ width: "100%" }}>Next</Button>
       </div>
     </>
