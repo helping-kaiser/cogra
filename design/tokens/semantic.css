@@ -11,7 +11,6 @@
   --surface-card: var(--surface-container-highest);
   --surface-dialog: var(--surface-container-high);
   --surface-bar: var(--surface-container);
-  --surface-field: var(--surface-container-highest);
   --surface-loud: var(--primary-container);
   --on-surface-loud: var(--on-primary-container);
   --surface-snackbar: var(--inverse-surface);
@@ -31,8 +30,10 @@
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
 
-  /* Disabled state, as the clients draw it. */
-  --opacity-disabled: 0.4; /* @kind other */
   /* The resting stance face with no standing behind it: muted and translucent. */
   --opacity-resting-face: 0.4; /* @kind other */
+  /* The stance face over media. The emoji is a mark, sized to the line face
+     that stands in for it rather than to a type rung — the two glyphs are the
+     same control in two states and have to read at one size. */
+  --size-face-over-media: 26px;
 }
