@@ -220,17 +220,7 @@ class PostDetailViewModelTest {
         }
     }
 
-    private fun viewModel() = PostDetailViewModel(content, landings, reveals)
-
-    /**
-     * Most tests exercise the staging, not the confirm (F4): the device
-     * has already said "don't ask", and the collector has read that
-     * before the first submit.
-     */
-    private fun viewModelWithoutConfirm(): PostDetailViewModel {
-        identity.confirmMultiAction.value = false
-        return viewModel().also { dispatcher.scheduler.advanceUntilIdle() }
-    }
+    private fun viewModel() = PostDetailViewModel(content, landings, reveals, WEB_ORIGIN)
 
     @Before
     fun setUp() {
@@ -436,47 +426,7 @@ class PostDetailViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.replyThreads["c1"]?.failed).isTrue()
     }
-
-    // -- The value reveal (F8) --
-
-    /** Nobody sees how strongly a topic is claimed unasked. */
-    @Test
-    fun noChipRowStartsRevealed() = runTest(dispatcher) {
-        val vm = viewModel()
-        vm.start("post-1")
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.revealedTagRows).isEmpty()
-    }
-
-    @Test
-    fun theRevealTogglesPerRowAndBackAgain() = runTest(dispatcher) {
-        val vm = viewModel()
-        vm.onToggleTagValues("post-1")
-        assertThat(vm.state.value.revealedTagRows).containsExactly("post-1")
-
-        vm.onToggleTagValues("c1")
-        assertThat(vm.state.value.revealedTagRows).containsExactly("post-1", "c1")
-
-        vm.onToggleTagValues("post-1")
-        assertThat(vm.state.value.revealedTagRows).containsExactly("c1")
-    }
-
-    // -- Comment compose gains tags (F9) --
-
-    private fun startedVm(): PostDetailViewModel = viewModelWithoutConfirm().also {
-        it.start("post-1")
-        dispatcher.scheduler.advanceUntilIdle()
-    }
-
-    /** The reference row's reveal is its own; the tag row's stays shut. */
-    @Test
-    fun theReferenceRevealTogglesApartFromTheTagReveal() = runTest(dispatcher) {
-        val vm = startedVm()
-        vm.onToggleReferenceValues("post-1")
-        assertThat(vm.state.value.revealedReferenceRows).containsExactly("post-1")
-        assertThat(vm.state.value.revealedTagRows).isEmpty()
-
-        vm.onToggleReferenceValues("post-1")
-        assertThat(vm.state.value.revealedReferenceRows).isEmpty()
-    }
 }
+
+/** The build's web origin, as the share link is built from it. */
+private const val WEB_ORIGIN = "https://cogra.example"

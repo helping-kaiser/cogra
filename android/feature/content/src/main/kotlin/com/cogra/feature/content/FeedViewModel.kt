@@ -8,6 +8,7 @@ import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SensitiveReveals
+import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.repo.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -59,10 +60,14 @@ class FeedViewModel @Inject constructor(
     private val content: ContentRepository,
     landings: LandingSignal,
     private val reveals: SensitiveReveals,
+    @WebOrigin private val webOrigin: String,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedUiState())
     val state = _state.asStateFlow()
+
+    /** What the share control hands to the platform's own sheet. */
+    fun shareUrl(postId: String): String = postShareUrl(webOrigin, postId)
 
     /** A reader chose to look at a veiled body, as it stands right now. */
     fun onReveal(nodeId: String, mark: SensitiveMark) = reveals.reveal(nodeId, mark)
