@@ -36,9 +36,11 @@ enum class DiscardSubject(val question: String) {
  * written — the dialog itself has no opinion about emptiness, because
  * what counts as written differs per surface.
  *
- * `Discard` is the filled action and `Keep writing` the quiet one: the
- * board fills the button that ends the writing, so the destructive
- * choice is the deliberate one rather than the easy one.
+ * `Keep writing` is the filled action and `Discard` the quiet one: the
+ * board fills the way back, so the heaviest control on the screen never
+ * belongs to the answer the dialog was raised to slow down. Material's
+ * `confirmButton` slot draws last, which is why the way back sits
+ * there.
  */
 @Composable
 fun DiscardConfirm(
@@ -61,17 +63,17 @@ fun DiscardConfirm(
         },
         confirmButton = {
             CograButton(
-                text = "Discard",
-                onClick = onDiscard,
-                testTag = testTag?.let { "${it}_discard" },
+                text = "Keep writing",
+                onClick = onKeepWriting,
+                testTag = testTag?.let { "${it}_keep" },
             )
         },
         dismissButton = {
             CograButton(
-                text = "Keep writing",
-                onClick = onKeepWriting,
+                text = "Discard",
+                onClick = onDiscard,
                 kind = ButtonKind.Text,
-                testTag = testTag?.let { "${it}_keep" },
+                testTag = testTag?.let { "${it}_discard" },
             )
         },
     )

@@ -18,11 +18,21 @@
 // It draws no box of its own: it belongs inside a Card, and a bordered
 // box on a filled card is a second surface saying the same thing twice.
 
+// A CODE TYPED BACK WRONG IS ANSWERED, NOT IGNORED. The confirm is live
+// as soon as anything is typed, and pressing it with the wrong code puts
+// the mismatch line on the field (the RecoveryCodeMismatch board) — a
+// dead button with no reason is how a reader concludes the screen is
+// broken and leaves without the one string that restores their actor.
+// Timing is the canvas's own: on submit, then live only where already
+// marked, so typing never turns a field red out of nowhere.
+
 import { useState } from "react";
 
 import { recoveryCodeTypedBack } from "@/lib/identity/recovery-code-confirmation";
 import { Button } from "@/lib/ui/button";
 import { TextField } from "@/lib/ui/text-field";
+
+const MISMATCH = "That doesn't match the code above.";
 
 export function RecoveryCode({
   code,
@@ -37,6 +47,20 @@ export function RecoveryCode({
 }) {
   const [typedBack, setTypedBack] = useState("");
   const [copyFailed, setCopyFailed] = useState(false);
+  const [mismatch, setMismatch] = useState(false);
+
+  const onTypedBack = (next: string) => {
+    setTypedBack(next);
+    if (mismatch) setMismatch(!recoveryCodeTypedBack(code, next));
+  };
+
+  const onSaved = () => {
+    if (recoveryCodeTypedBack(code, typedBack)) {
+      onConfirmed();
+      return;
+    }
+    setMismatch(true);
+  };
 
   const onCopy = async () => {
     // writeText rejects on denied permission or a non-secure context —
@@ -67,17 +91,20 @@ export function RecoveryCode({
       <TextField
         label="Type or paste the code to confirm"
         value={typedBack}
-        onChange={setTypedBack}
+        onChange={onTypedBack}
         testId={`${testId}_typed_back`}
         autoComplete="off"
+        error={mismatch ? MISMATCH : undefined}
         mono
       />
+      {/* Empty is the one state with nothing to answer: there is no
+          mismatch to name until the reader has written something. */}
       <Button
         testId={`${testId}_saved`}
         size="sm"
         selfStart
-        disabled={!recoveryCodeTypedBack(code, typedBack)}
-        onClick={onConfirmed}
+        disabled={typedBack.trim() === ""}
+        onClick={onSaved}
       >
         I&apos;ve written it down
       </Button>

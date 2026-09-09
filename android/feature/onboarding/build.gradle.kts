@@ -29,6 +29,9 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
 
+    // The recovery-code screen has to refuse the system back gesture, which
+    // is `BackHandler` — an activity-compose API.
+    implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)

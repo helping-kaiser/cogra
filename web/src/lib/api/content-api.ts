@@ -257,18 +257,27 @@ export async function fetchPostDetail(
   });
 }
 
+/** An author's own mark on their comment, as the edit surface holds it. */
+export type CommentSelfMark = {
+  readonly sensitive: boolean;
+  /** The line shown on the veil; empty when the mark carries none. */
+  readonly reason: string;
+};
+
 /**
  * The author's own sensitive mark on one comment — what its edit switch shows.
  *
  * Its own read rather than a field on the detail query: see the operation's own
  * note. Null means the comment is gone; the caller keeps the switch where it
  * was rather than guessing at false, because guessing false would offer to
- * unveil something the author had veiled.
+ * unveil something the author had veiled. The reason travels with the mark for
+ * the same reason: an edit carries complete state, so a reason left behind is a
+ * reason erased.
  */
 export async function fetchCommentSelfMark(
   client: ApolloClient,
   id: string,
-): Promise<Outcome<boolean | null>> {
+): Promise<Outcome<CommentSelfMark | null>> {
   const fetched = await fetchOutcome(() =>
     client.query({
       query: CommentSelfMarkDocument,
@@ -277,7 +286,12 @@ export async function fetchCommentSelfMark(
     }),
   );
   if (fetched.kind !== "success") return fetched;
-  return success(fetched.value.comment?.sensitiveSelfMark ?? null);
+  const comment = fetched.value.comment;
+  if (!comment) return success(null);
+  return success({
+    sensitive: comment.sensitiveSelfMark,
+    reason: comment.sensitiveReason ?? "",
+  });
 }
 
 function liftPrepared(payload: {

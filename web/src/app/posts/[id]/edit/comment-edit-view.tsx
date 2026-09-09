@@ -9,20 +9,26 @@
 // board's own answer to "why can't I touch this" — better than hiding a term
 // the comment is still under.
 //
-// THERE IS NO SENSITIVE ROW, and that is FIDELITY rather than a deviation: the
-// CommentEdit board draws none. The author's own mark still travels on the
-// wire, unchanged, because the edit is complete state — an edit that omitted
-// it would unveil a comment its author had veiled.
+// THE MARK IS THE AUTHOR'S ONGOING JUDGEMENT, which is why it sits beside a
+// licence that cannot move: the licence is fixed by contract at signing, the
+// mark is not, so an author can veil or unveil their own comment after
+// publishing (design/backlog.md item 25.2). It opens the same ComposeSensitive
+// sheet the post's seal opens — one sheet for every surface that marks.
+//
+// THE ROW SENDS COMPLETE STATE, mark and reason together. An edit that carried
+// the switch but dropped the reason would strip the line the veil shows without
+// anyone asking for it.
 //
 // THE ACTS FOOTER IS AN AFFORDANCE, not a label: it opens the acts sheet
 // (CommentEditActs), which is the EditActs pattern at comment scale.
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
-import { PillButton } from "@/lib/ui2/pill-button";
+import { PillButton, TextAction } from "@/lib/ui2/pill-button";
 import { TextField } from "@/lib/ui2/text-field";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { DescribeCounter } from "@/lib/ui2/compose/picked-row";
+import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { TransportError } from "@/lib/ui/transport-error";
@@ -51,6 +57,9 @@ export function CommentEditView({
   references,
   tagErrors,
   referenceErrors,
+  sensitive,
+  sensitiveReason,
+  sensitiveOpen,
   acts,
   actsOpen,
   busy,
@@ -58,6 +67,10 @@ export function CommentEditView({
   refusal,
   failed,
   onWords,
+  onSensitive,
+  onSensitiveReason,
+  onSensitiveOpen,
+  onSensitiveHelp,
   onPick,
   onRemovePicture,
   onDescribe,
@@ -78,6 +91,10 @@ export function CommentEditView({
   references: readonly ReferenceDraft[];
   tagErrors?: Readonly<Record<number, string>>;
   referenceErrors?: Readonly<Record<number, string>>;
+  /** The author's own mark, and the line the veil would show. */
+  sensitive: boolean;
+  sensitiveReason: string;
+  sensitiveOpen: boolean;
   acts: number;
   actsOpen: boolean;
   busy: boolean;
@@ -86,6 +103,10 @@ export function CommentEditView({
   refusal: string | null;
   failed: boolean;
   onWords: (words: string) => void;
+  onSensitive: (next: boolean) => void;
+  onSensitiveReason: (next: string) => void;
+  onSensitiveOpen: (open: boolean) => void;
+  onSensitiveHelp: () => void;
   onPick: (files: readonly File[]) => void;
   onRemovePicture: (id: string) => void;
   onDescribe: (id: string) => void;
@@ -219,17 +240,35 @@ export function CommentEditView({
           />
         </div>
 
-        {/* The licence, stated and locked. */}
-        <div className="flex min-h-11 items-center gap-2 border-y border-outline-variant">
-          <span className="flex-1 text-body-medium">License</span>
-          <span className="text-body-medium text-on-surface-variant">Public domain</span>
-          <span
-            className="inline-flex text-on-surface-variant"
-            aria-label="The license never changes"
-            data-testid="comment-edit-license-locked"
-          >
-            <LockGlyph />
-          </span>
+        {/* The two term rows the board draws shut: the licence, stated and
+            locked, then the author's own mark. */}
+        <div className="flex flex-col">
+          <div className="flex min-h-11 items-center gap-2 border-t border-outline-variant">
+            <span className="flex-1 text-body-medium">License</span>
+            <span className="text-body-medium text-on-surface-variant">Public domain</span>
+            <span
+              className="inline-flex text-on-surface-variant"
+              aria-label="The license never changes"
+              data-testid="comment-edit-license-locked"
+            >
+              <LockGlyph />
+            </span>
+          </div>
+          <div className="flex min-h-11 items-center gap-2 border-y border-outline-variant">
+            <span className="flex-1 text-body-medium">Sensitive</span>
+            <span
+              className="text-body-medium text-on-surface-variant"
+              data-testid="comment-edit-sensitive-value"
+            >
+              {sensitive ? "Marked" : "Not marked"}
+            </span>
+            <TextAction
+              testId="comment-edit-open-sensitive"
+              onClick={() => onSensitiveOpen(true)}
+            >
+              {sensitive ? "Change" : "Mark"}
+            </TextAction>
+          </div>
         </div>
 
         <div className="flex-1" />
@@ -273,6 +312,17 @@ export function CommentEditView({
           {busy ? "Signing…" : "Sign the edit"}
         </PillButton>
       </div>
+
+      <SensitiveSheet
+        open={sensitiveOpen}
+        marked={sensitive}
+        reason={sensitiveReason}
+        onMarked={onSensitive}
+        onReason={onSensitiveReason}
+        onClose={() => onSensitiveOpen(false)}
+        onHelp={onSensitiveHelp}
+        testIdPrefix="comment-edit"
+      />
 
       <BottomSheet
         open={actsOpen}

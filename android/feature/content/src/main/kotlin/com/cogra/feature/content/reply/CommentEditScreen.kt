@@ -143,12 +143,9 @@ fun CommentEditRoute(
  * the reply composer wears), topics, citations, **and the license shown
  * locked** — an edit can never change it.
  *
- * **No sensitive Mark row, and that is the board.** Unlike `ReplySeal`,
- * where the row is drawn and this lane deliberately does not build it,
- * `CommentEdit` has no such row to draw: `graph.json` gives it twelve
- * edges and none is a mark. What the screen does carry is the standing
- * mark itself, unseen, because the contract is complete-state — see
- * [CommentEditState.sensitive].
+ * The standing sensitive mark rides in state rather than on screen: the
+ * edit contract is complete-state, so an edit that omits the mark
+ * unmarks — see [CommentEditState.sensitive].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
