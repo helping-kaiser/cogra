@@ -162,7 +162,7 @@ export function ReferenceFinder({
                     disabled={already}
                     data-testid={`${testIdPrefix}-finder-candidate-${candidate.targetId}`}
                     onClick={() => onPick(candidate)}
-                    className="flex w-full flex-col items-start rounded-extra-small px-2 py-2 text-left disabled:opacity-50"
+                    className="flex w-full flex-col items-start rounded-extra-small px-2 py-2 text-left disabled:opacity-[var(--state-disabled)]"
                   >
                     <span className="text-body-medium">{candidate.target.label}</span>
                     <span className="text-label-small text-on-surface-variant">

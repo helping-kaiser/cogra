@@ -47,7 +47,7 @@ export function pillClassName({
     "cg-state cg-focus",
     "box-border inline-flex items-center justify-center gap-2 rounded-full",
     "text-label-large",
-    "disabled:opacity-40",
+    "disabled:opacity-[var(--state-disabled)]",
     SIZES[size],
     VARIANTS[variant],
     full ? "w-full" : "",
@@ -113,7 +113,7 @@ export function TextAction({
       data-testid={testId}
       disabled={disabled}
       onClick={onClick}
-      className="cg-state cg-focus cg-hit relative inline-flex items-center rounded-extra-small text-label-medium text-primary disabled:opacity-40"
+      className="cg-state cg-focus cg-hit relative inline-flex items-center rounded-extra-small text-label-medium text-primary disabled:opacity-[var(--state-disabled)]"
     >
       {children}
     </button>
