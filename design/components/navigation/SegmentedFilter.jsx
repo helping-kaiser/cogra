@@ -28,16 +28,22 @@ import React from "react";
    DRAWN AT 32PX, border-box — the chips' rung, because this control lives among
    chips (the filter sheets) and a taller pill beside 32px chips read as swollen
    twice over (first at 48, then again at 40). The 48px hit minimum is a target
-   rule, not a drawn height — the same drawn-vs-tapped split the chips keep. */
+   rule, not a drawn height — the same drawn-vs-tapped split the chips keep.
 
-export function SegmentedFilter({ options = [], value, onChange, ariaLabel }) {
+   `block` SPANS THE CONTAINER, for the one place this control is not standing
+   among chips: a settings group, where it is the group's whole content and a
+   pill floating short of the card's right edge reads as unfinished. The
+   segments stay equal, so spanning divides the width rather than stretching
+   one of them. */
+
+export function SegmentedFilter({ options = [], value, onChange, ariaLabel, block = false }) {
   if (options.length === 0) return null;
   return (
     <div
       role="group"
       aria-label={ariaLabel}
       style={{
-        display: "inline-flex",
+        display: block ? "flex" : "inline-flex",
         alignItems: "stretch",
         height: "32px",
         boxSizing: "border-box",
@@ -45,7 +51,7 @@ export function SegmentedFilter({ options = [], value, onChange, ariaLabel }) {
         border: "1px solid var(--border-field)",
         overflow: "hidden",
         maxWidth: "100%",
-        width: "fit-content",
+        width: block ? "100%" : "fit-content",
       }}
     >
       {options.map((option, index) => {

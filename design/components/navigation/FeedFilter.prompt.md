@@ -14,5 +14,6 @@ const [filter, setFilter] = React.useState(FEED_FILTER_DEFAULT);
 - **The sheet carries its own "?"** (the pads' precedent) opening "The filter" dialog — the text lives in `guidelines/copy-voice.md` and names the settings default.
 - **"Also show" is not a warning.** Sensitive content arrives veiled, a removed record arrives as its skeleton. Neither takes `error` colouring here or anywhere.
 - **Search wears the same pill.** A surface that owns its own sheet uses `FilterTrigger` with its own reading — same idiom, same silence at the default.
+- **Settings owns the other half.** A surface whose own control is the trigger takes `FeedFilterSheet` — the settings page's Reading row opens it directly, so the default and a feed's own view are set by one control rather than two drawings of one. `lead` is what a titled sheet says first, and a sheet that covers what opened it needs a heading; the "?" then rides the heading's row, which is `SheetTitle`'s own rule.
 - `defaultOpen` renders the sheet open, for static boards.
 - Do not add a kind whose surface does not exist yet — the same rule `BottomNav` keeps for slots.
