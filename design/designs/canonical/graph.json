@@ -206,7 +206,7 @@
     { "from": "KeyElsewhere", "via": 17, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "KeyElsewhere", "via": 18, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
 
-    { "from": "InviteEntry", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "InviteEntry", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "FeedBare", "case": "the arrow is a link, not history — from a root of the funnel, up is the public front door" }] },
     { "from": "InviteEntry", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "InviteEntry", "via": 3, "kind": "advance", "label": "Continue", "to": [{ "board": "Join", "case": "the link checks out" }, { "board": "JoinInvalid", "case": "unusable link" }, { "board": "InviteEntryError", "case": "nothing that reads as a link — the field says so in place" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "InviteEntry", "via": 4, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
@@ -265,7 +265,7 @@
     { "from": "KeyDecline", "via": 1, "kind": "cancel", "label": "I accept the risk", "to": [{ "terminal": "back", "case": "key without backup — returns where the ceremony began" }] },
     { "from": "KeyDecline", "via": 2, "kind": "back", "label": "Go back", "to": [{ "board": "KeyCeremony" }] },
 
-    { "from": "SignIn", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "SignIn", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "FeedBare", "case": "the arrow is a link, not history — from a root of the funnel, up is the public front door" }] },
     { "from": "SignIn", "via": 2, "kind": "advance", "label": "Email field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "SignIn", "via": 3, "kind": "advance", "label": "Password field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "SignIn", "via": 4, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
@@ -295,7 +295,7 @@
     { "from": "ResetNew", "via": 2, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
     { "from": "ResetNew", "via": 3, "kind": "advance", "label": "Set the new password", "to": [{ "board": "SignIn", "case": "set — every device is signed out, so signing in again is the next thing" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
 
-    { "from": "Restore", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back" }] },
+    { "from": "Restore", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "KeyElsewhere", "case": "the arrow is a link, not history — restore is reached signed in with the key absent, so up is that reader's own home" }] },
     { "from": "Restore", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Restore", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
     { "from": "Restore", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "board": "RestoreError", "case": "the code doesn't check out" }] },
