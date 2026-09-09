@@ -5,9 +5,14 @@
 // ranked feed. Reading needs no session (web.md "Routes"), so the
 // surface lives outside the (app) gate; only the write affordance
 // swaps on the auth phase.
+//
+// IT REMEMBERS WHERE THE READER WAS — the pages they had loaded and the
+// offset they had reached — in `feed-memory.ts`, which says why an external
+// store and not the router. Both are read at mount and applied before the
+// first paint, so opening a post and coming back is not a fresh feed.
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -23,9 +28,11 @@ import { Card } from "@/lib/ui/card";
 import { CograBand } from "@/lib/ui/cogra-band";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PostCard } from "@/lib/ui/post-card";
+import { scrollElementOf, useScrollHost } from "@/lib/ui/scroll-host";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
+import { recallFeed, rememberFeed, rememberFeedOffset } from "./feed-memory";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 function GuestBanner() {
@@ -58,10 +65,15 @@ export function FeedView({
   const phase = useAuthPhase();
   const router = useRouter();
   const outcome = composeOutcomeOf(useSearchParams().get("compose"));
-  const [posts, setPosts] = useState<readonly PostView[]>([]);
-  const [endCursor, setEndCursor] = useState<string | null>(null);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const host = useScrollHost();
+  // Read ONCE, at mount: what the feed left behind last time it was on
+  // screen. Seeding the state from it is what makes the pages come back
+  // synchronously, on the first render, before anything is painted.
+  const remembered = useRef(recallFeed()).current;
+  const [posts, setPosts] = useState<readonly PostView[]>(remembered?.posts ?? []);
+  const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
+  const [hasNextPage, setHasNextPage] = useState(remembered?.hasNextPage ?? false);
+  const [loading, setLoading] = useState(remembered === null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -94,7 +106,49 @@ export function FeedView({
     };
   }, [client]);
 
-  useEffect(() => refresh(), [refresh]);
+  // A remembered feed is not re-fetched. A refresh takes no cursor, so it
+  // would answer with page one and throw away every page after it — which is
+  // the loss this whole file exists to stop. The reader gets new posts from a
+  // reload or from Retry, both of which are deliberate.
+  useEffect(() => {
+    if (remembered !== null) return;
+    return refresh();
+  }, [refresh, remembered]);
+
+  // The pages, kept for the next mount. Written from an effect rather than
+  // from each fetch so no path can set state and forget to record it.
+  useEffect(() => {
+    if (loading) return;
+    rememberFeed({ posts, endCursor, hasNextPage });
+  }, [loading, posts, endCursor, hasNextPage]);
+
+  // The place. Restored before the browser paints — the pages are already in
+  // this render, so the scroller is as tall now as it was when the reader
+  // left, and the offset lands where they were rather than at the end of a
+  // shorter list.
+  useLayoutEffect(() => {
+    const scroller = scrollElementOf(host);
+    if (scroller === null || remembered === null) return;
+    scroller.scrollTop = remembered.offset;
+  }, [host, remembered]);
+
+  // Kept on the way past rather than on unmount: a mobile browser may never
+  // run an unmount, and one assignment per frame is cheaper than a render.
+  useEffect(() => {
+    const scroller = scrollElementOf(host);
+    if (scroller === null) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        rememberFeedOffset(scroller.scrollTop);
+        ticking = false;
+      });
+    };
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => scroller.removeEventListener("scroll", onScroll);
+  }, [host]);
 
   const onLoadMore = async () => {
     if (loadingMore || !hasNextPage) return;
