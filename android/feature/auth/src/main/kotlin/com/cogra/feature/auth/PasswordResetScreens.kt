@@ -30,6 +30,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.PasswordTextField
+import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.has
@@ -109,6 +110,7 @@ class PasswordResetViewModel @Inject constructor(
 @Composable
 fun PasswordResetRoute(
     onDone: () -> Unit,
+    onBack: () -> Unit,
     viewModel: PasswordResetViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -122,6 +124,7 @@ fun PasswordResetRoute(
         onNewPasswordChange = viewModel::onNewPasswordChange,
         onRequest = viewModel::onRequest,
         onConfirm = viewModel::onConfirm,
+        onBack = onBack,
     )
 }
 
@@ -133,8 +136,9 @@ fun PasswordResetScreen(
     onNewPasswordChange: (String) -> Unit,
     onRequest: () -> Unit,
     onConfirm: () -> Unit,
+    onBack: () -> Unit = {},
 ) {
-    Scaffold { padding ->
+    Scaffold(topBar = { PageHeader(onBack = onBack, testTag = "reset_header") }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -145,7 +149,7 @@ fun PasswordResetScreen(
         ) {
             Text(
                 text = stringResource(R.string.reset_title),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.semantics { heading() },
             )
             OutlinedTextField(

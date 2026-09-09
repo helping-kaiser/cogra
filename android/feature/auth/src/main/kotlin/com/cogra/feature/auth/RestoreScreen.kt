@@ -26,11 +26,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.identity.RestoreResult
 
 @Composable
 fun RestoreRoute(
     onRestored: () -> Unit,
+    onBack: () -> Unit,
     viewModel: RestoreViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -42,6 +44,7 @@ fun RestoreRoute(
         onCodeChange = viewModel::onCodeChange,
         onForgetOnSignOutChange = viewModel::onForgetOnSignOutChange,
         onSubmit = viewModel::onSubmit,
+        onBack = onBack,
     )
 }
 
@@ -51,8 +54,9 @@ fun RestoreScreen(
     onCodeChange: (String) -> Unit,
     onForgetOnSignOutChange: (Boolean) -> Unit,
     onSubmit: () -> Unit,
+    onBack: () -> Unit = {},
 ) {
-    Scaffold { padding ->
+    Scaffold(topBar = { PageHeader(onBack = onBack, testTag = "restore_header") }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -64,7 +68,7 @@ fun RestoreScreen(
         ) {
             Text(
                 text = stringResource(R.string.restore_title),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.semantics { heading() },
             )
             Text(stringResource(R.string.restore_explainer))

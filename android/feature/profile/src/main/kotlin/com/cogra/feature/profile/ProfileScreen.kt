@@ -25,7 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,6 +45,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.core.designsystem.collapsingTop
@@ -153,7 +153,7 @@ fun ProfileScreen(
     Scaffold(
         modifier = Modifier.collapsingTop(collapsingTop),
         snackbarHost = {
-            SnackbarHost(snackbarHostState) },
+            CograSnackbarHost(snackbarHostState) },
         topBar = {
             Column {
                 TopAppBar(

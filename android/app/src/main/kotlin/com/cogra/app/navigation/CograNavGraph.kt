@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,7 +50,9 @@ import com.cogra.app.BuildConfig
 import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
 import com.cogra.app.ui.SecurityNoticeHost
+import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.LocalSnackbarHostState
+import com.cogra.core.designsystem.v2.token.NavTransitions
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
@@ -65,6 +65,7 @@ import com.cogra.feature.content.reply.CommentEditRoute
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.cogra.feature.content.reply.ReplyWizardRoute
+import com.cogra.feature.home.BorrowedViewBandRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
 import com.cogra.feature.home.StatusBannersRoute
 import com.cogra.feature.invites.InvitesRoute
@@ -422,6 +423,11 @@ private fun CograNavGraphContent(
             KeyRestoreBannerRoute(onRestoreActor = { navController.navigate(Restore) })
         }
     }
+    val borrowedViewBand: @Composable () -> Unit = {
+        if (signedIn == true) {
+            BorrowedViewBandRoute()
+        }
+    }
     val statusBanners: @Composable (Boolean, () -> Unit) -> Unit = { restored, onConsumed ->
         if (signedIn == true) {
             StatusBannersRoute(
@@ -435,9 +441,7 @@ private fun CograNavGraphContent(
 
     Scaffold(
         snackbarHost = {
-            SnackbarHost(shellSnackbar) { data ->
-                Snackbar(snackbarData = data, modifier = Modifier.testTag("shell_snackbar"))
-            }
+            CograSnackbarHost(shellSnackbar, testTag = "shell_snackbar")
         },
         bottomBar = {
             if (signedIn != null && onReadSurface) {
@@ -468,6 +472,14 @@ private fun CograNavGraphContent(
             // Login is the signed-out entry — signing in is the common
             // path; the invite entry hangs off it (design.md §6).
             startDestination = Login,
+            // The transition layer the design defines and the app had none
+            // of (`design/tokens/transitions.css`): a transition says where
+            // a screen came from, and nothing else. Stock Navigation Compose
+            // cross-fades, which makes back indistinguishable from forward.
+            enterTransition = { NavTransitions.forwardEnter },
+            exitTransition = { NavTransitions.forwardExit },
+            popEnterTransition = { NavTransitions.backEnter },
+            popExitTransition = { NavTransitions.backExit },
             // consumeWindowInsets rides with the padding (the documented
             // nested-scaffold pattern): without it every screen's own
             // scaffold re-applies the status inset the shell already
@@ -491,25 +503,42 @@ private fun CograNavGraphContent(
                     onUsableLink = { id -> navController.navigate(Apply(id)) },
                     onLogInInstead = { navController.navigate(Login) },
                     onBrowseFeed = { navController.navigate(Feed) },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable<Apply> { entry ->
                 // A successful register flips the token store; the phase
                 // holder navigates.
-                ApplyRoute(inviteId = entry.toRoute<Apply>().inviteId)
+                ApplyRoute(
+                    inviteId = entry.toRoute<Apply>().inviteId,
+                    onBack = { navController.popBackStack() },
+                )
             }
             composable<KeyCeremony> {
-                KeyCeremonyRoute(onDone = { navController.popBackStack() })
+                KeyCeremonyRoute(
+                    onDone = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() },
+                )
             }
             composable<Login> {
                 LoginRoute(
                     onForgotPassword = { navController.navigate(PasswordReset) },
                     onJoin = { navController.navigate(InviteEntry()) },
                     onBrowse = { navController.navigate(Feed) },
+                    // The signed-out root has nothing behind it; a visitor
+                    // who arrived from a read surface does.
+                    onBack = if (navController.previousBackStackEntry == null) {
+                        null
+                    } else {
+                        { navController.popBackStack() }
+                    },
                 )
             }
             composable<PasswordReset> {
-                PasswordResetRoute(onDone = { navController.popBackStack() })
+                PasswordResetRoute(
+                    onDone = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() },
+                )
             }
             composable<Restore> {
                 RestoreRoute(
@@ -517,6 +546,7 @@ private fun CograNavGraphContent(
                         navController.report(actorRestoredKey, true)
                         navController.popBackStack()
                     },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable<Feed> { entry ->
@@ -537,9 +567,21 @@ private fun CograNavGraphContent(
                     // Pushes the login screen (the web guest entries link
                     // to /login), so back returns to the reading context.
                     onSignInOrJoin = { navController.navigate(Login) },
+                    // The chats affordance the band carries (jakob
+                    // 2026-09-01). A signed-out tap opens the guest gate,
+                    // which is the edge the canvas draws; the signed-in
+                    // destination is a declared gap ("the chat surface (not
+                    // designed)"), so no control is drawn for a member
+                    // until it exists.
+                    onChats = if (signedIn == false) {
+                        { joinPrompt = true }
+                    } else {
+                        null
+                    },
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = consumeSigned,
                     keyBanner = keyBanner,
+                    borrowedViewBand = borrowedViewBand,
                     banners = { statusBanners(actorRestored, consumeRestored) },
                 )
             }
