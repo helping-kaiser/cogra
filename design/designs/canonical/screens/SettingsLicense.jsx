@@ -38,7 +38,7 @@ export function Screen() {
 
       <BottomSheet open ariaLabel="Default license">
         <SheetTitle trailing={<HelpDot ariaLabel="License" />}>Default license</SheetTitle>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "0 24px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px" }}>
           <QuietNote>
             Where every new post starts. A post's terms settle when it is first signed, so changing
             this never reaches one you have already published.

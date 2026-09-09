@@ -24,7 +24,7 @@ export function Screen() {
 
       <BottomSheet open ariaLabel="License terms">
         <SheetTitle trailing={<HelpDot ariaLabel="License" />}>License</SheetTitle>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "0 24px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px" }}>
           <QuietNote>Terms for anyone who reuses this.</QuietNote>
 
           <LicenseAxisLabel>Credit</LicenseAxisLabel>
