@@ -164,9 +164,12 @@ export function probeVideo(file: Blob): Promise<VideoProbe> {
  *
  * NOT ZERO, deliberately. A great many clips open on a fade from black, and a
  * black poster is the one cover that tells a reader nothing at all — so the
- * earliest offer sits just inside the opening. Three of them, evenly placed, is
- * what the ComposeCover board draws, and the first is the one selected when the
- * screen opens.
+ * earliest offer sits just inside the opening, and the first is the one
+ * selected when the screen opens.
+ *
+ * `CoverRow` asks for a fourth offer at one second ("FOUR FRAMES, NOT THREE:
+ * 1s, 10%, 50%, 90%"). A time is not a fraction, and these points carry no
+ * duration to turn one into the other.
  */
 export const FRAME_POINTS = [0.1, 0.5, 0.9] as const;
 

@@ -81,7 +81,7 @@ import {
 import { runUpload } from "@/lib/compose/uploads";
 import { usePreviewUrls } from "@/lib/compose/previews";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
-import { HelpDialog, HELP_TOPICS } from "@/lib/ui2/help-dialog";
+import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { commentTarget, ReplyWizard } from "./reply/reply-wizard-view";
 import { CommentEditView } from "./edit/comment-edit-view";
 import { MultiActionConfirm } from "@/lib/ui/signed-actions";
@@ -228,12 +228,18 @@ export function PostView({
     gallery: EditGallery;
     /** What the comment is on, for the editor's lede. */
     targetLabel: string;
-    /** Carried forward so a complete-state edit cannot unveil the comment. */
+    /** The author's own mark as the editor found it, and as it holds it now. */
+    loadedSensitive: boolean;
+    loadedSensitiveReason: string;
     sensitive: boolean;
+    sensitiveReason: string;
   } | null>(null);
   const [editDescribing, setEditDescribing] = useState<string | null>(null);
   const [editActsOpen, setEditActsOpen] = useState(false);
-  const [editHelp, setEditHelp] = useState(false);
+  // The editor has two help doors — the header's "Editing" and the mark
+  // sheet's "?" — so the state is which topic is open, not whether one is.
+  const [editHelp, setEditHelp] = useState<HelpTopic | null>(null);
+  const [editSensitiveOpen, setEditSensitiveOpen] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editFailed, setEditFailed] = useState(false);
   const [editRefusedMessage, setEditRefusedMessage] = useState<string | null>(null);
@@ -371,8 +377,18 @@ export function PostView({
   // write one, or the removal never happens.
   const editGalleryMoved =
     editing !== null && galleryChanged(editing.loadedGallery, editing.gallery);
+  // The mark is a term of the same record, so moving it stages the edit the
+  // way the body and the gallery do — a comment whose only change is the
+  // author's own mark still has to write one, or the mark never moves. The
+  // reason counts only where it is shown: on an unmarked comment it is not
+  // sent at all.
+  const editMarkMoved =
+    editing !== null &&
+    (editing.sensitive !== editing.loadedSensitive ||
+      (editing.sensitive && editing.sensitiveReason !== editing.loadedSensitiveReason));
   const editTextChanged =
-    editing !== null && (editing.draft !== editing.loadedDraft || editGalleryMoved);
+    editing !== null &&
+    (editing.draft !== editing.loadedDraft || editGalleryMoved || editMarkMoved);
   // A withdrawal is a whole counter-record batch, and the claim quotes
   // it: `withdrawalCost` comes off the raw bundle sums the clipped pair
   // has already lost, so this count is exact and every edit asks before
@@ -408,6 +424,7 @@ export function PostView({
           // gallery for the same reason as the mark.
           attachments: editClaims(editing.gallery) ?? undefined,
           sensitive: editing.sensitive,
+          sensitiveReason: editing.sensitiveReason,
         }),
       );
       if (prepared.kind === "failed") {
@@ -750,22 +767,35 @@ export function PostView({
                         // show a moderator's verdict as the author's until it
                         // landed, so the switch starts unmarked and the read
                         // is what turns it on.
+                        loadedSensitive: false,
+                        loadedSensitiveReason: "",
                         sensitive: false,
+                        sensitiveReason: "",
                       });
                       void fetchCommentSelfMark(client, comment.id).then((outcome) => {
                         if (outcome.kind !== "success") return;
                         const mark = outcome.value;
                         if (mark === null) return;
+                        // The read lands as BOTH the switch and what it is
+                        // compared against, so arriving marked is not itself a
+                        // change the editor offers to sign.
                         setEditing((current) =>
                           current === null || current.id !== comment.id
                             ? current
-                            : { ...current, sensitive: mark },
+                            : {
+                                ...current,
+                                loadedSensitive: mark.sensitive,
+                                loadedSensitiveReason: mark.reason,
+                                sensitive: mark.sensitive,
+                                sensitiveReason: mark.reason,
+                              },
                         );
                       });
                       setEditTagErrors({});
                       setEditReferenceErrors({});
                       setEditRefusedMessage(null);
                       setEditFailed(false);
+                      setEditSensitiveOpen(false);
                       setReplying(null);
                     }}
                   >
@@ -989,6 +1019,9 @@ export function PostView({
             references={editing.references}
             tagErrors={editTagErrors}
             referenceErrors={editReferenceErrors}
+            sensitive={editing.sensitive}
+            sensitiveReason={editing.sensitiveReason}
+            sensitiveOpen={editSensitiveOpen}
             acts={editActions}
             actsOpen={editActsOpen}
             busy={editSubmitting}
@@ -996,6 +1029,10 @@ export function PostView({
             refusal={editRefusedMessage}
             failed={editFailed}
             onWords={(draft) => setEditing({ ...editing, draft })}
+            onSensitive={(sensitive) => setEditing({ ...editing, sensitive })}
+            onSensitiveReason={(sensitiveReason) => setEditing({ ...editing, sensitiveReason })}
+            onSensitiveOpen={setEditSensitiveOpen}
+            onSensitiveHelp={() => setEditHelp(HELP_TOPICS.markingAsSensitive)}
             onPick={(files) =>
               setEditing({
                 ...editing,
@@ -1012,7 +1049,7 @@ export function PostView({
             onTags={(tags) => setEditing({ ...editing, tags })}
             onReferences={(references) => setEditing({ ...editing, references })}
             onActs={setEditActsOpen}
-            onHelp={() => setEditHelp(true)}
+            onHelp={() => setEditHelp(HELP_TOPICS.editing)}
             onSign={() => void onSubmitEdit()}
             onLeave={() => setEditing(null)}
           />
@@ -1052,9 +1089,9 @@ export function PostView({
             testId="comment-edit-describe-sheet"
           />
           <HelpDialog
-            open={editHelp}
-            onClose={() => setEditHelp(false)}
-            topic={HELP_TOPICS.editing}
+            open={editHelp !== null}
+            onClose={() => setEditHelp(null)}
+            topic={editHelp ?? HELP_TOPICS.editing}
             testId="comment-edit-help-dialog"
           />
         </>

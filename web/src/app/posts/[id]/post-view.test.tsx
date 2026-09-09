@@ -26,6 +26,7 @@ const server = startMswServer(
           __typename: "Comment",
           id: variables.id,
           sensitiveSelfMark: false,
+          sensitiveReason: null,
         },
       },
     }),
@@ -995,7 +996,14 @@ describe("PostView", () => {
         // The reader sees a veiled comment — but that veil is the moderator's.
         graphql.query("CommentSelfMark", () =>
           HttpResponse.json({
-            data: { comment: { __typename: "Comment", id: "c1", sensitiveSelfMark: false } },
+            data: {
+              comment: {
+                __typename: "Comment",
+                id: "c1",
+                sensitiveSelfMark: false,
+                sensitiveReason: null,
+              },
+            },
           }),
         ),
         graphql.mutation("PrepareCommentEdit", ({ variables }) => {
@@ -1016,6 +1024,83 @@ describe("PostView", () => {
 
       await waitFor(() => expect(sent).not.toBeNull());
       expect(sent!.sensitive).toBe(false);
+    });
+
+    // The mark is the author's ongoing judgement (design/backlog.md item 25.2),
+    // so the edit surface carries the row — and the mark is a term of the edit
+    // record, so moving it alone is enough to write one.
+    it("the mark row alone stages the edit, and the reason travels with it", async () => {
+      let sent: { sensitive?: boolean; sensitiveReason?: string | null } | null = null;
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        graphql.mutation("PrepareCommentEdit", ({ variables }) => {
+          sent = (variables.input as typeof sent) ?? null;
+          return HttpResponse.json({ data: editPayload() });
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      // Nothing typed: the row is the only change.
+      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
+
+      fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
+      fireEvent.click(screen.getByTestId("comment-edit-sensitive-switch"));
+      fireEvent.change(screen.getByTestId("comment-edit-sensitive-reason"), {
+        target: { value: "A dead seabird." },
+      });
+      fireEvent.click(screen.getByTestId("comment-edit-sensitive-done"));
+
+      expect(screen.getByTestId("comment-edit-sensitive-value")).toHaveTextContent("Marked");
+      fireEvent.click(screen.getByTestId("comment-edit-save"));
+
+      await waitFor(() => expect(sent).not.toBeNull());
+      expect(sent!.sensitive).toBe(true);
+      expect(sent!.sensitiveReason).toBe("A dead seabird.");
+    });
+
+    // An edit is complete state: a reason the editor never showed would be
+    // erased by the very edit that left it alone.
+    it("carries a reason the comment already had through an untouched edit", async () => {
+      let sent: { sensitiveReason?: string | null } | null = null;
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        graphql.query("CommentSelfMark", () =>
+          HttpResponse.json({
+            data: {
+              comment: {
+                __typename: "Comment",
+                id: "c1",
+                sensitiveSelfMark: true,
+                sensitiveReason: "One rubbing includes a dead seabird.",
+              },
+            },
+          }),
+        ),
+        graphql.mutation("PrepareCommentEdit", ({ variables }) => {
+          sent = (variables.input as typeof sent) ?? null;
+          return HttpResponse.json({ data: editPayload() });
+        }),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      await waitFor(() =>
+        expect(screen.getByTestId("comment-edit-sensitive-value")).toHaveTextContent("Marked"),
+      );
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "new words" },
+      });
+      fireEvent.click(screen.getByTestId("comment-edit-save"));
+
+      await waitFor(() => expect(sent).not.toBeNull());
+      expect(sent!.sensitiveReason).toBe("One rubbing includes a dead seabird.");
     });
 
     it("stages the edit record and one Tag act per change, in one signing pass", async () => {
