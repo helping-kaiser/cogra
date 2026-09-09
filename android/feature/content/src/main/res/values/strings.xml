@@ -1,5 +1,4 @@
 <resources>
-    <string name="content_feed_title">Feed</string>
     <string name="content_feed_empty">Nothing here yet — write the first post.</string>
     <string name="content_feed_compose">Write a post</string>
     <string name="content_feed_load_more">Load more</string>
