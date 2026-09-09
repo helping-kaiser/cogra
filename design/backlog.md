@@ -1261,3 +1261,32 @@ the implementation session's own decision** — one prepare that grows
 the fields, or the client staging the three prepares and sealing the
 batch. The boards and the contract are both satisfied by the second,
 which is why the contract is not moving to meet the first.
+
+### 38 · The UI conformance audit's undrawn states · *design* · **the states are drawn**
+
+The 2026-09-08 audit found states both apps reach and no board draws;
+where the design was silent both apps invented an answer, and the two
+answers disagree. jakob ruled the whole set 2026-09-09. The six that
+needed **drawing** are done — readme §13, *The audit states*:
+
+- ~~**16 · Chronicle pagination**~~ — infinite scroll matching the
+  feed, and `ProfileMoreFailed` for the page that doesn't arrive.
+- ~~**17 · Profile not-found and whole-profile read-failure**~~ —
+  `ProfileNotFound` (terminal) and `ProfileUnreachable` (retries).
+- ~~**18 · The set-new-password surface**~~ — `ResetNew`, the reset
+  link's destination. The **token** finding needs nothing here: the
+  boards have always said *link*, and the apps take their lines.
+- ~~**19 · Malformed-invite input**~~ — `InviteEntryError`, one line.
+- ~~**20 · Android's verification landing**~~ — `VerifiedApp` and
+  `VerifyExpired`. Links only; no in-app token paste.
+- ~~**25 · The reply-pad help topic**~~ — `ReplyPadHelp`. The copy was
+  already blessed; the board and the edge were what was missing.
+
+**Still owed by this item.** The new lines are marked *Awaiting
+blessing — the audit-states round* in `copy-voice.md` and are not
+settled until jakob reads them. The audit's remaining questions are
+conform work, not drawing, and belong to the apps: they take these
+boards' lines verbatim, and the word **token** leaves the reset and
+verify flows when they do. The desktop questions — the fullscreen
+viewer and the desktop card idiom — are parked to a round of their own
+by jakob's scope ruling.

@@ -2652,6 +2652,77 @@ could close. These are the answers, and what each one moved.
   license sheet's two axis labels, which swapped a raw `0.5px` for
   the tracking token that is the same half-pixel.
 
+### The audit states — 2026-09-09
+
+Six of the conformance audit's open questions, ruled by jakob the same
+day and closed onto boards. Every one of them was a state the product
+genuinely reaches and the design had never drawn, so both apps invented
+an answer — and where two apps invent, they disagree.
+
+- **The chronicle scrolls like the feed.** No Show more, no page
+  numbers: infinite scroll, which leaves nothing to draw at rest and
+  exactly one thing to draw when it fails. `ProfileMoreFailed` is that
+  row — `Couldn't load more` with a `Retry` beside it, standing where
+  the next page would have been. It is **quiet, not `--error`**, and
+  that is the ruling's own word carried into the drawing: rows are
+  already on screen, so the page that didn't come means stale, not
+  gone. `EmptyState` refuses the colour for the same reason, and the
+  three things `--error` is allowed to mean — fault lines, signing
+  failures, field errors — do not include a list that stopped growing.
+  The in-flight state needs no board: it is `LoadingState`'s `Loading…`
+  in the same slot.
+- **An absence and a fault are opposite states.** `ProfileNotFound` is
+  terminal — the answer arrived and it was no, so it draws `EmptyState`
+  and offers no way on, because nothing about trying again makes a
+  profile exist. `ProfileUnreachable` is `NetworkError`'s family — no
+  answer arrived, so it keeps the failure voice and a Retry. What the
+  exemplar keeps and this one cannot is the point of the pair: the
+  seal's fault leaves a whole signed post standing beneath it because
+  the send is what failed, and here the read is what failed, so there
+  is nothing beneath it to keep.
+- **The reset link's destination exists at last.** `ResetNew` is one
+  password field and one commitment, with no field to paste the link's
+  own secret into — which is what made both apps put **token** on
+  screen, the word §3 bans. The boards never carried it: `Reset` has
+  said `Send reset link` all along, and the finding is the apps
+  diverging from the board, not the board needing a fix. What the
+  design owed was the destination, and the word leaves the apps when
+  they take the drawn lines. It draws no back arrow, for `Verified`'s
+  reason — a mail link has no previous screen of ours behind it.
+- **A malformed invite gets one line.** `That doesn't look like an
+  invite link.`, in the shape the register already uses for a local
+  format failure, on `InviteEntryError`. `JoinInvalid` answers a link
+  the product read and refused; this answers something it could not
+  read as a link at all — two facts, two boards.
+- **Android's verification landing is links-only.** `VerifiedApp` and
+  `VerifyExpired` are what App Links open when the URL reaches the app
+  instead of a browser. The browser landing tells the reader the app
+  already knows and sends them back to it, which is addressed to
+  somebody who is not there once the app is what opened. **No in-app
+  token paste** — the link is the proof, and the field Android ships
+  today existed only because this board did not.
+- **The reply pad's "?" opens its own topic.** The copy was never
+  missing: **Toward what you answer** has been in `copy-voice.md` since
+  the compose-session rulings, and it says the true thing — a reply's
+  stance is toward the post it answers, both axes, on the reply's own
+  signature. What was missing was a board drawing it and an edge
+  pointing there; `ReplyPad`'s "?" led to the seal's Signed-actions
+  dialog. Android left the dot out rather than open the post pad's
+  topic, which says "only for-or-against is yours to set" and is the
+  opposite of what is true here — the right call about the wrong
+  problem. `ReplyPadHelp` draws it over `ReplyPadBody`, the pad's real
+  surface lifted into `_shared.jsx` so the board underneath a modal is
+  never a stand-in.
+- **The gate**: 120 → **128 screens**, 930 → **957 edges**, **81 gaps**
+  and **flows 58/53/5** unchanged — no journey gained a blocker, and no
+  gap was closed or opened, because every board this round drew was a
+  state nothing had ever pointed at. The witness was re-blessed once,
+  for the growth the flow layer documents: `nav · New post` is declared
+  as a control, so its origin census grew from 25 boards to 27 when the
+  two full-chrome profile states joined it. No board outside the round's
+  own moved a pixel — `ReplyPad` included, whose drawing was lifted to a
+  helper and re-rendered byte-identical.
+
 ## 14. Index
 
 **Root**
