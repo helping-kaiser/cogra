@@ -47,7 +47,7 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <Button selfStart={false}>Next</Button>
+        <Button style={{ width: "100%" }}>Next</Button>
       </div>
     </>
   );
