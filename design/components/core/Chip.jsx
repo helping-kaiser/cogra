@@ -3,13 +3,14 @@ import React from "react";
 /* Chips (backlog items 4 and 8).
 
    TWO CHIPS, ONE SHAPE. A `Chip` is a filter the reader turns on and off; a
-   `TopicChip` is a topic that goes somewhere. They look alike on purpose — both
+   `TopicChip` is a tag that goes somewhere. They look alike on purpose — both
    are a word in a pill — and they are told apart by what they do, which is the
-   same test that separates a button from a link (§7).
+   same test that separates a button from a link (§7). The component keeps the
+   record's word and draws the reader's (the naming law, readme §13).
 
    WHEN A CHIP AND NOT A SEGMENTED FILTER. Chips are for a set the reader can
    combine, or one that grows: seven kinds of ranked content, an open list of
-   topics. A segmented filter is for two to four alternatives where exactly one
+   tags. A segmented filter is for two to four alternatives where exactly one
    is true. Using chips for the exclusive case loses "one of these" ; using a
    segmented row for the combinable case loses the combination.
 
@@ -18,7 +19,7 @@ import React from "react";
    `secondaryContainer`, colour only \u2014 no check glyph, because a leading check on
    the selected chips reflows every label in the row as the reader picks.
 
-   Both wear the same pill and the same size rung, because a size the topic half
+   Both wear the same pill and the same size rung, because a size the tag half
    of the family does not understand is exactly the drift this file exists to
    prevent. */
 
@@ -68,7 +69,7 @@ function pill(size) {
 }
 
 /* THE READOUT TONE (jakob's ruling, the conformance round). A readout is a chip
-   the reader is being SHOWN — the topics inside the acts card, where what a
+   the reader is being SHOWN — the tags inside the acts card, where what a
    signature will carry is read back to its author — and it is not a control:
    no press, no state layer, no target, so no button and no `switch` role over
    something nothing can switch. It is the borderless `secondary-container`
@@ -83,7 +84,7 @@ function pill(size) {
    height, because a readout has to grow with the reader's text setting instead
    of clipping it — nothing here is a target that a growing box would move.
    `flex: none` is the acts row's business: that row's value slot clips, and a
-   topic shrunk to nothing would be a lie about what is being signed. The
+   tag shrunk to nothing would be a lie about what is being signed. The
    letter-spacing is spelled `0.5px` rather than the token the way
    `InlineAction`'s small rung is — the same half-pixel at a 16px root, taken
    from the call site value for value. */
@@ -126,8 +127,10 @@ export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = 
   );
 }
 
-/* A topic. The `#` is part of the word, not an icon: readers type it, and a topic
-   without it reads as a name. It navigates, so it is an anchor. */
+/* A tag. The `#` is part of the word, not an icon: readers type it, and a tag
+   without it reads as a name. It navigates — always to the tag's own page, on
+   every surface (jakob's ruling, the tag round: a chip tap is never a reveal) —
+   so it is an anchor. */
 export function TopicChip({ topic, href, onClick, inert = false, size = "md", style: override }) {
   const name = topic.replace(/^#/, "");
   const style = {

@@ -1,6 +1,6 @@
 /* The post ladder — the maximal collapsed card, held under the height cap
    by the system itself: the media honors --media-max-height, the title and
-   description clamp, topics and citations share one line. */
+   description clamp, tags and citations share one line. */
 export function Screen() {
   return (
     <>
