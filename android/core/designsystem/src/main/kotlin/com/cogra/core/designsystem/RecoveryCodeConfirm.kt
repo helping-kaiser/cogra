@@ -103,11 +103,15 @@ fun RecoveryCodeConfirm(
         ConfirmField(
             typedBack = typedBack,
             onTypedBackChange = { typedBack = it },
-            // A code typed but not matching is answered where it was
-            // typed: a disabled button with no reason reads as a broken
-            // screen, and this is the one screen a reader cannot come
-            // back to for the code.
-            mismatched = typedBack.isNotBlank() && !matches(typedBack),
+            // A diverged prefix is answered where it was typed: a
+            // disabled button with no reason reads as a broken screen,
+            // and this is the one screen a reader cannot come back to
+            // for the code. The line fires on divergence, not on every
+            // non-match — a correct-so-far partial is still on its way
+            // to being right (design/components/forms/RecoveryCode.jsx).
+            diverged = readRecoveryCodeText(typedBack).let { typed ->
+                typed.isNotEmpty() && !readRecoveryCodeText(code).startsWith(typed)
+            },
         )
         Button(
             onClick = onConfirmed,
@@ -122,7 +126,7 @@ fun RecoveryCodeConfirm(
 }
 
 /**
- * The field the code is typed back into, wearing the mismatch as its
+ * The field the code is typed back into, wearing the divergence as its
  * own supporting line — Material's arrangement, which also puts the
  * message inside the field's accessible name rather than beside it.
  */
@@ -130,15 +134,15 @@ fun RecoveryCodeConfirm(
 private fun ConfirmField(
     typedBack: String,
     onTypedBackChange: (String) -> Unit,
-    mismatched: Boolean,
+    diverged: Boolean,
 ) {
     OutlinedTextField(
         value = typedBack,
         onValueChange = onTypedBackChange,
         label = { Text(stringResource(R.string.recovery_code_type_back)) },
         singleLine = true,
-        isError = mismatched,
-        supportingText = if (mismatched) {
+        isError = diverged,
+        supportingText = if (diverged) {
             {
                 Text(
                     text = stringResource(R.string.recovery_code_mismatch),
@@ -153,6 +157,18 @@ private fun ConfirmField(
             .testTag("recovery_code_typed_back"),
     )
 }
+
+/**
+ * The reading rule for the diverged-prefix check: whitespace stripped,
+ * case folded. Mirrors the master's own `read()`
+ * (design/components/forms/RecoveryCode.jsx) rather than the stronger
+ * confusable-folding codec [matches] delegates to for the real
+ * unlock — divergence is a display-only judgment the component can own
+ * outright, while the button's match state stays on the production
+ * codec untouched by this function.
+ */
+private fun readRecoveryCodeText(input: String): String =
+    input.filterNot { it.isWhitespace() }.uppercase()
 
 /**
  * The clip carrying a recovery code. `EXTRA_IS_SENSITIVE` is what makes

@@ -80,11 +80,14 @@ class RecoveryCodeConfirmTest {
     private fun mismatchLine() =
         compose.onNodeWithTag("recovery_code_mismatch", useUnmergedTree = true)
 
+    // A diverging character — CODE's fifth character is 'E', not 'Z' —
+    // fires the line at once; the earlier characters were a correct
+    // partial right up to that point.
     @Test
-    fun aWrongAnswerSaysSoRatherThanOnlyClosingTheButton() {
+    fun aDivergingCharacterSaysSoRatherThanOnlyClosingTheButton() {
         show()
 
-        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDE")
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDZ")
 
         mismatchLine().assertExists()
     }
@@ -96,15 +99,41 @@ class RecoveryCodeConfirmTest {
         mismatchLine().assertDoesNotExist()
     }
 
+    // Ruling 41.2: a correct-so-far partial is still on its way to being
+    // right, not a mistake — "ABCDE" is CODE's own first five characters.
+    @Test
+    fun aCorrectPartialShowsNoMismatchLine() {
+        show()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDE")
+
+        mismatchLine().assertDoesNotExist()
+    }
+
     @Test
     fun theMismatchLineGoesWhenTheCodeIsAnswered() {
         show()
 
-        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDE")
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDZ")
         mismatchLine().assertExists()
 
         compose.onNodeWithTag("recovery_code_typed_back").performTextClearance()
         compose.onNodeWithTag("recovery_code_typed_back").performTextInput(CODE)
+
+        mismatchLine().assertDoesNotExist()
+    }
+
+    // Backspacing a diverged character off the end lands back on a
+    // valid prefix, and the line clears the instant it does.
+    @Test
+    fun backspacingOffTheDivergedCharacterClearsTheMismatchLine() {
+        show()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDZ")
+        mismatchLine().assertExists()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextClearance()
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCD")
 
         mismatchLine().assertDoesNotExist()
     }
