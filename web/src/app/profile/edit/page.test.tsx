@@ -141,8 +141,12 @@ describe("ProfileEditPage", () => {
     expect(screen.getByTestId("profile-edit-website")).toHaveValue("");
   });
 
-  it("refuses a blanked display name locally", async () => {
-    server.use(myProfileHandler());
+  // Item 36.2: a display name is optional, so the empty-name check was a rule
+  // the product does not have — and it was this form's only local rule. A
+  // blanked name goes to the seal like any other edit.
+  it("validates nothing locally: a blanked display name still reaches the seal", async () => {
+    const seen: { input?: Record<string, unknown> } = {};
+    server.use(myProfileHandler(), capturingUpdate(seen));
     renderWithProviders(<ProfileEditPage />, {
       store: signedInStore(),
       writeSigner: fakeWriteSigner(),
@@ -150,7 +154,9 @@ describe("ProfileEditPage", () => {
     const name = await screen.findByTestId("profile-edit-display-name");
     fireEvent.change(name, { target: { value: "  " } });
     fireEvent.click(screen.getByTestId("profile-edit-save"));
-    expect(await screen.findByTestId("profile-edit-empty-name")).toBeInTheDocument();
+
+    await waitFor(() => expect(seen.input).toBeDefined());
+    expect(screen.queryByTestId("profile-edit-empty-name")).toBeNull();
   });
 
   it("signs the update and returns to the profile; a blanked bio clears", async () => {
