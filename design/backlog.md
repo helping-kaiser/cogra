@@ -1312,3 +1312,13 @@ drawing, and belongs to the apps: they take these boards' lines
 verbatim, and the word **token** leaves the reset and verify flows when
 they do. The desktop questions — the fullscreen viewer and the desktop
 card idiom — are parked to item 38 by jakob's scope ruling.
+
+### 40 · The field flow badge is invisible, and the gate likes it that way · *build*
+
+`check-flows` verifies `data-flow` on the `<input>` opening tag itself,
+but `::after` generates no box on a replaced element, so every field
+badge is invisible-but-valid — six boards before the audit-states round
+and its fields since. Either the gate learns to accept the attribute on
+the field's wrapper (and the boards move it where it paints), or the
+readme's "the gate verifies the attribute, not the paint" stays the
+stated rule and this item closes as written.

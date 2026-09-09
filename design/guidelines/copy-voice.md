@@ -311,6 +311,9 @@ validation exists yet to trigger them):
   a local format failure.
 - `That doesn't look like an email address.` — Join's Email field, a
   local format failure.
+- `That doesn't look like an invite link.` — the invite field's local
+  format failure, in the email line's shape; it names the link because
+  the field asks for a link. Drawn on `InviteEntryError`.
 
 ## Menu rows
 
@@ -368,6 +371,44 @@ among the acts one signature commits:
   cited: the staged row above it now shows a citation, and an example
   beats a list.
 
+## Missing and unreachable
+
+The dead ends and failed loads, blessed with the audit-states round.
+The difference between the first two is the whole design — an answer
+that was no, and no answer at all:
+
+- `This profile doesn't exist.` — the terminal state, on
+  `ProfileNotFound`. It carries no way on, because nothing about trying
+  again makes a profile exist.
+- `Can't reach the server — this profile can't load right now.` — the
+  fault, on `ProfileUnreachable`, with an outlined Retry. The feed
+  variant with the noun this surface is about; the long house line ends
+  in "and try again", which beside a Retry says try again twice.
+- `Couldn't load more` · `Retry` — the chronicle page that didn't
+  arrive, on `ProfileMoreFailed`: the fact at body-medium
+  `text-secondary` (rows are already on screen, so the missing page
+  means stale, not gone), the way out an `InlineAction` ending the line.
+
+## The reset and verify landings
+
+Blessed with the audit-states round:
+
+- `Set a new password` · `New password` · `Set the new password` — the
+  reset link's destination (`ResetNew`): heading, field label,
+  commitment.
+- `Setting a new password signs out every device. You sign in again
+  with the new one.` — the consequence, said where the act happens
+  (auth.md: password reset revokes every session).
+- `Your application moved a step. The rest of it is waiting for you on
+  the feed.` · `Go to the feed` — the app's verification landing
+  (`VerifiedApp`); the way on names its destination.
+- `This link doesn't work anymore` — the dead verify link's heading
+  (`VerifyExpired`), in `JoinInvalid`'s idiom.
+- `It may have expired or already been used. Send yourself a fresh one
+  — your application is untouched, and the new link picks it back up.`
+  — the two possibilities, the way forward, and the reassurance a
+  reader who reads "expired" without it would miss.
+
 ## Awaiting blessing — the parked-rulings round
 
 Drawn, and up for review in the same pass. Kept apart from the blessed
@@ -384,75 +425,3 @@ looking alike until one plays:
   it, and the eye reads it off the cover.
 - `1 picture` · `4 pictures` — a picture post, the count alone.
 
-## Awaiting blessing — the audit-states round
-
-Drawn on the boards the 2026-09-09 rulings added, and up for review in
-the same pass. Once blessed each line moves to the section it belongs
-to above. The reply pad's help topic is absent from this list on
-purpose: **Toward what you answer** was already blessed, and the round
-drew a board for it rather than writing a second version of it.
-
-**The chronicle's failed next page** (`ProfileMoreFailed`). The
-chronicle scrolls like the feed, so the only drawn state is the one
-where a page does not arrive. jakob's own words for it:
-
-- `Couldn't load more` — the fact, `text-secondary` at body-medium,
-  not `--error`: rows are already on screen, so the page that didn't
-  come means stale, not gone.
-- `Retry` — the way out, an `InlineAction` at the end of that line.
-
-**A profile that isn't there, and one that wouldn't load** (`ProfileNotFound`,
-`ProfileUnreachable`). Two states, and the difference between them is
-the whole design — an answer that was no, and no answer at all:
-
-- `This profile doesn't exist.` — the terminal state. Both apps already
-  ship this exact sentence; adopting it costs nothing and settles the
-  wording where it already agrees. It carries no way on, because
-  nothing about trying again makes a profile exist.
-- `Can't reach the server — this profile can't load right now.` — the
-  fault. It is §3's own feed variant (`Can't reach the server — new
-  posts can't load right now.`) with the noun this surface is about.
-  The long house line ends in "and try again", which beside a Retry
-  says try again twice — the same reason the reply's failed upload is
-  drawn short.
-
-**Setting the new password** (`ResetNew`). The stage behind the reset
-link, which no board drew. `At least 12 characters.` is Join's hint
-verbatim and `This restores your sign-in only…` is Reset's quiet note
-verbatim — neither needs blessing again:
-
-- `Set a new password` — the heading.
-- `Setting a new password signs out every device. You sign in again
-  with the new one.` — the consequence, said where the act happens.
-  Reset's request screen already carries the first fact; this is the
-  screen that acts on it.
-- `New password` — the field's label.
-- `Set the new password` — the commitment.
-
-**Nothing that reads as an invite** (`InviteEntryError`):
-
-- `That doesn't look like an invite link.` — the field's own supporting
-  line. It takes the shape the register already uses for a local format
-  failure (`That doesn't look like an email address.`) and names the
-  link, because the field asks for a link. Web's invented line adds "or
-  its code", describing a field this design does not draw; Android's
-  says "doesn't contain an invite code", describing a paste this design
-  does not ask for. Belongs under **Field errors**, drawn, once blessed.
-
-**The verification link, in the app** (`VerifiedApp`, `VerifyExpired`).
-`Email verified` and `Resend the link` are taken verbatim from the
-browser landing and the applicant feed's card:
-
-- `Your application moved a step. The rest of it is waiting for you on
-  the feed.` — the app's landing. The browser's second sentence ("You
-  can go back to the app — it already knows") is addressed to a reader
-  who is not in the app, so it cannot stand here.
-- `Go to the feed` — the way on, naming its destination the way `Back
-  to CoGra` names the browser's.
-- `This link doesn't work anymore` — the dead link's heading, in
-  `JoinInvalid`'s idiom (`This invite can't be used anymore`).
-- `It may have expired or already been used. Send yourself a fresh one
-  — your application is untouched, and the new link picks it back up.`
-  — the two possibilities, the way forward, and the reassurance
-  `JoinInvalid` also carries, because a reader who reads "expired"
-  without it assumes the application expired too.
