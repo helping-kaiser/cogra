@@ -310,8 +310,35 @@ data class MediaAssetView(
         /** What an absent or unparsable `options.aspectRatio` reads as. */
         const val FALLBACK_RATIO = 1f
 
-        fun ratioOf(raw: String?): Float =
-            raw?.toFloatOrNull()?.takeIf { it.isFinite() && it > 0f } ?: FALLBACK_RATIO
+        /**
+         * `MediaOptions.aspectRatio` as a number.
+         *
+         * THE CONTRACT STATES THE SHAPE AS `"W:H"` in lowest terms
+         * (api-spec.md `MediaOptions`) — "4:5", "1:1", "540:283" — so it
+         * is read as a ratio and never as a decimal. Read as a decimal
+         * every asset in the app fell back to square, which cropped
+         * pictures the author framed and stretched a clip's surface to a
+         * shape the clip does not have.
+         *
+         * Exactly two parts: taking the first two of three would accept
+         * "4:5:6" as a shape nobody stated. Anything else falls back to
+         * square rather than to zero — the field exists to reserve space
+         * before the load, and a zero would collapse the tile it is meant
+         * to hold open.
+         */
+        fun ratioOf(raw: String?): Float {
+            // A side a shape can be stated in: finite and positive.
+            val parts = raw?.split(':')
+                ?.map { part -> part.trim().toFloatOrNull()?.takeIf { it.isFinite() && it > 0f } }
+                .orEmpty()
+            val width = parts.getOrNull(0)
+            val height = parts.getOrNull(1)
+            return if (parts.size == 2 && width != null && height != null) {
+                width / height
+            } else {
+                FALLBACK_RATIO
+            }
+        }
     }
 }
 

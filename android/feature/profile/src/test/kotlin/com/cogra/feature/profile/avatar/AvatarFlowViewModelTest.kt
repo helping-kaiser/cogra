@@ -12,6 +12,7 @@ import com.cogra.domain.ProfileView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.CropWindow
+import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
@@ -196,6 +197,23 @@ class AvatarFlowViewModelTest {
     @Test
     fun bytesThatDoNotDecodeNeverReachTheWire() = runTest(dispatcher) {
         processor.processed = null
+        val vm = startedAtSeal()
+
+        assertThat(media.calls).isEqualTo(0)
+        assertThat(vm.state.value.upload).isInstanceOf(AvatarUpload.Failed::class.java)
+        assertThat(vm.state.value.canSign).isFalse()
+    }
+
+    /**
+     * HT-19, jakob's ruling: the profile picture takes the same
+     * ten-megabyte cap a post's media does. The same file was refused for
+     * a post and taken here, which made the limit a hole rather than a
+     * difference. Weighed on the encode's output, like every other still.
+     */
+    @Test
+    fun aPictureOverTheStillCapNeverReachesTheWire() = runTest(dispatcher) {
+        val overCap = (PICTURE_MAX_BYTES + 1).toInt()
+        processor.processed = ProcessedPicture(ByteArray(overCap), 4000, 4000)
         val vm = startedAtSeal()
 
         assertThat(media.calls).isEqualTo(0)

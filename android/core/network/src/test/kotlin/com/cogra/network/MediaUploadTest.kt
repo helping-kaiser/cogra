@@ -122,7 +122,7 @@ class MediaUploadTest {
     private fun mediaJson() = """
         {"__typename":"MediaAttachment","id":"v1","url":"https://media/v1","altText":null,
          "status":"NORMAL","mimeType":"video/mp4",
-         "options":{"__typename":"MediaOptions","aspectRatio":"0.5625","durationMs":1000},
+         "options":{"__typename":"MediaOptions","aspectRatio":"9:16","durationMs":1000},
          "coverMedia":null}
     """.trimIndent()
 

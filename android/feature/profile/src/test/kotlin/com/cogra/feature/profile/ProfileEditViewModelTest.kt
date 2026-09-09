@@ -11,6 +11,7 @@ import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
@@ -232,6 +233,43 @@ class ProfileEditViewModelTest {
         vm.onSubmit()
         assertThat(vm.state.value.imagesPending).isTrue()
         assertThat(profiles.lastUpdate).isNull()
+    }
+
+    /**
+     * HT-19, jakob's ruling: a profile picture takes the same ten-megabyte
+     * cap a post's media does. It is the same asset kind through the same
+     * `uploadMedia`, so a limit this path did not enforce was a hole — the
+     * same file was refused for a post and taken here.
+     */
+    @Test
+    fun anAvatarOverThePictureCapNeverReachesTheWire() = runTest(dispatcher) {
+        val overCap = (PICTURE_MAX_BYTES + 1).toInt()
+        processor.processed = ProcessedPicture(ByteArray(overCap), 4000, 4000)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onAvatarPicked("content://pick/1")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.calls).isEqualTo(0)
+        val failed = vm.state.value.avatar as ProfileImageState.Failed
+        // The composers' own sentence, word for word.
+        assertThat(failed.message).isEqualTo(ProfileEditViewModel.TOO_BIG)
+    }
+
+    /**
+     * The cap is on the ENCODED bytes, so the camera photo that used to be
+     * refused for a post is taken here as it always was.
+     */
+    @Test
+    fun anAvatarThatEncodesUnderTheCapIsTaken() = runTest(dispatcher) {
+        processor.processed = ProcessedPicture(ByteArray(320 * 1024), 1080, 1080)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onAvatarPicked("content://pick/1")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.calls).isEqualTo(1)
+        assertThat(vm.state.value.avatar).isInstanceOf(ProfileImageState.Uploaded::class.java)
     }
 
     @Test
