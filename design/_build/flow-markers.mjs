@@ -1174,6 +1174,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Close</button>", tag: "button" },
     { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
+  ReplyPadHelp: [
+    { n: 1, find: ">Close</button>", tag: "button" },
+    { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
   DiscardConfirm: [
     { n: 1, find: ">Keep writing</button>", tag: "button" },
     { n: 2, find: ">Discard</button>", tag: "button" },
