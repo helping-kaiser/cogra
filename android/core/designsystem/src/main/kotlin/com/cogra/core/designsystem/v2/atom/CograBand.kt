@@ -18,8 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
@@ -54,7 +56,7 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 fun CograBand(
     modifier: Modifier = Modifier,
     onChats: (() -> Unit)? = null,
-    chatsContentDescription: String = "Chats",
+    chatsContentDescription: String = stringResource(R.string.cogra_band_chats),
     trailing: @Composable (RowScope.() -> Unit)? = null,
     testTag: String? = null,
     content: @Composable ColumnScope.() -> Unit = {},
