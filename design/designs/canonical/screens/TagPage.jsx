@@ -56,6 +56,12 @@
    record. Relevance is signed, confidence is not, because the census bounds
    them differently.
 
+   AND IT IS DRAWN WHOLE, for `Settings`' reason. What this board records is a
+   LIST — its order, its two kinds, the claim above each row — and a list cut
+   off at 844px is a list nobody can review: the comment, which is the whole
+   point of saying the list is mixed, would be the half-row under the fold. The
+   frame is the state the board draws.
+
    THE REFERENCES TAKEN, and what was refused: Mastodon's hashtag page gives
    the shape — the tag as the title, the follow control on the header's
    trailing edge, a plain chronological column of whole posts. Its "N people
@@ -69,6 +75,9 @@
    cannot serve, on a page that would then just be search again. Tumblr's
    "post this tag" button is a compose entrance nothing has ruled, so it is not
    invented here. */
+
+export const FRAME = { width: 390, height: 1280 };
+
 export function Screen() {
   return (
     <>
@@ -79,7 +88,11 @@ export function Screen() {
         action={<StanceControl targetLabel="this tag" bundle={mkBundle(0.4, 0.3)} onCommit={() => {}} />}
       />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
-        <QuietNote>Everything its author tagged #saltmaps, newest first.</QuietNote>
+        <QuietNote>Everything its author tagged #saltmaps, newest claim first.</QuietNote>
+
+        <TaggedRow pair="+0.10 / 1.00" pending>
+          <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
+        </TaggedRow>
 
         <TaggedRow pair="+0.55 / 1.00">
           <PostCard {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
@@ -98,10 +111,6 @@ export function Screen() {
             target="“Salt maps of the coast road” — @sol"
             onOpenTarget={() => {}}
           />
-        </TaggedRow>
-
-        <TaggedRow pair="+0.10 / 1.00" pending>
-          <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
         </TaggedRow>
       </div>
     </>

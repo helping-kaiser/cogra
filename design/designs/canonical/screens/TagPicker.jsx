@@ -27,13 +27,16 @@
    nothing"), so the apps ship type-only and this list arrives with search.
    Same staging shape as the Sky's, and the register carries it.
 
-   WHAT A ROW SHOWS ITS RANK, NOT A USE COUNT (jakob's ruling). Every kind
-   wears a viewer-relative rank on its right edge in this system, and a tag is
-   a kind. A global "12k posts" figure — Instagram's and Tumblr's habit — is
-   the popularity number §3 refuses: it is nobody's view in particular, and it
-   is not explainable. The rank ships with 2.7's search and slice 3's ranker
-   together; here the edge yields it to the act, the way `ReferencePicker`'s
-   rows do, because the whole row's tap picks.
+   RANKING ORDERS THE LIST AND THE EDGE GOES TO THE ACT, which is
+   `ReferenceRow`'s own rule and `ReferencePicker`'s drawing: where the whole
+   row's tap picks, the right edge is the add mark and the number yields to it.
+   So a candidate row carries no figure at all.
+
+   AND CERTAINLY NOT A USE COUNT. Instagram and Tumblr both hang "12k posts"
+   off a tag; §3 refuses it — it is nobody's view in particular and it is not
+   explainable. Where a tag does wear a number in this system it is a
+   viewer-relative rank, on a search result row (`ExploreSearch`), and it
+   arrives with 2.7's index and slice 3's ranker together.
 
    THE ROWS ARE ALREADY-USED NAMES, which is what an index can offer. That is
    not a contradiction of the paragraph above: the picker helps you find a name
@@ -49,10 +52,10 @@ export function Screen() {
         <SearchBar query="salt" placeholder="Name a tag" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="topic" name="saltmaps" rank="9.10" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltmarsh" rank="4.30" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltcrust" rank="2.10" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltflats" rank="1.80" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="topic" name="saltmarsh" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="topic" name="saltflats" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
         <div style={{ flex: 1 }} />
         <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
