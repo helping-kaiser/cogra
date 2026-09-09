@@ -408,8 +408,8 @@ class CograNavGraphTest {
         profiles.others["author"] =
             com.cogra.domain.testing.testProfile(id = "author-1", handle = "author")
         render()
-        waitForTag("feed_author_p1")
-        compose.onNodeWithTag("feed_author_p1").performClick()
+        waitForTag("feed_p1_author")
+        compose.onNodeWithTag("feed_p1_author").performClick()
         waitForTag("profile_display_name")
         val entry = navController.currentBackStackEntry
         assertThat(entry?.destination?.hasRoute<Profile>()).isTrue()

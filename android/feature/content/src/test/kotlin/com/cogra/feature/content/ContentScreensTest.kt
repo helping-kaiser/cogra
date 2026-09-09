@@ -965,7 +965,7 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("detail_author").assertExists()
-        compose.onNodeWithTag("comment_author_c1").assertExists()
+        compose.onNodeWithTag("comment_c1_author").assertExists()
     }
 
     // -- Topics --
@@ -979,6 +979,46 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
+    }
+
+    // -- The card header: author left, age right --
+
+    /** The boards' compact age — a number and its unit, no word between. */
+    @Test
+    fun theAgeReadsAsTheBoardsDrawIt() {
+        val now = java.time.Instant.parse("2026-09-09T12:00:00Z")
+        fun ago(minutes: Long) = compactAge(now.minusSeconds(minutes * 60), now)
+
+        assertThat(ago(0)).isEqualTo("0m")
+        assertThat(ago(35)).isEqualTo("35m")
+        assertThat(ago(60)).isEqualTo("1h")
+        assertThat(ago(60 * 4)).isEqualTo("4h")
+        assertThat(ago(60 * 24 * 3)).isEqualTo("3d")
+    }
+
+    /** A clock behind the node's own time never reads as the future. */
+    @Test
+    fun anAgeNeverRunsBackwards() {
+        val now = java.time.Instant.parse("2026-09-09T12:00:00Z")
+        assertThat(compactAge(now.plusSeconds(600), now)).isEqualTo("0m")
+    }
+
+    @Test
+    fun aCardWearsItsAge() {
+        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
+        compose.onNodeWithTag("feed_p1_age", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun aCommentWearsItsAgeToo() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
+            ),
+        )
+        compose.onNodeWithTag("comment_c1_age", useUnmergedTree = true).assertExists()
     }
 
     // -- The affordance row (PostCard.jsx 300-358) --
