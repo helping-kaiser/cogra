@@ -157,10 +157,11 @@
         "ProfilePosts",
         "Reel",
         "Removed",
+        "TagPage",
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 18 boards → ReplyEntry",
+        "start · «comment count» on 19 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
@@ -186,20 +187,21 @@
         "ProfilePosts",
         "Reel",
         "Removed",
+        "TagPage",
         "VouchBack"
       ]
     },
     {
       "name": "open-a-topic",
-      "description": "A topic chip on a post opens that topic's page — the page itself is still owed.",
-      "status": "blocked by gap",
-      "blockedBy": "the topic page (ruled 2026-09-01 — not designed)",
+      "description": "A tag chip on a post opens that tag's page — everything its author tagged, newest claim first, each row carrying the pair it was tagged with.",
+      "status": "resolved",
       "steps": [
         "start · Feed",
-        "end · Feed · 6 «topic chip» → gap: the topic page (ruled 2026-09-01 — not designed)"
+        "end · Feed · 6 «tag chip» → TagPage"
       ],
       "boards": [
-        "Feed"
+        "Feed",
+        "TagPage"
       ]
     },
     {
@@ -409,10 +411,11 @@
         "ProfilePosts",
         "Reel",
         "Removed",
+        "TagPage",
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 13 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 14 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -429,6 +432,7 @@
         "ProfilePosts",
         "Reel",
         "Removed",
+        "TagPage",
         "VouchBack"
       ]
     },
@@ -1023,10 +1027,11 @@
         "PostDetailVideo",
         "Reel",
         "Removed",
+        "TagPage",
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 17 boards → ProfileOther",
+        "start · «author chip» on 18 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1047,6 +1052,7 @@
         "PostDetailVideo",
         "Reel",
         "Removed",
+        "TagPage",
         "VouchBack"
       ]
     },
@@ -1205,15 +1211,15 @@
     },
     {
       "name": "add-a-topic",
-      "description": "Add a topic on the details step opens the picker over every topic a post can carry — the picker itself is still owed.",
-      "status": "blocked by gap",
-      "blockedBy": "the topic picker (not boarded)",
+      "description": "+ Add a tag on the details step opens the picker, where any legal name is pickable — used or not, since nothing is ever created.",
+      "status": "resolved",
       "steps": [
         "start · ComposeDetails",
-        "end · ComposeDetails · 7 «Add a topic» → gap: the topic picker (not boarded)"
+        "end · ComposeDetails · 7 «+ Add a tag» → TagPicker"
       ],
       "boards": [
-        "ComposeDetails"
+        "ComposeDetails",
+        "TagPicker"
       ]
     },
     {
@@ -2067,6 +2073,25 @@
         "sign-in-with-the-key-elsewhere"
       ]
     },
+    "TagPage": {
+      "flows": [
+        "open-a-topic",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
+      ],
+      "endpoint": [
+        "open-a-topic"
+      ]
+    },
+    "TagPicker": {
+      "flows": [
+        "add-a-topic"
+      ],
+      "endpoint": [
+        "add-a-topic"
+      ]
+    },
     "Verified": {
       "flows": [
         "verify-the-email",
@@ -2197,48 +2222,31 @@
   "gapsOnFlows": [
     "ApplicantFeed/11: Post Score drill-down (backlog item 13)",
     "ApplicantFeed/18: the chat surface (not designed)",
-    "ApplicantFeed/8: the topic page (ruled 2026-09-01 — not designed)",
     "ApplicantWaiting/15: the chat surface (not designed)",
-    "ApplicantWaiting/5: the topic page (ruled 2026-09-01 — not designed)",
     "ApplicantWaiting/8: Post Score drill-down (backlog item 13)",
-    "CommentEdit/9: the topic picker (not boarded)",
-    "CommentEditVideo/9: the topic picker (not boarded)",
-    "ComposeCited/5: the topic picker (not boarded)",
-    "ComposeDetails/7: the topic picker (not boarded)",
     "ComposeExpired/11: Post Score drill-down (backlog item 13)",
     "ComposeExpired/18: the chat surface (not designed)",
-    "ComposeExpired/8: the topic page (ruled 2026-09-01 — not designed)",
     "ComposeLanded/7: Post Score drill-down (backlog item 13)",
-    "ComposeUploading/10: the topic picker (not boarded)",
-    "EditCompose/8: the topic picker (not boarded)",
     "Explore/2: the Sky (backlog item 16 — last on purpose)",
     "Explore/9: the chat surface (not designed)",
     "ExploreSearch/5: the item's surface (not designed)",
     "ExploreSearch/7: the chat surface (not designed)",
     "ExploreSearch/8: the offer's surface (not designed)",
     "Feed/16: the chat surface (not designed)",
-    "Feed/6: the topic page (ruled 2026-09-01 — not designed)",
     "Feed/9: Post Score drill-down (backlog item 13)",
     "FeedBare/11: Post Score drill-down (backlog item 13)",
-    "FeedBare/8: the topic page (ruled 2026-09-01 — not designed)",
     "FeedCover/17: the chat surface (not designed)",
-    "FeedCover/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedCover/8: Post Score drill-down (backlog item 13)",
     "FeedFar/16: the chat surface (not designed)",
-    "FeedFar/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedFar/9: Post Score drill-down (backlog item 13)",
     "FeedGallery/15: the chat surface (not designed)",
-    "FeedGallery/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedGallery/8: Post Score drill-down (backlog item 13)",
     "FeedNarrowed/16: the chat surface (not designed)",
-    "FeedNarrowed/6: the topic page (ruled 2026-09-01 — not designed)",
     "FeedNarrowed/9: Post Score drill-down (backlog item 13)",
     "FeedNothing/8: the chat surface (not designed)",
     "KeyElsewhere/10: Post Score drill-down (backlog item 13)",
     "KeyElsewhere/17: the chat surface (not designed)",
-    "KeyElsewhere/7: the topic page (ruled 2026-09-01 — not designed)",
     "Main/11: Post Score drill-down (backlog item 13)",
-    "Main/8: the topic page (ruled 2026-09-01 — not designed)",
     "PostDetail/7: Post Score drill-down (backlog item 13)",
     "PostDetailVideo/10: Post Score drill-down (backlog item 13)",
     "Profile/1: the chat surface (not designed)",
@@ -2246,18 +2254,13 @@
     "ProfileApplicant/1: the chat surface (not designed)",
     "ProfileComments/5: the chat surface (not designed)",
     "ProfileOther/5: the chat surface (not designed)",
-    "ProfilePosts/11: the topic page (ruled 2026-09-01 — not designed)",
     "ProfilePosts/13: Post Score drill-down (backlog item 13)",
     "ProfilePosts/5: the chat surface (not designed)",
-    "RefsSheet/1: the topic page (ruled 2026-09-01 — not designed)",
     "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
     "Removed/4: Post Score drill-down (backlog item 13)",
-    "ReplyCited/4: the topic picker (not boarded)",
-    "ReplyEntry/3: the topic page (ruled 2026-09-01 — not designed)",
-    "ReplySeal/4: the topic picker (not boarded)",
+    "TagPage/10: Post Score drill-down (backlog item 13)",
     "VouchBack/11: Post Score drill-down (backlog item 13)",
     "VouchBack/18: the chat surface (not designed)",
-    "VouchBack/8: the topic page (ruled 2026-09-01 — not designed)",
     "Wallet/14: the chat surface (not designed)",
     "Wallet/2: the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)",
     "Wallet/3: the settlement's public record view (not boarded — the traceability promise)",

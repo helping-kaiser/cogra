@@ -1068,16 +1068,16 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 3657,
+      "h": 3618,
       "page": "entry",
       "title": "Entry · flow map"
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -2450,
+      "x": -3030,
       "y": 0,
-      "w": 2030,
-      "h": 2346,
+      "w": 2610,
+      "h": 2324,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1086,7 +1086,7 @@
       "x": -3900,
       "y": 0,
       "w": 3480,
-      "h": 1490,
+      "h": 1524,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -1095,7 +1095,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1285,
+      "h": 2005,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1113,7 +1113,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 2451,
+      "h": 2455,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1149,7 +1149,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2080,
+      "h": 2067,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1323,6 +1323,51 @@
       "w": 390,
       "h": 844,
       "page": "profile"
+    },
+    {
+      "file": "TagPage.dc.html",
+      "title": "A tag's page",
+      "x": 0,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageEmpty.dc.html",
+      "title": "A tag nothing carries yet",
+      "x": 480,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPicker.dc.html",
+      "title": "Add a tag",
+      "x": 3360,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "TagPickerTyping.dc.html",
+      "title": "Add a tag · naming one",
+      "x": 3840,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "TagPair.dc.html",
+      "title": "A staged tag's pair",
+      "x": 2400,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
     }
   ],
   "annotations": [
