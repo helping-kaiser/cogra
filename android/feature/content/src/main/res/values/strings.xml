@@ -38,6 +38,10 @@
          beside it tells a listener the verb but not the object
          (guidelines/copy-voice.md). -->
     <string name="content_share_post">Share this post</string>
+    <!-- The caption's in-place opener. A text control, not a link: it
+         opens the words where they stand and never navigates. -->
+    <string name="content_more">More</string>
+    <string name="content_less">Less</string>
     <!-- What a topic name may be — L1\'s identifier atom (D3). -->
     <!-- The references section (D18, D20). The word is always
          Reference — a reference to a profile is a mention — and never

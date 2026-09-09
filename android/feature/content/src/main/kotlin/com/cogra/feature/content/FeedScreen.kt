@@ -323,9 +323,6 @@ fun FeedScreen(
     }
 }
 
-/** What a card shows of a long body before the detail takes over. */
-private const val FEED_BODY_LINES = 4
-
 /**
  * `ComposeExpired` — a staged batch collected before it landed.
  *
@@ -431,9 +428,17 @@ private fun PostCard(
                 testTagPrefix = "feed_${post.id}",
             )
             // The title stays outside the veil (D12): a reader has to
-            // be able to tell what they are choosing not to look at.
+            // be able to tell what they are choosing not to look at. It
+            // clamps to one line — the collapse order gives the title
+            // away before media or the affordance row ever shrink.
             post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
-                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.testTag("feed_post_title_${post.id}"),
+                )
             }
             PostBody(
                 content = post.content,
@@ -442,7 +447,7 @@ private fun PostCard(
                 attachmentsStatus = post.attachmentsStatus,
                 moderation = post.moderation,
                 testTagPrefix = "feed_post_${post.id}",
-                maxBodyLines = FEED_BODY_LINES,
+                collapsed = true,
                 // The whole gallery is one target opening the post: a
                 // reader scrolling the feed is choosing between posts,
                 // not looking at one picture.
