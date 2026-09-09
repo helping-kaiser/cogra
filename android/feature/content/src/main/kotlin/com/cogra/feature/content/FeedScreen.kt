@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,7 +40,10 @@ import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
-import com.cogra.core.designsystem.v2.atom.CograBand
+import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.atom.CograBandChats
+import com.cogra.core.designsystem.v2.atom.CograBandIdentity
+import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
@@ -129,29 +133,40 @@ fun FeedScreen(
      */
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
 ) {
-    // The collapsing top (design.md §6): the region hides scrolling down
-    // and returns after a third of a screen of upward scroll. The band
-    // and everything riding below it are ONE non-shrinking block
-    // (`design/components/navigation/CograBand.jsx`) — "the whole band
-    // scrolls away with the top region and returns with it; the control
-    // rides along" — so the block is gated as a whole rather than the
-    // bar sliding on its own offset while its children animate on
-    // another.
+    // The collapsing top (design.md §6): the bar hides scrolling down
+    // and returns after a third of a screen of upward scroll; the key
+    // banner — or the guest notice, for the signed-out reader — rides
+    // the same region and gate, so the card follows the reader.
+    //
+    // The band's two pieces sit IN the bar rather than in a block of
+    // their own above it. Nesting band and cards inside one gate makes
+    // the whole 96dp region leave in a single step, which re-clamps the
+    // list underneath, and the leftover scroll that produces reads back
+    // to the gate as "the reader is at the top" — the region returned
+    // the moment it left.
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
         topBar = {
-            CollapsingTopBanner(collapsingTop, horizontalPadding = 0.dp) {
-                // A tab root wears the band, never a page title: its name
-                // is the bar slot the reader tapped to get here (FE-09).
-                CograBand(onChats = onChats, testTag = "feed_band") {
-                    Box(Modifier.padding(horizontal = 16.dp)) {
-                        if (signedIn == false) {
-                            GuestBanner(onSignInOrJoin)
-                        } else {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                borrowedViewBand()
-                                keyBanner()
-                            }
+            Column {
+                TopAppBar(
+                    // A tab root wears the band, never a page title: its
+                    // name is the bar slot the reader tapped to get here
+                    // (FE-09). The 48dp band is the drawn one (F-10).
+                    title = { CograBandIdentity(testTag = "feed_band") },
+                    actions = {
+                        onChats?.let { CograBandChats(it, testTag = "feed_band") }
+                    },
+                    expandedHeight = Layout.TopBarHeight,
+                    colors = surfaceTopAppBarColors(),
+                    scrollBehavior = collapsingTop.scrollBehavior,
+                )
+                CollapsingTopBanner(collapsingTop) {
+                    if (signedIn == false) {
+                        GuestBanner(onSignInOrJoin)
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            borrowedViewBand()
+                            keyBanner()
                         }
                     }
                 }

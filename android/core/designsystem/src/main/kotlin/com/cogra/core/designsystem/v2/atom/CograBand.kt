@@ -45,12 +45,15 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * **Chats ride the band** (jakob 2026-09-01): messaging must be reachable
  * from any major screen, so every tab root's band carries the chats
  * affordance built in. It sits LEFT of the screen's own trailing control, so
- * the ruled corner occupants keep their edge. `chats = null` opts a band out
- * where messaging cannot apply.
+ * the ruled corner occupants keep their edge. `onChats = null` opts a band
+ * out where messaging cannot apply.
  *
- * [content] rides below the band inside the same non-shrinking block — the
- * borrowed-view band, a search field — so the whole block scrolls away with
- * the collapsing top region and returns with it, control and all.
+ * [content] rides below the band inside the same block. A surface whose top
+ * region collapses hosts the two pieces itself — [CograBandIdentity] in the
+ * bar it already has, [CograBandChats] as that bar's action — rather than
+ * nesting the whole block inside one gate: collapsing the band and the cards
+ * below it in a single step re-clamps the list underneath, and the leftover
+ * scroll that produces reads to the collapse gate as "back at the top".
  */
 @Composable
 fun CograBand(
@@ -69,36 +72,58 @@ fun CograBand(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
-            CograMark(size = 24.dp)
-            Text(
-                text = WORDMARK,
-                style = MaterialTheme.typography.titleLarge,
-                // The one weight the wordmark takes that the type ramp's
-                // title rung does not: the mark's own drawing (§6).
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag(testTag?.let { "${it}_wordmark" } ?: "cogra_band_wordmark"),
-            )
+            CograBandIdentity(Modifier.weight(1f), testTag)
             if (onChats != null) {
-                IconButton(
-                    onClick = onChats,
-                    modifier = Modifier
-                        .size(Layout.TouchTargetMin)
-                        .testTag(testTag?.let { "${it}_chats" } ?: "cogra_band_chats"),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Forum,
-                        contentDescription = chatsContentDescription,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
+                CograBandChats(onChats, chatsContentDescription, testTag)
             }
             trailing?.invoke(this)
         }
         content()
+    }
+}
+
+/** The mark and the wordmark — the band's whole left side. */
+@Composable
+fun CograBandIdentity(modifier: Modifier = Modifier, testTag: String? = null) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        CograMark(size = 24.dp)
+        Text(
+            text = WORDMARK,
+            style = MaterialTheme.typography.titleLarge,
+            // The one weight the wordmark takes that the type ramp's title
+            // rung does not: the mark's own drawing (§6).
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.testTag(
+                testTag?.let { "${it}_wordmark" } ?: "cogra_band_wordmark",
+            ),
+        )
+    }
+}
+
+/** The chats affordance, left of whatever the screen puts in the corner. */
+@Composable
+fun CograBandChats(
+    onChats: () -> Unit,
+    contentDescription: String = stringResource(R.string.cogra_band_chats),
+    testTag: String? = null,
+) {
+    IconButton(
+        onClick = onChats,
+        modifier = Modifier
+            .size(Layout.TouchTargetMin)
+            .testTag(testTag?.let { "${it}_chats" } ?: "cogra_band_chats"),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Forum,
+            contentDescription = contentDescription,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(22.dp),
+        )
     }
 }
 
