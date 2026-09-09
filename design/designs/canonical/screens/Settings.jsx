@@ -42,125 +42,16 @@
    SIGN OUT KEEPS THE FORGET SWITCH (jakob): setting "don't remember" only on
    the login form makes the reader sign in and out again to reach it. It sits
    here, with the act it changes, and stays on the login form too. It takes no
-   `error` colour — leaving is not a failure. */
+   `error` colour — leaving is not a failure.
+
+   THE PAGE ITSELF IS `SettingsBody`, in `_shared.jsx`. Two of its rows open
+   sheets that cover it, and those boards draw the page they cover rather than a
+   hand-made few rows of it: the order is the ruling, and a second drawing of it
+   is a second order. This board is the page whole; those are the page under a
+   sheet. */
 
 export const FRAME = { width: 390, height: 1774 };
 
 export function Screen() {
-  return (
-    <>
-      <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 24, padding: "8px 24px 32px" }}>
-        <SettingsGroup
-          bare
-          label="Theme"
-          footnote="Auto follows your device's own setting, and the choice stays on this device."
-        >
-          <div>
-            <SegmentedFilter
-              block
-              ariaLabel="Theme"
-              value="auto"
-              options={[
-                { value: "light", label: "Light" },
-                { value: "dark", label: "Dark" },
-                { value: "auto", label: "Auto" },
-              ]}
-            />
-          </div>
-        </SettingsGroup>
-
-        <SettingsGroup
-          label="Taking a stance"
-          footnote="A tap always adds a small positive one. This is what a longer press opens, everywhere."
-        >
-          <SettingsRow
-            name="settings-stance-input"
-            selected
-            label="The pad"
-            status="Press and hold, then drift to where you stand."
-          />
-          <SettingsRow
-            name="settings-stance-input"
-            selected={false}
-            label="Sliders"
-            status="One slider per side of the stance."
-          />
-          <SettingsRow
-            name="settings-stance-input"
-            selected={false}
-            label="Typed values"
-            status="Type both numbers exactly."
-          />
-        </SettingsGroup>
-
-        <SettingsGroup
-          label="Writing"
-          footnote="Every signed action is paid for separately. A post's license is settled when it is first signed and never changes."
-        >
-          <SettingsRow
-            checked
-            label="Confirm multi-action submits"
-            status="Ask first when one submit signs more than one action."
-            onOpen={() => {}}
-          />
-          <SettingsRow label="Default license" value="Public domain" onOpen={() => {}} />
-        </SettingsGroup>
-
-        <SettingsGroup
-          label="Reading"
-          footnote="Every feed starts from this. A change made inside a feed lasts until you change it back, on that device only."
-        >
-          <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} />
-        </SettingsGroup>
-
-        <SettingsGroup
-          label="Key backup"
-          footnote="Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
-        >
-          <SettingsRow label="Recovery code" status="Last created 12 August" onOpen={() => {}} />
-          <SettingsRow label="Your key" onOpen={() => {}} />
-        </SettingsGroup>
-
-        <SettingsGroup
-          label="Sessions"
-          footnote="A device you sign out can stay signed in for up to 15 minutes."
-        >
-          <SettingsRow label="Firefox on Ubuntu" status="This browser" inert />
-          <SettingsRow
-            label="Pixel 8"
-            status="Last used 2 days ago"
-            inert
-            trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
-          />
-          <SettingsRow
-            label="Unnamed device"
-            status="Last used 12 August"
-            inert
-            trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
-          />
-          <SettingsRow action label="Sign out everywhere else" onOpen={() => {}} />
-        </SettingsGroup>
-
-        <SettingsGroup
-          label="Credentials"
-          footnote="Changing your password signs out every other device."
-        >
-          <SettingsRow label="Password" status="Changed 3 weeks ago" onOpen={() => {}} />
-          <SettingsRow label="Handle" value="@sol" onOpen={() => {}} />
-          <SettingsRow label="Email" value="sol@solferreira.art" onOpen={() => {}} />
-        </SettingsGroup>
-
-        <SettingsGroup ariaLabel="Sign out">
-          <SettingsRow
-            checked={false}
-            label="Don't remember this account on this device"
-            status="Your key and your draft are cleared from this browser when you sign out."
-            onOpen={() => {}}
-          />
-          <SettingsRow action label="Sign out" onOpen={() => {}} />
-        </SettingsGroup>
-      </div>
-    </>
-  );
+  return <SettingsBody />;
 }
