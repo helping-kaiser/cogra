@@ -401,8 +401,8 @@ class ComposePostViewModel @Inject constructor(
                         content = s.body.takeIf { !s.mediaBody },
                         // Carried through unchanged, and shown while it
                         // is: an edit that does not re-state the gallery
-                        // clears it, which is how this surface used to
-                        // replace a post's pictures with the form's words.
+                        // clears it, which would replace a media post's
+                        // pictures with whatever the form's words hold.
                         attachments = s.attachments.map { AttachmentClaim(it.id, it.altText) },
                         // Carried through unchanged: the record is the
                         // post's complete content state, so the mark the

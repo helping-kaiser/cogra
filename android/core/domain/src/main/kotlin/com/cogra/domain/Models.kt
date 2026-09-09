@@ -327,7 +327,9 @@ data class MediaAssetView(
          * to hold open.
          */
         fun ratioOf(raw: String?): Float {
-            val parts = raw?.split(':')?.map { it.trim().toFloatOrNull()?.takeIf(::usableExtent) }
+            // A side a shape can be stated in: finite and positive.
+            val parts = raw?.split(':')
+                ?.map { part -> part.trim().toFloatOrNull()?.takeIf { it.isFinite() && it > 0f } }
                 .orEmpty()
             val width = parts.getOrNull(0)
             val height = parts.getOrNull(1)
@@ -337,9 +339,6 @@ data class MediaAssetView(
                 FALLBACK_RATIO
             }
         }
-
-        /** A side length a shape can be stated in: finite and positive. */
-        private fun usableExtent(value: Float): Boolean = value.isFinite() && value > 0f
     }
 }
 
