@@ -452,7 +452,7 @@
     { "from": "FeedSheet", "via": 3, "kind": "advance", "label": "Ranked / Newest", "to": [{ "terminal": "self", "case": "swaps the order" }] },
     { "from": "FeedSheet", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips" }] },
     { "from": "FeedSheet", "via": 5, "kind": "advance", "label": "Reset", "to": [{ "terminal": "self", "case": "back to the default" }] },
-    { "from": "FeedSheet", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Feed", "case": "unchanged" }, { "board": "FeedNarrowed", "case": "narrowed" }, { "board": "FeedNothing", "case": "everything off" }, { "board": "FeedFar", "case": "far from the default" }] },
+    { "from": "FeedSheet", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Feed", "case": "unchanged" }, { "board": "FeedNarrowed", "case": "narrowed" }, { "board": "FeedNothing", "case": "everything off" }, { "board": "FeedFar", "case": "far from the default" }, { "board": "Settings", "case": "opened from settings — the row reads the new default back" }] },
 
     { "from": "FeedNarrowed", "via": 1, "kind": "advance", "label": "filter chip (deviations spelled out)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedNarrowed", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -703,8 +703,8 @@
     { "from": "ComposeLicense", "via": 1, "kind": "detour", "label": "? — License", "to": [{ "board": "HelpDialog", "case": "the License text" }] },
     { "from": "ComposeLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three" }] },
     { "from": "ComposeLicense", "via": 3, "kind": "advance", "label": "Public-record options", "to": [{ "terminal": "self", "case": "one of three" }] },
-    { "from": "ComposeLicense", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the choice" }] },
-    { "from": "ComposeLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes" }] },
+    { "from": "ComposeLicense", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the choice" }, { "board": "Settings", "case": "opened from settings — the default row reads the choice" }] },
+    { "from": "ComposeLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes" }, { "board": "Settings", "case": "opened from settings" }] },
 
     { "from": "ComposePad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "ComposePad", "via": 2, "kind": "advance", "label": "the one-axis pad", "to": [{ "terminal": "self", "case": "For/Against only — your own post always reaches you in full" }] },
@@ -1042,7 +1042,7 @@
     { "from": "HelpDialog", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes" }] },
     { "from": "Profile", "via": 1, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "Profile", "via": 2, "kind": "advance", "label": "share your profile", "to": [{ "terminal": "os", "case": "the platform's own share sheet — your own profile keeps no menu" }] },
-    { "from": "Profile", "via": 3, "kind": "advance", "label": "settings gear", "to": [{ "gap": "the settings screen (not designed)" }] },
+    { "from": "Profile", "via": 3, "kind": "advance", "label": "settings gear", "to": [{ "board": "Settings" }] },
     { "from": "Profile", "via": 4, "kind": "advance", "label": "avatar change badge", "to": [{ "board": "AvatarCrop", "case": "the system picker, then the crop — the standalone shortcut" }] },
     { "from": "Profile", "via": 5, "kind": "advance", "label": "the figures row", "to": [{ "board": "ProfileStances" }] },
     { "from": "Profile", "via": 6, "kind": "advance", "label": "Edit profile", "to": [{ "board": "ProfileEdit" }] },
@@ -1110,7 +1110,7 @@
 
     { "from": "ProfileApplicant", "via": 1, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "ProfileApplicant", "via": 2, "kind": "advance", "label": "share your profile", "to": [{ "terminal": "os", "case": "the platform's own share sheet — an applicant's own profile keeps no menu either" }] },
-    { "from": "ProfileApplicant", "via": 3, "kind": "advance", "label": "settings gear", "to": [{ "gap": "the settings screen (not designed)" }] },
+    { "from": "ProfileApplicant", "via": 3, "kind": "advance", "label": "settings gear", "to": [{ "board": "Settings", "case": "the same page — an applicant's settings are a member's" }] },
     { "from": "ProfileApplicant", "via": 4, "kind": "advance", "label": "avatar change badge", "to": [{ "board": "AvatarCrop", "case": "the system picker, then the crop — the standalone shortcut" }] },
     { "from": "ProfileApplicant", "via": 5, "kind": "advance", "label": "the figures row", "to": [{ "board": "ProfileStances" }] },
     { "from": "ProfileApplicant", "via": 6, "kind": "advance", "label": "Edit profile", "to": [{ "board": "ProfileEdit" }] },
@@ -1160,6 +1160,30 @@
     { "from": "ProfileComments", "via": 13, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
     { "from": "ProfileComments", "via": 14, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "ProfileComments", "via": 15, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
-    { "from": "ProfileComments", "via": 16, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] }
+    { "from": "ProfileComments", "via": 16, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+
+    { "from": "Settings", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the gear was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
+    { "from": "Settings", "via": 2, "kind": "advance", "label": "Light / Dark / Auto", "to": [{ "terminal": "self", "case": "the page repaints — the choice is this device's, never the account's" }] },
+    { "from": "Settings", "via": 3, "kind": "advance", "label": "how a stance is taken", "to": [{ "terminal": "self", "case": "one of three — it replaces the pad everywhere" }] },
+    { "from": "Settings", "via": 4, "kind": "advance", "label": "Confirm multi-action submits", "to": [{ "terminal": "self", "case": "the switch flips" }] },
+    { "from": "Settings", "via": 5, "kind": "advance", "label": "Default license", "to": [{ "board": "ComposeLicense", "case": "the seal's own license sheet, over settings — here it sets the account's default rather than one post's terms" }] },
+    { "from": "Settings", "via": 6, "kind": "advance", "label": "What your feed shows", "to": [{ "board": "FeedSheet", "case": "the feed's own filter sheet, over settings — here it sets the default every feed starts from" }] },
+    { "from": "Settings", "via": 7, "kind": "advance", "label": "Recovery code", "to": [{ "board": "SettingsBackup" }] },
+    { "from": "Settings", "via": 8, "kind": "advance", "label": "Your key", "to": [{ "board": "YourKey", "case": "after the platform's own unlock — the phone's lock on Android, the current code in a browser whose seed is sealed" }] },
+    { "from": "Settings", "via": 9, "kind": "advance", "label": "Revoke", "to": [{ "terminal": "self", "case": "the row goes — the snackbar answers" }] },
+    { "from": "Settings", "via": 10, "kind": "advance", "label": "Sign out everywhere else", "to": [{ "terminal": "self", "case": "every row but this one goes — the snackbar answers" }] },
+    { "from": "Settings", "via": 11, "kind": "advance", "label": "Password", "to": [{ "gap": "the change-password screen (not designed)" }] },
+    { "from": "Settings", "via": 12, "kind": "advance", "label": "Handle", "to": [{ "gap": "the change-handle screen (not designed)" }] },
+    { "from": "Settings", "via": 13, "kind": "advance", "label": "Email", "to": [{ "gap": "the change-email screen, both confirmation codes (not designed)" }] },
+    { "from": "Settings", "via": 14, "kind": "advance", "label": "Don't remember this account on this device", "to": [{ "terminal": "self", "case": "the switch flips — it decides what signing out clears, and the login form carries the same one" }] },
+    { "from": "Settings", "via": 15, "kind": "advance", "label": "Sign out", "to": [{ "board": "SignIn", "case": "remembered — the session ends and the account stays offered here" }, { "board": "SignIn", "case": "not remembered — the key and the unpublished draft go with the session" }] },
+
+    { "from": "SettingsBackup", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings", "case": "nothing is lost — no code has been made" }] },
+    { "from": "SettingsBackup", "via": 2, "kind": "advance", "label": "Current recovery code", "to": [{ "terminal": "self", "case": "typing — the browser's proof; Android's is the phone's own unlock" }] },
+    { "from": "SettingsBackup", "via": 3, "kind": "advance", "label": "Create a new recovery code", "to": [{ "board": "RecoveryCode", "case": "the new code on the ceremony's own board — back stays swallowed until it is typed back" }] },
+
+    { "from": "YourKey", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings" }] },
+    { "from": "YourKey", "via": 2, "kind": "advance", "label": "Copy the PEM block", "to": [{ "terminal": "self", "case": "the PEM lands on the clipboard" }] },
+    { "from": "YourKey", "via": 3, "kind": "advance", "label": "Copy the raw hex", "to": [{ "terminal": "self", "case": "the hex lands on the clipboard" }] }
   ]
 }

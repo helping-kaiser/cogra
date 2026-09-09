@@ -70,6 +70,12 @@ export interface SettingsGroupProps {
   footnote?: React.ReactNode;
   /** Accessible name for a group with no visible heading. */
   ariaLabel?: string;
+  /**
+   * No card — for a group whose whole content is a control that draws its own
+   * container, where a card would be a second container saying the same thing.
+   * Only the fill goes — the heading and footnote keep their inset.
+   */
+  bare?: boolean;
   children?: React.ReactNode;
 }
 
