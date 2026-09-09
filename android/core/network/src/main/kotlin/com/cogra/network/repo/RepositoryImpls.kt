@@ -513,7 +513,10 @@ class ContentRepositoryImpl @Inject constructor(
             .fetch()
             .map { data ->
                 Page(
-                    items = data.posts.edges.map { it.node.postFields.toDomain() },
+                    items = data.posts.edges.map { edge ->
+                        edge.node.postFields.toDomain()
+                            .copy(commentCount = edge.node.commentCount.totalCount)
+                    },
                     endCursor = data.posts.pageInfo.endCursor,
                     hasNextPage = data.posts.pageInfo.hasNextPage,
                 )
@@ -536,7 +539,8 @@ class ContentRepositoryImpl @Inject constructor(
         ).fetch().map { data ->
             data.post?.let { post ->
                 PostDetail(
-                    post = post.postFields.toDomain(),
+                    post = post.postFields.toDomain()
+                        .copy(commentCount = post.comments.totalCount),
                     comments = Page(
                         items = post.comments.edges.map { edge ->
                             edge.node.commentFields.toDomain()

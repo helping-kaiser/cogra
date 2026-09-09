@@ -12,8 +12,10 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -23,9 +25,11 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
 import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.ModeratedField
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testContentTarget
 import com.cogra.domain.testing.testMentionTarget
@@ -39,6 +43,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
 class ContentScreensTest {
@@ -60,10 +65,12 @@ class ContentScreensTest {
         keyBanner: @Composable () -> Unit = {},
         borrowedViewBand: @Composable () -> Unit = {},
         onChats: (() -> Unit)? = null,
+        onShare: (String) -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
     ) {
         compose.setContent {
             FeedScreen(
+                onShare = onShare,
                 stanceControl = { target, tag -> onStance(target, tag) },
                 state = state,
                 signedIn = signedIn,
@@ -523,11 +530,9 @@ class ContentScreensTest {
         onAddComment: () -> Unit = {},
         onReplyTo: (com.cogra.domain.CommentView) -> Unit = {},
         onEditComment: (com.cogra.domain.CommentView) -> Unit = {},
-        onToggleTagValues: (String) -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
-        onToggleReferenceValues: (String) -> Unit = {},
-        onOpenPost: (String) -> Unit = {},
         onReference: (String) -> Unit = {},
+        onShare: (String) -> Unit = {},
     ) {
         compose.setContent {
             PostDetailScreen(
@@ -539,16 +544,14 @@ class ContentScreensTest {
                 onLoadMoreComments = onLoadMoreComments,
                 onCommentSignedShown = {},
                 onLoadMoreReplies = onLoadMoreReplies,
-                onToggleTagValues = onToggleTagValues,
-                onToggleReferenceValues = onToggleReferenceValues,
                 onEdit = onEdit,
                 onAddComment = onAddComment,
                 onReplyTo = onReplyTo,
                 onEditComment = onEditComment,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
-                onOpenPost = onOpenPost,
                 onReference = onReference,
+                onShare = onShare,
                 onSignInOrJoin = onSignInOrJoin,
                 onReveal = { _, _ -> },
                 onBack = {},
@@ -930,6 +933,9 @@ class ContentScreensTest {
      * comment, rather than growing a box under it.
      */
     @Test
+    // The post now wears its own card, header and title, so the default
+    // viewport no longer composes as far as the second comment.
+    @Config(qualifiers = "+h1600dp")
     fun replyOpensTheComposerPreTargetedAtThatComment() {
         var replied: com.cogra.domain.CommentView? = null
         renderDetail(
@@ -967,7 +973,7 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("detail_author").assertExists()
-        compose.onNodeWithTag("comment_author_c1").assertExists()
+        compose.onNodeWithTag("comment_c1_author").assertExists()
     }
 
     // -- Topics --
@@ -983,105 +989,352 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
     }
 
-    // -- Topic value reveal (F8): the detail view only, on demand --
+    // -- The detail is a card, author first, title above the media --
 
-    /** A card is for reading; the reveal belongs where the reader chose the content. */
     @Test
-    fun aFeedCardOffersNoValueReveal() {
+    fun theDetailDrawsThePostAsACard() {
+        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_card").assertExists()
+    }
+
+    /** PEOPLE FIRST: the author leads, above the title and the body. */
+    @Test
+    fun theAuthorLeadsTheDetailRatherThanTrailingIt() {
+        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+
+        val author = compose.onNodeWithTag("detail_author", useUnmergedTree = true)
+            .fetchSemanticsNode().positionInRoot.y
+        val title = compose.onNodeWithTag("detail_title", useUnmergedTree = true)
+            .fetchSemanticsNode().positionInRoot.y
+        val body = compose.onNodeWithTag("detail_body", useUnmergedTree = true)
+            .fetchSemanticsNode().positionInRoot.y
+        assertThat(author).isLessThan(title)
+        assertThat(title).isLessThan(body)
+    }
+
+    /** The title titles the thing, so it is the card's heading, not the band's. */
+    @Test
+    fun theDetailTitleIsTheCardsHeadingAndNotTheBands() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    title = ModeratedField("Salt maps", FieldStatus.NORMAL),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("detail_title", useUnmergedTree = true)
+            .assertTextEquals("Salt maps")
+        compose.onAllNodesWithText("Salt maps").assertCountEquals(1)
+    }
+
+    // -- What a removal leaves standing (Removed.jsx) --
+
+    /** The license rode the payload, so a redacted record has none to show. */
+    @Test
+    fun aRemovedPostPrintsNoLicenseAndNoTopics() {
+        renderDetail(PostDetailUiState(loading = false, post = removedPost()))
+
+        // The body region carries the caller's own tag, so the mark is
+        // read by the line it draws.
+        compose.onNodeWithText("Removed by its author").assertExists()
+        compose.onNodeWithTag("detail_license_terms", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("detail_post_topics_line", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /** A removed post has no menu left — back is the whole header. */
+    @Test
+    fun aRemovedOwnPostLosesItsEditAction() {
+        renderDetail(
+            PostDetailUiState(loading = false, post = removedPost()),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("detail_edit").assertDoesNotExist()
+    }
+
+    /** The skeleton survives: author, age, stance, comments, share. */
+    @Test
+    fun aRemovedPostKeepsItsSkeleton() {
+        renderDetail(PostDetailUiState(loading = false, post = removedPost().copy(commentCount = 2)))
+
+        compose.onNodeWithTag("detail_author", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("detail_age", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("detail_post_comments", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("detail_post_share", useUnmergedTree = true).assertExists()
+    }
+
+    private fun removedPost() = testPost("p1").copy(
+        content = ModeratedField(null, FieldStatus.REDACTED),
+        attachments = emptyList(),
+    )
+
+    // -- Words XOR media, the clamps, and the opener --
+    //
+    // The rules themselves are pinned in `PostBodyTest`; these two say
+    // the two surfaces ask for the right reading.
+
+    /** Past the clamp the opener stands, and it unfolds in place. */
+    @Test
+    // Real glyph metrics: legacy graphics measure every string at zero
+    // width, so nothing would ever overflow the clamp. The tall
+    // viewport puts the opener — eighteen lines down — on screen.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "+h1600dp")
+    fun aFoldedFeedBodyOpensWhereItStands() {
         renderFeed(
             FeedUiState(
                 loading = false,
-                posts = listOf(testPost("p1").copy(topics = listOf(testTopicClaim("rust")))),
+                posts = listOf(
+                    testPost("p1").copy(content = ModeratedField(LONG_BODY, FieldStatus.NORMAL)),
+                ),
             ),
         )
-        compose.onNodeWithTag("feed_post_p1_topics_reveal").assertDoesNotExist()
+        compose.onNodeWithTag("feed_post_p1_opener", useUnmergedTree = true)
+            .assertTextEquals("More")
+        compose.onNodeWithTag("feed_post_p1_opener", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("feed_post_p1_opener", useUnmergedTree = true)
+            .assertTextEquals("Less")
     }
 
+    /** The detail is the read surface: it clamps nothing, so it never opens. */
     @Test
-    fun theDetailViewOffersTheRevealOnThePostAndOnEveryComment() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1").copy(topics = listOf(testTopicClaim("rust"))),
-                comments = listOf(comment("c1").copy(topics = listOf(testTopicClaim("kotlin")))),
-            ),
-        )
-        compose.onNodeWithTag("detail_post_topics_reveal").assertExists()
-        compose.onNodeWithTag("comment_c1_topics_reveal").assertExists()
-    }
-
-    /** Default is the plain name chip — nobody sees the numbers unasked. */
-    @Test
-    fun anUnrevealedChipShowsOnlyItsName() {
+    fun theDetailCarriesNoOpener() {
         renderDetail(
             PostDetailUiState(
                 loading = false,
                 post = testPost("p1").copy(
-                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
+                    content = ModeratedField(LONG_BODY, FieldStatus.NORMAL),
                 ),
             ),
         )
-        compose.onNodeWithTag("detail_post_topic_rust").assertTextEquals("#rust")
+        compose.onNodeWithTag("detail_opener", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    // -- The card header: author left, age right --
+
+    /** The boards' compact age — a number and its unit, no word between. */
+    @Test
+    fun theAgeReadsAsTheBoardsDrawIt() {
+        val now = java.time.Instant.parse("2026-09-09T12:00:00Z")
+        fun ago(minutes: Long) = compactAge(now.minusSeconds(minutes * 60), now)
+
+        assertThat(ago(0)).isEqualTo("0m")
+        assertThat(ago(35)).isEqualTo("35m")
+        assertThat(ago(60)).isEqualTo("1h")
+        assertThat(ago(60 * 4)).isEqualTo("4h")
+        assertThat(ago(60 * 24 * 3)).isEqualTo("3d")
+    }
+
+    /** A clock behind the node's own time never reads as the future. */
+    @Test
+    fun anAgeNeverRunsBackwards() {
+        val now = java.time.Instant.parse("2026-09-09T12:00:00Z")
+        assertThat(compactAge(now.plusSeconds(600), now)).isEqualTo("0m")
     }
 
     @Test
-    fun revealingTheRowShowsEachClaimCompactlyAndSigned() {
+    fun aCardWearsItsAge() {
+        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
+        compose.onNodeWithTag("feed_p1_age", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun aCommentWearsItsAgeToo() {
         renderDetail(
             PostDetailUiState(
                 loading = false,
-                post = testPost("p1").copy(
-                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
-                ),
-                revealedTagRows = setOf("p1"),
+                post = testPost("p1"),
+                comments = listOf(comment("c1")),
             ),
         )
-        compose.onNodeWithTag("detail_post_topic_rust").assertTextContains("+0.40 · 0.90")
+        compose.onNodeWithTag("comment_c1_age", useUnmergedTree = true).assertExists()
     }
 
-    /** Bipolar relevance keeps its sign; a withdrawal-ward claim reads negative. */
+    // -- The affordance row (PostCard.jsx 300-358) --
+
+    /** Stance, comment, share — and the two the staging rule gates. */
     @Test
-    fun aNegativeRelevanceRevealsWithItsSign() {
+    fun theCardWearsTheAffordanceRowAndNoGatedControl() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 3))),
+        )
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertExists()
+        // The Post Score's drill-down is an acknowledged gap and the
+        // contract carries no score; the ⋮ opens a menu W3 builds.
+        compose.onNodeWithTag("feed_post_p1_score", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("feed_post_p1_overflow", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /** The count is spoken, never drawn as a word — the row is glyphs. */
+    @Test
+    fun theCommentAffordanceSpeaksItsCount() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 1))),
+        )
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true)
+            .assertContentDescriptionEquals("1 comment")
+    }
+
+    /** No number beside the glyph where there is none to state. */
+    @Test
+    fun anUncommentedPostDrawsTheGlyphAlone() {
+        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true)
+            .assertContentDescriptionEquals("0 comments")
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true)
+            .assertTextEquals()
+    }
+
+    /** On the feed the count opens the post — the master's own fallback. */
+    @Test
+    fun theCommentCountOpensThePostFromTheFeed() {
+        var opened: String? = null
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 2))),
+            onOpenPost = { opened = it },
+        )
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true).performClick()
+        assertThat(opened).isEqualTo("p1")
+    }
+
+    /** On the detail the thread is already below it, so the count states. */
+    @Test
+    fun theCommentCountStatesRatherThanActsOnTheDetail() {
         renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1").copy(
-                    topics = listOf(testTopicClaim("rust", relevance = -0.5, confidence = 1.0)),
-                ),
-                revealedTagRows = setOf("p1"),
-            ),
+            PostDetailUiState(loading = false, post = testPost("p1").copy(commentCount = 2)),
         )
-        compose.onNodeWithTag("detail_post_topic_rust").assertTextContains("-0.50 · 1.00")
+        compose.onNodeWithTag("detail_post_comments", useUnmergedTree = true)
+            .assert(hasClickAction().not())
     }
 
-    /**
-     * The compact form is an abbreviation, so the revealed chip names
-     * both parameters for assistive tech rather than leaving TalkBack to
-     * read "+0.40 · 0.90" after a name.
-     */
     @Test
-    fun aRevealedChipNamesBothParametersForScreenReaders() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1").copy(
-                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
-                ),
-                revealedTagRows = setOf("p1"),
-            ),
+    fun shareHandsThePostOnFromBothSurfaces() {
+        val shared = mutableListOf<String>()
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            onShare = { shared += it },
         )
-        compose.onNodeWithTag("detail_post_topic_rust")
-            .assertContentDescriptionEquals("#rust, relevance +0.40, confidence 0.90")
+        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).performClick()
+        assertThat(shared).containsExactly("p1")
     }
 
-    /** The chip stays the way to the topic screen, revealed or not (F8). */
     @Test
-    fun aRevealedChipStillNavigatesToItsTopic() {
+    fun theShareControlNamesWhatItShares() {
+        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_post_share", useUnmergedTree = true)
+            .assertContentDescriptionEquals("Share this post")
+    }
+
+    /** The web page, not an in-app route: the receiver may have no app. */
+    @Test
+    fun theSharedLinkIsThePostsPageOnTheWeb() {
+        assertThat(postShareUrl("https://cogra.example", "p1"))
+            .isEqualTo("https://cogra.example/posts/p1")
+    }
+
+    // -- The topics line: two chips, then the counts in words --
+
+    /** Never a wrap, never a second row: the third topic is a count. */
+    @Test
+    fun theTopicsLineDrawsTwoChipsAndCountsTheRest() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(
+                        topics = listOf(
+                            testTopicClaim("rust"),
+                            testTopicClaim("kotlin"),
+                            testTopicClaim("compose"),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
+        compose.onNodeWithTag("feed_post_p1_topic_kotlin").assertExists()
+        compose.onNodeWithTag("feed_post_p1_topic_compose").assertDoesNotExist()
+        // The card is one clickable, so its plain text merges into it —
+        // the counts are read off the unmerged tree.
+        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+            .assertTextEquals("· 1 topic")
+    }
+
+    /** A card never lists its references inline — it states how many. */
+    @Test
+    fun theTopicsLineCountsReferencesRatherThanListingThem() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(
+                        topics = listOf(testTopicClaim("rust")),
+                        references = listOf(
+                            testReferenceClaim(testMentionTarget("ada")),
+                            testReferenceClaim(testMentionTarget("sol")),
+                        ),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+            .assertTextEquals("· 2 references")
+        compose.onNodeWithTag("feed_post_p1_reference_l1-user-ada", useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    /** Both halves fold into one trailing string, in the master's order. */
+    @Test
+    fun theCountsJoinTopicsAndReferencesInOneLine() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(
+                        topics = List(5) { testTopicClaim("t$it") },
+                        references = listOf(testReferenceClaim(testMentionTarget("ada"))),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+            .assertTextEquals("· 3 topics · 1 reference")
+    }
+
+    /** Two topics and nothing else leaves no counts to state. */
+    @Test
+    fun twoTopicsAloneStateNoCounts() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(
+                        topics = listOf(testTopicClaim("rust"), testTopicClaim("kotlin")),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    /** Nothing to say, nothing drawn. */
+    @Test
+    fun aPostWithNoTopicsOrReferencesDrawsNoLine() {
+        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
+        compose.onNodeWithTag("feed_post_p1_topics_line", useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    /** The chips still navigate — that destination exists (readme §2). */
+    @Test
+    fun aTopicChipOpensItsTopic() {
         var opened: String? = null
         renderDetail(
             PostDetailUiState(
                 loading = false,
                 post = testPost("p1").copy(topics = listOf(testTopicClaim("rust"))),
-                revealedTagRows = setOf("p1"),
             ),
             onOpenTopic = { opened = it },
         )
@@ -1089,41 +1342,24 @@ class ContentScreensTest {
         assertThat(opened).isEqualTo("rust")
     }
 
+    /** The comment card wears the same line the post does. */
     @Test
-    fun tappingTheRevealReportsTheRowItBelongsTo() {
-        val toggled = mutableListOf<String>()
+    fun aCommentWearsTheSameTopicsLine() {
         renderDetail(
             PostDetailUiState(
                 loading = false,
-                post = testPost("p1").copy(topics = listOf(testTopicClaim("rust"))),
-                comments = listOf(comment("c1").copy(topics = listOf(testTopicClaim("kotlin")))),
-            ),
-            onToggleTagValues = { toggled += it },
-        )
-        compose.onNodeWithTag("detail_post_topics_reveal").performClick()
-        compose.onNodeWithTag("comment_c1_topics_reveal").performClick()
-        assertThat(toggled).containsExactly("p1", "c1").inOrder()
-    }
-
-    /** One row's answer says nothing about the next row's. */
-    @Test
-    fun revealingOneRowLeavesTheOtherRowsPlain() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1").copy(
-                    topics = listOf(testTopicClaim("rust", relevance = 0.4, confidence = 0.9)),
-                ),
+                post = testPost("p1"),
                 comments = listOf(
                     comment("c1").copy(
-                        topics = listOf(testTopicClaim("kotlin", relevance = 0.4, confidence = 0.9)),
+                        topics = listOf(testTopicClaim("kotlin")),
+                        references = listOf(testReferenceClaim(testMentionTarget("ada"))),
                     ),
                 ),
-                revealedTagRows = setOf("p1"),
             ),
         )
-        compose.onNodeWithTag("detail_post_topic_rust").assertTextContains("+0.40 · 0.90")
         compose.onNodeWithTag("comment_c1_topic_kotlin").assertTextEquals("#kotlin")
+        compose.onNodeWithTag("comment_c1_topics_counts", useUnmergedTree = true)
+            .assertTextEquals("· 1 reference")
     }
 
     // -- What the composer is pinned to (graph.json `ReplyEntry` 5, 7) --
@@ -1345,139 +1581,6 @@ class ContentScreensTest {
 
     private fun tagRows(vararg names: String) = names.map { TagRow(it) }
 
-    // -- The reference row (D16) --
-
-    private fun mentionClaim(handle: String = "ada") =
-        testReferenceClaim(testMentionTarget(handle))
-
-    @Test
-    fun aPostCardRendersItsReferenceChips() {
-        renderFeed(
-            FeedUiState(
-                loading = false,
-                posts = listOf(testPost("p1").copy(references = listOf(mentionClaim()))),
-            ),
-        )
-        compose.onNodeWithTag("feed_post_p1_reference_l1-user-ada").assertExists()
-    }
-
-    /** A card is for reading; the reveal belongs where the reader chose the content. */
-    @Test
-    fun aFeedCardOffersNoReferenceValueReveal() {
-        renderFeed(
-            FeedUiState(
-                loading = false,
-                posts = listOf(testPost("p1").copy(references = listOf(mentionClaim()))),
-            ),
-        )
-        compose.onNodeWithTag("feed_post_p1_references_reveal").assertDoesNotExist()
-    }
-
-    @Test
-    fun theDetailOffersTheReferenceRevealOnThePostAndOnEveryComment() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1").copy(references = listOf(mentionClaim())),
-                comments = listOf(comment("c1").copy(references = listOf(mentionClaim("grace")))),
-            ),
-        )
-        compose.onNodeWithTag("detail_post_references_reveal").assertExists()
-        compose.onNodeWithTag("comment_c1_references_reveal").assertExists()
-    }
-
-    /** The two rows reveal apart — a citation's parameters are its own question. */
-    @Test
-    fun revealingReferenceValuesLeavesTheTopicRowAlone() {
-        val revealed = mutableListOf<String>()
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1").copy(
-                    topics = listOf(testTopicClaim("rust")),
-                    references = listOf(mentionClaim()),
-                ),
-                comments = emptyList(),
-            ),
-            onToggleReferenceValues = { revealed += it },
-        )
-        compose.onNodeWithTag("detail_post_references_reveal").performClick()
-        assertThat(revealed).containsExactly("p1")
-    }
-
-    @Test
-    fun aRevealedReferenceRowShowsBothParametersSigned() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1").copy(
-                    references = listOf(
-                        testReferenceClaim(
-                            testMentionTarget("ada"),
-                            relevance = 0.4,
-                            support = -0.2,
-                        ),
-                    ),
-                ),
-                comments = emptyList(),
-                revealedReferenceRows = setOf("p1"),
-            ),
-        )
-        compose.onNodeWithTag("detail_post_reference_l1-user-ada")
-            .assertTextContains("+0.40 · -0.20")
-    }
-
-    @Test
-    fun aMentionChipOpensTheProfileItNames() {
-        val opened = mutableListOf<String>()
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1").copy(references = listOf(mentionClaim())),
-                comments = emptyList(),
-            ),
-            onOpenActor = { opened += it },
-        )
-        compose.onNodeWithTag("detail_post_reference_l1-user-ada").performClick()
-        assertThat(opened).containsExactly("ada")
-    }
-
-    @Test
-    fun aQuotedPostChipOpensThatPostsDetail() {
-        val opened = mutableListOf<String>()
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1").copy(
-                    references = listOf(testReferenceClaim(testContentTarget("p9"))),
-                ),
-                comments = emptyList(),
-            ),
-            onOpenPost = { opened += it },
-        )
-        compose.onNodeWithTag("detail_post_reference_l1-p9").performClick()
-        assertThat(opened).containsExactly("p9")
-    }
-
-    /**
-     * A citation this build cannot type still stands as a substrate
-     * fact, so its chip renders — readable, and not actionable.
-     */
-    @Test
-    fun anUntypeableCitationRendersInertRatherThanVanishing() {
-        renderDetail(
-            PostDetailUiState(
-                loading = false,
-                post = testPost("p1").copy(
-                    references = listOf(testReferenceClaim(target = null)),
-                ),
-                comments = emptyList(),
-            ),
-        )
-        compose.onNodeWithTag("detail_post_reference_l1-untypeable").assertExists()
-        compose.onNodeWithTag("detail_post_reference_l1-untypeable").assertIsNotEnabled()
-    }
-
     // -- The Reference affordance and the finder (D20) --
 
     @Test
@@ -1627,3 +1730,6 @@ class ContentScreensTest {
         compose.onNodeWithTag("compose_confirm_withdrawal").assertDoesNotExist()
     }
 }
+
+/** Well past the 18-line ceiling at any plausible card width. */
+private val LONG_BODY = "Salt maps of the coast road, walked at low tide. ".repeat(80)

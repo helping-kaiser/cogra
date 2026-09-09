@@ -4,16 +4,26 @@
 
 package com.cogra.feature.content
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.v2.atom.bleedHorizontally
 import com.cogra.core.designsystem.v2.media.MediaGallery
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.RemovalReason
@@ -29,6 +39,7 @@ import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
+import com.cogra.feature.content.R
 
 /**
  * Which surface the body is drawn on, and therefore how its pictures sit.
@@ -65,8 +76,10 @@ internal enum class BodySurface { Post, Comment }
  * 2026-08-31) — none of which a `remember` keyed to one card can do. It
  * is hoisted to `SensitiveReveals`, and arrives here already decided.
  *
- * @param maxBodyLines the feed card's clamp; null in the detail, where
- *   the whole body is shown.
+ * @param collapsed the summary card's reading: the body clamps to
+ *   [TEXT_BODY_CLAMP_LINES], the description to
+ *   [DESCRIPTION_CLAMP_LINES], and an opener unfolds whatever that hid.
+ *   False on the detail, which is the read surface and clamps nothing.
  * @param revealed whether this reader has already chosen to look.
  * @param onReveal fired when they choose to; null where the surface
  *   holds no reveal state, which leaves the veil closed.
@@ -80,7 +93,13 @@ internal fun PostBody(
     moderation: ModerationState,
     testTagPrefix: String,
     modifier: Modifier = Modifier,
-    maxBodyLines: Int? = null,
+    collapsed: Boolean = false,
+    /**
+     * The card padding a post's gallery cancels so it runs to the
+     * card's edges (`PostCard.jsx:263`, `margin: 0 calc(-1 *
+     * var(--card-padding))`). Zero where there is none to escape.
+     */
+    bleed: Dp = 0.dp,
     onOpenMedia: (() -> Unit)? = null,
     surface: BodySurface = BodySurface.Post,
     revealed: Boolean = false,
@@ -95,10 +114,18 @@ internal fun PostBody(
         return
     }
 
-    val veiled = !revealed && isSensitive(content, description, attachmentsStatus)
+    // WORDS XOR MEDIA (D16): the picture IS the body, so a media post
+    // draws no `content` even when the record carries one. The words
+    // beside a picture are the description, and the card draws them
+    // under it. Handed both — an impossible post — the documented media
+    // reading wins: the manifest is the body, and half a card is better
+    // than an invented one. A comment is words PLUS pictures, so the
+    // exclusion is a post's alone.
+    val mediaIsTheBody = surface == BodySurface.Post && attachments.isNotEmpty()
+    val words = content.value?.takeIf { it.isNotEmpty() && !mediaIsTheBody }
 
     SensitiveVeil(
-        veiled = veiled,
+        veiled = !revealed && isSensitive(content, description, attachmentsStatus),
         onReveal = onReveal,
         modifier = modifier.fillMaxWidth(),
         testTag = "${testTagPrefix}_veil",
@@ -109,36 +136,119 @@ internal fun PostBody(
         ) {
             val gallery: @Composable () -> Unit = {
                 if (attachments.isNotEmpty()) {
-                    Gallery(attachments, surface, onOpenMedia, "${testTagPrefix}_gallery")
+                    Gallery(attachments, surface, onOpenMedia, bleed, "${testTagPrefix}_gallery")
                 }
+            }
+            val caption: @Composable () -> Unit = {
+                Caption(words, description?.value, collapsed, testTagPrefix)
             }
 
             // A post leads with its pictures; a comment leads with its
             // words and its pictures join them.
-            if (surface == BodySurface.Post) gallery()
-
-            content.value?.takeIf { it.isNotEmpty() }?.let { words ->
-                Text(
-                    text = words,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = maxBodyLines ?: Int.MAX_VALUE,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            if (surface == BodySurface.Comment) gallery()
-
-            description?.value?.takeIf { it.isNotEmpty() }?.let { note ->
-                Text(
-                    text = note,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = maxBodyLines ?: Int.MAX_VALUE,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            if (surface == BodySurface.Post) {
+                gallery()
+                caption()
+            } else {
+                caption()
+                gallery()
             }
         }
     }
+}
+
+/**
+ * The body's words and the caption under them, with the opener that
+ * unfolds whatever the clamp hid.
+ *
+ * BODY FIRST, DESCRIPTION UNDER IT, on both kinds of post — so the two
+ * shapes read as one card re-proportioned rather than two layouts.
+ */
+@Composable
+private fun Caption(
+    words: String?,
+    description: String?,
+    collapsed: Boolean,
+    testTagPrefix: String,
+) {
+    // What the clamp hid, remembered from the reading that hid it: once
+    // the opener has unfolded the text nothing overflows any more, so a
+    // live measurement would take the opener away with the fold.
+    var folded by remember(testTagPrefix) { mutableStateOf(false) }
+    var open by remember(testTagPrefix) { mutableStateOf(false) }
+    val clamping = collapsed && !open
+
+    words?.let {
+        ClampedText(
+            text = it,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = if (clamping) TEXT_BODY_CLAMP_LINES else Int.MAX_VALUE,
+            onOverflow = { folded = true },
+            testTag = "${testTagPrefix}_words",
+        )
+    }
+    description?.takeIf { it.isNotEmpty() }?.let {
+        ClampedText(
+            text = it,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = if (clamping) DESCRIPTION_CLAMP_LINES else Int.MAX_VALUE,
+            onOverflow = { folded = true },
+            testTag = "${testTagPrefix}_description",
+        )
+    }
+    // Only where there is something folded away. A text control, not a
+    // link: it opens the text in place and never navigates.
+    if (collapsed && folded) {
+        Text(
+            text = stringResource(if (open) R.string.content_less else R.string.content_more),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .clickable { open = !open }
+                .testTag("${testTagPrefix}_opener"),
+        )
+    }
+}
+
+/**
+ * THE DESCRIPTION IS TWO LINES in the feed, on both kinds of post. It is
+ * the caption, not the body: enough to say what the thing is, never
+ * enough to become the reading.
+ */
+internal const val DESCRIPTION_CLAMP_LINES = 2
+
+/**
+ * THE TEXT BODY'S CEILING — a text post stands about as tall as a media
+ * post, never taller, so a feed of both keeps one rhythm. Derived from
+ * the tokens rather than chosen: on the 390×844 board, 844 less the 44px
+ * safe area, the 64px bottom bar and the 360px worst-case chrome leaves
+ * 376px, and `body-medium`'s line height is 20px — floor(376 / 20) = 18.
+ */
+internal const val TEXT_BODY_CLAMP_LINES = 18
+
+/**
+ * A paragraph that reports whether the clamp hid anything.
+ *
+ * Measured rather than estimated from a character count: the board's
+ * estimate exists because a static render cannot measure a paragraph,
+ * and the rule it serves is "only where there is something folded away".
+ */
+@Composable
+private fun ClampedText(
+    text: String,
+    color: Color,
+    maxLines: Int,
+    onOverflow: () -> Unit,
+    testTag: String,
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = color,
+        maxLines = maxLines,
+        overflow = TextOverflow.Ellipsis,
+        onTextLayout = { if (it.hasVisualOverflow) onOverflow() },
+        modifier = Modifier.testTag(testTag),
+    )
 }
 
 /**
@@ -153,13 +263,21 @@ private fun Gallery(
     attachments: List<MediaAssetView>,
     surface: BodySurface,
     onOpenMedia: (() -> Unit)?,
+    bleed: Dp,
     testTag: String,
 ) {
     val items = attachments.map { it.toItem() }
     when (surface) {
+        // FULL-BLEED, on the card and on the detail alike (design
+        // backlog item 35, ruled 2026-09-08). The media cancels the
+        // card's own padding so it runs to the card's edges and drops
+        // its side radii — it meets the card's straight sides, never its
+        // corners, so nothing needs clipping. It is the largest thing in
+        // the card by a wide margin, which is the point.
         BodySurface.Post -> MediaGallery(
             items = items,
             onOpen = onOpenMedia,
+            modifier = if (bleed > 0.dp) Modifier.bleedHorizontally(bleed) else Modifier,
             testTag = testTag,
         )
 

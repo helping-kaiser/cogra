@@ -17,6 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * The body region's two replacing states.
@@ -25,7 +26,12 @@ import org.robolectric.RobolectricTestRunner
  * placeholder rather than a gap, so both are decided here — once, for
  * the feed card and the detail alike.
  */
+// The clamp tests ask whether a paragraph overflowed, which needs real
+// glyph metrics: Robolectric's legacy graphics measure every string at
+// zero width, so nothing ever overflows. NATIVE draws through the real
+// Skia stack and measures for real.
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class PostBodyTest {
 
     @get:Rule
@@ -225,12 +231,19 @@ class PostBodyTest {
         assertThat(galleryTop).isGreaterThan(wordsTop)
     }
 
+    // -- Words XOR media (D16) --
+
+    /**
+     * A post's body is words or media and never both, so the picture IS
+     * the body: handed an impossible post carrying each, the card draws
+     * the documented media reading and the words never appear.
+     */
     @Test
-    fun aPostsPicturesLeadItsWords() {
+    fun aPostsPictureReplacesItsWords() {
         compose.setContent {
             PostBody(
                 content = words,
-                description = null,
+                description = ModeratedField("what it is", FieldStatus.NORMAL),
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.NORMAL,
                 moderation = ModerationState.NORMAL,
@@ -238,8 +251,122 @@ class PostBodyTest {
             )
         }
 
-        val wordsTop = compose.onNodeWithText("Salt maps").fetchSemanticsNode().positionInRoot.y
-        val galleryTop = compose.onNodeWithTag("p_gallery").fetchSemanticsNode().positionInRoot.y
-        assertThat(galleryTop).isLessThan(wordsTop)
+        compose.onNodeWithTag("p_gallery").assertIsDisplayed()
+        compose.onNodeWithTag("p_words").assertDoesNotExist()
+        compose.onNodeWithTag("p_description").assertIsDisplayed()
     }
+
+    /** A comment is words PLUS pictures, and its words still lead them. */
+    @Test
+    fun aCommentsWordsLeadItsPictures() {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = null,
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                surface = BodySurface.Comment,
+                testTagPrefix = "c",
+            )
+        }
+
+        val wordsTop = compose.onNodeWithTag("c_words").fetchSemanticsNode().positionInRoot.y
+        val galleryTop = compose.onNodeWithTag("c_gallery").fetchSemanticsNode().positionInRoot.y
+        assertThat(wordsTop).isLessThan(galleryTop)
+    }
+
+    /** A words post keeps both, body first and the caption under it. */
+    @Test
+    fun aWordsPostDrawsItsBodyThenItsCaption() {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = ModeratedField("the caption", FieldStatus.NORMAL),
+                attachments = emptyList(),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                testTagPrefix = "w",
+            )
+        }
+
+        val bodyTop = compose.onNodeWithTag("w_words").fetchSemanticsNode().positionInRoot.y
+        val captionTop = compose.onNodeWithTag("w_description").fetchSemanticsNode().positionInRoot.y
+        assertThat(bodyTop).isLessThan(captionTop)
+    }
+
+    // -- The clamps and the opener --
+
+    /** Nothing folded away, no opener — the rule is "only where there is". */
+    @Test
+    fun aShortBodyCarriesNoOpener() {
+        showCollapsed(words)
+
+        compose.onNodeWithTag("s_opener").assertDoesNotExist()
+    }
+
+    /** Past the ceiling the opener stands, and it unfolds in place. */
+    @Test
+    fun aFoldedBodyOpensAndClosesInPlace() {
+        showCollapsed(ModeratedField(longBody, FieldStatus.NORMAL))
+
+        compose.onNodeWithTag("s_opener").assertIsDisplayed()
+        compose.onNodeWithText("More").assertIsDisplayed()
+        compose.onNodeWithTag("s_opener").performClick()
+        compose.onNodeWithText("Less").assertIsDisplayed()
+        compose.onNodeWithTag("s_opener").performClick()
+        compose.onNodeWithText("More").assertIsDisplayed()
+    }
+
+    /** The detail is the read surface: it clamps nothing and never opens. */
+    @Test
+    fun anUncollapsedBodyNeverOffersTheOpener() {
+        compose.setContent {
+            PostBody(
+                content = ModeratedField(longBody, FieldStatus.NORMAL),
+                description = null,
+                attachments = emptyList(),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                testTagPrefix = "d",
+            )
+        }
+
+        compose.onNodeWithTag("d_opener").assertDoesNotExist()
+    }
+
+    /** A caption past two lines opens the card even on a media post. */
+    @Test
+    fun aLongCaptionOpensTheCardToo() {
+        compose.setContent {
+            PostBody(
+                content = ModeratedField(null, FieldStatus.NORMAL),
+                description = ModeratedField(longBody, FieldStatus.NORMAL),
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                collapsed = true,
+                testTagPrefix = "m",
+            )
+        }
+
+        compose.onNodeWithTag("m_opener").assertIsDisplayed()
+    }
+
+    private fun showCollapsed(content: ModeratedField) {
+        compose.setContent {
+            PostBody(
+                content = content,
+                description = null,
+                attachments = emptyList(),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                collapsed = true,
+                testTagPrefix = "s",
+            )
+        }
+    }
+
+    /** Well past the 18-line ceiling at any plausible card width. */
+    private val longBody = "Salt maps of the coast road, walked at low tide. ".repeat(80)
 }
