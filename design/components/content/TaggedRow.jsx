@@ -24,17 +24,27 @@ import { PendingMarker } from "../honesty/PendingMarker.jsx";
    belong to, and the numbers say what it claimed.
 
    A CLAIM STILL IN FLIGHT SAYS SO, with the same marker every other
-   unsettled record wears. */
+   unsettled record wears.
+
+   THE CLAIM IS ATTACHED, NOT HOVERING (jakob's review, 2026-09-09): the line
+   draws as a small flag sitting on the card's top edge — zero gap, its own
+   surface, top corners rounded — so the claim and the content it put here
+   read as one thing. A free-floating line between cards belonged to neither
+   neighbour. */
 
 export function TaggedRow({ pair, pending = false, children }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
       <div
         style={{
-          display: "flex",
+          display: "inline-flex",
           alignItems: "center",
+          alignSelf: "flex-start",
           gap: "var(--space-2)",
-          padding: "0 var(--space-4)",
+          margin: "0 0 0 var(--space-4)",
+          padding: "2px 10px",
+          background: "var(--surface-container-high)",
+          borderRadius: "var(--radius-small) var(--radius-small) 0 0",
           fontSize: "var(--text-body-small)",
           lineHeight: "var(--text-body-small--line-height)",
           color: "var(--text-secondary)",

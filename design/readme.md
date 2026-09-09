@@ -3141,13 +3141,15 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   cannot serve either. So there is no order section, no pagination and
   no load-more. In the end state the ranker orders this list — a
   staging note, never a control.
-- **Following is a stance, so it is the stance control.** hashtag.md §3
-  makes a follow an **Affinity** record toward the Type and api-spec's
-  `viewerStance` calls it "the follow control's read"; its parameters
-  are signed over [-1, +1] like every other stance, so the pad fits and
-  a second toggle-shaped gesture would have hidden that following is a
-  priced signed act. It is drawn as the end state with the obligation
-  named: the roadmap holds topic follow client-hidden until slice 3.
+- **Following is a stance, and its surface waits for slice 3.**
+  hashtag.md §3 makes a follow an **Affinity** record toward the Type,
+  parameters signed over [-1, +1], so the stance control is its input —
+  but a stance anchor on the page header's trailing edge read as a
+  stance readout for the post the reader arrived from, and jakob's
+  review removed it. The tag page carries no follow control; the
+  gesture gets its surface in slice 3's round, which is also when the
+  roadmap first lets it ship (topic follow is client-hidden until the
+  topic feed lands).
 - **Every row carries its claim's pair, plainly.** A signed act is
   public record, so `TaggedRow` simply shows it — and the reveal
   gesture on content surfaces stays the tags-and-references sheet.
@@ -3184,8 +3186,9 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   its right edge — never a use count, which would be nobody's view in
   particular and unexplainable.
 - **The looks bar.** Mastodon's hashtag page gives the shape: the tag
-  as the title, the follow control on the header's trailing edge, a
-  chronological column of whole posts. Refused: its "N people talking"
+  as the title, a chronological column of whole posts (its header
+  follow was taken first and removed at review — above). Refused: its
+  "N people talking"
   figure (a global popularity count is the badge farming §3 rules out);
   Instagram's media grid (this list is not all media) though not its
   absent order switcher, which we reach by the opposite route — it
@@ -3194,7 +3197,9 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   would then be search again); Tumblr's "post this tag" button (a
   compose entrance nothing has ruled). The no-creation rule is where
   this product parts from all four, and the contract forces it.
-- **The gate**: 137 → **142 screens**, 1006 → **1043 edges**, 79 →
+- **The gate**: 137 → **142 screens**, 1006 → **1039 edges** (1043
+  drawn, then jakob's review removed the follow anchors and the
+  comment's reply affordances), 79 →
   **56 gaps**, and flows 58/53/5 → **58/55/3**. The twenty-four close
   and one opens — `TagPage`'s own Post Score row, which every board
   drawing a post card carries. `open-a-topic` and `add-a-topic` resolve

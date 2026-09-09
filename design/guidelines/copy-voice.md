@@ -628,17 +628,15 @@ Drawn on `TagPage`, `TagPageEmpty`, `TagPicker`, `TagPickerTyping` and
 part of the same ruling and is written where it belongs; these are the
 new lines.
 
-**The page states what the list is, and the sentence carries the
-contract.** `Everything its author tagged #saltmaps, newest first.` —
-*its author* because 2.3 serves the content-intrinsic channel alone, so
-a stranger's claim is genuinely not here yet; *newest first* because
-that is the order `taggedContent` returns and there is no control
-offering another. One line does the work an order pill would have done
-badly.
+**The page carries no preamble.** The list opens directly under the
+title (jakob's review removed the explanatory line): the rows say what
+they are, and a sentence restating the contract was noise where the
+title and the claims already carry it.
 
 **A row says which act put it there.** `Tagged` and then the pair, on
-every row — the word names the act, the numbers say what it claimed,
-and the tag itself is not repeated because the page is titled by it.
+a flag attached to every card's top edge — the word names the act, the
+numbers say what it claimed, and the tag itself is not repeated because
+the page is titled by it.
 
 **An unused tag is not a miss.** `Nothing carries this tag yet. The name
 is still a place — anyone can be the first to use it.` No "not found",

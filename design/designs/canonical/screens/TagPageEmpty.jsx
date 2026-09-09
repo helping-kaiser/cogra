@@ -14,9 +14,11 @@
    list. `EmptyState`'s rules hold — a calm statement, no scolding, no `error`
    colour, and an empty list is not a fault (design.md §6, §9).
 
-   THE FOLLOW CONTROL STAYS. Following an unused tag is a perfectly good act —
-   an Affinity toward a Type needs no Tag records to exist first — and a
-   control that vanished when a list was empty would be saying the opposite.
+   NO FOLLOW CONTROL, same as the populated page (jakob's review 2026-09-09):
+   the header anchor misread as a stance readout, so the follow gesture waits
+   for its own surface in slice 3's round. Following an unused tag stays a
+   perfectly good act — an Affinity toward a Type needs no Tag records to
+   exist first — and the slice-3 shape must keep that true.
 
    NO ACTION IS OFFERED, and that is deliberate. `EmptyState` takes the one
    action that fills a list where there is one; here the action would be "post
@@ -26,12 +28,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader
-        title="#slipwaylight"
-        backHref="#"
-        backLabel="Back to Explore"
-        action={<StanceControl targetLabel="this tag" onCommit={() => {}} />}
-      />
+      <PageHeader title="#slipwaylight" backHref="#" backLabel="Back to Explore" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "4px 24px 0" }}>
         <EmptyState title="Nothing carries this tag yet. The name is still a place — anyone can be the first to use it." />
       </div>
