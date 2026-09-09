@@ -450,21 +450,25 @@ is a different thing from a piece the apps have not reached yet.
 
 | Directory | Components |
 |---|---|
-| `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
-| `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton` |
-| `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
-| `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
-| `components/compose/` | `WizardHeader`, `MediaThumb`, `PickedRow`, `DescribeCounter`, `PickedSheet`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `ActsCard` |
+| `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
+| `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton`, `NodeMark` |
+| `components/forms/` | `TextField`, `FieldLabel`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
+| `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
+| `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `StagedReference`, `TopicRemovable`, `Caret` |
 | `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
-| `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
+| `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
 | `components/states/` | `EmptyState`, `LoadingState` |
-| `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
-| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `StanceCoachMark`, `SeveranceConfirm` |
-| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `MediaViewer`, `VideoTransport`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
+| `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
+| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `StanceCoachMark`, `SeveranceConfirm` |
+| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
-Each has a sibling `.d.ts` (props contract) and `.prompt.md` (what &
-when, plus a usage example). Each directory has one `@dsCard` HTML
+The pair a component is documented by is its **module file's**: every
+`.jsx` has a sibling `.d.ts` (props contract) and `.prompt.md` (what &
+when, plus a usage example), and a module that draws a family covers the
+whole family in that one pair — `MediaAttachment.jsx` also holds
+`MediaGallery` and `MediaDisc`, `VideoControls.jsx` the transport, the
+timeline and the seek line. Each directory has one `@dsCard` HTML
 showing its states.
 
 **Buttons are Material's three and no others**: filled for the one
@@ -1068,8 +1072,9 @@ picture; there the draft is the safety, so nothing asks on the way
 out. The reply wizard and the comment edit keep no draft: leaving
 them discards, so a non-empty composer is asked first — one shared
 dialog (the *DiscardConfirm* board) reading "Discard this reply?"
-or, from an edit, "Discard this edit?", body "Nothing is kept.",
-*Keep writing* beside a filled *Discard*. An empty composer leaves
+or, from an edit, "Discard this edit?", body "Nothing is kept.", a
+quiet *Discard* beside a filled *Keep writing* — the safe answer
+carries the weight, as it does everywhere else. An empty composer leaves
 at once — a confirm with nothing to lose is noise. Signing exits to
 the post's own detail view wearing *Still settling*, with the
 snackbar "Signed — it's in the thread now, still settling." An act
