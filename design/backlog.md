@@ -1265,3 +1265,39 @@ the implementation session's own decision** — one prepare that grows
 the fields, or the client staging the three prepares and sealing the
 batch. The boards and the contract are both satisfied by the second,
 which is why the contract is not moving to meet the first.
+
+### 38 · The recovery code's two loose ends · *design*
+
+Filed by the W0 conform lane 2026-09-09 (questions 29 and 30 of the
+conformance audit's design-session list). Both sit on the recovery
+code; neither blocked the fixes that shipped.
+
+1. **The settings backup card shows a recovery code no board draws
+   there.** The ceremony's code lives on a dedicated screen and is
+   now the trap the board rules — back swallowed until the typed-back
+   confirmation. Settings shows the same code inside a card on the
+   settings screen itself: the mismatch line arrived for free through
+   the shared component, the trap did not — trapping back there would
+   strand the reader in settings. The stakes are the ceremony's (the
+   code is shown once and never stored), so the choices are: give the
+   settings backup its own screen riding the drawn board, trap the
+   settings screen while the code is up, or bless the card as a
+   deliberately lighter surface. Implementation's input: the
+   dedicated screen — same stakes, same screen; the other two either
+   invent a trap no board draws or leave the loss open.
+
+2. **`graph.json` fires the mismatch on a press the master forbids.**
+   The RecoveryCode→RecoveryCodeMismatch edge triggers on pressing
+   "I've written it down" with a wrong code, but the RecoveryCode
+   master draws that button `disabled={!matches}` — the press cannot
+   happen. The apps ship the only reading all three sources support:
+   the button stays disabled and the line appears in place while the
+   field is non-empty and wrong. Two rulings would close it: bless
+   the in-place reading and repoint the edge's trigger, and say when
+   the line appears — today it is the first wrong character, which
+   also flags a reader mid-way through typing the code correctly,
+   since a partial code never matches the whole. The honest eager
+   signal is prefix divergence — a typed prefix the code doesn't
+   start with can never become right, a correct partial shows
+   nothing — but choosing between type-through, blur, and
+   prefix-divergence is a drawing-level call.
