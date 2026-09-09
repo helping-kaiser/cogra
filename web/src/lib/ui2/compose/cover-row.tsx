@@ -3,7 +3,7 @@
 // The cover row — ComposeCover's "Cover" block, and the same block inlined into
 // the reply composer at comment scale (design/backlog.md item 31).
 //
-// ONE COMPONENT FOR BOTH because it is one design element: three frames pulled
+// ONE COMPONENT FOR BOTH because it is one design element: the frames pulled
 // off the clip with the first selected, a dashed "A picture" tile beside them
 // for a face of the author's own, and one line of help under it. The post gives
 // it a whole screen and a comment gives it a row in the composer, but what the
@@ -11,7 +11,7 @@
 // the two silently drift apart.
 //
 // NOT A SCRUBBER. A timeline that lets an author land on any frame is the
-// obvious web idiom and it is not what the board draws: three offers plus a
+// obvious web idiom and it is not what the board draws: a few offers plus a
 // picture tile is a smaller decision, and the picture tile already covers the
 // author who wants a face the clip does not contain.
 
