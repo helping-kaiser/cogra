@@ -14,6 +14,7 @@ import { intersect, observedThresholds } from "@/test/media-env";
 import { isMuted, resetMuteForTests, setMuted } from "./mute";
 import { VideoPlayer } from "./video-player";
 import { MediaTile } from "./media-tile";
+import { PORTRAIT_CAP } from "./aspect";
 
 afterEach(() => resetMuteForTests());
 
@@ -177,5 +178,45 @@ describe("the tile", () => {
   it("draws the length where the contract states one", () => {
     render(<MediaTile src={CLIP} mimeType="video/mp4" durationMs={42_000} testId="moving" />);
     expect(screen.getByTestId("moving-duration")).toHaveTextContent("0:42");
+  });
+});
+
+// HT-21: clips rendered SQUISHED — wider than the clip actually is. The cause
+// was the CSS default `object-fit: fill` on a box the height cap had shortened,
+// so the picture was scaled to the box instead of cropped to it. The ruling (the
+// reel round) is a clamp-and-crop: native ratio, anything taller than 4:5
+// centre-cropped to it, and letterboxing nowhere.
+describe("a clip's shape", () => {
+  it("never scale-distorts, on either surface", () => {
+    render(
+      <>
+        <VideoPlayer src={CLIP} testId="post" />
+        <VideoPlayer src={CLIP} surface="reading" testId="thread" />
+      </>,
+    );
+    expect(screen.getByTestId("post").className).toContain("object-cover");
+    expect(screen.getByTestId("thread").className).toContain("object-cover");
+  });
+
+  it("reserves the clip's own shape, so the height cap crops instead of squeezing", () => {
+    render(<MediaTile src={CLIP} mimeType="video/mp4" sourceRatio={16 / 9} testId="moving" />);
+    const frame = screen.getByTestId("moving-frame");
+    expect(frame.style.aspectRatio).toBe(`${16 / 9} / 1`);
+    expect(frame.style.maxHeight).toBe("var(--media-max-height)");
+    expect(screen.getByTestId("moving").className).toContain("size-full");
+  });
+
+  it("clamps a clip taller than 4:5 to the cap and crops it there", () => {
+    render(<MediaTile src={CLIP} mimeType="video/mp4" sourceRatio={9 / 16} testId="moving" />);
+    expect(screen.getByTestId("moving-frame").style.aspectRatio).toBe(`${PORTRAIT_CAP} / 1`);
+    expect(screen.getByTestId("moving").className).toContain("object-cover");
+  });
+
+  it("leaves an unprobed clip its own shape, bounded by the height cap alone", () => {
+    // Reserving a square for a shape nobody has measured would crop a wide clip
+    // to one — the honest answer is to let the element size itself.
+    render(<MediaTile src={CLIP} mimeType="video/mp4" testId="moving" />);
+    expect(screen.queryByTestId("moving-frame")).toBeNull();
+    expect(screen.getByTestId("moving").className).toContain("max-h-[var(--media-max-height)]");
   });
 });

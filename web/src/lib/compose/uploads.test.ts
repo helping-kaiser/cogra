@@ -4,7 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApolloClient } from "@apollo/client";
 import { CENTERED } from "@/lib/ui2/media/crop";
+import { PICTURE_MAX_BYTES } from "@/lib/ui2/media/caps";
 import type { AuthGuard } from "@/lib/session/guard";
+import { TOO_BIG_PICTURE } from "./pick";
 import { runUpload, runVideoUpload, waitingAssets } from "./uploads";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
@@ -206,6 +208,53 @@ describe("runUpload", () => {
       }),
     );
     await expect(runUpload(clientAnswering({}), asset, 1, () => {})).resolves.toBeUndefined();
+  });
+
+  // HT-17: the cap lives HERE, on the encoded bytes, so a camera original three
+  // times over it is uploaded happily once the encode has shrunk it — and the
+  // board's own sentence still stands for the case that survives oversized.
+  it("weighs the ENCODED bytes against the cap, not the picked file", async () => {
+    encodable();
+    const client = clientAnswering({ uploadMedia: { media: { id: "m" }, userErrors: [] } });
+    const huge: PickedAsset = {
+      ...asset,
+      file: new Blob([new Uint8Array(new ArrayBuffer(PICTURE_MAX_BYTES + 1)) as BlobPart]),
+    };
+    const { seen, step } = steps();
+
+    await runUpload(client, huge, 1, step);
+
+    expect(seen.at(-1)).toEqual({ kind: "done", mediaId: "m" });
+  });
+
+  it("speaks the board's sentence when the encode itself lands over the cap", async () => {
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => ({ width: 100, height: 100, close: () => {} })),
+    );
+    class Fat {
+      constructor(
+        public width: number,
+        public height: number,
+      ) {}
+      getContext() {
+        return { drawImage: () => {} };
+      }
+      async convertToBlob({ type }: { type: string }) {
+        return new Blob([new Uint8Array(new ArrayBuffer(PICTURE_MAX_BYTES + 1)) as BlobPart], {
+          type,
+        });
+      }
+    }
+    vi.stubGlobal("OffscreenCanvas", Fat);
+    const client = clientAnswering({ uploadMedia: { media: { id: "m" }, userErrors: [] } });
+    const { seen, step } = steps();
+
+    await runUpload(client, asset, 1, step);
+
+    // Not retryable: the same source encodes to the same bytes next time.
+    expect(seen.at(-1)).toEqual({ kind: "failed", message: TOO_BIG_PICTURE, retryable: false });
+    expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
   });
 });
 
