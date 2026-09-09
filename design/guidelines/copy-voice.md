@@ -114,7 +114,7 @@ title, at most two short paragraphs, Close. The texts, verbatim
   and can never change, not even by an edit. Your default lives in
   settings — Public domain until you change it.
 - **Marking as sensitive**: The mark veils the pictures and the
-  description until a reader chooses to look. The title stays
+  words until a reader chooses to look. The title stays
   readable, so choosing is informed. / Your reason, if you give one,
   is shown on the veil. The mark is public and travels with the post.
 - **Describing pictures** (the describe sheet): A description is
