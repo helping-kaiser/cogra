@@ -529,6 +529,12 @@ from the media path and carrying their own doc write-back:
   no-ops), and an optional **quick-pad variant** — hold, drag,
   commit on release, no Set step — as a second mode beside the
   full pad (jakob, 2026-08-25; the full pad stays the default).
+- **The borrowed-view band lands here.** `BorrowedViewBand` names a
+  borrowed *ranking* vantage, which nothing before this slice can
+  make true, so the band and the borrowed-vantage field the contract
+  owes an anonymous or applicant reader ship with the ranker. The
+  guest notice stands until then
+  ([design/readme.md §13](../../design/readme.md#13-decided-in-design-sessions)).
 - **The L1-view / L2-view toggle on the feed.** The stance bundle
   already lets a reader choose which view they read — landed only,
   or landed plus what is still in flight (slice 2.2). The ranked

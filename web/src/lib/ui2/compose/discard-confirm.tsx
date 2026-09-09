@@ -57,9 +57,11 @@ export function DiscardConfirm({
         event.preventDefault();
         onKeepWriting();
       }}
-      className="m-auto w-[calc(100%-3.375rem)] max-w-[22rem] rounded-extra-large border-0 bg-surface-container-high p-6 text-on-surface backdrop:bg-scrim/50"
+      className="cg-dialog-in m-auto w-[calc(100%-3.375rem)] max-w-[22rem] rounded-extra-large border-0 bg-surface-container-high p-6 text-on-surface backdrop:bg-scrim/50"
     >
-      <h2 id={`${testId}-title`} className="m-0 text-title-medium">
+      {/* `headline-small` is a dialog heading's role; `title-medium` is a
+          card's (readme §13, the audit answers, and the type table). */}
+      <h2 id={`${testId}-title`} className="m-0 text-headline-small">
         Discard this reply?
       </h2>
       <p className="mt-2 mb-6 text-body-medium text-on-surface-variant">Nothing is kept.</p>

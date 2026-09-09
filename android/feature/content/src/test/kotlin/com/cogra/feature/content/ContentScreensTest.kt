@@ -16,6 +16,7 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
@@ -57,6 +58,8 @@ class ContentScreensTest {
         onLoadMore: () -> Unit = {},
         onRefresh: () -> Unit = {},
         keyBanner: @Composable () -> Unit = {},
+        borrowedViewBand: @Composable () -> Unit = {},
+        onChats: (() -> Unit)? = null,
         onStance: (String, String) -> Unit = { _, _ -> },
     ) {
         compose.setContent {
@@ -70,9 +73,59 @@ class ContentScreensTest {
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onSignInOrJoin = onSignInOrJoin,
+                onChats = onChats,
                 keyBanner = keyBanner,
+                borrowedViewBand = borrowedViewBand,
             )
         }
+    }
+
+    @Test
+    fun theFeedWearsTheBandRatherThanAPageTitle() {
+        renderFeed(FeedUiState(loading = false))
+
+        // A tab root's name is the bar slot the reader tapped to get here,
+        // so the band carries the mark and the wordmark and no screen
+        // title (FE-09).
+        compose.onNodeWithTag("feed_band_wordmark").assertTextEquals("cogra")
+        compose.onNodeWithText("Feed").assertDoesNotExist()
+    }
+
+    @Test
+    fun theBandCarriesChatsWhereMessagingLeadsSomewhere() {
+        var chats = 0
+        renderFeed(FeedUiState(loading = false), onChats = { chats++ })
+
+        compose.onNodeWithTag("feed_band_chats").performClick()
+
+        assertThat(chats).isEqualTo(1)
+    }
+
+    @Test
+    fun theBandDrawsNoChatsControlWhereItWouldOpenNothing() {
+        // The signed-in reader's chat surface is an undrawn gap on the
+        // canvas, and a control that opens nothing teaches the reader the
+        // band lies.
+        renderFeed(FeedUiState(loading = false), onChats = null)
+
+        compose.onNodeWithTag("feed_band_chats").assertDoesNotExist()
+    }
+
+    @Test
+    fun theBorrowedViewBandRidesTheTopRegionForTheReaderWhoHasOne() {
+        renderFeed(
+            FeedUiState(loading = false),
+            borrowedViewBand = {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(24.dp)
+                        .testTag("borrowed_band"),
+                )
+            },
+        )
+
+        compose.onNodeWithTag("borrowed_band").assertExists()
     }
 
     @Test

@@ -66,7 +66,7 @@ export function SeveranceConfirm({
       ref={ref}
       data-testid="severance-confirm"
       onClose={onCancel}
-      className="m-auto w-[min(90vw,22rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
+      className="cg-dialog-in m-auto w-[min(90vw,22rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
       <h2 className="text-headline-small">Sever this?</h2>
       {pickAnchor !== null && (
