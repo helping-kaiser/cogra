@@ -16,10 +16,32 @@
     <string name="content_topics_preview">Will be added as #%1$s</string>
     <string name="content_topics_cap_reached">Up to %1$d topics per post</string>
     <string name="content_topics_params_done">Done</string>
-    <!-- The detail view\'s on-demand reveal of how strongly each topic
-         is claimed (F8) — never on by default. -->
-    <string name="content_topics_show_values">Show how strongly these topics are claimed</string>
-    <string name="content_topics_hide_values">Hide how strongly these topics are claimed</string>
+    <!-- The topics line on a card: two chips whole, then everything
+         else in words (TopicsLine.jsx). The two counts join with the
+         same "·" that opens the string. -->
+    <plurals name="content_topics_line_topics">
+        <item quantity="one">%d topic</item>
+        <item quantity="other">%d topics</item>
+    </plurals>
+    <plurals name="content_topics_line_references">
+        <item quantity="one">%d reference</item>
+        <item quantity="other">%d references</item>
+    </plurals>
+    <!-- The affordance row. The comment count is spoken rather than
+         drawn as a word — the row is glyph-plus-number, and the label
+         lives in the accessibility tree instead. -->
+    <plurals name="content_comment_count">
+        <item quantity="one">%d comment</item>
+        <item quantity="other">%d comments</item>
+    </plurals>
+    <!-- The completed name, never a bare "Share": a glyph with one word
+         beside it tells a listener the verb but not the object
+         (guidelines/copy-voice.md). -->
+    <string name="content_share_post">Share this post</string>
+    <!-- The caption's in-place opener. A text control, not a link: it
+         opens the words where they stand and never navigates. -->
+    <string name="content_more">More</string>
+    <string name="content_less">Less</string>
     <!-- What a topic name may be — L1\'s identifier atom (D3). -->
     <!-- The references section (D18, D20). The word is always
          Reference — a reference to a profile is a mention — and never
@@ -45,8 +67,6 @@
     <string name="content_references_finder_empty">Nothing matched that yet.</string>
     <string name="content_references_finder_failed">Couldn\'t look that up. Check your connection.</string>
     <string name="content_references_finder_cancel">Cancel</string>
-    <string name="content_references_show_values">Show how strongly these references are made</string>
-    <string name="content_references_hide_values">Hide how strongly these references are made</string>
     <!-- A withdrawal nets the citation bundle to zero, which may take
          more than one counter-record (D11). -->
     <plurals name="content_references_withdrawal_cost">
