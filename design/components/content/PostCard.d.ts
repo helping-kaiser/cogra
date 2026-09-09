@@ -122,6 +122,11 @@ export interface PostCardProps {
    * affordance row keeps only what a reader reaches for.
    */
   menuItems?: readonly { label: string; onSelect?: () => void }[];
+  /**
+   * Squares the top-left corner so a row flag (TaggedRow) fuses with the
+   * card. Defaults to false.
+   */
+  attach?: boolean;
 }
 
 export declare function PostCard(props: PostCardProps): JSX.Element;
