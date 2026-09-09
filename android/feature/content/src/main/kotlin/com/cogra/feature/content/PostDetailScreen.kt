@@ -21,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -41,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
+import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.collapsingTop
@@ -172,7 +172,7 @@ fun PostDetailScreen(
     }
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = { CograSnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 // The 48dp band every board draws (`spacing.css`
