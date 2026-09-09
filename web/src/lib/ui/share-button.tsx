@@ -16,10 +16,17 @@
 // with the browser's first paint. Where neither door exists the control is
 // absent rather than dead (see `share.ts`).
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 import { Icon } from "./icons";
 import { canShare, shareLink } from "./share";
+
+// The documented way to read a browser fact the server cannot know: a store
+// with a server snapshot, rather than an effect that sets state (React,
+// "useSyncExternalStore — subscribing to a browser API"). What this browser can
+// do never changes while the page is open, so there is nothing to subscribe to.
+const NEVER_CHANGES = () => () => {};
+const NOT_ON_THE_SERVER = () => false;
 
 export function ShareButton({
   href,
@@ -38,8 +45,7 @@ export function ShareButton({
   onCopied: () => void;
   testId?: string;
 }) {
-  const [capable, setCapable] = useState(false);
-  useEffect(() => setCapable(canShare()), []);
+  const capable = useSyncExternalStore(NEVER_CHANGES, canShare, NOT_ON_THE_SERVER);
   if (!capable) return null;
 
   return (

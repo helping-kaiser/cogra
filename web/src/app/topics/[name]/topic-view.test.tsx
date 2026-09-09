@@ -18,6 +18,7 @@ function postNode(id: string, title: string) {
   return {
     __typename: "Post",
     id,
+    comments: { __typename: "CommentConnection", totalCount: 0 },
     title: moderated(title),
     description: moderated(null),
     content: moderated(`body of ${id}`),
@@ -66,7 +67,7 @@ describe("TopicView", () => {
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("topic-name")).toHaveTextContent("#rust");
     expect(screen.getByTestId("topic-post-p1")).toHaveTextContent("About Rust");
-    expect(screen.getByTestId("topic-post-p1")).toHaveAttribute("href", "/posts/p1");
+    expect(screen.getByTestId("topic-post-p1-link")).toHaveAttribute("href", "/posts/p1");
     // PostCard's own inventory rides along — the stance control included.
     expect(screen.getByTestId("topic-stance-p1")).toBeInTheDocument();
   });
