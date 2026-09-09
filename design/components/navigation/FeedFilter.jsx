@@ -148,8 +148,21 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
    sits in the corner the trigger left it in. A sheet that covers the surface
    it was opened from does need one, and `SheetTitle` already rules where the
    "?" goes then: on the heading's own row. The slot carries both, so the two
-   readings differ where they must and nowhere else. */
-export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead }) {
+   readings differ where they must and nowhere else.
+
+   `foot` IS THE OTHER HALF OF THAT DIFFERENCE. Over a feed the filter applies
+   live and there is nothing to commit — the list behind it rearranges and the
+   reader watches it happen. Over settings nothing reacts, so the choice is
+   committed, and the sheet takes the Done row the license sheets take: a
+   hairline, the reading, the button, inside the sheet's own inset.
+
+   A SHEET WITH A FOOT OWNS ITS HEIGHT. Ten kinds and four sections already
+   outrun 88% of the screen, so a commitment appended after them would sit
+   below the fold — the one control that must always be reachable, reachable
+   only by scrolling. So the sections scroll inside the sheet and the foot is
+   pinned under them, which is the anatomy `BottomSheet`'s own `height` exists
+   for. A sheet with no foot is sized by its content, exactly as before. */
+export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot }) {
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
     const list = value[key] || [];
@@ -157,17 +170,8 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
   };
   const postsish = (value.kinds || []).some((kind) => kind === "posts" || kind === "comments");
 
-  return (
-    /* Ten kinds plus four sections outgrow the sheet's 62% default — the
-       filter opens taller so the whole control is present; it still scrolls
-       on shorter screens. The sheet carries its own "?" (like the pads):
-       the dialog explains the filter and names the settings default. */
-    <BottomSheet open={open} onClose={onClose} ariaLabel={ariaLabel} maxHeight="88%">
-      {lead ?? (
-        <div style={{ position: "absolute", top: "var(--space-1)", right: "var(--space-2)" }}>
-          <HelpDot ariaLabel="How the filter works" onOpen={onHelp} />
-        </div>
-      )}
+  const sections = (
+    <>
       <FilterSection label="What gets ranked" hint="Everything that can reach your feed. Combine as many as you like.">
         {FEED_KINDS.map((kind) => (
           <Chip key={kind.value} label={kind.label} selected={(value.kinds || []).includes(kind.value)} onToggle={() => toggle("kinds", kind.value)} />
@@ -187,6 +191,30 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
       <div style={{ padding: "0 var(--space-6)" }}>
         <Button variant="text" size="sm" selfStart onClick={() => onChange && onChange(FEED_FILTER_DEFAULT)}>Reset</Button>
       </div>
+    </>
+  );
+
+  return (
+    /* Ten kinds plus four sections outgrow the sheet's 62% default — the
+       filter opens taller so the whole control is present; it still scrolls
+       on shorter screens. The sheet carries its own "?" (like the pads):
+       the dialog explains the filter and names the settings default. */
+    <BottomSheet open={open} onClose={onClose} ariaLabel={ariaLabel} {...(foot ? { height: "88%" } : { maxHeight: "88%" })}>
+      {lead ?? (
+        <div style={{ position: "absolute", top: "var(--space-1)", right: "var(--space-2)" }}>
+          <HelpDot ariaLabel="How the filter works" onOpen={onHelp} />
+        </div>
+      )}
+      {foot ? (
+        <>
+          {/* `Reset` ends the scroll rather than the sheet, and keeps a section's
+              own gap between itself and the hairline below it. */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingBottom: "var(--space-4)" }}>{sections}</div>
+          {foot}
+        </>
+      ) : (
+        sections
+      )}
     </BottomSheet>
   );
 }

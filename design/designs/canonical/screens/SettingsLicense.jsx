@@ -27,10 +27,10 @@
    the two cannot drift — the same rule the Reading row keeps with the filter's
    accessible name.
 
-   `Done` CLOSES IT, the way the seal's does. The filter applies live because a
-   feed reacts behind it and a reader can see what they did; a license has
-   nothing to show until it is used, so the choice is committed rather than
-   watched. */
+   `Done` CLOSES IT, the way the seal's does — and the way the Reading row's
+   sheet does. Over settings nothing reacts behind a sheet to be watched, so
+   both of the page's sheets commit rather than apply live; the feed's own
+   filter is the one that can be watched, and it is the one with no `Done`. */
 export function Screen() {
   return (
     <>

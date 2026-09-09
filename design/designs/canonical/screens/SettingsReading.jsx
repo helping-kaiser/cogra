@@ -19,6 +19,19 @@
    still on screen. The "?" moves with the title onto its own row, which is
    `SheetTitle`'s rule for a sheet that has one.
 
+   IT COMMITS, WHERE THE FEED'S WATCHES. The feed's filter applies live because
+   the list behind it rearranges as the reader presses; over settings nothing
+   reacts, so the sheet takes the Done row — the license sheets' third anatomy:
+   a hairline, the reading, the button, inside the sheet's own inset. The
+   reading is the pill's word, `Posts`, so the row that opened this sheet, the
+   sheet's own foot and the trigger in every feed cannot say different things.
+
+   THE FOOT IS PINNED AND THE SECTIONS SCROLL. Four sections already outrun the
+   sheet's 88%, so a commitment placed after them would be the one control a
+   reader has to scroll to find — and `Reset` would still end at the screen's
+   bottom lip. `FeedFilterSheet` takes the height when it is given a foot, and
+   `Reset` ends the scroll instead of the sheet.
+
    THE ORDER SECTION IS DRAWN AT ITS DESIGNED DEFAULT, `Ranked`. §13's standing
    ruling — the filter honestly reads Newest until slice 3's ranker ships —
    binds the shipped label to the shipped behaviour, and it binds this row too:
@@ -41,6 +54,16 @@ export function Screen() {
               <QuietNote>Every feed starts from this.</QuietNote>
             </div>
           </>
+        }
+        foot={
+          <div style={{ padding: "0 var(--space-6)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
+              <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+                Posts
+              </span>
+              <Button>Done</Button>
+            </div>
+          </div>
         }
       />
     </>
