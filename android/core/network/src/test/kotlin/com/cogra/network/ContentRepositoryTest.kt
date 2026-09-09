@@ -102,7 +102,9 @@ class ContentRepositoryTest {
         id: String = "m1",
         altText: String? = "A salt crust",
         status: String = "NORMAL",
-        aspectRatio: String? = "0.8",
+        // "W:H" in lowest terms, which is what the contract serves
+        // (api-spec.md `MediaOptions`) — never a decimal.
+        aspectRatio: String? = "4:5",
         mimeType: String = "image/webp",
         durationMs: Int? = null,
         coverId: String? = null,
@@ -121,7 +123,7 @@ class ContentRepositoryTest {
         """
         {"__typename":"MediaAttachment","id":"$it","url":"https://media/$it",
          "status":"$status",
-         "options":{"__typename":"MediaOptions","aspectRatio":"0.5625"}}
+         "options":{"__typename":"MediaOptions","aspectRatio":"9:16"}}
         """.trimIndent()
     } ?: "null"
 
@@ -274,7 +276,7 @@ class ContentRepositoryTest {
                 postJson(
                     "p1",
                     "Salt maps",
-                    attachments = "[${mediaJson("m1")},${mediaJson("m2", altText = null, aspectRatio = "1.91")}]",
+                    attachments = "[${mediaJson("m1")},${mediaJson("m2", altText = null, aspectRatio = "16:9")}]",
                 )
             }}],
                "pageInfo":{"__typename":"PageInfo","hasNextPage":false,"endCursor":null}}}}""",
@@ -287,7 +289,10 @@ class ContentRepositoryTest {
         // null rather than acquiring a fabricated description (D20).
         assertThat(post.attachments[0].altText).isEqualTo("A salt crust")
         assertThat(post.attachments[1].altText).isNull()
-        assertThat(post.attachments[1].aspectRatio).isEqualTo(1.91f)
+        // The contract states a shape as "W:H", so the tile reserves the
+        // shape the server measured rather than falling back to square.
+        assertThat(post.attachments[0].aspectRatio).isEqualTo(4f / 5f)
+        assertThat(post.attachments[1].aspectRatio).isWithin(0.0001f).of(16f / 9f)
     }
 
     @Test
@@ -302,7 +307,7 @@ class ContentRepositoryTest {
                         mediaJson(
                             "v1",
                             mimeType = "video/mp4",
-                            aspectRatio = "0.5625",
+                            aspectRatio = "9:16",
                             durationMs = 42_000,
                             coverId = "c1",
                         )
@@ -318,6 +323,10 @@ class ContentRepositoryTest {
         assertThat(asset.durationMs).isEqualTo(42_000)
         assertThat(asset.cover?.id).isEqualTo("c1")
         assertThat(asset.cover?.status).isEqualTo(FieldStatus.NORMAL)
+        // HT-21. A portrait clip's own shape, which is what sizes the
+        // player's surface — read as a decimal it fell back to square and
+        // the surface stretched the frames into it.
+        assertThat(asset.aspectRatio).isEqualTo(9f / 16f)
     }
 
     @Test
@@ -433,13 +442,57 @@ class ContentRepositoryTest {
                           "canonicalProposal":"AA==","gcAfterEpochs":8}],
                "userErrors":[]}}}""",
         )
-        repo().preparePostEdit("p1", title = null, description = null, content = "B")
+        repo().preparePostEdit(
+            "p1",
+            title = null,
+            description = null,
+            content = "B",
+            attachments = emptyList(),
+        )
         val body = server.takeRequest().body.readUtf8()
         // The payload is the whole content state: the optional fields
         // ride as explicit nulls rather than absent keys (post.md §4).
         assertThat(body).contains("\"title\":null")
         assertThat(body).contains("\"description\":null")
         assertThat(body).contains("\"content\":\"B\"")
+        // The gallery too, and explicitly empty rather than absent: an
+        // absent one is an empty one on the wire, so a words post says
+        // what it means instead of relying on the server's default.
+        assertThat(body).contains("\"attachments\":[]")
+    }
+
+    /**
+     * HT-18. The gallery is complete state like the words: an edit that
+     * did not re-state it would clear a media post's body, which is how
+     * saving an image post's edit destroyed its pictures.
+     */
+    @Test
+    fun anEditReStatesTheGalleryItLeavesStanding() = runTest {
+        enqueue(
+            """{"data":{"preparePostEdit":{"__typename":"PrepareContentPayload",
+               "node":"p1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"PUBLISH",
+                          "canonicalProposal":"AA==","gcAfterEpochs":8}],
+               "userErrors":[]}}}""",
+        )
+        repo().preparePostEdit(
+            "p1",
+            title = "T",
+            description = null,
+            // Words XOR media: a media post's body is its gallery.
+            content = null,
+            attachments = listOf(AttachmentClaim("m1", "A salt crust"), AttachmentClaim("m2")),
+        )
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"content\":null")
+        assertThat(body).contains("\"mediaId\":\"m1\"")
+        assertThat(body).contains("\"altText\":\"A salt crust\"")
+        assertThat(body).contains("\"mediaId\":\"m2\"")
+        // Order and cover are the list's own, never the caller's claim.
+        assertThat(body).contains("\"displayOrder\":0")
+        assertThat(body).contains("\"displayOrder\":1")
+        assertThat(body).contains("\"isCover\":true")
+        assertThat(body).contains("\"isCover\":false")
     }
 
     /**
@@ -462,6 +515,7 @@ class ContentRepositoryTest {
             title = null,
             description = null,
             content = "B",
+            attachments = emptyList(),
             sensitive = true,
             sensitiveReason = "graphic injury",
         )
@@ -483,6 +537,7 @@ class ContentRepositoryTest {
             title = null,
             description = null,
             content = "B",
+            attachments = emptyList(),
             sensitive = false,
             sensitiveReason = "left over from a cleared switch",
         )

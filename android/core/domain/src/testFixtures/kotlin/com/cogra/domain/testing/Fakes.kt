@@ -458,7 +458,8 @@ open class ThrowingContentRepository : ContentRepository {
         id: String,
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
+        attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
@@ -537,8 +538,6 @@ open class ThrowingMediaProcessor : MediaProcessor {
         throw UnsupportedOperationException()
 
     override suspend fun aspectRatio(uri: String): Float? = throw UnsupportedOperationException()
-
-    override suspend fun sizeBytes(uri: String): Long? = null
 }
 
 /** Video-pipeline base: every call throws until a test scripts it. */

@@ -1,8 +1,10 @@
 package com.cogra.feature.content.reply
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -274,6 +276,40 @@ class ReplyWizardScreenTest {
         compose.onNodeWithTag("reply_seal_stance_action").performScrollTo().performClick()
 
         assertThat(sheets).containsExactly(ReplySealSheet.Stance)
+    }
+
+    /**
+     * HT-20. THE PAD CARRIES THE STANCE'S FACE. The boards draw the
+     * anchor's emoji in the readout above the field (`ReplyPad`), and it
+     * was missing here entirely — the pad showed a bare pair of numbers
+     * while every other stance surface in the app shows a face.
+     */
+    @Test
+    fun thePadReadsTheStanceAsAFaceBesideItsPair() {
+        compose.setContent {
+            Wizard(
+                sealWithWords().copy(
+                    sheet = ReplySealSheet.Stance,
+                    // The board's own example pick, which reads "Nice".
+                    pDirected = 0.1,
+                    pInterest = 0.1,
+                ),
+            )
+        }
+
+        // The face is a readout, not a label: it leaves the semantics
+        // tree, and the readout announces the anchor's words instead.
+        compose.onNodeWithTag("reply_pad_reading")
+            .assert(hasContentDescription("Nice", substring = true))
+    }
+
+    /** The seal's row reads the same face beside the same pair. */
+    @Test
+    fun theSealRowReadsTheStanceAsAFaceToo() {
+        compose.setContent { Wizard(sealWithWords().copy(pDirected = 0.1, pInterest = 0.1)) }
+
+        compose.onNodeWithTag("reply_seal_stance").performScrollTo().assertExists()
+        compose.onNodeWithText("🙂", substring = true).assertExists()
     }
 
     /** `ReplySeal` 7: Change opens the license sheet. */

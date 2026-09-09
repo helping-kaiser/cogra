@@ -227,6 +227,17 @@ interface ContentRepository {
      * all of them ride as present values; a null title/description
      * clears.
      *
+     * [content] is the words half of the body, under the same
+     * exclusive-or a creation carries: a media post sends null, because
+     * words beside media are refused on `["content"]` (api-spec.md "The
+     * body XOR").
+     *
+     * [attachments] is the gallery the edit leaves standing — complete,
+     * not a delta, and carries **no default** for the same reason the
+     * mark does not: an omitted gallery is an empty gallery on the wire,
+     * so an edit that forgot to re-state it would replace a media post's
+     * body with the words in the form and destroy the pictures.
+     *
      * [sensitive] and [sensitiveReason] are the author's own mark, and
      * they are not optional here: an edit record carries the complete
      * content state, so a mark the edit does not re-state is a mark the
@@ -237,7 +248,8 @@ interface ContentRepository {
         id: String,
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
+        attachments: List<AttachmentClaim>,
         sensitive: Boolean = false,
         sensitiveReason: String? = null,
     ): Outcome<PreparedContentView>
