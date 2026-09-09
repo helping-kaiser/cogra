@@ -10,8 +10,21 @@
 
 import { useId } from "react";
 
-const FIELD =
+/**
+ * The box itself, without the label above it.
+ *
+ * Exported because one composer draws its own: the reply's words are the
+ * screen and carry no label (the target sits above them and names what is
+ * being answered — `ReplyCompose`), but the BOX is not theirs to redraw. The
+ * master's own note about the same escape hatch,
+ * `design/designs/canonical/screens/ComposeWords.jsx:7-13`: spell the box "at
+ * `TextField`'s own values" rather than invent one, and never drop it —
+ * a borderless field says nothing about where the writing goes.
+ */
+export const FIELD_BOX =
   "cg-focus box-border w-full rounded-extra-small border border-outline bg-transparent px-3 py-2.5 text-body-large text-on-surface placeholder:text-on-surface-variant disabled:opacity-[var(--state-disabled)]";
+
+const FIELD = FIELD_BOX;
 
 export function TextField({
   label,
