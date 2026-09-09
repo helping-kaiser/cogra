@@ -302,44 +302,69 @@ weight. Mostly its own thing and mostly outside this system — last on
 purpose. **It lands with slice 2.7's search backend** (ruled 2026-09-09):
 no surface is built against the exact-match lookup before then.
 
-### 20 · Settings — the whole surface · *design* · **gates 2.5.3**
-Three shipped "?" texts already promise it: "Your default lives in
+### 20 · Settings — the whole surface · *design* · **drawn 2026-09-09**
+Three shipped "?" texts promised it: "Your default lives in
 settings" (the license, and now the filter), and "Swap the input in
-settings" (the stance pads). Two boards reach it as a gap
-(`Profile/3`, `ProfileApplicant/3` → *the settings screen (not
-designed)*), and 2.5.3 cannot ship without it: the
-**default-license account setting** is the one 2.5.3 deliverable
-with neither a contract field nor a screen, and the license sheet
-already promises it in words.
+settings" (the stance pads). Two boards reached it as a gap
+(`Profile/3`, `ProfileApplicant/3`), and 2.5.3 could not ship
+without it: the **default-license account setting** was the one
+2.5.3 deliverable with neither a contract field nor a screen.
 
-The round runs in three moves. **Census first** — slice 1 already
-shipped settings-shaped controls (backup, recovery, export) on
-Android and web; find them and read what they are, because the
-surface is being designed around existing furniture, not onto an
-empty page. **Then the whole surface** — its sections, its
-navigation, and the pattern every later setting follows; a defaults
-page designed alone is a page the next setting breaks. **Then the
-default license joins the surface** as one setting among the others,
-with the account-preference shape `api-spec.md` still owes it.
 Added 2026-08-28 out of item 19's review; reshaped by the slice-2.5
-round.
+round; ruled and drawn 2026-09-09. Readme §13, *The settings round*,
+records the shape.
 
-Ruled 2026-09-09 (jakob), shaping the surface before it is drawn:
+Ruled 2026-09-09 (jakob), all carried into the boards: order by use
+rather than taxonomy; the default license as one setting among the
+others; theme as light / dark / auto, per-device and never in the
+contract; the settings backup on a dedicated screen riding the drawn
+RecoveryCode board (item 41.1); the recovery-code replace divergence
+blessed as platform-appropriate proof; "don't remember this account
+on this device" joining the sign-out section as well as the login
+form; the snackbar as the only feedback; and the aesthetic bar —
+current settings-surface anatomy in this system's own skin.
 
-- **Order by use, most- to least-used.** The page's order is a
-  frequency ranking, not a taxonomy — what a reader reaches for
-  often sits high, regardless of which section a taxonomist would
-  file it under.
-- **The default license is one setting among the others**, placed by
-  the same frequency rule — "on top" in the roadmap meant on top of
-  the round's work, never literally first on the page.
-- **A theme setting joins the surface**: light, dark, and auto
-  (device default). Likely high on the page. It implies the census
-  answers what dark support exists today — in the apps and in the
-  design tokens.
-- **The settings backup card becomes a dedicated screen** riding the
-  drawn RecoveryCode board (item 41.1's ruling): same stakes, same
-  screen; the round draws it in context.
+**Drawn**: `Settings` (the whole page, eight groups in the ruled
+order), `SettingsBackup`, `YourKey`; `SettingsGroup`/`SettingsRow`
+and the house `Switch` as masters; `api-spec.md`'s
+`UserPreferences.defaultLicense`; the round's copy in
+`copy-voice.md`, awaiting blessing.
+
+**What implementation owes** — the boards are ahead of both apps on
+every line below:
+
+1. **The page is one scrolling task flow** entered from the gear,
+   with no bottom bar, and its card order is the ruled one. Both apps
+   ship a different order and web's entry is a text link.
+2. **Every setting takes the row anatomy** — group heading, card of
+   rows, footnote under. Today both apps draw section cards with body
+   paragraphs inside them.
+3. **Credentials move off the page.** The boards draw three rows
+   toward three screens nobody has drawn yet (`Settings/11`, `/12`,
+   `/13` are the gaps); the apps still stack three forms inline. The
+   screens themselves are a design item of their own.
+4. **The theme override exists nowhere.** Both apps and
+   `tokens/colors.css` carry full dark palettes; what is missing is
+   the hook that overrides the system preference, plus the per-device
+   store behind it.
+5. **The default license needs the contract**: `UserPreferences`
+   and `SetPreferencesInput` are specified, `schema.graphql` carries
+   no preference field at all, and the license sheet needs a second
+   caller that writes the account default instead of one post's terms.
+6. **The backup card stops showing a code inline** and leads to the
+   dedicated screen; the replace proof stays each platform's own.
+7. **The drifted lines**: Writing vs Signing, the multi-action hint,
+   "(this device)" vs "(this browser)", the verb-shaped row labels —
+   `copy-voice.md`'s settings section carries the settled line for
+   each.
+8. **The preference stores disagree, and web's is wrong.** Android
+   keys the stance input and the multi-action confirmation by
+   `accountId`; web keeps both in unscoped `localStorage`
+   (`cogra.stanceInputMode`, `cogra.confirmMultiActionSubmits`), so
+   on a shared browser the next account inherits the last one's
+   choices. Web should scope them by account the way Android does —
+   and the theme, being genuinely per-device rather than per-account,
+   is the one that should not be.
 
 ### 22 · Canvas flows + pages · *process*
 The canonical canvas has outgrown one flat plane (77+ boards):
@@ -1411,8 +1436,17 @@ if the latter, its words.
 **Ruled by jakob 2026-09-09: one line for both scales.** The sheet
 says `Veils the pictures and the words until a reader chooses to
 look.` — a comment has no description to name, and a post's
-description is words. **The "?" behind the sheet still says *the
-description***: the dialog's paragraph is separately blessed copy in
-`guidelines/copy-voice.md`, and this ruling reached the sheet's line
-only, so the same mark is explained two ways until that text is
-blessed again.
+description is words. The "?" behind the sheet caught up with the
+settings round (jakob's re-bless, same day): its paragraph now reads
+*the words* too, and the mark is explained one way again.
+
+### 43 · The sensitive sheet still draws its own switch · *system*
+
+Filed by the settings round 2026-09-09. `ComposeSensitive` drew the
+system's only switch inline, correctly — one instance is a control,
+not a component. There are now several, so `Switch` is a master
+(`components/core/SettingsRow.jsx`), built to the sheet's own
+geometry so the swap moves no pixel. The sheet has not taken it yet,
+because the round's pixel bar admits only the round's own boards.
+Swap it, re-render, and confirm the board is byte-identical; a copy
+is never the answer.
