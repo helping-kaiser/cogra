@@ -11,7 +11,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { AddIcon, DynamicFeedIcon, PersonIcon } from "@/lib/ui/icons";
+import { Icon } from "@/lib/ui/icons";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 
 export function BottomNav({
@@ -30,12 +30,12 @@ export function BottomNav({
       aria-hidden
       className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container"
     >
-      <AddIcon />
+      <Icon name="add" />
     </span>
   );
   const profileSlot = (
     <>
-      <PersonIcon filled={active === "profile"} />
+      <Icon name={active === "profile" ? "person" : "person_outline"} />
       Profile
     </>
   );
@@ -51,7 +51,7 @@ export function BottomNav({
         aria-current={active === "feed" ? "page" : undefined}
         className={`${item} ${tone(active === "feed")}`}
       >
-        <DynamicFeedIcon />
+        <Icon name="dynamic_feed" />
         Feed
       </Link>
       {signedIn ? (
