@@ -63,6 +63,7 @@ export function VideoPlayer({
   testId = "video-player",
   autoplay = true,
   surface = "full",
+  framed = false,
 }: {
   src: string;
   /** The video's face. Null when there is none, or when it was redacted. */
@@ -72,6 +73,12 @@ export function VideoPlayer({
   testId?: string;
   autoplay?: boolean;
   surface?: PlayerSurface;
+  /**
+   * Whether the caller reserved a frame for the clip to fill. Framed, the
+   * element takes its parent's box whole; unframed it sizes itself and the
+   * height cap is what bounds it.
+   */
+  framed?: boolean;
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const muted = useMuted();
@@ -140,10 +147,16 @@ export function VideoPlayer({
         aria-label={altText ?? undefined}
         data-testid={testId}
         onVolumeChange={(event) => setMuted(event.currentTarget.muted)}
+        // `object-cover` IS THE RULING, not a taste: a clip keeps its native
+        // ratio clamped to tall — 16:9 and 1:1 display true, anything taller
+        // than 4:5 centre-crops to it, and letterboxing exists nowhere (the
+        // reel round, review 1). Without it the element takes the CSS default
+        // `object-fit: fill`, so the moment the height cap shortened the box
+        // the picture was squeezed wider than the clip actually is.
         className={
-          reading
-            ? "block size-full bg-surface-container-high object-contain"
-            : "block max-h-[var(--media-max-height)] w-full bg-surface-container-high"
+          reading || framed
+            ? "block size-full bg-surface-container-high object-cover"
+            : "block max-h-[var(--media-max-height)] w-full bg-surface-container-high object-cover"
         }
       />
 
