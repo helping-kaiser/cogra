@@ -16,6 +16,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -495,8 +497,28 @@ class StancePadTest {
         compose.onNodeWithTag("${TAG}_stance_explanation").assertDoesNotExist()
         compose.onNodeWithTag("${TAG}_stance_explain").performScrollTo().performClick()
 
-        compose.onNodeWithTag("${TAG}_stance_explanation")
-            .assertTextContains("Set", substring = true)
+        compose.onNodeWithTag("${TAG}_stance_explanation").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_explain_back").assertExists()
+    }
+
+    @Test
+    fun theHelpTakesTheFieldsPlaceRatherThanGrowingBelowIt() {
+        // StanceControl.jsx: the panel REPLACES the readouts and the
+        // input. Appended, it grew the card past the window, where
+        // PadAtLowerCentre's clamp abandons the lower anchor and snaps
+        // the pad to the top — the jump (HT-9). Set is disabled while
+        // it is up: the field it explains is not there to check.
+        show(StanceControlState(pad = StancePadMode.STICKY))
+        compose.onNodeWithTag("${TAG}_stance_readout").assertExists()
+
+        compose.onNodeWithTag("${TAG}_stance_explain").performScrollTo().performClick()
+        compose.onNodeWithTag("${TAG}_stance_readout").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_set").assertIsNotEnabled()
+
+        compose.onNodeWithTag("${TAG}_stance_explain_back").performScrollTo().performClick()
+        compose.onNodeWithTag("${TAG}_stance_readout").assertExists()
+        compose.onNodeWithTag("${TAG}_stance_explanation").assertDoesNotExist()
+        compose.onNodeWithTag("${TAG}_stance_set").assertIsEnabled()
     }
 
     @Test
