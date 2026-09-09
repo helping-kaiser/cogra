@@ -2,7 +2,9 @@ package com.cogra.feature.content
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
@@ -45,6 +47,17 @@ data class ComposePostUiState(
     val loadedDescription: String = "",
     val loadedBody: String = "",
     /**
+     * The gallery this edit leaves standing: exactly the one the post
+     * carries, in its own order.
+     *
+     * The edit record is the post's complete content state, so a gallery
+     * the record does not re-state is a gallery the record clears. This
+     * surface authors no pictures — that is the wizard-generation editor
+     * — so the only correct value is the post's own, carried through and
+     * shown.
+     */
+    val attachments: List<MediaAssetView> = emptyList(),
+    /**
      * The author's own sensitive mark this edit leaves standing, read
      * when the form opened.
      *
@@ -73,6 +86,14 @@ data class ComposePostUiState(
     val confirmMultiActionSubmits: Boolean = true,
 ) {
     val creating: Boolean get() = editingId == null
+
+    /**
+     * Whether the pictures are this post's body (D16). A media post has
+     * no words half to edit: every keystroke in a body field could only
+     * end as the server's refusal on `["content"]`, so the field is not
+     * drawn and the words never ride.
+     */
+    val mediaBody: Boolean get() = attachments.isNotEmpty()
 
     /** Whether the edit record has anything to carry (F4's count depends on it). */
     val contentChanged: Boolean
@@ -202,6 +223,7 @@ class ComposePostViewModel @Inject constructor(
                                 loadedTitle = post.title.value.orEmpty(),
                                 loadedDescription = post.description.value.orEmpty(),
                                 loadedBody = post.content.value.orEmpty(),
+                                attachments = post.attachments,
                                 sensitive = mark?.sensitive ?: false,
                                 sensitiveReason = mark?.reason,
                                 tagSection = TagSectionState(tags = tags, loaded = tags),
@@ -306,7 +328,11 @@ class ComposePostViewModel @Inject constructor(
     fun onSubmit() {
         val s = _state.value
         if (s.submitting || s.confirmPending) return
-        if (s.creating && s.body.isBlank()) {
+        // A words post cannot be saved wordless — the server refuses a
+        // body that is neither words nor media, and saying so here puts
+        // the refusal on the field that caused it. A media post has no
+        // words half to be missing.
+        if (!s.mediaBody && s.body.isBlank()) {
             _state.update { it.copy(emptyBody = true) }
             return
         }
@@ -368,7 +394,16 @@ class ComposePostViewModel @Inject constructor(
                         id = editingId,
                         title = s.title.ifBlank { null },
                         description = s.description.ifBlank { null },
-                        content = s.body,
+                        // Words XOR media: a media post's body is its
+                        // gallery, so it sends no words at all rather
+                        // than an empty string, which is a value and
+                        // would read as "both".
+                        content = s.body.takeIf { !s.mediaBody },
+                        // Carried through unchanged, and shown while it
+                        // is: an edit that does not re-state the gallery
+                        // clears it, which is how this surface used to
+                        // replace a post's pictures with the form's words.
+                        attachments = s.attachments.map { AttachmentClaim(it.id, it.altText) },
                         // Carried through unchanged: the record is the
                         // post's complete content state, so the mark the
                         // form read is the mark the edit has to re-state.
