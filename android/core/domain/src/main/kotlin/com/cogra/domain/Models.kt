@@ -198,6 +198,22 @@ const val DEFAULT_STANCE = 0.1
 // Content (slice 2 — api-spec.md "Content nodes", "Content authoring")
 // ---------------------------------------------------------------------
 
+/**
+ * A whole node's moderation state, as against [FieldStatus]'s per-field
+ * one. It is what tells a passed proposal's removal from an author's
+ * own, which the docs require to stay distinguishable — collapsing them
+ * lets a verdict hide behind an author's decision.
+ *
+ * UNKNOWN is the forward-compatible fallback: a state this build cannot
+ * name is never read as a verdict.
+ */
+enum class ModerationState {
+    NORMAL,
+    SENSITIVE,
+    ILLEGAL,
+    UNKNOWN,
+}
+
 /** Per-field moderation state; UNKNOWN renders like REDACTED (hide). */
 enum class FieldStatus {
     NORMAL,
@@ -363,6 +379,8 @@ data class PostView(
     val attachments: List<MediaAssetView> = emptyList(),
     /** The gallery's state — one for the whole set, never per asset (D12). */
     val attachmentsStatus: FieldStatus = FieldStatus.NORMAL,
+    /** This post's own moderation state — what names a removal's reason. */
+    val moderation: ModerationState = ModerationState.NORMAL,
 ) {
     /** The body is media rather than words (D16). */
     val isMediaPost: Boolean get() = attachments.isNotEmpty()
@@ -399,6 +417,8 @@ data class CommentView(
      */
     val attachments: List<MediaAssetView> = emptyList(),
     val attachmentsStatus: FieldStatus = FieldStatus.NORMAL,
+    /** This comment's own moderation state — what names a removal's reason. */
+    val moderation: ModerationState = ModerationState.NORMAL,
 )
 
 /**

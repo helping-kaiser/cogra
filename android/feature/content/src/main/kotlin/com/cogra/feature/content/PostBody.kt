@@ -26,6 +26,7 @@ import com.cogra.domain.CommentView
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
+import com.cogra.domain.ModerationState
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 
@@ -76,6 +77,7 @@ internal fun PostBody(
     description: ModeratedField?,
     attachments: List<MediaAssetView>,
     attachmentsStatus: FieldStatus,
+    moderation: ModerationState,
     testTagPrefix: String,
     modifier: Modifier = Modifier,
     maxBodyLines: Int? = null,
@@ -86,13 +88,7 @@ internal fun PostBody(
 ) {
     if (isRemoved(content, attachments, attachmentsStatus)) {
         RemovedPlaceholder(
-            // Which of the two reasons applies is a moderation fact the
-            // contract does not carry yet: `FieldModerationStatus` says
-            // REDACTED and nothing more. The author's own removal is
-            // the honest default until the verdict field exists —
-            // attributing a removal to the platform on no evidence
-            // would be the worse error of the two.
-            reason = RemovalReason.Author,
+            reason = removalReason(moderation),
             modifier = modifier,
             testTag = "${testTagPrefix}_removed",
         )
@@ -209,6 +205,17 @@ internal fun MediaAssetView.toItem(): MediaItem {
         durationMs = durationMs,
     )
 }
+
+/**
+ * Which of the two removals a reader is looking at.
+ *
+ * The docs require the two to stay distinguishable, since collapsing
+ * them lets a verdict hide behind an author's decision. `ILLEGAL` is the
+ * passed proposal; every other state — an unnamed one included — leaves
+ * the author's own removal as the only reading the evidence supports.
+ */
+internal fun removalReason(moderation: ModerationState): RemovalReason =
+    if (moderation == ModerationState.ILLEGAL) RemovalReason.Platform else RemovalReason.Author
 
 /**
  * Whether the whole body is gone.

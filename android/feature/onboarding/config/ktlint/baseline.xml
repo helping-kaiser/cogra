@@ -13,9 +13,6 @@
     <file name="src/main/kotlin/com/cogra/feature/onboarding/KeyCeremonyViewModel.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
-    <file name="src/main/kotlin/com/cogra/feature/onboarding/OnboardingScreens.kt">
-        <error line="372" column="1" source="standard:no-consecutive-blank-lines" />
-    </file>
     <file name="src/test/kotlin/com/cogra/feature/onboarding/OnboardingViewModelsTest.kt">
         <error line="3" column="1" source="standard:import-ordering" />
     </file>
