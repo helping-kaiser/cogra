@@ -295,7 +295,7 @@ export function StanceControl({
             <span
               aria-hidden="true"
               style={{
-                fontSize: overMedia ? "26px" : "var(--text-title-large)",
+                fontSize: overMedia ? "var(--size-face-over-media)" : "var(--text-title-large)",
                 lineHeight: 1,
                 opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
                 filter: restingFace === null ? "grayscale(1)" : "none",
