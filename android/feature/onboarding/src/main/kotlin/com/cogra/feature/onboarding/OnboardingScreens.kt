@@ -3,6 +3,7 @@
 
 package com.cogra.feature.onboarding
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -284,6 +285,13 @@ fun KeyCeremonyScreen(
     onCancelDecline: () -> Unit,
     onConfirmDecline: () -> Unit,
 ) {
+    // While the code is on screen this is a trap (design/readme.md, the
+    // entry flow): the code is shown once and never stored, so a back
+    // gesture that leaves takes the actor with it. The typed-back
+    // confirmation is the only way out, and back is swallowed rather than
+    // answered — there is nowhere safe for it to go.
+    BackHandler(enabled = state.recoveryCode != null) {}
+
     Scaffold { padding ->
         Column(
             modifier = Modifier
