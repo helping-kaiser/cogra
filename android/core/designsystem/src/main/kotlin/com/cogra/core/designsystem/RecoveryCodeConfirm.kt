@@ -100,11 +100,26 @@ fun RecoveryCodeConfirm(
                 )
             }
         }
+        // A code that has been typed but does not match is answered where
+        // it was typed: a disabled button with no reason reads as a broken
+        // screen, and this is the one screen a reader cannot come back to.
+        val mismatched = typedBack.isNotBlank() && !matches(typedBack)
         OutlinedTextField(
             value = typedBack,
             onValueChange = { typedBack = it },
             label = { Text(stringResource(R.string.recovery_code_type_back)) },
             singleLine = true,
+            isError = mismatched,
+            supportingText = if (mismatched) {
+                {
+                    Text(
+                        text = stringResource(R.string.recovery_code_mismatch),
+                        modifier = Modifier.testTag("recovery_code_mismatch"),
+                    )
+                }
+            } else {
+                null
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("recovery_code_typed_back"),
