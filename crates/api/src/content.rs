@@ -33,6 +33,16 @@ use crate::topics::{self, TagDraft, TagError, TopicsError};
 /// so stronger stances stay expressible.
 pub const DEFAULT_STANCE: f64 = 0.1;
 
+/// The longest title a Post carries (post.md §1), counted in Unicode
+/// scalar values — the unit every character cap on this surface counts
+/// in, `MAX_ALT_TEXT_CHARS` included.
+///
+/// Named rather than inline because both clients enforce it before a
+/// round trip: the number leaves here through `client-constants.json`,
+/// so a composer refuses the title the server would refuse instead of
+/// spending the round trip to find out.
+pub const MAX_TITLE_CHARS: usize = 100;
+
 /// The resolution the canonical string renders and the wire accepts:
 /// three decimal places. A degree is a judgment, not a measurement, so
 /// the grid is coarse enough to be readable and fine enough that no
@@ -500,6 +510,23 @@ fn post_body(content: Option<String>, gallery: &PlannedGallery) -> Result<String
     }
 }
 
+/// The title as the envelope will carry it: trimmed, length-checked, and
+/// blank folded to absent so `""` and null cannot mean two different
+/// nothings — the same rule the body and the self-mark's reason run.
+///
+/// Create and edit both come through here, so an edit cannot land a title
+/// a create would have refused.
+fn checked_title(raw: Option<String>) -> Result<Option<String>, ContentError> {
+    match raw.as_deref().map(str::trim) {
+        Some(title) if title.chars().count() > MAX_TITLE_CHARS => Err(ContentError::BadInput {
+            field: "title",
+            message: format!("the title is longer than {MAX_TITLE_CHARS} characters"),
+        }),
+        Some(title) if !title.is_empty() => Ok(Some(title.to_string())),
+        _ => Ok(None),
+    }
+}
+
 /// The author's self-mark as the envelope carries it, or a refusal.
 ///
 /// A reason without the switch is refused rather than dropped: the author
@@ -545,6 +572,7 @@ pub async fn prepare_post<B: L1Boundary>(
 ) -> Result<PreparedContent, ContentError> {
     let p_d = draft.p_directed.unwrap_or(DEFAULT_STANCE);
     stance_range("pDirected", p_d)?;
+    let title = checked_title(draft.title)?;
     let tags = topics::plan_batch(&draft.tags)?;
     let citations = references::plan_batch(pool, &draft.references).await?;
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
@@ -555,7 +583,7 @@ pub async fn prepare_post<B: L1Boundary>(
     let node = Uuid::new_v4();
     let payload = CograContent {
         node,
-        title: draft.title,
+        title,
         description: draft.description,
         body: Some(body),
         media: gallery.manifest,
@@ -703,6 +731,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     if post.author_id != viewer {
         return Err(ContentError::NotCreator);
     }
+    let title = checked_title(draft.title)?;
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
     let body = post_body(draft.content, &gallery)?;
     let mark = self_mark(draft.sensitive)?;
@@ -711,7 +740,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
         chained_edit_target(pool, viewer, Family::Publish, &post.l1_node_id, &address).await?;
     let payload = CograContent {
         node: post.id,
-        title: draft.title,
+        title,
         description: draft.description,
         body: Some(body),
         media: gallery.manifest,
