@@ -48,6 +48,7 @@ import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.LoadingState
+import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
@@ -676,6 +677,15 @@ private fun CommentThread(
                     surface = BodySurface.Comment,
                     revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
                     onReveal = { onReveal(comment.id, comment.sensitiveMark()) },
+                    // The statuses are the veil — the OR of the author's
+                    // own mark and a moderator's verdict — so the
+                    // author's half is what names the source.
+                    sensitiveSource = if (comment.sensitiveSelfMark) {
+                        SensitiveSource.Author
+                    } else {
+                        SensitiveSource.Platform
+                    },
+                    sensitiveReason = comment.sensitiveReason,
                 )
                 Text(
                     licenseTerms(comment.license),
