@@ -163,7 +163,7 @@ export function CommentCard({
         ) : (
           body
         )}
-        {/* The same topics-and-citations line a post wears, one line, clipped —
+        {/* The same topics-and-citations line a post wears, one line —
             a comment is content like any other and signs the same acts. */}
         <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />
         {edited && <EditedMarker />}
