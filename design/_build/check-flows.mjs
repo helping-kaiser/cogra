@@ -182,7 +182,7 @@ if (existsSync(flowsFile)) {
   // control-selector start names an origin with no board behind it.
   const stops = new Map(); // board/via + role + text -> { board, via, text, role, flows }
   const stopsAt = (board, via, text, role, flow) => {
-    const key = `${board}/${via} ${role} ${text}`;
+    const key = `${board}/${via} ${role} ${text}`;
     const row = stops.get(key) ?? { board, via: Number(via), text, role, flows: new Set() };
     row.flows.add(flow);
     stops.set(key, row);
