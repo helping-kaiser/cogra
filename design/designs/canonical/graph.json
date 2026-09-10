@@ -8,6 +8,7 @@
   },
   "scanExempt": {
     "TagPair": "the pair sheet covers the composer — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
+    "RefPair": "the citation's pair sheet covers the details stage — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "GuestGate": "the join prompt covers the borrowed view — the band, the post card, and nav beneath the scrim are inactive in this state; only the ask (and its scrim) is live",
     "KeyConfirm": "the record-your-code dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
     "KeyDecline": "the without-a-backup dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
@@ -637,6 +638,7 @@
     { "from": "ReplyCited", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment and its reference settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ReplyCited", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the reference still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
     { "from": "ReplyCited", "via": 11, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation leaves — the comment stops carrying it" }] },
+    { "from": "ReplyCited", "via": 12, "kind": "advance", "label": "staged reference name", "to": [{ "board": "RefPair", "case": "the citation's pair sheet (master on the compose page)" }] },
 
     { "from": "DiscardConfirm", "via": 1, "kind": "back", "label": "Keep writing", "to": [{ "terminal": "back", "case": "the dialog closes — back to the stage it covered" }] },
     { "from": "DiscardConfirm", "via": 2, "kind": "cancel", "label": "Discard", "to": [{ "board": "ReplyEntry", "case": "from a reply — the thread" }, { "board": "ReplyMedia", "case": "from the edit — the thread" }] },
@@ -697,6 +699,7 @@
     { "from": "ComposeDetails", "via": 9, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "ComposeDetails", "via": 10, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeSeal" }, { "board": "ComposeUploading", "case": "uploads still running — details keep writing (drawn on the media page)" }] },
     { "from": "ComposeDetails", "via": 12, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPair" }] },
+    { "from": "ComposeDetails", "via": 13, "kind": "advance", "label": "staged reference row", "to": [{ "board": "RefPair" }] },
     { "from": "ComposeDetails", "via": 11, "kind": "advance", "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet — a video path reads \"Describe the video\", one for the clip" }] },
 
     { "from": "ComposeSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeDetails", "case": "one stage back" }] },
@@ -757,6 +760,7 @@
     { "from": "EditCompose", "via": 11, "kind": "detour", "label": "This creates 3 signed actions", "to": [{ "board": "EditActs" }] },
     { "from": "EditCompose", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "EditCompose", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPair" }] },
+    { "from": "EditCompose", "via": 15, "kind": "advance", "label": "staged reference row", "to": [{ "board": "RefPair", "case": "the citation's pair sheet (master on the compose page)" }] },
     { "from": "EditCompose", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
 
     { "from": "EditComposeVideo", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — where the edit began" }] },
@@ -794,6 +798,10 @@
     { "from": "TagPair", "via": 1, "kind": "advance", "label": "the two sliders", "to": [{ "terminal": "self", "case": "the pair moves — nothing signs until the seal" }] },
     { "from": "TagPair", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the chip carries the pair it was given" }] },
     { "from": "TagPair", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
+
+    { "from": "RefPair", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — nothing signs until the seal" }] },
+    { "from": "RefPair", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the staged row carries the pair it was given" }] },
+    { "from": "RefPair", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
 
     { "from": "TagPage", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Explore", "case": "the search surface this is a subpage of" }] },
     { "from": "TagPage", "via": 2, "kind": "advance", "label": "choose your stance (the accessible path)", "to": [{ "terminal": "self", "case": "the alternates open on whichever stance it belongs to" }, { "board": "VouchBackPad", "case": "the pad, where that is the reader's chosen input (master board)" }] },
@@ -846,6 +854,7 @@
     { "from": "ComposeCited", "via": 6, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation leaves — the post stops being about it" }] },
     { "from": "ComposeCited", "via": 7, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker", "case": "a second reference — the staged one stays" }] },
     { "from": "ComposeCited", "via": 8, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeSeal" }] },
+    { "from": "ComposeCited", "via": 9, "kind": "advance", "label": "staged reference row", "to": [{ "board": "RefPair" }] },
 
     { "from": "RemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "Removed", "case": "the visible mark — never silent" }] },
     { "from": "RemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes" }] },

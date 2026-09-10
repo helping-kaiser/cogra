@@ -1,5 +1,5 @@
 import React from "react";
-import { clampDimension, clampPair, ORIGIN } from "./StanceReadout.jsx";
+import { clampDimension, clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES } from "./StanceReadout.jsx";
 
 /* The pad's field: a SOFT ROUNDED SQUARE, and THE DRAWN FIELD IS THE VALUE SPACE
    (design.md §8.3). The knob travels exactly the field, the corners are (±1, ±1),
@@ -15,6 +15,21 @@ import { clampDimension, clampPair, ORIGIN } from "./StanceReadout.jsx";
 
    The pick is ACCUMULATED TRAVEL from where the pointer went down, never its
    absolute position: the pad opens at the origin wherever the press landed. */
+
+/* THE FIELD'S FOUR WORDS ARE THE SLOTS' WORDS, NOT THE STANCE'S. The pad's
+   geometry is bound to `(pDirected, pInterest)` — horizontal is the directed
+   slot, vertical the interest slot — and a stance is not the only record whose
+   two user parameters are both signed. A citation's are too (`ReferenceInput`,
+   api-spec.md), and they mean different things in the same two slots, so the
+   words that name the poles travel with the record family rather than living
+   in the control. The default is the stance's four, because the stance is what
+   this pad was drawn for. */
+export const STANCE_AXES = {
+  left: DIRECTED_POLES[0],
+  right: DIRECTED_POLES[1],
+  bottom: INTEREST_POLES[0],
+  top: INTEREST_POLES[1],
+};
 
 export const FIELD_CORNER_RADIUS_PX = 16;
 export const KNOB_DIAMETER_PX = 20;
@@ -45,7 +60,7 @@ export function padPercentOf(pair) {
   return { x: 50 + clampDimension(pair.pDirected) * 50, y: 50 - clampDimension(pair.pInterest) * 50 };
 }
 
-export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true }) {
+export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true, axes = STANCE_AXES }) {
   const localRef = React.useRef(null);
   const ref = fieldRef ?? localRef;
   const drag = React.useRef(null);
@@ -85,15 +100,15 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true 
       <div aria-hidden="true" style={{ position: "absolute", left: 0, top: "50%", height: "1px", width: "100%", background: "var(--border-hairline)" }} />
       <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: 0, width: "1px", height: "100%", background: "var(--border-hairline)" }} />
       {/* THE AXES ARE NAMED ON THE FIELD. A blank square says nothing about which
-         direction means what, and the words are the same four the sliders use, so
-         the two surfaces teach each other. `label-small` on `onSurfaceVariant`:
-         present without competing with the knob. */}
+         direction means what, and for a stance the words are the same four the
+         sliders use, so the two surfaces teach each other. `label-small` on
+         `onSurfaceVariant`: present without competing with the knob. */}
       {showAxes && (
         <div aria-hidden="true" style={{ position: "absolute", inset: "6px", fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }}>
-          <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)" }}>Against</span>
-          <span style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)" }}>For</span>
-          <span style={{ position: "absolute", left: "50%", top: 0, transform: "translateX(-50%)" }}>More</span>
-          <span style={{ position: "absolute", left: "50%", bottom: 0, transform: "translateX(-50%)" }}>Less</span>
+          <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)" }}>{axes.left}</span>
+          <span style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)" }}>{axes.right}</span>
+          <span style={{ position: "absolute", left: "50%", top: 0, transform: "translateX(-50%)" }}>{axes.top}</span>
+          <span style={{ position: "absolute", left: "50%", bottom: 0, transform: "translateX(-50%)" }}>{axes.bottom}</span>
         </div>
       )}
       <div aria-hidden="true" style={{ position: "absolute", inset: `${KNOB_TRAVEL_INSET_PX}px` }}>
