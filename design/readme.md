@@ -3319,6 +3319,84 @@ sets and a reader reads. Ruled by jakob the same day.
   stands on the real stage rather than a stand-in of it, the overlay
   rule from 2026-09-08.
 
+### The bottom bar's re-tap ladder — 2026-09-10
+
+The bar's slots each had a destination and no behaviour: a tap on the
+tab the reader was already standing on did nothing — in the graph,
+where twenty-four edges read *already here*, and in both apps, which
+navigate and let the framework find nothing to do. Ruled by jakob the
+same day (backlog item 47). The slots are stateful re-entry points, and
+a single tap — everywhere, with no second gesture to learn — climbs a
+four-rung ladder.
+
+- **Another tab returns in the state it was left**, its whole stack and
+  its scroll, not its root. A tab never opened arrives at its root,
+  fresh. That is the rung that makes the other three matter: if a tab
+  reset on every visit there would be no state to re-enter.
+- **The tab you are on pops to its own root** from anywhere deep in it,
+  and the root's scroll is wherever it was left — a pop is not a
+  reload.
+- **At the root, scrolled, the tap goes to the top**, animated, so the
+  jump reads as travel over a list the reader still owns.
+- **At the top, only the feed answers.** It refreshes and loads what is
+  new; Explore, Wallet and Profile do nothing, having nothing the
+  reader is waiting on.
+
+- **Refresh has exactly two gestures, both deliberate** — the re-tap at
+  the top, and the pull-down while all the way at the top. A restored
+  feed shows the list as it was left; nothing reloads merely because a
+  reader came back, because a feed that moves under a returning reader
+  loses the place they were keeping. **The indicator is the platform's
+  own**, so the system draws none.
+- **A stack is where a screen was opened FROM, never what it is
+  about.** A post detail, an actor's profile and a tag page reached
+  from the feed are Feed's stack, and one screen may sit in two tabs at
+  two positions at once. The Profile TAB is your own profile; your own
+  profile reached from a chip in the feed is still Feed's. The reel
+  stream is Feed's too, which is what its edge has said since the reel
+  round.
+- **The compose slot has no ladder** — it is an action, not a
+  destination, the deviation the master already declares, and the
+  kept-draft rules govern what a second tap meets.
+- **A transient is not state.** A sheet or dialog that was up when the
+  reader left is gone when they return; a tab restores its screen and
+  its scroll, never what was covering them.
+- **Every viewer class climbs the same ladder.** Guest, applicant and
+  key-absent readers get the identical four rungs, and the gates in
+  front of the slots are unchanged — one shell for everyone is the
+  bar's standing rule, and the ladder is part of the shell.
+- **The state is the session's.** A restart lands on Feed's root,
+  fresh; nothing is promised across launches.
+- **Back is the platform's.** Android's system back pops within the
+  current stack, then from another tab's root to Feed's root, then
+  leaves — never a tab switch mid-stack. On the web the tabs are
+  routes: the browser's back and forward own the history, the ladder
+  governs clicks on the nav, and scroll is restored per route entry.
+
+- **The graph had already drawn the pop, and only the pop.** A deep
+  board's active-tab edge has always named the tab's root as a board —
+  `PostDetail`'s Feed slot lands on `Feed`, `ProfileOther`'s Profile
+  slot on `Profile` — so rung two was drawn before it was ruled, and no
+  edge changed shape to record this. What said nothing was the root
+  boards' own edge, and those twenty-four self-terminals now carry the
+  scroll and, on the feed's roots alone, the refresh as a second
+  outcome. The cross-tab edges keep naming each tab's ROOT: a restored
+  stack has no single board to point at, and the root is the honest
+  representative of one.
+- **It is ahead of both apps, unevenly.** Neither does anything on an
+  active-tab tap, so rungs two through four are a conform item for the
+  implementation session. The rest is further along than the drawing
+  suggested: Android already restores a tab's stack and scroll, already
+  pops to the root from a drill-in, and already carries a
+  pull-to-refresh; the web restores the feed alone and has no pull
+  gesture at all, its feed view stating the absence as intent — new
+  posts from a reload or from Retry — which this ruling overrides.
+- **The gate**: **142 screens**, **1039 edges**, **56 gaps** and **flows
+  58/55/3**, every one unchanged — twenty-four cases were reworded in
+  place, and nothing was drawn or pointed at that was not there before.
+  No hand-drawn board moved a pixel; six map boards grew where the
+  longer case wraps.
+
 ## 14. Index
 
 **Root**

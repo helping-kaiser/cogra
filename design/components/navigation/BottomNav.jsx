@@ -16,6 +16,17 @@ import { Icon } from "./Icon.jsx";
    anonymous viewers alike, and a slot that needs an account asks on an anonymous
    tap rather than yanking the read away.
 
+   THE SLOTS ARE RE-ENTRY POINTS, NOT LINKS — one tap, four rungs (readme §13).
+   Another tab returns IN THE STATE IT WAS LEFT, whole stack and scroll; never
+   opened, it arrives at its root, fresh. The active tab pops to its own root
+   from anywhere deep in it, scrolls to the top once it is at that root, and at
+   the top does the one thing left — the feed refreshes, and Explore, Wallet and
+   Profile do nothing. A screen belongs to the stack it was opened FROM, whatever
+   its subject, so one screen may sit in two tabs at two positions. All of it is
+   session-only, and a transient — a sheet, a dialog — is never part of what
+   comes back. The centre slot has no ladder: it is an action, and the kept-draft
+   rules govern its re-entry.
+
    64px short navigation bar on `surfaceContainer`, hairline `outlineVariant` top
    border, safe-area padding at the bottom. Selection shows in COLOUR
    (`onSurfaceVariant` → `onSurface`) and in the filled icon cut — never an
