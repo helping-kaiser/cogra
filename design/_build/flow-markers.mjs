@@ -942,15 +942,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
     { n: 9, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
     { n: 9, find: ">Choose your stance on this comment</button>", tag: "button", all: true },
-    /* Pre-existing quirk, kept as found (backlog item 46.1's own repin is text
-       only, not a via reassignment): before this fix every "Choose your
-       stance" on this board was one indistinguishable string, so the generic
-       sweep above also caught the OWN-PROFILE skip-link ("@ada") and stamped
-       it 9 — its face two rows up is 4. Splitting the string by target now
-       has to name that stray match explicitly to keep stamping it, and it
-       stays on 9 rather than moving to 4 so this fix changes no rendered
-       badge, only the accessible text. */
-    { n: 9, find: ">Choose your stance on @ada</button>", tag: "button" },
+    /* The own-profile skip-link ("@ada") is the profile's own stance control's
+       accessible-text twin, not the comment's — via 4 (its face two rows up),
+       matching ProfileOther's convention of stamping both the aria-label and
+       the skip-link text under the same via (jakob 2026-09-10). */
+    { n: 4, find: ">Choose your stance on @ada</button>", tag: "button" },
     { n: 10, find: ">Reply</button>", tag: "button", all: true },
     { n: 11, find: "View 2 replies", tag: "button" },
     { n: 17, find: ">On “", tag: "button", all: true },
