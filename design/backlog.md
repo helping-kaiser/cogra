@@ -345,10 +345,15 @@ current settings-surface anatomy in this system's own skin.
 
 Ruled again at review the same day: a canonical canvas that stops at
 the row leaves implementation to guess the surface behind it, so
-every row that opens something now opens a drawn board.
+every row that opens something now opens a drawn board. The batch's own
+review, 2026-09-10, carried the rule one step further: a row whose
+screen changes when the key is absent owes that state a board too.
 
 **Drawn**: `Settings` (the whole page, eight groups in the ruled
-order), `SettingsBackup`, `YourKey`; the six subpages its rows open —
+order), `SettingsBackup`, `YourKey`, and the two key-absent states of
+the Key backup rows — `SettingsBackupKeyAbsent` and `YourKeyAbsent`,
+riding the drawn key-absent pattern, neither drawing an act the key is
+needed for; the six subpages its rows open —
 `SettingsLicense` and `SettingsReading` (the license and filter sheets
 over the settings page, titled by the row that opened them),
 `ChangePassword`, `ChangeHandle`, `ChangeEmail` and
@@ -1635,7 +1640,9 @@ settle, each named where it was found rather than folded into the round.
    2026-09-10**: the row opens the pad in a sheet of its own
    (`RefPair`), and the tags-and-references sheet gained the settling
    row alongside it. Item 18 is closed; readme §13 *The citation's
-   pair, and the settling row* holds the ruling.
+   pair, and the settling row* holds the ruling, and *The batch's
+   review* the same day gives the sheet the anchor face every
+   pair-setting readout now wears.
 3. **The picker's refused-name state is undrawn.** What an illegal
    character does at the field is the input-error round's shape and
    belongs to a validation pass. `TagPickerTyping` states the gate and

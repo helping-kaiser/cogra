@@ -3292,11 +3292,13 @@ sets and a reader reads. Ruled by jakob the same day.
   carry the mapping in their head. `StancePad` therefore takes its four
   words as `axes`, defaulting to `STANCE_AXES` — the control owns the
   geometry, the record family owns the words.
-- **No face on this sheet.** The face is a stance's lossy readout and
-  its anchor table is a stance's table; the same two slots mean
-  something else here, so a face would name a feeling the record does
-  not carry. The exact pair stands alone above the field, where a thumb
-  cannot cover it.
+- **The face rides the pair.** The readout carries the nearest anchor's
+  face beside the exact numbers, and the lookup is `STANCE_ANCHORS`
+  unchanged, because the citation's two axes fill the two slots the
+  contract assigns. The anchor's WORD stays behind: it names a feeling
+  about a stance, and a citation is not one, so the spoken reading names
+  the two axes and their values instead. The readout sits above the
+  field, where a thumb cannot cover it.
 - **The row opens it, the × still removes.** `StagedReference` takes
   `onEdit` on `TopicRemovable`'s terms: pressable only where there is
   something else a citation is for, two separately named controls
@@ -3396,6 +3398,43 @@ four-rung ladder.
   place, and nothing was drawn or pointed at that was not there before.
   No hand-drawn board moved a pixel; six map boards grew where the
   longer case wraps.
+
+### The batch's review — 2026-09-10
+
+jakob's review of the small-rulings batch, ruled in one sitting. The
+edit body's editability and the single-long-tag state are ruled in the
+same review and recorded with the boards that draw them.
+
+- **Wherever a pair is being set, the readout shows the nearest anchor's
+  face.** Emojis whenever possible: a face is the fastest rough read of
+  where a knob currently sits, and the exact pair beside it carries the
+  fact for anyone who wants it. `RefPair` takes it — the lookup is
+  `STANCE_ANCHORS` unchanged, the two slots being the ones the contract
+  assigns. What does not travel with the face is the anchor's word: it
+  names a feeling about a stance, so a citation keeps the face and
+  speaks its own two axes instead. A pair whose axes the anchor table
+  cannot speak for — a tag's census-bounded confidence — has no face to
+  be nearest to, which is what "whenever possible" excludes.
+- **A reference count counts every kind.** The number on a card is the
+  length of the list the sheet draws, whatever kind of node each row
+  points at, a cited chat message included. A count that quietly dropped
+  a kind would say the sheet holds less than it does, and the sheet is
+  the only place the number can be checked.
+- **The key-absent settings rows open drawn boards.** Item 20's review
+  rule reaches its last two: `SettingsBackupKeyAbsent` and
+  `YourKeyAbsent` draw what the Recovery code and Your key rows open
+  when the key is elsewhere. Both ride the drawn pattern —
+  a `tertiary-container` notice leading the page, restore first, the one
+  "?" on the key — and both stop short of the act, because making a new
+  code needs the key and the key page's whole body is the key. Neither
+  carries an escape hatch: nothing is staged, so the back arrow is the
+  way out, which is `WalletKeyAbsent`'s shape.
+- **The license sheets keep the 88% cap.** They stay content-sized; the
+  raised cap binds only when terms run long enough to reach it.
+- **The gate**: 143 → **145 screens**, 1046 → **1052 edges**, gaps hold
+  at **56** and flows at **58/55/3**. The two new boards join the
+  restore flow, whose control-start now reads six boards rather than
+  four, and the witness is re-blessed for that.
 
 ## 14. Index
 
