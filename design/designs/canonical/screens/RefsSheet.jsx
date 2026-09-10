@@ -13,7 +13,15 @@
    — `+0.40 / 0.90`. A reference's second axis is enthusiasm over [-1, +1]
    (`ReferenceInput`, api-spec.md), so it keeps one. The sheet used to draw
    tags in the reference shape, which promised a negative half that the census
-   does not carry. `formatTagPair` is where the difference is assigned. */
+   does not carry. `formatTagPair` is where the difference is assigned.
+
+   AND THIS SHEET IS WHERE "STILL SETTLING" SHOWS (jakob's ruling, 2026-09-10).
+   The chip on the card says nothing about an act still finding its place in the
+   order — a tag's word is the tag's word either way — so the honesty lands here,
+   on the row that already carries the act's own numbers. Two rows wear it, one
+   per section: a settling tag and a settling citation are the same fact about
+   two families, and a sheet that drew it on only one would imply the other
+   cannot. */
 export function Screen() {
   return (
     <>
@@ -28,7 +36,7 @@ export function Screen() {
         <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <SectionLabel>Tags</SectionLabel>
           <ReferenceRow kind="topic" name="photography" pair="+0.40 / 0.90" onOpen={() => {}} />
-          <ReferenceRow kind="topic" name="coastroad" pair="+0.10 / 1.00" onOpen={() => {}} />
+          <ReferenceRow kind="topic" name="coastroad" pair="+0.10 / 1.00" pending onOpen={() => {}} />
           <SectionLabel>References</SectionLabel>
           <ReferenceRow kind="person" name="Mira Voss" src="inviter.jpg" pair="+0.10 / +0.10" onOpen={() => {}} />
           <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" pair="+0.55 / +0.20" onOpen={() => {}} />
@@ -39,7 +47,7 @@ export function Screen() {
           <ReferenceRow kind="campaign" name="Coast road cleanup week" pair="+0.40 / +0.40" onOpen={() => {}} />
           <ReferenceRow kind="offer" name="Offer on: Salt-crust rubbing, framed" pair="+0.10 / +0.10" onOpen={() => {}} />
           <ReferenceRow kind="chat" name="Coast walkers" pair="+0.10 / +0.10" onOpen={() => {}} />
-          <ReferenceRow kind="message" name="Crust held all the way past the slipway today." sub="in Coast walkers" pair="+0.10 / +0.10" onOpen={() => {}} />
+          <ReferenceRow kind="message" name="Crust held all the way past the slipway today." sub="in Coast walkers" pair="+0.10 / +0.10" pending onOpen={() => {}} />
         </div>
       </BottomSheet>
     </>

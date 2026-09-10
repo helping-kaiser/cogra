@@ -58,6 +58,12 @@ export interface ReferenceRowProps {
    * `rank` and `value`. Decorative — the row's own tap is the action.
    */
   trailing?: JSX.Element;
+  /**
+   * The act is signed but not yet ordered on L1: the row wears the pending
+   * marker under its pair. This sheet is the only surface that says so — a
+   * chip on a card shows nothing pending.
+   */
+  pending?: boolean;
   /** The row navigates to the node it names. */
   onOpen?: () => void;
 }
