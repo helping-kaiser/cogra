@@ -6,9 +6,8 @@
    THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
    `ComposeSeal` draws. What a sheet covers is inert, not shortened.
 
-   THE SWITCH IS DRAWN ON THIS BOARD, and it is a real one — `role="switch"`
-   with its state on it. The system has no switch master: this is the only one
-   in it, and one instance is a control, not a component.
+   THE SWITCH IS THE MASTER — `Switch` from `SettingsRow.jsx`, built to this
+   sheet's own geometry, so the settings page and this sheet cannot drift.
 
    THE HEADING ROW IS `SheetTitle`, and the "?" and the switch ride its
    `trailing` slot — the name and what the line carries besides it.
@@ -27,16 +26,7 @@ export function Screen() {
           trailing={
             <>
               <HelpDot ariaLabel="Sensitive" />
-              <button
-                type="button"
-                role="switch"
-                aria-checked="true"
-                aria-label="Mark as sensitive"
-                className="cg-state cg-focus cg-hit"
-                style={{ position: "relative", width: 44, height: 24, flex: "none", border: 0, padding: 0, borderRadius: "var(--radius-full)", background: "var(--primary)", cursor: "pointer" }}
-              >
-                <span aria-hidden="true" style={{ position: "absolute", right: 3, top: 3, width: 18, height: 18, borderRadius: "var(--radius-full)", background: "var(--on-primary)" }} />
-              </button>
+              <Switch checked ariaLabel="Mark as sensitive" />
             </>
           }
         >

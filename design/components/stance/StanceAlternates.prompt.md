@@ -13,3 +13,5 @@ Use `StanceAlternates` for the non-drag route to a stance. `StanceControl` opens
 It must offer the **full** range, not a coarse subset — a degraded alternate is not an accessible path. Keep the standing above and the landing below, same order as the pad. The affirmative action reads `Sign it`.
 
 **One control at a time.** Sliders lead; `Type exact values` swaps to the typed fields and back. Never render both at once — two controls editing the same two numbers is a needless choice at the moment of a priced act. `mode="entry"` opens on the typed fields for a reader who has chosen them in settings.
+
+**The "?" names its own pad** (jakob's ruling A7) — `helpLabel`, defaulting to `"How stances work"`. A board that draws a named pad passes that pad's own title (`"Where you stand on it"`, `"Toward what you answer"`, `"Your first stance"`); it mirrors whatever `helpLabel` `StanceControl` was given.
