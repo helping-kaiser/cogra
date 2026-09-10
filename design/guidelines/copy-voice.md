@@ -305,9 +305,9 @@ the post's complete new content state, so it may flip the kind outright
 
 ## Accessible names
 
-The words the stream, the video transport and the viewer put in front
-of a reader. These controls are glyphs, so what is written here is what
-a screen reader says, and it is the only wording they have.
+The words a reader hears where the screen carries none — glyph controls
+whose accessible name is the only wording they have, and readouts whose
+visible half is hidden from the accessibility tree and spoken instead.
 
 **The transport**, one control one verb — each says what the tap will
 DO, the way the sound toggle already does:
@@ -328,6 +328,16 @@ DO, the way the sound toggle already does:
   completed name, never a bare "Share": a glyph with one word beside it
   in the accessibility tree tells a listener the verb but not the
   object.
+
+**The citation's pair** (`RefPair`), where the field and its readout are
+`aria-hidden` and these words are what is said in their place:
+
+- `The pair this citation signs` — the pad's own name. It says whose
+  pair and what setting it does; a pad named for the instrument would
+  leave a listener to work out what the two numbers are for.
+- `How much it leans on this` — the relevance axis, spoken with its
+  value. It is api-spec's own gloss said to a reader, and the other axis
+  keeps `For or against`, the words a stance already uses for that slot.
 
 ## The staged-act snackbar
 
@@ -625,6 +635,16 @@ does — *Confirm email change* is what a reader would have believed it
 did, and a control says what will happen. Last: `Until both sides land
 your account keeps the address it has, and a reset still goes there.`
 
+## The profile save
+
+Blessed with the small-rulings batch. A profile edit is a signed act
+that settles like any other, and the shell's snackbar is the only
+feedback the surface draws:
+
+- `Signed — your profile shows it now, still settling.` — what a saved
+  profile answers with. It says both halves: the change is visible
+  already, and the act is still finding its place in the order.
+
 ## Awaiting blessing — the parked-rulings round
 
 Drawn, and up for review in the same pass. Kept apart from the blessed
@@ -702,15 +722,3 @@ before takes no extra step. Tagging is its own signed action, and it
 carries how much the post is about that tag. / Names are lowercased,
 and a name can hold letters, digits, dot, dash and underscore. Tap a
 tag you have added to set how it relates.`
-
-## Awaiting blessing — the small-rulings batch
-
-Kept apart from the blessed lines above until reviewed.
-
-**A saved profile answers in the snackbar.** Feedback on the settings
-surfaces is the shell's snackbar (ruling Q14) and web's profile save
-draws no confirmation at all, so the act with no words yet needs them.
-A profile edit is a signed act that settles like any other, and the
-line says both:
-
-- `Signed — your profile shows it now, still settling.`
