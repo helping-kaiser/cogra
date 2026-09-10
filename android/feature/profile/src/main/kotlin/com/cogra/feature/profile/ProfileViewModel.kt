@@ -10,11 +10,11 @@ import com.cogra.domain.RecordRow
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /** The chronicle filter chips; every visitor lands on Posts. */
 enum class ChronicleFilter(val family: Family?) {
@@ -25,6 +25,8 @@ enum class ChronicleFilter(val family: Family?) {
 
 data class ProfileUiState(
     val loading: Boolean = true,
+    /** The read in flight, not the empty screen (PostDetail's twin field). */
+    val refreshing: Boolean = false,
     val notFound: Boolean = false,
     /** Full-screen only in the nothing-loaded state (the shared rule). */
     val transportFailed: Boolean = false,
@@ -70,6 +72,11 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun refresh() {
+        // PostDetailViewModel's twin: a profile already on screen keeps
+        // its content and shows the pull indicator; only the
+        // nothing-loaded state goes full-screen (the shared degrade
+        // rule this mirrors).
+        _state.update { it.copy(loading = it.profile == null, refreshing = true) }
         viewModelScope.launch {
             val viewer = when (val outcome = account.me()) {
                 is Outcome.Success -> outcome.value
@@ -82,11 +89,12 @@ class ProfileViewModel @Inject constructor(
                 is Outcome.Success -> {
                     val profile = outcome.value
                     if (profile == null) {
-                        _state.update { it.copy(loading = false, notFound = true) }
+                        _state.update { it.copy(loading = false, refreshing = false, notFound = true) }
                     } else {
                         _state.update {
                             it.copy(
                                 loading = false,
+                                refreshing = false,
                                 notFound = false,
                                 transportFailed = false,
                                 profile = profile,
@@ -100,12 +108,12 @@ class ProfileViewModel @Inject constructor(
                 is Outcome.Refused ->
                     // The own-profile read refused: the session is gone;
                     // the auth-state holder navigates.
-                    _state.update { it.copy(loading = false, notFound = true) }
+                    _state.update { it.copy(loading = false, refreshing = false, notFound = true) }
                 is Outcome.Failed -> _state.update {
                     // The fault reflects the last completed fetch: loaded
                     // content stays; only the nothing-loaded state goes
                     // full-screen (the shared degrade rule).
-                    it.copy(loading = false, transportFailed = it.profile == null)
+                    it.copy(loading = false, refreshing = false, transportFailed = it.profile == null)
                 }
             }
         }

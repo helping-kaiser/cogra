@@ -11,7 +11,6 @@ import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingProfileRepository
 import com.cogra.domain.testing.testProfile
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -21,6 +20,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelTest {
@@ -141,5 +141,29 @@ class ProfileViewModelTest {
         assertThat(s.pageFailed).isTrue()
         assertThat(s.transportFailed).isFalse()
         assertThat(s.profile).isNotNull()
+    }
+
+    // PostDetailViewModel's twin case: pulling to refresh a profile
+    // already on screen is what feeds the ProfileScreen's
+    // PullToRefreshBox(isRefreshing = state.refreshing, onRefresh =
+    // viewModel::refresh) — the design/readme.md rule that every
+    // full-screen scrolling root answers pull-to-refresh (ruled
+    // 2026-09-10).
+    @Test
+    fun pullingToRefreshShowsTheIndicatorWithoutBlankingTheProfile() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start(null)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refreshing).isFalse()
+
+        vm.refresh()
+        // Before the read has had a chance to come back: the indicator
+        // has something to say, but the already-drawn profile stays.
+        assertThat(vm.state.value.loading).isFalse()
+        assertThat(vm.state.value.refreshing).isTrue()
+        assertThat(vm.state.value.profile?.handle).isEqualTo("jakob")
+
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refreshing).isFalse()
     }
 }
