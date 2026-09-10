@@ -216,11 +216,11 @@ private val PAD_GAP = 8.dp
 private val PAD_MARGIN = 12.dp
 
 /**
- * The pad's standoff from the viewport's lower edge — enough that the
- * card clears the gesture-navigation strip and sits in the thumb's
- * comfortable arc rather than at the very bottom of the reach.
+ * The pad's standoff from the viewport's lower edge — the bar where
+ * one exists, the viewport edge otherwise; one number everywhere
+ * (design/readme.md "Fixed elements", ruled 2026-09-10).
  */
-private val PAD_BOTTOM = 24.dp
+private val PAD_BOTTOM = 16.dp
 
 /** The pad's card, wide enough for the field and its lines of text. */
 private val PAD_WIDTH = 288.dp
