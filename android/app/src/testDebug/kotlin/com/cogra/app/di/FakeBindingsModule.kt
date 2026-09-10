@@ -22,6 +22,7 @@ import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.testing.ThrowingMediaRepository
+import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
@@ -78,7 +79,12 @@ class ScriptedAccountRepository : ThrowingAccountRepository() {
     var backupBlob: ByteArray? = null
     var uploadedBackup: ByteArray? = null
 
+    /** Whose view the band names; every viewer in these tests borrows one. */
+    var vantage: ActorRef? = ActorRef(id = "genesis-id", handle = "genesis_mod")
+
     override suspend fun me(): Outcome<UserProfile?> = Outcome.Success(profile)
+
+    override suspend fun borrowedView(): Outcome<ActorRef?> = Outcome.Success(vantage)
 
     override suspend fun keyBackup(): Outcome<ByteArray?> = Outcome.Success(backupBlob)
 

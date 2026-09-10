@@ -437,9 +437,17 @@ private fun CograNavGraphContent(
             KeyRestoreBannerRoute(onRestoreActor = { navController.navigate(Restore) })
         }
     }
+    // The band rides both sides of the session — the guest reading carries
+    // the shell's one sign-in-or-join entry, which is why the slot and not
+    // the screen owns that navigation. Nothing is drawn while the auth
+    // state is still unknown: the two readings differ, and guessing puts
+    // the wrong sentence on screen for a frame.
     val borrowedViewBand: @Composable () -> Unit = {
-        if (signedIn == true) {
-            BorrowedViewBandRoute()
+        signedIn?.let { signed ->
+            BorrowedViewBandRoute(
+                signedIn = signed,
+                onSignInOrJoin = { navController.navigate(Login) },
+            )
         }
     }
     val statusBanners: @Composable (Boolean, () -> Unit) -> Unit = { restored, onConsumed ->
@@ -574,13 +582,9 @@ private fun CograNavGraphContent(
                         consumeExpired()
                         navController.navigate(ComposePost())
                     },
-                    signedIn = signedIn,
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
                     onOpenTopic = { name -> navController.navigate(Topic(name)) },
-                    // Pushes the login screen (the web guest entries link
-                    // to /login), so back returns to the reading context.
-                    onSignInOrJoin = { navController.navigate(Login) },
                     // The chats affordance the band carries (jakob
                     // 2026-09-01). A signed-out tap opens the guest gate,
                     // which is the edge the canvas draws; the signed-in

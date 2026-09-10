@@ -497,7 +497,11 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
         // One shell for every viewer: the guest keeps the bar.
         assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
-        assertThat(compose.onAllNodesWithTag("feed_signin").fetchSemanticsNodes()).isNotEmpty()
+        // The band is the guest's one sign-in-or-join entry, and it says
+        // whose view they are reading from.
+        assertThat(
+            compose.onAllNodesWithTag("home_borrowed_view_action").fetchSemanticsNodes(),
+        ).isNotEmpty()
     }
 
     @Test
@@ -592,7 +596,7 @@ class CograNavGraphTest {
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
-        waitForTag("feed_signin")
+        waitForTag("home_borrowed_view_action")
 
         signIn()
         compose.waitUntil(timeoutMillis = 30_000) {
