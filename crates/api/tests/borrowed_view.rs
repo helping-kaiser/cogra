@@ -208,19 +208,52 @@ async fn an_unverified_applicant_borrows_their_inviter(pool: PgPool) {
     );
 }
 
-/// The application trace outlives the landing, so `invitedBy` still names
-/// the inviter here; the account state is what ends the borrowing, and a
-/// null answer is the band's instruction to disappear.
+/// Landing is not the handover: membership is granted by the inviter,
+/// while the view becomes the member's own only once they have pointed
+/// somewhere themselves (§13). Between the two the feed is still ranked
+/// from the inviter's vantage, so the band must still name them.
 ///
-/// A landed member borrows nobody's view, inviter on file or not.
-/// ´claim:borrowed:a-landed-member-borrows-nobodys-view´
+/// A member who has landed but not vouched back is still borrowing their inviter's view.
+/// ´claim:borrowed:a-landed-member-borrows-until-the-vouch-back´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_landed_member_borrows_nobodys_view(pool: PgPool) {
+async fn a_landed_member_borrows_until_the_vouch_back(pool: PgPool) {
     seed_genesis_moderator(&pool, "genesis_mod").await;
     let inviter = seed_inviter(&pool, "mira").await;
     let account = seed_applicant(&pool, inviter, "noa").await;
     land(&pool, account).await;
 
+    let credentials = store::credentials_by_actor(&pool, account)
+        .await
+        .expect("query")
+        .expect("row");
+    assert_eq!(credentials.account_state, store::AccountState::Member);
+
+    let schema = schema(pool);
+    assert_eq!(
+        borrowed_handle(&schema, viewer(account)).await.as_deref(),
+        Some("mira")
+    );
+}
+
+/// The reciprocation latch is the mirror-confirmed vouch-back, and it is
+/// what ends the borrowing — the same fact `hasReciprocated` reports, read
+/// through the one query path both fields share.
+///
+/// A member who has vouched back borrows nobody's view, inviter still on file.
+/// ´claim:borrowed:the-vouch-back-ends-the-borrowing´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_vouch_back_ends_the_borrowing(pool: PgPool) {
+    seed_genesis_moderator(&pool, "genesis_mod").await;
+    let inviter = seed_inviter(&pool, "mira").await;
+    let account = seed_applicant(&pool, inviter, "noa").await;
+    land(&pool, account).await;
+    assert!(
+        store::latch_reciprocated(&pool, account)
+            .await
+            .expect("latch")
+    );
+
+    // The provenance outlives the handover: the band leaves, the trace stays.
     assert!(
         store::inviter_of(&pool, account)
             .await
@@ -229,4 +262,17 @@ async fn a_landed_member_borrows_nobodys_view(pool: PgPool) {
     );
     let schema = schema(pool);
     assert_eq!(borrowed_handle(&schema, viewer(account)).await, None);
+}
+
+/// The genesis account came through no invite at all, so there is no
+/// vantage to hand over and none to name.
+///
+/// An account with no inviter borrows nobody's view from the start.
+/// ´claim:borrowed:an-account-with-no-inviter-borrows-nobody´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_account_with_no_inviter_borrows_nobody(pool: PgPool) {
+    let genesis_id = seed_genesis_moderator(&pool, "genesis_mod").await;
+
+    let schema = schema(pool);
+    assert_eq!(borrowed_handle(&schema, viewer(genesis_id)).await, None);
 }

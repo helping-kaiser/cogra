@@ -1794,12 +1794,28 @@ type Query {
 	else's view — named, always, by the borrowed-view band, which
 	reads this field to know whose name to say.
 	
-	Three answers, one per reader. A signed-out reader borrows the
-	Genesis Moderator's view. An applicant keeps their inviter's for
-	the applicant days — from the moment the account exists, before
-	either proof is in. A landed member has a view of their own, so
-	the answer is null, and null is the rule the band reads as
-	"disappear", not an absence of data.
+	**The most specific available vantage wins**, and the answer
+	always carries whose view it is. In preference order:
+	
+	1. An **invite-link arrival**, still signed out, borrows **the
+	inviter's** view, resolved from the link id. That resolution
+	arrives with slice 3 and its own band-line ruling.
+	2. An **applicant** borrows **their inviter's**, from the moment
+	the account exists and before either proof is in — and a
+	**landed member** keeps borrowing it until their own first
+	stance toward them exists, the vouch-back.
+	3. A **bare visitor**, with nothing more specific to go on,
+	borrows the **Genesis Moderator's** view. Strictly the
+	fallback: it is the only vantage that names no relationship
+	the reader arrived through.
+	
+	**The handle is load-bearing, not decoration.** The band speaks
+	the name, because a borrowed rank the reader cannot attribute is
+	exactly the unlabelled feed §9 refuses — so this resolves to an
+	`Actor`, never to a bare "yes, borrowed".
+	
+	Null is the end of the ladder: the reader's view is their own.
+	It is the rule the band reads as "disappear", not missing data.
 	"""
 	borrowedView: Actor
 	"""
