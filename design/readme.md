@@ -2593,8 +2593,7 @@ of these and nothing else.
   one, so nothing may require it later: an explicit null clears the
   field, and a profile with no name written is presented by its
   handle (api-spec's profile-update clause; the breaking schema
-  change is backlog item 36). A Collective is the exception — it is
-  founded with a name and `PrepareCollectiveInput` keeps saying so.
+  change is backlog item 36).
   With the requirement gone, "A display name can't be empty." became
   a false sentence and `ProfileEditError` retired with it — profile
   edit has no true local failure left to exemplify, so Save's edge

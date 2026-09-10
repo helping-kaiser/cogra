@@ -1336,9 +1336,11 @@ conform items for the feature session, not design work still owed:
    the author chip, the profile header, a mention, a search result.
    The handle alone, never a stand-in name.
 
-**A Collective keeps its founding name.** The optionality does not reach
-`PrepareCollectiveInput`: its `displayName` stays `String!`, so founding
-a Collective still means naming it (ruled 2026-09-08).
+**A Collective is founded the same way.** `PrepareCollectiveInput`'s
+`displayName` is optional, an explicit null clears it exactly as on a
+person's profile, and a Collective with none written is presented by its
+handle. Point 1's breaking schema change carries the field (ruled
+2026-09-10).
 
 ### 37 · The edit batch's mechanics are the implementation's call · *implementation*
 
