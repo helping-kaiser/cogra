@@ -1,9 +1,12 @@
 /* The post ladder — a post wearing MANY tags (50 is legal). ONE line
-   whatever the count, on both variants: two chips, then the counts in words;
-   on detail the line is the tags-and-references sheet's opener — the sheet
-   is the full set's home. */
+   whatever the count, on both variants: up to two chips whole, then the
+   counts in words; on detail the line is the tags-and-references sheet's
+   opener — the sheet is the full set's home. The second tag here,
+   "weatherwatching", is long enough that its chip doesn't clear the line's
+   budget beside the first — this board is where that fold shows: one chip,
+   not two, and the folded tag's count joins the rest. */
 const MANY_TOPICS = [
-  "coastroad", "saltmarsh", "headland", "lowtide", "fieldnotes", "placenames",
+  "coastroad", "weatherwatching", "headland", "lowtide", "fieldnotes", "placenames",
   "ferrylanding", "springtide", "waxstick", "rubbings", "papercraft", "maps",
   "walking", "shoreline", "driftwood", "estuary", "tidepools", "seabirds",
   "lighthouse", "harbour", "dunes", "marram", "shingle", "breakwater",
