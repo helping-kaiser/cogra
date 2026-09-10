@@ -2,6 +2,11 @@
 export interface PendingMarkerProps {
   /** Override only for a different honesty case; the default is the product's copy. */
   label?: string;
+  /**
+   * The phrasing form, for a row that is itself a button — a `<button>` takes
+   * phrasing content, so the block form's `<p>` cannot nest inside one.
+   */
+  inline?: boolean;
 }
 
 export declare function PendingMarker(props: PendingMarkerProps): JSX.Element;

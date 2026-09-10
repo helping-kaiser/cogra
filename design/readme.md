@@ -1052,8 +1052,9 @@ visitor the app they are not in, and the app itself never carries it.
 
 The recovery-code screen is a trap: no back affordance, and the only
 way out is the code typed or pasted back. A think-twice dialog gates
-entry to it. Where a bottom bar exists, the stance pad rests 16px
-above the bar rather than the screen edge. First-time onboarding is
+entry to it. The parked stance pad rests 16px above
+whatever it parks over — the bottom bar where one exists, a sheet's
+bottom edge otherwise; one number everywhere (ruled 2026-09-10). First-time onboarding is
 per-control, never a tour, and on the entry screens only the pad
 carries it — what it is for, how it opens, that nothing signs until
 Set, and that the input can be swapped in settings.
@@ -2593,8 +2594,7 @@ of these and nothing else.
   one, so nothing may require it later: an explicit null clears the
   field, and a profile with no name written is presented by its
   handle (api-spec's profile-update clause; the breaking schema
-  change is backlog item 36). A Collective is the exception — it is
-  founded with a name and `PrepareCollectiveInput` keeps saying so.
+  change is backlog item 36).
   With the requirement gone, "A display name can't be empty." became
   a false sentence and `ProfileEditError` retired with it — profile
   edit has no true local failure left to exemplify, so Save's edge
@@ -3208,6 +3208,300 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   pixel it was not sent to move — the nine composers took the spelling,
   the six that stage a tag took a via stamp, and the maps followed the
   edges.
+
+### The small-rulings batch — 2026-09-10
+
+Twelve questions the audit and conform lanes had left standing, none of
+them large enough to have earned a round of its own. Ruled by jakob in
+one sitting.
+
+- **A comment clip's cover crops exactly as the clip does.** The post
+  scale's rule reaches the comment scale unchanged — the cover is the
+  same clip's face, so one frame holds both — and letterboxing exists
+  nowhere, pictures included.
+- **A staged citation's pair is set on the pad, not sliders.** Both of a
+  citation's axes are signed, so the square is its own shape and no half
+  of it is dead; the census-bounded confidence that sent a tag's pair to
+  sliders has no counterpart here. Item 18's remaining half, closed.
+- **A tag that would need cutting is not drawn as a chip.** `TopicsLine`
+  folds it into the worded counts instead, so a reader gets either a
+  whole name or a number saying how many are left. The ellipsis retires:
+  a truncated name is one the reader can neither read nor tap.
+- **Settling shows in the sheet, never on the chip.** A chip is a
+  destination, and a destination wearing a state says the state belongs
+  to the place rather than to the act. The tags-and-references sheet is
+  where the act is, so that is where it says it is still settling.
+- **The borrowed-view band dies after signing, not on approach.** While
+  the vouch-back is unsigned the reader has no stance of their own and
+  the view is still borrowed, so the band stands through the whole
+  approach to the pad and goes when the signature lands.
+- **The Collective founding-name force is removed.**
+  `PrepareCollectiveInput`'s `displayName` is optional, an explicit null
+  clears it exactly as on a person's profile, and a Collective with none
+  written is presented by its handle. The handle is the only name the
+  product requires, of anyone.
+- **Each "?" names its own dialog.** The three stance pads read `Where
+  you stand on it`, `Toward what you answer` and `Your first stance` —
+  their own dialogs' titles, the way every other "?" in the system
+  already takes its subject. One name across three surfaces says only
+  that a dialog exists; `How stances work` stays where the control
+  itself is the subject.
+- **An @-scope hit on a tag is indirect, and the drawing stands.** The
+  row's second line says the route out loud ("tagged by @sol"). A
+  person's scope holds their acts, and the tag is what one of those acts
+  points at — never a direct hit of its own.
+- **A field's flow badge moves to the field's wrapper.** `::after`
+  generates no box on a replaced element, so a badge pinned to the
+  `<input>` was valid and invisible at once. It moves where it paints
+  and the gate accepts it there: a marker nobody can see verifies its
+  own presence and nothing else.
+- **Three closures.** The license sheets take the 88% height class, like
+  every sheet not deliberately taller. A settings section label binds to
+  the group it heads by sitting nearer to it than to the group above,
+  rather than floating equidistant between them. And `--surface-pad` is
+  not minted — one padding token across every surface would name a
+  resemblance the surfaces do not have.
+- **The settings round's copy is blessed** and sits in the register's
+  topical sections, the page's own words and the six subpages alike.
+- **The media edit's body line is blessed**: "A post's body is words or
+  media, never both." It states the body's rule, never a lock on the
+  post in front of the reader — an edit carries complete state and may
+  flip the kind outright, every picture replaced by words or the words
+  by a gallery. Web's profile save answers with nothing; a snackbar line
+  is drafted and awaits blessing.
+
+### The citation's pair, and the settling row — 2026-09-10
+
+Two rulings the tag round left standing, both about a pair the author
+sets and a reader reads. Ruled by jakob the same day.
+
+- **A staged citation's pair editor is the pad, in a sheet
+  (`RefPair`).** The instrument follows the census, not the surface.
+  `ReferenceInput` (api-spec.md) gives a citation relevance `[-1, 1]`
+  and support `[-1, 1]` — both signed — so the pad's square over two
+  signed axes fits it exactly, where a Tag's confidence is bounded to
+  `[0, 1]` and would hang half the field dead. That is the same
+  argument that gave `TagPair` two sliders, read the other way.
+- **The poles are the citation's, in the slots the contract assigns.**
+  Relevance occupies `pDirected`, the pad's horizontal, and asks how
+  much this post leans on what it cites — `Barely` to `Entirely`, the
+  words `TagPair` already uses for the same slot. Support occupies
+  `pInterest`, the vertical, and is endorsing against refuting, so
+  `Against` and `For` ride there. Those two words sit on the horizontal
+  when the pad carries a stance: the rotation is the contract's doing,
+  and the pad names its poles on the field so that no reader has to
+  carry the mapping in their head. `StancePad` therefore takes its four
+  words as `axes`, defaulting to `STANCE_AXES` — the control owns the
+  geometry, the record family owns the words.
+- **The face rides the pair.** The readout carries the nearest anchor's
+  face beside the exact numbers, and the lookup is `STANCE_ANCHORS`
+  unchanged, because the citation's two axes fill the two slots the
+  contract assigns. The anchor's WORD stays behind: it names a feeling
+  about a stance, and a citation is not one, so the spoken reading names
+  the two axes and their values instead. The readout sits above the
+  field, where a thumb cannot cover it.
+- **The row opens it, the × still removes.** `StagedReference` takes
+  `onEdit` on `TopicRemovable`'s terms: pressable only where there is
+  something else a citation is for, two separately named controls
+  ("Remove &lt;name&gt;", "&lt;name&gt; — set how it relates"), and inert
+  without it. One phrase for opening a pair editor, whichever family
+  the pair belongs to. Four composers wear it — the details stage, the
+  cited details stage, the post edit, and the reply's seal with a
+  citation staged, which borrows the sheet as it borrows the license
+  and sensitive sheets.
+- **The chip says nothing about the order; the sheet does.** A staged
+  tag or citation that is signed but not yet ordered on L1 reads
+  `Still settling` in the tags-and-references sheet — `PendingMarker`'s
+  own words, its own two tokens, no colour and no type role of its own.
+  It rides the pair at the row's edge rather than the name, because
+  what has not landed is the act, not the node it points at: the
+  attachment `TaggedRow` already makes.
+- **The gate**: 142 → **143 screens**, 1039 → **1046 edges**, gaps hold
+  at **56** and flows at **58/55/3** — the round adds a destination, not
+  a journey. `ComposeDetails` is factored to `_shared.jsx` so the sheet
+  stands on the real stage rather than a stand-in of it, the overlay
+  rule from 2026-09-08.
+
+### The bottom bar's re-tap ladder — 2026-09-10
+
+The bar's slots each had a destination and no behaviour: a tap on the
+tab the reader was already standing on did nothing — in the graph,
+where twenty-four edges read *already here*, and in both apps, which
+navigate and let the framework find nothing to do. Ruled by jakob the
+same day (backlog item 47). The slots are stateful re-entry points, and
+a single tap — everywhere, with no second gesture to learn — climbs a
+four-rung ladder.
+
+- **Another tab returns in the state it was left**, its whole stack and
+  its scroll, not its root. A tab never opened arrives at its root,
+  fresh. That is the rung that makes the other three matter: if a tab
+  reset on every visit there would be no state to re-enter.
+- **The tab you are on pops to its own root** from anywhere deep in it,
+  and the root's scroll is wherever it was left — a pop is not a
+  reload.
+- **At the root, scrolled, the tap goes to the top**, animated, so the
+  jump reads as travel over a list the reader still owns.
+- **At the top, only the feed answers.** It refreshes and loads what is
+  new; Explore, Wallet and Profile do nothing, having nothing the
+  reader is waiting on.
+
+- **Refresh has exactly two gestures, both deliberate** — the re-tap at
+  the top, and the pull-down while all the way at the top. A restored
+  feed shows the list as it was left; nothing reloads merely because a
+  reader came back, because a feed that moves under a returning reader
+  loses the place they were keeping. **The indicator is the platform's
+  own**, so the system draws none.
+- **The pull-down lives on every full-screen scrolling root** (ruled
+  2026-09-10): the feed in all its views, the profile pages and the
+  chronicle, search results, the wallet's history, the tag page — and
+  **never inside a bottom sheet**, where pulling down already means
+  dismiss and one gesture may not mean two things. The re-tap refresh
+  stays the feed's alone; the pull-down is the gesture every root
+  answers.
+- **A stack is where a screen was opened FROM, never what it is
+  about.** A post detail, an actor's profile and a tag page reached
+  from the feed are Feed's stack, and one screen may sit in two tabs at
+  two positions at once. The Profile TAB is your own profile; your own
+  profile reached from a chip in the feed is still Feed's. The reel
+  stream is Feed's too, which is what its edge has said since the reel
+  round.
+- **The compose slot has no ladder** — it is an action, not a
+  destination, the deviation the master already declares, and the
+  kept-draft rules govern what a second tap meets.
+- **A transient is not state.** A sheet or dialog that was up when the
+  reader left is gone when they return; a tab restores its screen and
+  its scroll, never what was covering them.
+- **Every viewer class climbs the same ladder.** Guest, applicant and
+  key-absent readers get the identical four rungs, and the gates in
+  front of the slots are unchanged — one shell for everyone is the
+  bar's standing rule, and the ladder is part of the shell.
+- **The state is the session's.** A restart lands on Feed's root,
+  fresh; nothing is promised across launches.
+- **Back is the platform's.** Android's system back pops within the
+  current stack, then from another tab's root to Feed's root, then
+  leaves — never a tab switch mid-stack. On the web the tabs are
+  routes: the browser's back and forward own the history, the ladder
+  governs clicks on the nav, and scroll is restored per route entry.
+
+- **The graph had already drawn the pop, and only the pop.** A deep
+  board's active-tab edge has always named the tab's root as a board —
+  `PostDetail`'s Feed slot lands on `Feed`, `ProfileOther`'s Profile
+  slot on `Profile` — so rung two was drawn before it was ruled, and no
+  edge changed shape to record this. What said nothing was the root
+  boards' own edge, and those twenty-four self-terminals now carry the
+  scroll and, on the feed's roots alone, the refresh as a second
+  outcome. The cross-tab edges keep naming each tab's ROOT: a restored
+  stack has no single board to point at, and the root is the honest
+  representative of one.
+- **It is ahead of both apps, unevenly.** Neither does anything on an
+  active-tab tap, so rungs two through four are a conform item for the
+  implementation session. The rest is further along than the drawing
+  suggested: Android already restores a tab's stack and scroll, already
+  pops to the root from a drill-in, and already carries a
+  pull-to-refresh; the web restores the feed alone and has no pull
+  gesture at all, its feed view stating the absence as intent — new
+  posts from a reload or from Retry — which this ruling overrides.
+- **The gate**: screens, edges, gaps and flows all unchanged by this
+  round — twenty-four cases were reworded in
+  place, and nothing was drawn or pointed at that was not there before.
+  No hand-drawn board moved a pixel; six map boards grew where the
+  longer case wraps.
+
+### The batch's review — 2026-09-10
+
+jakob's review of the small-rulings batch, ruled in one sitting. The
+edit body's editability and the single-long-tag state are ruled in the
+same review and recorded with the boards that draw them.
+
+- **Wherever a pair is being set, the readout shows the nearest anchor's
+  face.** Emojis whenever possible: a face is the fastest rough read of
+  where a knob currently sits, and the exact pair beside it carries the
+  fact for anyone who wants it. `RefPair` takes it — the lookup is
+  `STANCE_ANCHORS` unchanged, the two slots being the ones the contract
+  assigns. What does not travel with the face is the anchor's word: it
+  names a feeling about a stance, so a citation keeps the face and
+  speaks its own two axes instead. A pair whose axes the anchor table
+  cannot speak for — a tag's census-bounded confidence — has no face to
+  be nearest to, which is what "whenever possible" excludes.
+- **A reference count counts every kind.** The number on a card is the
+  length of the list the sheet draws, whatever kind of node each row
+  points at, a cited chat message included. A count that quietly dropped
+  a kind would say the sheet holds less than it does, and the sheet is
+  the only place the number can be checked.
+- **The key-absent settings rows open drawn boards.** Item 20's review
+  rule reaches its last two: `SettingsBackupKeyAbsent` and
+  `YourKeyAbsent` draw what the Recovery code and Your key rows open
+  when the key is elsewhere. Both ride the drawn pattern —
+  a `tertiary-container` notice leading the page, restore first, the one
+  "?" on the key — and both stop short of the act, because making a new
+  code needs the key and the key page's whole body is the key. Neither
+  carries an escape hatch: nothing is staged, so the back arrow is the
+  way out, which is `WalletKeyAbsent`'s shape.
+- **The license sheets keep the 88% cap.** They stay content-sized; the
+  raised cap binds only when terms run long enough to reach it.
+- **The gate**: 143 → **145 screens**, 1046 → **1052 edges**, gaps hold
+  at **56** and flows at **58/55/3**. The two new boards join the
+  restore flow, whose control-start now reads six boards rather than
+  four, and the witness is re-blessed for that.
+
+### The edit body round — 2026-09-10
+
+One ruling, from jakob's hand review of the small-rulings batch: post
+editing must alter the BODY as well — remove and add pictures, remove a
+video, change the words — and a complete swap from a media post to a
+text post or back is allowed. The body line blessed that same day said
+as much in copy; the edit board still drew a body nobody could touch.
+
+- **The gallery is not a readout.** The picked row keeps its one
+  affordance, and beside it stands the add control the composer and
+  the comment edit already spell — "+ Add pictures · 2 of 10", what is
+  held against the cap. Nothing else on the edit changes: an edit was
+  always a post being composed with its answers filled in, and this is
+  the answer that had been left read-only.
+- **The blessed line is finally drawn.** "A post's body is words or
+  media, never both." was blessed for this surface and appeared on no
+  board. It sits under the gallery, where copy-voice puts it — saying
+  why no words field stands there, and by saying it as the body's rule
+  rather than this post's, saying that the field can come back.
+- **Show all over the edit is its own board (`EditPicked`).** The
+  overlay rule of 2026-09-08 decides this: a sheet covers the surface
+  the reader came from, and `ComposePicked` draws the PICK STEP —
+  a tray, a prompt offering "Write words instead", a wizard foot — which
+  an author editing a published post was never on. `EditCompose`'s row
+  now opens the sheet over `EditComposeBody`, and `ComposePicked`'s Done
+  stops claiming an origin it no longer has.
+- **The flip has a destination, and it is one board.** `EditWords` is
+  the edit with `WordsBody` where the row stands. A words post opened
+  for editing arrives there as an entry, the way `EditComposeVideo` is
+  one for a clip; so does a media post whose last picture was just
+  removed, with the field empty. They are the same surface, so drawing
+  the second separately would be drawing the first twice — the arriving
+  edge carries the difference in its case, which is what a case is for.
+- **The removals now land somewhere.** `EditPicked`'s last × and
+  `EditComposeVideo`'s × both point at `EditWords`. The video edge's
+  words — "the post is its words" — were already written and pointed at
+  `self`; a sentence that names a destination should reach one.
+- **A clip's share of the flip is the × alone.** No add control joins
+  the video edit: a body one clip fills has nothing to add to, and a
+  clip is never swapped for another. The quiet line stands where the
+  control would, from the staging copy — its second half, "Its cover
+  comes next", is the wizard's and is dropped where the cover is already
+  on screen.
+- **The words edit carries no description.** A description is how words
+  stand beside pictures (the compose flow, above); with the body already
+  words it has no job, and a second prose field would only ask the
+  author which one the post is. The title stays — it names a post of
+  either kind.
+- **The growing body field moved to `_shared.jsx` (`WordsBody`).** It
+  was hand-spelled on `ComposeWords` because no `TextField` grows; a
+  second board needing it made it board-local no longer. `ComposeWords`
+  renders byte-identically after the move, which is what a factoring
+  owes.
+- **The gate**: 143 → **145 screens**, 1046 → **1064 edges**, gaps hold
+  at **56** and flows at **58/55/3** — the round adds destinations, not
+  journeys. The witness was re-blessed for one line: `ComposePicked`'s
+  Done case, reworded because the edit no longer opens it. `EditActs`
+  and `TagPair` redrew where the shared edit body grew its two rows.
 
 ## 14. Index
 

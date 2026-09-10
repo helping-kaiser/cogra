@@ -58,7 +58,7 @@ export function UploadStatusLine({ done, total, progress }) {
 
 export function UploadErrorLine({ message = "One picture didn't upload.", onRetry, onRemove }) {
   return (
-    <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px" }}>
+    <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }}>
       <span style={{ color: "var(--error)" }}>{message}</span>{" "}
       {onRetry && (
         <>

@@ -1068,7 +1068,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 3618,
+      "h": 3696,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1077,7 +1077,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2324,
+      "h": 2501,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1095,7 +1095,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1945,
+      "h": 1984,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1104,7 +1104,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1249,
+      "h": 1275,
       "page": "money",
       "title": "Money & Wallet · flow map"
     },
@@ -1113,7 +1113,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 2455,
+      "h": 2503,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1149,7 +1149,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2067,
+      "h": 2328,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1325,6 +1325,24 @@
       "page": "profile"
     },
     {
+      "file": "SettingsBackupKeyAbsent.dc.html",
+      "title": "Settings · a new recovery code, key absent",
+      "x": 480,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "YourKeyAbsent.dc.html",
+      "title": "Settings · your key, key absent",
+      "x": 960,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "TagPage.dc.html",
       "title": "A tag's page",
       "x": 0,
@@ -1364,6 +1382,33 @@
       "file": "TagPair.dc.html",
       "title": "A staged tag's pair",
       "x": 2400,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "RefPair.dc.html",
+      "title": "A staged citation's pair",
+      "x": 2880,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "EditPicked.dc.html",
+      "title": "Edit post · show all",
+      "x": 3360,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "EditWords.dc.html",
+      "title": "Edit post · words body",
+      "x": 3840,
       "y": 3180,
       "w": 390,
       "h": 844,

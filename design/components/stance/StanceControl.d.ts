@@ -5,7 +5,13 @@ import type { StanceBundle, StancePair } from "./StanceReadout";
  * the parked pad, and every confirmation behind them.
  */
 export interface StanceControlProps {
-  /** Already in the reader's words — "this post", "this comment", "@ada". */
+  /**
+   * Already in the reader's words — "this post", "this comment", "@ada". Names
+   * the face's aria-label and, since backlog item 46.1, the visually-hidden
+   * "Choose your stance on {targetLabel}" skip-link beside it — the fix for a
+   * page (e.g. TagPage) carrying more than one stance control, where every
+   * skip-link once read the same unnamed "Choose your stance".
+   */
   targetLabel?: string;
   /**
    * The standing the hosting read already carried. Leave it out and the control
@@ -35,6 +41,14 @@ export interface StanceControlProps {
   /** The anchor restyled to sit on photography: a line-face glyph in the rail's
    *  family instead of the card's muted emoji. Restyles the anchor only. */
   overMedia?: boolean;
+  /**
+   * The pad's "?" accessible name (jakob's ruling A7) — the name of the
+   * dialog it belongs to, not a generic one, on a board that draws a named
+   * pad ("Where you stand on it", "Toward what you answer", "Your first
+   * stance"). Defaults to "How stances work", the ordinary feed-card
+   * control's name. Passed through to `StanceAlternates` unchanged.
+   */
+  helpLabel?: string;
 }
 
 export declare function StanceControl(props: StanceControlProps): JSX.Element;

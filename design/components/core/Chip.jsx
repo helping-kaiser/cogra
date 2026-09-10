@@ -84,10 +84,7 @@ function pill(size) {
    height, because a readout has to grow with the reader's text setting instead
    of clipping it — nothing here is a target that a growing box would move.
    `flex: none` is the acts row's business: that row's value slot clips, and a
-   tag shrunk to nothing would be a lie about what is being signed. The
-   letter-spacing is spelled `0.5px` rather than the token the way
-   `InlineAction`'s small rung is — the same half-pixel at a 16px root, taken
-   from the call site value for value. */
+   tag shrunk to nothing would be a lie about what is being signed. */
 const READOUT = {
   display: "inline-flex",
   alignItems: "center",
@@ -99,7 +96,7 @@ const READOUT = {
   fontSize: "var(--text-label-small)",
   lineHeight: "var(--text-label-small--line-height)",
   fontWeight: "var(--text-label-small--font-weight)",
-  letterSpacing: "0.5px",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
   flex: "none",
 };
 

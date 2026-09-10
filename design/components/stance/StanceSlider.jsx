@@ -29,7 +29,10 @@ export function StanceSlider({ label, value, onChange, minLabel, maxLabel, id, m
   const generated = React.useId();
   const fieldId = id ?? generated;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
+    // Same reasoning as TextField's own `data-field`: `type="range"` is a
+    // replaced element too and cannot host the flow badge's ::after, so the
+    // badge names the slider as a whole (jakob's ruling A9, backlog item 40).
+    <div data-field={label} style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
       <label
         htmlFor={fieldId}
         style={{

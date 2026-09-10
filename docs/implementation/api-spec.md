@@ -901,7 +901,7 @@ type MediaAttachment {
 }
 
 type MediaOptions {
-  "Container aspect ratio as \"W:H\", so layout reserves space pre-load."
+  "The displayed shape after container rotation, as \"W:H\", so layout reserves space pre-load."
   aspectRatio: String
   "Duration in milliseconds; null until video lands."
   durationMs: Int
@@ -3551,7 +3551,9 @@ stakes, and weight overrides ride the collective-side payloads.
  namespace at prepare."
 input PrepareCollectiveInput {
   handle: String!
-  displayName: String!
+  "Optional, as on any profile — a Collective with none written is
+   presented by its handle."
+  displayName: String
   description: String
   avatarMediaId: UUID
   websiteUrl: String
