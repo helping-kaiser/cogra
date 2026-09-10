@@ -516,6 +516,110 @@ fn h264_movie(sample_ms: u32) -> Vec<u8> {
     writer.into_writer().into_inner()
 }
 
+/// Overwrites the identity tkhd matrix `mp4::Mp4Writer` stamps with a
+/// 90-degree quarter turn.
+///
+/// The 36-byte matrix is nine big-endian `i32` terms in ISO/IEC
+/// 14496-12's order `a b u c d v x y w`; the identity leaves `a`, `d`
+/// and `w` at fixed-point 1.0 and every other term at 0. `mvhd` (the
+/// movie header) carries the same identity matrix every unrotated box
+/// gets, so the run is not unique in the file on its own — the search
+/// is scoped to the bytes after the track header's own `tkhd` fourcc,
+/// located by name rather than by trusting either box's byte offset,
+/// since the exact layout the writer produces is the `mp4` crate's
+/// business, not this crate's.
+///
+/// The patched values are a 90-degree turn per ISO/IEC 14496-12: `a`
+/// and `d` go to 0, and `b` and `c` take the unity terms `a` and `d`
+/// vacated, with `c` negated.
+fn rotate_quarter_turn(bytes: &[u8]) -> Vec<u8> {
+    #[rustfmt::skip]
+    const IDENTITY: [u8; 36] = [
+        0x00, 0x01, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x01, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x40, 0x00, 0x00, 0x00,
+    ];
+
+    let mut tkhd_hits = bytes.windows(4).enumerate().filter(|(_, w)| *w == b"tkhd");
+    let (tkhd_at, _) = tkhd_hits.next().expect("the fixture carries a tkhd box");
+    assert!(
+        tkhd_hits.next().is_none(),
+        "exactly one track is expected; a second tkhd would make the scoped search ambiguous"
+    );
+
+    let mut hits = bytes[tkhd_at..]
+        .windows(IDENTITY.len())
+        .enumerate()
+        .filter(|(_, window)| *window == IDENTITY);
+    let (offset, _) = hits
+        .next()
+        .expect("the tkhd box carries the writer's identity matrix");
+    assert!(
+        hits.next().is_none(),
+        "the identity matrix must appear exactly once after tkhd, or patching it is ambiguous"
+    );
+    let at = tkhd_at + offset;
+
+    let (quarter_turn_a, quarter_turn_b, quarter_turn_c, quarter_turn_d) =
+        (0i32, 0x0001_0000i32, -0x0001_0000i32, 0i32);
+    let mut out = bytes.to_vec();
+    out[at..at + 4].copy_from_slice(&quarter_turn_a.to_be_bytes());
+    out[at + 4..at + 8].copy_from_slice(&quarter_turn_b.to_be_bytes());
+    out[at + 12..at + 16].copy_from_slice(&quarter_turn_c.to_be_bytes());
+    out[at + 16..at + 20].copy_from_slice(&quarter_turn_d.to_be_bytes());
+    out
+}
+
+/// A real MP4 carrying one H.264 track coded landscape — the shape a
+/// phone's encoder writes before its tkhd matrix turns the picture for
+/// display.
+fn landscape_h264_movie(sample_ms: u32) -> Vec<u8> {
+    let config = mp4::Mp4Config {
+        major_brand: "isom".parse().expect("a brand"),
+        minor_version: 512,
+        compatible_brands: vec![
+            "isom".parse().expect("a brand"),
+            "mp41".parse().expect("a brand"),
+        ],
+        timescale: 1000,
+    };
+    let mut writer = mp4::Mp4Writer::write_start(std::io::Cursor::new(Vec::new()), &config)
+        .expect("the writer starts");
+    writer
+        .add_track(&mp4::TrackConfig {
+            track_type: mp4::TrackType::Video,
+            timescale: 1000,
+            language: "und".into(),
+            media_conf: mp4::MediaConfig::AvcConfig(mp4::AvcConfig {
+                width: 1920,
+                height: 1080,
+                seq_param_set: vec![0x67, 0x42, 0x00, 0x1E, 0x00],
+                pic_param_set: vec![0x68, 0xCE, 0x3C, 0x80],
+            }),
+        })
+        .expect("a track");
+    writer
+        .write_sample(
+            1,
+            &mp4::Mp4Sample {
+                start_time: 0,
+                duration: sample_ms,
+                rendering_offset: 0,
+                is_sync: true,
+                bytes: bytes::Bytes::from_static(&[0, 0, 0, 1]),
+            },
+        )
+        .expect("a sample");
+    writer.write_end().expect("the writer finishes");
+    writer.into_writer().into_inner()
+}
+
 /// The field path a refusal names, so a test asserts where the client
 /// will actually read the message.
 fn refused_at(payload: &Value) -> Vec<String> {
@@ -571,6 +675,34 @@ async fn a_video_uploads_with_its_duration_and_poster(pool: PgPool) {
 
     let key = format!("{}.mp4", uploaded["media"]["id"].as_str().expect("id"));
     assert!(rig.blobs.exists(&key).await.expect("head"));
+}
+
+/// A portrait phone clip — coded landscape, carried by a 90-degree tkhd
+/// matrix — uploads with the displayed shape in its aspect ratio, not
+/// the coded one the container's `stsd` states.
+///
+/// A rotated video uploads with the aspect ratio its tkhd matrix displays, not the landscape shape its track was coded in.
+/// ´claim:media:a-rotated-video-uploads-with-its-displayed-shape´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_rotated_video_uploads_with_its_displayed_aspect_ratio(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let rotated = rotate_quarter_turn(&landscape_h264_movie(2_500));
+    let uploaded = rig.upload(&token, &rotated).await;
+    assert_eq!(
+        uploaded["userErrors"].as_array().map(Vec::len),
+        Some(0),
+        "a valid rotated video is accepted: {uploaded}"
+    );
+    assert_eq!(uploaded["media"]["mimeType"], "video/mp4");
+    assert_eq!(
+        uploaded["media"]["options"]["aspectRatio"], "9:16",
+        "the track is coded 1920x1080 (16:9) but the matrix turns it a \
+         quarter, so the displayed shape — and the aspect ratio the \
+         contract publishes — is 9:16"
+    );
 }
 
 /// An asset row is immutable once written, poster included, so the
