@@ -108,7 +108,13 @@ export function TextField({
     boxSizing: "border-box",
   };
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
+    // A REPLACED ELEMENT CANNOT HOST THE FLOW BADGE'S ::after (shell.mjs) — an
+    // <input>/<textarea> paints nothing for a `data-flow` it carries directly,
+    // so the badge belongs on the field as a whole instead. `data-field` names
+    // that whole for flow-markers.mjs to find and stamp (jakob's ruling A9,
+    // backlog item 40), the same way `data-axis` lets it stamp `LicenseAxis`'s
+    // row rather than its own hidden radio.
+    <div data-field={label} style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
       <FieldLabel htmlFor={fieldId} corner={corner} error={error}>
         {label}
       </FieldLabel>

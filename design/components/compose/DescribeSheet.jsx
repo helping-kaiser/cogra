@@ -46,7 +46,7 @@ export function DescribeSheet({ open = false, onClose, src, alt = "", value, onC
                 margin: 0,
                 fontSize: "var(--text-label-small)",
                 lineHeight: "var(--text-label-small--line-height)",
-                letterSpacing: "0.4px",
+                letterSpacing: "var(--text-label-small--letter-spacing)",
                 color: "var(--text-secondary)",
               }}
             >

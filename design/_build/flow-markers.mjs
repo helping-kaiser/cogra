@@ -75,9 +75,9 @@ export const FLOW_MARKERS = {
     ...nav(13),
   ],
   VouchBackPad: [
-    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 1, find: 'aria-label="Your first stance"', tag: "button" },
     { n: 2, find: 'aria-label="Stance', tag: "div" },
-    { n: 2, find: ">Choose your stance</button>", tag: "button" },
+    { n: 2, find: ">Choose your stance on @mira</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
   ],
@@ -88,7 +88,7 @@ export const FLOW_MARKERS = {
       (m) => m.find !== 'aria-label="Take a stance on this post"'
     ),
     { n: 9, find: 'aria-label="Your stance on this post', tag: "button" },
-    { n: 9, find: ">Choose your stance</button>", tag: "button" },
+    { n: 9, find: ">Choose your stance on this post</button>", tag: "button" },
     ...nav(12),
   ],
 };
@@ -172,7 +172,7 @@ const signedPost = (at) => [
   { n: at.more, find: ">More</button>", tag: "button", all: true },
   { n: at.topic, find: '<a href="/t/', tag: "a", all: true },
   { n: at.stance, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-  { n: at.stance, find: ">Choose your stance</button>", tag: "button", all: true },
+  { n: at.stance, find: ">Choose your stance on this post</button>", tag: "button", all: true },
   { n: at.score, find: ">Post Score</span>", tag: "button", all: true },
 ];
 const searchShell = (fieldText, nRow) => [
@@ -262,7 +262,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: '<a href="/t/', tag: "a", all: true },
     { n: 4, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
     { n: 4, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
-    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: "Add a comment</label>", tag: "label" },
@@ -274,7 +275,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: "scroll-snap-type:x mandatory", tag: "div" },
     { n: 4, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
     { n: 4, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
-    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: ">Edit</button>", tag: "button" },
     { n: 7, find: "Add a comment</label>", tag: "label" },
@@ -286,7 +288,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
-    { n: 4, find: 'rows="3"', tag: "textarea" },
+    { n: 4, find: 'data-field="Words"', tag: "div" },
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
     { n: 6, find: "+ Add pictures · 1 of 4", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
@@ -410,21 +412,23 @@ Object.assign(FLOW_MARKERS, {
   ComposeCited: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: "<input", tag: "input" },
-    { n: 4, find: "<textarea", tag: "textarea" },
+    { n: 3, find: 'data-field="Title"', tag: "div" },
+    { n: 4, find: 'data-field="Description"', tag: "div" },
     { n: 5, find: "+ Add a tag", tag: "button" },
     { n: 6, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 7, find: "+ Cite something", tag: "button" },
     { n: 8, find: ">Next</button>", tag: "button" },
+    { n: 9, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
   ],
   ComposeDetails: [
     { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 12, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
+    { n: 13, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
-    { n: 4, find: "<input", tag: "input" },
-    { n: 5, find: "<textarea", tag: "textarea" },
+    { n: 4, find: 'data-field="Title"', tag: "div" },
+    { n: 5, find: 'data-field="Description"', tag: "div" },
     { n: 6, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
     { n: 6, find: 'aria-label="Remove #coastroad"', tag: "button" },
     { n: 7, find: "+ Add a tag", tag: "button" },
@@ -442,7 +446,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: '<a href="/u/', tag: "a", all: true },
     { n: 3, find: 'aria-label="Take a stance on this post"', tag: "button", all: true },
-    { n: 3, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 3, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 4, find: ">Post Score</span>", tag: "button", all: true },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(6),
@@ -454,7 +458,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
     { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 6, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 6, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 6, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 7, find: ">Post Score</span>", tag: "button", all: true },
     { n: 8, find: 'aria-label="0 comments"', tag: "button" },
     ...nav(9),
@@ -470,7 +474,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: '<a href="/t/', tag: "a", all: true },
     { n: 9, find: ">· 1 reference<", tag: "span" },
     { n: 10, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 10, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 10, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 11, find: ">Post Score</span>", tag: "button", all: true },
     { n: 12, find: 'aria-label="3 comments"', tag: "button" },
     ...nav(13),
@@ -568,12 +572,12 @@ Object.assign(FLOW_MARKERS, {
   ComposeSensitive: [
     { n: 1, find: 'aria-label="Sensitive"', tag: "button" },
     { n: 2, find: 'role="switch"', tag: "button" },
-    { n: 3, find: "<input", tag: "input" },
+    { n: 3, find: 'data-field="Why?"', tag: "div" },
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   ComposePad: [
-    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 1, find: 'aria-label="Where you stand on it"', tag: "button" },
     { n: 2, find: 'aria-label="Stance pad', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
@@ -591,7 +595,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">More</button>", tag: "button" },
     { n: 6, find: '<a href="/t/', tag: "a", all: true },
     { n: 7, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 7, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 7, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 8, find: ">Post Score</span>", tag: "button", all: true },
     { n: 9, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="1 comment"', tag: "button" },
@@ -615,13 +619,13 @@ Object.assign(FLOW_MARKERS, {
   ],
   ComposeDescribe: [
     { n: 1, find: 'aria-label="Describing pictures"', tag: "button" },
-    { n: 2, find: 'rows="2"', tag: "textarea" },
+    { n: 2, find: 'data-field="What&#x27;s in the picture"', tag: "div" },
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   ComposeDescribeVideo: [
     { n: 1, find: 'aria-label="Describing pictures"', tag: "button" },
-    { n: 2, find: 'rows="2"', tag: "textarea" },
+    { n: 2, find: 'data-field="What&#x27;s in the video"', tag: "div" },
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
@@ -654,7 +658,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
-    { n: 4, find: 'rows="2"', tag: "textarea" },
+    { n: 4, find: 'data-field="Words"', tag: "div" },
     { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 6, find: ">Describe the video</button>", tag: "button" },
     { n: 7, find: ">Change the cover</button>", tag: "button" },
@@ -673,8 +677,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 5, find: ">Describe the video</button>", tag: "button" },
     { n: 6, find: ">Change the cover</button>", tag: "button" },
-    { n: 7, find: 'value="The long way home"', tag: "input" },
-    { n: 8, find: 'rows="2"', tag: "textarea" },
+    { n: 7, find: 'data-field="Title"', tag: "div" },
+    { n: 8, find: 'data-field="Description"', tag: "div" },
     { n: 9, find: 'aria-label="Remove #coastroad"', tag: "button" },
     { n: 10, find: "+ Add a tag", tag: "button" },
     { n: 11, find: "This creates 3 signed actions", tag: "button" },
@@ -689,8 +693,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Retry</button>", tag: "button" },
     { n: 5, find: ">Remove it</button>", tag: "button" },
     { n: 6, find: ">Describe the pictures</button>", tag: "button" },
-    { n: 7, find: 'type="text"', tag: "input" },
-    { n: 8, find: 'rows="2"', tag: "textarea" },
+    { n: 7, find: 'data-field="Title"', tag: "div" },
+    { n: 8, find: 'data-field="Description"', tag: "div" },
     { n: 9, find: 'aria-label="Remove #tidemarket"', tag: "button" },
     { n: 10, find: "+ Add a tag", tag: "button" },
     { n: 11, find: ">Next</button>", tag: "button" },
@@ -707,6 +711,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Sign comment</button>", tag: "button" },
     { n: 10, find: ">Back</button>", tag: "button" },
     { n: 11, find: 'aria-label="Remove Tide tables', tag: "button" },
+    { n: 12, find: "aria-label=\"Tide tables and the third headland — set how it relates\"", tag: "button" },
   ],
   ComposeSealUploading: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -758,7 +763,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">More</button>", tag: "button", all: true },
     { n: 6, find: '<a href="/t/', tag: "a", all: true },
     { n: 7, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 7, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 7, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 8, find: ">Post Score</span>", tag: "button", all: true },
     { n: 9, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="1 comment"', tag: "button" },
@@ -771,7 +776,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Turn sound on"', tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a" },
     { n: 4, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 4, find: ">Choose your stance</button>", tag: "button" },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     { n: 6, find: 'aria-label="Share this post"', tag: "button" },
     { n: 7, find: ">Post Score</span>", tag: "button" },
@@ -787,7 +792,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
     { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 6, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 6, find: ">Choose your stance</button>", tag: "button" },
+    { n: 6, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 7, find: ">Post Score</span>", tag: "button" },
     { n: 8, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="Share this post"', tag: "button" },
@@ -803,7 +808,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: '<a href="/u/', tag: "a" },
     { n: 8, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 9, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 9, find: ">Choose your stance</button>", tag: "button" },
+    { n: 9, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 10, find: ">Post Score</span>", tag: "button" },
     { n: 11, find: 'aria-label="2 comments"', tag: "button" },
     { n: 12, find: 'aria-label="Share this post"', tag: "button" },
@@ -879,7 +884,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Stances on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Take a stance on @ada"', tag: "button" },
-    { n: 4, find: ">Choose your stance</button>", tag: "button" },
+    { n: 4, find: ">Choose your stance on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
     { n: 6, find: 'aria-label="Comments"', tag: "button" },
@@ -904,7 +909,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Stances on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Take a stance on @ada"', tag: "button" },
-    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on @ada</button>", tag: "button" },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
     { n: 6, find: 'aria-label="Comments"', tag: "button" },
@@ -935,7 +941,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="More on this comment"', tag: "button", all: true },
     { n: 9, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
     { n: 9, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
-    { n: 9, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 9, find: ">Choose your stance on this comment</button>", tag: "button", all: true },
+    /* The own-profile skip-link ("@ada") is the profile's own stance control's
+       accessible-text twin, not the comment's — via 4 (its face two rows up),
+       matching ProfileOther's convention of stamping both the aria-label and
+       the skip-link text under the same via (jakob 2026-09-10). */
+    { n: 4, find: ">Choose your stance on @ada</button>", tag: "button" },
     { n: 10, find: ">Reply</button>", tag: "button", all: true },
     { n: 11, find: "View 2 replies", tag: "button" },
     { n: 17, find: ">On “", tag: "button", all: true },
@@ -944,9 +955,9 @@ Object.assign(FLOW_MARKERS, {
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Change picture</button>", tag: "button" },
-    { n: 3, find: 'value="Sol Ferreira"', tag: "input" },
-    { n: 4, find: "whatever the wind allows.</textarea>", tag: "textarea" },
-    { n: 5, find: 'value="solferreira.art"', tag: "input" },
+    { n: 3, find: 'data-field="Display name"', tag: "div" },
+    { n: 4, find: 'data-field="Bio"', tag: "div" },
+    { n: 5, find: 'data-field="Website"', tag: "div" },
     { n: 6, find: ">Save</button>", tag: "button" },
   ],
   ProfileEditSeal: [
@@ -969,7 +980,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Light</button>", tag: "button" },
     { n: 2, find: ">Dark</button>", tag: "button" },
     { n: 2, find: ">Auto</button>", tag: "button" },
-    { n: 3, find: 'name="settings-stance-input"', tag: "input", all: true },
+    { n: 3, find: 'name="settings-stance-input"', tag: "label", all: true },
     { n: 4, find: ">Confirm multi-action submits</span>", tag: "button" },
     { n: 5, find: ">Default license</span>", tag: "button" },
     { n: 6, find: ">What your feed shows</span>", tag: "button" },
@@ -985,13 +996,26 @@ Object.assign(FLOW_MARKERS, {
   ],
   SettingsBackup: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: 'id="settings-rekey-code"', tag: "input" },
+    { n: 2, find: 'data-field="Current recovery code"', tag: "div" },
     { n: 3, find: ">Create a new recovery code</button>", tag: "button" },
   ],
   YourKey: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: 'aria-label="Copy the PEM block"', tag: "button" },
     { n: 3, find: 'aria-label="Copy the raw hex"', tag: "button" },
+  ],
+  // Both key-absent twins carry the same three controls in the same order —
+  // the back arrow, the panel's one "?", and the restore — because they draw
+  // the same notice over two bodies.
+  SettingsBackupKeyAbsent: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'aria-label="Your key"', tag: "button" },
+    { n: 3, find: ">Restore the key</button>", tag: "button" },
+  ],
+  YourKeyAbsent: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'aria-label="Your key"', tag: "button" },
+    { n: 3, find: ">Restore the key</button>", tag: "button" },
   ],
 });
 
@@ -1026,26 +1050,26 @@ Object.assign(FLOW_MARKERS, {
   // per-post controls keep.
   ChangePassword: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: 'id="current-password"', tag: "input" },
-    { n: 3, find: 'id="change-new-password"', tag: "input" },
+    { n: 2, find: 'data-field="Current password"', tag: "div" },
+    { n: 3, find: 'data-field="New password"', tag: "div" },
     { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
     { n: 5, find: ">Change password</button>", tag: "button" },
   ],
   ChangeHandle: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: 'id="new-handle"', tag: "input" },
+    { n: 2, find: 'data-field="New handle"', tag: "div" },
     { n: 3, find: ">Change handle</button>", tag: "button" },
   ],
   ChangeEmail: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: 'id="new-email"', tag: "input" },
-    { n: 3, find: 'id="email-current-password"', tag: "input" },
+    { n: 2, find: 'data-field="New email"', tag: "div" },
+    { n: 3, find: 'data-field="Current password"', tag: "div" },
     { n: 4, find: 'aria-label="Show password"', tag: "button" },
     { n: 5, find: ">Change email</button>", tag: "button" },
   ],
   ChangeEmailConfirm: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: 'id="email-change-code"', tag: "input" },
+    { n: 2, find: 'data-field="Confirmation code"', tag: "div" },
     { n: 3, find: ">Confirm the code</button>", tag: "button" },
   ],
 });
@@ -1058,19 +1082,19 @@ Object.assign(FLOW_MARKERS, {
 Object.assign(FLOW_MARKERS, {
   Join: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="handle"', tag: "input" },
-    { n: 3, find: 'id="email"', tag: "input" },
-    { n: 4, find: 'id="password"', tag: "input" },
+    { n: 2, find: 'data-field="Handle"', tag: "div" },
+    { n: 3, find: 'data-field="Email"', tag: "div" },
+    { n: 4, find: 'data-field="Password"', tag: "div" },
     { n: 5, find: 'aria-label="Show password"', tag: "button" },
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
   ],
   SignIn: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="signin-email"', tag: "input" },
-    { n: 3, find: 'id="signin-password"', tag: "input" },
+    { n: 2, find: 'data-field="Email"', tag: "div" },
+    { n: 3, find: 'data-field="Password"', tag: "div" },
     { n: 4, find: 'aria-label="Show password"', tag: "button" },
-    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 6, find: ">Sign in</button>", tag: "button" },
     { n: 7, find: ">Forgot password?</button>", tag: "button" },
     { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
@@ -1079,13 +1103,13 @@ Object.assign(FLOW_MARKERS, {
   ],
   Restore: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="recovery-code"', tag: "input" },
-    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 2, find: 'data-field="Recovery code"', tag: "div" },
+    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 4, find: ">Restore the key</button>", tag: "button" },
   ],
   RecoveryCode: [
     { n: 1, find: ">Copy</button>", tag: "button" },
-    { n: 2, find: 'type="text"', tag: "input" },
+    { n: 2, find: 'data-field="Type or paste the code to confirm"', tag: "div" },
     { n: 3, find: ">I&#x27;ve written it down</button>", tag: "button" },
   ],
 });
@@ -1097,19 +1121,19 @@ Object.assign(FLOW_MARKERS, {
 Object.assign(FLOW_MARKERS, {
   JoinErrors: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="handle"', tag: "input" },
-    { n: 3, find: 'id="email"', tag: "input" },
-    { n: 4, find: 'id="password"', tag: "input" },
+    { n: 2, find: 'data-field="Handle"', tag: "div" },
+    { n: 3, find: 'data-field="Email"', tag: "div" },
+    { n: 4, find: 'data-field="Password"', tag: "div" },
     { n: 5, find: 'aria-label="Show password"', tag: "button" },
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
   ],
   SignInError: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="signin-email"', tag: "input" },
-    { n: 3, find: 'id="signin-password"', tag: "input" },
+    { n: 2, find: 'data-field="Email"', tag: "div" },
+    { n: 3, find: 'data-field="Password"', tag: "div" },
     { n: 4, find: 'aria-label="Show password"', tag: "button" },
-    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 6, find: ">Sign in</button>", tag: "button" },
     { n: 7, find: ">Forgot password?</button>", tag: "button" },
     { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
@@ -1118,13 +1142,13 @@ Object.assign(FLOW_MARKERS, {
   ],
   RestoreError: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="recovery-code"', tag: "input" },
-    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 2, find: 'data-field="Recovery code"', tag: "div" },
+    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 4, find: ">Restore the key</button>", tag: "button" },
   ],
   RecoveryCodeMismatch: [
     { n: 1, find: ">Copy</button>", tag: "button" },
-    { n: 2, find: 'type="text"', tag: "input" },
+    { n: 2, find: 'data-field="Type or paste the code to confirm"', tag: "div" },
     { n: 3, find: ">I&#x27;ve written it down</button>", tag: "button" },
   ],
 });
@@ -1138,33 +1162,33 @@ Object.assign(FLOW_MARKERS, {
 Object.assign(FLOW_MARKERS, {
   InviteEntry: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="invite-link"', tag: "input" },
+    { n: 2, find: 'data-field="Invite link"', tag: "div" },
     { n: 3, find: ">Continue</button>", tag: "button" },
     { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
     { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
   ],
   InviteEntryError: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="invite-link"', tag: "input" },
+    { n: 2, find: 'data-field="Invite link"', tag: "div" },
     { n: 3, find: ">Continue</button>", tag: "button" },
     { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
     { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
   ],
   JoinInvalid: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="invite-link"', tag: "input" },
+    { n: 2, find: 'data-field="Invite link"', tag: "div" },
     { n: 3, find: ">Continue</button>", tag: "button" },
     { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
     { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
   ],
   Reset: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="reset-email"', tag: "input" },
+    { n: 2, find: 'data-field="Email"', tag: "div" },
     { n: 3, find: ">Send reset link</button>", tag: "button" },
   ],
   // No back arrow: a mail link has no previous screen of ours behind it.
   ResetNew: [
-    { n: 1, find: 'id="new-password"', tag: "input" },
+    { n: 1, find: 'data-field="New password"', tag: "div" },
     { n: 2, find: 'aria-label="Show password"', tag: "button" },
     { n: 3, find: ">Set the new password</button>", tag: "button" },
   ],
@@ -1221,7 +1245,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: "+ Add pictures or a video", tag: "button" },
   ],
   ReplyPad: [
-    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 1, find: 'aria-label="Toward what you answer"', tag: "button" },
     { n: 2, find: 'aria-label="Stance pad for the post you answer"', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
@@ -1247,8 +1271,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'aria-label="Manage the pictures"', tag: "button" },
-    { n: 5, find: 'value="Salt maps of the coast road"', tag: "input" },
-    { n: 6, find: "paper against the salt crust.</textarea>", tag: "textarea" },
+    { n: 5, find: 'data-field="Title"', tag: "div" },
+    { n: 6, find: 'data-field="Description"', tag: "div" },
     { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
     { n: 7, find: 'aria-label="Remove #saltmaps"', tag: "button" },
     { n: 8, find: "+ Add a tag", tag: "button" },
@@ -1257,6 +1281,40 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: "This creates 3 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
+    { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+    { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
+  ],
+  // Show all over the edit. The sheet is the same `PickedSheet` ComposePicked
+  // draws, so the markers are its markers — but the REMOVE anchors are spelled
+  // exactly rather than by the "Remove" prefix, because the edit beneath this
+  // sheet has remove buttons of its own (its tag chips, its staged citation)
+  // and a prefix match with `all` would badge them through the scrim.
+  EditPicked: [
+    { n: 1, find: "cursor:grab", tag: "span", all: true },
+    { n: 2, find: ">Describe</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Remove the cover"', tag: "button" },
+    { n: 3, find: 'aria-label="Remove picture 2"', tag: "button" },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // The words edit. Marker 4 is the growing body box, anchored on the field
+  // border: it is the FIRST such border on the board, standing above the
+  // title's own field, and `applyFlowMarkers` takes the first match.
+  EditWords: [
+    { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 12, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Editing"', tag: "button" },
+    { n: 4, find: "1px solid var(--border-field)", tag: "div" },
+    { n: 5, find: "+ Add pictures or a video", tag: "button" },
+    { n: 6, find: 'data-field="Title"', tag: "div" },
+    { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 8, find: "+ Add a tag", tag: "button" },
+    { n: 9, find: "This creates 3 signed actions", tag: "button" },
+    { n: 10, find: ">Sign the edit</button>", tag: "button" },
+    { n: 11, find: ">Mark</button>", tag: "button" },
   ],
   EditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
@@ -1319,19 +1377,18 @@ for (const [board, n] of Object.entries(CARD_SHARE)) {
    so it borrows the feed boards' numbering with it; the two picker states
    borrow `ReferencePicker`'s.
 
-   ONE VIA CARRIES EVERY "Choose your stance" ON THE PAGE. The skip-link is the
-   same control wherever it sits — it opens the alternates for the stance it
-   belongs to — and its text names no target, so the four on this page cannot
-   be told apart by a `find` at all. One number for the accessible path is the
-   honest reading of what they share, and each FACE beside them is numbered by
-   what it actually stances: the tag, a post, a comment. That the skip-link
-   does not name its target where the face does is a defect worth its own fix,
-   and it is bigger than this round: it is one line in `StanceControl` and a
-   repin on all thirty-four boards that draw a stance. */
+   ONE VIA STILL CARRIES EVERY SKIP-LINK ON THE PAGE (backlog item 46.1). The
+   skip-link's text now names its target — `StanceControl`'s `targetLabel`,
+   the same source the face beside it reads — so the three on this page (two
+   posts, one comment) no longer share one anonymous "Choose your stance". The
+   VIA NUMBERING ITSELF is unchanged here: it is still one edge for all three,
+   where each FACE keeps its own (a post's, a comment's). Splitting the via to
+   match is a graph.json call, left standing for jakob to rule on. */
 Object.assign(FLOW_MARKERS, {
   TagPage: [
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
-    { n: 2, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 2, find: ">Choose your stance on this post</button>", tag: "button", all: true },
+    { n: 2, find: ">Choose your stance on this comment</button>", tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a", all: true },
     { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 5, find: ">More</button>", tag: "button", all: true },
@@ -1365,7 +1422,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">saltmaps<", tag: "button" },
   ],
   TagPair: [
-    { n: 1, find: 'type="range"', tag: "input", all: true },
+    { n: 1, find: 'data-field="How much it is about this"', tag: "div" },
+    { n: 1, find: 'data-field="How sure you are"', tag: "div" },
+    { n: 2, find: ">Done</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The citation's twin of TagPair — the pad instead of the sliders, because
+  // both of a citation's axes are signed. Same three controls.
+  RefPair: [
+    { n: 1, find: 'aria-label="The pair this citation signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],

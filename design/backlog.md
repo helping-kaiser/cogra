@@ -150,13 +150,20 @@ The editor is two sliders rather than the reader's chosen stance
 input — a Tag's confidence is census-bounded to [0, 1] and the pad
 is a square over two signed axes, so half of it would be dead.
 
-**Remaining: the reference half.** `StagedReference` shows the pair
-it carries and offers nothing that changes it — its only control is
-the remove ×. A citation's two axes are both signed (`ReferenceInput`,
-api-spec.md), so unlike a tag's it is the pad's own shape, and the
-question the tag round did not answer is whether the composer opens
-the pad there or a sheet of its own beside `TagPair`. Undrawn, and
-jakob's to rule.
+**The reference half is closed** (jakob's ruling 2026-09-10, readme §13
+*The citation's pair, and the settling row*): a staged reference row is
+a button, and what it opens is the pad in a sheet of its own
+(`RefPair`) — a citation's two axes are both signed (`ReferenceInput`,
+api-spec.md), so unlike a tag's pair it is the pad's own shape. The
+poles are the citation's in the slots the contract assigns: relevance
+`Barely`/`Entirely` on the horizontal, support `Against`/`For` on the
+vertical, which is why `StancePad` now takes its four words as `axes`.
+Four composers open it; the sheet is the master on the compose page.
+
+**And the sheet says what is still settling** (jakob's A4 ruling, the
+same day): a staged-not-yet-landed tag or citation reads
+`Still settling` on its `ReferenceRow`, beside the pair it signs. The
+chip on the card says nothing about the order.
 
 ### 9 · Search + results · *design* · **built**
 `designs/canonical/` — the Explore row (2026-08-28): at rest (the
@@ -338,10 +345,15 @@ current settings-surface anatomy in this system's own skin.
 
 Ruled again at review the same day: a canonical canvas that stops at
 the row leaves implementation to guess the surface behind it, so
-every row that opens something now opens a drawn board.
+every row that opens something now opens a drawn board. The batch's own
+review, 2026-09-10, carried the rule one step further: a row whose
+screen changes when the key is absent owes that state a board too.
 
 **Drawn**: `Settings` (the whole page, eight groups in the ruled
-order), `SettingsBackup`, `YourKey`; the six subpages its rows open —
+order), `SettingsBackup`, `YourKey`, and the two key-absent states of
+the Key backup rows — `SettingsBackupKeyAbsent` and `YourKeyAbsent`,
+riding the drawn key-absent pattern, neither drawing an act the key is
+needed for; the six subpages its rows open —
 `SettingsLicense` and `SettingsReading` (the license and filter sheets
 over the settings page, titled by the row that opened them),
 `ChangePassword`, `ChangeHandle`, `ChangeEmail` and
@@ -349,7 +361,7 @@ over the settings page, titled by the row that opened them),
 `Switch` as masters, with `FeedFilterSheet` split off `FeedFilter` so
 one control serves the feed and the default; `api-spec.md`'s
 `UserPreferences.defaultLicense`; the round's copy in
-`copy-voice.md`, awaiting blessing.
+`copy-voice.md`, blessed 2026-09-10.
 
 **Not drawn**: the marked states of the four task screens
 (validation is on submit, so the resting form is the one state that
@@ -1244,7 +1256,10 @@ had left open and fixed what the canvas showed:
   uncropped pictures display-crop to their square frame, centred, the
   way its clip already does; the whole frame is one tap away in the
   viewer. Display only — nothing about the no-crop-at-upload ruling
-  changes, and the bytes stay the author's own.
+  changes, and the bytes stay the author's own. **A comment clip's
+  cover crops with it** (ruled 2026-09-10), the way a post's does — the
+  cover is the clip's own face, so one frame holds both. A conform item
+  for the apps.
 - **The score element keeps its double meaning** — the drill-down from
   a card, the detail door from the stream's rail — and is not renamed.
 - The **viewer boards were broken on the canvas** and are rebuilt: see
@@ -1336,9 +1351,11 @@ conform items for the feature session, not design work still owed:
    the author chip, the profile header, a mention, a search result.
    The handle alone, never a stand-in name.
 
-**A Collective keeps its founding name.** The optionality does not reach
-`PrepareCollectiveInput`: its `displayName` stays `String!`, so founding
-a Collective still means naming it (ruled 2026-09-08).
+**A Collective is founded the same way.** `PrepareCollectiveInput`'s
+`displayName` is optional, an explicit null clears it exactly as on a
+person's profile, and a Collective with none written is presented by its
+handle. Point 1's breaking schema change carries the field (ruled
+2026-09-10).
 
 ### 37 · The edit batch's mechanics are the implementation's call · *implementation*
 
@@ -1400,15 +1417,14 @@ verbatim, and the word **token** leaves the reset and verify flows when
 they do. The desktop questions — the fullscreen viewer and the desktop
 card idiom — are parked to item 38 by jakob's scope ruling.
 
-### 40 · The field flow badge is invisible, and the gate likes it that way · *build*
+### 40 · The field flow badge is invisible, and the gate likes it that way · *build* · **ruled**
 
 `check-flows` verifies `data-flow` on the `<input>` opening tag itself,
 but `::after` generates no box on a replaced element, so every field
 badge is invisible-but-valid — six boards before the audit-states round
-and its fields since. Either the gate learns to accept the attribute on
-the field's wrapper (and the boards move it where it paints), or the
-readme's "the gate verifies the attribute, not the paint" stays the
-stated rule and this item closes as written.
+and its fields since. **The badge moves to the field's wrapper**, where
+it paints, and the gate accepts it there (ruled 2026-09-10): a marker
+nobody can see verifies its own presence and nothing else.
 
 ### 41 · The recovery code's two loose ends · *design* · **ruled**
 
@@ -1556,7 +1572,7 @@ stop 1 is about the screen, not the board): `InviteEntryError`,
 verbatim, because a screen and its error state are one control and
 one control reads one way.
 
-### 44 · The sensitive sheet still draws its own switch · *system*
+### 44 · The sensitive sheet still draws its own switch · *system* · **in progress**
 
 Filed by the settings round 2026-09-09. `ComposeSensitive` drew the
 system's only switch inline, correctly — one instance is a control,
@@ -1565,7 +1581,7 @@ not a component. There are now several, so `Switch` is a master
 geometry so the swap moves no pixel. The sheet has not taken it yet,
 because the round's pixel bar admits only the round's own boards.
 Swap it, re-render, and confirm the board is byte-identical; a copy
-is never the answer.
+is never the answer. The small-rulings batch is taking the swap.
 
 ### 45 · What the post-card round could not finish · *design*
 
@@ -1610,39 +1626,131 @@ blocked the card that shipped.
 
 ### 46 · What the tag round left standing · *design + system*
 
-Filed by the tag round 2026-09-09. Four things it surfaced and did not
+Filed by the tag round 2026-09-09. Five things it surfaced and did not
 settle, each named where it was found rather than folded into the round.
 
-1. **The accessible stance path does not name its target.**
-   `StanceControl`'s skip-link reads `Choose your stance` on every
-   instance while the face beside it names what it stances ("Your
-   stance on this post", "…on this comment"). `TagPage` draws three stance
-   controls, so it carries three identically-named buttons — the exact
-   defect `TopicRemovable`'s aria-label ruling fixed for the × ("a row
-   of these is a row of identically-named controls otherwise"). The fix
-   is one line in the master and a repin across the thirty-four boards
-   that draw a stance, which is why the round did not take it: its
-   pixel bar admits only its own boards. Until then the tag page gives
-   the accessible path one via of its own, which is honest about what
-   those buttons share.
-2. **A staged reference still has no pair editor** — item 18's
-   remaining half. A citation's axes are both signed, so unlike a tag's
-   it is the pad's own shape; whether the composer opens the pad there
-   or a sheet beside `TagPair` is jakob's to rule.
+1. ~~**The accessible stance path does not name its target.**~~ Taken by
+   the small-rulings batch 2026-09-10: `StanceControl`'s skip-link names
+   what it stances, the way the face beside it already does, and the
+   boards that draw a stance repin. A page drawing three stance controls
+   carried three identically-named buttons — the defect
+   `TopicRemovable`'s aria-label ruling fixed for the ×, and the tag
+   page's own via retires with it.
+2. ~~**A staged reference still has no pair editor**~~ — **settled
+   2026-09-10**: the row opens the pad in a sheet of its own
+   (`RefPair`), and the tags-and-references sheet gained the settling
+   row alongside it. Item 18 is closed; readme §13 *The citation's
+   pair, and the settling row* holds the ruling, and *The batch's
+   review* the same day gives the sheet the anchor face every
+   pair-setting readout now wears.
 3. **The picker's refused-name state is undrawn.** What an illegal
    character does at the field is the input-error round's shape and
    belongs to a validation pass. `TagPickerTyping` states the gate and
    previews the canonical name; it does not draw the refusal.
-4. **Whether an @-scoped search returns a tag is not settled anywhere.**
-   §13's scope operators say the remainder matches "the names of their
-   acts' targets", and a Type is the target of a Tag act — but the
-   result could as easily be the content tagged as the tag itself. The
-   round drew the tag as an indirect hit whose second line says the
-   route out loud ("tagged by @sol") rather than let the row imply an
-   answer. A ruling would settle the row's shape.
+4. ~~**Whether an @-scoped search returns a tag is not settled anywhere.**~~
+   Ruled 2026-09-10, and the round's drawing stands: an **@-scope hit is
+   indirect**, and its second line says the route out loud ("tagged by
+   @sol"). The scope never returns the tag itself as a direct hit — what
+   a person's scope holds is their acts, and the tag is what one of them
+   points at.
 5. **The follow gesture has no surface.** The round drew it as the
    stance anchor on the tag page's header and jakob's review removed
    it: beside the entrance post's context it read as that post's
    stance readout, not a gesture toward the tag. An Affinity toward a
    Type stays real and pad-shaped; slice 3's round — the first that
    may ship a follow at all — owes it a home that cannot be misread.
+
+### 47 · The bottom bar's re-tap ladder · *design* · **ruled + recorded**
+
+Ruled by jakob 2026-09-10 and recorded the same day: readme §13 (*The
+bottom bar's re-tap ladder*) carries the ruling, `BottomNav`'s master
+and prompt carry it as the component's behaviour contract, and
+`graph.json`'s twenty-four active-tab edges say it instead of *already
+here*. The design work is done; what is left is conformance.
+
+**Both apps do nothing on an active-tab tap** — Android's `toTab`
+navigates with `launchSingleTop` and has no re-tap branch, the web's
+slot is a plain `next/link` — so rungs two through four are owed by
+both:
+
+1. **Pop to the tab's root** when the tap comes from deep in the
+   current tab, keeping the root's scroll.
+2. **Scroll to the top**, animated, when the tap comes from the tab's
+   root and the reader is scrolled.
+3. **Refresh the feed** when the tap comes from the feed's root at the
+   top. Explore, Wallet and Profile do nothing there — the rung is a
+   no-op by ruling, not by omission, and must not grow a behaviour to
+   look consistent.
+
+**Rung one is unevenly built.** Android already restores a tab's stack
+and scroll and already pops to the root from a drill-in, so it needs
+only the active-tab branch. The web restores the feed alone, through a
+module-scope memory; Explore, Wallet and Profile remount fresh, and
+giving them the same recall is web-side work with no Android twin.
+
+**The web has no pull gesture**, so the ruling's second refresh path is
+unbuilt there. Its feed view states the absence as intent — new posts
+come from a reload or from Retry — and that comment is now wrong: the
+ruling gives the feed a pull-down at the top. The indicator stays the
+platform's own on both sides; nothing is drawn for it.
+
+### 48 · The edit's alterable body · *design + implementation* · **drawn 2026-09-10**
+
+Found by jakob hand-reviewing the small-rulings batch: the body line
+blessed that day says an edit "may flip the kind outright", and the edit
+board drew a gallery nothing could alter — no add control, no way to
+reach a words body, and a picked row whose manager stood over the
+composer's pick step rather than over the edit. Ruled and drawn the same
+day; readme §13 *The edit body round* holds it.
+
+**Drawn**: `EditPicked` (Show all over the edit) and `EditWords` (the
+words body, one board for a words post's edit and for the media post
+whose last picture just left), the add control and the blessed body line
+on `EditCompose`, the whole-body line on `EditComposeVideo`, and both
+removal edges pointed at `EditWords`.
+
+**Two lines await blessing.** `A video is the whole post.` is the
+staging line with the wizard's "Its cover comes next" trimmed, because
+the cover is on the edit's own screen. `+ Add pictures · 2 of 10` is the
+established add grammar carrying the post's cap for the first time; the
+comment scale already draws its `· 1 of 4` twin.
+
+**What the implementation owes.** Both apps draw the edit's media as a
+readout. The add path, the manager over the edit, and the kind flip are
+new client work on top of item 37's invariant — one seal, one act count,
+all-or-nothing — which the flip does not move: a body change is part of
+the content edit, not an act of its own, so the foot still counts three.
+
+**Left open by the round**: what an edit does with per-picture
+descriptions when the pictures it described are replaced, and whether a
+words body that flips to media keeps its text anywhere recoverable. The
+boards say only that the field goes; neither question is a drawing.
+
+### 49 · The video-cover round · *design* · **ruled 2026-09-10, undrawn**
+
+Filed from the implementation session's media handoff; jakob ruled all
+three questions in the design session the same day (the full record:
+dev-state `cogra/tmp_dev/2026-09-10-video-cover-round-rulings.md`).
+Runs as its own round after the small-rulings review lands.
+
+1. **`CoverCrop` is wired into the wizard on both platforms.** Every
+   gallery-sourced cover passes the locked crop at the clip's ratio
+   before upload; frame-sourced covers skip it. Only the cropped export
+   leaves the device. The sharing rule stands unrevised.
+2. **The 4:5 feed clamp stands, confirmed explicitly** — "taller than
+   4:5 is reserved for the reel scroller." The round draws all three
+   clip shapes (horizontal, vertical, square) on one feed board so the
+   presentation is verifiable; no clamp changes.
+3. **No-cover is first-class, and the default is shape-keyed**: a
+   vertical clip defaults to NO cover — the cover step collapses to an
+   optional "Add a cover" door on details; horizontal and square keep
+   the frame picker. Shape alone decides, never length. An autoplaying
+   video with a cover looks broken — the cover flashes for an instant
+   before playback — and a short-vertical author must not meet a forced
+   step. The coverless card's face is the first frame, cropped exactly
+   as the clip is; the capture-fails state gets drawn (gallery path
+   alone, neutral tile when no frame exists); comment scale inherits.
+
+The edit surface reconciles with ruling 3 in this round: a vertical
+clip's edit shows the same optional door, never a cover row presuming
+one exists.
