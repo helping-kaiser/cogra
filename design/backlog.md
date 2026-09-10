@@ -150,12 +150,20 @@ The editor is two sliders rather than the reader's chosen stance
 input — a Tag's confidence is census-bounded to [0, 1] and the pad
 is a square over two signed axes, so half of it would be dead.
 
-**The reference half is ruled** (2026-09-10): a citation's pair is set
-on **the pad, not sliders**. Both its axes are signed (`ReferenceInput`,
-api-spec.md), so the square is the citation's own shape and none of it
-is dead — the reason a tag's bounded confidence sends it to sliders does
-not reach here. `StagedReference`'s chip opens it the way a staged tag
-chip opens `TagPair`. Being drawn.
+**The reference half is closed** (jakob's ruling 2026-09-10, readme §13
+*The citation's pair, and the settling row*): a staged reference row is
+a button, and what it opens is the pad in a sheet of its own
+(`RefPair`) — a citation's two axes are both signed (`ReferenceInput`,
+api-spec.md), so unlike a tag's pair it is the pad's own shape. The
+poles are the citation's in the slots the contract assigns: relevance
+`Barely`/`Entirely` on the horizontal, support `Against`/`For` on the
+vertical, which is why `StancePad` now takes its four words as `axes`.
+Four composers open it; the sheet is the master on the compose page.
+
+**And the sheet says what is still settling** (jakob's A4 ruling, the
+same day): a staged-not-yet-landed tag or citation reads
+`Still settling` on its `ReferenceRow`, beside the pair it signs. The
+chip on the card says nothing about the order.
 
 ### 9 · Search + results · *design* · **built**
 `designs/canonical/` — the Explore row (2026-08-28): at rest (the
@@ -1623,10 +1631,12 @@ settle, each named where it was found rather than folded into the round.
    carried three identically-named buttons — the defect
    `TopicRemovable`'s aria-label ruling fixed for the ×, and the tag
    page's own via retires with it.
-2. ~~**A staged reference still has no pair editor**~~ — item 18's
-   remaining half, ruled 2026-09-10: the pair is set on **the pad**, both
-   its axes being signed, and `StagedReference`'s chip opens it the way a
-   staged tag chip opens `TagPair`. Being drawn.
+   those buttons share.
+2. ~~**A staged reference still has no pair editor**~~ — **settled
+   2026-09-10**: the row opens the pad in a sheet of its own
+   (`RefPair`), and the tags-and-references sheet gained the settling
+   row alongside it. Item 18 is closed; readme §13 *The citation's
+   pair, and the settling row* holds the ruling.
 3. **The picker's refused-name state is undrawn.** What an illegal
    character does at the field is the input-error round's shape and
    belongs to a validation pass. `TagPickerTyping` states the gate and
