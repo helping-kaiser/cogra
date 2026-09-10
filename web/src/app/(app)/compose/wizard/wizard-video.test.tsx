@@ -275,8 +275,10 @@ describe("picking a video", () => {
     await screen.findByTestId("wizard-cover-picture");
     expect(screen.queryByTestId("wizard-cover-frame-0")).toBeNull();
     expect(screen.queryByTestId("wizard-cover-capturing")).toBeNull();
-    // Next stays held until a face is chosen — the failure does not quietly
-    // waive the gate, it only removes the offers the gate could be met with.
-    expect(screen.getByTestId("wizard-next")).toBeDisabled();
+    // Next stays open even with no face chosen — a faceless video is no
+    // longer a wall (jakob, 2026-09-10, "going without a cover is always
+    // possible"), so a capture failure that leaves no offers still has to
+    // let the author move on rather than trap them on this screen.
+    expect(screen.getByTestId("wizard-next")).not.toBeDisabled();
   });
 });
