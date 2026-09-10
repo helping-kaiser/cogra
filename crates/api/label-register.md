@@ -80,6 +80,7 @@ label.
 | `test:integration:a-post-edit-replaces-the-snapshot-and-appends-a-version`                  | a_post_edit_replaces_the_snapshot_and_appends_a_version                  |
 | `test:integration:a-post-lands-with-carriage-display-row-and-envelope-binding`              | a_post_lands_with_carriage_display_row_and_envelope_binding              |
 | `test:integration:a-post-stages-one-act-per-declared-citation`                              | a_post_stages_one_act_per_declared_citation                              |
+| `test:integration:a-post-title-is-capped-at-a-hundred-characters`                           | a_post_title_is_capped_at_a_hundred_characters                           |
 | `test:integration:a-post-with-topics-stages-one-act-per-topic`                              | a_post_with_topics_stages_one_act_per_topic                              |
 | `test:integration:a-post-without-topics-stages-only-its-minting-record`                     | a_post_without_topics_stages_only_its_minting_record                     |
 | `test:integration:a-poster-is-not-swept-out-from-under-its-video`                           | a_poster_is_not_swept_out_from_under_its_video                           |
