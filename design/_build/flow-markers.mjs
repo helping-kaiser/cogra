@@ -416,10 +416,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 7, find: "+ Cite something", tag: "button" },
     { n: 8, find: ">Next</button>", tag: "button" },
+    { n: 9, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
   ],
   ComposeDetails: [
     { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 12, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
+    { n: 13, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
@@ -707,6 +709,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Sign comment</button>", tag: "button" },
     { n: 10, find: ">Back</button>", tag: "button" },
     { n: 11, find: 'aria-label="Remove Tide tables', tag: "button" },
+    { n: 12, find: "aria-label=\"Tide tables and the third headland — set how it relates\"", tag: "button" },
   ],
   ComposeSealUploading: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -1257,6 +1260,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: "This creates 3 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
+    { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
   ],
   EditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
@@ -1366,6 +1370,13 @@ Object.assign(FLOW_MARKERS, {
   ],
   TagPair: [
     { n: 1, find: 'type="range"', tag: "input", all: true },
+    { n: 2, find: ">Done</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The citation's twin of TagPair — the pad instead of the sliders, because
+  // both of a citation's axes are signed. Same three controls.
+  RefPair: [
+    { n: 1, find: 'aria-label="The pair this citation signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],

@@ -41,6 +41,7 @@ export function Screen() {
             sub="Post"
             src="post-photo.jpg"
             value="+0.10 / +0.10"
+            onEdit={() => {}}
           />
           <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
         </div>

@@ -5,6 +5,11 @@
    tags and references are named. This is what that surface looks like once
    the picker has handed one back.
 
+   THE NAME OPENS THE CITATION'S PAIR (jakob 2026-09-10). A comment's citation
+   carries the same two signed axes a post's does, so it gets the same editor —
+   `RefPair`, the master on the compose page — and the row keeps two separately
+   named controls, the name and the ×.
+
    A STAGED REFERENCE IS AN ACT, so it joins the acts card rather than sitting
    beside it — the total counts it, and the all-or-nothing subline appears the
    moment a signature carries more than one thing. A references block floating
@@ -38,7 +43,17 @@ export function Screen() {
               label: "Reference",
               value: (
                 <span style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
-                  <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Tide tables and the third headland — @juno</span>
+                  {/* The citation's own pair opens from the name, as it does on
+                      every composer that stages one — the × keeps its own name
+                      beside it (`StagedReference`'s rule, jakob 2026-09-10). */}
+                  <button
+                    type="button"
+                    aria-label="Tide tables and the third headland — set how it relates"
+                    className="cg-state cg-focus"
+                    style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
+                  >
+                    Tide tables and the third headland — @juno
+                  </button>
                   <button
                     type="button"
                     aria-label="Remove Tide tables and the third headland"
