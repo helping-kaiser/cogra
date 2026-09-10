@@ -801,6 +801,44 @@ function ReplySealBody() {
   );
 }
 
+/* THE GROWING BODY FIELD — the box a words body is written in. It is NOT a
+   `TextField`: the master's field is a `<textarea rows={n}>`, a fixed number
+   of lines holding one string, and neither this height nor these paragraphs
+   survive one. So it is spelled at `TextField`'s own values — the extra-small
+   corner, the field border, `body-large` inside — and the caret is the
+   system's `Caret`, because the field is always shown mid-writing.
+
+   It lives here because the words STAGE and the words EDIT both draw it, and
+   a body on a second board stops being board-local (`ReplyDraft`'s reason).
+   The caret rides the last paragraph wherever the box is drawn. */
+function WordsBody({ paragraphs }) {
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+        padding: 12,
+        borderRadius: "var(--radius-extra-small)",
+        border: "1px solid var(--border-field)",
+        overflow: "hidden",
+        boxSizing: "border-box",
+      }}
+    >
+      {paragraphs.map((text, index) => (
+        <p
+          key={text}
+          style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)", letterSpacing: "var(--text-body-large--letter-spacing)" }}
+        >
+          {text}
+          {index === paragraphs.length - 1 && <Caret />}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 /* THE PICTURE PATH'S DETAILS STAGE, whole — `ComposeDetails` itself, and what
    the reference pair sheet stands on. Factored for `ReplySealBody`'s reason: a
    sheet covers the surface the reader came from, and that surface has to be the
@@ -851,18 +889,34 @@ function ComposeDetailsBody() {
   );
 }
 
-/* THE POST EDIT, whole — `EditCompose` itself, and what its acts sheet stands
-   on. */
+/* THE POST EDIT, whole — `EditCompose` itself, and what its acts sheet, its
+   tag pair sheet and its picture manager stand on.
+
+   THE BODY IS ALTERABLE (jakob's ruling, 2026-09-10). An edit carries the
+   post's complete new content state, so the gallery is not a readout of what
+   was published: the row opens the manager over THIS surface (`EditPicked`)
+   and the add control takes more pictures, in the same words the composer
+   and the comment edit use — the count of what is held, against the cap.
+
+   THE LINE UNDER IT IS THE BLESSED ONE (copy-voice, *Editing a media post*),
+   and this is the board it was written for: it says why no words field
+   stands where the gallery is. It states the body's rule, not a lock — take
+   the last picture away in the manager and the words field is what the edit
+   becomes (`EditWords`). */
 function EditComposeBody() {
   return (
     <>
       <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <PickedRow
-          items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
-          caption="2 pictures — the body"
-          onManage={() => {}}
-        />
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <PickedRow
+            items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
+            caption="2 pictures — the body"
+            onManage={() => {}}
+          />
+          <InlineAction size="sm" selfStart>+ Add pictures · 2 of 10</InlineAction>
+          <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
+        </div>
 
         <TextField label="Title" corner="Optional" value="Salt maps of the coast road" />
 
