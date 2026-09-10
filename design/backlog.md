@@ -1556,6 +1556,27 @@ stop 1 is about the screen, not the board): `InviteEntryError`,
 verbatim, because a screen and its error state are one control and
 one control reads one way.
 
+**Both borrowed-view bands ship now** (jakob's ruling, 2026-09-10 —
+this reverses stop 3): the applicant band shows from the moment an
+invitation-link account exists, before the email is verified and
+before the application lands, and the guest band replaces the guest
+notice with the genesis moderator's name. Both feeds stay
+newest-first. What stop 3 refused was a label claiming a ranking
+that does not exist; the band's sentence claims a *vantage*, and
+whose posts a borrowed feed shows is true the moment the vantage is
+served — the ranker only changes their order. The borrowed-vantage
+field the contract owed lands with them.
+
+**The vouch-back reading has no ship ruling** (filed by the f2-bands
+lane, 2026-09-10): §13 hands the borrowed view over "the moment
+their first stance exists — the vouch-back", and `VouchBack` draws a
+third line for the landed member who has not pointed back yet. The
+override names two bands, so the apps drop the band the moment an
+account lands and that third line stays unbuilt. Ruling it in costs
+one branch per client — `hasReciprocated` already rides the `Me`
+read — and would make the member's first stance, not their landing,
+the moment the band leaves.
+
 ### 44 · The sensitive sheet still draws its own switch · *system*
 
 Filed by the settings round 2026-09-09. `ComposeSensitive` drew the
