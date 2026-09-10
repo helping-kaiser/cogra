@@ -646,6 +646,7 @@ export function ComposeWizard({
           durationMs={durationMs}
           framePreviews={framePreviews}
           cover={cover}
+          coverPreview={coverPreview}
           capturing={capturing}
           error={gate.ok ? null : gate.reason}
           blocked={!gate.ok}
