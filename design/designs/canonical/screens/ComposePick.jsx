@@ -93,7 +93,7 @@ export function Screen() {
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
             fontWeight: "var(--text-label-small--font-weight)",
-            letterSpacing: "0.5px",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
             color: "var(--primary)",
           }}
         >
@@ -124,7 +124,7 @@ export function Screen() {
               fontSize: "var(--text-label-small)",
               lineHeight: "var(--text-label-small--line-height)",
               fontWeight: "var(--text-label-small--font-weight)",
-              letterSpacing: "0.5px",
+              letterSpacing: "var(--text-label-small--letter-spacing)",
               display: "inline-flex",
               alignItems: "center",
               gap: 3,
