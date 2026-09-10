@@ -1052,8 +1052,9 @@ visitor the app they are not in, and the app itself never carries it.
 
 The recovery-code screen is a trap: no back affordance, and the only
 way out is the code typed or pasted back. A think-twice dialog gates
-entry to it. Where a bottom bar exists, the stance pad rests 16px
-above the bar rather than the screen edge. First-time onboarding is
+entry to it. The parked stance pad rests 16px above
+whatever it parks over — the bottom bar where one exists, a sheet's
+bottom edge otherwise; one number everywhere (ruled 2026-09-10). First-time onboarding is
 per-control, never a tour, and on the entry screens only the pad
 carries it — what it is for, how it opens, that nothing signs until
 Set, and that the input can be swapped in settings.
@@ -3350,6 +3351,13 @@ four-rung ladder.
   reader came back, because a feed that moves under a returning reader
   loses the place they were keeping. **The indicator is the platform's
   own**, so the system draws none.
+- **The pull-down lives on every full-screen scrolling root** (ruled
+  2026-09-10): the feed in all its views, the profile pages and the
+  chronicle, search results, the wallet's history, the tag page — and
+  **never inside a bottom sheet**, where pulling down already means
+  dismiss and one gesture may not mean two things. The re-tap refresh
+  stays the feed's alone; the pull-down is the gesture every root
+  answers.
 - **A stack is where a screen was opened FROM, never what it is
   about.** A post detail, an actor's profile and a tag page reached
   from the feed are Feed's stack, and one screen may sit in two tabs at

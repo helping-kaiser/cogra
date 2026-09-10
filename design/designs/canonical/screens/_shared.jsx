@@ -712,7 +712,7 @@ function ReplyPadBody() {
           position: "absolute",
           left: 30,
           right: 30,
-          bottom: 24,
+          bottom: 16,
           display: "flex",
           flexDirection: "column",
           gap: 12,
