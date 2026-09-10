@@ -44,7 +44,7 @@ export function Screen() {
         }}
       >
         <span style={{ position: "absolute", top: 4, right: 4 }}>
-          <HelpDot ariaLabel="How stances work" />
+          <HelpDot ariaLabel="Where you stand on it" />
         </span>
 
         {/* The pick's readout, in the pad's own block shape: the name of the

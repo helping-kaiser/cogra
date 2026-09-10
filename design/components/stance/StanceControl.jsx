@@ -114,6 +114,7 @@ export function StanceControl({
   padNote,
   wide = false,
   overMedia = false,
+  helpLabel = "How stances work",
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -385,11 +386,15 @@ export function StanceControl({
           >
             {/* The help affordance: a circled `?` in the pad's top-right corner,
                 out of the reading order of the three readouts. 48px target, 32px
-                ring. */}
+                ring. Its name is `helpLabel` (jakob's ruling A7) — the dialog's
+                own title, not a generic one, wherever a board draws a named
+                pad (`ComposePad`'s "Where you stand on it", `ReplyPad`'s
+                "Toward what you answer", `VouchBackPad`'s "Your first
+                stance"); the ordinary feed-card control keeps the default. */}
             <button
               type="button"
               aria-expanded={explaining}
-              aria-label="How stances work"
+              aria-label={helpLabel}
               onClick={() => setExplaining((shown) => !shown)}
               className={BUTTON_CLASS}
               style={{
@@ -491,6 +496,7 @@ export function StanceControl({
           onCancel={closeAll}
           onSever={openSeverance}
           landing={<StanceLandingLine landing={landing} />}
+          helpLabel={helpLabel}
         >
           <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} />
         </StanceAlternates>

@@ -724,7 +724,7 @@ function ReplyPadBody() {
         }}
       >
         <span style={{ position: "absolute", top: 4, right: 4 }}>
-          <HelpDot ariaLabel="How stances work" />
+          <HelpDot ariaLabel="Toward what you answer" />
         </span>
 
         {/* The pick's readout, above the field where a thumb cannot cover it:
