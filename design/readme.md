@@ -3209,6 +3209,56 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   the six that stage a tag took a via stamp, and the maps followed the
   edges.
 
+### The citation's pair, and the settling row — 2026-09-10
+
+Two rulings the tag round left standing, both about a pair the author
+sets and a reader reads. Ruled by jakob the same day.
+
+- **A staged citation's pair editor is the pad, in a sheet
+  (`RefPair`).** The instrument follows the census, not the surface.
+  `ReferenceInput` (api-spec.md) gives a citation relevance `[-1, 1]`
+  and support `[-1, 1]` — both signed — so the pad's square over two
+  signed axes fits it exactly, where a Tag's confidence is bounded to
+  `[0, 1]` and would hang half the field dead. That is the same
+  argument that gave `TagPair` two sliders, read the other way.
+- **The poles are the citation's, in the slots the contract assigns.**
+  Relevance occupies `pDirected`, the pad's horizontal, and asks how
+  much this post leans on what it cites — `Barely` to `Entirely`, the
+  words `TagPair` already uses for the same slot. Support occupies
+  `pInterest`, the vertical, and is endorsing against refuting, so
+  `Against` and `For` ride there. Those two words sit on the horizontal
+  when the pad carries a stance: the rotation is the contract's doing,
+  and the pad names its poles on the field so that no reader has to
+  carry the mapping in their head. `StancePad` therefore takes its four
+  words as `axes`, defaulting to `STANCE_AXES` — the control owns the
+  geometry, the record family owns the words.
+- **No face on this sheet.** The face is a stance's lossy readout and
+  its anchor table is a stance's table; the same two slots mean
+  something else here, so a face would name a feeling the record does
+  not carry. The exact pair stands alone above the field, where a thumb
+  cannot cover it.
+- **The row opens it, the × still removes.** `StagedReference` takes
+  `onEdit` on `TopicRemovable`'s terms: pressable only where there is
+  something else a citation is for, two separately named controls
+  ("Remove &lt;name&gt;", "&lt;name&gt; — set how it relates"), and inert
+  without it. One phrase for opening a pair editor, whichever family
+  the pair belongs to. Four composers wear it — the details stage, the
+  cited details stage, the post edit, and the reply's seal with a
+  citation staged, which borrows the sheet as it borrows the license
+  and sensitive sheets.
+- **The chip says nothing about the order; the sheet does.** A staged
+  tag or citation that is signed but not yet ordered on L1 reads
+  `Still settling` in the tags-and-references sheet — `PendingMarker`'s
+  own words, its own two tokens, no colour and no type role of its own.
+  It rides the pair at the row's edge rather than the name, because
+  what has not landed is the act, not the node it points at: the
+  attachment `TaggedRow` already makes.
+- **The gate**: 142 → **143 screens**, 1039 → **1046 edges**, gaps hold
+  at **56** and flows at **58/55/3** — the round adds a destination, not
+  a journey. `ComposeDetails` is factored to `_shared.jsx` so the sheet
+  stands on the real stage rather than a stand-in of it, the overlay
+  rule from 2026-09-08.
+
 ## 14. Index
 
 **Root**
