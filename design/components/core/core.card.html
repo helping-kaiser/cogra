@@ -31,7 +31,7 @@ function Demo(){return (
       <InlineAction disabled>Mark</InlineAction>
     </div>
     <span className="lbl">InlineAction sm — the same word at label-small, for an action that is one word of the sentence it sits in</span>
-    <p style={{margin:0,fontSize:"var(--text-label-small)",lineHeight:"var(--text-label-small--line-height)",letterSpacing:"0.4px"}}>
+    <p style={{margin:0,fontSize:"var(--text-label-small)",lineHeight:"var(--text-label-small--line-height)",letterSpacing:"var(--text-label-small--letter-spacing)"}}>
       <span style={{color:"var(--error)"}}>One picture didn't upload.</span>{" "}
       <InlineAction size="sm">Retry</InlineAction>{" "}
       <span style={{color:"var(--text-secondary)"}}>·</span>{" "}

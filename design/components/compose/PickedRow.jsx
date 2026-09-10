@@ -43,7 +43,7 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
             flex: 1,
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
-            letterSpacing: "0.4px",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
             color: "var(--text-secondary)",
           }}
         >
@@ -78,7 +78,7 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
 export function DescribeCounter({ described, total, onDescribe, subject = "pictures" }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px" }}>
+      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }}>
         <InlineAction size="sm" onClick={onDescribe} style={{ fontSize: "inherit", lineHeight: "inherit" }}>
           Describe the {subject}
         </InlineAction>{" "}
@@ -86,7 +86,7 @@ export function DescribeCounter({ described, total, onDescribe, subject = "pictu
           · {described} of {total} described
         </span>
       </p>
-      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
         Read aloud to people who can&apos;t see it.
       </p>
     </div>
