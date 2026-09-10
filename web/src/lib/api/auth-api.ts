@@ -4,6 +4,7 @@
 import type { ApolloClient } from "@apollo/client";
 
 import {
+  BorrowedViewDocument,
   ConfirmPasswordResetDocument,
   KeyBackupDocument,
   CreateKeyBackupChallengeDocument,
@@ -12,9 +13,11 @@ import {
   RefreshSessionDocument,
   RequestPasswordResetDocument,
   UploadKeyBackupDocument,
+  type BorrowedViewQuery,
   type MeQuery,
 } from "@/__generated__/graphql";
 import {
+  fetchOutcome,
   payloadOutcome,
   success,
   viewerField,
@@ -24,6 +27,9 @@ import type { RefreshExecutor } from "@/lib/session/refresher";
 import type { SessionAuth } from "@/lib/session/token-store";
 
 export type MeUser = NonNullable<MeQuery["me"]>;
+
+/** The actor a reader without a view of their own borrows one from. */
+export type BorrowedVantage = NonNullable<BorrowedViewQuery["borrowedView"]>;
 
 /**
  * Lifts a payload's `AuthSession` into the stored shape. A non-null auth
@@ -163,5 +169,24 @@ export function fetchMe(client: ApolloClient): Promise<Outcome<MeUser>> {
   return viewerField(
     () => client.query({ query: MeDocument, fetchPolicy: "network-only" }),
     (data) => data.me,
+  );
+}
+
+/**
+ * Whose view this reader browses from, for the borrowed-view band.
+ *
+ * NULL IS AN ANSWER HERE, not a missing viewer: it is the contract saying
+ * this reader's view is their own. So this is the plain fetch rather than
+ * `viewerField`, whose null means UNAUTHENTICATED — lifting a landed
+ * member's answer into a refusal would send the guard chasing a refresh
+ * for a question that was answered.
+ */
+export function fetchBorrowedView(
+  client: ApolloClient,
+): Promise<Outcome<BorrowedVantage | null>> {
+  return fetchOutcome(() =>
+    client.query({ query: BorrowedViewDocument, fetchPolicy: "network-only" }),
+  ).then((outcome) =>
+    outcome.kind === "success" ? success(outcome.value.borrowedView ?? null) : outcome,
   );
 }
