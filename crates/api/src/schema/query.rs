@@ -15,8 +15,8 @@ use uuid::Uuid;
 use super::types::{
     Actor, CommentType, CursorKey, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType,
     Record, RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User,
-    connection_cost, content_cursor, content_cursor_key, keyset_connection, keyset_page, list_cost,
-    list_limit, resolve_reference_target,
+    borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
+    keyset_page, list_cost, list_limit, resolve_reference_target,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -117,26 +117,36 @@ impl Query {
     /// else's view — named, always, by the borrowed-view band, which
     /// reads this field to know whose name to say.
     ///
-    /// Three answers, one per reader. A signed-out reader borrows the
-    /// Genesis Moderator's view. An applicant keeps their inviter's for
-    /// the applicant days — from the moment the account exists, before
-    /// either proof is in. A landed member has a view of their own, so
-    /// the answer is null, and null is the rule the band reads as
-    /// "disappear", not an absence of data.
+    /// **The most specific available vantage wins**, and the answer
+    /// always carries whose view it is. In preference order:
+    ///
+    /// 1. An **invite-link arrival**, still signed out, borrows **the
+    ///    inviter's** view, resolved from the link id. That resolution
+    ///    arrives with slice 3 and its own band-line ruling.
+    /// 2. An **applicant** borrows **their inviter's**, from the moment
+    ///    the account exists and before either proof is in — and a
+    ///    **landed member** keeps borrowing it until their own first
+    ///    stance toward them exists, the vouch-back.
+    /// 3. A **bare visitor**, with nothing more specific to go on,
+    ///    borrows the **Genesis Moderator's** view. Strictly the
+    ///    fallback: it is the only vantage that names no relationship
+    ///    the reader arrived through.
+    ///
+    /// **The handle is load-bearing, not decoration.** The band speaks
+    /// the name, because a borrowed rank the reader cannot attribute is
+    /// exactly the unlabelled feed §9 refuses — so this resolves to an
+    /// `Actor`, never to a bare "yes, borrowed".
+    ///
+    /// Null is the end of the ladder: the reader's view is their own.
+    /// It is the rule the band reads as "disappear", not missing data.
     async fn borrowed_view(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
         let pool = ctx.data::<PgPool>()?;
         let vantage = match ctx.data::<Option<Viewer>>()?.as_ref().copied() {
             None => genesis::genesis_moderator(pool).await?,
-            Some(viewer) => {
-                let applicant = store::credentials_by_actor(pool, viewer.user_id)
-                    .await?
-                    .is_some_and(|c| c.account_state == store::AccountState::Applicant);
-                if applicant {
-                    store::inviter_of(pool, viewer.user_id).await?
-                } else {
-                    None
-                }
-            }
+            Some(viewer) => match store::actor_identity(pool, viewer.user_id).await? {
+                Some(account) => borrowed_vantage(ctx, &account).await?,
+                None => None,
+            },
         };
         Ok(vantage.map(|identity| {
             Actor::User(User {
