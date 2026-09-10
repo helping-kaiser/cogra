@@ -29,6 +29,7 @@ export function Screen() {
             <Button variant="text">Not now</Button>
             <StanceControl
               targetLabel="@mira"
+              helpLabel="Your first stance"
               defaultOpen
               defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
               padInset={80}

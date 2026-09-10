@@ -31,7 +31,7 @@ export function PayoutAddressRow({ address, onOpen }) {
         boxSizing: "border-box",
       }}
     >
-      <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+      <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
         Payouts land at
       </span>
       <code style={{ flex: 1, minWidth: 0, fontFamily: "var(--font-mono)", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -114,7 +114,7 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, onCh
         {address}
       </code>
       {caption && (
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
           {caption}
         </span>
       )}

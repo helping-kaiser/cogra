@@ -30,7 +30,7 @@ const LABEL = {
   fontSize: "var(--text-label-small)",
   lineHeight: "var(--text-label-small--line-height)",
   fontWeight: "var(--text-label-small--font-weight)",
-  letterSpacing: "0.5px",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
   color: "var(--text-secondary)",
 };
 
@@ -38,7 +38,7 @@ const COUNT = {
   flex: "none",
   fontSize: "var(--text-label-small)",
   lineHeight: "var(--text-label-small--line-height)",
-  letterSpacing: "0.4px",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
   color: "var(--text-secondary)",
 };
 
@@ -100,7 +100,7 @@ export function ActsCard({ rows = [], total, note }) {
             style={{
               fontSize: "var(--text-label-small)",
               lineHeight: "var(--text-label-small--line-height)",
-              letterSpacing: "0.4px",
+              letterSpacing: "var(--text-label-small--letter-spacing)",
               color: "var(--text-secondary)",
             }}
           >

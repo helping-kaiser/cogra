@@ -12,8 +12,9 @@ Never redesign this control. The rules it encodes:
 - **Hold 500ms** blooms the pad at the **lower centre of the viewport** — always the same place, never anchored to the target.
 - **Release never commits.** `Set` commits, `Cancel` or an outside press stages nothing.
 - The pad shows the pick's face and pair live, the standing above, the landing below, a `?`, and a route to `Sever` — which appears only once there is a stance to walk away from.
+- **The `?` names its own pad** (jakob's ruling A7) — `helpLabel`, defaulting to `"How stances work"` for the ordinary feed-card control. A board drawing a named pad passes that pad's own title instead (`ComposePad`'s `"Where you stand on it"`, `ReplyPad`'s `"Toward what you answer"`, `VouchBackPad`'s `"Your first stance"`).
 - A statically rendered board shows the parked pad via `defaultOpen`/`defaultPick` (never a hand copy of the card), lifts it above a bottom bar with `padInset`, and may speak once through `padNote` (the first vouch's coaching lines).
-- **`Choose your stance`** is always in the DOM beside the target — visually hidden until focused, so keyboard, switch, and screen-reader users reach the non-drag equivalent in one tab without it being printed beside every stance in a feed.
+- **`Choose your stance on {targetLabel}`** is always in the DOM beside the target — visually hidden until focused, so keyboard, switch, and screen-reader users reach the non-drag equivalent in one tab without it being printed beside every stance in a feed. It names its target from the same `targetLabel` the face's aria-label reads, so a page carrying more than one stance control never repeats the same unnamed link.
 - It never refuses a choice, and it never lets its touches reach the card behind it.
 
 Do not add a second loud surface to a screen that carries this control: the knob and the compose action already own `primaryContainer`.
