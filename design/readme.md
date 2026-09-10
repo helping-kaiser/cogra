@@ -3208,6 +3208,67 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   the six that stage a tag took a via stamp, and the maps followed the
   edges.
 
+### The small-rulings batch — 2026-09-10
+
+Twelve questions the audit and conform lanes had left standing, none of
+them large enough to have earned a round of its own. Ruled by jakob in
+one sitting.
+
+- **A comment clip's cover crops exactly as the clip does.** The post
+  scale's rule reaches the comment scale unchanged — the cover is the
+  same clip's face, so one frame holds both — and letterboxing exists
+  nowhere, pictures included.
+- **A staged citation's pair is set on the pad, not sliders.** Both of a
+  citation's axes are signed, so the square is its own shape and no half
+  of it is dead; the census-bounded confidence that sent a tag's pair to
+  sliders has no counterpart here. Item 18's remaining half, closed.
+- **A tag that would need cutting is not drawn as a chip.** `TopicsLine`
+  folds it into the worded counts instead, so a reader gets either a
+  whole name or a number saying how many are left. The ellipsis retires:
+  a truncated name is one the reader can neither read nor tap.
+- **Settling shows in the sheet, never on the chip.** A chip is a
+  destination, and a destination wearing a state says the state belongs
+  to the place rather than to the act. The tags-and-references sheet is
+  where the act is, so that is where it says it is still settling.
+- **The borrowed-view band dies after signing, not on approach.** While
+  the vouch-back is unsigned the reader has no stance of their own and
+  the view is still borrowed, so the band stands through the whole
+  approach to the pad and goes when the signature lands.
+- **The Collective founding-name force is removed.**
+  `PrepareCollectiveInput`'s `displayName` is optional, an explicit null
+  clears it exactly as on a person's profile, and a Collective with none
+  written is presented by its handle. The handle is the only name the
+  product requires, of anyone.
+- **Each "?" names its own dialog.** The three stance pads read `Where
+  you stand on it`, `Toward what you answer` and `Your first stance` —
+  their own dialogs' titles, the way every other "?" in the system
+  already takes its subject. One name across three surfaces says only
+  that a dialog exists; `How stances work` stays where the control
+  itself is the subject.
+- **An @-scope hit on a tag is indirect, and the drawing stands.** The
+  row's second line says the route out loud ("tagged by @sol"). A
+  person's scope holds their acts, and the tag is what one of those acts
+  points at — never a direct hit of its own.
+- **A field's flow badge moves to the field's wrapper.** `::after`
+  generates no box on a replaced element, so a badge pinned to the
+  `<input>` was valid and invisible at once. It moves where it paints
+  and the gate accepts it there: a marker nobody can see verifies its
+  own presence and nothing else.
+- **Three closures.** The license sheets take the 88% height class, like
+  every sheet not deliberately taller. A settings section label binds to
+  the group it heads by sitting nearer to it than to the group above,
+  rather than floating equidistant between them. And `--surface-pad` is
+  not minted — one padding token across every surface would name a
+  resemblance the surfaces do not have.
+- **The settings round's copy is blessed** and sits in the register's
+  topical sections, the page's own words and the six subpages alike.
+- **The media edit's body line is blessed**: "A post's body is words or
+  media, never both." It states the body's rule, never a lock on the
+  post in front of the reader — an edit carries complete state and may
+  flip the kind outright, every picture replaced by words or the words
+  by a gallery. Web's profile save answers with nothing; a snackbar line
+  is drafted and awaits blessing.
+
 ## 14. Index
 
 **Root**
