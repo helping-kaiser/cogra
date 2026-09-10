@@ -181,7 +181,7 @@ before it is signed, and anything half-finished says who acts next.
 
 **Guest copy invites, it does not nag.**
 
-- `You're browsing as a guest — sign in or join to post and vouch.`
+- `Browsing from @mira's view — join to build your own.`
 - `Join the conversation` / `Posting and profiles need an account.` /
   `Keep browsing`
 - `Just looking? Browse the feed →`

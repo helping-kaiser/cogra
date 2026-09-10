@@ -16,16 +16,45 @@ import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 // The feed reads `?compose=` to say that the last post did not land, and
 // rewrites the URL when the notice is dismissed.
 const replace = vi.fn();
+const push = vi.fn();
 let searchParams = new URLSearchParams();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace }),
+  useRouter: () => ({ replace, push }),
   useSearchParams: () => searchParams,
 }));
+
+/**
+ * Whose view the reader borrows. Every viewer of this feed asks, so the
+ * genesis moderator is the default and the tests that care override it.
+ */
+function borrowedViewHandler(
+  vantage: { id: string; handle: string; displayName: string | null } | null = {
+    id: "genesis-id",
+    handle: "genesis_mod",
+    displayName: "Genesis Moderator",
+  },
+) {
+  return graphql.query("BorrowedView", () =>
+    HttpResponse.json({
+      data: {
+        borrowedView:
+          vantage === null
+            ? null
+            : {
+                __typename: "User",
+                id: vantage.id,
+                handle: vantage.handle,
+                displayName: { __typename: "ModeratedText", value: vantage.displayName },
+              },
+      },
+    }),
+  );
+}
 
 // Every signed-in card reads its own standing, so the read is a default
 // rather than something each test remembers: an unhandled one degrades
 // the control silently instead of failing the test.
-const server = startMswServer(...stanceHandlers());
+const server = startMswServer(...stanceHandlers(), borrowedViewHandler());
 
 function signedInStore() {
   const store = createTokenStore();
@@ -114,6 +143,7 @@ describe("FeedView", () => {
     window.localStorage.clear();
     searchParams = new URLSearchParams();
     replace.mockClear();
+    push.mockClear();
     // The feed's memory is module scope, which is the point of it — so each
     // test starts from a reader who has not been here yet.
     forgetFeed();
@@ -126,7 +156,7 @@ describe("FeedView", () => {
     server.use(meHandler());
     renderWithProviders(<FeedView />, { store: signedInStore() });
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
-    expect(screen.queryByTestId("feed-signin")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1-link")).toHaveAttribute("href", "/posts/p1");
     expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
   });
@@ -281,28 +311,48 @@ describe("FeedView", () => {
     expect(screen.getByTestId("collapsing-top")).toContainElement(restore);
   });
 
-  it("reads without a session and carries the guest banner in the collapsing top", async () => {
+  it("names the genesis moderator's view to a signed-out reader, with the way in", async () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) })),
     );
     renderWithProviders(<FeedView />);
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
 
-    // The one sign-in-or-join entry rides the guest banner, in place
-    // of a header action (design.md §6).
-    const banner = screen.getByTestId("feed-guest-banner");
-    expect(screen.getByTestId("collapsing-top")).toContainElement(banner);
-    expect(screen.getByTestId("feed-signin")).toHaveAttribute("href", "/login");
+    // The band subsumes the guest notice: it says whose view this is and
+    // carries the one sign-in-or-join entry, riding the collapsing top.
+    const band = await screen.findByTestId("feed-borrowed-view");
+    expect(screen.getByTestId("collapsing-top")).toContainElement(band);
+    expect(screen.getByTestId("feed-borrowed-view-line")).toHaveTextContent(
+      "Browsing from @genesis_mod's view — join to build your own.",
+    );
+    fireEvent.click(screen.getByTestId("feed-borrowed-view-action"));
+    expect(push).toHaveBeenCalledWith("/login");
   });
 
-  it("shows no guest banner to a signed-in reader", async () => {
+  // The account exists from the moment the invite link is spent, before
+  // either proof is in — and the band must name the vantage from then.
+  it("names the inviter's view to an applicant whose email is not verified yet", async () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
     );
-    server.use(meHandler());
+    server.use(borrowedViewHandler({ id: "inv-1", handle: "mira", displayName: "Mira Voss" }));
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+
+    expect(await screen.findByTestId("feed-borrowed-view-line")).toHaveTextContent(
+      "Browsing from @mira's view while your application lands.",
+    );
+    // The applicant can do nothing about the borrowing, so no action.
+    expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();
+  });
+
+  it("shows no band to a reader whose view is their own", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    server.use(meHandler(), borrowedViewHandler(null));
     renderWithProviders(<FeedView />, { store: signedInStore() });
     expect(await screen.findByTestId("feed-empty")).toBeInTheDocument();
-    expect(screen.queryByTestId("feed-guest-banner")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-borrowed-view")).not.toBeInTheDocument();
   });
 
   it("carries no back arrow — the feed is a tab root for every viewer", async () => {
