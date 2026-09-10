@@ -1646,3 +1646,37 @@ settle, each named where it was found rather than folded into the round.
    stance readout, not a gesture toward the tag. An Affinity toward a
    Type stays real and pad-shaped; slice 3's round — the first that
    may ship a follow at all — owes it a home that cannot be misread.
+
+### 47 · The bottom bar's re-tap ladder · *design* · **ruled + recorded**
+
+Ruled by jakob 2026-09-10 and recorded the same day: readme §13 (*The
+bottom bar's re-tap ladder*) carries the ruling, `BottomNav`'s master
+and prompt carry it as the component's behaviour contract, and
+`graph.json`'s twenty-four active-tab edges say it instead of *already
+here*. The design work is done; what is left is conformance.
+
+**Both apps do nothing on an active-tab tap** — Android's `toTab`
+navigates with `launchSingleTop` and has no re-tap branch, the web's
+slot is a plain `next/link` — so rungs two through four are owed by
+both:
+
+1. **Pop to the tab's root** when the tap comes from deep in the
+   current tab, keeping the root's scroll.
+2. **Scroll to the top**, animated, when the tap comes from the tab's
+   root and the reader is scrolled.
+3. **Refresh the feed** when the tap comes from the feed's root at the
+   top. Explore, Wallet and Profile do nothing there — the rung is a
+   no-op by ruling, not by omission, and must not grow a behaviour to
+   look consistent.
+
+**Rung one is unevenly built.** Android already restores a tab's stack
+and scroll and already pops to the root from a drill-in, so it needs
+only the active-tab branch. The web restores the feed alone, through a
+module-scope memory; Explore, Wallet and Profile remount fresh, and
+giving them the same recall is web-side work with no Android twin.
+
+**The web has no pull gesture**, so the ruling's second refresh path is
+unbuilt there. Its feed view states the absence as intent — new posts
+come from a reload or from Retry — and that comment is now wrong: the
+ruling gives the feed a pull-down at the top. The indicator stays the
+platform's own on both sides; nothing is drawn for it.
