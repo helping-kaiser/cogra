@@ -6,10 +6,11 @@
 // surface lives outside the (app) gate; only the write affordance
 // swaps on the auth phase.
 //
-// IT REMEMBERS WHERE THE READER WAS — the pages they had loaded and the
-// offset they had reached — in `feed-memory.ts`, which says why an external
-// store and not the router. Both are read at mount and applied before the
-// first paint, so opening a post and coming back is not a fresh feed.
+// IT REMEMBERS WHERE THE READER WAS — the pages they had loaded and the place
+// they had reached — in `feed-memory.ts`, which says why an external store and
+// not the router. Both are read at mount and applied before the first paint, so
+// opening a post and coming back is not a fresh feed; `scroll-pin.ts` says why
+// the place is an anchor rather than a number, and how it is held afterwards.
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
@@ -29,12 +30,14 @@ import { Card } from "@/lib/ui/card";
 import { CograBand } from "@/lib/ui/cogra-band";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PostCard } from "@/lib/ui/post-card";
-import { useMeasureEffect } from "@/lib/ui/measure-effect";
-import { scrollElementOf, useScrollHost } from "@/lib/ui/scroll-host";
+import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
+import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
+import { useScrollHost } from "@/lib/ui/scroll-host";
+import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
-import { recallFeed, rememberFeed, rememberFeedOffset } from "./feed-memory";
+import { recallFeed, rememberFeed, rememberFeedPlace } from "./feed-memory";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 function GuestBanner() {
@@ -81,6 +84,7 @@ export function FeedView({
   // left behind last time it was on screen; seeding the state below from it is
   // what makes the pages come back on the FIRST render, before any paint.
   const [remembered] = useState(recallFeed);
+  const [rememberedPlace] = useState(() => remembered?.place ?? null);
   const [posts, setPosts] = useState<readonly PostView[]>(remembered?.posts ?? []);
   const [endCursor, setEndCursor] = useState<string | null>(remembered?.endCursor ?? null);
   const [hasNextPage, setHasNextPage] = useState(remembered?.hasNextPage ?? false);
@@ -117,10 +121,10 @@ export function FeedView({
     };
   }, [client]);
 
-  // A remembered feed is not re-fetched. A refresh takes no cursor, so it
-  // would answer with page one and throw away every page after it — which is
-  // the loss this whole file exists to stop. The reader gets new posts from a
-  // reload or from Retry, both of which are deliberate.
+  // A remembered feed is not re-fetched on arrival. A refresh takes no cursor,
+  // so it would answer with page one and throw away every page after it —
+  // which is the loss this whole file exists to stop. New posts arrive when the
+  // reader asks: the pull below, a Retry, or a reload.
   useEffect(() => {
     if (remembered !== null) return;
     return refresh();
@@ -133,35 +137,28 @@ export function FeedView({
     rememberFeed({ posts, endCursor, hasNextPage });
   }, [loading, posts, endCursor, hasNextPage]);
 
-  // The place. Restored before the browser paints — the pages are already in
-  // this render, so the scroller is as tall now as it was when the reader
-  // left, and the offset lands where they were rather than at the end of a
-  // shorter list.
-  useMeasureEffect(() => {
-    const scroller = scrollElementOf(host);
-    if (scroller === null || remembered === null) return;
-    scroller.scrollTop = remembered.offset;
-  }, [host, remembered]);
+  // The place, held against everything that lands late — `scroll-pin.ts` says
+  // why an offset alone drifts. Read once, like the pages: the memory's place
+  // is rewritten as the reader scrolls, and the landing is the place they left.
+  const { release: releasePin } = usePinnedPlace({
+    host,
+    place: rememberedPlace,
+    record: rememberFeedPlace,
+  });
 
-  // Kept on the way past rather than on unmount: a mobile browser may never
-  // run an unmount, and one assignment per frame is cheaper than a render.
-  useEffect(() => {
-    const scroller = scrollElementOf(host);
-    if (scroller === null) return;
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        rememberFeedOffset(scroller.scrollTop);
-        ticking = false;
-      });
-    };
-    scroller.addEventListener("scroll", onScroll, { passive: true });
-    return () => scroller.removeEventListener("scroll", onScroll);
-  }, [host]);
+  // The reader's own ask for newer posts (design readme §13, the bottom bar's
+  // re-tap ladder: pull-down at the feed's top is one of the feed's two refresh
+  // routes). It goes through the same fetch the first arrival takes, so the
+  // fault it can raise surfaces in the same place. Asking is a move, so the
+  // place stops being held.
+  const onPull = useCallback(() => {
+    releasePin();
+    setLoading(true);
+    refresh();
+  }, [releasePin, refresh]);
+  usePullToRefresh({ host, onPull });
 
-  const onLoadMore = async () => {
+  const loadMore = useCallback(async () => {
     if (loadingMore || !hasNextPage) return;
     setLoadingMore(true);
     const outcome = await fetchPosts(client, endCursor);
@@ -174,7 +171,19 @@ export function FeedView({
     } else {
       setTransportFault("append");
     }
-  };
+  }, [client, endCursor, hasNextPage, loadingMore]);
+
+  // THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (design readme §13, the
+  // audit states): no Show more, no page numbers — nothing drawn at rest. The
+  // watch sits a few posts short of the end so the page is already on its way
+  // by the time the reader gets there. A page that failed is not re-asked
+  // automatically: the drawn Retry below is the way back.
+  const tailRef = useApproachingTail({
+    root: host,
+    onReach: loadMore,
+    enabled: hasNextPage && transportFault !== "append",
+  });
+  const tailIndex = tailIndexOf(posts.length);
 
   return (
     // The band is chrome and full-bleed, so the gutter belongs to the content
@@ -199,13 +208,15 @@ export function FeedView({
         {phase === "signedIn" && <StatusBanners />}
         {/* What the wizard just did, if anything. Dismissing drops the query
             value, so the notice cannot come back on a reload. */}
-        {outcome !== null && <ComposeNotice onDismiss={() => router.replace("/feed")} />}
+        {outcome !== null && (
+          <ComposeNotice onDismiss={() => router.replace("/feed", { scroll: false })} />
+        )}
         {transportFault === "refresh" && (
           <div className="flex items-center gap-3">
             {/* With posts on screen the fault means "stale", not "gone":
                 the loaded posts stay readable under this banner. A failed
-                page fetch surfaces at the load-more slot instead (web.md
-                "Design guidelines", the Android twin). */}
+                page fetch surfaces where the page would have been instead
+                (web.md "Design guidelines", the Android twin). */}
             <TransportError
               testId="feed-transport-error"
               message={
@@ -227,7 +238,16 @@ export function FeedView({
             </Button>
           </div>
         )}
-        {loading && <p data-testid="feed-loading">Loading…</p>}
+        {loading && (
+          <p
+            role="status"
+            aria-live="polite"
+            data-testid="feed-loading"
+            className="text-body-medium text-on-surface-variant"
+          >
+            Loading…
+          </p>
+        )}
         {!loading && transportFault === null && posts.length === 0 && (
           <p data-testid="feed-empty">Nothing here yet — write the first post.</p>
         )}
@@ -241,8 +261,15 @@ export function FeedView({
           42rem column shows above phone width is whatever it shows: desktop is
           out of design scope until the mobile set is complete (readme §2). */}
       <ul className="flex flex-col gap-2" data-testid="feed-list">
-        {posts.map((post) => (
-          <li key={post.id}>
+        {posts.map((post, index) => (
+          // The card names itself to the pin: it is the anchor the reader's
+          // place is measured against (`scroll-pin.ts`). One of them also
+          // carries the watch that fetches the next page.
+          <li
+            key={post.id}
+            {...{ [ANCHOR_ATTRIBUTE]: post.id }}
+            ref={index === tailIndex ? tailRef : undefined}
+          >
             <PostCard
               post={post}
               href={`/posts/${post.id}`}
@@ -256,33 +283,37 @@ export function FeedView({
         ))}
       </ul>
       <div className="flex flex-col gap-4 px-6">
-        {hasNextPage &&
-          (transportFault === "append" ? (
-            <div className="flex items-center justify-center gap-3">
-              <TransportError
-                testId="feed-load-more-error"
-                message="Can't reach the server — new posts can't load right now."
-              />
-              <Button
-                testId="feed-load-more-retry"
-                variant="outline"
-                size="sm"
-                onClick={() => void onLoadMore()}
-                disabled={loadingMore}
-              >
-                Retry
-              </Button>
-            </div>
-          ) : (
+        {/* The slot the next page fills. At rest it is empty — the page comes
+            because the reader kept going. In flight it is the list's own
+            loading line, and a page that did not arrive stands here with its
+            way back (`ProfileMoreFailed`, the drawn twin of this row). */}
+        {hasNextPage && transportFault === "append" && (
+          <div className="flex items-center justify-center gap-3">
+            <TransportError
+              testId="feed-load-more-error"
+              message="Can't reach the server — new posts can't load right now."
+            />
             <Button
-              testId="feed-load-more"
+              testId="feed-load-more-retry"
               variant="outline"
-              onClick={() => void onLoadMore()}
+              size="sm"
+              onClick={() => void loadMore()}
               disabled={loadingMore}
             >
-              Load more
+              Retry
             </Button>
-          ))}
+          </div>
+        )}
+        {loadingMore && (
+          <p
+            role="status"
+            aria-live="polite"
+            data-testid="feed-loading-more"
+            className="text-body-medium text-on-surface-variant"
+          >
+            Loading…
+          </p>
+        )}
         {/* One region for the whole feed: a card that copied a link says so
             here rather than each card mounting a live region of its own. */}
         <Snackbar

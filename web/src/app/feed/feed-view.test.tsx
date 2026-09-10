@@ -7,8 +7,10 @@ import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
+import { intersect } from "@/test/media-env";
 import { FeedView } from "./feed-view";
 import { forgetFeed, recallFeed } from "./feed-memory";
+import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import type { RegistrationFlow } from "@/lib/signing/registration-flow";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
@@ -322,7 +324,10 @@ describe("FeedView", () => {
     expect(await screen.findByTestId("feed-empty")).toBeInTheDocument();
   });
 
-  it("loads the next page from the cursor", async () => {
+  // THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (design readme §13,
+  // the audit states): no Show more, no page numbers, nothing drawn at rest.
+  // The watch reaches the reader before the end of the list does.
+  it("loads the next page from the cursor as the reader nears the tail", async () => {
     const afters: (string | null)[] = [];
     server.use(
       graphql.query("Posts", ({ variables }) => {
@@ -336,11 +341,57 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-post-p1");
+    expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
+
+    intersect(true);
     expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
     expect(afters).toEqual([null, "c1"]);
-    expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
+  });
+
+  it("stops asking once the last page has landed", async () => {
+    const afters: (string | null)[] = [];
+    server.use(
+      graphql.query("Posts", ({ variables }) => {
+        afters.push((variables.after as string | null) ?? null);
+        return HttpResponse.json({
+          data:
+            variables.after == null
+              ? postsPage([post("p1", "First")], "c1", true)
+              : postsPage([post("p2", "Second")], null, false),
+        });
+      }),
+    );
+    renderWithProviders(<FeedView />);
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
+    await screen.findByTestId("feed-post-p2");
+
+    intersect(true);
+    await waitFor(() => expect(afters).toEqual([null, "c1"]));
+  });
+
+  // A page that did not arrive is the one thing the boards draw here, and the
+  // way back is the reader's — a watch that re-asked on its own would spend
+  // the failure in a loop.
+  it("leaves a failed page to its Retry rather than asking again", async () => {
+    let calls = 0;
+    server.use(
+      graphql.query("Posts", ({ variables }) => {
+        calls += 1;
+        if (variables.after != null) return HttpResponse.error();
+        return HttpResponse.json({ data: postsPage([post("p1", "First")], "c1", true) });
+      }),
+    );
+    renderWithProviders(<FeedView />);
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
+    expect(await screen.findByTestId("feed-load-more-error")).toBeInTheDocument();
+
+    intersect(true);
+    await waitFor(() => expect(calls).toBe(2));
+    expect(screen.getByTestId("feed-load-more-retry")).toBeInTheDocument();
   });
 
   // HT-2. The restore ask and the key ceremony are different accounts'
@@ -421,7 +472,8 @@ describe("FeedView", () => {
       const afters: (string | null)[] = [];
       server.use(pagedPosts(afters));
       const first = renderWithProviders(<FeedView />);
-      fireEvent.click(await screen.findByTestId("feed-load-more"));
+      await screen.findByTestId("feed-post-p1");
+      intersect(true);
       expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
       first.unmount();
 
@@ -449,7 +501,7 @@ describe("FeedView", () => {
       await screen.findByTestId("feed-post-p1");
       scroller.scrollTop = 1240;
       fireEvent.scroll(scroller);
-      await waitFor(() => expect(recallFeed()?.offset).toBe(1240));
+      await waitFor(() => expect(recallFeed()?.place.offset).toBe(1240));
       first.unmount();
 
       scroller.scrollTop = 0;
@@ -468,6 +520,137 @@ describe("FeedView", () => {
       renderWithProviders(<FeedView />);
       expect(await screen.findByTestId("feed-post-p1")).toBeInTheDocument();
       expect(afters).toEqual([null]);
+    });
+  });
+
+  // The feed's second refresh route (design readme §13, the bottom bar's
+  // re-tap ladder). The browser's own gesture cannot fire here — the document
+  // is pinned and closed, so it has no overscroll to give (`shell.tsx`) — so
+  // the pull is read off the touch stream, and it belongs to every viewer:
+  // reading needs no account, and neither does asking for newer posts.
+  describe("pulling down at the top", () => {
+    // One object, not one per read: the progress rides `useSyncExternalStore`,
+    // and a fresh snapshot every call is an endless render.
+    const applicantProgress: RegistrationProgress = {
+      kind: "awaitingApproval",
+      emailVerified: true,
+      keyAttached: true,
+      keyOnDevice: true,
+    };
+    const applicantFlow: RegistrationFlow = {
+      progress: () => applicantProgress,
+      subscribe: () => () => {},
+      ensureAdvancing: () => {},
+      consumeLanded: () => false,
+      reset: () => {},
+    };
+
+    function touch(type: string, clientY: number): Event {
+      const event = new Event(type, { bubbles: true });
+      const points = [{ clientY }];
+      Object.defineProperty(event, "touches", { value: points });
+      Object.defineProperty(event, "changedTouches", { value: points });
+      return event;
+    }
+
+    function pull(scroller: HTMLElement, travel = PULL_THRESHOLD) {
+      fireEvent(scroller, touch("touchstart", 100));
+      fireEvent(scroller, touch("touchmove", 100 + travel));
+      fireEvent(scroller, touch("touchend", 100 + travel));
+    }
+
+    function feedIn(options: Parameters<typeof renderWithProviders>[1]) {
+      const scroller = document.createElement("div");
+      document.body.append(scroller);
+      renderWithProviders(
+        <ScrollHostProvider value={{ current: scroller }}>
+          <FeedView store={fakeIdentityStore()} />
+        </ScrollHostProvider>,
+        options,
+      );
+      return scroller;
+    }
+
+    function servePosts(calls: { n: number }) {
+      server.use(
+        graphql.query("Posts", () => {
+          calls.n += 1;
+          return HttpResponse.json({
+            data: postsPage([post(`p${calls.n}`, `Page ${calls.n}`)], null, false),
+          });
+        }),
+      );
+    }
+
+    it("asks the server again for a signed-in reader", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      server.use(meHandler());
+      const scroller = feedIn({ store: signedInStore() });
+      await screen.findByTestId("feed-post-p1");
+
+      pull(scroller);
+      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("asks the server again for an applicant", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      server.use(meHandler());
+      const scroller = feedIn({ store: signedInStore(), flow: applicantFlow });
+      await screen.findByTestId("feed-post-p1");
+
+      pull(scroller);
+      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("asks the server again for a guest", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      const scroller = feedIn(undefined);
+      await screen.findByTestId("feed-post-p1");
+
+      pull(scroller);
+      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("says it is asking, in the list's own loading line", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      const scroller = feedIn(undefined);
+      await screen.findByTestId("feed-post-p1");
+
+      pull(scroller);
+      expect(screen.getByTestId("feed-loading")).toHaveTextContent("Loading…");
+      await screen.findByTestId("feed-post-p2");
+      expect(screen.queryByTestId("feed-loading")).not.toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("takes a short tug for what it is — a scroll, not an ask", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      const scroller = feedIn(undefined);
+      await screen.findByTestId("feed-post-p1");
+
+      pull(scroller, PULL_THRESHOLD - 1);
+      await waitFor(() => expect(calls.n).toBe(1));
+      scroller.remove();
+    });
+
+    it("ignores a pull that starts anywhere but the top", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      const scroller = feedIn(undefined);
+      await screen.findByTestId("feed-post-p1");
+
+      scroller.scrollTop = 900;
+      pull(scroller);
+      await waitFor(() => expect(calls.n).toBe(1));
+      scroller.remove();
     });
   });
 
@@ -501,7 +684,8 @@ describe("FeedView", () => {
       ),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
     expect(await screen.findByTestId("feed-post-p3")).toBeInTheDocument();
     expect(screen.getAllByTestId("feed-post-p1")).toHaveLength(1);
     // The held copy stays as it was read — no reconciliation.
@@ -525,12 +709,12 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
     expect(await screen.findByTestId("feed-load-more-error")).toBeInTheDocument();
-    // The fault surfaces where the failed fetch was requested — at the
-    // load-more slot, not the top-of-page banner.
+    // The fault surfaces where the failed fetch was requested — where the page
+    // would have been, not the top-of-page banner.
     expect(screen.queryByTestId("feed-transport-error")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
   });
 
@@ -545,7 +729,8 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
     await screen.findByTestId("feed-load-more-error");
     fireEvent.click(screen.getByTestId("feed-load-more-retry"));
     expect(screen.getByTestId("feed-load-more-error")).toBeInTheDocument();
@@ -580,7 +765,8 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
     await screen.findByTestId("feed-load-more-error");
     fireEvent.click(screen.getByTestId("feed-load-more-retry"));
     expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();

@@ -167,6 +167,7 @@ export function ProfileScreen({
         <PageHeader
           title={profile ? `@${profile.handle}` : "Profile"}
           backHref={handle === null ? undefined : "/feed"}
+          backScroll={false}
           backLabel="Back to feed"
           backTestId="profile-back"
           action={
