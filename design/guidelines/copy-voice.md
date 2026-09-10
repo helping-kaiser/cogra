@@ -625,7 +625,6 @@ does — *Confirm email change* is what a reader would have believed it
 did, and a control says what will happen. Last: `Until both sides land
 your account keeps the address it has, and a reset still goes there.`
 
-
 ## Awaiting blessing — the parked-rulings round
 
 Drawn, and up for review in the same pass. Kept apart from the blessed
