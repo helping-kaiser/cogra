@@ -121,6 +121,92 @@ class MediaComponentsTest {
         compose.onNodeWithText("Shows an injury").assertIsDisplayed()
     }
 
+    // ---- The comment-scale veil ---------------------------------------
+
+    /**
+     * A comment's body is REPLACED by one block rather than covered in
+     * place: two lines and an inset attachment would otherwise take a
+     * wash each (`SensitiveVeil.jsx`, the compact face).
+     */
+    @Test
+    fun aVeiledCommentIsReplacedByOneBlockCarryingTheVeilsWords() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                SensitiveVeilCompact(veiled = true, onReveal = {}, testTag = "veil") {
+                    Text("the secret comment")
+                }
+            }
+        }
+
+        compose.onNodeWithTag("veil").assertIsDisplayed()
+        compose.onNodeWithText("Sensitive — tap to view").assertIsDisplayed()
+        compose.onNodeWithText("the secret comment").assertDoesNotExist()
+    }
+
+    /**
+     * THE VEIL NAMES ITS SOURCE, unconditionally. The author's warning
+     * and the platform's verdict read back as the same veil, so an
+     * unnamed source would read as the other one.
+     */
+    @Test
+    fun theCompactVeilNamesWhoseMarkItIs() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column {
+                    SensitiveVeilCompact(
+                        veiled = true,
+                        onReveal = {},
+                        source = SensitiveSource.Author,
+                    ) { Text("a") }
+                    SensitiveVeilCompact(
+                        veiled = true,
+                        onReveal = {},
+                        source = SensitiveSource.Platform,
+                    ) { Text("b") }
+                }
+            }
+        }
+
+        compose.onNodeWithText("The author's warning").assertIsDisplayed()
+        compose.onNodeWithText("The platform's verdict").assertIsDisplayed()
+    }
+
+    /** A reason, where the author gave one, follows the source. */
+    @Test
+    fun theStatedReasonFollowsTheSourceOnOneLine() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                SensitiveVeilCompact(
+                    veiled = true,
+                    onReveal = {},
+                    reason = "Shows an injury",
+                ) { Text("body") }
+            }
+        }
+
+        compose.onNodeWithText("The author's warning — Shows an injury").assertIsDisplayed()
+    }
+
+    /** The whole block is the reveal — not a button inside a panel. */
+    @Test
+    fun tappingTheBlockAnywhereRevealsTheComment() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                var veiled by remember { mutableStateOf(true) }
+                SensitiveVeilCompact(
+                    veiled = veiled,
+                    onReveal = { veiled = false },
+                    testTag = "veil",
+                ) { Text("the secret comment") }
+            }
+        }
+
+        compose.onNodeWithTag("veil").performClick()
+
+        compose.onNodeWithText("the secret comment").assertIsDisplayed()
+        compose.onNodeWithText("Sensitive — tap to view").assertDoesNotExist()
+    }
+
     // ---- Removal ------------------------------------------------------
 
     @Test

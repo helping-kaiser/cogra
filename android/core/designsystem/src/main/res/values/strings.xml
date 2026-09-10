@@ -171,6 +171,19 @@
          language, not of the layout. -->
     <string name="designsystem_gallery_position">Picture %1$d of %2$d</string>
 
+    <!-- The sensitive veil (design/components/honesty/SensitiveVeil.jsx).
+         The veil names its source unconditionally: an author's own warning
+         and the platform's verdict read back as the same veil, so an
+         unnamed source would read as the other one. A reason, where the
+         author gave one, follows on the same line. -->
+    <string name="sensitive_veil_label">Sensitive — tap to view</string>
+    <string name="sensitive_source_author">The author\'s warning</string>
+    <string name="sensitive_source_platform">The platform\'s verdict</string>
+    <string name="sensitive_source_with_reason">%1$s — %2$s</string>
+    <!-- The veil is one target: the label and the source line are read as
+         one thing, and the whole block is the reveal. -->
+    <string name="sensitive_veil_description">%1$s. %2$s</string>
+
     <!-- A surface that has nothing to show yet
          (design/components/states/EmptyState.jsx). A line of text, never
          a spinner: motion clarifies where something came from and never
