@@ -98,6 +98,7 @@ label.
 | `test:integration:a-refused-seal-leaves-no-readable-pending-content`                        | a_refused_seal_leaves_no_readable_pending_content                        |
 | `test:integration:a-registered-topic-is-followable-by-id`                                   | a_registered_topic_is_followable_by_id                                   |
 | `test:integration:a-repair-run-with-changed-input-is-refused`                               | a_repair_run_with_changed_input_is_refused                               |
+| `test:integration:a-rotated-video-uploads-with-its-displayed-aspect-ratio`                  | a_rotated_video_uploads_with_its_displayed_aspect_ratio                  |
 | `test:integration:a-seal-lost-before-storing-expires-the-write`                             | a_seal_lost_before_storing_expires_the_write                             |
 | `test:integration:a-sealed-unapproved-act-is-recovered`                                     | a_sealed_unapproved_act_is_recovered                                     |
 | `test:integration:a-self-mark-reconciles-its-switch-and-its-reason`                         | a_self_mark_reconciles_its_switch_and_its_reason                         |
