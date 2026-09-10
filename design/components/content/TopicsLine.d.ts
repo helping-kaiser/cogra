@@ -1,8 +1,9 @@
 /**
  * The topics-and-citations line a content card wears — shared by `PostCard`
  * and `CommentCard`. One line on every variant: at most two chips, then the
- * counts in words ("· 23 topics · 3 references"); the topics-and-references
- * sheet is the full set's home.
+ * counts in words ("· 23 tags · 3 references"); a topic is never drawn as
+ * a cut-off chip — one that wouldn't fit whole folds into the counts instead.
+ * The topics-and-references sheet is the full set's home.
  */
 export interface TopicsLineProps {
   /** Topic names, with or without the `#`. */

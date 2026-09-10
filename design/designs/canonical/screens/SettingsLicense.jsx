@@ -36,7 +36,7 @@ export function Screen() {
     <>
       <SettingsBody />
 
-      <BottomSheet open ariaLabel="Default license">
+      <BottomSheet open ariaLabel="Default license" maxHeight="88%">
         <SheetTitle trailing={<HelpDot ariaLabel="License" />}>Default license</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px" }}>
           <QuietNote>

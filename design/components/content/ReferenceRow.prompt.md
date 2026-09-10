@@ -9,3 +9,9 @@ Use `ReferenceRow` for every entry in the topics-and-references sheet, and for s
 **The leading mark says the kind, without a word beside it**: a person keeps their avatar (a circle, as everywhere), a media post its cover, a text post the letter T as a tile, a topic its #, and the rest their node-type glyph — proposal `how_to_vote`, item `inventory_2`, campaign `campaign`, offer `sell`, chat `forum`, comment `chat_bubble`.
 
 **The pair is the author's signed act, public record** — set at compose with a changeable default, shown right-aligned for any reader. Never coloured, never a judgement.
+
+**`pending` is where a settling act is admitted, and the only place.** A chip on a card shows nothing pending — a tag's word is its word whether the record has been ordered or not — so this sheet carries the honesty. The marker stacks under the pair, not under the name: what has not landed is the act, not the node it points at.
+
+```jsx
+<ReferenceRow kind="topic" name="coastroad" pair="+0.10 / 1.00" pending onOpen={open} />
+```

@@ -41,7 +41,7 @@ export function WalletBalance({ amount = 0, approx, delta, onHelp }) {
       {(approx || delta) && amount !== 0 && (
         <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-3)", flexWrap: "wrap" }}>
           {approx && (
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
               ≈ {approx} L-BTC right now
             </span>
           )}
@@ -58,7 +58,7 @@ export function WalletBalance({ amount = 0, approx, delta, onHelp }) {
                 fontSize: "var(--text-label-small)",
                 lineHeight: "var(--text-label-small--line-height)",
                 fontWeight: "var(--text-label-small--font-weight)",
-                letterSpacing: "0.5px",
+                letterSpacing: "var(--text-label-small--letter-spacing)",
               }}
             >
               {delta}
