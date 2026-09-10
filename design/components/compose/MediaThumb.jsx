@@ -126,7 +126,7 @@ export function MediaThumb({
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
             fontWeight: "var(--text-label-small--font-weight)",
-            letterSpacing: "0.5px",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
           }}
         >
           {duration}
@@ -145,7 +145,7 @@ export function MediaThumb({
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
             fontWeight: "var(--text-label-small--font-weight)",
-            letterSpacing: "0.5px",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
           }}
         >
           Cover
