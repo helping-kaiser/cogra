@@ -21,13 +21,20 @@
    on the row that already carries the act's own numbers. Two rows wear it, one
    per section: a settling tag and a settling citation are the same fact about
    two families, and a sheet that drew it on only one would imply the other
-   cannot. */
+   cannot.
+
+   THE COUNT IS THE LIST'S LENGTH (jakob's ruling, 2026-09-10). A reference
+   counts whatever kind of node it points at — a chat message is cited exactly
+   as a post is — so the card's number and the rows under References are the
+   same ten. A count that quietly dropped a kind would tell a reader the sheet
+   holds less than it does, and this sheet is the only place the number can be
+   checked. */
 export function Screen() {
   return (
     <>
       <DetailHeader items={READER_POST_MENU} />
       <DetailColumn>
-        <PostCard {...ADA_POST} variant="detail" references={9} />
+        <PostCard {...ADA_POST} variant="detail" references={10} />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 
