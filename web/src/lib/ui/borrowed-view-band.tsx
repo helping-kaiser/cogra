@@ -61,12 +61,19 @@ export function BorrowedViewBand({
   );
 }
 
-/** The ruled readings (`design/readme.md` §13), one per reader. */
+/**
+ * The three ruled readings (`design/readme.md` §13). All name the same
+ * borrowed vantage and differ in what the reader can do about it: the
+ * guest can join, the applicant can only wait, and the landed member can
+ * end the borrowing by pointing back.
+ */
 export const borrowedViewLine = {
   /** A signed-out reader, who can do something about it. */
   join: (handle: string) => `Browsing from @${handle}'s view — join to build your own.`,
   /** A signed-in applicant: the vantage is the same, the action is not theirs. */
   applicant: (handle: string) => `Browsing from @${handle}'s view while your application lands.`,
+  /** Landed, not yet pointed back — the act that ends the borrowing. */
+  vouchBack: (handle: string) => `Browsing from @${handle}'s view — vouch back to start your own.`,
 } as const;
 
 export const SIGN_IN_OR_JOIN = "Sign in or join";
