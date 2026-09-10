@@ -21,6 +21,7 @@ import { appendDeduped } from "@/lib/api/pagination";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthPhase } from "@/lib/session/provider";
+import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationProgress } from "@/lib/signing/provider";
 import { RestoreCard } from "@/app/applicant-status";
 import { StatusBanners } from "@/app/status-banners";
@@ -52,12 +53,19 @@ import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
  */
 function BorrowedView({ signedOut }: { signedOut: boolean }) {
   const client = useApolloClient();
+  const guard = useAuthGuard();
   const router = useRouter();
   const [vantage, setVantage] = useState<BorrowedVantage | null>(null);
 
+  // Re-read when the session flips, not only on mount: the answer is
+  // per-reader, so a sign-in or a sign-out under a mounted feed would
+  // otherwise leave the previous reader's name under the bar. The guard
+  // rides along for the same reason the other reads use it — a stale
+  // access token must refresh rather than demote an applicant to the
+  // anonymous answer.
   useEffect(() => {
     let cancelled = false;
-    void fetchBorrowedView(client).then((outcome) => {
+    void guard.run(() => fetchBorrowedView(client)).then((outcome) => {
       if (cancelled) return;
       // A read that did not answer names nobody: the band is an honesty
       // label over a feed already on screen, not a thing to guess at.
@@ -66,7 +74,7 @@ function BorrowedView({ signedOut }: { signedOut: boolean }) {
     return () => {
       cancelled = true;
     };
-  }, [client]);
+  }, [client, guard, signedOut]);
 
   if (vantage === null) return null;
   const { handle } = vantage;
