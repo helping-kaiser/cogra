@@ -19,6 +19,7 @@ import {
   sealGate,
   signedActions,
   stepsFor,
+  TITLE_MAX_CHARS,
   uploadsFailed,
   uploadsPending,
   wizardReducer,
@@ -419,8 +420,32 @@ describe("the details and the sheets", () => {
     );
     expect(state.title).toBe("Salt maps of the coast road");
     expect(state.description).toBe("Rubbings from three weekends.");
-    // Everything on the details screen is optional, so it always hands over.
+    // Every field on the details screen is optional, so a filled one within
+    // its cap hands over.
     expect(advanceGate(state).ok).toBe(true);
+  });
+
+  // The one rule the details screen owns. The count is the SERVER'S unit —
+  // scalar values — so the astral fixture is the whole point: `.length` would
+  // read it as double and refuse a title the server takes.
+  it("refuses a title past the cap, counting scalar values and not code units", () => {
+    const withTitle = (title: string) =>
+      run(emptyWizard(), picks(1), { type: "title", title }, { type: "goto", step: "details" });
+
+    const atCap = withTitle("é".repeat(TITLE_MAX_CHARS));
+    expect(advanceGate(atCap).ok).toBe(true);
+    expect(sealGate(uploaded(atCap)).ok).toBe(true);
+
+    const astralAtCap = withTitle("🧂".repeat(TITLE_MAX_CHARS));
+    expect(astralAtCap.title.length).toBe(2 * TITLE_MAX_CHARS);
+    expect(advanceGate(astralAtCap).ok).toBe(true);
+
+    const over = withTitle("x".repeat(TITLE_MAX_CHARS + 1));
+    const blocked = advanceGate(over);
+    expect(blocked.ok).toBe(false);
+    expect(blocked.ok === false && blocked.reason).toMatch(/too long/i);
+    // The seal is the boundary the server sees, so it refuses it too.
+    expect(sealGate(uploaded(over)).ok).toBe(false);
   });
 
   it("starts on the account's default licence and the low-defaults stance", () => {
