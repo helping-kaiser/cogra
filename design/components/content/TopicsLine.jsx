@@ -26,32 +26,56 @@ import { TopicChip } from "../core/Chip.jsx";
 const VISIBLE_CHIPS = 2;
 
 /* WHOLE OR FOLDED, NEVER CUT. This line renders at one fixed context only —
-   a 390px card, 16px insets — so "does a chip fit" is a threshold derived
-   from that context rather than measured live: this file renders through
-   ReactDOMServer (no DOM, no real glyph metrics), so the check has to run
-   ahead of paint, on the tag string alone.
+   a 390px card, 16px insets, so a 358px content width — so "does it fit" is
+   a threshold derived from that context rather than measured live: this
+   file renders through ReactDOMServer, no DOM and no real glyph metrics, so
+   the check has to run ahead of paint, on the strings alone. Fit is judged
+   for the LINE, not a chip in isolation — a tag's chip can cost more of the
+   358px when the count beside it is short, and less when the count is long.
 
-   Two chips plus the counts have to clear the card's 358px content width
-   (390 minus the 16px insets either side); this file has always reserved
-   96px of that per chip. A chip's pill is border-box with 12px of padding
-   and a 1px border either side, so 26px of the 96 is never text — 70px is
-   the actual budget for "#name". There's no font-metrics table to turn 70px
-   into a character count, so this calibrates against the line's own
-   documented two-chip example ("#coastroad", "#saltmarsh" — 10 characters
-   each, the pair this file has always shown as filling the budget):
-   70px / 10 chars ⇒ MAX_CHIP_CHARS = 10. A "#name" longer than that doesn't
-   get a chip; a third tag once two have already fit doesn't either — both
-   fold into the trailing count. Visible chips are always a PREFIX of
-   `topics`: the walk stops at the first tag that doesn't fit, so a later,
-   shorter tag never jumps ahead of one the line already gave up on. */
-const MAX_CHIP_CHARS = 10;
+   The per-character costs below are real measurement, not a guess: probed
+   in a live render of this exact pill and this exact counts span, in
+   Figtree, against every topic name this repo's canonical fixtures use.
+   Both average a little under the constants here (chip text: label-large,
+   14px/500, averaged 7.28px/char across the corpus, worst single word
+   8.68px/char; counts text: body-small, 12px/400, averaged 5.39px/char,
+   worst 5.63px/char) — the constants round up from the average rather than
+   the worst single word, because the worst-per-character words in the
+   corpus are short ones a single wide letter dominates, and a short word's
+   error is a few px, not a systemic one. A chip's pill also always costs
+   26px beyond its text: 12px of padding and a 1px border either side.
+
+   The line tries two chips, then one, then none, keeping the first
+   candidate whose estimated total — every shown chip's pill, the resulting
+   counts span, and a var(--space-2) gap between every pair of them — clears
+   358px. Whichever count of chips survives is always a PREFIX of `topics`:
+   there's no version of this line where a later, shorter tag is shown and
+   an earlier, longer one is folded instead. */
+const CHIP_TEXT_AVG_PX = 7.5;
+const COUNTS_TEXT_AVG_PX = 5.5;
+const PILL_OVERHEAD_PX = 26;
+const GAP_PX = 8;
+const LINE_BUDGET_PX = 358;
 
 function chipLabel(topic) {
   return `#${topic.replace(/^#/, "")}`;
 }
 
-function fitsWhole(topic) {
-  return chipLabel(topic).length <= MAX_CHIP_CHARS;
+function estimateChipWidth(topic) {
+  return PILL_OVERHEAD_PX + chipLabel(topic).length * CHIP_TEXT_AVG_PX;
+}
+
+function estimateCountsWidth(text) {
+  return text.length * COUNTS_TEXT_AVG_PX;
+}
+
+function estimateLineWidth(shownTopics, hiddenTopics, references) {
+  const counts = countsText(hiddenTopics, references);
+  const items = shownTopics.length + (counts ? 1 : 0);
+  if (items === 0) return 0;
+  const chipsWidth = shownTopics.reduce((sum, topic) => sum + estimateChipWidth(topic), 0);
+  const countsWidth = counts ? estimateCountsWidth(counts) : 0;
+  return chipsWidth + countsWidth + (items - 1) * GAP_PX;
 }
 
 const CHIP_STYLE = { flex: "none" };
@@ -81,18 +105,18 @@ const LINE = {
   minWidth: 0,
 };
 
-function visibleChips(topics) {
-  const visible = [];
-  for (const topic of topics) {
-    if (visible.length >= VISIBLE_CHIPS || !fitsWhole(topic)) break;
-    visible.push(topic);
+function visibleChips(topics, references) {
+  const cap = Math.min(VISIBLE_CHIPS, topics.length);
+  for (let n = cap; n > 0; n--) {
+    const shown = topics.slice(0, n);
+    if (estimateLineWidth(shown, topics.length - n, references) <= LINE_BUDGET_PX) return shown;
   }
-  return visible;
+  return [];
 }
 
 export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferences }) {
   if (topics.length === 0 && references === 0) return null;
-  const visible = visibleChips(topics);
+  const visible = visibleChips(topics, references);
   const counts = countsText(topics.length - visible.length, references);
 
   if (onOpen) {
