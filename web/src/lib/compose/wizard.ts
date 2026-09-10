@@ -220,12 +220,16 @@ export function bodyGate(state: WizardState): Gate {
   return ALLOWED;
 }
 
-/** The cover screen's own gate: a video may not leave it faceless. */
-export function coverGate(state: WizardState): Gate {
-  if (!isVideoPost(state)) return ALLOWED;
-  return state.cover === null
-    ? { ok: false, reason: "Choose a frame, or a picture of your own." }
-    : ALLOWED;
+/**
+ * The cover screen's own gate. A faceless video is not a wall: the contract,
+ * the database, and the backend all accept `coverMediaId: null`, so nothing
+ * here should refuse what the rest of the system already allows (jakob,
+ * 2026-09-10 — "going without a cover is always possible"). Capture still
+ * auto-fills the first frame the moment it succeeds; this gate just stops
+ * treating its absence as a reason to hold the reader on the screen.
+ */
+export function coverGate(): Gate {
+  return ALLOWED;
 }
 
 /** Every upload this draft is waiting on — the cover counts, though it is no attachment. */
@@ -253,7 +257,7 @@ export function sealGate(state: WizardState): Gate {
   const body = bodyGate(state);
   if (!body.ok) return body;
   if (state.mode === "words") return ALLOWED;
-  const cover = coverGate(state);
+  const cover = coverGate();
   if (!cover.ok) return cover;
   // A video post's two uploads are the clip and its cover, so the count is
   // never the plural "pictures" a gallery would report — it says "video"
@@ -292,7 +296,7 @@ export function advanceGate(state: WizardState): Gate {
     // A frame is selected the moment the clip is read, so this only ever
     // speaks when no frame could be taken and no picture was chosen.
     case "cover":
-      return coverGate(state);
+      return coverGate();
     // Every picture has a crop from the moment it is picked, and the details
     // are all optional, so neither screen can be incomplete.
     case "crop":
