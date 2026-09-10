@@ -11,6 +11,7 @@ import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { captureFrames } from "@/lib/ui2/media/video";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
@@ -256,5 +257,26 @@ describe("picking a video", () => {
     const videoUrl = URL.createObjectURL(clip);
     expect(thumb).toHaveAttribute("src");
     expect(thumb.getAttribute("src")).not.toBe(videoUrl);
+  });
+
+  // W3: this suite's own mock had `captureFrames` succeed every time, so the
+  // screen a real decode failure lands on was never exercised — exactly the
+  // path that used to leave an author stuck with no offers and no way past
+  // the cover screen. The escape hatch is what has to survive this, not a
+  // particular frame.
+  it("still lets the author choose a picture of their own when frame capture fails entirely", async () => {
+    vi.mocked(captureFrames).mockRejectedValueOnce(new Error("this browser couldn't read that video"));
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+
+    // No offers to select from once the capture failed, and no stall either —
+    // the escape hatch is what the screen falls back to.
+    await screen.findByTestId("wizard-cover-picture");
+    expect(screen.queryByTestId("wizard-cover-frame-0")).toBeNull();
+    expect(screen.queryByTestId("wizard-cover-capturing")).toBeNull();
+    // Next stays held until a face is chosen — the failure does not quietly
+    // waive the gate, it only removes the offers the gate could be met with.
+    expect(screen.getByTestId("wizard-next")).toBeDisabled();
   });
 });
