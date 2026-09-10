@@ -1217,8 +1217,8 @@
     { "from": "Settings", "via": 4, "kind": "advance", "label": "Confirm multi-action submits", "to": [{ "terminal": "self", "case": "the switch flips" }] },
     { "from": "Settings", "via": 5, "kind": "advance", "label": "Default license", "to": [{ "board": "SettingsLicense", "case": "the license sheet over settings — the same question the seal asks, set here as what every new post starts from" }] },
     { "from": "Settings", "via": 6, "kind": "advance", "label": "What your feed shows", "to": [{ "board": "SettingsReading", "case": "the filter sheet over settings — the same control the feed carries, set here as the default every feed opens with" }] },
-    { "from": "Settings", "via": 7, "kind": "advance", "label": "Recovery code", "to": [{ "board": "SettingsBackup" }] },
-    { "from": "Settings", "via": 8, "kind": "advance", "label": "Your key", "to": [{ "board": "YourKey", "case": "after the platform's own unlock — the phone's lock on Android, the current code in a browser whose seed is sealed" }] },
+    { "from": "Settings", "via": 7, "kind": "advance", "label": "Recovery code", "to": [{ "board": "SettingsBackup", "case": "the key is on this browser — the replace screen, ready to take the proof" }, { "board": "SettingsBackupKeyAbsent", "case": "key elsewhere — the same screen with nothing to re-encrypt" }] },
+    { "from": "Settings", "via": 8, "kind": "advance", "label": "Your key", "to": [{ "board": "YourKey", "case": "after the platform's own unlock — the phone's lock on Android, the current code in a browser whose seed is sealed" }, { "board": "YourKeyAbsent", "case": "key elsewhere — no unlock is asked for, because there is nothing behind it to reveal" }] },
     { "from": "Settings", "via": 9, "kind": "advance", "label": "Revoke", "to": [{ "terminal": "self", "case": "the row goes — the snackbar answers" }] },
     { "from": "Settings", "via": 10, "kind": "advance", "label": "Sign out everywhere else", "to": [{ "terminal": "self", "case": "every row but this one goes — the snackbar answers" }] },
     { "from": "Settings", "via": 11, "kind": "advance", "label": "Password", "to": [{ "board": "ChangePassword" }] },
@@ -1234,6 +1234,14 @@
     { "from": "YourKey", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings" }] },
     { "from": "YourKey", "via": 2, "kind": "advance", "label": "Copy the PEM block", "to": [{ "terminal": "self", "case": "the PEM lands on the clipboard" }] },
     { "from": "YourKey", "via": 3, "kind": "advance", "label": "Copy the raw hex", "to": [{ "terminal": "self", "case": "the hex lands on the clipboard" }] },
+
+    { "from": "SettingsBackupKeyAbsent", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings", "case": "nothing is lost — no code has been made" }] },
+    { "from": "SettingsBackupKeyAbsent", "via": 2, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
+    { "from": "SettingsBackupKeyAbsent", "via": 3, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
+
+    { "from": "YourKeyAbsent", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings" }] },
+    { "from": "YourKeyAbsent", "via": 2, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
+    { "from": "YourKeyAbsent", "via": 3, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
 
     { "from": "SettingsLicense", "via": 1, "kind": "detour", "label": "? — License", "to": [{ "board": "HelpDialog", "case": "the License text" }] },
     { "from": "SettingsLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three — it seeds the next post, never the last" }] },

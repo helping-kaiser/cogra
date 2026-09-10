@@ -1149,7 +1149,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2067,
+      "h": 2328,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1320,6 +1320,24 @@
       "title": "Settings · confirm the email change",
       "x": 3840,
       "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsBackupKeyAbsent.dc.html",
+      "title": "Settings · a new recovery code, key absent",
+      "x": 480,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "YourKeyAbsent.dc.html",
+      "title": "Settings · your key, key absent",
+      "x": 960,
+      "y": 2988,
       "w": 390,
       "h": 844,
       "page": "profile"
