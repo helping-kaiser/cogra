@@ -9,15 +9,15 @@ import com.cogra.domain.repo.ContentRepository
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
-import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.CoverChoice
+import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.inFlight
 import com.cogra.feature.content.wizard.pickedPictures
 import com.cogra.feature.content.wizard.withAltText
 import com.cogra.feature.content.wizard.withSourceRatio
 import com.cogra.feature.content.wizard.withUpload
-import com.cogra.feature.content.wizard.PickedAsset
-import com.cogra.feature.content.wizard.RefusedPick
 
 /**
  * The reply wizard's stages, in the order the canonical boards draw
@@ -223,9 +223,21 @@ data class ReplyWizardState(
         get() = uploadedIds.size == picked.size &&
             (!isVideoComment || coverMediaId != null)
 
-    /** Any drawer open over the current stage. */
+    /**
+     * The stance pad is parked over the page, not a drawer.
+     *
+     * It is `position: fixed` at the lower centre of the viewport, the
+     * same place every time, because muscle memory is part of the
+     * control (design/readme.md §"Fixed elements"). Riding the sheet
+     * host would draw a second sheet chrome around it — the doubled
+     * surface F2-10 reports — and would park it wherever the drawer
+     * happened to stop.
+     */
+    val padOpen: Boolean get() = sheet == ReplySealSheet.Stance
+
+    /** Any drawer open over the current stage — the pad is not one. */
     val anySheetOpen: Boolean
-        get() = sheet != ReplySealSheet.None || describingIndex != null
+        get() = (sheet != ReplySealSheet.None && !padOpen) || describingIndex != null
 
     /**
      * How many picks carry a description — `DescribeCounter`'s count.
@@ -367,8 +379,10 @@ fun ReplyWizardState.advanced(): ReplyWizardState? = when (step) {
  * comments keep no drafts.
  */
 fun ReplyWizardState.retreated(): ReplyWizardState? = when {
-    // A sheet is a drawer over the stage: it closes before the stage moves.
-    anySheetOpen -> closedSheets()
+    // A drawer sits over the stage, and so does the parked pad: either
+    // closes before the stage moves. Backing out of the pad stages
+    // nothing, exactly as its own Cancel does.
+    anySheetOpen || padOpen -> closedSheets()
     step == ReplyStep.Compose -> null
     else -> copy(step = ReplyStep.Compose)
 }

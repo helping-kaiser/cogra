@@ -4,6 +4,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,11 +20,14 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.CograButton
@@ -225,93 +232,130 @@ internal fun ReplyWizardScreen(
         )
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag("reply_wizard"),
-    ) {
-        WizardHeader(
-            title = if (state.step == ReplyStep.Seal) "What you sign" else "Reply",
-            onBack = onBack,
-            // The X leaves from any stage. The post wizard's default
-            // wording promises a kept draft; a comment has none, so the
-            // label says what will happen to what is written.
-            onLeave = onLeave,
-            leaveContentDescription = "Leave — the reply is discarded",
-            trailingNote = if (state.step == ReplyStep.Seal) "Last step" else null,
-            onHelp = if (state.step == ReplyStep.Seal && !state.keyAbsent) {
-                { onOpenHelp(HelpTopic.SignedActions) }
-            } else {
-                null
-            },
-            helpContentDescription = HelpTopic.SignedActions.title,
-            testTag = "reply_header",
-        )
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("reply_wizard"),
+        ) {
+            WizardHeader(
+                title = if (state.step == ReplyStep.Seal) "What you sign" else "Reply",
+                onBack = onBack,
+                // The X leaves from any stage. The post wizard's default
+                // wording promises a kept draft; a comment has none, so the
+                // label says what will happen to what is written.
+                onLeave = onLeave,
+                leaveContentDescription = "Leave — the reply is discarded",
+                trailingNote = if (state.step == ReplyStep.Seal) "Last step" else null,
+                onHelp = if (state.step == ReplyStep.Seal && !state.keyAbsent) {
+                    { onOpenHelp(HelpTopic.SignedActions) }
+                } else {
+                    null
+                },
+                helpContentDescription = HelpTopic.SignedActions.title,
+                testTag = "reply_header",
+            )
 
-        keyBanner()
+            keyBanner()
 
-        Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            when (state.step) {
-                ReplyStep.Compose -> {
-                    WizardBody(gap = Space.x4) {
-                        ReplyComposeStepBody(
-                            state = state,
-                            onBodyChange = onBodyChange,
-                            onOpenPicker = onOpenPicker,
-                            onRemovePickAt = onRemovePickAt,
-                            onDescribePictures = onDescribePictures,
-                            onPickCoverFrame = onPickCoverFrame,
-                            onPickCoverPicture = onOpenCoverPicker,
-                            onDismissRefusal = onDismissRefusal,
-                            onRetryUpload = onRetryUpload,
-                        )
+            Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                when (state.step) {
+                    ReplyStep.Compose -> {
+                        WizardBody(gap = Space.x4) {
+                            ReplyComposeStepBody(
+                                state = state,
+                                onBodyChange = onBodyChange,
+                                onOpenPicker = onOpenPicker,
+                                onRemovePickAt = onRemovePickAt,
+                                onDescribePictures = onDescribePictures,
+                                onPickCoverFrame = onPickCoverFrame,
+                                onPickCoverPicture = onOpenCoverPicker,
+                                onDismissRefusal = onDismissRefusal,
+                                onRetryUpload = onRetryUpload,
+                            )
+                        }
+                        WizardFooter {
+                            CograButton(
+                                text = "Next",
+                                onClick = onNext,
+                                enabled = state.bodyReady,
+                                modifier = Modifier.fillMaxWidth(),
+                                testTag = "reply_next",
+                            )
+                        }
                     }
-                    WizardFooter {
-                        CograButton(
-                            text = "Next",
-                            onClick = onNext,
-                            enabled = state.bodyReady,
-                            modifier = Modifier.fillMaxWidth(),
-                            testTag = "reply_next",
-                        )
+
+                    ReplyStep.Seal -> {
+                        WizardBody(gap = Space.x3, scrollable = true, bottom = Space.x2) {
+                            ReplySealStepBody(
+                                state = state,
+                                onOpenSheet = onOpenSheet,
+                                onAddTopic = { onOpenSheet(ReplySealSheet.Topics) },
+                                onCite = { onOpenSheet(ReplySealSheet.References) },
+                            )
+                        }
+                        WizardFooter {
+                            ReplySealActions(
+                                state = state,
+                                onSign = onSign,
+                                onBack = onSealBack,
+                                onRestoreKey = onRestoreKey,
+                                onLeave = onLeave,
+                            )
+                        }
                     }
                 }
 
-                ReplyStep.Seal -> {
-                    WizardBody(gap = Space.x3, scrollable = true, bottom = Space.x2) {
-                        ReplySealStepBody(
-                            state = state,
-                            onOpenSheet = onOpenSheet,
-                            onAddTopic = { onOpenSheet(ReplySealSheet.Topics) },
-                            onCite = { onOpenSheet(ReplySealSheet.References) },
-                        )
-                    }
-                    WizardFooter {
-                        ReplySealActions(
-                            state = state,
-                            onSign = onSign,
-                            onBack = onSealBack,
-                            onRestoreKey = onRestoreKey,
-                            onLeave = onLeave,
-                        )
-                    }
+                state.problem()?.let { message ->
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Layout.ScreenGutter, vertical = Space.x2)
+                            .testTag("reply_problem")
+                            // A refusal has to reach a reader who is not
+                            // looking at the bottom of the screen.
+                            .semantics { liveRegion = LiveRegionMode.Assertive },
+                    )
                 }
             }
+        }
 
-            state.problem()?.let { message ->
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Layout.ScreenGutter, vertical = Space.x2)
-                        .testTag("reply_problem")
-                        // A refusal has to reach a reader who is not
-                        // looking at the bottom of the screen.
-                        .semantics { liveRegion = LiveRegionMode.Assertive },
-                )
-            }
+        // THE PAD PARKS OVER THE PAGE, and the wash covers the seal beneath
+        // it — `ReplyPadBody` in the boards' `_shared.jsx`, and the rule in
+        // design/readme.md §"Fixed elements": lower centre of the viewport,
+        // the same place every time, 16dp off the bottom edge where no
+        // bottom bar exists. It is deliberately NOT in the sheet host: a
+        // drawer would draw a second sheet chrome around it (F2-10) and
+        // would park it wherever the drawer stopped.
+        if (state.padOpen) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = PAD_WASH_ALPHA))
+                    // The wash is the outside press: it stages nothing.
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onCloseSheet,
+                    )
+                    .testTag("reply_pad_wash"),
+            )
+            ReplyPad(
+                target = state.target,
+                pDirected = state.pDirected,
+                pInterest = state.pInterest,
+                onChange = onStanceChange,
+                onSet = onCloseSheet,
+                onCancel = onCloseSheet,
+                onHelp = { onOpenHelp(HelpTopic.TowardWhatYouAnswer) },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = PAD_SIDE_INSET)
+                    .padding(bottom = PAD_BOTTOM_INSET),
+            )
         }
     }
 
@@ -337,15 +381,6 @@ internal fun ReplyWizardScreen(
 
                 state.sheet == ReplySealSheet.License ->
                     LicenseSheet(state.license, onLicenseChange, onCloseSheet)
-
-                state.sheet == ReplySealSheet.Stance -> ReplyPadSheet(
-                    target = state.target,
-                    pDirected = state.pDirected,
-                    pInterest = state.pInterest,
-                    onChange = onStanceChange,
-                    onSet = onCloseSheet,
-                    onCancel = onCloseSheet,
-                )
 
                 // The post seal's own sheet, not a comment-scale copy:
                 // its one line reads for both scales (ruling 42).
@@ -410,6 +445,24 @@ internal fun ReplyWizardScreen(
         )
     }
 }
+
+/**
+ * The wash the parked pad sits over — the standard covering scrim, the
+ * `rgba(0, 0, 0, 0.5)` the boards draw over the seal (`_shared.jsx`).
+ */
+private const val PAD_WASH_ALPHA = 0.5f
+
+/** What the parked pad leaves of the screen on either side (`_shared.jsx`). */
+private val PAD_SIDE_INSET = 30.dp
+
+/**
+ * How far the pad rides off the bottom edge.
+ *
+ * The `ReplyPad` board draws 24, which is also the rung the bloomed
+ * stance control already parks at (`StancePad.kt`'s `PAD_BOTTOM`), so
+ * both pads in the app stop in the same place.
+ */
+private val PAD_BOTTOM_INSET = 24.dp
 
 /**
  * The one line the wizard shows when a submit did not go through.
