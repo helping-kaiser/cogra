@@ -171,6 +171,18 @@ describe("holding the reader's place", () => {
     expect(scroller.scrollTop).toBe(0);
   });
 
+  // "If S is not scrolled away from the origin of its scrolling area in its
+  // block flow direction, then do not select an anchor node for S" (CSS Scroll
+  // Anchoring §2.1). A reader at the top is there to see what is at the top.
+  it("anchors nothing at the origin, so what lands above can be seen", () => {
+    // `b` sits at 1120 with the column unscrolled; holding it would follow the
+    // 180 that lands above it and take the top off the screen.
+    render(<Pinned place={{ offset: 0, anchorId: "b", anchorTop: 1120 }} />);
+    expect(scroller.scrollTop).toBe(0);
+    growAbove(180);
+    expect(scroller.scrollTop).toBe(0);
+  });
+
   it("stands on the offset alone when the anchor is no longer in the list", () => {
     render(<Pinned place={{ offset: 1000, anchorId: "gone", anchorTop: 120 }} />);
     expect(scroller.scrollTop).toBe(1000);

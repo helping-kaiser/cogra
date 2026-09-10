@@ -131,6 +131,16 @@ export function usePinnedPlace({
 
   const correct = useCallback(() => {
     if (place === null) return;
+    const offset = scrollOffsetOf(host);
+    // NOTHING IS ANCHORED AT THE ORIGIN. "If S is not scrolled away from the
+    // origin of its scrolling area in its block flow direction, then do not
+    // select an anchor node for S" (CSS Scroll Anchoring §2.1) — a reader who
+    // is at the top is there to see what is at the top, and a banner that lands
+    // there must be allowed to show rather than be held out of sight.
+    if (offset <= 0) {
+      written.current = offset;
+      return;
+    }
     const scroller = scrollElementOf(host);
     const drift = driftOf(place, topOfAnchor(scroller, place.anchorId));
     if (drift !== 0) scrollHostBy(host, drift);
