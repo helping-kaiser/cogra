@@ -22,7 +22,7 @@ export function Screen() {
     <>
       <ComposeSealBody />
 
-      <BottomSheet open ariaLabel="License terms">
+      <BottomSheet open ariaLabel="License terms" maxHeight="88%">
         <SheetTitle trailing={<HelpDot ariaLabel="License" />}>License</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px" }}>
           <QuietNote>Terms for anyone who reuses this.</QuietNote>

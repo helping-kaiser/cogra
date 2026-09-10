@@ -334,7 +334,7 @@ const READER_POST_MENU = [LICENSE_ROW, CITE_ROW];
    takes the next rung. Over the post detail there is nothing to stack on. */
 function LicenseSheet({ license, stacked = false }) {
   return (
-    <BottomSheet open stacked={stacked} ariaLabel="License terms">
+    <BottomSheet open stacked={stacked} ariaLabel="License terms" maxHeight="88%">
       <div style={{ padding: "0 24px" }}>
         <LicenseTerms license={license} />
       </div>
