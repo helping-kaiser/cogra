@@ -9,7 +9,7 @@
 use async_graphql::{Context, Object, SimpleObject};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
-use postgres_store::{PgPool, auth as store, content as content_store, mirror, staged};
+use postgres_store::{PgPool, auth as store, content as content_store, genesis, mirror, staged};
 use uuid::Uuid;
 
 use super::types::{
@@ -109,6 +109,41 @@ impl Query {
         Ok(store::actor_identity(pool, viewer.user_id)
             .await?
             .map(|identity| User::from_viewer(identity, viewer)))
+    }
+
+    /// The actor whose view this reader is browsing from
+    /// (`design/readme.md` §13). A feed is rooted in the viewer's own
+    /// outgoing stances, and a reader who has none is served someone
+    /// else's view — named, always, by the borrowed-view band, which
+    /// reads this field to know whose name to say.
+    ///
+    /// Three answers, one per reader. A signed-out reader borrows the
+    /// Genesis Moderator's view. An applicant keeps their inviter's for
+    /// the applicant days — from the moment the account exists, before
+    /// either proof is in. A landed member has a view of their own, so
+    /// the answer is null, and null is the rule the band reads as
+    /// "disappear", not an absence of data.
+    async fn borrowed_view(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
+        let pool = ctx.data::<PgPool>()?;
+        let vantage = match ctx.data::<Option<Viewer>>()?.as_ref().copied() {
+            None => genesis::genesis_moderator(pool).await?,
+            Some(viewer) => {
+                let applicant = store::credentials_by_actor(pool, viewer.user_id)
+                    .await?
+                    .is_some_and(|c| c.account_state == store::AccountState::Applicant);
+                if applicant {
+                    store::inviter_of(pool, viewer.user_id).await?
+                } else {
+                    None
+                }
+            }
+        };
+        Ok(vantage.map(|identity| {
+            Actor::User(User {
+                identity,
+                viewer_session: None,
+            })
+        }))
     }
 
     /// One user by id or unique handle — exactly one argument
