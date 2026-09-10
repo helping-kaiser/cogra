@@ -26,7 +26,10 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
   const supportId = `${fieldId}-support`;
   const [visible, setVisible] = React.useState(false);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
+    // Same reasoning as TextField's own `data-field`: a replaced element
+    // cannot host the flow badge's ::after, so the badge names the field as a
+    // whole (jakob's ruling A9, backlog item 40).
+    <div data-field={label} style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
       <label
         htmlFor={fieldId}
         style={{
