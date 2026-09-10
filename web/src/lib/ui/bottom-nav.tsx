@@ -148,6 +148,11 @@ export function BottomNav({
           <Link
             key={slot}
             href={href}
+            // A tab that remembers where its reader was restores that place
+            // itself (`feed-memory.ts`), and Next scrolling to the first Page
+            // element would land on top of the restore (Next `link.md`,
+            // "scroll"). The tabs that remember nothing yet keep the default.
+            scroll={slot === "feed" ? false : undefined}
             data-testid={testId}
             aria-label={slot === "compose" ? LABELS.compose : undefined}
             aria-current={selected ? "page" : undefined}

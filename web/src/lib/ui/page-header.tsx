@@ -25,6 +25,7 @@ export function PageHeader({
   backHref,
   backLabel,
   backTestId,
+  backScroll,
   action,
 }: {
   /** Omit when the surface renders its own heading below the header. */
@@ -34,6 +35,15 @@ export function PageHeader({
   /** Accessible name for the arrow-only link, e.g. "Back to feed". */
   backLabel?: string;
   backTestId?: string;
+  /**
+   * Whether the arrow scrolls the destination to its top.
+   *
+   * `<Link>`'s own prop, passed through (Next `link.md`, "scroll"): a
+   * destination that remembers where its reader was restores that place
+   * itself, and Next scrolling to the first Page element would land on top of
+   * it. Left at Next's default — a fresh surface starts at its top.
+   */
+  backScroll?: boolean;
   action?: ReactNode;
 }) {
   return (
@@ -42,6 +52,7 @@ export function PageHeader({
         {backHref !== undefined && (
           <Link
             href={backHref}
+            scroll={backScroll}
             aria-label={backLabel}
             data-testid={backTestId}
             className="cg-state cg-focus grid size-12 flex-none place-items-center rounded-full text-on-surface-variant"
