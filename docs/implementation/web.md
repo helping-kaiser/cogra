@@ -143,9 +143,10 @@ choice is ergonomics, not security.
 
 The auth phase (`resolving → signedOut / signedIn`) derives from
 token presence alone, no `me` bootstrap — Android's `AuthPhase`.
-Guarded calls follow Android's `AuthGuard`: on an UNAUTHENTICATED
-refusal, refresh once and replay once; a still-unauthenticated
-replay is surfaced, never looped. UNAUTHENTICATED arrives two
+Every call that needs a viewer goes through Android's `AuthGuard`,
+the media uploads included: on an UNAUTHENTICATED refusal, refresh
+once and replay once; a still-unauthenticated replay is surfaced,
+never looped. UNAUTHENTICATED arrives two
 ways, and the guard handles both: a null on any viewer-scoped
 field — `me`, `viewerStance`, every field the backend resolves
 against the viewer — and an errors-array entry with
