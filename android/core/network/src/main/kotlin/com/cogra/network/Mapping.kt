@@ -210,6 +210,7 @@ internal fun ProfileFields.toDomain(): ProfileView = ProfileView(
     bio = ModeratedField(bio.value, bio.status.toDomain()),
     websiteUrl = ModeratedField(websiteUrl.value, websiteUrl.status.toDomain()),
     avatar = avatar?.mediaFields?.toDomain(),
+    updatedAt = updatedAt,
 )
 
 /**
@@ -401,6 +402,8 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     attachments = attachments.map { it.mediaFields.toDomain() },
     attachmentsStatus = attachmentsStatus.toDomain(),
     moderation = moderationStatus.toDomain(),
+    sensitiveSelfMark = sensitiveSelfMark,
+    sensitiveReason = sensitiveReason,
 )
 
 internal fun LicenseChoice.toInput(): LicenseInput = LicenseInput(
