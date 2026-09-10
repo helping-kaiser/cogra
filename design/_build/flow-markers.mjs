@@ -1008,6 +1008,19 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Copy the PEM block"', tag: "button" },
     { n: 3, find: 'aria-label="Copy the raw hex"', tag: "button" },
   ],
+  // Both key-absent twins carry the same three controls in the same order —
+  // the back arrow, the panel's one "?", and the restore — because they draw
+  // the same notice over two bodies.
+  SettingsBackupKeyAbsent: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'aria-label="Your key"', tag: "button" },
+    { n: 3, find: ">Restore the key</button>", tag: "button" },
+  ],
+  YourKeyAbsent: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'aria-label="Your key"', tag: "button" },
+    { n: 3, find: ">Restore the key</button>", tag: "button" },
+  ],
 });
 
 // The settings subpages (jakob's review 2026-09-09): the two sheets its rows
