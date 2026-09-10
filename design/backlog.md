@@ -150,13 +150,12 @@ The editor is two sliders rather than the reader's chosen stance
 input — a Tag's confidence is census-bounded to [0, 1] and the pad
 is a square over two signed axes, so half of it would be dead.
 
-**Remaining: the reference half.** `StagedReference` shows the pair
-it carries and offers nothing that changes it — its only control is
-the remove ×. A citation's two axes are both signed (`ReferenceInput`,
-api-spec.md), so unlike a tag's it is the pad's own shape, and the
-question the tag round did not answer is whether the composer opens
-the pad there or a sheet of its own beside `TagPair`. Undrawn, and
-jakob's to rule.
+**The reference half is ruled** (2026-09-10): a citation's pair is set
+on **the pad, not sliders**. Both its axes are signed (`ReferenceInput`,
+api-spec.md), so the square is the citation's own shape and none of it
+is dead — the reason a tag's bounded confidence sends it to sliders does
+not reach here. `StagedReference`'s chip opens it the way a staged tag
+chip opens `TagPair`. Being drawn.
 
 ### 9 · Search + results · *design* · **built**
 `designs/canonical/` — the Explore row (2026-08-28): at rest (the
@@ -349,7 +348,7 @@ over the settings page, titled by the row that opened them),
 `Switch` as masters, with `FeedFilterSheet` split off `FeedFilter` so
 one control serves the feed and the default; `api-spec.md`'s
 `UserPreferences.defaultLicense`; the round's copy in
-`copy-voice.md`, awaiting blessing.
+`copy-voice.md`, blessed 2026-09-10.
 
 **Not drawn**: the marked states of the four task screens
 (validation is on submit, so the resting form is the one state that
@@ -1244,7 +1243,10 @@ had left open and fixed what the canvas showed:
   uncropped pictures display-crop to their square frame, centred, the
   way its clip already does; the whole frame is one tap away in the
   viewer. Display only — nothing about the no-crop-at-upload ruling
-  changes, and the bytes stay the author's own.
+  changes, and the bytes stay the author's own. **A comment clip's
+  cover crops with it** (ruled 2026-09-10), the way a post's does — the
+  cover is the clip's own face, so one frame holds both. A conform item
+  for the apps.
 - **The score element keeps its double meaning** — the drill-down from
   a card, the detail door from the stream's rail — and is not renamed.
 - The **viewer boards were broken on the canvas** and are rebuilt: see
@@ -1402,15 +1404,14 @@ verbatim, and the word **token** leaves the reset and verify flows when
 they do. The desktop questions — the fullscreen viewer and the desktop
 card idiom — are parked to item 38 by jakob's scope ruling.
 
-### 40 · The field flow badge is invisible, and the gate likes it that way · *build*
+### 40 · The field flow badge is invisible, and the gate likes it that way · *build* · **ruled**
 
 `check-flows` verifies `data-flow` on the `<input>` opening tag itself,
 but `::after` generates no box on a replaced element, so every field
 badge is invisible-but-valid — six boards before the audit-states round
-and its fields since. Either the gate learns to accept the attribute on
-the field's wrapper (and the boards move it where it paints), or the
-readme's "the gate verifies the attribute, not the paint" stays the
-stated rule and this item closes as written.
+and its fields since. **The badge moves to the field's wrapper**, where
+it paints, and the gate accepts it there (ruled 2026-09-10): a marker
+nobody can see verifies its own presence and nothing else.
 
 ### 41 · The recovery code's two loose ends · *design* · **ruled**
 
@@ -1558,7 +1559,7 @@ stop 1 is about the screen, not the board): `InviteEntryError`,
 verbatim, because a screen and its error state are one control and
 one control reads one way.
 
-### 44 · The sensitive sheet still draws its own switch · *system*
+### 44 · The sensitive sheet still draws its own switch · *system* · **in progress**
 
 Filed by the settings round 2026-09-09. `ComposeSensitive` drew the
 system's only switch inline, correctly — one instance is a control,
@@ -1567,7 +1568,7 @@ not a component. There are now several, so `Switch` is a master
 geometry so the swap moves no pixel. The sheet has not taken it yet,
 because the round's pixel bar admits only the round's own boards.
 Swap it, re-render, and confirm the board is byte-identical; a copy
-is never the answer.
+is never the answer. The small-rulings batch is taking the swap.
 
 ### 45 · What the post-card round could not finish · *design*
 
@@ -1612,36 +1613,30 @@ blocked the card that shipped.
 
 ### 46 · What the tag round left standing · *design + system*
 
-Filed by the tag round 2026-09-09. Four things it surfaced and did not
+Filed by the tag round 2026-09-09. Five things it surfaced and did not
 settle, each named where it was found rather than folded into the round.
 
-1. **The accessible stance path does not name its target.**
-   `StanceControl`'s skip-link reads `Choose your stance` on every
-   instance while the face beside it names what it stances ("Your
-   stance on this post", "…on this comment"). `TagPage` draws three stance
-   controls, so it carries three identically-named buttons — the exact
-   defect `TopicRemovable`'s aria-label ruling fixed for the × ("a row
-   of these is a row of identically-named controls otherwise"). The fix
-   is one line in the master and a repin across the thirty-four boards
-   that draw a stance, which is why the round did not take it: its
-   pixel bar admits only its own boards. Until then the tag page gives
-   the accessible path one via of its own, which is honest about what
-   those buttons share.
-2. **A staged reference still has no pair editor** — item 18's
-   remaining half. A citation's axes are both signed, so unlike a tag's
-   it is the pad's own shape; whether the composer opens the pad there
-   or a sheet beside `TagPair` is jakob's to rule.
+1. ~~**The accessible stance path does not name its target.**~~ Taken by
+   the small-rulings batch 2026-09-10: `StanceControl`'s skip-link names
+   what it stances, the way the face beside it already does, and the
+   boards that draw a stance repin. A page drawing three stance controls
+   carried three identically-named buttons — the defect
+   `TopicRemovable`'s aria-label ruling fixed for the ×, and the tag
+   page's own via retires with it.
+2. ~~**A staged reference still has no pair editor**~~ — item 18's
+   remaining half, ruled 2026-09-10: the pair is set on **the pad**, both
+   its axes being signed, and `StagedReference`'s chip opens it the way a
+   staged tag chip opens `TagPair`. Being drawn.
 3. **The picker's refused-name state is undrawn.** What an illegal
    character does at the field is the input-error round's shape and
    belongs to a validation pass. `TagPickerTyping` states the gate and
    previews the canonical name; it does not draw the refusal.
-4. **Whether an @-scoped search returns a tag is not settled anywhere.**
-   §13's scope operators say the remainder matches "the names of their
-   acts' targets", and a Type is the target of a Tag act — but the
-   result could as easily be the content tagged as the tag itself. The
-   round drew the tag as an indirect hit whose second line says the
-   route out loud ("tagged by @sol") rather than let the row imply an
-   answer. A ruling would settle the row's shape.
+4. ~~**Whether an @-scoped search returns a tag is not settled anywhere.**~~
+   Ruled 2026-09-10, and the round's drawing stands: an **@-scope hit is
+   indirect**, and its second line says the route out loud ("tagged by
+   @sol"). The scope never returns the tag itself as a direct hit — what
+   a person's scope holds is their acts, and the tag is what one of them
+   points at.
 5. **The follow gesture has no surface.** The round drew it as the
    stance anchor on the tag page's header and jakob's review removed
    it: beside the entrance post's context it read as that post's
