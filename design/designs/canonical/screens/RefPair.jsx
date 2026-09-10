@@ -23,10 +23,24 @@
    `√0.01 = 0.1`. So the knob opens just off centre in the for-it quadrant, not
    at the origin.
 
-   NO FACE. The face is the stance's lossy readout and its anchor table is a
-   stance's table; a citation's axes mean something else in the same two slots,
-   so a face here would name a feeling the record does not carry. The exact pair
-   stands alone above the field — above, because a thumb on the pad covers
+   THE FACE RIDES THE PAIR (jakob's ruling, 2026-09-10). Wherever a pair is
+   being set, its readout carries the nearest anchor's face beside the exact
+   numbers: the face is the quickest rough read of where the knob currently
+   sits, and the numbers under it carry the fact for anyone who wants it. The
+   citation's two axes fill the two slots the contract assigns — relevance
+   `pDirected`, support `pInterest` — so the lookup is `STANCE_ANCHORS`
+   unchanged, and at +0.10 / +0.10 the nearest row is 🙂 (0.15 / 0.15). It is
+   spelled here for `ComposePad`'s reason: `nearestAnchor` is not among the
+   names the bundle exposes to screens, and a board must never name a face the
+   system has no row for.
+
+   THE ANCHOR'S WORD DOES NOT COME WITH IT. The face is a lossy readout and
+   survives the change of family; the word beside it names a feeling about a
+   stance, and this record is a citation, so the spoken reading names the two
+   axes and their values instead. Nothing is taken from a reader who cannot see
+   the face — the pair it approximates is spoken exactly.
+
+   THE READOUT STANDS ABOVE THE FIELD, because a thumb on the pad covers
    exactly the spot where feedback would otherwise appear.
 
    `Done` CLOSES IT, and the scrim is the way out that keeps nothing —
@@ -64,17 +78,25 @@ export function Screen() {
       <BottomSheet open ariaLabel="The long way home — @ada">
         <SheetTitle>The long way home — @ada</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 4px" }}>
-          {/* The pair, exact, above the field. `aria-hidden` beside a
-              screen-reader reading that names both axes: the numbers alone say
-              nothing about which slot they fill. */}
+          {/* The pick's readout, in the pad's own block shape: the name of the
+              quantity, then the face and the exact pair on the line below it.
+              `aria-hidden` beside a screen-reader reading that names both axes —
+              the numbers alone say nothing about which slot they fill, and the
+              anchor's own word would name a stance this record is not. */}
           <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <span
               aria-hidden="true"
-              style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+              style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
             >
-              +0.10 / +0.10
+              Your pick
             </span>
-            <span style={SR_ONLY}>How much it leans on this +0.10, For or against +0.10</span>
+            <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
+              <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
+              <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
+                +0.10 / +0.10
+              </span>
+            </span>
+            <span style={SR_ONLY}>Your pick: How much it leans on this +0.10, For or against +0.10</span>
           </div>
 
           <div role="group" aria-label="The pair this citation signs" style={{ alignSelf: "center", width: 240 }}>
