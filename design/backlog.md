@@ -1725,3 +1725,32 @@ the content edit, not an act of its own, so the foot still counts three.
 descriptions when the pictures it described are replaced, and whether a
 words body that flips to media keeps its text anywhere recoverable. The
 boards say only that the field goes; neither question is a drawing.
+
+### 49 · The video-cover round · *design* · **ruled 2026-09-10, undrawn**
+
+Filed from the implementation session's media handoff; jakob ruled all
+three questions in the design session the same day (the full record:
+dev-state `cogra/tmp_dev/2026-09-10-video-cover-round-rulings.md`).
+Runs as its own round after the small-rulings review lands.
+
+1. **`CoverCrop` is wired into the wizard on both platforms.** Every
+   gallery-sourced cover passes the locked crop at the clip's ratio
+   before upload; frame-sourced covers skip it. Only the cropped export
+   leaves the device. The sharing rule stands unrevised.
+2. **The 4:5 feed clamp stands, confirmed explicitly** — "taller than
+   4:5 is reserved for the reel scroller." The round draws all three
+   clip shapes (horizontal, vertical, square) on one feed board so the
+   presentation is verifiable; no clamp changes.
+3. **No-cover is first-class, and the default is shape-keyed**: a
+   vertical clip defaults to NO cover — the cover step collapses to an
+   optional "Add a cover" door on details; horizontal and square keep
+   the frame picker. Shape alone decides, never length. An autoplaying
+   video with a cover looks broken — the cover flashes for an instant
+   before playback — and a short-vertical author must not meet a forced
+   step. The coverless card's face is the first frame, cropped exactly
+   as the clip is; the capture-fails state gets drawn (gallery path
+   alone, neutral tile when no frame exists); comment scale inherits.
+
+The edit surface reconciles with ruling 3 in this round: a vertical
+clip's edit shows the same optional door, never a cover row presuming
+one exists.

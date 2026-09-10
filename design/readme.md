@@ -3393,8 +3393,8 @@ four-rung ladder.
   pull-to-refresh; the web restores the feed alone and has no pull
   gesture at all, its feed view stating the absence as intent — new
   posts from a reload or from Retry — which this ruling overrides.
-- **The gate**: **142 screens**, **1039 edges**, **56 gaps** and **flows
-  58/55/3**, every one unchanged — twenty-four cases were reworded in
+- **The gate**: screens, edges, gaps and flows all unchanged by this
+  round — twenty-four cases were reworded in
   place, and nothing was drawn or pointed at that was not there before.
   No hand-drawn board moved a pixel; six map boards grew where the
   longer case wraps.

@@ -11,9 +11,8 @@
    THE TWO SECTIONS COUNT IN DIFFERENT UNITS, and the rows say so. A tag's
    confidence is census-bounded to [0, 1] (hashtag.md §4), so it wears no sign
    — `+0.40 / 0.90`. A reference's second axis is enthusiasm over [-1, +1]
-   (`ReferenceInput`, api-spec.md), so it keeps one. The sheet used to draw
-   tags in the reference shape, which promised a negative half that the census
-   does not carry. `formatTagPair` is where the difference is assigned.
+   (`ReferenceInput`, api-spec.md), so it keeps one. `formatTagPair` is where
+   the difference is assigned.
 
    AND THIS SHEET IS WHERE "STILL SETTLING" SHOWS (jakob's ruling, 2026-09-10).
    The chip on the card says nothing about an act still finding its place in the

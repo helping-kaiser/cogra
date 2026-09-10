@@ -41,7 +41,7 @@ const fontTokens = `:root { --font-figtree: "Figtree"; --font-sans: var(--font-f
 // orange circle". A badge nobody can see annotates nothing, and check-flows
 // cannot catch it because it verifies the attribute, not the paint.
 export const flowBadgeCss = `[data-flow] { position: relative; }
-[data-flow]::after { content: attr(data-flow); position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }`;
+[data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }`;
 
 // A screen may export PROPS (extra data-props descriptors) and VALS (extra
 // `renderVals` entries, one code string like `keyTitle: this.props.wording ===
