@@ -126,7 +126,7 @@ export function MediaThumb({
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
             fontWeight: "var(--text-label-small--font-weight)",
-            letterSpacing: "0.5px",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
           }}
         >
           {duration}
@@ -145,7 +145,7 @@ export function MediaThumb({
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
             fontWeight: "var(--text-label-small--font-weight)",
-            letterSpacing: "0.5px",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
           }}
         >
           Cover
@@ -181,8 +181,8 @@ export function MediaThumb({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "12px",
-            lineHeight: "16px",
+            fontSize: "var(--text-label-medium)",
+            lineHeight: "var(--text-label-medium--line-height)",
             fontWeight: 700,
           }}
         >

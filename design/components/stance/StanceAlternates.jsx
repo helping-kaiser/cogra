@@ -69,12 +69,14 @@ export function StanceAlternates({
   children,
   landing,
   inline = false,
+  helpLabel = "How stances work",
 }) {
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
   // interaction is the genuinely new idea in this control, and a reader meeting it
   // as two sliders has nothing to infer it from — the pad at least teaches it by
-  // being a square.
+  // being a square. `helpLabel` mirrors `StanceControl`'s own prop (ruling A7):
+  // the caller passing one pad's name passes the same name here.
   const [explaining, setExplaining] = React.useState(false);
   /* THE DIALOG MUST NOT RESIZE WHEN THE HELP OPENS. The pad gets this for free — it
      is parked by its bottom edge, so its actions stay put however tall it is. This
@@ -98,7 +100,7 @@ export function StanceAlternates({
         <button
           type="button"
           aria-expanded={explaining}
-          aria-label="How stances work"
+          aria-label={helpLabel}
           onClick={() => setExplaining((shown) => !shown)}
           className={BUTTON_CLASS}
           style={{

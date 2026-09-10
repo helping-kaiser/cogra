@@ -5,9 +5,14 @@
    IT IS `EditComposeVideo`'s TEXT-AND-PICTURES TWIN, and `CommentEdit` at post
    scale: same header with its one "?", same fields, same tags and references
    blocks, same locked license, same foot. The picture body arrives as
-   `PickedRow` — the whole row opens Show all, the way the compose wizard's
-   details stage does — because a post being edited is a post being composed
-   with its answers already filled in.
+   `PickedRow` — the whole row opens Show all — because a post being edited is
+   a post being composed with its answers already filled in.
+
+   THE BODY EDITS LIKE A COMPOSER'S, because an edit carries complete state:
+   the row's manager reorders, recovers the cover, removes and describes, and
+   "+ Add pictures · 2 of 10" takes more. The two together are the whole of
+   what the ruling asked for — the body may end up a different KIND than the
+   one that was published, and the manager is where that begins.
 
    THE LICENSE IS LOCKED, and the lock is a mark rather than an action: a
    licence is published with the post and never changes, so the row shows what

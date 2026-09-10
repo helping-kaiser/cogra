@@ -10,12 +10,29 @@ export interface StancePadProps {
   onChange?: (pair: StancePair) => void;
   fieldRef?: React.RefObject<HTMLDivElement | null>;
   /**
-   * The four edge labels — Against / For, Less / More. On by default: a blank
-   * square says nothing about which direction means what, and these are the same
-   * words the sliders use.
+   * The four edge labels. On by default: a blank square says nothing about which
+   * direction means what.
    */
   showAxes?: boolean;
+  /**
+   * What the four poles are called. Defaults to `STANCE_AXES` — Against / For,
+   * Less / More. Another record family whose two parameters are both signed
+   * (a citation's relevance and support) fills the same two slots with its own
+   * words.
+   */
+  axes?: PadAxes;
 }
+
+/** The pad's four poles, named: horizontal is `pDirected`, vertical `pInterest`. */
+export interface PadAxes {
+  left: string;
+  right: string;
+  top: string;
+  bottom: string;
+}
+
+/** The stance's four poles — the pad's default. */
+export declare const STANCE_AXES: PadAxes;
 
 export declare function StancePad(props: StancePadProps): JSX.Element;
 
