@@ -159,8 +159,12 @@ describe("holding the reader's place", () => {
     );
   });
 
-  it("leaves a first arrival where the surface puts it", () => {
-    scroller.scrollTop = 0;
+  // The scroller belongs to the shell, not to the surface, so it arrives
+  // carrying wherever the last surface left it — and the surface's own links
+  // have turned Next's scroll handling off. A first arrival starts at the top
+  // because this puts it there.
+  it("starts a first arrival at the top, and then leaves it alone", () => {
+    scroller.scrollTop = 900;
     render(<Pinned place={null} />);
     expect(scroller.scrollTop).toBe(0);
     growAbove(180);

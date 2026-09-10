@@ -143,8 +143,17 @@ export function usePinnedPlace({
 
   // The landing, before the paint: the pages are already in this render, so the
   // scroller is as tall now as it was when the reader left.
+  //
+  // A SURFACE THAT PINS ITS OWN PLACE OWNS BOTH ANSWERS. Its links turn Next's
+  // scroll handling off (`link.md`, "scroll") so the framework cannot land on
+  // top of the restore — and the scroller is shared with whatever surface was
+  // on screen before, so with no place to restore this has to put the top back
+  // itself. Nothing else will.
   useMeasureEffect(() => {
-    if (place === null) return;
+    if (place === null) {
+      scrollHostTo(host, 0);
+      return;
+    }
     scrollHostTo(host, place.offset);
     correct();
   }, [host, place, correct]);
