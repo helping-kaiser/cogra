@@ -1068,7 +1068,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 3618,
+      "h": 3696,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1077,7 +1077,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2367,
+      "h": 2393,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1095,7 +1095,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1945,
+      "h": 1984,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1104,7 +1104,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1249,
+      "h": 1275,
       "page": "money",
       "title": "Money & Wallet · flow map"
     },
@@ -1113,7 +1113,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 2455,
+      "h": 2490,
       "page": "media",
       "title": "Media · flow map"
     },
