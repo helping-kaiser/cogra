@@ -8,6 +8,7 @@
 
 package com.cogra.domain
 
+import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.media.RESUMABLE_THRESHOLD_BYTES
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.signing.TERMINAL_REFUSALS
@@ -70,6 +71,11 @@ class ClientConstantsTest {
         assertThat(MAX_HANDLE_LENGTH).isEqualTo(registration.int("handleMaxChars"))
         assertThat(MIN_PASSWORD_LENGTH).isEqualTo(registration.int("passwordMinChars"))
         assertThat(HANDLE_CHARSET.pattern).isEqualTo(registration.text("handleCharsetPattern"))
+    }
+
+    @Test
+    fun `the authored-text caps the composers refuse on are the contract's`() {
+        assertThat(MAX_TITLE_CHARS).isEqualTo(group("content").int("titleChars"))
     }
 
     // Set equality, not containment: a code the backend added to the

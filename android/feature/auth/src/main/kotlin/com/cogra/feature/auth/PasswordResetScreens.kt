@@ -32,6 +32,7 @@ import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.PasswordTextField
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.MIN_PASSWORD_LENGTH
 import com.cogra.domain.Outcome
 import com.cogra.domain.has
 import com.cogra.domain.repo.AccountRepository
@@ -191,6 +192,7 @@ fun PasswordResetScreen(
                 onValueChange = onNewPasswordChange,
                 label = stringResource(R.string.reset_new_password),
                 testTag = "reset_password",
+                supportingText = stringResource(R.string.reset_password_rules),
                 modifier = Modifier.fillMaxWidth(),
             )
             state.error?.let {
@@ -209,7 +211,12 @@ fun PasswordResetScreen(
             }
             Button(
                 onClick = onConfirm,
-                enabled = state.token.isNotBlank() && state.newPassword.isNotEmpty() && !state.inProgress,
+                // The floor the server states (auth.md "Password
+                // requirements"), not merely "not empty" — the reset form
+                // answers to the same rule the join form does.
+                enabled = state.token.isNotBlank() &&
+                    state.newPassword.length >= MIN_PASSWORD_LENGTH &&
+                    !state.inProgress,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("reset_confirm"),
