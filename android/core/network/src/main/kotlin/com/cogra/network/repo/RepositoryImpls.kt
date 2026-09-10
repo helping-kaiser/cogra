@@ -55,6 +55,7 @@ import com.cogra.network.graphql.ApplyWithInviteMutation
 import com.cogra.network.graphql.ApproveActsMutation
 import com.cogra.network.graphql.ApproveApplicantsMutation
 import com.cogra.network.graphql.AttachActorKeyMutation
+import com.cogra.network.graphql.BorrowedViewQuery
 import com.cogra.network.graphql.ChangeHandleMutation
 import com.cogra.network.graphql.ChangePasswordMutation
 import com.cogra.network.graphql.ConfirmEmailChangeMutation
@@ -342,6 +343,15 @@ class AccountRepositoryImpl @Inject constructor(
                     invitedBy = me.invitedBy?.let { ActorRef(it.id, it.handle) },
                 ),
             )
+        }
+    }
+
+    // Rides the guard like the public-graph reads do: the answer differs
+    // per reader, so a signed-in viewer's stale token must refresh rather
+    // than silently demote them to the anonymous answer.
+    override suspend fun borrowedView(): Outcome<ActorRef?> = guard.run {
+        client.query(BorrowedViewQuery()).fetch().map { data ->
+            data.borrowedView?.let { ActorRef(it.id, it.handle, it.displayName.value) }
         }
     }
 
