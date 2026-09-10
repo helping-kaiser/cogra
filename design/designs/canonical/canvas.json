@@ -1077,7 +1077,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2393,
+      "h": 2501,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1113,7 +1113,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 2490,
+      "h": 2503,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1391,6 +1391,24 @@
       "file": "RefPair.dc.html",
       "title": "A staged citation's pair",
       "x": 2880,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "EditPicked.dc.html",
+      "title": "Edit post · show all",
+      "x": 3360,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "EditWords.dc.html",
+      "title": "Edit post · words body",
+      "x": 3840,
       "y": 3180,
       "w": 390,
       "h": 844,

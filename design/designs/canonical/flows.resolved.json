@@ -841,7 +841,7 @@
       "status": "resolved",
       "steps": [
         "start · ComposePick · 5 «Show all» → ComposePicked — the Show-all sheet (drawn on the media page)",
-        "end · ComposePicked · 4 «Done» → back — the sheet closes — pick, details, or edit, wherever it opened"
+        "end · ComposePicked · 4 «Done» → back — the sheet closes — the pick or the details stage, wherever it opened"
       ],
       "boards": [
         "ComposePick",

@@ -11,7 +11,11 @@
 
    The clip's own move is to leave whole. A post that loses its clip is a post
    with words, the same way a post that loses its pictures is — the body
-   changes, the post does not become another one. */
+   changes, the post does not become another one. That sentence used to end at
+   itself; since the edit body round (2026-09-10) it lands somewhere, and the
+   somewhere is `EditWords`, drawn. The × is the whole of this board's share of
+   the flip: a clip is never swapped for another clip, and there is no add
+   control to offer, so the quiet line stands where one would. */
 
 export function Screen() {
   return (
@@ -24,6 +28,12 @@ export function Screen() {
             <MediaThumb src="post-photo.jpg" alt="" width={96} height={54} fit="cover" video onRemove={() => {}} removeLabel="Remove this video" />
           </div>
           <DescribeCounter subject="video" described={1} total={1} onDescribe={() => {}} />
+          {/* Where the picture edit's "+ Add" stands, a clip gets the quiet
+              line instead (copy-voice, *Staging a video*): there is nothing
+              to add to a body one clip already fills. The staging line's
+              second half — "Its cover comes next" — is the wizard's, and is
+              dropped here because the cover is on this screen, above. */}
+          <QuietNote>A video is the whole post.</QuietNote>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

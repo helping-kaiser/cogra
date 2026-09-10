@@ -1282,6 +1282,39 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+    { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
+  ],
+  // Show all over the edit. The sheet is the same `PickedSheet` ComposePicked
+  // draws, so the markers are its markers — but the REMOVE anchors are spelled
+  // exactly rather than by the "Remove" prefix, because the edit beneath this
+  // sheet has remove buttons of its own (its tag chips, its staged citation)
+  // and a prefix match with `all` would badge them through the scrim.
+  EditPicked: [
+    { n: 1, find: "cursor:grab", tag: "span", all: true },
+    { n: 2, find: ">Describe</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Remove the cover"', tag: "button" },
+    { n: 3, find: 'aria-label="Remove picture 2"', tag: "button" },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // The words edit. Marker 4 is the growing body box, anchored on the field
+  // border: it is the FIRST such border on the board, standing above the
+  // title's own field, and `applyFlowMarkers` takes the first match.
+  EditWords: [
+    { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 12, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Editing"', tag: "button" },
+    { n: 4, find: "1px solid var(--border-field)", tag: "div" },
+    { n: 5, find: "+ Add pictures or a video", tag: "button" },
+    { n: 6, find: 'data-field="Title"', tag: "div" },
+    { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 8, find: "+ Add a tag", tag: "button" },
+    { n: 9, find: "This creates 3 signed actions", tag: "button" },
+    { n: 10, find: ">Sign the edit</button>", tag: "button" },
+    { n: 11, find: ">Mark</button>", tag: "button" },
   ],
   EditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },

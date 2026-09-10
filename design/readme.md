@@ -3436,6 +3436,65 @@ same review and recorded with the boards that draw them.
   restore flow, whose control-start now reads six boards rather than
   four, and the witness is re-blessed for that.
 
+### The edit body round — 2026-09-10
+
+One ruling, from jakob's hand review of the small-rulings batch: post
+editing must alter the BODY as well — remove and add pictures, remove a
+video, change the words — and a complete swap from a media post to a
+text post or back is allowed. The body line blessed that same day said
+as much in copy; the edit board still drew a body nobody could touch.
+
+- **The gallery is not a readout.** The picked row keeps its one
+  affordance, and beside it stands the add control the composer and
+  the comment edit already spell — "+ Add pictures · 2 of 10", what is
+  held against the cap. Nothing else on the edit changes: an edit was
+  always a post being composed with its answers filled in, and this is
+  the answer that had been left read-only.
+- **The blessed line is finally drawn.** "A post's body is words or
+  media, never both." was blessed for this surface and appeared on no
+  board. It sits under the gallery, where copy-voice puts it — saying
+  why no words field stands there, and by saying it as the body's rule
+  rather than this post's, saying that the field can come back.
+- **Show all over the edit is its own board (`EditPicked`).** The
+  overlay rule of 2026-09-08 decides this: a sheet covers the surface
+  the reader came from, and `ComposePicked` draws the PICK STEP —
+  a tray, a prompt offering "Write words instead", a wizard foot — which
+  an author editing a published post was never on. `EditCompose`'s row
+  now opens the sheet over `EditComposeBody`, and `ComposePicked`'s Done
+  stops claiming an origin it no longer has.
+- **The flip has a destination, and it is one board.** `EditWords` is
+  the edit with `WordsBody` where the row stands. A words post opened
+  for editing arrives there as an entry, the way `EditComposeVideo` is
+  one for a clip; so does a media post whose last picture was just
+  removed, with the field empty. They are the same surface, so drawing
+  the second separately would be drawing the first twice — the arriving
+  edge carries the difference in its case, which is what a case is for.
+- **The removals now land somewhere.** `EditPicked`'s last × and
+  `EditComposeVideo`'s × both point at `EditWords`. The video edge's
+  words — "the post is its words" — were already written and pointed at
+  `self`; a sentence that names a destination should reach one.
+- **A clip's share of the flip is the × alone.** No add control joins
+  the video edit: a body one clip fills has nothing to add to, and a
+  clip is never swapped for another. The quiet line stands where the
+  control would, from the staging copy — its second half, "Its cover
+  comes next", is the wizard's and is dropped where the cover is already
+  on screen.
+- **The words edit carries no description.** A description is how words
+  stand beside pictures (the compose flow, above); with the body already
+  words it has no job, and a second prose field would only ask the
+  author which one the post is. The title stays — it names a post of
+  either kind.
+- **The growing body field moved to `_shared.jsx` (`WordsBody`).** It
+  was hand-spelled on `ComposeWords` because no `TextField` grows; a
+  second board needing it made it board-local no longer. `ComposeWords`
+  renders byte-identically after the move, which is what a factoring
+  owes.
+- **The gate**: 143 → **145 screens**, 1046 → **1064 edges**, gaps hold
+  at **56** and flows at **58/55/3** — the round adds destinations, not
+  journeys. The witness was re-blessed for one line: `ComposePicked`'s
+  Done case, reworded because the edit no longer opens it. `EditActs`
+  and `TagPair` redrew where the shared edit body grew its two rows.
+
 ## 14. Index
 
 **Root**
