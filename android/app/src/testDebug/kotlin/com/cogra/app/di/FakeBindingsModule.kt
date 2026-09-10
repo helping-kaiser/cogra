@@ -30,7 +30,6 @@ import com.cogra.domain.PreparedContentView
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
-import java.time.Instant
 import com.cogra.domain.RecordRow
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.TaggedContentView
@@ -71,6 +70,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
+import java.time.Instant
 import javax.inject.Singleton
 
 /** Scriptable account state: tests set the profile and backup blob. */
