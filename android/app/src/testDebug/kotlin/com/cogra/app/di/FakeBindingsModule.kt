@@ -30,6 +30,7 @@ import com.cogra.domain.PreparedContentView
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ProfileView
+import java.time.Instant
 import com.cogra.domain.RecordRow
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.TaggedContentView
@@ -180,6 +181,11 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
             displayName = testModeratedField(displayName),
             bio = testModeratedField(bio),
             websiteUrl = testModeratedField(websiteUrl),
+            // A landed edit is a NEW profile version, and its instant is
+            // what the screen waits on: a fake that changed the words
+            // without moving this would model a backend that answers
+            // instantly, which is the one thing the real one does not do.
+            updatedAt = profile?.updatedAt?.plusSeconds(1) ?: Instant.EPOCH.plusSeconds(1),
         )
         return Outcome.Success(emptyList())
     }
