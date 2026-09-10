@@ -181,8 +181,8 @@ export function MediaThumb({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "12px",
-            lineHeight: "16px",
+            fontSize: "var(--text-label-medium)",
+            lineHeight: "var(--text-label-medium--line-height)",
             fontWeight: 700,
           }}
         >
