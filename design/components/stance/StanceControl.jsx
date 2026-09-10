@@ -332,7 +332,10 @@ export function StanceControl({
             place. It is now visually hidden until focused (the skip-link
             pattern): keyboard, switch, and screen-reader users reach it in one
             tab, and a reader who cannot long-press sets the alternate once in
-            settings, which replaces the pad everywhere (§8.6). */}
+            settings, which replaces the pad everywhere (§8.6). ITS NAME CARRIES
+            `targetLabel` (backlog item 46.1) — the same source the face's own
+            aria-label reads — so a page with more than one stance control, like
+            `TagPage`, does not repeat one anonymous name across all of them. */}
         {signedIn && (
           <button
             type="button"
@@ -345,7 +348,7 @@ export function StanceControl({
             className={`cg-sr-focusable ${BUTTON_CLASS}`}
             style={{ fontFamily: "var(--font-sans)" }}
           >
-            Choose your stance
+            Choose your stance on {targetLabel}
           </button>
         )}
       </div>
