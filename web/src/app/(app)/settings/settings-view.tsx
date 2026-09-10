@@ -28,6 +28,13 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { RestoreCard } from "@/app/applicant-status";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
+import {
+  HANDLE_MAX_CHARS,
+  HANDLE_MIN_CHARS,
+  PASSWORD_MIN_CHARS,
+  handleValid,
+  passwordValid,
+} from "@/lib/onboarding/registration-rules";
 import { useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { Button } from "@/lib/ui/button";
@@ -495,13 +502,16 @@ export function SettingsView({
             autoComplete="new-password"
             testId="settings_new_password"
           />
+          <p className="text-body-small text-on-surface-variant">
+            At least {PASSWORD_MIN_CHARS} characters.
+          </p>
           {feedbackLine("password")}
           <Button
             type="submit"
             testId="settings_change_password"
             size="sm"
             selfStart
-            disabled={currentPassword === "" || newPassword === "" || busy}
+            disabled={currentPassword === "" || !passwordValid(newPassword) || busy}
           >
             Change password
           </Button>
@@ -524,7 +534,14 @@ export function SettingsView({
               autoComplete="off"
               spellCheck={false}
               className="rounded-extra-small border border-outline bg-transparent px-3 py-2"
+              aria-describedby="settings-handle-rules"
             />
+            {/* The join form's own line, from the same constants. A screen
+                that gates on a rule and does not state it disables its
+                button for a reason the reader cannot see. */}
+            <p id="settings-handle-rules" className="text-body-small text-on-surface-variant">
+              {HANDLE_MIN_CHARS}–{HANDLE_MAX_CHARS} characters: a–z, 0–9, _
+            </p>
           </div>
           {feedbackLine("handle")}
           <Button
@@ -532,7 +549,7 @@ export function SettingsView({
             testId="settings_change_handle"
             size="sm"
             selfStart
-            disabled={newHandle.trim().length < 3 || busy}
+            disabled={!handleValid(newHandle) || busy}
           >
             Change handle
           </Button>
