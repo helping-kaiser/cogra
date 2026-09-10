@@ -1,13 +1,18 @@
 package com.cogra.feature.content
 
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
@@ -39,6 +44,17 @@ class PostBodyTest {
 
     private val words = ModeratedField("Salt maps", FieldStatus.NORMAL)
     private val picture = MediaAssetView("m1", "https://media/m1", "A crust", FieldStatus.NORMAL, 1f)
+
+    /**
+     * A stage width inside the comment frame's height band (180dp–220dp,
+     * `MediaFrame.MinHeight`–`MediaFrame.CommentMaxHeight`), so the frame's
+     * own aspect ratio decides its height rather than the cap — a square
+     * frame reports back exactly this width and height.
+     */
+    private val commentScaleStage = 200.dp
+
+    /** Portrait, past the old 4:5 cap: what a lone comment picture used to keep. */
+    private val tallRatio = 0.5f
 
     // -- Removal (D15) --
 
@@ -229,6 +245,58 @@ class PostBodyTest {
         val wordsTop = compose.onNodeWithText("Salt maps").fetchSemanticsNode().positionInRoot.y
         val galleryTop = compose.onNodeWithTag("c_gallery").fetchSemanticsNode().positionInRoot.y
         assertThat(galleryTop).isGreaterThan(wordsTop)
+    }
+
+    // -- Comment scale is square, single item included (CommentCard.prompt.md
+    // "display-crop to the pager's square frame ... nothing in this product
+    // letterboxes"; design/readme.md "Letterboxing exists nowhere in the
+    // product"). A lone comment picture used to keep its own (portrait)
+    // shape, fitted rather than filled — the regression this pins closed. --
+
+    @Test
+    fun aLoneCommentPictureTakesTheSquareCommentFrame() {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = null,
+                attachments = listOf(picture.copy(aspectRatio = tallRatio)),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                testTagPrefix = "sq",
+                surface = BodySurface.Comment,
+                modifier = Modifier.width(commentScaleStage),
+            )
+        }
+
+        compose.onNodeWithTag("sq_gallery")
+            .assertWidthIsEqualTo(commentScaleStage)
+            .assertHeightIsEqualTo(commentScaleStage)
+    }
+
+    /** A comment's clip takes the same square frame — video is not a special case. */
+    @Test
+    fun aLoneCommentClipTakesTheSquareCommentFrameToo() {
+        val clip = picture.copy(
+            aspectRatio = tallRatio,
+            mimeType = "video/mp4",
+            cover = picture.copy(id = "m1_cover"),
+        )
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = null,
+                attachments = listOf(clip),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                testTagPrefix = "sqv",
+                surface = BodySurface.Comment,
+                modifier = Modifier.width(commentScaleStage),
+            )
+        }
+
+        compose.onNodeWithTag("sqv_gallery")
+            .assertWidthIsEqualTo(commentScaleStage)
+            .assertHeightIsEqualTo(commentScaleStage)
     }
 
     // -- Words XOR media (D16) --
