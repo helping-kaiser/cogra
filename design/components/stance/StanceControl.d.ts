@@ -5,7 +5,13 @@ import type { StanceBundle, StancePair } from "./StanceReadout";
  * the parked pad, and every confirmation behind them.
  */
 export interface StanceControlProps {
-  /** Already in the reader's words — "this post", "this comment", "@ada". */
+  /**
+   * Already in the reader's words — "this post", "this comment", "@ada". Names
+   * the face's aria-label and, since backlog item 46.1, the visually-hidden
+   * "Choose your stance on {targetLabel}" skip-link beside it — the fix for a
+   * page (e.g. TagPage) carrying more than one stance control, where every
+   * skip-link once read the same unnamed "Choose your stance".
+   */
   targetLabel?: string;
   /**
    * The standing the hosting read already carried. Leave it out and the control

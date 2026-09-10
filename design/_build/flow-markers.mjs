@@ -77,7 +77,7 @@ export const FLOW_MARKERS = {
   VouchBackPad: [
     { n: 1, find: 'aria-label="How stances work"', tag: "button" },
     { n: 2, find: 'aria-label="Stance', tag: "div" },
-    { n: 2, find: ">Choose your stance</button>", tag: "button" },
+    { n: 2, find: ">Choose your stance on @mira</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
   ],
@@ -88,7 +88,7 @@ export const FLOW_MARKERS = {
       (m) => m.find !== 'aria-label="Take a stance on this post"'
     ),
     { n: 9, find: 'aria-label="Your stance on this post', tag: "button" },
-    { n: 9, find: ">Choose your stance</button>", tag: "button" },
+    { n: 9, find: ">Choose your stance on this post</button>", tag: "button" },
     ...nav(12),
   ],
 };
@@ -172,7 +172,7 @@ const signedPost = (at) => [
   { n: at.more, find: ">More</button>", tag: "button", all: true },
   { n: at.topic, find: '<a href="/t/', tag: "a", all: true },
   { n: at.stance, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-  { n: at.stance, find: ">Choose your stance</button>", tag: "button", all: true },
+  { n: at.stance, find: ">Choose your stance on this post</button>", tag: "button", all: true },
   { n: at.score, find: ">Post Score</span>", tag: "button", all: true },
 ];
 const searchShell = (fieldText, nRow) => [
@@ -262,7 +262,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: '<a href="/t/', tag: "a", all: true },
     { n: 4, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
     { n: 4, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
-    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: "Add a comment</label>", tag: "label" },
@@ -274,7 +275,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: "scroll-snap-type:x mandatory", tag: "div" },
     { n: 4, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
     { n: 4, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
-    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: ">Edit</button>", tag: "button" },
     { n: 7, find: "Add a comment</label>", tag: "label" },
@@ -442,7 +444,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: '<a href="/u/', tag: "a", all: true },
     { n: 3, find: 'aria-label="Take a stance on this post"', tag: "button", all: true },
-    { n: 3, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 3, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 4, find: ">Post Score</span>", tag: "button", all: true },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(6),
@@ -454,7 +456,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
     { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 6, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 6, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 6, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 7, find: ">Post Score</span>", tag: "button", all: true },
     { n: 8, find: 'aria-label="0 comments"', tag: "button" },
     ...nav(9),
@@ -470,7 +472,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: '<a href="/t/', tag: "a", all: true },
     { n: 9, find: ">· 1 reference<", tag: "span" },
     { n: 10, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 10, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 10, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 11, find: ">Post Score</span>", tag: "button", all: true },
     { n: 12, find: 'aria-label="3 comments"', tag: "button" },
     ...nav(13),
@@ -591,7 +593,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">More</button>", tag: "button" },
     { n: 6, find: '<a href="/t/', tag: "a", all: true },
     { n: 7, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 7, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 7, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 8, find: ">Post Score</span>", tag: "button", all: true },
     { n: 9, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="1 comment"', tag: "button" },
@@ -758,7 +760,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">More</button>", tag: "button", all: true },
     { n: 6, find: '<a href="/t/', tag: "a", all: true },
     { n: 7, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 7, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 7, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 8, find: ">Post Score</span>", tag: "button", all: true },
     { n: 9, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="1 comment"', tag: "button" },
@@ -771,7 +773,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Turn sound on"', tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a" },
     { n: 4, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 4, find: ">Choose your stance</button>", tag: "button" },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     { n: 6, find: 'aria-label="Share this post"', tag: "button" },
     { n: 7, find: ">Post Score</span>", tag: "button" },
@@ -787,7 +789,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
     { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 6, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 6, find: ">Choose your stance</button>", tag: "button" },
+    { n: 6, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 7, find: ">Post Score</span>", tag: "button" },
     { n: 8, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="Share this post"', tag: "button" },
@@ -803,7 +805,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: '<a href="/u/', tag: "a" },
     { n: 8, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 9, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 9, find: ">Choose your stance</button>", tag: "button" },
+    { n: 9, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 10, find: ">Post Score</span>", tag: "button" },
     { n: 11, find: 'aria-label="2 comments"', tag: "button" },
     { n: 12, find: 'aria-label="Share this post"', tag: "button" },
@@ -879,7 +881,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Stances on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Take a stance on @ada"', tag: "button" },
-    { n: 4, find: ">Choose your stance</button>", tag: "button" },
+    { n: 4, find: ">Choose your stance on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
     { n: 6, find: 'aria-label="Comments"', tag: "button" },
@@ -904,7 +906,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Stances on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Take a stance on @ada"', tag: "button" },
-    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on @ada</button>", tag: "button" },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
     { n: 6, find: 'aria-label="Comments"', tag: "button" },
@@ -935,7 +938,16 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="More on this comment"', tag: "button", all: true },
     { n: 9, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
     { n: 9, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
-    { n: 9, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 9, find: ">Choose your stance on this comment</button>", tag: "button", all: true },
+    /* Pre-existing quirk, kept as found (backlog item 46.1's own repin is text
+       only, not a via reassignment): before this fix every "Choose your
+       stance" on this board was one indistinguishable string, so the generic
+       sweep above also caught the OWN-PROFILE skip-link ("@ada") and stamped
+       it 9 — its face two rows up is 4. Splitting the string by target now
+       has to name that stray match explicitly to keep stamping it, and it
+       stays on 9 rather than moving to 4 so this fix changes no rendered
+       badge, only the accessible text. */
+    { n: 9, find: ">Choose your stance on @ada</button>", tag: "button" },
     { n: 10, find: ">Reply</button>", tag: "button", all: true },
     { n: 11, find: "View 2 replies", tag: "button" },
     { n: 17, find: ">On “", tag: "button", all: true },
@@ -1319,19 +1331,18 @@ for (const [board, n] of Object.entries(CARD_SHARE)) {
    so it borrows the feed boards' numbering with it; the two picker states
    borrow `ReferencePicker`'s.
 
-   ONE VIA CARRIES EVERY "Choose your stance" ON THE PAGE. The skip-link is the
-   same control wherever it sits — it opens the alternates for the stance it
-   belongs to — and its text names no target, so the four on this page cannot
-   be told apart by a `find` at all. One number for the accessible path is the
-   honest reading of what they share, and each FACE beside them is numbered by
-   what it actually stances: the tag, a post, a comment. That the skip-link
-   does not name its target where the face does is a defect worth its own fix,
-   and it is bigger than this round: it is one line in `StanceControl` and a
-   repin on all thirty-four boards that draw a stance. */
+   ONE VIA STILL CARRIES EVERY SKIP-LINK ON THE PAGE (backlog item 46.1). The
+   skip-link's text now names its target — `StanceControl`'s `targetLabel`,
+   the same source the face beside it reads — so the three on this page (two
+   posts, one comment) no longer share one anonymous "Choose your stance". The
+   VIA NUMBERING ITSELF is unchanged here: it is still one edge for all three,
+   where each FACE keeps its own (a post's, a comment's). Splitting the via to
+   match is a graph.json call, left standing for jakob to rule on. */
 Object.assign(FLOW_MARKERS, {
   TagPage: [
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
-    { n: 2, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 2, find: ">Choose your stance on this post</button>", tag: "button", all: true },
+    { n: 2, find: ">Choose your stance on this comment</button>", tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a", all: true },
     { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 5, find: ">More</button>", tag: "button", all: true },
