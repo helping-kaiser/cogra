@@ -78,6 +78,9 @@ export function ReplyComposeStep({
 }) {
   const video = isVideoReply(state);
   const hasPictures = !video && state.media.length > 0;
+  // Android's own `wordsFill` (`ReplyComposeStep.kt:84`): the words take the
+  // column while they are the only thing in it.
+  const wordsFill = !video && refusals.length === 0;
 
   return (
     <div
@@ -105,7 +108,7 @@ export function ReplyComposeStep({
         rows={4}
         onChange={(event) => onWords(event.target.value)}
         className={`${FIELD_BOX} resize-none ${
-          video || refusals.length > 0 ? "min-h-32" : "min-h-48 flex-1"
+          wordsFill ? "min-h-11 flex-1" : "min-h-32"
         }`}
         placeholder="Your reply"
       />
@@ -128,7 +131,11 @@ export function ReplyComposeStep({
         testIdPrefix="reply"
       />
 
-      <div className="flex-1" />
+      {/* The board's own `flex: 1` — the gap that pushes the hint and the pill
+          down once the words have stopped doing it. The words' ALTERNATIVE,
+          never their neighbour: two growing children would split the column
+          between them and the box would take half the height it is drawn at. */}
+      {!wordsFill && <div className="flex-1" />}
 
       {/* The foot line names what CAN still join, so it changes with the body:
           a video says so in the singular, and once one is in there is nothing
