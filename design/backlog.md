@@ -1693,3 +1693,35 @@ unbuilt there. Its feed view states the absence as intent — new posts
 come from a reload or from Retry — and that comment is now wrong: the
 ruling gives the feed a pull-down at the top. The indicator stays the
 platform's own on both sides; nothing is drawn for it.
+
+### 48 · The edit's alterable body · *design + implementation* · **drawn 2026-09-10**
+
+Found by jakob hand-reviewing the small-rulings batch: the body line
+blessed that day says an edit "may flip the kind outright", and the edit
+board drew a gallery nothing could alter — no add control, no way to
+reach a words body, and a picked row whose manager stood over the
+composer's pick step rather than over the edit. Ruled and drawn the same
+day; readme §13 *The edit body round* holds it.
+
+**Drawn**: `EditPicked` (Show all over the edit) and `EditWords` (the
+words body, one board for a words post's edit and for the media post
+whose last picture just left), the add control and the blessed body line
+on `EditCompose`, the whole-body line on `EditComposeVideo`, and both
+removal edges pointed at `EditWords`.
+
+**Two lines await blessing.** `A video is the whole post.` is the
+staging line with the wizard's "Its cover comes next" trimmed, because
+the cover is on the edit's own screen. `+ Add pictures · 2 of 10` is the
+established add grammar carrying the post's cap for the first time; the
+comment scale already draws its `· 1 of 4` twin.
+
+**What the implementation owes.** Both apps draw the edit's media as a
+readout. The add path, the manager over the edit, and the kind flip are
+new client work on top of item 37's invariant — one seal, one act count,
+all-or-nothing — which the flip does not move: a body change is part of
+the content edit, not an act of its own, so the foot still counts three.
+
+**Left open by the round**: what an edit does with per-picture
+descriptions when the pictures it described are replaced, and whether a
+words body that flips to media keeps its text anywhere recoverable. The
+boards say only that the field goes; neither question is a drawing.
