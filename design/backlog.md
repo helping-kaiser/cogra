@@ -1631,7 +1631,6 @@ settle, each named where it was found rather than folded into the round.
    carried three identically-named buttons — the defect
    `TopicRemovable`'s aria-label ruling fixed for the ×, and the tag
    page's own via retires with it.
-   those buttons share.
 2. ~~**A staged reference still has no pair editor**~~ — **settled
    2026-09-10**: the row opens the pad in a sheet of its own
    (`RefPair`), and the tags-and-references sheet gained the settling
