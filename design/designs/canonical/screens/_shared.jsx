@@ -1140,7 +1140,7 @@ function SettingsBody() {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 24, padding: "8px 24px 32px" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-6)", padding: "24px 24px 32px" }}>
         <SettingsGroup
           bare
           label="Theme"
