@@ -145,6 +145,12 @@ Cross-cutting design questions live in
   a bug, a stale doc, a broken pattern — fix it in the same effort
   after notifying. Notifying is required; asking permission is not.
   Only genuine design decisions stop for the human.
+- **Touched functionality ships design-conform.** Whenever a change
+  touches a user-facing surface, that surface ships 100% conform to
+  the drawn boards in `design/` — matching the designs is part of
+  the change, not a separate task. A problem discovered in the
+  designs is a prompt to the design backlog (`design/backlog.md`),
+  never license to build something different.
 - **Technical how-questions answer themselves.** "Never make
   design decisions autonomously" covers product and design
   choices. For purely technical questions — how a pattern is

@@ -169,7 +169,12 @@ describe("MemberStatus", () => {
       await act(async () => {
         vi.advanceTimersByTime(SNACKBAR_MS + 1);
       });
-      expect(screen.queryByTestId("home_reciprocated")).not.toBeInTheDocument();
+      // With shouldAdvanceTime the dismissal timer can fire a beat after
+      // the manual advance on a slow runner — poll instead of asserting
+      // the very next tick.
+      await waitFor(() =>
+        expect(screen.queryByTestId("home_reciprocated")).not.toBeInTheDocument(),
+      );
       expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
