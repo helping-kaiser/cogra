@@ -15,7 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
-import { fetchBorrowedView, type BorrowedVantage } from "@/lib/api/auth-api";
+import { fetchBorrowedView, fetchMe, type BorrowedVantage } from "@/lib/api/auth-api";
 import { fetchPosts, type PostView } from "@/lib/api/content-api";
 import { appendDeduped } from "@/lib/api/pagination";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
@@ -43,19 +43,21 @@ import { recallFeed, rememberFeed, rememberFeedOffset } from "./feed-memory";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 /**
- * The band, for the reader whose feed is not their own — the guest and the
- * applicant alike (`design/readme.md` §13). Which reading it wears follows
- * the session rather than the vantage: only the signed-out reader can act
- * on it, so theirs invites and carries the one sign-in-or-join entry, while
- * the applicant's says what is already under way. A null vantage is the
- * contract saying this reader's view is their own, and the band leaving is
- * that rule rather than a gap.
+ * The band, for the reader whose feed is not their own — guest, applicant,
+ * and the landed member who has not pointed back yet (`design/readme.md`
+ * §13; Android's twin in `feature:home`).
+ *
+ * WHETHER a band shows is the contract's call: `borrowedView` answers null
+ * the moment the reader's own view exists — their vouch-back — and the band
+ * leaving is that rule rather than a gap. The account state is asked only
+ * to pick the wording, and only once there is a vantage to word.
  */
 function BorrowedView({ signedOut }: { signedOut: boolean }) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const router = useRouter();
   const [vantage, setVantage] = useState<BorrowedVantage | null>(null);
+  const [member, setMember] = useState(false);
 
   // Re-read when the session flips, not only on mount: the answer is
   // per-reader, so a sign-in or a sign-out under a mounted feed would
@@ -65,11 +67,18 @@ function BorrowedView({ signedOut }: { signedOut: boolean }) {
   // anonymous answer.
   useEffect(() => {
     let cancelled = false;
-    void guard.run(() => fetchBorrowedView(client)).then((outcome) => {
+    void guard.run(() => fetchBorrowedView(client)).then(async (outcome) => {
       if (cancelled) return;
       // A read that did not answer names nobody: the band is an honesty
       // label over a feed already on screen, not a thing to guess at.
-      setVantage(outcome.kind === "success" ? outcome.value : null);
+      const borrowed = outcome.kind === "success" ? outcome.value : null;
+      setVantage(borrowed);
+      if (borrowed === null || signedOut) return;
+      const me = await guard.run(() => fetchMe(client));
+      if (cancelled) return;
+      // An unanswered account read takes the applicant's line: it is the
+      // weaker claim, where the vouch-back line asks for an act.
+      setMember(me.kind === "success" && me.value.accountState === "MEMBER");
     });
     return () => {
       cancelled = true;
@@ -78,14 +87,21 @@ function BorrowedView({ signedOut }: { signedOut: boolean }) {
 
   if (vantage === null) return null;
   const { handle } = vantage;
+  const line = signedOut
+    ? borrowedViewLine.join(handle)
+    : member
+      ? borrowedViewLine.vouchBack(handle)
+      : borrowedViewLine.applicant(handle);
   return (
     <BorrowedViewBand
       testId="feed-borrowed-view"
       handle={handle}
       displayName={vantage.displayName.value}
-      line={
-        signedOut ? borrowedViewLine.join(handle) : borrowedViewLine.applicant(handle)
-      }
+      line={line}
+      // The action rides the guest's reading alone. The other two name an
+      // act performed elsewhere — the application runs itself, the
+      // vouch-back has its own card below — and one act offered by two
+      // controls on one screen is the ambiguity §2.4 refuses.
       actionLabel={signedOut ? SIGN_IN_OR_JOIN : undefined}
       // Pushes /login, so back returns to the reading context.
       onAction={signedOut ? () => router.push("/login") : undefined}

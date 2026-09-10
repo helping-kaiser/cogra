@@ -14,6 +14,9 @@ describe("BorrowedViewBand", () => {
     expect(borrowedViewLine.applicant("mira")).toBe(
       "Browsing from @mira's view while your application lands.",
     );
+    expect(borrowedViewLine.vouchBack("mira")).toBe(
+      "Browsing from @mira's view — vouch back to start your own.",
+    );
     expect(SIGN_IN_OR_JOIN).toBe("Sign in or join");
   });
 

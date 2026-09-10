@@ -62,8 +62,11 @@ function signedInStore() {
   return store;
 }
 
-/** The status banners ride the signed-in feed and read the viewer. */
-function meHandler() {
+/**
+ * The status banners ride the signed-in feed and read the viewer, and so
+ * does the band — the account state is what picks its wording.
+ */
+function meHandler(accountState: "MEMBER" | "APPLICANT" = "MEMBER") {
   return graphql.query("Me", () =>
     HttpResponse.json({
       data: {
@@ -72,7 +75,7 @@ function meHandler() {
           id: "acct-1",
           handle: "ada",
           displayName: { __typename: "ModeratedText", value: null },
-          accountState: "MEMBER",
+          accountState,
           hasReciprocated: true,
           invitedBy: null,
         },
@@ -335,13 +338,35 @@ describe("FeedView", () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
     );
-    server.use(borrowedViewHandler({ id: "inv-1", handle: "mira", displayName: "Mira Voss" }));
+    server.use(
+      meHandler("APPLICANT"),
+      borrowedViewHandler({ id: "inv-1", handle: "mira", displayName: "Mira Voss" }),
+    );
     renderWithProviders(<FeedView />, { store: signedInStore() });
 
     expect(await screen.findByTestId("feed-borrowed-view-line")).toHaveTextContent(
       "Browsing from @mira's view while your application lands.",
     );
     // The applicant can do nothing about the borrowing, so no action.
+    expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();
+  });
+
+  // Landing grants membership; the vouch-back is what gives the reader a
+  // view of their own (§13). Between them the band still names the inviter.
+  it("asks a landed member who has not pointed back to vouch back", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    server.use(
+      meHandler(),
+      borrowedViewHandler({ id: "inv-1", handle: "mira", displayName: "Mira Voss" }),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+
+    expect(await screen.findByTestId("feed-borrowed-view-line")).toHaveTextContent(
+      "Browsing from @mira's view — vouch back to start your own.",
+    );
+    // The reciprocation card below carries the control; the band names it.
     expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();
   });
 
