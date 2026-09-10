@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { ALT_TEXT_MAX_CHARS } from "../media/caps";
 import { DescribeSheet } from "./describe-sheet";
 
 function open(overrides: Partial<Parameters<typeof DescribeSheet>[0]> = {}) {
@@ -42,6 +43,18 @@ describe("DescribeSheet", () => {
       target: { value: "A jar of honey" },
     });
     expect(props.onChange).toHaveBeenCalledWith("A jar of honey");
+  });
+
+  // The server refuses past this length, so the sheet says so where the words
+  // are written rather than letting the seal carry the news.
+  it("stays quiet at the cap the write side allows", () => {
+    open({ value: "x".repeat(ALT_TEXT_MAX_CHARS) });
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("says when the description is past that cap", () => {
+    open({ value: "x".repeat(ALT_TEXT_MAX_CHARS + 1) });
+    expect(screen.getByRole("alert")).toHaveTextContent(/too long/i);
   });
 
   it("says which picture is being described, when there is more than one", () => {

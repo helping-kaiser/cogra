@@ -29,6 +29,33 @@ import type { ReferenceDraft } from "@/lib/references/draft";
  */
 export const POST_ATTACHMENT_CAP = 10;
 
+/**
+ * The write side's cap on a title, pinned to `client-constants.json` in
+ * `lib/client-constants.test.ts`.
+ */
+export const TITLE_MAX_CHARS = 100;
+
+/**
+ * A title's length as the SERVER measures it — Unicode scalar values, which
+ * is what Rust's `chars().count()` counts.
+ *
+ * `"".length` counts UTF-16 code units instead, so one emoji weighs two there
+ * and one here. That difference is why the field carries this check rather
+ * than an HTML `maxLength`, whose unit is the code unit: a native cap would
+ * stop a title the server would have taken, and a client stricter than the
+ * server is the one failure a mirrored cap must not have.
+ */
+export function titleLength(title: string): number {
+  return [...title.trim()].length;
+}
+
+/** The refusal an over-long title earns, or null. */
+export function titleProblem(title: string): string | null {
+  return titleLength(title) > TITLE_MAX_CHARS
+    ? `Too long — at most ${TITLE_MAX_CHARS} characters.`
+    : null;
+}
+
 export type BodyMode = "words" | "media";
 
 /**
@@ -220,6 +247,12 @@ export function bodyGate(state: WizardState): Gate {
   return ALLOWED;
 }
 
+/** The details are optional, but a title that is there answers to its cap. */
+export function detailsGate(state: WizardState): Gate {
+  const problem = titleProblem(state.title);
+  return problem === null ? ALLOWED : { ok: false, reason: problem };
+}
+
 /** The cover screen's own gate: a video may not leave it faceless. */
 export function coverGate(state: WizardState): Gate {
   if (!isVideoPost(state)) return ALLOWED;
@@ -252,6 +285,10 @@ export function uploadsFailed(state: WizardState): number {
 export function sealGate(state: WizardState): Gate {
   const body = bodyGate(state);
   if (!body.ok) return body;
+  // The details screen already refuses it, but the seal is the boundary the
+  // server sees — a draft that reached here over-titled would sign a refusal.
+  const details = detailsGate(state);
+  if (!details.ok) return details;
   if (state.mode === "words") return ALLOWED;
   const cover = coverGate(state);
   if (!cover.ok) return cover;
@@ -293,11 +330,12 @@ export function advanceGate(state: WizardState): Gate {
     // speaks when no frame could be taken and no picture was chosen.
     case "cover":
       return coverGate(state);
-    // Every picture has a crop from the moment it is picked, and the details
-    // are all optional, so neither screen can be incomplete.
+    // Every picture has a crop from the moment it is picked, so that screen
+    // cannot be incomplete.
     case "crop":
-    case "details":
       return ALLOWED;
+    case "details":
+      return detailsGate(state);
     case "seal":
       return sealGate(state);
   }
