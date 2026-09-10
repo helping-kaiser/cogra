@@ -20,6 +20,13 @@ export interface StanceAlternatesProps {
   /** The landing line, below the inputs as it sits below the field. */
   landing?: React.ReactNode;
   inline?: boolean;
+  /**
+   * The "?" button's accessible name (jakob's ruling A7) — the name of the pad
+   * it belongs to, not a generic one. Defaults to "How stances work", the
+   * ordinary feed-card control's name; `StanceControl` passes its own
+   * `helpLabel` through unchanged.
+   */
+  helpLabel?: string;
 }
 
 export declare function StanceAlternates(props: StanceAlternatesProps): JSX.Element;
