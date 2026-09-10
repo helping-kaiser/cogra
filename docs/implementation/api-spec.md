@@ -2731,6 +2731,15 @@ sub-surfaces: the inputs below are the target contract, and each
 arrives with the work that carries it (media with the media
 follow-up, `actAs` with collectives).
 
+A Post's title is **at most 100 characters**, trimmed, with blank
+folded to absent so `""` and null cannot mean two different
+nothings — refused field-level at `["title"]`, on a create and an
+edit alike, before a single act is staged. The unit is the
+Unicode scalar value, the same one every character cap here
+counts in. The number leaves through `client-constants.json`
+(`content.titleChars`), so a composer refuses the title the
+server would refuse rather than spending the round trip.
+
 A tag batch is checked whole before a single act is staged, each
 refusal a field-level `userError` naming the offender: at most
 **ten** tags per batch, a named constant; names compared after
