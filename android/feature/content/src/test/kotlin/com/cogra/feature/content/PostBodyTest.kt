@@ -8,11 +8,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
-import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
