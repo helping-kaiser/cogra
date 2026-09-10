@@ -572,12 +572,12 @@ mod tests {
     /// The byte offset from a version-0 tkhd box's start to its matrix
     /// field.
     ///
-    /// `header`(8 or 16) + version/flags(4) + the version-0 creation,
-    /// modification, track-ID, reserved and duration fields (20) +
-    /// reserved(8) + layer, alternate_group, volume and reserved (8)
-    /// together place the matrix 48 bytes past `tkhd.header` for a
-    /// version-0 box — the version this fixture is asserted to write, and
-    /// checked against it directly rather than assumed.
+    /// version/flags(4) + the version-0 creation, modification, track-ID,
+    /// reserved and duration fields (20) + reserved(8) + layer,
+    /// alternate_group, volume and reserved (8) together place the matrix
+    /// 40 bytes past the end of `tkhd.header` for a version-0 box — the
+    /// version this fixture is asserted to write, and checked against it
+    /// directly rather than assumed.
     fn version0_tkhd_matrix_offset(tkhd: &BoxRef) -> usize {
         tkhd.start + tkhd.header + 4 + 20 + 8 + 8
     }
