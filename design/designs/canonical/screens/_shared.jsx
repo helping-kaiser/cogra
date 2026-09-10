@@ -802,6 +802,56 @@ function ReplySealBody() {
   );
 }
 
+/* THE PICTURE PATH'S DETAILS STAGE, whole — `ComposeDetails` itself, and what
+   the reference pair sheet stands on. Factored for `ReplySealBody`'s reason: a
+   sheet covers the surface the reader came from, and that surface has to be the
+   real one, so the two boards share one markup. */
+function ComposeDetailsBody() {
+  return (
+    <>
+      <WizardHeader title="Details" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
+        <PickedRow
+          items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
+          caption="2 pictures — the body"
+          onManage={() => {}}
+        />
+        <DescribeCounter described={0} total={2} onDescribe={() => {}} />
+
+        <TextField label="Title" corner="Optional" value="Salt maps of the coast road" />
+
+        <TextField label="Description" corner="Optional" rows={3} value="Rubbings from three weekends at low tide — paper against the salt crust." />
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <FieldLabel>Tags</FieldLabel>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <TopicRemovable topic="fieldnotes" onEdit={() => {}} />
+            <TopicRemovable topic="coastroad" onEdit={() => {}} />
+          </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <FieldLabel>References</FieldLabel>
+          <StagedReference
+            kind="post"
+            name="The long way home — @ada"
+            sub="Post"
+            src="post-photo.jpg"
+            value="+0.10 / +0.10"
+            onEdit={() => {}}
+          />
+          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <Button style={{ width: "100%" }}>Next</Button>
+      </div>
+    </>
+  );
+}
+
 /* THE POST EDIT, whole — `EditCompose` itself, and what its acts sheet stands
    on. */
 function EditComposeBody() {
@@ -846,6 +896,7 @@ function EditComposeBody() {
             sub="Post"
             src="post-photo.jpg"
             value="+0.10 / +0.10"
+            onEdit={() => {}}
           />
           <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
         </div>

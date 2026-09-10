@@ -1077,7 +1077,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2324,
+      "h": 2367,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1364,6 +1364,15 @@
       "file": "TagPair.dc.html",
       "title": "A staged tag's pair",
       "x": 2400,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "RefPair.dc.html",
+      "title": "A staged citation's pair",
+      "x": 2880,
       "y": 3180,
       "w": 390,
       "h": 844,

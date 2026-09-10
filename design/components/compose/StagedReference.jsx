@@ -1,6 +1,7 @@
 import React from "react";
 import { NodeMark } from "../content/ReferenceRow.jsx";
 import { Icon } from "../navigation/Icon.jsx";
+import { BUTTON_CLASS } from "../core/Button.jsx";
 
 /* A reference already staged in a composer (item 17, the conformance round):
    the citation the author has committed to, shown back to them — the kind's
@@ -14,12 +15,29 @@ import { Icon } from "../navigation/Icon.jsx";
 
    IT IS THE COMPOSER'S TWIN OF `ReferenceRow`, not a variant of it. The reading
    row is a way in: it is pressable, it navigates, and it has no ×. This one
-   navigates nowhere — the author is holding it, not following it — and its one
-   affordance is taking it back off. Two jobs, two rows, one mark. */
+   navigates nowhere — the author is holding it, not following it. Two jobs, two
+   rows, one mark.
 
-export function StagedReference({ kind = "post", name, sub, src, value, onRemove }) {
+   AND THE ROW IS A BUTTON WHEN, AND ONLY WHEN, THERE IS SOMETHING ELSE A
+   CITATION IS FOR (`onEdit`, jakob's ruling 2026-09-10) — `TopicRemovable`'s
+   rule, said for the other family. The conformance round left the row inert
+   because removal was the only thing a staged citation was for; it no longer
+   is. A citation's two axes are BOTH signed (`ReferenceInput`, api-spec.md), so
+   unlike a tag's pair this one is the stance pad's own shape, and what the row
+   opens is that pad in a sheet. Given no `onEdit` the row stays exactly as
+   inert as the conformance round left it.
+
+   EACH CONTROL NAMES ITS OWN CITATION — "Remove <name>", "<name> — set how it
+   relates" — because a block of these is a block of identically-named controls
+   otherwise. The phrase is the one a staged tag already wears: opening a pair
+   editor is one gesture, whichever family the pair belongs to. */
+
+/* The row minus its ×: the mark, what it points at, and the pair it signs. One
+   markup whether or not it is pressable, so the drawing cannot drift between
+   the two states. */
+function Body({ kind, name, sub, src, value }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}>
+    <>
       <NodeMark kind={kind} name={name} src={src} />
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
@@ -27,6 +45,31 @@ export function StagedReference({ kind = "post", name, sub, src, value, onRemove
       </span>
       {value && (
         <span style={{ flex: "none", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{value}</span>
+      )}
+    </>
+  );
+}
+
+export function StagedReference({ kind = "post", name, sub, src, value, onRemove, onEdit }) {
+  const body = <Body kind={kind} name={name} sub={sub} src={src} value={value} />;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}>
+      {/* The button adds no box of its own — no border, no background, no
+          padding, ink inherited — so the row is the row it always was, and the
+          state layer, the focus ring and the 48px target arrive with
+          `BUTTON_CLASS`. */}
+      {onEdit ? (
+        <button
+          type="button"
+          aria-label={`${name} — set how it relates`}
+          onClick={onEdit}
+          className={BUTTON_CLASS}
+          style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8, border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
+        >
+          {body}
+        </button>
+      ) : (
+        body
       )}
       <button
         type="button"

@@ -12,7 +12,14 @@ export interface StagedReferenceProps {
   src?: string;
   /** The pair signed on the act, trailing and quiet. */
   value?: React.ReactNode;
+  /** The × is its own button, named "Remove <name>". */
   onRemove?: () => void;
+  /**
+   * Opens the citation's pair editor — the stance pad in a sheet, because both
+   * of a citation's axes are signed. Given it, the row (minus the ×) becomes a
+   * button named "<name> — set how it relates"; without it the row is inert.
+   */
+  onEdit?: () => void;
 }
 
 export declare function StagedReference(props: StagedReferenceProps): JSX.Element;
