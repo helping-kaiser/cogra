@@ -323,13 +323,15 @@ internal fun ReplyWizardScreen(
             }
         }
 
-        // THE PAD PARKS OVER THE PAGE, and the wash covers the seal beneath
-        // it — `ReplyPadBody` in the boards' `_shared.jsx`, and the rule in
-        // design/readme.md §"Fixed elements": lower centre of the viewport,
-        // the same place every time, 16dp off the bottom edge where no
-        // bottom bar exists. It is deliberately NOT in the sheet host: a
-        // drawer would draw a second sheet chrome around it (F2-10) and
-        // would park it wherever the drawer stopped.
+        // THE PAD PARKS OVER THE PAGE, and the wash covers the seal
+        // beneath it — `ReplyPadBody` in the boards' `_shared.jsx`, under
+        // the rule design/readme.md §"Fixed elements" gives every pad in
+        // the product: the lower centre of the viewport, the same place
+        // every time, because muscle memory is part of the control.
+        //
+        // It is deliberately NOT in the sheet host: a drawer would draw a
+        // second sheet chrome around it (F2-10) and would park it
+        // wherever the drawer happened to stop.
         if (state.padOpen) {
             Box(
                 modifier = Modifier
