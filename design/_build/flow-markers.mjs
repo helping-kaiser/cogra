@@ -75,7 +75,7 @@ export const FLOW_MARKERS = {
     ...nav(13),
   ],
   VouchBackPad: [
-    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 1, find: 'aria-label="Your first stance"', tag: "button" },
     { n: 2, find: 'aria-label="Stance', tag: "div" },
     { n: 2, find: ">Choose your stance on @mira</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
@@ -575,7 +575,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   ComposePad: [
-    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 1, find: 'aria-label="Where you stand on it"', tag: "button" },
     { n: 2, find: 'aria-label="Stance pad', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
@@ -1233,7 +1233,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: "+ Add pictures or a video", tag: "button" },
   ],
   ReplyPad: [
-    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 1, find: 'aria-label="Toward what you answer"', tag: "button" },
     { n: 2, find: 'aria-label="Stance pad for the post you answer"', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },

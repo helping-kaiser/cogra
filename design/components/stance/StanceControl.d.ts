@@ -41,6 +41,14 @@ export interface StanceControlProps {
   /** The anchor restyled to sit on photography: a line-face glyph in the rail's
    *  family instead of the card's muted emoji. Restyles the anchor only. */
   overMedia?: boolean;
+  /**
+   * The pad's "?" accessible name (jakob's ruling A7) — the name of the
+   * dialog it belongs to, not a generic one, on a board that draws a named
+   * pad ("Where you stand on it", "Toward what you answer", "Your first
+   * stance"). Defaults to "How stances work", the ordinary feed-card
+   * control's name. Passed through to `StanceAlternates` unchanged.
+   */
+  helpLabel?: string;
 }
 
 export declare function StanceControl(props: StanceControlProps): JSX.Element;
