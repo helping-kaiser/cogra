@@ -324,10 +324,12 @@
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
-        "WalletKeyAbsent"
+        "SettingsBackupKeyAbsent",
+        "WalletKeyAbsent",
+        "YourKeyAbsent"
       ],
       "steps": [
-        "start · «Restore the key» on 4 boards → Restore",
+        "start · «Restore the key» on 6 boards → Restore",
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
@@ -335,7 +337,9 @@
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
-        "WalletKeyAbsent"
+        "SettingsBackupKeyAbsent",
+        "WalletKeyAbsent",
+        "YourKeyAbsent"
       ]
     },
     {
@@ -2061,6 +2065,12 @@
         "restore-your-key"
       ]
     },
+    "SettingsBackupKeyAbsent": {
+      "flows": [
+        "restore-your-key"
+      ],
+      "endpoint": []
+    },
     "SignIn": {
       "flows": [
         "guest-turns-applicant",
@@ -2217,6 +2227,12 @@
       "endpoint": [
         "publish-your-payout-address"
       ]
+    },
+    "YourKeyAbsent": {
+      "flows": [
+        "restore-your-key"
+      ],
+      "endpoint": []
     }
   },
   "gapsOnFlows": [
