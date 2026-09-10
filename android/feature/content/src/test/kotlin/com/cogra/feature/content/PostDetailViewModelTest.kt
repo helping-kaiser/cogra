@@ -261,8 +261,10 @@ class PostDetailViewModelTest {
         assertThat(vm.state.value.loading).isFalse()
         // The thread is only ever the fresh read's.
         assertThat(vm.state.value.comments).isEmpty()
-        // And the read still runs, so the indicator has something to say.
-        assertThat(vm.state.value.refreshing).isTrue()
+        // And the read that catches up behind says NOTHING: an indicator
+        // over a post the reader can already see claims the screen is
+        // still arriving when it has arrived (F2-9).
+        assertThat(vm.state.value.refreshing).isFalse()
 
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(content.detailReads).isEqualTo(1)
@@ -276,6 +278,25 @@ class PostDetailViewModelTest {
         vm.start("post-1")
         assertThat(vm.state.value.post).isNull()
         assertThat(vm.state.value.loading).isTrue()
+        // Empty is not the same as refreshing: the surface says what it
+        // is doing in its own loading state, and the pull indicator
+        // stays for the gesture that owns it.
+        assertThat(vm.state.value.refreshing).isFalse()
+    }
+
+    @Test
+    fun aReadersOwnPullIsTheOneReadThatReportsItself() = runTest(dispatcher) {
+        seenPosts.saw(testPost("post-1"))
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refreshing).isFalse()
+
+        vm.refresh()
+        assertThat(vm.state.value.refreshing).isTrue()
+
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refreshing).isFalse()
     }
 
     @Test

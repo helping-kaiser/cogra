@@ -170,4 +170,10 @@
          because the order of the two numbers is a property of the
          language, not of the layout. -->
     <string name="designsystem_gallery_position">Picture %1$d of %2$d</string>
+
+    <!-- A surface that has nothing to show yet
+         (design/components/states/EmptyState.jsx). A line of text, never
+         a spinner: motion clarifies where something came from and never
+         performs. -->
+    <string name="loading_state">Loading…</string>
 </resources>
