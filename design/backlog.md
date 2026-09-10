@@ -1646,3 +1646,27 @@ settle, each named where it was found rather than folded into the round.
    stance readout, not a gesture toward the tag. An Affinity toward a
    Type stays real and pad-shaped; slice 3's round — the first that
    may ship a follow at all — owes it a home that cannot be misread.
+
+### 47 · Pull-to-refresh is shipped and undrawn · *design*
+
+Filed by the f2-droid lane 2026-09-10, from F2-8: jakob asks for
+pull-to-refresh on the profile, and there is **no pull-to-refresh
+anywhere in this folder** — the word "refresh" appears only in
+`TransportError`'s failed-refresh banner. The apps meanwhile already
+ship the gesture on four surfaces (Android's feed, post detail and
+home; the web feed, whose broken one is F2-4), so the boards are
+silent about a pattern the product uses everywhere and jakob now wants
+extended. The lane did not add a fifth instance rather than invent the
+drawing.
+
+What a ruling owes: whether the gesture exists at all as a designed
+affordance, which surfaces carry it, and what it draws while pulling —
+the last one matters because `EmptyState`'s rule ("loading is a line of
+text, not a spinner") and Material's pull-refresh indicator say
+opposite things, and the apps currently ship the spinner. The profile
+is the specific ask; the answer should cover the set.
+
+Related, from the same lane: the pad's parking distance is stated twice
+and differently — readme §"Fixed elements" and `StanceControl.jsx`'s
+`padInset` say 16px off the bottom edge, while the `ReplyPad` board
+draws the parked card at 24. Both apps ship 24. One number, please.
