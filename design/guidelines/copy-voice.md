@@ -221,6 +221,15 @@ title, at most two short paragraphs, Close. The texts, verbatim
   nothing here is signed or shared. / It lasts until you change it,
   on this device only. Your default lives in settings.
 
+**A "?" is named by the dialog it opens.** Its accessible name is that
+dialog's own subject, so a listener hears which explanation the tap
+brings: `Your key`, `License`, `Sensitive`, `How the filter works`,
+`What is CGT?`. The three stance pads take theirs the same way —
+`Where you stand on it`, `Toward what you answer`, `Your first stance`
+— because one name across three surfaces says only that a dialog
+exists. `How stances work` is the stance control's own help, where the
+control itself is the subject.
+
 The stream and the viewer earn no "?". The stream is the feed the
 reader already knows, and the viewer is one picture with a way out —
 a dialog explaining either would be explaining the obvious.
@@ -282,6 +291,17 @@ and the way back to it from an edit:
 
 - `The cover takes the video's shape.`
 - `Change the cover`
+
+## Editing a media post
+
+The edit surface shows the gallery the post already has where the words
+field would stand, and one line says why the field is not there:
+
+- `A post's body is words or media, never both.`
+
+It states the body's rule, never a lock on this post: an edit carries
+the post's complete new content state, so it may flip the kind outright
+— every picture replaced by words, or the words by a gallery.
 
 ## Accessible names
 
@@ -439,27 +459,11 @@ Blessed with the audit-states round:
   — the two possibilities, the way forward, and the reassurance a
   reader who reads "expired" without it would miss.
 
-## Awaiting blessing — the parked-rulings round
+## The settings page
 
-Drawn, and up for review in the same pass. Kept apart from the blessed
-lines above until then.
-
-**A card's media description names the kind of thing it has.** The
-description is what a screen reader is given for a post card's body, so
-a clip announced as a picture is the card telling a reader something
-untrue — and it is the only place the difference is sayable, the two
-looking alike until one plays:
-
-- `1 clip · 0:24` — a video post. The duration belongs in the words:
-  it is the one fact about a clip a reader decides on before playing
-  it, and the eye reads it off the cover.
-- `1 picture` · `4 pictures` — a picture post, the count alone.
-
-## Awaiting blessing — the settings round
-
-Drawn on `Settings`, `SettingsBackup` and `YourKey`, and up for review
-in the same pass. Where the two apps had drifted, one line is chosen
-here and both take it.
+Drawn on `Settings`, `SettingsBackup` and `YourKey`, blessed with the
+settings round. Where the two apps had drifted, one line is chosen here
+and both take it.
 
 **Group headings** — short noun phrases, sentence case, naming what a
 reader came for rather than what the system calls it: `Theme` ·
@@ -547,9 +551,10 @@ listener the verb and not the object. Under them:
 `Nothing here is sent anywhere — the key is read from this browser and
 shown.`
 
-The six subpages the round's review added come up for blessing in the
-same pass. A sheet opened from settings is titled by the row that opened
-it, so each heading below is a row's own words.
+## The settings subpages
+
+The six the round's review added. A sheet opened from settings is titled
+by the row that opened it, so each heading below is a row's own words.
 
 **The default license** (`SettingsLicense`) is titled `Default license`
 and says what a default does, which the seal's sheet cannot: `Where
@@ -621,6 +626,22 @@ did, and a control says what will happen. Last: `Until both sides land
 your account keeps the address it has, and a reset still goes there.`
 
 
+## Awaiting blessing — the parked-rulings round
+
+Drawn, and up for review in the same pass. Kept apart from the blessed
+lines above until then.
+
+**A card's media description names the kind of thing it has.** The
+description is what a screen reader is given for a post card's body, so
+a clip announced as a picture is the card telling a reader something
+untrue — and it is the only place the difference is sayable, the two
+looking alike until one plays:
+
+- `1 clip · 0:24` — a video post. The duration belongs in the words:
+  it is the one fact about a clip a reader decides on before playing
+  it, and the eye reads it off the cover.
+- `1 picture` · `4 pictures` — a picture post, the count alone.
+
 ## Awaiting blessing — the tag round
 
 Drawn on `TagPage`, `TagPageEmpty`, `TagPicker`, `TagPickerTyping` and
@@ -682,3 +703,15 @@ before takes no extra step. Tagging is its own signed action, and it
 carries how much the post is about that tag. / Names are lowercased,
 and a name can hold letters, digits, dot, dash and underscore. Tap a
 tag you have added to set how it relates.`
+
+## Awaiting blessing — the small-rulings batch
+
+Kept apart from the blessed lines above until reviewed.
+
+**A saved profile answers in the snackbar.** Feedback on the settings
+surfaces is the shell's snackbar (ruling Q14) and web's profile save
+draws no confirmation at all, so the act with no words yet needs them.
+A profile edit is a signed act that settles like any other, and the
+line says both:
+
+- `Signed — your profile shows it now, still settling.`
