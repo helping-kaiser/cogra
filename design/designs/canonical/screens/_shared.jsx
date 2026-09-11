@@ -70,6 +70,7 @@ const {
   StancePad,
   StanceReadout,
   StanceSlider,
+  TAG_RANGES,
   TaggedRow,
   TransportError,
   SensitiveVeil,
