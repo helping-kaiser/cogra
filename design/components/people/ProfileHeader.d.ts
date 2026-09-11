@@ -14,8 +14,10 @@ export interface ProfileHeaderProps {
   displayName?: string | null;
   /** Their photo, where they have set one. The monogram is the fallback. */
   avatarSrc?: string;
-  /** Their own words, body-medium, unclamped. Omit when there are none. */
-  bio?: string;
+  /** Their own words, body-medium, unclamped. Omit when there are none. Takes
+   *  a node too: where the words were removed, `RedactedContent` stands in
+   *  their place rather than the slot collapsing. */
+  bio?: string | React.ReactNode;
   website?: string;
   /** Leads the figures row. Already formatted. */
   posts?: string | number;
@@ -44,6 +46,14 @@ export interface ProfileHeaderProps {
    *  `placement="row"`. No band carries a ⋮ (the band law), so a profile's
    *  rare acts hang off the row that holds its other acts. */
   menu?: React.ReactNode;
+  /**
+   * A deleted account (`erasure.md` §2–3). The header is unchanged — the same
+   * counts, the same tabs and chronicle under it, the same actions row — and
+   * only the identity is placeholdered: the reserved disc, `Deleted account`
+   * in `text-secondary`, no handle, and `bio` carrying the redaction mark.
+   * The shells never go.
+   */
+  redacted?: boolean;
   /** Off where the screen's own top bar already carries @handle. Defaults to true. */
   showHandle?: boolean;
 }
