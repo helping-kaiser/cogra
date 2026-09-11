@@ -12,6 +12,7 @@ const {
   ALL_SLOTS,
   PageHeader,
   BorrowedViewBand,
+  DeletionBand,
   MonogramAvatar,
   ActorChip,
   ProfileHeader,
@@ -1545,6 +1546,32 @@ function SettingsBody() {
             onOpen={() => {}}
           />
           <SettingsRow action label="Sign out" onOpen={() => {}} />
+        </SettingsGroup>
+
+        {/* DELETING THE ACCOUNT IS THE LAST ROW, IN ITS OWN GROUP, QUIET AT REST
+            (jakob's ruling, the account-deletion round). The weight of this act
+            lives in the flow it opens, not in a red row on a page a reader came
+            to for the theme: a row shouting at eight neighbours is a row that
+            makes the whole page feel dangerous, and a reader who has decided
+            does not need to be argued with.
+
+            IT IS A NAVIGATING ROW, NOT AN ACTION ROW. Sign out happens on the
+            press; this opens a surface, and the chevron is the system's one
+            promise that it does. That is also why the label is a verb phrase
+            where `SettingsRow`'s own note asks for a noun: the row names a task
+            rather than a setting, and `Account deletion` would be the page's
+            only piece of bureaucratic English. The chevron keeps the promise the
+            verb might otherwise break.
+
+            THE FOOTNOTE IS THE GROUP'S ONE DEBT — that nothing happens from the
+            tap. It is the fact a reader needs exactly once, which is what a
+            footnote is for, and saying it here is what lets the row stay one
+            quiet line. */}
+        <SettingsGroup
+          ariaLabel="Delete account"
+          footnote="Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."
+        >
+          <SettingsRow label="Delete account" onOpen={() => {}} />
         </SettingsGroup>
       </div>
     </>
