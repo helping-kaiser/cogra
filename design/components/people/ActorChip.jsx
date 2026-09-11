@@ -46,6 +46,27 @@ import React from "react";
    reasons). */
 export const REDACTED_ACTOR_NAME = "Deleted account";
 
+/* THE HIDE ROW NAMES ITS PERSON, AND A REDACTED ONE HAS NO NAME TO PUT THERE
+   (jakob 2026-09-11). Every menu that offers hiding spells the handle —
+   `Hide @ada`, the word a reader scans for — and on a deleted author's post,
+   comment or profile there is no handle left to spell; the stored form is a
+   uniqueness device, so printing anything there would invent a handle the
+   reader could try to reach.
+
+   THE ROW ITSELF STAYS. Hiding is a read-side comfort about an ACTOR, and the
+   actor is still there, still signing, still ranking into the reader's feed —
+   so the act is exactly as useful as it was and only its wording gives way:
+   `Hide this account`, the system saying what the tap does when it cannot say
+   whose.
+
+   IT IS COMPOSED HERE, beside the name it stands in for, because every menu
+   that carries the row builds its label from an actor and a fallback spelled
+   per menu is a fallback that drifts — the same reason `redacted` itself is
+   assigned on this master. Menus take their label from here; no board and no
+   client writes the words twice. */
+export const HIDE_ACTOR_LABEL = (handle, redacted = false) =>
+  redacted || !handle ? "Hide this account" : `Hide ${handle}`;
+
 export function MonogramAvatar({ name, size = "sm", src, redacted = false }) {
   const [failed, setFailed] = React.useState(false);
   const initial = redacted ? null : (name ?? "").trim().charAt(0).toUpperCase() || "?";

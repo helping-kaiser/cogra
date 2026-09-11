@@ -1,9 +1,11 @@
 Use `OverflowMenu` for the interactions a reader does rarely — save something, cite it in a new post, hide its author, check a license. `PostCard` and `CommentCard` mount one automatically and append whatever you pass in `menuItems`.
 
 ```jsx
-<PostCard {...post} menuItems={[{ label: "Hide @ada", onSelect: hide }]} />
+<PostCard {...post} menuItems={[{ label: HIDE_ACTOR_LABEL(author.handle, author.redacted), onSelect: hide }]} />
 <OverflowMenu items={[{ label: "Cite in a new post", onSelect: cite }]} />
 ```
+
+**A row that names an actor takes its words from `ActorChip`.** The hide row spells a handle, and a deleted author has none to spell, so its label comes from `HIDE_ACTOR_LABEL` and reads `Hide this account` there. Never write those words out here: the fallback is one mechanism, and a menu that spells its own drifts. The row itself never drops — hiding is about an actor, and a redacted actor still ranks into the reader's feed.
 
 The dividing line: **the affordance row carries what a reader reaches for; the menu carries the rest.** An opinion is the gesture the product lives on and belongs in the row. A license is checked once in a hundred readings and belongs in here.
 
