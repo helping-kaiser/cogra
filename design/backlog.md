@@ -143,12 +143,12 @@ their avatar, a media post its cover); `TopicsLine` is shared by
 post and comment cards. Drawn on the "Tags & references · the
 sheet" board.
 
-**The tag half is closed** (the tag round, 2026-09-09): a staged tag
-chip is a button, it opens `TagPair`, and the pair it sets is drawn
-back on the chip whenever it deviates from the contract's +0.1 / 1.
-The editor is two sliders rather than the reader's chosen stance
-input — a Tag's confidence is census-bounded to [0, 1] and the pad
-is a square over two signed axes, so half of it would be dead.
+**The tag half is closed** (the tag round, 2026-09-09; the editor
+settled by the tag pad round, 2026-09-10): a staged tag chip is a
+button, it opens `TagPad`, and the pair it sets is drawn back on the
+chip whenever it deviates from the contract's +0.1 / 1. The editor is
+the pad over a field both of whose axes run 0 to 1, which is the reach
+a Tag's census gives it.
 
 **The reference half is closed** (jakob's ruling 2026-09-10, readme §13
 *The citation's pair, and the settling row*): a staged reference row is
@@ -1756,3 +1756,40 @@ Runs as its own round after the small-rulings review lands.
 The edit surface reconciles with ruling 3 in this round: a vertical
 clip's edit shows the same optional door, never a cover row presuming
 one exists.
+
+### 50 · The tag pad · *design + implementation* · **drawn 2026-09-10**
+
+Ruled by jakob 2026-09-10 and drawn the same day: a staged tag's pair
+is set on the pad over a field both of whose axes run 0 to 1, the
+readout is one glyph from a thirteen-anchor table of the tag's own, and
+relevance 0 — the withdrawal — makes the pad say what signing there
+would do. `TagPad` and `TagPadWithdraw` carry it; readme §13 (*The tag
+pad*) holds the ruling and the anchors' coordinates. The design work is
+done; what is left is below.
+
+**Both apps ship the two sliders.** Slice 2.3 built the tag pair as
+relevance and confidence tracks on Android and web alike, and the pad
+is now the drawn editor, so both owe the change. `StancePad` already
+takes `ranges`, so what the clients need is the same bound, the tag's
+four poles, and the thirteen-anchor lookup — none of which the stance
+pad can supply, the two tables being deliberately disjoint.
+
+**The anchors have not been through `copy-voice.md`.** The table's
+thirteen glosses and the withdrawal's line — "Nothing about it —
+signing this disconnects the tag." — are the words the boards draw and
+speak, and they are ruled, but a copy pass has not read them as a set
+against the guide's register. Whoever takes that pass takes the
+withdrawal line first: it is the only one written to be read at a
+moment of consequence.
+
+**The contract's default reads oddly through the table.** A tag opens
+at relevance +0.1, whose nearest anchor is 🔍 "had to look, but it's in
+there" — a fair reading of the number and a strange thing for an author
+to say about their own post's tag. Either the low-defaults value is
+wrong for a self-declaration or the lowest aboutness band is, and
+nothing here settles which.
+
+**A pad-side untag affordance is permitted and undrawn.** The × on the
+chip is the un-tag; the ruling allows the pad a second door and does
+not ask for one. Nothing is owed unless a hand test finds the drag to
+the edge is how readers actually reach for it.
