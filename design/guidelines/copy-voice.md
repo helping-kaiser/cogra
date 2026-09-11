@@ -1157,3 +1157,79 @@ have changed their own feed and nothing else. `Undo` is the only
 snackbar action in the product — hiding is a comfort a reader may have
 meant for one post rather than for a person, and the way back costs
 nothing.
+
+## Awaiting blessing — the score-and-opinions round
+
+Every new line on the Post score's four drill-down boards and on the two
+opinions sheets. The register the round was ruled into is paths, people
+and connections — never statistics — so the words are sparse by design:
+each board says what the reader is looking at, and the honesty lands in
+one sentence rather than a paragraph.
+
+**The four titles.** `Why this reached you` · `One path` · `One step` ·
+`What landed`. The first is the question the whole feature answers, put
+from the reader's side and in their own terms; the three below it name
+what the screen holds and nothing more, because the cover carried down
+from level one already says what it is all about. Sentence case, no
+colon, no subtitle.
+
+**The rule under the cover**, on level one: `Every path here starts with
+an opinion you gave.` This is the inbound-inert invariant
+(`feed-ranking.md` §1) in the reader's vocabulary — nothing anyone points
+at you moves anything toward you — and it is the one sentence that makes
+the list below it mean what it means.
+
+**A path's own words.** `Through @ada` · `Through @kel and @wren`, under
+the trace that draws it. The trace says the shape; the words say who. The
+handles rather than the names, because the row has one line for them and
+a chain of display names would ellipsise before the last person in it.
+
+**The quiet expand row**: `2 more paths`, with what they add beside it,
+and `Show 2 more paths` as its accessible name. Never `See all`, never a
+page number — the row unfolds the rest in place.
+
+**A path's two facts**: `What it adds` and `Newest opinion on it`. Both
+are questions a reader would actually ask out loud, which is what a
+`FactRow` label is for.
+
+**A step's three**: `What carries it` · `Behind it` · `Newest of them`,
+and the way down is the word `Show them`. *Carries* is the round's one
+piece of borrowed vocabulary and it is load-bearing: a step does not
+*have* a value, it conveys the post along itself, and no plainer verb
+says that.
+
+**What a step is, in words**: `Your opinion of @ada` · `@ada published
+it`, with `Her own opinion rides the post` under the second. A publish is
+a step like any other, and what makes it one is the opinion the author
+signed with it — which the composer's seal already told them.
+
+**The fold, said once**: `You have given @ada two opinions. They add up
+to one, and that one is what carries — the same adding up the pad shows
+you as your current opinion.` It speaks faces and counts rather than
+arithmetic, the geek round's rule for a sentence about pairs: it has to
+hold for a reader who has never turned the digits on.
+
+**The floor's two lines**: `The two records behind your opinion of @ada.`
+and `These records are public. Anyone can run the same sum and land on
+the same number.` The second is the sentence the whole drill-down exists
+for, and it is a fact rather than a boast — the spec binds every
+implementation to compute the sum exactly rather than sample it, which is
+what makes it true.
+
+**The aged-out line**: `The paths that carried it here have moved on.`
+One line, and no offer of anything to do about it — nothing is owed and
+nothing is broken. It is deliberately not an empty-list line: something
+*was* here.
+
+**The opinions list.** The post's door reads `8 opinions on this post`
+(`1 opinion on this post` in the singular) with `Opinions on this post`
+as its accessible name; the comment's menu row reads `Opinions on this`.
+The sheets are titled `Opinions on this post` and `Opinions on this
+comment`. *Opinion* throughout, never *stance* — the reader's word
+(*Naming*, above) — and the count is bare beside it, the row's own words
+having already said what was counted.
+
+**The empty sheet**: `No opinions yet — yours would be the first.` The
+`Nothing here yet — write the first post.` shape: calm, and naming the
+one thing that would fill it. It never scolds and it carries no `error`
+colour; a comment nobody has answered is not a fault.
