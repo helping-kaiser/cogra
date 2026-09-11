@@ -65,7 +65,7 @@ export function Screen() {
           title="Sunday at the tide market"
           titleAside="@mira"
           second="Everything the flats give up in one morning."
-          trailing="1w"
+          trailing="7d"
           onOpen={() => {}}
         />
       </ChronicleList>

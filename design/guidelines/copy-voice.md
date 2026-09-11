@@ -903,5 +903,6 @@ looking.` The footnote carries the whole of what hiding means, which is
 the group anatomy's own rule. With nobody hidden the row reads `None`.
 
 **The sheet is titled by the row that opened it** — `Hidden accounts` —
-and each row carries `Unhide` and the age of the hiding
-(`Hidden 3 days ago`).
+and each row carries `Unhide` and the moment of the hiding in the ages
+vocabulary (`Hidden 3d`, `Hidden 12.08.2026`) — the removal mark's own
+precedent: the word, then the ladder or the date.
