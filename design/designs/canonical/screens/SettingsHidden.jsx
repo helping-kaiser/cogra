@@ -38,7 +38,7 @@ export function Screen() {
             name="Juno Baptiste"
             title="Juno Baptiste"
             titleAside="@juno"
-            second="Hidden 3 days ago"
+            second="Hidden 3d"
             trailing={<InlineAction onClick={() => {}}>Unhide</InlineAction>}
           />
           <ContentRow
@@ -48,7 +48,7 @@ export function Screen() {
             image="ava1.jpg"
             title="Ada Okonkwo"
             titleAside="@ada"
-            second="Hidden 2 weeks ago"
+            second="Hidden 14d"
             trailing={<InlineAction onClick={() => {}}>Unhide</InlineAction>}
           />
           <ContentRow
@@ -58,7 +58,7 @@ export function Screen() {
             name="Tobias Lindqvist"
             title="Tobias Lindqvist"
             titleAside="@tobias"
-            second="Hidden 1 month ago"
+            second="Hidden 12.08.2026"
             trailing={<InlineAction onClick={() => {}}>Unhide</InlineAction>}
           />
         </div>
