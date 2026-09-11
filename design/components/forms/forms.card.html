@@ -1,11 +1,11 @@
-<!-- @dsCard group="Components" viewport="700x440" name="Forms" subtitle="Text field, password field, checkbox, license axes, recovery code" -->
+<!-- @dsCard group="Components" viewport="1040x520" name="Forms" subtitle="Text field, the late counter, password field, checkbox, license axes, recovery code" -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <script src="../../_ds_bundle.js"></script>
-<style>body{padding:16px}.grid{display:grid;grid-template-columns:300px 320px;gap:24px;align-items:start}.col{display:flex;flex-direction:column;gap:12px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
+<style>body{padding:16px}.grid{display:grid;grid-template-columns:300px 320px 320px;gap:24px;align-items:start}.col{display:flex;flex-direction:column;gap:12px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
 const { TextField, FieldLabel, PasswordField, Checkbox, LicenseChooser, LicenseTerms, RecoveryCode, Card } = window.CoGraDesignSystem_9084ba;
@@ -15,6 +15,8 @@ function Demo(){
   const [forget,setForget]=React.useState(false);
   const [body,setBody]=React.useState("Walked the long way home and the whole street smelled of rain.");
   const [license,setLicense]=React.useState({attribution:0.5,provenance:0});
+  const [title,setTitle]=React.useState("Salt maps of the coast road — three weekends of rubbings taken at the lowest tides of the year");
+  const [description,setDescription]=React.useState("Rubbings from three weekends at low tide, paper laid straight onto the salt crust and worked with the flat of a wax stick until the ridges came through. The third headland gives the finest lines — the crust there dries in plates rather than grains, and a plate holds an edge the way a leaf does. Nothing here is traced, redrawn or corrected afterwards; what the paper took is what the tide had left that morning, including the places where the wind lifted a corner and the line runs out into nothing at all.");
   return (
   <div className="grid">
     <div className="col">
@@ -36,6 +38,14 @@ function Demo(){
       <Card>
         <RecoveryCode code="7Q3ZD-XK9P2-M4TVE-0RH8N-1WYB6C" explainer="This is the only way to restore your key. We can't show it again."/>
       </Card>
+    </div>
+    <div className="col">
+      <span className="lbl">The late counter — a capped field says nothing while there is room</span>
+      <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" onChange={()=>{}}/>
+      <span className="lbl">Inside the last tenth, never fewer than the last 20 — here 94 of 100</span>
+      <TextField label="Title" corner="Optional" cap={100} value={title} onChange={setTitle}/>
+      <span className="lbl">Past it — the count in `--error`, the words the surface's own</span>
+      <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} onChange={setDescription} error="A description is at most 500 characters."/>
     </div>
   </div>)}
 ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
