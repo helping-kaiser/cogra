@@ -23,7 +23,7 @@ export interface ProfileHeaderProps {
   stancesOn?: string | number;
   /** How many stances they have taken. Already formatted. */
   stancesTaken?: string | number;
-  /** The viewer's own profile: no stance to take, so the row carries edit + invites. */
+  /** The viewer's own profile: no opinion to give, so the row carries edit + invites. */
   own?: boolean;
   signedIn?: boolean;
   /** Owned by the shell, like `PostCard.taught`. */
