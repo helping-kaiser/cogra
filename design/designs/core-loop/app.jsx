@@ -207,7 +207,7 @@ function Session() {
                options={[{ value: "loaded", label: "Loaded" }, { value: "loading", label: "Loading" }, { value: "empty", label: "Empty" }, { value: "offline", label: "Offline" }]} />
         <button className="ctl-btn wide" onClick={() => setRun((n) => n + 1)}>Reset the session</button>
         <p className="text-body-small" style={{ margin: 0, color: "var(--text-secondary)" }}>
-          Out of scope here, by backlog order: the sheet behind the overflow menu (3), replying and signing (6), profiles (5), the Post Score's screens (13).
+          Out of scope here, by backlog order: the sheet behind the overflow menu (3), replying and signing (6), profiles (5), the Post score's screens (13).
         </p>
       </aside>
     </div>

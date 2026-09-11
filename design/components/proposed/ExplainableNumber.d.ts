@@ -3,7 +3,7 @@
  * explanation (§7). It does not render the explanation.
  *
  * There is no expand-in-place variant. The only figure the product has is the
- * Post Score, and its explanation is four screens deep — see
+ * Post score, and its explanation is four screens deep — see
  * `components/proposed/score/`. Nothing here is designed against a number that
  * does not exist yet.
  */
@@ -21,7 +21,7 @@ export interface ExplainableNumberProps {
   /**
    * This figure is a SIGNAL NUMBER: the digits (and the `—` that stands in for
    * them) ride a `cg-exact` span and paint only in geek mode, leaving the glyph
-   * to carry the reading. The Post Score sets it. Money, ages and counts never
+   * to carry the reading. The Post score sets it. Money, ages and counts never
    * do — they are shown whatever the reader's setting says.
    */
   exact?: boolean;

@@ -9,4 +9,4 @@ Use `ExplainableNumber` for any figure the product shows. It is the affordance, 
 - **The figure is drawn in both reading modes** (readme §13): geek mode governs the number PAIRS, and a score has no glyph that could carry its magnitude — a `graph` mark alone would say only that a score exists.
 - **Negative is ordinary:** a minus sign, no colour. `error` is failure, and a low score is not one.
 - Never a badge, a trend arrow, or a sparkline.
-- **There is no expand-in-place variant**, and do not add one for a number that does not exist yet. The Post Score's explanation is four screens (`components/proposed/score/`); when a second figure arrives, design its explanation then.
+- **There is no expand-in-place variant**, and do not add one for a number that does not exist yet. The Post score's explanation is four screens (`components/proposed/score/`); when a second figure arrives, design its explanation then.
