@@ -370,6 +370,41 @@ describe("runVideoUpload", () => {
     expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
   });
 
+  // A FACELESS CLIP STILL GOES UP. The cover pick is optional, so `null` is a
+  // settled answer rather than a not-yet — and a clip that waited for a face it
+  // was never going to get sat at "waiting" forever with nothing on screen to
+  // say so. This is that bug, pinned where it is decided.
+  it("uploads a clip that has no cover, naming none", async () => {
+    encodable();
+    const client = clientAnsweringInTurn("media-video");
+    const video = steps();
+    const poster = steps();
+
+    await runVideoUpload(client, guard, clip, null, video.step, poster.step);
+
+    const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
+    // One call, not two: there is no cover leg to run.
+    expect(calls).toHaveLength(1);
+    // `coverMediaId` is omitted rather than sent as null — the contract's
+    // optional field simply goes unnamed, which is what faceless means.
+    expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
+    expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
+    // The cover reports nothing at all: there was no cover to report on.
+    expect(poster.seen).toEqual([]);
+  });
+
+  it("still strips a faceless clip before it goes", async () => {
+    encodable();
+    const client = clientAnsweringInTurn("media-video");
+
+    await runVideoUpload(client, guard, clip, null, steps().step, steps().step);
+
+    expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
+    const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[0]![0].variables.input
+      .file as File;
+    expect(sent.size).toBe(STRIPPED.size);
+  });
+
   it("sends the STRIPPED bytes, not the ones that were picked", async () => {
     encodable();
     const client = clientAnsweringInTurn("media-cover", "media-video");
