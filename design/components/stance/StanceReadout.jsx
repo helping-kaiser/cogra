@@ -3,14 +3,14 @@ import React from "react";
 /* The stance readout — the numbers and the faces (design.md §8.2, §8.3, §8.4).
 
    TWO DIFFERENT NUMBERS, NEVER MERGED INTO ONE LINE:
-     · "Current stance" sits ABOVE the readout — the bundle as it stands.
+     · "Current opinion" sits ABOVE the readout — the bundle as it stands.
      · The FACE is the lossy readout of the EDGE BEING AUTHORED — this pick, not
        the bundle it joins. Conflating the two would make the face mean something
        different depending on history, which is exactly what a readout must not do.
        The EXACT PAIR rides the same line in a `cg-exact` span: the face carries
        the feel by default and the numbers paint only in geek mode (readme §13,
        the geek-mode rule). Both are always drawn, so the markup is one markup.
-     · "Resulting stance" sits BELOW the field — the bundle after the pick.
+     · "Resulting opinion" sits BELOW the field — the bundle after the pick.
 
    DIVERGENCE FROM THE SOURCE: the anchor's WORDS ARE NO LONGER DRAWN. The source
    renders face + words + pair — three encodings of one value, which is two too

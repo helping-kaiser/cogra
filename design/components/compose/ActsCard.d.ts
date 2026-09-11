@@ -14,13 +14,13 @@ export interface ActsCardRow {
    */
   action?: React.ReactNode;
   onAct?: () => void;
-  /** e.g. "1 action". */
+  /** This row's act count, a bare number — e.g. "1". */
   count?: string;
 }
 
 export interface ActsCardProps {
   rows?: readonly ActsCardRow[];
-  /** e.g. "3 signed actions". */
+  /** e.g. "3 things, signed together". */
   total?: React.ReactNode;
   /**
    * The all-or-nothing subline under the total — "they land together, or

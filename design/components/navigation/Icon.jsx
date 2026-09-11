@@ -109,7 +109,7 @@ const PATHS = {
   fullscreen: ["M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"],
   /* THE STANCE FACE AS A GLYPH (review round 2). On the stream the anchor sits
      on photography beside the rail's other glyphs, and an emoji — muted and
-     translucent for "no standing yet" — is unreadable there and off-family
+     translucent for "no opinion yet" — is unreadable there and off-family
      besides. `sentiment_neutral` is the same idea drawn as a line face, so the
      rail reads as one set. The official cut draws its eyes as <circle>s; PATHS
      holds paths only, so each is carried as an exact arc path — same geometry,

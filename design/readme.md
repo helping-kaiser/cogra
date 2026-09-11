@@ -657,8 +657,8 @@ Every interaction authors two independent continuous values in `[−1, +1]`
 — on screen, **"For or against"** and **"How much reaches you"**. All
 four quadrants are legitimate.
 
-- **At rest** the target shows the standing: the face and the exact
-  pair. A viewer with no standing sees a **muted, translucent 🫥** —
+- **At rest** the target shows the opinion: the face and the exact
+  pair. A viewer with no opinion sees a **muted, translucent 🫥** —
   never a bare word.
 - **A plain tap** blooms the pad at the lower centre of the viewport and
   stages nothing. The **first open ever teaches** — the coach mark rides
@@ -823,15 +823,15 @@ different numbers read as prose.
 
 **Both help affordances exist, and both replace the body they sit in.** A
 circled `?` in the corner of the pad and of the alternates dialog. The
-pad's four lines cover what the field means, what commits, why the pick
-and the resulting stance differ, and what severing costs; the
+pad's four lines cover what the field means, what commits, why the two
+faces can differ, and what walking it back costs; the
 alternates' first line instead teaches the thing two sliders cannot —
 *two values, not one*. Neither grows below its surface: on the pad that
 would push `Set` away from the thumb, and in the centred dialog it would
 move every button. `Set` is disabled while the pad's help shows.
 
-**The coach mark says less** — two facts (a tap signs `+0.10 / +0.10`; a
-hold opens the pad) instead of five at the moment a reader is least
+**The coach mark says less** — two facts (a tap opens the pad; a hold
+signs `+0.10 / +0.10`) instead of five at the moment a reader is least
 willing to read. `Nothing was signed just now.` stays: it is the line
 the mark exists for.
 
@@ -1458,8 +1458,8 @@ set of findings; jakob's rulings 2026-08-31):
   is the same counter line everywhere a composer shows picked
   pictures; the reply composer already wore it, *Edit comment*
   now does too.
-- **The edit's acts footer opens a sheet.** "This creates n
-  signed actions" opens an M3 modal bottom sheet — the EditActs
+- **The edit's acts footer opens a sheet.** "You're signing n
+  things" opens an M3 modal bottom sheet — the EditActs
   pattern, now rendered with `ActsCard` (*Edit comment · the
   acts*): the sheet title carries the count, the card the rows
   and the all-or-nothing note. The sheet is the

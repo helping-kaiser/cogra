@@ -23,10 +23,10 @@ Two states, two different takes: sensitive covers the body and gives it back on 
 **`RedactedContent` — the whole record, never a field.**
 
 ```jsx
-<RedactedContent reason="illegal" when="Removed 4 days ago" />
+<RedactedContent reason="illegal" when="4d" />
 ```
 
 - An illegal verdict removes the **payload**, so **every authored field goes at once**: no title, no body, no description, no media. Granularity is the record — the content commitment forbids partial rewrite. There is no redacted title beside a surviving body, and no redaction inside a sentence. `PostCard`'s `redacted` prop does this for you.
-- **What remains is the skeleton, and that is the point:** author, timestamp, thread position, standing, the stance a reader can still take. No record leaves the graph and no removal is silent — a reader must never wonder whether something was quietly deleted.
+- **What remains is the skeleton, and that is the point:** author, timestamp, thread position, the opinion, the opinion a reader can still give. No record leaves the graph and no removal is silent — a reader must never wonder whether something was quietly deleted.
 - **`reason` matters.** "illegal" is removed for cause by proposal; "author" is removed by choice. They must read differently, or a verdict can hide behind an author's decision.
 - A redacted node is **not feed material** — it is reached by direct link, by structure still pointing at it, or by a filter that admits it. Whoever is looking arrived on purpose, so say what happened and nothing more.

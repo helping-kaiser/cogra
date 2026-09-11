@@ -18,7 +18,7 @@ export interface WizardHeaderProps {
   /** The stage's name, quiet and trailing — "Last step" on every seal. */
   stageLabel?: string;
   /** The screen's one "?", by its aria-label: what the dialog behind it
-   *  explains ("Signed actions", "Changing your picture"). */
+   *  explains ("How signing works", "Changing your picture"). */
   help?: string;
   onHelp?: () => void;
   /** Anything else passive the corner must carry; it follows the pair above.
