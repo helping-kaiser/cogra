@@ -6,7 +6,7 @@ import { ApolloProvider } from "@apollo/client/react";
 import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
 
-import { authorizedLink } from "@/lib/apollo-link";
+import { createGuardedClient } from "@/lib/session/browser-guard";
 import type { KeyCeremony } from "@/lib/identity/key-ceremony";
 import { SessionProvider } from "@/lib/session/provider";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
@@ -33,12 +33,14 @@ export function renderWithProviders(
     stanceData?: StanceData;
   } = {},
 ) {
-  const client = new ApolloClient({
-    cache: new InMemoryCache(),
-    // The same chain the browser builds, over the injected store: which
-    // reads carry the viewer's token is part of what a surface does.
-    link: authorizedLink(store, "http://localhost/graphql"),
-  });
+  // The same chain the browser builds, over the injected store: which reads
+  // carry the viewer's token — and whether they wait for the session to
+  // settle before they go at all — is part of what a surface does.
+  const client = createGuardedClient(
+    store,
+    "http://localhost/graphql",
+    (link) => new ApolloClient({ cache: new InMemoryCache(), link }),
+  );
   const result = render(
     <SessionProvider store={store}>
       <ApolloProvider client={client}>
