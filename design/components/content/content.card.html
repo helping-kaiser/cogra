@@ -9,6 +9,7 @@
 </head><body><div id="root"></div>
 <script type="text/babel">
 const { PostCard, CommentCard, OverflowMenu } = window.CoGraDesignSystem_9084ba;
+const READER_POST_MENU = (handle) => [{label:"Save"},{label:"Cite in a new post"},{label:"Hide @"+handle},{label:"License terms"}];
 const ada = { handle: "ada", displayName: "Ada Okonkwo" };
 const mira = { handle: "mira_l", displayName: "Mira Lindqvist" };
 const b = (d,i,n) => ({current:{pDirected:d,pInterest:i},rawSum:{pDirected:d,pInterest:i},records:n,severed:false,severance:{records:n}});
@@ -16,20 +17,20 @@ function Demo(){return (
 <div className="grid">
   <div className="col">
     <span className="lbl">Post card — summary, with title, four-line clamp</span>
-    <PostCard author={ada} title="The long way home" content="Took the long way home tonight and the whole street smelled of rain on warm stone. Stopped at the corner for ten minutes just to stand in it. Nothing else to report." timestamp="2h" license={{attribution:0.5,provenance:0}} score="15" bundle={b(0.55,0.2,2)} menuItems={[{label:"Report this"},{label:"Copy link"}]}/>
+    <PostCard author={ada} title="The long way home" content="Took the long way home tonight and the whole street smelled of rain on warm stone. Stopped at the corner for ten minutes just to stand in it. Nothing else to report." timestamp="2h" license={{attribution:0.5,provenance:0}} score="15" bundle={b(0.55,0.2,2)} menuItems={READER_POST_MENU("ada")}/>
     <span className="lbl">Text-only, pending — real content, quietly marked</span>
-    <PostCard author={mira} content="Finished the shelf. It is not level but it holds twenty-two books and one heavy lamp." timestamp="4h" license={{attribution:0,provenance:0}} score="-4" pending menuItems={[{label:"Report this"},{label:"Copy link"}]}/>
-    <span className="lbl">The affordance row — the stance leads, the score follows, a negative one reads plainly</span>
+    <PostCard author={mira} content="Finished the shelf. It is not level but it holds twenty-two books and one heavy lamp." timestamp="4h" license={{attribution:0,provenance:0}} score="-4" pending menuItems={READER_POST_MENU("mira_l")}/>
+    <span className="lbl">The affordance row — the opinion leads, the score follows, a negative one reads plainly</span>
     <PostCard author={mira} content="Same walk, six weeks running." timestamp="6h" license={{attribution:1,provenance:1}} score="8" bundle={b(0.2,0.6,1)}
-      menuItems={[{label:"Report this"},{label:"Copy link"}]}/>
+      menuItems={READER_POST_MENU("mira_l")}/>
     <p style={{margin:0,fontSize:11,color:"var(--text-secondary)",lineHeight:1.5,maxWidth:300}}>Material's <code>graph_3</code> and the number — not the word "Score", and never an emoji, which would collide with the stance face on the same card. Uncapped, negative allowed, never coloured. The drill-down behind it is <b>not built</b>.</p>
   </div>
   <div className="col">
     <span className="lbl">Post card — detail variant</span>
-    <PostCard author={ada} variant="detail" title="Six weeks of the same walk" description="Same route, same time." content="Week one I noticed the bakery. Week four I noticed the woman who feeds the cats behind it." timestamp="Yesterday" license={{attribution:1,provenance:0.5}} score="23" edited menuItems={[{label:"Report this"},{label:"Copy link"}]}/>
+    <PostCard author={ada} variant="detail" title="Six weeks of the same walk" description="Same route, same time." content="Week one I noticed the bakery. Week four I noticed the woman who feeds the cats behind it." timestamp="1d" license={{attribution:1,provenance:0.5}} score="23" edited menuItems={READER_POST_MENU("ada")}/>
     <span className="lbl">The overflow menu, open — the rare interactions, license among them</span>
     <div style={{display:"flex",justifyContent:"flex-start",height:190}}>
-      <OverflowMenu items={[{label:"License terms"},{label:"Report this"},{label:"Copy link"}]} align="left"/>
+      <OverflowMenu items={READER_POST_MENU("ada")} align="left"/>
     </div>
     <span className="lbl">Comment thread — nested, one reply pending</span>
     <ul><CommentCard author={mira} content="That corner by the bakery? It does that in September and then never again." timestamp="1h" license={{attribution:0,provenance:0}} edited bundle={b(0.15,0.15,1)} onReply={()=>{}} replies={[{id:"r1",author:ada,content:"The same one. I'll go back in a week and report.",timestamp:"20m",license:{attribution:0,provenance:0},pending:true}]}/></ul>
