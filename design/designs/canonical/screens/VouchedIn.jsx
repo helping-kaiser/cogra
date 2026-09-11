@@ -19,11 +19,32 @@
    owes — the reader's own point, and the one edge they just made. Nothing here
    is hand-drawn where the system already owns the drawing.
 
+   TWO RUNGS OF POINT, NOT THREE, AND `secondaryContainer` IS NOT ONE OF THEM.
+   `SkyField` spends `secondaryContainer` on its mid-weight points, which works
+   on the Explore hero's light card and inverts in the dark theme: dark
+   `secondaryContainer` is #743918, a dark brown that sinks into the near-black
+   ground, so the LARGEST points come out the DIMMEST and the weight reading
+   runs backwards. This board therefore spends only `outline` (far) and
+   `primaryContainer` (near) on the field, plus `primary` for you — three values
+   that all read on both grounds, `primaryContainer` being literally the same
+   #ef6c1a in either theme. The same inversion is latent in `SkyField` itself;
+   it is reported rather than fixed here, because fixing it moves the Explore
+   board, which belongs to its own pass.
+
+   THE FIELD MAKES NO CLAIM ABOUT WEIGHTING, and the copy is careful not to make
+   one. The Explore hero promises a sky "sized by your own paths to it"; on this
+   screen the reader has exactly one path, so a field drawn by that rule would
+   be one lit point and a dozen grey ones — true, and the wrong note for a
+   welcome. So this is the sky as a picture of the network with the reader newly
+   in it, and the screen's WORDS claim only what is certainly true: the opinion
+   is signed, and the feed is theirs now. Nothing is promised that a later Sky
+   would have to honour.
+
    WHAT THE PICTURE SAYS, element by element:
      · the faint `outline` points are accounts far from you — the network you
        have joined but do not know yet;
-     · the `secondaryContainer` and `primaryContainer` points are nearer ones,
-       the same distance-by-colour reading the Explore hero already teaches;
+     · the two `primaryContainer` points are nearer ones, the same
+       distance-by-colour reading the Explore hero already teaches;
      · the hairlines between them were there before you arrived — the network
        does not assemble itself for you, and the motion spec below is careful
        never to imply it does;
@@ -94,13 +115,17 @@
 /* The ceremony's sky. `SkyField`'s vocabulary — token colours only, weighted
    discs, hairline edges — at full bleed, with the reader's own point and the
    edge they just signed. Kept local to this board rather than added to
-   `_shared.jsx`: one board uses it, and `SkyField` remains the shared tease. */
+   `_shared.jsx`: one board uses it, and `SkyField` remains the shared tease.
+
+   The field takes two thirds of the screen, and YOUR POINT SITS NEAR ITS LOWER
+   EDGE — close enough to the headline that the words read as this picture's
+   caption rather than as a second, unrelated block. */
 const SKY_W = 390;
-const SKY_H = 470;
+const SKY_H = 560;
 /* @mira's point, and yours. The avatar disc is laid over the SVG at these same
    coordinates, so the field and the face stay in one register. */
-const MIRA_AT = { x: 240, y: 250, r: 16 };
-const YOU_AT = { x: 195, y: 400, r: 8 };
+const MIRA_AT = { x: 240, y: 288, r: 16 };
+const YOU_AT = { x: 195, y: 516, r: 8 };
 
 function CeremonySky() {
   return (
@@ -109,35 +134,35 @@ function CeremonySky() {
         style={{ display: "block", lineHeight: 0 }}
         html={`<svg viewBox="0 0 ${SKY_W} ${SKY_H}" width="${SKY_W}" height="${SKY_H}" aria-hidden="true" style="display:block">
           <g stroke="var(--border-hairline)" stroke-width="1" fill="none">
-            <line x1="52" y1="120" x2="110" y2="68"/>
-            <line x1="110" y1="68" x2="206" y2="128"/>
-            <line x1="206" y1="128" x2="300" y2="120"/>
-            <line x1="300" y1="120" x2="348" y2="196"/>
-            <line x1="150" y1="186" x2="206" y2="128"/>
-            <line x1="84" y1="250" x2="150" y2="186"/>
-            <line x1="330" y1="300" x2="348" y2="196"/>
-            <line x1="150" y1="186" x2="176" y2="288"/>
-            <line x1="120" y1="330" x2="84" y2="250"/>
-            <line x1="206" y1="128" x2="235.4" y2="233.6"/>
-            <line x1="254.9" y1="258.3" x2="330" y2="300"/>
-            <line x1="225.4" y1="258.7" x2="176" y2="288"/>
+            <line x1="52" y1="136" x2="110" y2="78"/>
+            <line x1="110" y1="78" x2="206" y2="142"/>
+            <line x1="206" y1="142" x2="300" y2="132"/>
+            <line x1="300" y1="132" x2="348" y2="222"/>
+            <line x1="150" y1="212" x2="206" y2="142"/>
+            <line x1="84" y1="286" x2="150" y2="212"/>
+            <line x1="330" y1="344" x2="348" y2="222"/>
+            <line x1="150" y1="212" x2="176" y2="330"/>
+            <line x1="120" y1="378" x2="84" y2="286"/>
+            <line x1="206" y1="142" x2="236.1" y2="271.4"/>
+            <line x1="254.4" y1="297.0" x2="330" y2="344"/>
+            <line x1="225.8" y1="297.3" x2="176" y2="330"/>
           </g>
-          <circle cx="110" cy="68" r="3" fill="var(--outline)"/>
-          <circle cx="262" cy="60" r="3" fill="var(--outline)"/>
-          <circle cx="52" cy="120" r="4" fill="var(--outline)"/>
-          <circle cx="300" cy="120" r="7" fill="var(--secondary-container)"/>
-          <circle cx="206" cy="128" r="5" fill="var(--primary-container)"/>
-          <circle cx="150" cy="186" r="6" fill="var(--secondary-container)"/>
-          <circle cx="62" cy="190" r="3" fill="var(--outline)"/>
-          <circle cx="348" cy="196" r="4" fill="var(--outline)"/>
-          <circle cx="84" cy="250" r="5" fill="var(--outline)"/>
-          <circle cx="176" cy="288" r="3" fill="var(--outline)"/>
-          <circle cx="330" cy="300" r="5" fill="var(--primary-container)"/>
-          <circle cx="120" cy="330" r="4" fill="var(--outline)"/>
-          <circle cx="38" cy="340" r="3" fill="var(--outline)"/>
-          <circle cx="286" cy="372" r="3" fill="var(--outline)"/>
+          <circle cx="110" cy="78" r="3" fill="var(--outline)"/>
+          <circle cx="262" cy="64" r="3" fill="var(--outline)"/>
+          <circle cx="52" cy="136" r="4" fill="var(--outline)"/>
+          <circle cx="300" cy="132" r="7" fill="var(--primary-container)"/>
+          <circle cx="206" cy="142" r="5" fill="var(--outline)"/>
+          <circle cx="150" cy="212" r="6" fill="var(--primary-container)"/>
+          <circle cx="62" cy="216" r="3" fill="var(--outline)"/>
+          <circle cx="348" cy="222" r="4" fill="var(--outline)"/>
+          <circle cx="84" cy="286" r="5" fill="var(--outline)"/>
+          <circle cx="176" cy="330" r="3" fill="var(--outline)"/>
+          <circle cx="330" cy="344" r="5" fill="var(--outline)"/>
+          <circle cx="120" cy="378" r="4" fill="var(--outline)"/>
+          <circle cx="38" cy="392" r="3" fill="var(--outline)"/>
+          <circle cx="286" cy="430" r="3" fill="var(--outline)"/>
 
-          <line x1="197.9" y1="390.4" x2="234.8" y2="267.2" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="196.9" y1="506.2" x2="236.5" y2="305.7" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round"/>
           <circle cx="${YOU_AT.x}" cy="${YOU_AT.y}" r="${YOU_AT.r * 2}" fill="none" stroke="color-mix(in srgb, var(--primary) 40%, transparent)" stroke-width="1"/>
           <circle cx="${YOU_AT.x}" cy="${YOU_AT.y}" r="${YOU_AT.r}" fill="var(--primary)"/>
         </svg>`}

@@ -1783,7 +1783,8 @@ The rulings the layer rests on:
 - **A stance concludes where it was taken.** The pad is reached from
   posts, comments and profiles alike, so its signed outcome returns
   wherever it bloomed. The applicant's vouch-back is the one exception
-  — that one opens the way into the member's own feed.
+  — that one opens the ceremony, and the ceremony opens the way into the
+  member's own feed.
 - **The start is the click, not a screen.** A flow starts from a board,
   from a given edge, or from a **control**: `{"control": "nav · New
   post"}` expands to every edge wearing that label, and they must all
@@ -4402,6 +4403,110 @@ start growing 39 → 44 boards as the five drill-down boards join the bar.
 One label was aligned in passing: `FeedHidden`'s score edge read `Post
 score` where the other 21 read `Post Score`, which would have dropped it
 silently from the control start.
+
+### The vouch-back ceremony — 2026-09-11
+
+Item 58, jakob's line: "once you vouche back there should be some
+indicator that you are now part of the network… it is the ceremonial
+ending of you becomming part of the graph.. we could even think of a
+nice animation for this.. you becomming part of the sky or sth". One
+board, `VouchedIn`, between the signed vouch-back and the feed.
+**Scope: an MVP-window stretch, and the first thing to yield** — the
+entry flow is complete and correct without it, so if the window
+closes the ceremony is what gets dropped, not a step the product
+needs.
+
+- **What the ceremony is ABOUT is the borrowed view ending.** A feed
+  is ranked from the viewer's own outgoing opinions; until the
+  vouch-back the new member had none and browsed from their inviter's
+  vantage. The signature is the moment their own view begins — that,
+  not a milestone badge, is the thing worth marking, and it lets the
+  copy stay concrete while the headline carries the metaphor.
+- **The sky is `SkyField`'s vocabulary, not a new drawing.** The
+  Explore hero already draws the graph as weighted discs on hairlines
+  in token colours ("Your sky — every account a star"). The ceremony
+  is that at full bleed with the two things the moment owes: the
+  reader's own point, and the one edge they just made. **The ground
+  stays `surface`** — no night-black special case, so the board is a
+  sky in the light theme too and the dark theme gets the night for
+  free.
+- **Two rungs of point, and `secondaryContainer` is not one.** Dark
+  `secondaryContainer` is #743918, which sinks into the dark ground —
+  so `SkyField`'s mid-weight points come out dimmest exactly where
+  they should read brightest. The ceremony spends `outline` (far) and
+  `primaryContainer` (near, and the same #ef6c1a in both themes),
+  plus `primary` for the reader. **The same inversion is latent in
+  `SkyField`** and is reported, not fixed here: fixing it moves the
+  Explore board.
+- **You are marked as a vantage, not ranked as a star.** The reader's
+  point is `primary` with a hairline halo. It is deliberately not the
+  biggest point: in the Sky size means "your own paths to it", and
+  there is no path from you to yourself.
+- **@mira carries her actual face**, the only identified point —
+  the act being celebrated is reciprocation to a person. **Your edge
+  is the one `primary` stroke, and it leaves your point for hers**:
+  only viewer-rooted forward paths shape a feed, so the edge runs
+  outward from you. The ranking law, drawn.
+- **The field claims nothing about weighting.** Drawn strictly by the
+  hero's "sized by your own paths" rule, a day-one sky would be one
+  lit point and a dozen grey ones — true, and the wrong note for a
+  welcome. So the picture is the network with the reader newly in it,
+  and the WORDS claim only what is certainly true. Nothing is
+  promised that a later Sky (item 16) would have to honour.
+- **No back, no bottom bar, one way out.** The opinion is signed and
+  on the record, so the screen it came from no longer exists and a
+  back arrow would be a lie; a bottom bar would make a ceremony into
+  a tab. `Go to your feed` is the single control, which is why the
+  board carries exactly one flow number.
+- **The motion is a DECLARED EXCEPTION to §4.** "Nothing inside an
+  arriving screen animates" and "motion never performs" are the
+  standing rules; this is the one board that asks to break them, and
+  it is recorded as an exception to accept or reject rather than
+  taken quietly. Two things keep it inside the system's spirit: every
+  duration and easing is an EXISTING token — no new motion value is
+  introduced, and the phase offsets are sums of those same durations
+  — and the motion is still deictic, showing where the reader's point
+  came from and which way their edge runs.
+- **The storyboard.** The sky ARRIVES ALREADY DRAWN: the other
+  accounts and the hairlines between them are in the first frame, and
+  nothing builds or assembles — the network did not wait for you.
+  Only what is new animates. `t=0` the standard forward transition
+  (300ms). `t=300` your point fades in and rises 24px
+  (`--duration-long-2`, `--ease-emphasized-decelerate`); opacity and
+  translate only — no scale, no bounce, no spring. `t=600` the halo
+  expands from the disc's radius to twice it and stays
+  (`--duration-medium-2`, `--ease-standard-decelerate`) — one move
+  that settles, never a pulse. `t=900` your edge draws outward to
+  @mira's rim (`--duration-long-2`, `--ease-standard`). `t=1100` the
+  headline, subline and button arrive together on an 8px rise and
+  fade — `cg-dialog-in`'s own entrance reused
+  (`--duration-medium-4`, `--ease-standard-decelerate`), together and
+  never staggered. It ends at 1500ms, and **a tap anywhere completes
+  every phase at once**, so nobody is held.
+- **Reduced motion: the resting state IS the end state**, which is
+  what the board draws. The phases collapse to 0ms (the duration
+  tokens already do this) and the screen arrives whole — edge drawn,
+  halo full, words in place. A reader who asked for stillness loses
+  the choreography and none of the content.
+- **Copy awaiting blessing.** Drawn: *"You're part of the sky now."*
+  over *"Your opinion on @mira is signed, and the way is open both
+  ways. The feed you see from here is your own."* **jakob's own
+  phrase "part of the graph" cannot be used**: §3 bans *graph* in
+  user-facing copy. *Sky* is legal and already product-facing, and
+  the picture glosses it. Alternates, both legal and both drop-in:
+  *"You're part of the network now."* (closest to the ruling's
+  words, and free of any dependency on the Sky shipping) and
+  *"You're in."* (the quietest). The subline carries the whole honest
+  content either way, so the headline can be swapped without touching
+  the substance.
+- **Wiring.** `VouchBackPad/4`'s vouch-back outcome lands on
+  `VouchedIn` instead of `Feed`, and `VouchedIn/1` carries on to the
+  feed. `vouch-back-for-your-inviter` gains the pad as a pinned
+  waypoint and now ends on the ceremony's own edge, so the journey
+  still concludes where it always claimed to. **§13's user-flow
+  ruling is amended**: "a stance concludes where it was taken — the
+  applicant's vouch-back is the one exception" still holds, and that
+  exception now opens the ceremony, which opens the feed.
 
 ## 14. Index
 
