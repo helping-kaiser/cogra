@@ -32,10 +32,10 @@ function captureFetch() {
   return calls;
 }
 
-function clientWith(token: string | null) {
+function clientWith(token: string | null, ready: () => Promise<void> = async () => {}) {
   return new ApolloClient({
     cache: new InMemoryCache(),
-    link: authorizedLink(store(token), "/graphql"),
+    link: authorizedLink(store(token), "/graphql", ready),
   });
 }
 

@@ -23,6 +23,7 @@ import {
   viewerField,
   type Outcome,
 } from "./outcome";
+import { SKIP_SESSION_READINESS } from "@/lib/apollo-link";
 import type { RefreshExecutor } from "@/lib/session/refresher";
 import type { SessionAuth } from "@/lib/session/token-store";
 
@@ -87,6 +88,9 @@ export function refreshExecutor(client: ApolloClient): RefreshExecutor {
         client.mutate({
           mutation: RefreshSessionDocument,
           variables: { input: { refreshToken } },
+          // The one operation that does not wait for the session to settle:
+          // it is what settles it (`apollo-link.ts`).
+          context: { [SKIP_SESSION_READINESS]: true },
         }),
       (data) => data.refreshSession.userErrors,
       (data) => sessionAuthOf(data.refreshSession.auth),
