@@ -474,7 +474,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SettingsGroup`, `SettingsRow`, `Switch`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton`, `NodeMark` |
 | `components/forms/` | `TextField`, `FieldLabel`, `FieldSupport`, `FieldCount`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
-| `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand`, `BandIcon` |
+| `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `DeletionBand`, `CograBand`, `BandIcon` |
 | `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `StagedReference`, `TopicRemovable`, `Caret` |
 | `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
@@ -3993,6 +3993,106 @@ drew against it. Ruled by jakob the same day.
   witness moved only in origin lists — the three new boards join every
   flow that starts on a bottom-nav tap, and `FeedUnread` joins the ones
   that start on a post card; no step rerouted.
+
+### The account-deletion round — 2026-09-11
+
+Slice 8's erasure half, and the product's most destructive gesture. The
+mechanics were already specified — `docs/instances/erasure.md` §2 and §5
+— and nothing had ever been drawn. Ruled by jakob the same day.
+
+- **The entry is the last row of Settings, in its own group, quiet at
+  rest (jakob).** `Delete account` on a plain navigating row: no `error`
+  colour, no `action` emphasis, a chevron. The weight of this act belongs
+  to the flow it opens, not to a page a reader came to for the theme — a
+  red row among eight neighbours makes the whole page feel dangerous, and
+  a reader who has decided does not need arguing with. The group's
+  footnote carries the one fact the row cannot: *Nothing is deleted
+  here.* The label is a verb phrase where `SettingsRow`'s note asks for a
+  noun, because the row names a task rather than a setting; the chevron
+  is what keeps the promise the verb might break.
+- **The request screen draws what stays, not only what goes.** Deleting
+  an account here does not unmake a record: the husk keeps authoring
+  everything it authored (`erasure.md` §3), and a screen listing only the
+  disappearances would let a reader commit believing their comments would
+  leave other people's threads. Two insets, `ChangeEmailConfirm`'s shape,
+  for its reason — two readings a reader has to hold at once. The wallet
+  is named in `What stays`: the L0 address is held by the reader's key
+  and no part of the platform can touch it.
+- **The content sweep is a checkbox, and the emailed link is the whole
+  friction.** `erasure.md` makes identity-level the default and
+  content-level the opt-in; the system's own distinction settles the
+  control, since a switch takes effect when pressed and nothing here
+  takes effect until the link is opened. And the link is the only
+  ceremony: it proves the account's own address, which is the check
+  against a compromised session that a typed handle cannot be. No
+  password, no typing the handle back, no *are you sure* — theatre here
+  reads as the product trying to talk the reader out of it.
+- **`DeleteAccountMail` exists because the confirmation leaves the app.**
+  The seven days start at the CONFIRMATION, not the request, so the one
+  thing this board owes is that nothing is scheduled yet. `Reset` says
+  the same thing in a status line because its form is still on screen;
+  here the form is spent, so it is a board — `VerifyExpired`'s column and
+  its foot. No expiry is claimed: `auth.md` gives the reset link fifteen
+  minutes and `erasure.md` gives this one no window, so drawing one would
+  be inventing a mechanic.
+- **The grace state is a band on every logged-in surface (jakob), and
+  `DeletionBand` is the mechanism.** A reader may have confirmed from a
+  mail client on another device; a state only a settings page confesses
+  is a state most readers would meet at the deadline. It is a SIBLING of
+  `BorrowedViewBand`, not the same band — they share the slot under the
+  surface's header (`CograBand`'s children on a root, under `PageHeader`
+  on an inner surface) and nothing else. This one is filled and its line
+  is `on-surface` where that one is transparent and secondary: the two
+  dials the system has for presence, turned once, without reaching for a
+  colour.
+- **It is not `--error`, and that is §4 rather than restraint.** `error`
+  is for failure, and this is a thing the reader asked for proceeding
+  exactly as asked. Colouring a chosen act like a fault would be the
+  surface arguing with the decision — the same reason Sign out takes no
+  error colour and `EmptyState` refuses it for an absence. The band wears
+  `surface-bar`, the shell's own chrome fill, because shell is what it is.
+- **`FeedDeleting` draws the band once, on the most-seen root**, the way
+  `FeedUnread` draws the bell's lit state. The feed beneath it is
+  untouched, and that is the ruling drawn: during the grace period
+  nothing is redacted and nothing is withdrawn, so a feed that started
+  hiding the reader's own posts would be redacting early.
+- **AWAITING A RULING: how the count says a FUTURE moment.** The ages
+  ladder is a vocabulary for how long ago something happened; this counts
+  forward and no ruling covers that (backlog 54.1). Drawn: `Your account
+  is deleted in 6 days.` — spelled out, because the ladder's compression
+  buys room in lists where many ages compete for it and buys nothing in a
+  band, while `6d` means *ago* everywhere else in the product. The two
+  alternatives and the reasoning are in `copy-voice.md`.
+- **The cancel is a snackbar, and it has no Undo.** The band is on every
+  surface, so the cancel is pressed anywhere; a confirmation screen would
+  move a reader who tapped two words mid-scroll. The settings round
+  already settled that shape for acts that finish where they are pressed.
+  The band's absence is the lasting confirmation — which is why no band
+  is drawn in some cancelled state. And an Undo here would re-arm an
+  irreversible countdown from a control that disappears in four seconds.
+- **`ProfileDeleted` is a removal mark, not an empty state (jakob: "we
+  never pretend sth that once was there never existed").** `RedactedContent`
+  gains a third reason, `account`: identity-level redaction empties the
+  Registration bundle exactly as a removal empties a post's, so a deleted
+  profile wears the mark a post wears, on the reserved surface that says
+  a space was kept rather than lost. `ProfileNotFound` keeps its own
+  case — a freed handle resolving to nothing — and this board is reached
+  by structure that still points at the actor, an author chip on a post
+  they wrote. The header keeps no handle: the handle is the thing that
+  was removed, and printing it back would undo the redaction on the one
+  surface that exists to report it.
+- **The gate**: 165 → **170 boards**, 1214 → **1263 edges**, gaps 59 →
+  **63**, flows 60/57/3 → **61/58/3**. The edge count is honest: the two
+  feed boards clone `Feed`'s eighteen each, `ProfileDeleted` takes
+  `ProfileNotFound`'s six, and the request flow's own six close the
+  settings row's gap without opening one. The four new gaps are the two
+  clones inheriting `Feed`'s Post Score and chats — `FeedUnread`'s own
+  inheritance, twice. The new flow is `request-account-deletion`, which
+  ends where the flow leaves the app; the witness moved only in origin
+  lists and the six start counts they feed, and no step rerouted.
+  `Settings`' frame and its canvas slot grow 2027 → **2163** for the
+  delete group, measured rather than guessed — the harness reproduced the
+  recorded 2027 on the pre-change board before it was trusted for 2163.
 
 ## 14. Index
 
