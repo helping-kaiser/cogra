@@ -95,7 +95,7 @@ export function StanceCoachMark({ onDismiss, style }) {
     <div
       role="dialog"
       aria-modal="false"
-      aria-label="How stances work"
+      aria-label="How opinions work"
       style={{
         zIndex: 20,
         display: "flex",

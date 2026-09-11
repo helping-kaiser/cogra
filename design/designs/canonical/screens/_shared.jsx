@@ -594,7 +594,7 @@ function ProfileOtherBody() {
         <ChronicleList>
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Took a stance" titleAside="on @tobias" trailing="2d" inert />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert />
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert />
         </ChronicleList>
@@ -773,7 +773,7 @@ function ReplyPadBody() {
           </span>
         </div>
 
-        <div role="group" aria-label="Stance pad for the post you answer" style={{ alignSelf: "center", width: 240 }}>
+        <div role="group" aria-label="Opinion pad for the post you answer" style={{ alignSelf: "center", width: 240 }}>
           <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
         </div>
 
@@ -1301,7 +1301,7 @@ function SettingsBody() {
         </SettingsGroup>
 
         <SettingsGroup
-          label="Taking a stance"
+          label="Giving an opinion"
           footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot."
         >
           <SettingsRow
@@ -1314,7 +1314,7 @@ function SettingsBody() {
             name="settings-stance-input"
             selected={false}
             label="Sliders"
-            status="One slider per side of the stance."
+            status="One slider per side of the opinion."
           />
           <SettingsRow
             name="settings-stance-input"

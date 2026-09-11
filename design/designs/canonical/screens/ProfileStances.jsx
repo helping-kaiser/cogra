@@ -11,13 +11,13 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="@ada · Stances" backHref="#" backLabel="Back" />
+      <PageHeader title="@ada · Opinions" backHref="#" backLabel="Back" />
       <TabBar
         ariaLabel="Which direction"
         value="on"
         tabs={[
           { id: "on", label: "On them" },
-          { id: "taken", label: "They've taken" },
+          { id: "taken", label: "By them" },
         ]}
       />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", paddingTop: 4 }}>

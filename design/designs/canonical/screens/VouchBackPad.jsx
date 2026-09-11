@@ -23,19 +23,19 @@ export function Screen() {
             <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>@mira vouched you in</h2>
           </div>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-            Vouch back to open the way from your side — your first stance, and your feed grows from it.
+            Vouch back to open the way from your side — your first opinion, and your feed grows from it.
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
             <Button variant="text">Not now</Button>
             <StanceControl
               targetLabel="@mira"
-              helpLabel="Your first stance"
+              helpLabel="Your first opinion"
               defaultOpen
               defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
               padInset={80}
               padNote={
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <PadLine>Your first stance. The pad is how you shape what reaches you — for or against, and how much.</PadLine>
+                  <PadLine>Your first opinion. The pad is how you shape what reaches you — for or against, and how much.</PadLine>
                   <PadLine>
                     Later, tap the small face under a post to open this — press and hold it instead and a gentle{" "}
                     <span aria-hidden="true">🙂</span>

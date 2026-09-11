@@ -11,7 +11,7 @@ export function Screen() {
             The wallet
           </h2>
           <p style={{ margin: 0, position: "relative", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            CGT is how CoGra pays its people — for the reach their posts and stances actually deliver, held by their own key, never by CoGra.
+            CGT is how CoGra pays its people — for the reach their posts and opinions actually deliver, held by their own key, never by CoGra.
           </p>
           <p style={{ margin: 0, position: "relative", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
             Join, and what you grow here lands here.
