@@ -101,11 +101,16 @@ object Veil {
     val BlurRadius = 24.dp
 
     /**
-     * The wash over the blur. design/readme.md §9 asks for "a neutral wash of
-     * the standard scrim" and forbids `error` colouring, so this is an alpha
-     * applied to the theme's own `scrim` role rather than a new colour.
+     * The wash every veil face wears. design/readme.md §9 asks for "a neutral
+     * wash of the standard scrim" and forbids `error` colouring, so this is an
+     * alpha applied to the theme's own `scrim` role rather than a new colour.
+     *
+     * One expression, so the faces cannot drift apart: the boards' `WASH` is
+     * `--scrim-dialog` at 55%, and `--scrim-dialog` is itself the `scrim` at
+     * 50% — 0.275 of a scrim that is `#000000` in both themes
+     * (`design/components/honesty/SensitiveVeil.jsx`, `tokens/semantic.css`).
      */
-    const val ScrimAlpha = 0.32f
+    const val ScrimAlpha = 0.275f
 
     /**
      * What covers the body where [androidx.compose.ui.draw.blur] cannot run.

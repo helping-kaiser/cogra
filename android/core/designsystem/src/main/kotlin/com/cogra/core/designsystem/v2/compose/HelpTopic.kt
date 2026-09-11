@@ -109,4 +109,23 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
                 "numbers? Swap the input in settings.",
         ),
     ),
+
+    /**
+     * The reply's two-axis pad — its own topic, not [WhereYouStand].
+     *
+     * A reply's stance is toward somebody else's post, so both axes are
+     * the author's to pick; the post pad's text says the opposite
+     * ("only for-or-against is yours to set") and would be false here
+     * (`design/designs/canonical/screens/ReplyPadHelp.jsx`).
+     */
+    TowardWhatYouAnswer(
+        title = "Toward what you answer",
+        paragraphs = listOf(
+            "Replying also signs where you stand on the post you answer — for or " +
+                "against, and how much of it reaches you. It starts at a gentle " +
+                "+0.10 / +0.10 and rides the same signature as your reply.",
+            "Nothing is signed until Set. Swap the input in settings if you prefer " +
+                "sliders or numbers.",
+        ),
+    ),
 }

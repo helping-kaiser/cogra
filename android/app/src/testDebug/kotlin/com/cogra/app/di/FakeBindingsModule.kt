@@ -70,6 +70,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
+import java.time.Instant
 import javax.inject.Singleton
 
 /** Scriptable account state: tests set the profile and backup blob. */
@@ -180,6 +181,11 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
             displayName = testModeratedField(displayName),
             bio = testModeratedField(bio),
             websiteUrl = testModeratedField(websiteUrl),
+            // A landed edit is a NEW profile version, and its instant is
+            // what the screen waits on: a fake that changed the words
+            // without moving this would model a backend that answers
+            // instantly, which is the one thing the real one does not do.
+            updatedAt = profile?.updatedAt?.plusSeconds(1) ?: Instant.EPOCH.plusSeconds(1),
         )
         return Outcome.Success(emptyList())
     }

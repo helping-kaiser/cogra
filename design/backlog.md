@@ -1754,3 +1754,16 @@ Runs as its own round after the small-rulings review lands.
 The edit surface reconciles with ruling 3 in this round: a vertical
 clip's edit shows the same optional door, never a cover row presuming
 one exists.
+
+### 50 · The length caps and pulls the f2 lanes filed · *status: ruled same day*
+
+Filed by the f2-droid lane 2026-09-10 as a pull-to-refresh + pad-inset
+prompt, renumbered here because the design side's items 47–49 landed
+first — and both asks were ruled the same day: pull-to-refresh exists
+on every full-screen scrolling root with the platform's own indicator
+(item 47 / readme §13), and the parked pad's one number is 16 (the
+ReplyPad board's hand-spelled 24 was the drift). What stands from the
+lane's filing: the post veil face's remaining divergences, `HelpDot`'s
+geometry drifting from its board while its KDoc claims conformance,
+item 30, and four surfaces still using spinners as loading states —
+each named in PR #667's body.

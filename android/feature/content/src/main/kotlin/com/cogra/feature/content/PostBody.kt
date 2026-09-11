@@ -28,7 +28,9 @@ import com.cogra.core.designsystem.v2.media.MediaGallery
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.RemovalReason
 import com.cogra.core.designsystem.v2.media.RemovedPlaceholder
+import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.media.SensitiveVeil
+import com.cogra.core.designsystem.v2.media.SensitiveVeilCompact
 import com.cogra.core.designsystem.v2.token.MediaFrame
 import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.domain.CommentView
@@ -104,6 +106,14 @@ internal fun PostBody(
     surface: BodySurface = BodySurface.Post,
     revealed: Boolean = false,
     onReveal: () -> Unit = {},
+    /**
+     * Whose mark the veil carries. The statuses above are the veil
+     * itself — the OR of the author's own mark and a moderator's verdict
+     * — so the caller reads the author's half to tell the two apart.
+     */
+    sensitiveSource: SensitiveSource = SensitiveSource.Author,
+    /** The author's public reason, shown on the veil after the source. */
+    sensitiveReason: String? = null,
 ) {
     if (isRemoved(content, attachments, attachmentsStatus)) {
         RemovedPlaceholder(
@@ -124,12 +134,7 @@ internal fun PostBody(
     val mediaIsTheBody = surface == BodySurface.Post && attachments.isNotEmpty()
     val words = content.value?.takeIf { it.isNotEmpty() && !mediaIsTheBody }
 
-    SensitiveVeil(
-        veiled = !revealed && isSensitive(content, description, attachmentsStatus),
-        onReveal = onReveal,
-        modifier = modifier.fillMaxWidth(),
-        testTag = "${testTagPrefix}_veil",
-    ) {
+    val body: @Composable () -> Unit = {
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -153,6 +158,33 @@ internal fun PostBody(
                 gallery()
             }
         }
+    }
+
+    val veiled = !revealed && isSensitive(content, description, attachmentsStatus)
+    // THE TWO FACES OF ONE VEIL. A post's body carries media or several
+    // lines, so it blurs in place and keeps its exact space. A comment
+    // is two lines and an inset attachment: covering it in place would
+    // wash the words and wash the pictures separately, so the whole body
+    // is replaced by one block at the card's own scale
+    // (design/components/honesty/SensitiveVeil.jsx).
+    if (surface == BodySurface.Comment) {
+        SensitiveVeilCompact(
+            veiled = veiled,
+            onReveal = onReveal,
+            modifier = modifier.fillMaxWidth(),
+            source = sensitiveSource,
+            reason = sensitiveReason,
+            testTag = "${testTagPrefix}_veil",
+            content = body,
+        )
+    } else {
+        SensitiveVeil(
+            veiled = veiled,
+            onReveal = onReveal,
+            modifier = modifier.fillMaxWidth(),
+            testTag = "${testTagPrefix}_veil",
+            content = body,
+        )
     }
 }
 
