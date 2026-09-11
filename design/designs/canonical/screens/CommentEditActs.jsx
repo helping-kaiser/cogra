@@ -1,5 +1,5 @@
 /* Edit comment · the acts (comment-media round, 2026-08-31): the footer's
-   "This creates 2 signed actions" opened — an M3 modal bottom sheet, the
+   "You're signing 2 things" opened — an M3 modal bottom sheet, the
    EditActs pattern at comment scale, rendered with ActsCard (the sheet title
    carries the count, so the card carries rows and the all-or-nothing note).
    The sheet is the peek-from-a-composer pattern; ceremony screens keep the
@@ -54,12 +54,12 @@ export function Screen() {
       </div>
 
       <BottomSheet open ariaLabel="What the edit signs">
-        <SheetTitle>2 signed actions</SheetTitle>
+        <SheetTitle>2 things, signed together</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px 16px" }}>
           <ActsCard
             rows={[
-              { label: "Edit", value: "The glovebox camera earns its keep — this is the print…", count: "1 action" },
-              { label: "Tag added", value: "#glovebox", count: "1 action" },
+              { label: "Edit", value: "The glovebox camera earns its keep — this is the print…", count: "1" },
+              { label: "Tag added", value: "#glovebox", count: "1" },
             ]}
             note="They land together, or none does."
           />

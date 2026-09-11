@@ -11,7 +11,7 @@ export function Screen() {
       <ProfileBand />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "8px 16px 0" }}>
-          <TaskCard title="Waiting on your inviter" body="Your application is with @mira. What you stage now lands with you." />
+          <TaskCard title="Waiting on your inviter" body="Your application is with @mira. What you post now arrives with you." />
         </div>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
@@ -32,11 +32,11 @@ export function Screen() {
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="1h" second="First light over the flats — brought the wrong lens, kept the picture anyway." pending onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.1, pInterest: 0.1 }} title="Took a stance" titleAside="on @mira" trailing="2h" pending inert />
           <p style={{ margin: 0, padding: "4px 0", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-            Each kind of act stages once until you land.
+            These wait with your application and arrive with you.
           </p>
         </ChronicleList>
       </div>
-      <Snackbar message="Invites open when you land." />
+      <Snackbar message="Invites open when you're in." />
       <BottomNav active="profile" slots={ALL_SLOTS} inline />
     </>
   );

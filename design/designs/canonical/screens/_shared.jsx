@@ -311,7 +311,7 @@ function KeyPledge() {
             letterSpacing: "var(--text-body-large--letter-spacing)",
           }}
         >
-          Everything you publish is signed with a key that is created on this device and stays in your hands — CoGra never
+          Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never
           holds it and can never reissue it.
         </p>
       </div>
@@ -648,8 +648,8 @@ function ReplyDraft() {
    with a reference staged are one surface in two states, and a row spelled
    twice is a row that drifts. */
 const ADD_ROWS = [
-  { label: "", action: "+ Add a tag", count: "1 more action" },
-  { label: "", action: "+ Cite something", count: "1 more action" },
+  { label: "", action: "+ Add a tag", count: "1 more" },
+  { label: "", action: "+ Cite something", count: "1 more" },
 ];
 
 /* ── WHAT AN OVERLAY SITS ON (jakob's ruling, 2026-09-08) ──────────────────
@@ -674,7 +674,7 @@ function ComposeSealBody() {
 
         <ActsCard
           rows={[
-            { label: "Post", value: "Salt maps of the coast road", count: "1 action" },
+            { label: "Post", value: "Salt maps of the coast road", count: "1" },
             {
               label: "Tags",
               value: (
@@ -683,7 +683,7 @@ function ComposeSealBody() {
                   <Chip label="#coastroad" tone="readout" />
                 </span>
               ),
-              count: "2 actions",
+              count: "2",
             },
             {
               label: "References",
@@ -696,11 +696,11 @@ function ComposeSealBody() {
                   <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
                 </span>
               ),
-              count: "1 action",
+              count: "1",
             },
           ]}
-          total="4 signed actions"
-          note="they land together, or none does"
+          total="4 things, signed together"
+          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -802,10 +802,10 @@ function ReplySealBody() {
             signature carries more than one thing (`ActsCard`'s rule). */}
         <ActsCard
           rows={[
-            { label: "Comment", value: "Reply to @ada's post", count: "1 action" },
+            { label: "Comment", value: "Reply to @ada's post", count: "1" },
             ...ADD_ROWS,
           ]}
-          total="1 signed action"
+          total="1 thing, signed"
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>

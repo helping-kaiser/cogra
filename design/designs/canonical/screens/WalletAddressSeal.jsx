@@ -13,7 +13,7 @@ export function Screen() {
           caption="Payouts and tips land here. It's public, and every change to it stays on your record."
         />
 
-        <ActsCard rows={[{ label: "Address", value: "Your payout address", count: "1 action" }]} total="1 signed action" />
+        <ActsCard rows={[{ label: "Address", value: "Your payout address", count: "1" }]} total="1 thing, signed" />
 
         <div style={{ flex: 1 }} />
 

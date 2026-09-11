@@ -1,7 +1,7 @@
 Use `EarnedChart` for the wallet's progress strip — earnings per settlement as bars.
 
 ```jsx
-<EarnedChart points={[{ amount: 4.1, label: "…", onOpen }, …]} caption="Earned · last 8 settlements" />
+<EarnedChart points={[{ amount: 4.1, label: "…", onOpen }, …]} caption="Earned · last 8 payouts" />
 ```
 
 What holds:

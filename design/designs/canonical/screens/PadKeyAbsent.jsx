@@ -58,7 +58,7 @@ export function Screen() {
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <QuietNote>
-            <span aria-hidden="true">🤷</span> No stance on this post yet.
+            <span aria-hidden="true">🤷</span> No opinion on this post yet.
           </QuietNote>
           {/* The pick's readout, above the field where a thumb cannot cover it. */}
           <div style={{ display: "flex", flexDirection: "column" }}>

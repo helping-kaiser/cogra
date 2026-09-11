@@ -167,8 +167,8 @@ no "Don't miss out". Failures are matter-of-fact and short:
 **Honest about consequence and about cost.** Anything priced says so
 before it is signed, and anything half-finished says who acts next.
 
-- `It takes 3 signed actions, each paid for separately.`
-- `Your standing toward this post drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`
+- `It signs 3 things, each paid separately.`
+- `Your opinion of this post drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`
 - `Signing needs your key, which isn't in this browser — the write waits as pending.`
 - `Nothing was signed just now.` (the first line of the coach mark)
 
@@ -194,8 +194,10 @@ headings, buttons, marketing copy, or empty states. The single arrow in
 
 **Numbers.** A stance pair is always signed and always two decimals:
 `+0.40 / +0.20`, `−0.90 / +0.30`. Valence first, matching the pad's
-horizontal-then-vertical order. Counts are spelled with their noun:
-`1 signed action` / `3 signed actions`.
+horizontal-then-vertical order. What one signature commits is counted in
+things: `1 thing, signed` / `3 things, signed together`, and the rows
+that make up the total carry bare counts — the row's own label already
+says what was counted.
 
 **Money** is `MoneyFigure`'s and never formatted by hand: two decimals,
 thousands grouped (`12,500.00`), the CGT mark trailing where a unit word
@@ -590,7 +592,7 @@ paper over:
 - `ProfileHeader` — §6 specifies it, the product never built it, and the
   profile round (2026-09-01) made it canonical: the compact avatar-left
   shape with name and figures beside it, and the figures are the design
-  work — **Posts**, **"Stances on them"**, **"Stances they've taken"** —
+  work — **Posts**, **"Opinions on them"**, **"Opinions by them"** —
   because the thing being counted is what the repo calls a connection and
   that word is banned on screen (§3); one merged "followers" figure would
   describe a different product. The figures are one tap target toward the
@@ -790,7 +792,7 @@ weights every choice equally. Instead:
   committing action on that surface. `Keep browsing` stays a text button
   and stays first, so nobody is nudged into signing by thumb position.
 - A **destructive** dialog inverts that: the *safe* action is filled and
-  keeps the right-hand slot, `Sever` stays a text button on the left.
+  keeps the right-hand slot, `Walk it back` stays a text button on the left.
   Severance is still one tap away — the control never prevents a choice —
   it just stops being the default-looking one. No new colour: severance
   is a deliberate act, not a failure.
@@ -1302,8 +1304,8 @@ The rulings that put it on screen:
   chips' 32px drawn rung: it lives among 32px chips in these
   sheets, and a taller pill beside them read as swollen.
 - **Everything off is answered by the feed**, not the chip: the empty
-  state names what is off ("Your feed admits nothing right now —
-  every kind is switched off.") and offers the way back.
+  state names what is off ("Your feed is showing nothing — everything
+  is switched off.") and offers the way back.
 
 ### Masters, variants, and screens — 2026-08-28
 
@@ -1592,7 +1594,7 @@ next to brands like Instagram):
   "…or drop them here") — the caption, the picked tray, and the text
   path identical to the app's (*Pick · the web variant*).
 - **The seal's total row carries the all-or-nothing subline on every
-  multi-act seal** — "they land together, or none does" — and omits it
+  multi-act seal** — "They land together, or none does." — and omits it
   on a single-act seal. It had drifted across the hand boards (on the
   key-absent and sheet states, missing from the seal itself); it now
   lives once, as `ActsCard`'s `note`. On the key-absent seal the one

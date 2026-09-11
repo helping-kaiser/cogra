@@ -11,7 +11,7 @@ export function Screen() {
 
         <ActsCard
           rows={[
-            { label: "Post", value: "Sunday at the tide market", count: "1 action" },
+            { label: "Post", value: "Sunday at the tide market", count: "1" },
             {
               label: "Tags",
               value: (
@@ -20,11 +20,11 @@ export function Screen() {
                   <Chip label="#coastroad" tone="readout" />
                 </span>
               ),
-              count: "2 actions",
+              count: "2",
             },
           ]}
-          total="3 signed actions"
-          note="they land together, or none does"
+          total="3 things, signed together"
+          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
