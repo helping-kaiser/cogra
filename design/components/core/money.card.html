@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="700x360" name="Money" subtitle="The CGT figure and its mark — two decimals, dust as < 0.01, signed flows, no colour" -->
+<!-- @dsCard group="Components" viewport="700x500" name="Money" subtitle="The CGT figure and its mark — two decimals, dust as < 0.01, signed flows, no colour" -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -8,13 +8,7 @@
 <style>body{padding:16px}.grid{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { MoneyFigure, CgtMark, HelpDot, Card } = window.CoGraDesignSystem_9084ba;
-function Row({ words, amount, signed }){return (
-  <div style={{display:"flex",justifyContent:"space-between",gap:16,width:260,fontSize:"var(--text-body-medium)"}}>
-    <span style={{color:"var(--text-secondary)"}}>{words}</span>
-    <MoneyFigure amount={amount} signed={signed} />
-  </div>
-)}
+const { MoneyFigure, CgtMark, FactRow, WalletBalance } = window.CoGraDesignSystem_9084ba;
 function Demo(){return (
 <div className="grid">
   <div className="col">
@@ -34,21 +28,15 @@ function Demo(){return (
   </div>
   <div className="col">
     <span className="lbl">History lines — direction is the sign and the words, never a colour</span>
-    <Row words="Payout · campaign settled" amount={12.4} signed />
-    <Row words="Tip to @ada" amount={-2} signed />
-    <Row words="Payout · campaign settled" amount={0.0003} signed />
+    <div style={{display:"flex",flexDirection:"column",width:260}}>
+      <FactRow emphasis="ledger" label="Payout · campaign settled" value={<MoneyFigure amount={12.4} signed />} />
+      <FactRow emphasis="ledger" label="Tip to @ada" value={<MoneyFigure amount={-2} signed />} />
+      <FactRow emphasis="ledger" label="Payout · campaign settled" value={<MoneyFigure amount={0.0003} signed />} last />
+    </div>
   </div>
   <div className="col" style={{width:300}}>
     <span className="lbl">The balance headline — the one surface that spells the word</span>
-    <Card>
-      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between"}}>
-        <div style={{display:"flex",flexDirection:"column",gap:4}}>
-          <span style={{fontSize:"var(--text-label-medium)",color:"var(--text-secondary)"}}>Your balance</span>
-          <span style={{fontSize:"var(--text-headline-small)",lineHeight:"var(--text-headline-small--line-height)",fontWeight:"var(--text-headline-small--font-weight)"}}><MoneyFigure amount={128.4} unit /></span>
-        </div>
-        <HelpDot ariaLabel="What is CGT?" />
-      </div>
-    </Card>
+    <WalletBalance amount={128.4} approx="0.00087" onHelp={()=>{}}/>
   </div>
 </div>)}
 ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
