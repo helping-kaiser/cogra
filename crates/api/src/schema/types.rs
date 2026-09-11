@@ -160,6 +160,46 @@ impl StanceBundle {
     }
 }
 
+/// The actor whose view this account still borrows: their inviter until
+/// the account's own first stance toward them exists — the vouch-back —
+/// and nobody after (`design/readme.md` §13). Vacuously nobody without an
+/// inviter, which is the genesis account's case.
+///
+/// ONE QUERY PATH BEHIND TWO QUESTIONS. `User.hasReciprocated` drives the
+/// reciprocation prompt and `Query.borrowedView` drives the band, and §13
+/// puts both on the same moment: the view hands over exactly when the
+/// prompt is answered. Deriving one from the other keeps that a fact of
+/// the code rather than a promise two copies would eventually break.
+///
+/// A missing address answers "still borrowing": no Opinion can exist
+/// without both, because a keyless account has signed nothing.
+pub(crate) async fn borrowed_vantage(
+    ctx: &Context<'_>,
+    account: &store::ActorIdentity,
+) -> async_graphql::Result<Option<store::ActorIdentity>> {
+    let pool = ctx.data::<PgPool>()?;
+    let Some(inviter) = store::inviter_of(pool, account.id).await? else {
+        return Ok(None);
+    };
+    if store::reciprocation_latched(pool, account.id).await? {
+        return Ok(None);
+    }
+    let (Some(account_address), Some(inviter_address)) = (&account.l0_address, &inviter.l0_address)
+    else {
+        return Ok(Some(inviter));
+    };
+    let source = NodeId::Addr(account_address.clone()).to_string();
+    let target = NodeId::Prof(inviter_address.clone()).to_string();
+    if mirror::has_opinion_toward(pool, &source, &target).await? {
+        store::latch_reciprocated(pool, account.id).await?;
+        return Ok(None);
+    }
+    if staged::has_live_targeting(pool, account.id, Family::Opinion, &target).await? {
+        return Ok(None);
+    }
+    Ok(Some(inviter))
+}
+
 /// Resolves the `viewerStance` field shared by every stance-able node.
 /// Null for a viewer who has none — an unauthenticated reader, or one
 /// whose account has no actor on the graph yet.
@@ -1090,25 +1130,7 @@ impl User {
         if !self.is_viewer(ctx) {
             return Ok(true);
         }
-        let pool = ctx.data::<PgPool>()?;
-        let Some(inviter) = store::inviter_of(pool, self.identity.id).await? else {
-            return Ok(true);
-        };
-        if store::reciprocation_latched(pool, self.identity.id).await? {
-            return Ok(true);
-        }
-        let (Some(viewer_address), Some(inviter_address)) =
-            (&self.identity.l0_address, &inviter.l0_address)
-        else {
-            return Ok(false);
-        };
-        let source = NodeId::Addr(viewer_address.clone()).to_string();
-        let target = NodeId::Prof(inviter_address.clone()).to_string();
-        if mirror::has_opinion_toward(pool, &source, &target).await? {
-            store::latch_reciprocated(pool, self.identity.id).await?;
-            return Ok(true);
-        }
-        Ok(staged::has_live_targeting(pool, self.identity.id, Family::Opinion, &target).await?)
+        Ok(borrowed_vantage(ctx, &self.identity).await?.is_none())
     }
 
     /// The account's service state — gates acting through CoGra (auth.md

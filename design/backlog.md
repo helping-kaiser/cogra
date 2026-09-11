@@ -1575,6 +1575,24 @@ stop 1 is about the screen, not the board): `InviteEntryError`,
 verbatim, because a screen and its error state are one control and
 one control reads one way.
 
+**Both borrowed-view bands ship now** (jakob's ruling, 2026-09-10 —
+this reverses stop 3): the applicant band shows from the moment an
+invitation-link account exists, before the email is verified and
+before the application lands, and the guest band replaces the guest
+notice with the genesis moderator's name. Both feeds stay
+newest-first. What stop 3 refused was a label claiming a ranking
+that does not exist; the band's sentence claims a *vantage*, and
+whose posts a borrowed feed shows is true the moment the vantage is
+served — the ranker only changes their order. The borrowed-vantage
+field the contract owed lands with them.
+
+**The vouch-back reading ships too** (filed by the f2-bands lane as
+unruled, ruled by jakob the same day): §13 hands the borrowed view
+over "the moment their first stance exists — the vouch-back", so the
+band leaves at the member's first stance, not their landing — the
+drawn third line is built on both clients and `borrowedView` answers
+the inviter until reciprocation.
+
 ### 44 · The sensitive sheet still draws its own switch · *system* · **in progress**
 
 Filed by the settings round 2026-09-09. `ComposeSensitive` drew the
@@ -1831,3 +1849,44 @@ two doors, one act, because a reader who just wants the tag gone should
 not need the pad roundtrip. A composer's × unstages on the spot as
 ever; the graph's edit-board × edges already read "the tag leaves the
 edit", which covers both doors honestly.
+
+### 51 · The length caps and pulls the f2 lanes filed · *status: ruled same day*
+
+Filed by the f2-droid lane 2026-09-10 as a pull-to-refresh + pad-inset
+prompt, renumbered here because the design side's items 47–49 landed
+first — and both asks were ruled the same day: pull-to-refresh exists
+on every full-screen scrolling root with the platform's own indicator
+(item 47 / readme §13), and the parked pad's one number is 16 (the
+ReplyPad board's hand-spelled 24 was the drift). What stands from the
+lane's filing: the post veil face's remaining divergences, `HelpDot`'s
+geometry drifting from its board while its KDoc claims conformance,
+item 30, and four surfaces still using spinners as loading states —
+each named in PR #667's body.
+### 52 · The length caps have no affordance · *design*
+
+Filed by the caps lane 2026-09-10 (renumbered at integration, finally 52), which enforced the title cap (100
+characters, jakob's ruling) end to end and found no drawn way to say so.
+Three things the boards do not carry, each named where the lane hit it.
+
+1. **No field states its cap before the field refuses.** `ComposeDetails`
+   draws a Title field with an "Optional" note and nothing else, so the
+   author learns about the hundredth character at the hundred and first.
+   A counter, a remaining count, a meter — which of those CoGra draws is
+   undrawn, and it is the same question for the describe sheet's alt
+   text (1000) and for whatever the description and the sensitive reason
+   are eventually capped at. The lane shipped the refusal alone: the
+   message where the words are, and the step's Next disabled.
+2. **The 2.0 field atom draws no error state at all.** The web
+   `TextField` carries an `error` slot its own note calls "the one place
+   the failure role is spent"; `CograTextField` carries nothing of the
+   kind, so the two clients say one refusal in two shapes — under the
+   label on web, a house `ErrorLine` below the field on Android. One
+   drawn field-error state would close that, and would give the alt-text
+   cap a home on Android, which this lane left unmirrored rather than
+   invent one inside the drawn `DescribeSheet`.
+3. **A cap and its refusal are one component's problem, drawn once.**
+   Item 46.3 filed the same gap from the tag side — "the picker's
+   refused-name state is undrawn" — and this is its other half: the
+   topic name, the title and the description are three fields with three
+   caps and no shared drawn answer for what a field does when the words
+   are too many. Worth one round rather than three.

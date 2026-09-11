@@ -7,8 +7,10 @@ import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
+import { intersect } from "@/test/media-env";
 import { FeedView } from "./feed-view";
 import { forgetFeed, recallFeed } from "./feed-memory";
+import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import type { RegistrationFlow } from "@/lib/signing/registration-flow";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
@@ -16,16 +18,45 @@ import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 // The feed reads `?compose=` to say that the last post did not land, and
 // rewrites the URL when the notice is dismissed.
 const replace = vi.fn();
+const push = vi.fn();
 let searchParams = new URLSearchParams();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace }),
+  useRouter: () => ({ replace, push }),
   useSearchParams: () => searchParams,
 }));
+
+/**
+ * Whose view the reader borrows. Every viewer of this feed asks, so the
+ * genesis moderator is the default and the tests that care override it.
+ */
+function borrowedViewHandler(
+  vantage: { id: string; handle: string; displayName: string | null } | null = {
+    id: "genesis-id",
+    handle: "genesis_mod",
+    displayName: "Genesis Moderator",
+  },
+) {
+  return graphql.query("BorrowedView", () =>
+    HttpResponse.json({
+      data: {
+        borrowedView:
+          vantage === null
+            ? null
+            : {
+                __typename: "User",
+                id: vantage.id,
+                handle: vantage.handle,
+                displayName: { __typename: "ModeratedText", value: vantage.displayName },
+              },
+      },
+    }),
+  );
+}
 
 // Every signed-in card reads its own standing, so the read is a default
 // rather than something each test remembers: an unhandled one degrades
 // the control silently instead of failing the test.
-const server = startMswServer(...stanceHandlers());
+const server = startMswServer(...stanceHandlers(), borrowedViewHandler());
 
 function signedInStore() {
   const store = createTokenStore();
@@ -33,8 +64,11 @@ function signedInStore() {
   return store;
 }
 
-/** The status banners ride the signed-in feed and read the viewer. */
-function meHandler() {
+/**
+ * The status banners ride the signed-in feed and read the viewer, and so
+ * does the band — the account state is what picks its wording.
+ */
+function meHandler(accountState: "MEMBER" | "APPLICANT" = "MEMBER") {
   return graphql.query("Me", () =>
     HttpResponse.json({
       data: {
@@ -43,7 +77,7 @@ function meHandler() {
           id: "acct-1",
           handle: "ada",
           displayName: { __typename: "ModeratedText", value: null },
-          accountState: "MEMBER",
+          accountState,
           hasReciprocated: true,
           invitedBy: null,
         },
@@ -114,6 +148,7 @@ describe("FeedView", () => {
     window.localStorage.clear();
     searchParams = new URLSearchParams();
     replace.mockClear();
+    push.mockClear();
     // The feed's memory is module scope, which is the point of it — so each
     // test starts from a reader who has not been here yet.
     forgetFeed();
@@ -126,7 +161,7 @@ describe("FeedView", () => {
     server.use(meHandler());
     renderWithProviders(<FeedView />, { store: signedInStore() });
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
-    expect(screen.queryByTestId("feed-signin")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1-link")).toHaveAttribute("href", "/posts/p1");
     expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
   });
@@ -281,28 +316,70 @@ describe("FeedView", () => {
     expect(screen.getByTestId("collapsing-top")).toContainElement(restore);
   });
 
-  it("reads without a session and carries the guest banner in the collapsing top", async () => {
+  it("names the genesis moderator's view to a signed-out reader, with the way in", async () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) })),
     );
     renderWithProviders(<FeedView />);
     expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
 
-    // The one sign-in-or-join entry rides the guest banner, in place
-    // of a header action (design.md §6).
-    const banner = screen.getByTestId("feed-guest-banner");
-    expect(screen.getByTestId("collapsing-top")).toContainElement(banner);
-    expect(screen.getByTestId("feed-signin")).toHaveAttribute("href", "/login");
+    // The band subsumes the guest notice: it says whose view this is and
+    // carries the one sign-in-or-join entry, riding the collapsing top.
+    const band = await screen.findByTestId("feed-borrowed-view");
+    expect(screen.getByTestId("collapsing-top")).toContainElement(band);
+    expect(screen.getByTestId("feed-borrowed-view-line")).toHaveTextContent(
+      "Browsing from @genesis_mod's view — join to build your own.",
+    );
+    fireEvent.click(screen.getByTestId("feed-borrowed-view-action"));
+    expect(push).toHaveBeenCalledWith("/login");
   });
 
-  it("shows no guest banner to a signed-in reader", async () => {
+  // The account exists from the moment the invite link is spent, before
+  // either proof is in — and the band must name the vantage from then.
+  it("names the inviter's view to an applicant whose email is not verified yet", async () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
     );
-    server.use(meHandler());
+    server.use(
+      meHandler("APPLICANT"),
+      borrowedViewHandler({ id: "inv-1", handle: "mira", displayName: "Mira Voss" }),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+
+    expect(await screen.findByTestId("feed-borrowed-view-line")).toHaveTextContent(
+      "Browsing from @mira's view while your application lands.",
+    );
+    // The applicant can do nothing about the borrowing, so no action.
+    expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();
+  });
+
+  // Landing grants membership; the vouch-back is what gives the reader a
+  // view of their own (§13). Between them the band still names the inviter.
+  it("asks a landed member who has not pointed back to vouch back", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    server.use(
+      meHandler(),
+      borrowedViewHandler({ id: "inv-1", handle: "mira", displayName: "Mira Voss" }),
+    );
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+
+    expect(await screen.findByTestId("feed-borrowed-view-line")).toHaveTextContent(
+      "Browsing from @mira's view — vouch back to start your own.",
+    );
+    // The reciprocation card below carries the control; the band names it.
+    expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();
+  });
+
+  it("shows no band to a reader whose view is their own", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    server.use(meHandler(), borrowedViewHandler(null));
     renderWithProviders(<FeedView />, { store: signedInStore() });
     expect(await screen.findByTestId("feed-empty")).toBeInTheDocument();
-    expect(screen.queryByTestId("feed-guest-banner")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("feed-borrowed-view")).not.toBeInTheDocument();
   });
 
   it("carries no back arrow — the feed is a tab root for every viewer", async () => {
@@ -322,7 +399,10 @@ describe("FeedView", () => {
     expect(await screen.findByTestId("feed-empty")).toBeInTheDocument();
   });
 
-  it("loads the next page from the cursor", async () => {
+  // THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (design readme §13,
+  // the audit states): no Show more, no page numbers, nothing drawn at rest.
+  // The watch reaches the reader before the end of the list does.
+  it("loads the next page from the cursor as the reader nears the tail", async () => {
     const afters: (string | null)[] = [];
     server.use(
       graphql.query("Posts", ({ variables }) => {
@@ -336,11 +416,57 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-post-p1");
+    expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
+
+    intersect(true);
     expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
     expect(afters).toEqual([null, "c1"]);
-    expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
+  });
+
+  it("stops asking once the last page has landed", async () => {
+    const afters: (string | null)[] = [];
+    server.use(
+      graphql.query("Posts", ({ variables }) => {
+        afters.push((variables.after as string | null) ?? null);
+        return HttpResponse.json({
+          data:
+            variables.after == null
+              ? postsPage([post("p1", "First")], "c1", true)
+              : postsPage([post("p2", "Second")], null, false),
+        });
+      }),
+    );
+    renderWithProviders(<FeedView />);
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
+    await screen.findByTestId("feed-post-p2");
+
+    intersect(true);
+    await waitFor(() => expect(afters).toEqual([null, "c1"]));
+  });
+
+  // A page that did not arrive is the one thing the boards draw here, and the
+  // way back is the reader's — a watch that re-asked on its own would spend
+  // the failure in a loop.
+  it("leaves a failed page to its Retry rather than asking again", async () => {
+    let calls = 0;
+    server.use(
+      graphql.query("Posts", ({ variables }) => {
+        calls += 1;
+        if (variables.after != null) return HttpResponse.error();
+        return HttpResponse.json({ data: postsPage([post("p1", "First")], "c1", true) });
+      }),
+    );
+    renderWithProviders(<FeedView />);
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
+    expect(await screen.findByTestId("feed-load-more-error")).toBeInTheDocument();
+
+    intersect(true);
+    await waitFor(() => expect(calls).toBe(2));
+    expect(screen.getByTestId("feed-load-more-retry")).toBeInTheDocument();
   });
 
   // HT-2. The restore ask and the key ceremony are different accounts'
@@ -421,7 +547,8 @@ describe("FeedView", () => {
       const afters: (string | null)[] = [];
       server.use(pagedPosts(afters));
       const first = renderWithProviders(<FeedView />);
-      fireEvent.click(await screen.findByTestId("feed-load-more"));
+      await screen.findByTestId("feed-post-p1");
+      intersect(true);
       expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
       first.unmount();
 
@@ -449,7 +576,7 @@ describe("FeedView", () => {
       await screen.findByTestId("feed-post-p1");
       scroller.scrollTop = 1240;
       fireEvent.scroll(scroller);
-      await waitFor(() => expect(recallFeed()?.offset).toBe(1240));
+      await waitFor(() => expect(recallFeed()?.place.offset).toBe(1240));
       first.unmount();
 
       scroller.scrollTop = 0;
@@ -468,6 +595,137 @@ describe("FeedView", () => {
       renderWithProviders(<FeedView />);
       expect(await screen.findByTestId("feed-post-p1")).toBeInTheDocument();
       expect(afters).toEqual([null]);
+    });
+  });
+
+  // The feed's second refresh route (design readme §13, the bottom bar's
+  // re-tap ladder). The browser's own gesture cannot fire here — the document
+  // is pinned and closed, so it has no overscroll to give (`shell.tsx`) — so
+  // the pull is read off the touch stream, and it belongs to every viewer:
+  // reading needs no account, and neither does asking for newer posts.
+  describe("pulling down at the top", () => {
+    // One object, not one per read: the progress rides `useSyncExternalStore`,
+    // and a fresh snapshot every call is an endless render.
+    const applicantProgress: RegistrationProgress = {
+      kind: "awaitingApproval",
+      emailVerified: true,
+      keyAttached: true,
+      keyOnDevice: true,
+    };
+    const applicantFlow: RegistrationFlow = {
+      progress: () => applicantProgress,
+      subscribe: () => () => {},
+      ensureAdvancing: () => {},
+      consumeLanded: () => false,
+      reset: () => {},
+    };
+
+    function touch(type: string, clientY: number): Event {
+      const event = new Event(type, { bubbles: true });
+      const points = [{ clientY }];
+      Object.defineProperty(event, "touches", { value: points });
+      Object.defineProperty(event, "changedTouches", { value: points });
+      return event;
+    }
+
+    function pull(scroller: HTMLElement, travel = PULL_THRESHOLD) {
+      fireEvent(scroller, touch("touchstart", 100));
+      fireEvent(scroller, touch("touchmove", 100 + travel));
+      fireEvent(scroller, touch("touchend", 100 + travel));
+    }
+
+    function feedIn(options: Parameters<typeof renderWithProviders>[1]) {
+      const scroller = document.createElement("div");
+      document.body.append(scroller);
+      renderWithProviders(
+        <ScrollHostProvider value={{ current: scroller }}>
+          <FeedView store={fakeIdentityStore()} />
+        </ScrollHostProvider>,
+        options,
+      );
+      return scroller;
+    }
+
+    function servePosts(calls: { n: number }) {
+      server.use(
+        graphql.query("Posts", () => {
+          calls.n += 1;
+          return HttpResponse.json({
+            data: postsPage([post(`p${calls.n}`, `Page ${calls.n}`)], null, false),
+          });
+        }),
+      );
+    }
+
+    it("asks the server again for a signed-in reader", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      server.use(meHandler());
+      const scroller = feedIn({ store: signedInStore() });
+      await screen.findByTestId("feed-post-p1");
+
+      pull(scroller);
+      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("asks the server again for an applicant", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      server.use(meHandler());
+      const scroller = feedIn({ store: signedInStore(), flow: applicantFlow });
+      await screen.findByTestId("feed-post-p1");
+
+      pull(scroller);
+      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("asks the server again for a guest", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      const scroller = feedIn(undefined);
+      await screen.findByTestId("feed-post-p1");
+
+      pull(scroller);
+      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("says it is asking, in the list's own loading line", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      const scroller = feedIn(undefined);
+      await screen.findByTestId("feed-post-p1");
+
+      pull(scroller);
+      expect(screen.getByTestId("feed-loading")).toHaveTextContent("Loading…");
+      await screen.findByTestId("feed-post-p2");
+      expect(screen.queryByTestId("feed-loading")).not.toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("takes a short tug for what it is — a scroll, not an ask", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      const scroller = feedIn(undefined);
+      await screen.findByTestId("feed-post-p1");
+
+      pull(scroller, PULL_THRESHOLD - 1);
+      await waitFor(() => expect(calls.n).toBe(1));
+      scroller.remove();
+    });
+
+    it("ignores a pull that starts anywhere but the top", async () => {
+      const calls = { n: 0 };
+      servePosts(calls);
+      const scroller = feedIn(undefined);
+      await screen.findByTestId("feed-post-p1");
+
+      scroller.scrollTop = 900;
+      pull(scroller);
+      await waitFor(() => expect(calls.n).toBe(1));
+      scroller.remove();
     });
   });
 
@@ -501,7 +759,8 @@ describe("FeedView", () => {
       ),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
     expect(await screen.findByTestId("feed-post-p3")).toBeInTheDocument();
     expect(screen.getAllByTestId("feed-post-p1")).toHaveLength(1);
     // The held copy stays as it was read — no reconciliation.
@@ -525,12 +784,12 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
     expect(await screen.findByTestId("feed-load-more-error")).toBeInTheDocument();
-    // The fault surfaces where the failed fetch was requested — at the
-    // load-more slot, not the top-of-page banner.
+    // The fault surfaces where the failed fetch was requested — where the page
+    // would have been, not the top-of-page banner.
     expect(screen.queryByTestId("feed-transport-error")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
   });
 
@@ -545,7 +804,8 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
     await screen.findByTestId("feed-load-more-error");
     fireEvent.click(screen.getByTestId("feed-load-more-retry"));
     expect(screen.getByTestId("feed-load-more-error")).toBeInTheDocument();
@@ -580,7 +840,8 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-load-more"));
+    await screen.findByTestId("feed-post-p1");
+    intersect(true);
     await screen.findByTestId("feed-load-more-error");
     fireEvent.click(screen.getByTestId("feed-load-more-retry"));
     expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();

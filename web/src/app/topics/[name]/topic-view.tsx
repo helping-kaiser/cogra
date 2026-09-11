@@ -58,7 +58,9 @@ export function TopicView({ name }: { name: string }) {
 
   useEffect(() => refresh(), [refresh]);
 
-  const header = <PageHeader backHref="/feed" backLabel="Back to feed" backTestId="topic-back" />;
+  const header = (
+    <PageHeader backHref="/feed" backScroll={false} backLabel="Back to feed" backTestId="topic-back" />
+  );
 
   if (loading) {
     return (

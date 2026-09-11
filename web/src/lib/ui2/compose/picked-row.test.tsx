@@ -34,6 +34,12 @@ describe("PickedRow", () => {
     render(<PickedRow items={items} caption="2 pictures — the body" onManage={vi.fn()} />);
     expect(screen.getByText("2 pictures — the body")).toBeInTheDocument();
   });
+
+  it("passes a video's length through, activating the thumb's video anatomy", () => {
+    const withDuration: PickedThumb[] = [{ id: "a", src: "blob:a", durationMs: 42_000 }];
+    render(<PickedRow items={withDuration} caption="1 video — the body" onManage={vi.fn()} />);
+    expect(screen.getByTestId("picked-row-thumb-0-duration")).toHaveTextContent("0:42");
+  });
 });
 
 describe("DescribeCounter", () => {

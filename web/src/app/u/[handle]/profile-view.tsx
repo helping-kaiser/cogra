@@ -32,6 +32,8 @@ import { MonogramAvatar } from "@/lib/ui/actor-chip";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
+import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
+import { useScrollHost } from "@/lib/ui/scroll-host";
 import { StanceControl } from "@/lib/ui/stance-control";
 import { TransportError } from "@/lib/ui/transport-error";
 
@@ -53,6 +55,7 @@ export function ProfileScreen({
   const client = useApolloClient();
   const guard = useAuthGuard();
   const phase = useAuthPhase();
+  const host = useScrollHost();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [own, setOwn] = useState(false);
@@ -150,6 +153,17 @@ export function ProfileScreen({
     };
   }, [refresh, phase]);
 
+  // Pull-down at the top is one of the surfaces the pull-to-refresh
+  // ruling names (design/readme.md, "The pull-down lives on every
+  // full-screen scrolling root", ruled 2026-09-10). It goes through
+  // the same fetch the first arrival takes, so a fault it raises
+  // surfaces in the same place.
+  const onPull = useCallback(() => {
+    setLoading(true);
+    refresh();
+  }, [refresh]);
+  usePullToRefresh({ host, onPull });
+
   const onFilter = (next: ChronicleFilter) => {
     if (next === filter || profile === null) return;
     setFilter(next);
@@ -167,6 +181,7 @@ export function ProfileScreen({
         <PageHeader
           title={profile ? `@${profile.handle}` : "Profile"}
           backHref={handle === null ? undefined : "/feed"}
+          backScroll={false}
           backLabel="Back to feed"
           backTestId="profile-back"
           action={
@@ -185,7 +200,11 @@ export function ProfileScreen({
         {own && keyOnDevice === false && <RestoreCard />}
       </CollapsingTop>
       {own && <StatusBanners />}
-      {loading && <p data-testid="profile-loading">Loading…</p>}
+      {loading && (
+        <p role="status" aria-live="polite" data-testid="profile-loading">
+          Loading…
+        </p>
+      )}
       {notFound && (
         <p data-testid="profile-not-found">This profile doesn&apos;t exist.</p>
       )}

@@ -192,8 +192,20 @@ describe("the reply wizard", () => {
       expect(words.className).toContain("border-outline");
       expect(words.className).toContain("rounded-extra-small");
       expect(words.className).not.toContain("border-0");
-      expect(words.className).toContain("min-h-48");
       expect(words.className).toContain("flex-1");
+    });
+
+    // The drawn height is the WHOLE column's slack, and a second growing child
+    // beside the words halves it. Android has the same rule as a branch
+    // (`ReplyComposeStep.kt:141` — the spacer is drawn only when the words do
+    // not fill), so the assertion is that the words are the only one growing.
+    it("gives the words every pixel of the column's slack", () => {
+      draw();
+      const column = screen.getByTestId("reply-compose");
+      const growing = Array.from(column.children).filter((child) =>
+        child.className.split(/\s+/).includes("flex-1"),
+      );
+      expect(growing).toEqual([screen.getByTestId("reply-words")]);
     });
 
     it("names what the words answer, for a reader who cannot see the chip", () => {

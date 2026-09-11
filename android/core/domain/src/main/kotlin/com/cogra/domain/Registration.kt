@@ -39,6 +39,13 @@ const val MIN_PASSWORD_LENGTH = 12
 fun registrationFormValid(handle: String, email: String, password: String): Boolean =
     handleValid(handle) && email.contains('@') && password.length >= MIN_PASSWORD_LENGTH
 
-/** Length within the contract's bounds, and nothing outside its charset. */
-private fun handleValid(handle: String): Boolean =
+/**
+ * Length within the contract's bounds, and nothing outside its charset.
+ *
+ * Public because the handle-change form in settings answers to the same
+ * rule the join form does — a second gate spelling out only half of it
+ * disables its button for a length the server takes and enables it for a
+ * charset the server refuses.
+ */
+fun handleValid(handle: String): Boolean =
     handle.length in MIN_HANDLE_LENGTH..MAX_HANDLE_LENGTH && HANDLE_CHARSET.matches(handle)

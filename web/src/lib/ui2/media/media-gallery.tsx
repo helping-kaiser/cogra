@@ -65,6 +65,7 @@ function fitInFrame(sourceRatio: number | null | undefined, frameRatio: number):
 export function MediaGallery({
   items,
   ratio,
+  fit,
   radius = "var(--radius-medium)",
   maxHeight,
   preloadLead = false,
@@ -78,6 +79,14 @@ export function MediaGallery({
   // The one frame every picture renders at. Omitted, the first picture's shape
   // sets it — which is exactly right for a post, where the whole set shares one.
   ratio?: number;
+  /**
+   * Overrides the per-item fit the frame would otherwise compute
+   * (`fitFor`/`fitInFrame`, which fit a post's own crop whole). The comment
+   * scale is the one caller that needs this: design/readme.md states a
+   * comment's pictures and clips alike FILL their square frame, uncropped
+   * bytes included — never letterboxed, whatever their source shape.
+   */
+  fit?: "contain" | "cover";
   radius?: string;
   maxHeight?: string;
   preloadLead?: boolean;
@@ -132,6 +141,7 @@ export function MediaGallery({
       <MediaTile
         {...items[0]}
         ratio={ratio}
+        fit={fit}
         radius={radius}
         maxHeight={maxHeight}
         preload={preloadLead}
@@ -186,7 +196,7 @@ export function MediaGallery({
             <MediaTile
               {...item}
               ratio={frameRatio}
-              fit={fitInFrame(item.sourceRatio, frameRatio)}
+              fit={fit ?? fitInFrame(item.sourceRatio, frameRatio)}
               radius={radius}
               maxHeight={maxHeight}
               preload={index === 0 && preloadLead}

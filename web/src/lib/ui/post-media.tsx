@@ -167,6 +167,7 @@ export function PostMedia({
   bleed = "card",
   radius,
   ratio,
+  fit,
   maxHeight,
   preloadLead = false,
   surface = "full",
@@ -181,6 +182,8 @@ export function PostMedia({
   // card's rung and a comment-scale cap instead of running to the edges.
   radius?: string;
   ratio?: number;
+  /** Overrides the frame's own crop-fitting — see `MediaGallery`'s `fit`. */
+  fit?: "contain" | "cover";
   maxHeight?: string;
   preloadLead?: boolean;
   onOpen?: (index: number) => void;
@@ -200,6 +203,7 @@ export function PostMedia({
           items={galleryItems(node)}
           radius={radius ?? "0px"}
           ratio={ratio}
+          fit={fit}
           maxHeight={maxHeight}
           preloadLead={preloadLead}
           surface={surface}

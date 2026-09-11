@@ -22,6 +22,7 @@ import { COVER_FROM_PICTURE, type CoverAsset } from "@/lib/compose/wizard";
 export function CoverRow({
   framePreviews,
   cover,
+  coverPreview,
   capturing,
   onPickFrame,
   onPickPicture,
@@ -31,6 +32,8 @@ export function CoverRow({
 }: {
   framePreviews: readonly string[];
   cover: CoverAsset | null;
+  /** An object URL for the author's own chosen picture, so the tile can show it. */
+  coverPreview?: string | null;
   capturing: boolean;
   onPickFrame: (index: number) => void;
   onPickPicture: (file: File) => void;
@@ -38,6 +41,7 @@ export function CoverRow({
   heading?: boolean;
 }) {
   const input = useRef<HTMLInputElement | null>(null);
+  const ownPictureChosen = cover?.frame === COVER_FROM_PICTURE;
 
   return (
     <div className="flex flex-col gap-2">
@@ -81,19 +85,35 @@ export function CoverRow({
         <button
           type="button"
           data-testid={`${testIdPrefix}-cover-picture`}
-          aria-pressed={cover?.frame === COVER_FROM_PICTURE}
+          aria-pressed={ownPictureChosen}
           onClick={() => input.current?.click()}
           style={
-            cover?.frame === COVER_FROM_PICTURE
+            ownPictureChosen
               ? { outline: "2px solid var(--primary)", outlineOffset: "1px" }
               : undefined
           }
-          className="cg-state cg-focus flex size-19 flex-none cursor-pointer flex-col items-center justify-center gap-0.5 rounded-small border border-dashed border-outline bg-transparent text-on-surface-variant"
+          className="cg-state cg-focus relative flex size-19 flex-none cursor-pointer flex-col items-center justify-center gap-0.5 overflow-hidden rounded-small border border-dashed border-outline bg-transparent text-on-surface-variant"
         >
-          <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
-            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-          </svg>
-          <span className="text-label-small">A picture</span>
+          {/* THE TILE SHOWS THE PICTURE ONCE ONE IS CHOSEN — an outline alone
+              left the author unable to tell which picture they had picked.
+              A plain `img`: this is an object URL for bytes already in
+              memory, so there is nothing for the optimizer to fetch. */}
+          {ownPictureChosen && coverPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={coverPreview}
+              alt=""
+              data-testid={`${testIdPrefix}-cover-picture-image`}
+              className="absolute inset-0 size-full object-cover"
+            />
+          ) : (
+            <>
+              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+              </svg>
+              <span className="text-label-small">A picture</span>
+            </>
+          )}
         </button>
       </div>
       <p className="m-0 text-body-small text-on-surface-variant">
