@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
@@ -41,6 +42,8 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.content.MAX_SENSITIVE_REASON_CHARS
+import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.feature.content.R
 
 /**
@@ -315,6 +318,15 @@ internal fun SensitiveSheet(
             enabled = marked,
             testTag = "${testTagPrefix}_sensitive_reason",
         )
+        if (marked && isSensitiveReasonTooLong(reason)) {
+            ErrorLine(
+                text = stringResource(
+                    R.string.content_error_sensitive_reason_too_long,
+                    MAX_SENSITIVE_REASON_CHARS,
+                ),
+                testTag = "${testTagPrefix}_sensitive_reason_too_long",
+            )
+        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             CograButton("Done", onDone, testTag = "${testTagPrefix}_sensitive_done")
         }

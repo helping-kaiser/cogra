@@ -51,7 +51,9 @@ The record carries:
 
 A Comment is **words plus optional media** — deliberately
 asymmetric to the Post's body XOR, because an answer is words
-first. A picture supports the words; it never replaces them.
+first. A picture supports the words; it never replaces them. The
+body runs to at most 2000 characters, tighter than a Post's
+since a comment is a reply and not the artifact itself.
 
 The media follows the Post's grammar at a comment's scale:
 **four pictures or one video, never both kinds**, the clip

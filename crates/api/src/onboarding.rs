@@ -189,6 +189,12 @@ pub async fn register(
     auth::validate_new_password(corpus, &input.password)
         .await
         .map_err(OnboardingError::WeakPassword)?;
+    let device_label = auth::checked_device_label(input.device_label.as_deref()).map_err(|m| {
+        OnboardingError::BadInput {
+            field: "deviceLabel",
+            message: m.to_string(),
+        }
+    })?;
     if !store::invite_link_usable(pool, input.invite_link).await? {
         return Err(OnboardingError::InviteUnusable);
     }
@@ -228,8 +234,7 @@ pub async fn register(
             ),
         })
         .await;
-    let session =
-        auth::issue_session(pool, auth_cfg, account_id, input.device_label.as_deref()).await?;
+    let session = auth::issue_session(pool, auth_cfg, account_id, device_label.as_deref()).await?;
     Ok(RegisteredAccount {
         session,
         expires_at: Utc::now() + Duration::hours(UNVERIFIED_TTL_HOURS),
