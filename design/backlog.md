@@ -1937,14 +1937,14 @@ canvas slot un-clipped. What is left:
    the face is drawn, the pair rides a `cg-exact` tail, and a
    screen-reader twin carries the anchor's word and both axes in either
    mode.
-2. **The wide anchor's words in non-geek mode.** The profile header's
-   `wide` variant draws the words beside the face "because a lone face
-   at full width reads as lost" — and with an opinion held, those words
-   ARE the pair, so the geek-off drawing is the lone face the variant
-   was written against. Either the anchor draws its label there, or the
-   variant accepts the face alone. (The unset case now reads `Your
-   opinion` — shortened same day, the longer label overflowed the wide
-   anchor; the held case is the open one.)
+2. ~~The wide anchor's words in non-geek mode.~~ **Closed by
+   `ProfileOtherHeld`** (jakob asked for the held state drawn,
+   2026-09-11: "in normal mode nothing changes"): the held wide anchor
+   is the face alone by ruling, the pair rides its `cg-exact` span
+   inside the anchor's own `flex: 1` half, and Message keeps its width
+   in both modes — the row's geometry is mode-invariant. (The unset
+   case reads `Your opinion` — shortened same day, the longer label
+   overflowed the wide anchor.)
 3. ~~A citation row's pair has no glyph to fall back to.~~
    **Closed by the review round.** `ReferenceRow`'s non-topic rows and
    `StagedReference` read `nearestAnchor` and draw the nearest of the

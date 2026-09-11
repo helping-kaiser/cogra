@@ -1181,6 +1181,15 @@
       "page": "profile"
     },
     {
+      "file": "ProfileOtherHeld.dc.html",
+      "title": "Profile · an opinion held",
+      "x": 3360,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "MapProfile.dc.html",
       "x": -3030,
       "y": 0,

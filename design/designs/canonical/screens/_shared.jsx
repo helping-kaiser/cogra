@@ -565,7 +565,7 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
 
 /* Someone else's profile, whole — shared the moment its own overflow menu
    needed the same page with a sheet over it (readme §13, the menus round). */
-function ProfileOtherBody() {
+function ProfileOtherBody({ bundle } = {}) {
   return (
     <>
       <PageHeader
@@ -584,6 +584,7 @@ function ProfileOtherBody() {
             posts={12}
             stancesOn={48}
             stancesTaken={31}
+            bundle={bundle}
             onCounts={() => {}}
             onCommit={() => {}}
             onMessage={() => {}}

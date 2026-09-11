@@ -3703,6 +3703,12 @@ signal numbers are geekery, and the glyph is what a reader is owed.
 Ruled the same day, drawn as its own round because it rewrites every
 stance master.
 
+`ProfileOtherHeld` draws the one held state where the mode meets
+layout — a profile the viewer already has an opinion on. Nothing
+moves: the anchor and Message split the row at `flex: 1` each, the
+pair paints inside the anchor's own half beside the face, and the
+row's geometry is identical in both modes.
+
 - **The pairs, and only the pairs.** Stance pairs, tag pairs and
   citation pairs — the two-parameter readings a face or a tag object
   already stands in for. The Post score and the viewer-relative rank
