@@ -303,7 +303,7 @@ export function PostCard({
       {edited && <EditedMarker />}
       {pending && <PendingMarker />}
       {/* THE AFFORDANCE ROW. The stance control leads — it is the gesture the
-          product lives on — then the Post Score, then comments, then anything
+          product lives on — then the Post score, then comments, then anything
           else a post grows. ONE LINE, NEVER WRAPPING: a second row of
           affordances reads as a second kind of thing, and it costs the height a
           post does not have (see `--media-max-height`). That is the constraint
