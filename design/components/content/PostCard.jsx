@@ -305,9 +305,20 @@ export function PostCard({
           post does not have (see `--media-max-height`). That is the constraint
           that keeps every affordance here glyph-plus-number — words would not
           fit, which is a feature. Nothing in here may take `primaryContainer`:
-          the stance knob already spends it. */}
+          the stance knob already spends it.
+
+          IT SPREADS ACROSS THE CARD (jakob's ruling, the geek round). The row's
+          controls sit at even intervals over the full width rather than huddled
+          at the left edge — the social pattern every reader already has a thumb
+          habit for, and the thing that makes the last affordance reachable
+          without crossing the first three. Order is unchanged: spreading is a
+          distribution, not a re-ranking.
+
+          EVERY CONTROL IN IT ANSWERS TO 48px. The ink stays whatever size it is
+          drawn — `cg-hit` grows the TARGET around it, so a spread row cannot
+          turn wider spacing into smaller aim. */}
       {(showStance || score !== undefined || comments !== undefined || actions) && (
-        <div style={{ display: "flex", flexWrap: "nowrap", alignItems: "center", gap: "var(--space-2)", minWidth: 0 }}>
+        <div style={{ display: "flex", flexWrap: "nowrap", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)", width: "100%", minWidth: 0 }}>
           {/* `taught` and `onCommit` belong to the SHELL, not the card: "the first
               tap ever" is a fact about the reader, and a card in a feed of twenty
               cannot know it. Default true so a lone card teaches nothing. */}
