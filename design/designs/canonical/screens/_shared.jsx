@@ -334,13 +334,13 @@ function DetailHeader({ items }) {
 
 /* What the one menu holds — the author's post vs someone else's.
 
-   ONE MECHANISM, SPELLED TWICE. A card mounts its own menu and prepends the
-   license row to whatever `menuItems` it was handed; a DETAIL surface hides the
+   ONE MECHANISM, SPELLED TWICE. A card mounts its own menu and closes whatever
+   `menuItems` it was handed with the license row; a DETAIL surface hides the
    card's dot and the header carries the menu instead, so these lists are that
    same menu written out for the header, and they take the row's words from the
-   master's atom rather than spelling them again. The reader's menu keeps the
-   card's own order; both leads with the acts the menu was opened for and lets
-   the license row close it, the license being the rarest read in the product.
+   master's atom rather than spelling them again. Both keep the card's own
+   order: the acts the menu was opened for lead, and the license row closes it,
+   the license being the rarest read in the product.
 
    SAVE IS THE ROW THAT CARRIES ITS OWN STATE (readme §13, the private-viewer-
    state round). Nothing outside this menu says a thing is saved — the action
