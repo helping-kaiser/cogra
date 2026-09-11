@@ -16,16 +16,38 @@
 // moves under a reading surface and a window listener would never fire. With
 // no shell above it — a component rendered alone, or a test — the window IS
 // the scroller, and it listens there instead.
+//
+// A CALLER THAT RESTORES A SCROLLED PLACE OWNS THE FIRST FRAME TOO. `hidden`
+// used to always start `false` and wait for a scroll event to correct it —
+// but a place restored by `scroll-pin.ts` lands before paint, imperatively,
+// and fires no synchronous event a layout effect here could catch (a child's
+// layout effect runs before its parent's, so by the time this component could
+// read the scroller it would still be reading the pre-restore offset). Sticky
+// positioning then paints this region pinned at the top regardless, one frame
+// before the real scroll listener below gets a chance to hide it — the flash.
+// `initiallyHidden` lets a caller who already knows the restored offset
+// synchronously (the same lazy-read source the restore itself used) seed the
+// state so the first paint is already correct, same technique as `next`'s own
+// guide for syncing React state with a pre-paint correction
+// (`node_modules/next/dist/docs/01-app/02-guides/preventing-flash-before-hydration.md`,
+// "Syncing with React state").
 
 import { useEffect, useRef, useState } from "react";
 
 import { scrollElementOf, scrollOffsetOf, useScrollHost, viewportHeightOf } from "./scroll-host";
 
-export function CollapsingTop({ children }: { children: React.ReactNode }) {
+export function CollapsingTop({
+  children,
+  initiallyHidden = false,
+}: {
+  children: React.ReactNode;
+  /** Whether the first paint should already show this region gone. */
+  initiallyHidden?: boolean;
+}) {
   const sentinel = useRef<HTMLDivElement>(null);
   const region = useRef<HTMLDivElement>(null);
   const host = useScrollHost();
-  const [hidden, setHidden] = useState(false);
+  const [hidden, setHidden] = useState(initiallyHidden);
   useEffect(() => {
     let lastY = scrollOffsetOf(host);
     let upRun = 0;
