@@ -1163,9 +1163,10 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 
 [data-flow] { position: relative; }
 [data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
+.screen:not([data-geek="on"]) .cg-exact { display: none !important; }
   </style>
 </helmet>
-<div class="screen" data-theme="{{theme}}" style="width: 1160px; height: 3696px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
+<div class="screen" data-theme="{{theme}}" data-geek="{{geek}}" style="width: 1160px; height: 3696px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
 <div style="padding:16px 20px 0 20px;">
 <div style="font-size:16px;font-weight:700;">Entry · flow map</div>
 <div style="margin-top:2px;font-size:10px;color:var(--on-surface-variant);">Generated from graph.json — do not edit. Numbers are the boards' orange badges; GAP marks a design still owed; ◦ is a terminal (back / self / OS); ◂ n counts inbound edges.</div>
@@ -1315,7 +1316,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 </div>
 </div>
 </x-dc>
-<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"},"geek":{"editor":"enum","options":["off","on"],"default":"off"}}'>
 class Component extends DCLogic {
   componentDidMount() {
     this.media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -1328,28 +1329,41 @@ class Component extends DCLogic {
       } else if (d && d.cograThemeQuery && this.state && this.state.remote && event.source) {
         try { event.source.postMessage({ cograTheme: this.state.remote }, "*"); } catch (e) {}
       }
+      if (d && (d.cograGeek === "off" || d.cograGeek === "on")) {
+        if (!this.state || this.state.remoteGeek !== d.cograGeek) this.setState({ remoteGeek: d.cograGeek });
+      } else if (d && d.cograGeekQuery && this.state && this.state.remoteGeek && event.source) {
+        try { event.source.postMessage({ cograGeek: this.state.remoteGeek }, "*"); } catch (e) {}
+      }
     };
     window.addEventListener("message", this.onMsg);
-    try {
-      const askWalk = (w, depth) => {
-        if (depth > 5) return;
-        let n = 0;
-        try { n = w.length; } catch (e) { n = 0; }
-        for (let i = 0; i < n; i++) {
-          let c = null;
-          try { c = w[i]; } catch (e) { c = null; }
-          if (c) {
-            try { c.postMessage({ cograThemeQuery: true }, "*"); } catch (e) {}
-            askWalk(c, depth + 1);
+    this.tell = (payload) => {
+      try {
+        const walk = (w, depth) => {
+          if (depth > 5) return;
+          let n = 0;
+          try { n = w.length; } catch (e) { n = 0; }
+          for (let i = 0; i < n; i++) {
+            let c = null;
+            try { c = w[i]; } catch (e) { c = null; }
+            if (c) {
+              try { c.postMessage(payload, "*"); } catch (e) {}
+              walk(c, depth + 1);
+            }
           }
-        }
-      };
-      askWalk(window.top, 0);
-    } catch (e) {}
+        };
+        walk(window.top, 0);
+      } catch (e) {}
+    };
+    this.tell({ cograThemeQuery: true });
+    this.tell({ cograGeekQuery: true });
   }
   componentDidUpdate(prevProps) {
     if (prevProps.theme !== this.props.theme && this.state && this.state.remote) {
       this.setState({ remote: null });
+    }
+    if (prevProps.geek !== this.props.geek) {
+      if (this.state && this.state.remoteGeek) this.setState({ remoteGeek: null });
+      if (this.tell) this.tell({ cograGeek: this.props.geek === "on" ? "on" : "off" });
     }
   }
   componentWillUnmount() {
@@ -1362,7 +1376,9 @@ class Component extends DCLogic {
     const dark = mode === "auto"
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
       : mode === "dark";
-    return { theme: dark ? "dark" : "light" };
+    const remoteGeek = this.state ? this.state.remoteGeek : null;
+    const geek = remoteGeek ?? this.props.geek ?? "off";
+    return { theme: dark ? "dark" : "light", geek };
   }
 }
 </script>
