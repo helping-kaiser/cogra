@@ -34,6 +34,9 @@
     <string name="profile_edit_image_clear">Back to %1$s</string>
     <string name="profile_edit_image_sending">Sending…</string>
     <string name="profile_edit_empty_name">A display name is required.</string>
+    <string name="profile_edit_display_name_too_long">Too long — at most %1$d characters.</string>
+    <string name="profile_edit_bio_too_long">Too long — at most %1$d characters.</string>
+    <string name="profile_edit_website_too_long">Too long — at most %1$d characters.</string>
     <string name="profile_edit_refused">That didn\'t work. Check the fields and try again.</string>
     <string name="profile_edit_signing_failed">Signing didn\'t complete. Try again.</string>
 </resources>
