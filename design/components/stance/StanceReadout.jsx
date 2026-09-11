@@ -78,7 +78,7 @@ export const INTEREST_POLES = ["Less", "More"];
 export const PICK_LABEL = "Your pick";
 
 export const SEVERED_LABEL = "Severed";
-export const NO_STANDING_LABEL = "No stance yet";
+export const NO_STANDING_LABEL = "No opinion yet";
 /** What a bundle standing at exactly (0, 0) reads as. */
 export const ZERO_BUNDLE_EMOJI = "🤷";
 /** The face an unauthored target wears at rest — the dotted-line face, deliberately
@@ -292,11 +292,11 @@ export function localLanding(rawSum, pick) {
 }
 
 export function standingLine(bundle, targetLabel) {
-  if (bundle === undefined) return "Checking your current stance…";
-  if (bundle === null || bundle.records === 0) return `${ZERO_BUNDLE_EMOJI} No stance on ${targetLabel} yet.`;
+  if (bundle === undefined) return "Checking your current opinion…";
+  if (bundle === null || bundle.records === 0) return `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.`;
   if (bundle.severed) return `${ZERO_BUNDLE_EMOJI} You've severed ${targetLabel}.`;
   // Face and pair; the words ride the spoken line beside it.
-  return `Current stance ${bundleReadout(bundle.current).emoji} ${formatStancePair(bundle.current)}`;
+  return `Current opinion ${bundleReadout(bundle.current).emoji} ${formatStancePair(bundle.current)}`;
 }
 
 /**
@@ -322,9 +322,9 @@ export function standingLine(bundle, targetLabel) {
  * owed the arithmetic, whatever their reading setting says.
  */
 export function severanceParts(bundle, targetLabel) {
-  if (bundle === undefined) return { sentence: "Checking your current stance…" };
+  if (bundle === undefined) return { sentence: "Checking your current opinion…" };
   if (bundle === null || bundle.records === 0) {
-    return { sentence: `${ZERO_BUNDLE_EMOJI} No stance on ${targetLabel} yet.` };
+    return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
   }
   const raw = formatStancePair(bundle.rawSum);
   const folded = formatStancePair(bundle.current);
@@ -332,17 +332,17 @@ export function severanceParts(bundle, targetLabel) {
 }
 
 export function landingLine(landing) {
-  if (landing === null || landing === undefined) return "Working out the resulting stance…";
-  if (landing.severed) return "Resulting stance: nothing — this nets everything you've said about it back to zero.";
+  if (landing === null || landing === undefined) return "Adding it up…";
+  if (landing.severed) return "This takes you back to zero.";
   if (landing.inert) {
     const directedInert = landing.landing.pDirected === 0;
     const interestInert = landing.landing.pInterest === 0;
-    if (directedInert && interestInert) return "Resulting stance: carries nothing.";
-    if (directedInert) return "Resulting stance: your side of it carries nothing.";
-    if (interestInert) return "Resulting stance: what reaches you carries nothing.";
+    if (directedInert && interestInert) return "Resulting opinion: carries nothing.";
+    if (directedInert) return "Resulting opinion: your side of it carries nothing.";
+    if (interestInert) return "Resulting opinion: what reaches you carries nothing.";
   }
   const readout = bundleReadout(landing.landing);
-  return `Resulting stance ${readout.emoji} ${formatStancePair(landing.landing)}`;
+  return `Resulting opinion ${readout.emoji} ${formatStancePair(landing.landing)}`;
 }
 
 /* The confirmation a signed gesture leaves. Names where it LEFT the viewer.
@@ -362,12 +362,12 @@ export function signedLine(standing, records, severed, targetLabel) {
   return (
     <>
       <span aria-hidden="true">
-        {`${acts}, still settling. Current stance `}
+        {`${acts}, still settling. Current opinion `}
         {readout.emoji}
         <span className="cg-exact">{` (${formatStancePair(standing)})`}</span>
       </span>
       <span style={SR_ONLY}>
-        {`${acts}, still settling. Current stance: ${readout.label}, ${formatStanceWords(standing)}`}
+        {`${acts}, still settling. Current opinion: ${readout.label}, ${formatStanceWords(standing)}`}
       </span>
     </>
   );
@@ -394,28 +394,28 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
 
 /** The standing, split for rendering: either a sentence, or a readout to lay out. */
 export function standingParts(bundle, targetLabel) {
-  if (bundle === undefined) return { sentence: "Checking your current stance…" };
-  if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No stance on ${targetLabel} yet.` };
+  if (bundle === undefined) return { sentence: "Checking your current opinion…" };
+  if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
   if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} You've severed ${targetLabel}.` };
   const readout = bundleReadout(bundle.current);
   return {
-    label: "Current stance",
+    label: "Current opinion",
     emoji: readout.emoji,
     pair: formatStancePair(bundle.current),
-    spoken: `Current stance: ${readout.label}, ${formatStanceWords(bundle.current)}`,
+    spoken: `Current opinion: ${readout.label}, ${formatStanceWords(bundle.current)}`,
   };
 }
 
 /** The landing, split the same way. */
 export function landingParts(landing) {
-  if (landing === null || landing === undefined) return { sentence: "Working out the resulting stance…" };
+  if (landing === null || landing === undefined) return { sentence: "Adding it up…" };
   if (landing.severed || landing.inert) return { sentence: landingLine(landing) };
   const readout = bundleReadout(landing.landing);
   return {
-    label: "Resulting stance",
+    label: "Resulting opinion",
     emoji: readout.emoji,
     pair: formatStancePair(landing.landing),
-    spoken: `Resulting stance: ${readout.label}, ${formatStanceWords(landing.landing)}`,
+    spoken: `Resulting opinion: ${readout.label}, ${formatStanceWords(landing.landing)}`,
   };
 }
 

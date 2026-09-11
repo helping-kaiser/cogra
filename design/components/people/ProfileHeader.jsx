@@ -76,8 +76,8 @@ export function ProfileHeader({
   const figures = (
     <>
       {posts !== undefined && <Figure value={posts} label="Posts" />}
-      {stancesOn !== undefined && <Figure value={stancesOn} label={own ? "Stances on you" : "Stances on them"} />}
-      {stancesTaken !== undefined && <Figure value={stancesTaken} label={own ? "Stances you've taken" : "Stances they've taken"} />}
+      {stancesOn !== undefined && <Figure value={stancesOn} label={own ? "Opinions on you" : "Opinions on them"} />}
+      {stancesTaken !== undefined && <Figure value={stancesTaken} label={own ? "Opinions by you" : "Opinions by them"} />}
     </>
   );
   return (

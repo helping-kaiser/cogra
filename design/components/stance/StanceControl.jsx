@@ -505,7 +505,7 @@ export function StanceControl({
                   className={BUTTON_CLASS}
                   style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}
                 >
-                  Sever
+                  Walk it back
                 </button>
               )}
               <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>

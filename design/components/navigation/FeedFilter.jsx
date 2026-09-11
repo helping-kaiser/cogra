@@ -177,7 +177,7 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
 
   const sections = (
     <>
-      <FilterSection label="What gets ranked" hint="Everything that can reach your feed. Combine as many as you like.">
+      <FilterSection label="What your feed shows" hint="Everything that can reach your feed. Combine as many as you like.">
         {FEED_KINDS.map((kind) => (
           <Chip key={kind.value} label={kind.label} selected={(value.kinds || []).includes(kind.value)} onToggle={() => toggle("kinds", kind.value)} />
         ))}

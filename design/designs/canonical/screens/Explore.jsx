@@ -17,7 +17,7 @@ export function Screen() {
             </div>
             <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>The Sky</h2>
             <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-              The graph as a sky — every account a star, sized by your own paths to it.
+              Your sky — every account a star, sized by your own paths to it.
             </p>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <Button size="sm">Enter the Sky</Button>

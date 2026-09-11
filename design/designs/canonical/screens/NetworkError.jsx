@@ -25,7 +25,7 @@ export function Screen() {
 
         <ActsCard
           rows={[
-            { label: "Post", value: "Salt maps of the coast road", count: "1 action" },
+            { label: "Post", value: "Salt maps of the coast road", count: "1" },
             {
               label: "Tags",
               value: (
@@ -34,7 +34,7 @@ export function Screen() {
                   <Chip label="#coastroad" tone="readout" />
                 </span>
               ),
-              count: "2 actions",
+              count: "2",
             },
             {
               label: "References",
@@ -44,11 +44,11 @@ export function Screen() {
                   <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
                 </span>
               ),
-              count: "1 action",
+              count: "1",
             },
           ]}
-          total="4 signed actions"
-          note="they land together, or none does"
+          total="4 things, signed together"
+          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>

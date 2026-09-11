@@ -38,7 +38,7 @@ export function Screen() {
 
         <ActsCard
           rows={[
-            { label: "Comment", value: "Reply to @ada's post", count: "1 action" },
+            { label: "Comment", value: "Reply to @ada's post", count: "1" },
             {
               label: "Reference",
               value: (
@@ -64,12 +64,12 @@ export function Screen() {
                   </button>
                 </span>
               ),
-              count: "1 action",
+              count: "1",
             },
             ...ADD_ROWS,
           ]}
-          total="2 signed actions"
-          note="they land together, or none does"
+          total="2 things, signed together"
+          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>

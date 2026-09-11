@@ -65,8 +65,8 @@
    control speaks the reader's word (api-spec's own noun for the r-0 record is
    "the un-tag") and the record-speak stays the register's. An act of that
    weight is asked for by a control that says what it does, never by dragging
-   a claim down to nothing. It takes `Sever`'s place on the stance pad — the
-   walk-away pushed left, the decisions kept right — and `Sever`'s restraint
+   a claim down to nothing. It takes `Walk it back`'s place on the stance pad — the
+   walk-away pushed left, the decisions kept right — and its restraint
    with it: a text button and no colour of its own, because a withdrawal is a
    deliberate act and not a failure (§2.4). THE CHIP'S × DOES THE SAME AT AN
    EDIT, without the pad roundtrip: a reader who just wants the tag gone taps

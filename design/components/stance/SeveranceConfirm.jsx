@@ -12,7 +12,7 @@ import { nearestAnchor, severanceParts, formatStancePair, formatStanceWords, SR_
 // The order is fixed (Android parity): title · the pick line when it was reached
 // by a pick · the consequences · what the reader has said in total (and, only when
 // it exceeds the clip, the cap as an aside) · the cost · the failure line when one
-// exists · Sever, Keep it.
+// exists · Walk it back, Keep it.
 //
 // THE RAW TOTAL LEADS. §8.3 requires the raw sums on every surface that explains
 // cost, because they are what a walk back to zero actually walks — but stating the
@@ -25,7 +25,7 @@ import { nearestAnchor, severanceParts, formatStancePair, formatStanceWords, SR_
 // buttons of equal weight. On a destructive dialog that is a coin flip — two
 // identical-looking words, one of which is irreversible and priced. Here the SAFE
 // action carries the emphasis (filled) and keeps the right-hand slot the thumb
-// goes to by habit, while `Sever` stays a text button on the left. It is still
+// goes to by habit, while `Walk it back` stays a text button on the left. It is still
 // reachable in one tap, so the control still never prevents the choice; it just
 // stops being the default-looking one. No new colour is introduced — severance is
 // a deliberate act, not a failure, so `error` stays off this surface (§2.4).
@@ -47,11 +47,14 @@ export function SeveranceConfirm({
   onCancel,
   inline = false,
 }) {
-  const actions = records === 1 ? "1 signed action" : `${records} signed actions`;
+  /* THE COST IS COUNTED IN THINGS, NOT IN ACTIONS (jakob's ruling, the geek
+     round). "Signed action" is the repo's word for a record; what the reader
+     has is a pile of things they said, each of which has to be said back. */
+  const cost = records === 1 ? "It signs 1 thing, paid on its own." : `It signs ${records} things, each paid separately.`;
   const pickAnchor = pick === null ? null : nearestAnchor(pick);
   const read = severanceParts(bundle, targetLabel);
   return (
-    <DialogSurface ariaLabel="Sever this?" inline={inline} onScrimPress={onCancel} width="22rem">
+    <DialogSurface ariaLabel="Walk it all back?" inline={inline} onScrimPress={onCancel} width="22rem">
       <h2
         style={{
           margin: 0,
@@ -60,7 +63,7 @@ export function SeveranceConfirm({
           fontWeight: "var(--text-headline-small--font-weight)",
         }}
       >
-        Sever this?
+        Walk it all back?
       </h2>
       {pickAnchor !== null && (
         <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)" }}>
@@ -71,7 +74,7 @@ export function SeveranceConfirm({
         </p>
       )}
       <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }}>
-        Your standing toward {targetLabel} drops to nothing. It stops reaching your feed, you stop earning from it, and
+        Your opinion of {targetLabel} drops to nothing. It stops reaching your feed, you stop earning from it, and
         nothing passes on through you.
       </p>
       {/* The RAW total leads and the cap is derived from it. The other order — the
@@ -86,13 +89,13 @@ export function SeveranceConfirm({
           </p>
           {read.capped && (
             <p style={{ margin: "4px 0 0", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
-              Your feed reads it capped at {read.folded} — the cap is what routing uses, not what you said.
+              Your feed reads it capped at {read.folded}.
             </p>
           )}
         </>
       )}
       <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)" }}>
-        {alreadySevered ? "You are already at nothing here." : `It takes ${actions}, each paid for separately.`}
+        {alreadySevered ? "You are already at nothing here." : cost}
       </p>
       {failed && (
         <p role="alert" style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", color: "var(--text-failure)" }}>
@@ -107,7 +110,7 @@ export function SeveranceConfirm({
           className={BUTTON_CLASS}
           style={buttonStyle({ variant: "text", size: "sm", disabled: busy || alreadySevered })}
         >
-          Sever
+          Walk it back
         </button>
         <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "primary", size: "sm" })}>
           Keep it
