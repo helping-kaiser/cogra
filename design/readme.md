@@ -4124,8 +4124,9 @@ one. The height cap is gone; what bounds a card tile is its shape.
   leaving 36 boards. Where the tile was `wide` (204px at the card's
   content width), `square` (390), or a comment's (220/240), the cap was
   never binding and nothing moved. The five that grew are the ones
-  carrying a 4:5 frame, 420 → 487.5 each: `FeedCover`, `FeedGallery`,
-  `LadderMax`, `PostDetail`, `PostDetailVideo`. All five are 390×844
+  carrying a 4:5 frame — capped at 376 on a phone, 487.5 now:
+  `FeedCover`, `FeedGallery`, `LadderMax`, `PostDetail`,
+  `PostDetailVideo`. All five are 390×844
   phone boards that clip at the fold by design — three of them already
   overflowed before the round — so no frame moved for them. Four boards
   in the canvas carry a frame of their own; one of those grew.
