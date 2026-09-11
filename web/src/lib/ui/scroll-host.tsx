@@ -38,6 +38,20 @@ export function scrollOffsetOf(host: RefObject<HTMLElement | null> | null): numb
   return scrollElementOf(host)?.scrollTop ?? window.scrollY;
 }
 
+/** Move the host to an offset, whichever host it is. */
+export function scrollHostTo(host: RefObject<HTMLElement | null> | null, offset: number): void {
+  const scroller = scrollElementOf(host);
+  if (scroller === null) window.scrollTo(0, offset);
+  else scroller.scrollTop = offset;
+}
+
+/** Move the host by a delta, whichever host it is. */
+export function scrollHostBy(host: RefObject<HTMLElement | null> | null, delta: number): void {
+  const scroller = scrollElementOf(host);
+  if (scroller === null) window.scrollBy(0, delta);
+  else scroller.scrollTop += delta;
+}
+
 /** The host's own visible height — a screenful, whichever host it is. */
 export function viewportHeightOf(host: RefObject<HTMLElement | null> | null): number {
   return scrollElementOf(host)?.clientHeight ?? window.innerHeight;

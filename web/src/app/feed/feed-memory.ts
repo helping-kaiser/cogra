@@ -19,14 +19,17 @@
 // deep.
 
 import type { PostView } from "@/lib/api/content-api";
+import type { ScrollPlace } from "@/lib/ui/scroll-pin";
 
 export type FeedMemory = {
   posts: readonly PostView[];
   endCursor: string | null;
   hasNextPage: boolean;
-  /** The scroller's offset, kept current while the reader scrolls. */
-  offset: number;
+  /** The reader's place, kept current while they scroll. */
+  place: ScrollPlace;
 };
+
+const TOP: ScrollPlace = { offset: 0, anchorId: null, anchorTop: 0 };
 
 let memory: FeedMemory | null = null;
 
@@ -36,13 +39,13 @@ export function recallFeed(): FeedMemory | null {
 }
 
 /** Keep the pages. Called whenever a fetch changes what is on screen. */
-export function rememberFeed(pages: Omit<FeedMemory, "offset">): void {
-  memory = { ...pages, offset: memory?.offset ?? 0 };
+export function rememberFeed(pages: Omit<FeedMemory, "place">): void {
+  memory = { ...pages, place: memory?.place ?? TOP };
 }
 
 /** Keep the place. Called as the reader scrolls, so it costs no render. */
-export function rememberFeedOffset(offset: number): void {
-  if (memory !== null) memory.offset = offset;
+export function rememberFeedPlace(place: ScrollPlace): void {
+  if (memory !== null) memory.place = place;
 }
 
 /** Drop it — for a test, and for a deliberate re-read of the feed. */
