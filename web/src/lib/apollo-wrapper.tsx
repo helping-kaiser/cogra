@@ -11,15 +11,19 @@ import {
 } from "@apollo/client-integration-nextjs";
 import type { ReactNode } from "react";
 
-import { authorizedLink } from "@/lib/apollo-link";
 import { graphqlUri } from "@/lib/graphql-uri";
+import { createGuardedClient } from "@/lib/session/browser-guard";
 import { tokenStore } from "@/lib/session/token-store";
 
+// The guard is built with the client rather than under it: the chain waits
+// on the guard's readiness, and the surfaces reach for the same one
+// (`session/browser-guard.ts`).
 function makeClient() {
-  return new ApolloClient({
-    cache: new InMemoryCache(),
-    link: authorizedLink(tokenStore, graphqlUri()),
-  });
+  return createGuardedClient(
+    tokenStore,
+    graphqlUri(),
+    (link) => new ApolloClient({ cache: new InMemoryCache(), link }),
+  );
 }
 
 export function ApolloWrapper({ children }: { children: ReactNode }) {

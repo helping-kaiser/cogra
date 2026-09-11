@@ -161,9 +161,25 @@ hands the guard a success carrying nothing, and nothing
 refreshes. And a viewer-scoped read always asks the server: the
 cache is keyed by query, not by viewer, so a cached answer
 outlives both the token gap that produced an empty one and the
-account that earned a full one. The access token is per-tab
-memory, minted by a refresh, so the first read on any freshly
-loaded page is exactly the one that goes out without it.
+account that earned a full one.
+
+**Nothing leaves a tab before its session has settled.** The
+access token is per-tab memory, minted by a refresh, so a freshly
+loaded page holds none: every read a surface starts on mount
+would go out anonymous and be answered with the guest's view —
+and those answers are viewer-shaped nulls rather than refusals,
+so the guard gets no UNAUTHENTICATED to replay and nothing
+refetches when the token lands. So the browser's request chain
+awaits the guard's readiness before it decides whether a request
+carries a token. Settled is not signed in: a token in hand, a
+refresh that produced one, and a refresh that could not run are
+all settlements, and the third sends the request as the anonymous
+one it is. A signed-out visitor pays no round trip for it — the
+stored refresh token is read synchronously — and the refresh
+mutation itself is the one operation that does not wait, because
+it is what readiness resolves to. The guard the surfaces hold and
+the one the chain waits on are the same object, so a refresh
+primed before an upload and the boot gate share one flight.
 
 Refresh is single-flight at two levels. In-tab, concurrent
 callers serialize on a mutex and a caller that finds the access
