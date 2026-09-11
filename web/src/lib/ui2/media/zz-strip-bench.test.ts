@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import { stripVideoMetadata } from "./strip-video";
 
 const DIR =
-  "C:/Users/peerp/AppData/Local/Temp/claude/D--dev-cogra/ddc8c0d3-41a0-410a-ae17-3cacf09ff340/scratchpad/clips";
+  "/mnt/c/Users/peerp/AppData/Local/Temp/claude/D--dev-cogra/ddc8c0d3-41a0-410a-ae17-3cacf09ff340/scratchpad/clips";
 
 const CLIPS = ["lowres", "vertical", "landscape", "square", "big"];
 
