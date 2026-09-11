@@ -34,7 +34,23 @@ const SR_ONLY = {
 /* OVER MEDIA (jakob, review round 1): on the stream this figure sits on the
    clip, where onSurfaceVariant on photography is not quiet but unreadable. It
    goes white with a shadow — the register is unchanged, the contrast is not. */
-export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, overMedia = false }) {
+
+/* `exact` SAYS THIS FIGURE IS A SIGNAL NUMBER (backlog item 53). The Post Score
+   is one and sets it: the `graph` glyph carries the reading, and the digits ride
+   a `cg-exact` span that paints only in geek mode (readme §13). Money, ages and
+   counts are not signal numbers and never set it — hiding what something costs
+   trades honesty for aesthetics, which is the opposite trade to this one.
+
+   THE EM-DASH PLACEHOLDER RIDES THE SAME SPAN. A post whose score has not
+   settled yet draws `—` where the number goes, and that is a number-shaped
+   readout of the same fact: in geek mode it says "no figure yet", and with the
+   digits off there is nothing for it to stand in for. The glyph alone is the
+   honest drawing either way, and one span means the two modes cannot disagree
+   about where the figure sits.
+
+   The glyph, the target and the geometry never move with the mode: only the
+   digits paint or do not. */
+export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, overMedia = false, exact = false }) {
   return (
     <button
       type="button"
@@ -76,10 +92,21 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, ove
           is failure only — a score below zero is a fact about reach, not a fault,
           and colouring it red would editorialise it the way §2.4 forbids for a
           negative stance. */}
-      <span style={{ color: overMedia ? "#fff" : "var(--on-surface)", fontWeight: 500 }}>
+      <span
+        className={exact ? "cg-exact" : undefined}
+        aria-hidden={exact ? "true" : undefined}
+        style={{ color: overMedia ? "#fff" : "var(--on-surface)", fontWeight: 500 }}
+      >
         {value}
         {unit ? <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>{unit}</span> : null}
       </span>
+      {/* The figure is spoken in both modes: the mode draws, it does not redact. */}
+      {exact && (
+        <span style={SR_ONLY}>
+          {value}
+          {unit}
+        </span>
+      )}
     </button>
   );
 }

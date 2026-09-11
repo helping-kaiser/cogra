@@ -9,7 +9,7 @@ Use `PostCard` for a post anywhere it appears — the feed, the post page, a pro
 
 **The license is not on the card.** It is a term over downstream reuse, read once in a hundred readings, so it lives behind the card's overflow menu (`License terms`), and the row opens it in a sheet over the surface the reader asked from. Pass extra rare interactions — report, open a proposal, copy a link — as `menuItems`.
 
-**The Post Score is a prop, not something each surface passes in.** Every post in a ranked listing has one, so `score` renders it in the affordance row after the stance control, as Material's `graph_3` glyph plus the number. Uncapped, negative allowed, never coloured.
+**The Post Score is a prop, not something each surface passes in.** Every post in a ranked listing has one, so `score` renders it in the affordance row after the stance control, as Material's `graph_3` glyph plus the number. Uncapped, negative allowed, never coloured. The glyph is the default reading and the number is the geek one (readme §13) — the card passes `exact` to `ExplainableNumber` and the tap target never moves.
 
 Everything a post grows beyond its content goes in the **affordance row**: **one line, never wrapping**, in a fixed order — **stance, Post Score, comments, then `actions`**. A second row reads as a second kind of thing, and it costs height the post does not have. That constraint is why every affordance here is glyph-plus-number rather than words. Nothing in that row may take `primaryContainer` — the stance knob already spends it.
 
