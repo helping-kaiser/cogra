@@ -2,7 +2,7 @@ import React from "react";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { MonogramAvatar } from "../people/ActorChip.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
-import { formatStancePair, formatTagPair, nearestTagAnchor, SR_ONLY } from "../stance/StanceReadout.jsx";
+import { formatStancePair, formatTagPair, nearestAnchor, nearestTagAnchor, SR_ONLY } from "../stance/StanceReadout.jsx";
 
 /* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
    result-row shape search reuses: EVERY row is leading mark · name · value, so
@@ -29,12 +29,14 @@ import { formatStancePair, formatTagPair, nearestTagAnchor, SR_ONLY } from "../s
    a plain string the row prints as given — an age, a date — and geek mode
    never touches it, because an age is not a signal number.
 
-   THE NUMBERS ARE THE GEEK READING (readme §13). The rank's `graph` glyph and
-   a topic's tag glyph carry the row by default; the digits ride `cg-exact`
-   spans that paint only when the screen root says `data-geek="on"`. The
-   button's accessible name is the same in both modes — every hidden number has
-   a screen-reader-only twin, because the mode is a drawing setting and nothing
-   spoken may depend on it.
+   THE PAIRS ARE THE GEEK READING (readme §13). Every pair is drawn as its
+   nearest anchor's glyph — the thirteen objects for a topic, the twenty faces
+   for a citation — with the digits in a `cg-exact` span that paints only when
+   the screen root says `data-geek="on"`. The rank keeps its number in both
+   modes: geek governs the pairs, not every figure. The button's accessible
+   name is the same in both modes — every hidden number has a screen-reader-only
+   twin, because the mode is a drawing setting and nothing spoken may depend
+   on it.
 
    AN ACT STILL SETTLING SAYS SO HERE, AND ONLY HERE (jakob's ruling,
    2026-09-10). A chip on a card shows nothing pending — a tag's word is the tag's
@@ -87,7 +89,18 @@ export function NodeMark({ kind, name, src }) {
 export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank, trailing, pending = false, onOpen }) {
   const tagFamily = kind === "topic";
   const exact = pair ? (tagFamily ? formatTagPair(pair) : formatStancePair(pair)) : null;
-  const anchor = pair && tagFamily ? nearestTagAnchor(pair) : null;
+  /* EVERY PAIR HAS A FACE TO FALL BACK TO (jakob's ruling, the geek round —
+     backlog item 53.3). A topic reads the thirteen objects; a person, post or
+     comment row is a CITATION, whose two axes fill the slots `STANCE_ANCHORS`
+     is drawn over, so it reads the twenty faces — the same lookup `RefPair`'s
+     own readout uses. Without it the row simply lost its right edge with the
+     digits off, which is the one thing the mode must never do.
+
+     THE WORD COMES WITH THE TAG AND NOT WITH THE CITATION (`RefPair`'s rule).
+     A tag anchor's word names a degree of aboutness and is true of the row; a
+     stance anchor's names a feeling about a stance, and a citation is not one
+     — so the spoken reading there is the pair itself, exactly. */
+  const anchor = pair ? (tagFamily ? nearestTagAnchor(pair) : nearestAnchor(pair)) : null;
   return (
     <button
       type="button"
@@ -185,7 +198,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank,
                   {anchor && <span style={{ fontSize: "var(--text-body-medium)", lineHeight: 1 }}>{anchor.emoji}</span>}
                   <span className="cg-exact">{exact}</span>
                 </span>
-                <span style={SR_ONLY}>{anchor ? `${anchor.label}, ${exact}` : exact}</span>
+                <span style={SR_ONLY}>{tagFamily && anchor ? `${anchor.label}, ${exact}` : exact}</span>
               </>
             )}
             {pending && <PendingMarker inline />}
