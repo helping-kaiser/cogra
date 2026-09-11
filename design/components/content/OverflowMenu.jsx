@@ -18,6 +18,13 @@ import { BottomSheet, SheetItem } from "../core/BottomSheet.jsx";
    · The trigger is `more_vert` at 24px on `onSurfaceVariant`, in the card's
      header beside the timestamp \u2014 never in the affordance row, which is for the
      things a reader actually reaches for.
+   \u00b7 TWO PLACEMENTS, AND THE DIFFERENCE IS THE GUTTER. `placement="header"` is
+     the default: a 48px box pulled back by -12px so it keeps the 24px line it
+     rides on \u2014 which is what a card header and a `PageHeader` action are.
+     `placement="row"` is the dot standing in a ROW OF CONTROLS, where the band
+     law sent every profile's \u22ee: there is no gutter to pull into, so it draws
+     40px of ink beside the row's buttons and keeps the 48px target through
+     `cg-hit` \u2014 the same trade `BandIcon` and the small button make.
    · The sheet is `surfaceContainerHigh` at the medium rung. On Android this is a
      bottom sheet (design.md \u00a76 lists them in the scaffolding); on web it is an
      anchored menu, which is the same inventory in the platform's own idiom.
@@ -31,9 +38,14 @@ import { BottomSheet, SheetItem } from "../core/BottomSheet.jsx";
    · Escape closes it, a press outside closes it, and nothing behind it is inert \u2014
      an overflow menu is not a decision the reader has to resolve.
    · Nothing in here takes `error` colouring. A destructive item is drawn like the
-     rest; the confirmation it opens is where the weight belongs. */
+     rest; the confirmation it opens is where the weight belongs.
+   · A ROW THAT NAMES AN ACTOR TAKES ITS WORDS FROM THE ACTOR'S MASTER. The hide
+     row spells a handle — `Hide @ada` — and a redacted author has none, so its
+     label comes from `ActorChip`'s `HIDE_ACTOR_LABEL` and reads `Hide this
+     account` there. The row stands either way: hiding is about an actor, and a
+     redacted actor still ranks into the reader's feed. */
 
-export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", presentation = "sheet" }) {
+export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", presentation = "sheet", placement = "header" }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
 
@@ -56,12 +68,12 @@ export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", 
         aria-expanded={open}
         aria-haspopup="menu"
         onClick={() => setOpen((shown) => !shown)}
-        className="cg-state cg-focus"
+        className={placement === "row" ? "cg-state cg-focus cg-hit" : "cg-state cg-focus"}
         style={{
           display: "flex",
-          height: "var(--touch-target-min)",
-          width: "var(--touch-target-min)",
-          margin: "-12px",
+          height: placement === "row" ? "40px" : "var(--touch-target-min)",
+          width: placement === "row" ? "40px" : "var(--touch-target-min)",
+          margin: placement === "row" ? 0 : "-12px",
           alignItems: "center",
           justifyContent: "center",
           border: 0,

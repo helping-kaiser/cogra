@@ -2,7 +2,7 @@ Use `WizardHeader` on every composer-flow stage — the post wizard, the reply f
 
 ```jsx
 <WizardHeader title="New post" />
-<WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions" />
+<WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
 <WizardHeader title="Your picture" leaveLabel="Leave" stageLabel="Last step" help="Changing your picture" />
 <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" />
 ```

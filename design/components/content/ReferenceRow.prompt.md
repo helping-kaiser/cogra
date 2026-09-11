@@ -4,7 +4,7 @@ Use `ReferenceRow` for every entry in the topics-and-references sheet, and for s
 <ReferenceRow kind="person" name="Mira Voss" src="mira.jpg" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={open} />
 <ReferenceRow kind="post" name="Salt maps of the coast road" src="cover.jpg" pair={{ pDirected: 0.55, pInterest: 0.2 }} onOpen={open} />
 <ReferenceRow kind="topic" name="photography" pair={{ pDirected: 0.4, pInterest: 0.9 }} onOpen={open} />
-<ReferenceRow kind="post" name="Grain of the flats" value="3w" onOpen={open} />   {/* an age is not a signal number */}
+<ReferenceRow kind="post" name="Grain of the flats" value="3d" onOpen={open} />   {/* an age is not a signal number */}
 ```
 
 **The leading mark says the kind, without a word beside it**: a person keeps their avatar (a circle, as everywhere), a media post its cover, a text post the letter T as a tile, a topic its #, and the rest their node-type glyph — proposal `how_to_vote`, item `inventory_2`, campaign `campaign`, offer `sell`, chat `forum`, comment `chat_bubble`.

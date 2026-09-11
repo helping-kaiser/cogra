@@ -24,10 +24,10 @@
    preview line and the list narrow; the header, the footnote and the row shape
    do not move, because they are the same picker.
 
-   THE REFUSED STATE IS NOT DRAWN. What an illegal character does at the field
-   is the input-error round's shape and belongs to a validation pass, not to
-   this round — named here so the canvas does not read as though it had been
-   settled. */
+   A STRING OUTSIDE THE GATE IS REFUSED AT THE FIELD, and `TagPickerRefused` is
+   that state: the bar takes the error ring and this line carries the refusal
+   instead of the rule. The two boards are one picker at two moments, the way
+   this one and `TagPicker` are. */
 export function Screen() {
   return (
     <>

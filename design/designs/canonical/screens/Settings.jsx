@@ -51,9 +51,16 @@
    sheets that cover it, and those boards draw the page they cover rather than a
    hand-made few rows of it: the order is the ruling, and a second drawing of it
    is a second order. This board is the page whole; those are the page under a
-   sheet. */
+   sheet.
 
-export const FRAME = { width: 390, height: 2027 };
+   DELETING THE ACCOUNT IS THE PAGE'S LAST ROW (jakob, the account-deletion
+   round), in a group of its own after the sign-out group: leaving and ending
+   are neighbours, and ending is last. It is drawn quiet — a navigating row with
+   a chevron, no `error` colour and no `action` emphasis — because the weight of
+   that act belongs to the flow it opens, not to a page a reader came to for the
+   theme. */
+
+export const FRAME = { width: 390, height: 2163 };
 
 export function Screen() {
   return <SettingsBody />;

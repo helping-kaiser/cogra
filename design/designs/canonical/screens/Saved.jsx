@@ -20,9 +20,10 @@
    boards at all yet, so its row shape lands with the chat round and joins this
    same list rather than starting a second one.
 
-   NO REMOVE ON THE ROW. Unsaving happens where saving happened — the thing's
-   own ⋮ — so the list stays a list and a scrolling thumb can never drop
-   something out of it. */
+   EVERY ROW CARRIES ITS OWN UNSAVE (jakob 2026-09-11) — the shared `Unsave`,
+   icon-only, standing in the chevron's slot outboard of the age. `SavedUndo`
+   draws the same list the moment one of them is tapped. */
+
 export function Screen() {
   return (
     <>
@@ -36,6 +37,7 @@ export function Screen() {
           titleAside="@ada"
           second="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
           trailing="2d"
+          action={<Unsave />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -46,6 +48,7 @@ export function Screen() {
           titleAside="@tobias"
           second="on The long way home"
           trailing="3d"
+          action={<Unsave />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -56,6 +59,7 @@ export function Screen() {
           titleAside="@mira"
           second="Runs the stand by the sea wall — honey from the headland hives."
           trailing="5d"
+          action={<Unsave />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -66,6 +70,7 @@ export function Screen() {
           titleAside="@mira"
           second="Everything the flats give up in one morning."
           trailing="7d"
+          action={<Unsave />}
           onOpen={() => {}}
         />
       </ChronicleList>

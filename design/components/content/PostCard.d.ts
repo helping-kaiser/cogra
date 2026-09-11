@@ -46,9 +46,9 @@ export interface PostCardProps {
   /** Fires when a stance on this post is signed, so the shell can keep it. */
   onCommit?: (pick: import("../stance/StanceReadout").StancePair, bundle: StanceBundle) => void;
   /**
-   * "summary" clamps the body to a capped media post's height (18 lines) and the
-   * description to two, and links the text region — the feed. "detail" sets the
-   * body at body-large, unclamped and unlinked — the post page.
+   * "summary" clamps the title to one line, the body to 18 and the description
+   * to two, and links the text region — the feed. "detail" sets the body at
+   * body-large, unclamped and unlinked — the post page.
    */
   variant?: "summary" | "detail";
   href?: string;
@@ -58,9 +58,9 @@ export interface PostCardProps {
   /** Off only where a surface deliberately carries no stance affordance. */
   showStance?: boolean;
   /**
-   * The Post Score, already formatted. Uncapped and possibly negative: render a
+   * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
-   * explanation is item 13's Post Score drill-down, still undesigned.
+   * explanation is item 13's Post score drill-down, still undesigned.
    */
   score?: string;
   /** Opens the score's detail surface (readme §7.1). */
@@ -103,6 +103,16 @@ export interface PostCardProps {
   references?: number;
   /** Opens the topics-and-references sheet. On detail, the whole line opens it. */
   onOpenReferences?: () => void;
+  /**
+   * How many people hold an opinion on this post (backlog item 55). DETAIL
+   * VARIANT ONLY, and only above zero: a quiet count line in the topics line's
+   * register, opening the sheet that lists the holders. At zero there is no row
+   * — a tap that can only open an empty list is a tap spent on nothing; a
+   * comment's door is its ⋮ menu instead, where the row always stands.
+   */
+  opinions?: number;
+  /** Opens the opinions-on-this-post sheet. */
+  onOpenOpinions?: () => void;
   /** The post's media items, rendered full-bleed via `MediaGallery`. */
   media?: readonly import("../media/MediaAttachment").MediaAttachmentProps[];
   /**

@@ -106,9 +106,12 @@
     },
     {
       "name": "vouch-back-for-your-inviter",
-      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view and the member's own feed opens.",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view, the ceremony says so, and the member's own feed opens.",
       "start": { "board": "VouchBack", "via": 3 },
-      "end": { "board": "VouchBackPad", "via": 4, "case": "the vouch-back — signed, the way opens" }
+      "waypoints": [
+        { "board": "VouchBackPad", "via": 4, "case": "the vouch-back — signed, the ceremony opens" }
+      ],
+      "end": { "board": "VouchedIn", "via": 1 }
     },
     {
       "name": "restore-your-key",
@@ -292,7 +295,7 @@
       "description": "The own-post overflow offers Edit; the edit surface carries its changes as signed acts of their own and the post settles with them.",
       "start": { "board": "ComposeLanded", "via": 2 },
       "waypoints": [
-        { "board": "RemoveMenu", "via": 1 }
+        { "board": "RemoveMenu", "via": 2 }
       ],
       "end": { "board": "EditCompose", "via": 12, "case": "signed — the post, the edit settling" }
     },
@@ -301,7 +304,7 @@
       "description": "Remove asks once, then leaves the mark — the post is redacted where it stood, never silently erased.",
       "start": { "board": "ComposeLanded", "via": 2 },
       "waypoints": [
-        { "board": "RemoveMenu", "via": 3 }
+        { "board": "RemoveMenu", "via": 4 }
       ],
       "end": { "board": "RemoveConfirm", "via": 1 }
     },
@@ -438,6 +441,28 @@
         { "board": "ComposePick", "via": 4 },
         { "board": "ComposeCited" }
       ]
+    },
+    {
+      "name": "request-account-deletion",
+      "description": "Settings' last row explains what goes and what stays, takes the content sweep as an opt-in, and ends where the flow leaves the app: a link mailed to the account's own address. Everything after that — the seven days, the band, the cancel — begins at the confirmation, which is not a tap of ours.",
+      "start": { "board": "Settings", "via": 18 },
+      "end": { "board": "DeleteAccount", "via": 3, "case": "the request is recorded with its opt-in and the link is on its way — nothing is scheduled until the link is opened" }
+    },
+    {
+      "name": "trace-a-score-to-its-records",
+      "description": "The Post score, wherever a post is drawn, opens why the post reached this reader: the paths from their own opinions to it, strongest first. A path opens its steps, a step opens what carries it, and behind that step stand the signed records themselves — the floor of the whole claim, and a reading journey that concludes on reaching them. The stream's score is excepted: on the rail it is the detail door and not this one.",
+      "start": { "control": "Post Score", "except": ["Reel"] },
+      "waypoints": [
+        { "board": "FeedEntry", "via": 2 },
+        { "board": "RankPath", "via": 2 },
+        { "board": "RankHop", "via": 2 },
+        { "board": "RankRecords" }
+      ]
+    },
+    {
+      "name": "who-holds-an-opinion-on-this",
+      "description": "The quiet count under a post's tags opens the list of everyone who holds an opinion on it — ungated, the profile's own opinions page mirrored onto content. A reading journey: reaching the list is the whole of it, and a row out of it is a visit to a person, which is its own flow.",
+      "start": { "board": "PostDetail", "via": 15 }
     }
   ]
 }

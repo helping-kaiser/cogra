@@ -17,6 +17,43 @@ export interface FieldLabelProps {
 
 export declare function FieldLabel(props: FieldLabelProps): JSX.Element;
 
+/** The late counter: the quiet remaining count a capped field shows only once
+ *  the writer is near its cap. Renders nothing at all until
+ *  `remaining <= max(20, round(cap / 10))`, then `"12 left"`; past the cap
+ *  `"9 over"` in `--error`. Counts Unicode scalar values, the unit every ruled
+ *  cap is stated in. `TextField` renders it for its own field; a field that is
+ *  not a `TextField` — the growing body box — renders it directly. */
+export interface FieldCountProps {
+  /** The field's whole content. Counted unless `used` is given. */
+  value?: string;
+  /** The cap, in Unicode scalar values. Without one nothing renders. */
+  cap?: number;
+  /** The whole length, for a field drawn as the visible tail of a longer body.
+   *  Overrides counting `value`. */
+  used?: number;
+  id?: string;
+}
+
+export declare function FieldCount(props: FieldCountProps): JSX.Element | null;
+
+/** The supporting row under a field, assigned once: the message or the hint at
+ *  its start, the late counter at its end. `TextField` renders it for its own
+ *  field; a capped field that is not a `TextField` renders it directly. Renders
+ *  nothing when there is nothing to say. */
+export interface FieldSupportProps {
+  /** Id of the message line, named by the control's `aria-describedby`. */
+  id?: string;
+  /** Id of the count, named by the same. */
+  countId?: string;
+  hint?: string;
+  error?: string;
+  value?: string;
+  cap?: number;
+  used?: number;
+}
+
+export declare function FieldSupport(props: FieldSupportProps): JSX.Element | null;
+
 /** The house labeled text input — and, with `rows`, the house textarea. */
 export interface TextFieldProps {
   label: string;
@@ -37,8 +74,15 @@ export interface TextFieldProps {
   hint?: string;
   /** The same supporting line in M3's error state: error outline, error label,
    *  the message in `--error`, always words. It REPLACES `hint` — a field never
-   *  carries both. */
+   *  carries both. Over the cap this is where the surface's own refusal goes:
+   *  the atom colours the count, the board words the message. */
   error?: string;
+  /** The field's cap in Unicode scalar values. The late counter appears at the
+   *  end of the supporting row once `remaining <= max(20, round(cap / 10))`,
+   *  and not one character sooner. */
+  cap?: number;
+  /** The whole length, where the field is drawn as the tail of a longer body. */
+  used?: number;
 }
 
 export declare function TextField(props: TextFieldProps): JSX.Element;

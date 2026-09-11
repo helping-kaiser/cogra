@@ -23,7 +23,20 @@ import { StanceValue } from "../stance/StanceReadout.jsx";
    THE SECOND LINE IS ONE LINE, in every variant, ellipsized. A row in a list is
    scanned, not read: the moment one row can be two lines tall, the reader loses
    the vertical rhythm that lets them skim past nine of them to find the tenth.
-   Where the whole snippet matters, the row's destination is where it belongs. */
+   Where the whole snippet matters, the row's destination is where it belongs.
+
+   A ROW MAY CARRY ONE CONTROL OF ITS OWN (`action`, the review-fix round), and
+   it takes the TRAILING-MOST slot — the chevron's, free by definition, since a
+   chevron means "this opens another surface" and a row with its own control is
+   not spending its edge on saying so. It does not displace the trailing edge:
+   on the Saved list the age is when YOU saved the thing, which is the list's
+   whole order and what a reader is retracing, so the age keeps its place and
+   the control stands outboard of it. `SettingsRow` assigns the same slot the
+   same way — "a control of the row's own" is one of its four trailing variants.
+
+   A control inside a control is not markup, so with `action` the row splits
+   into the pressable part and the control beside it. Without one it stays the
+   single element every existing list already draws. */
 
 const VARIANTS = {
   /* The wallet's history. Its trailing edge is money, which is body-sized
@@ -110,6 +123,8 @@ export function ContentRow({
   direction,
   chevron = true,
   inert = false,
+  unread = false,
+  action,
   onOpen,
 }) {
   const shape = VARIANTS[variant] ?? VARIANTS.ledger;
@@ -130,26 +145,32 @@ export function ContentRow({
       {title}
     </span>
   );
-  return (
+  /* The row's own box, and the part of it that presses. With no `action` they
+     are the same element, exactly as every list has always drawn it; with one,
+     the box is a plain div and the press is the button inside it — the card's
+     padding moves onto the press so the state layer still covers what the
+     reader aimed at. */
+  const box = {
+    display: "flex",
+    alignItems: "center",
+    gap: "var(--space-3)",
+    width: "100%",
+    border: 0,
+    borderRadius: "var(--radius-medium)",
+    background: "var(--surface-card)",
+    padding: "var(--space-3)",
+    cursor: onOpen ? "pointer" : "default",
+    fontFamily: "var(--font-sans)",
+    color: "var(--on-surface)",
+    textAlign: "left",
+    boxSizing: "border-box",
+  };
+  const body = (
     <Tag
       type={inert ? undefined : "button"}
       onClick={inert ? undefined : onOpen}
       className={inert ? undefined : "cg-state cg-focus"}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-3)",
-        width: "100%",
-        border: 0,
-        borderRadius: "var(--radius-medium)",
-        background: "var(--surface-card)",
-        padding: "var(--space-3)",
-        cursor: onOpen ? "pointer" : "default",
-        fontFamily: "var(--font-sans)",
-        color: "var(--on-surface)",
-        textAlign: "left",
-        boxSizing: "border-box",
-      }}
+      style={action ? { ...box, width: "auto", flex: 1, minWidth: 0, background: "none", paddingRight: 0 } : box}
     >
       <span style={{ position: "relative", flex: "none", width: "40px", height: "40px" }}>
         <Disc image={image} imageShape={shape.image} name={name} face={face} glyph={glyph} tone={shape.disc} />
@@ -196,7 +217,7 @@ export function ContentRow({
           <span style={{ ...TYPE[shape.second], color: "var(--text-secondary)", ...ellipsis }}>{second}</span>
         )}
       </span>
-      {(trailing || pending) && (
+      {(trailing || pending || unread) && (
         <span style={{ flex: "none", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
           <span
             style={{
@@ -207,13 +228,31 @@ export function ContentRow({
             {trailing}
           </span>
           {pending && <PendingMarker />}
+          {/* The shell's unread mark, the bell's own dot at row scale: the one
+              drawing the product uses for "this arrived and you have not
+              opened it". A dot and not a weight change, so a list of eight
+              unread rows stays a list rather than eight headlines. */}
+          {unread && (
+            <span
+              role="img"
+              aria-label="New"
+              style={{ width: "8px", height: "8px", borderRadius: "var(--radius-full)", background: "var(--primary)" }}
+            />
+          )}
         </span>
       )}
-      {chevron && (
+      {chevron && !action && (
         <span style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true">
           <Icon name="chevron_right" size={18} />
         </span>
       )}
     </Tag>
+  );
+  if (!action) return body;
+  return (
+    <div style={{ ...box, padding: 0, paddingRight: "var(--space-3)", cursor: "default", background: "var(--surface-card)" }}>
+      {body}
+      <span style={{ flex: "none", display: "inline-flex" }}>{action}</span>
+    </div>
   );
 }

@@ -21,7 +21,7 @@ const P = "../../assets/photos/";
 const mira = {handle:"mira_l",displayName:"Mira Lindqvist"};
 const rey = {handle:"rey",displayName:"Rey Alvarez"};
 const jun = {handle:"jun",displayName:"Jun Watanabe"};
-const menu = [{label:"Report this"},{label:"Copy link"}];
+const menuFor = (handle) => [{label:"Save"},{label:"Cite in a new post"},{label:"Hide @"+handle},{label:"License terms"}];
 function Demo(){return (
 <div className="grid">
   <div className="col">
@@ -38,7 +38,7 @@ function Demo(){return (
       </SensitiveScope>
     </Card>
     <span className="lbl">The platform's verdict — the same face, the other source named</span>
-    <PostCard author={rey} timestamp="5d" score="1.20" comments={9} menuItems={menu}
+    <PostCard author={rey} timestamp="5d" score="1.20" comments={9} menuItems={menuFor(rey.handle)}
       title="What they found in the yard"
       content="The council came out the same afternoon and it was over by five."
       media={[{src:P+"10-square-1x1.jpg",ratio:"wide",fit:"cover"}]}
@@ -55,23 +55,23 @@ function Demo(){return (
   <div className="col">
     <span className="hd">Redacted — the whole record</span>
     <span className="lbl">Removed for cause. Nothing authored survives — no title, body, description, or media</span>
-    <PostCard author={mira} timestamp="4d" score="2" menuItems={menu} comments={7}
+    <PostCard author={mira} timestamp="4d" score="2" menuItems={menuFor(mira.handle)} comments={7}
       title="A title that is gone" content="A body that is gone." media={[{src:P+"02-landscape-3x2.jpg"}]}
-      redacted={{reason:"illegal",when:"Removed 22 Aug"}}/>
+      redacted={{reason:"illegal",when:"3d"}}/>
     <span className="lbl">Removed by the author — reads differently, deliberately</span>
-    <PostCard author={rey} timestamp="2w" score="−1" menuItems={menu} comments={0}
-      redacted={{reason:"author",when:"Removed 12 Aug"}}/>
+    <PostCard author={rey} timestamp="14d" score="−1" menuItems={menuFor(rey.handle)} comments={0}
+      redacted={{reason:"author",when:"10d"}}/>
     <span className="lbl">The placeholder alone — for a comment or any other node</span>
-    <RedactedContent reason="illegal" when="Removed 22 Aug"/>
+    <RedactedContent reason="illegal" when="20d"/>
   </div>
   <div className="open">
     <p><b>The two states differ in what they take, and that is the whole design.</b> Reading them as one family is the mistake this card exists to prevent.</p>
-    <p><b>Sensitive veils the whole body as one.</b> Media, text and description sit under a single veil; the title and topics stay outside it and readable, so a reader can decide from the frame without touching the content. A gallery veils whole, never one picture of it.</p>
+    <p><b>Sensitive veils the whole body as one.</b> Media, text and description sit under a single veil; the title and tags stay outside it and readable, so a reader can decide from the frame without touching the content. A gallery veils whole, never one picture of it.</p>
     <p><b>The veil names its source.</b> The author's own warning and the platform's verdict are two independent states that read back as the same veil, so the face says which one this is — always, since an unnamed source would read as the other. The reason, where there is one, follows it on the same line.</p>
     <p><b>One tap reveals everything.</b> The reader answered the question once; asking again per item turns one decision into five.</p>
     <p><b>Revealing moves nothing.</b> Content stays mounted under the veil and keeps its exact space. That is also why text is blurred in place rather than replaced: the reader can see there <i>is</i> a sentence, only not read it.</p>
     <p><b>Redaction is record-granular.</b> An illegal verdict removes the <i>payload</i> of the record — "the binding content commitment forbids partial rewrite, so there is no per-field redaction". One illegal attachment takes everything authored with it: no title, no body, no description, no media, and no license. There is no redacted title beside a surviving body, and no redaction inside a sentence. Anything that offers field-level redaction is lying about the substrate.</p>
-    <p><b>What is left is the skeleton, and the skeleton is the point.</b> The structural record, its witness, and everything it does on L1 survive: author, timestamp, thread position, standing, the stance a reader can still take, the score, the comments. No record ever leaves the graph and every redaction leaves a visible mark — so a reader is never left wondering whether something was quietly deleted.</p>
+    <p><b>What is left is the skeleton, and the skeleton is the point.</b> The structural record, its witness, and everything it does on L1 survive: author, timestamp, thread position, the opinion, the opinion a reader can still give, the score, the comments. No record ever leaves the graph and every redaction leaves a visible mark — so a reader is never left wondering whether something was quietly deleted.</p>
     <p><b>Two reasons, two wordings.</b> Removed for cause by a passing proposal, or removed by the author's own choice. The docs require these to be distinguishable; collapsing them lets a moderation verdict hide behind an author's decision, or the reverse.</p>
     <p><b>A redacted node is not feed material.</b> It is reached by direct link, by structure still pointing at it, or by a reader whose filter admits it. Whoever is looking arrived on purpose — so the placeholder says what happened and stops.</p>
     <p><b>Neither state uses <code>error</code> colouring.</b> A neutral scrim wash and a <code>visibility</code> chip for sensitive; the same reserved surface an unloaded media tile uses for redacted, because both are a space <i>kept</i>. No red, no triangle. These are facts about content, not alarms.</p>

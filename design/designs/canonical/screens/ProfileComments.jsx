@@ -1,24 +1,13 @@
 /* The profile's COMMENTS view (profile round, item 23): the second tab — the
    person's comments as the real comment cards, each in reach of its thread.
    Same header block; only the list changes. Drawn on @ada's profile — the
-   master instance every profile's comments tab follows. */
+   master instance every profile's comments tab follows. The ⋮ rides the
+   actions row and holds the whole profile menu, exactly as the profile's own
+   board draws it (the band law): a tab of a page is not a smaller page. */
 export function Screen() {
   return (
     <>
-      <PageHeader
-        title="@ada"
-        backHref="#"
-        backLabel="Back"
-        action={
-          <OverflowMenu
-            ariaLabel="More about @ada"
-            items={[
-              { label: "Mention in a new post", onSelect: () => {} },
-              { label: "Share this profile", onSelect: () => {} },
-            ]}
-          />
-        }
-      />
+      <PageHeader title="@ada" backHref="#" backLabel="Back" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
@@ -32,6 +21,7 @@ export function Screen() {
             onCounts={() => {}}
             onCommit={() => {}}
             onMessage={() => {}}
+            menu={otherProfileMenu()}
             showHandle={false}
           />
         </div>

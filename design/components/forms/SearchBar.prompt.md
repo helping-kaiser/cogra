@@ -6,4 +6,4 @@ Use `SearchBar` only at the top of the Explore tab — the one search surface. I
 </CograBand>
 ```
 
-Queries may open with the scope operators — `@handle <text>` or `#topic <text>` (readme §13, the search rulings); the bar renders them as plain text, the client parses them. Without `onChange` the bar renders statically (prototype boards): the query text plus a standing caret.
+Queries may open with the scope operators — `@handle <text>` or `#tag <text>` (readme §13, the search rulings); the bar renders them as plain text, the client parses them. Without `onChange` the bar renders statically (prototype boards): the query text plus a standing caret.

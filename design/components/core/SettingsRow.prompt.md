@@ -6,8 +6,8 @@ Use `SettingsGroup` and `SettingsRow` for every setting in the product. The grou
   <SettingsRow label="Default license" value="Public domain" onOpen={openLicenseSheet} />
 </SettingsGroup>
 
-<SettingsGroup label="Giving an opinion" footnote="A tap opens this, everywhere.">
-  <SettingsRow name="stance-input" selected label="The pad" status="A tap opens it; drift to where you stand." />
+<SettingsGroup label="Giving an opinion" footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot.">
+  <SettingsRow name="stance-input" selected label="The pad" status="A tap opens it; drift to where it feels right." />
   <SettingsRow name="stance-input" selected={false} label="Sliders" status="One slider per side of the opinion." />
 </SettingsGroup>
 ```

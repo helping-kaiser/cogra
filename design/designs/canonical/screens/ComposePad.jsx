@@ -28,7 +28,7 @@ export function Screen() {
       <ComposeSealBody />
 
       {/* The wash over the shell; the parked pad above it stays sharp. */}
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-wash, rgba(0, 0, 0, 0.5))" }} />
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-dialog)" }} />
 
       <div
         style={{
@@ -53,7 +53,7 @@ export function Screen() {
         {/* The pick's readout, in the pad's own block shape: the name of the
             quantity, then the face and the number under it. */}
         {/* The readout clears the corner the "?" sits in, the way the master's
-            own standing block does. */}
+            own `StanceStanding` block does. */}
         <div style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
           <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             Your pick
@@ -68,7 +68,7 @@ export function Screen() {
             <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
             <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.30</span>
           </span>
-          <span style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 }}>
+          <span style={SR_ONLY}>
             Nice, For or against +0.30
           </span>
         </div>

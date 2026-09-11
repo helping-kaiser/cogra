@@ -1,16 +1,15 @@
 Use `SegmentedFilter` where one list can be shown two to four ways and only one at a time.
 
 ```jsx
-const [view, setView] = React.useState("posts");
+const [order, setOrder] = React.useState("ranked");
 
 <SegmentedFilter
-  ariaLabel="Filter the chronicle"
-  value={view}
-  onChange={setView}
+  ariaLabel="Order"
+  value={order}
+  onChange={setOrder}
   options={[
-    { value: "posts", label: "Posts" },
-    { value: "comments", label: "Comments" },
-    { value: "stances", label: "Stances" },
+    { value: "ranked", label: "Ranked" },
+    { value: "newest", label: "Newest" },
   ]}
 />
 ```

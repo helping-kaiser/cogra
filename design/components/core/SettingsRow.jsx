@@ -44,7 +44,7 @@ import { QuietNote } from "./QuietNote.jsx";
    sheet and a settings choice are visibly the same question asked twice.
 
    THE SECOND LINE SHOWS STATUS, NOT DESCRIPTION. "Last used 2 days ago" earns
-   its line; "lets you choose how you take a stance" restates the label. The
+   its line; "lets you choose how you give an opinion" restates the label. The
    exception is a switch, where the line has to say what turning it on does,
    because the label alone cannot.
 
