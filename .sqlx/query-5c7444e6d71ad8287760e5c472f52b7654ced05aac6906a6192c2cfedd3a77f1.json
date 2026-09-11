@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT a.id AS \"id!\", a.kind AS \"kind!\", a.handle AS \"handle!\",\n                  a.actor_pubkey, a.l0_address, a.created_at AS \"created_at!\"\n           FROM actors a\n           JOIN system_actor_keys k ON k.actor_id = a.id\n           WHERE a.kind = 'user'\n           ORDER BY a.created_at\n           LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "kind!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "handle!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "actor_pubkey",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 4,
+        "name": "l0_address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "5c7444e6d71ad8287760e5c472f52b7654ced05aac6906a6192c2cfedd3a77f1"
+}

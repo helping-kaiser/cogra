@@ -5,6 +5,7 @@
 package com.cogra.domain.repo
 
 import com.cogra.crypto.Family
+import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
@@ -104,6 +105,14 @@ interface WriteRepository {
 interface AccountRepository {
     /** Null when the session is gone. */
     suspend fun me(): Outcome<UserProfile?>
+
+    /**
+     * Whose view this reader browses from — their inviter through the
+     * applicant days, the Genesis Moderator for a signed-out reader,
+     * and null once their own view exists (api-spec.md "Queries").
+     * The one account read that answers without a session.
+     */
+    suspend fun borrowedView(): Outcome<ActorRef?>
 
     /** The uploaded backup blob (decoded from base64); null when none. */
     suspend fun keyBackup(): Outcome<ByteArray?>
