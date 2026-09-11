@@ -14,6 +14,8 @@
         "Feed",
         "FeedCover",
         "FeedDeleting",
+        "FeedEntry",
+        "FeedEntryMoved",
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
@@ -36,6 +38,9 @@
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
+        "RankHop",
+        "RankPath",
+        "RankRecords",
         "Reel",
         "Removed",
         "Saved",
@@ -47,7 +52,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 39 boards → ComposePick",
+        "start · «nav · New post» on 44 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -66,6 +71,8 @@
         "Feed",
         "FeedCover",
         "FeedDeleting",
+        "FeedEntry",
+        "FeedEntryMoved",
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
@@ -88,6 +95,9 @@
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
+        "RankHop",
+        "RankPath",
+        "RankRecords",
         "Reel",
         "Removed",
         "Saved",
@@ -650,6 +660,8 @@
         "Feed",
         "FeedCover",
         "FeedDeleting",
+        "FeedEntry",
+        "FeedEntryMoved",
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
@@ -672,6 +684,9 @@
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
+        "RankHop",
+        "RankPath",
+        "RankRecords",
         "Reel",
         "Removed",
         "Saved",
@@ -683,7 +698,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 39 boards → ComposePick",
+        "start · «nav · New post» on 44 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -702,6 +717,8 @@
         "Feed",
         "FeedCover",
         "FeedDeleting",
+        "FeedEntry",
+        "FeedEntryMoved",
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
@@ -724,6 +741,9 @@
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
+        "RankHop",
+        "RankPath",
+        "RankRecords",
         "Reel",
         "Removed",
         "Saved",
@@ -748,6 +768,8 @@
         "Feed",
         "FeedCover",
         "FeedDeleting",
+        "FeedEntry",
+        "FeedEntryMoved",
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
@@ -770,6 +792,9 @@
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
+        "RankHop",
+        "RankPath",
+        "RankRecords",
         "Reel",
         "Removed",
         "Saved",
@@ -781,7 +806,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 39 boards → ComposePick",
+        "start · «nav · New post» on 44 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -800,6 +825,8 @@
         "Feed",
         "FeedCover",
         "FeedDeleting",
+        "FeedEntry",
+        "FeedEntryMoved",
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
@@ -822,6 +849,9 @@
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
+        "RankHop",
+        "RankPath",
+        "RankRecords",
         "Reel",
         "Removed",
         "Saved",
@@ -846,6 +876,8 @@
         "Feed",
         "FeedCover",
         "FeedDeleting",
+        "FeedEntry",
+        "FeedEntryMoved",
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
@@ -868,6 +900,9 @@
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
+        "RankHop",
+        "RankPath",
+        "RankRecords",
         "Reel",
         "Removed",
         "Saved",
@@ -879,7 +914,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 39 boards → ComposePick",
+        "start · «nav · New post» on 44 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -896,6 +931,8 @@
         "Feed",
         "FeedCover",
         "FeedDeleting",
+        "FeedEntry",
+        "FeedEntryMoved",
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
@@ -918,6 +955,9 @@
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
+        "RankHop",
+        "RankPath",
+        "RankRecords",
         "Reel",
         "Removed",
         "Saved",
@@ -1526,6 +1566,83 @@
         "DeleteAccount",
         "DeleteAccountMail"
       ]
+    },
+    {
+      "name": "trace-a-score-to-its-records",
+      "description": "The Post score, wherever a post is drawn, opens why the post reached this reader: the paths from their own opinions to it, strongest first. A path opens its steps, a step opens what carries it, and behind that step stand the signed records themselves — the floor of the whole claim, and a reading journey that concludes on reaching them. The stream's score is excepted: on the rail it is the detail door and not this one.",
+      "status": "resolved",
+      "startsOn": [
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "ComposeLanded",
+        "DeleteAccountCanceled",
+        "Feed",
+        "FeedBare",
+        "FeedCover",
+        "FeedDeleting",
+        "FeedFar",
+        "FeedGallery",
+        "FeedHidden",
+        "FeedNarrowed",
+        "FeedUnread",
+        "KeyElsewhere",
+        "Main",
+        "PostDetail",
+        "PostDetailVideo",
+        "ProfilePosts",
+        "Removed",
+        "TagPage",
+        "VouchBack"
+      ],
+      "steps": [
+        "start · «Post Score» on 22 boards → FeedEntry",
+        "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
+        "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
+        "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
+        "end · arrival at RankRecords"
+      ],
+      "boards": [
+        "FeedEntry",
+        "RankPath",
+        "RankHop",
+        "RankRecords",
+        "ApplicantFeed",
+        "ApplicantWaiting",
+        "ComposeExpired",
+        "ComposeLanded",
+        "DeleteAccountCanceled",
+        "Feed",
+        "FeedBare",
+        "FeedCover",
+        "FeedDeleting",
+        "FeedFar",
+        "FeedGallery",
+        "FeedHidden",
+        "FeedNarrowed",
+        "FeedUnread",
+        "KeyElsewhere",
+        "Main",
+        "PostDetail",
+        "PostDetailVideo",
+        "ProfilePosts",
+        "Removed",
+        "TagPage",
+        "VouchBack"
+      ]
+    },
+    {
+      "name": "who-holds-an-opinion-on-this",
+      "description": "The quiet count under a post's tags opens the list of everyone who holds an opinion on it — ungated, the profile's own opinions page mirrored onto content. A reading journey: reaching the list is the whole of it, and a row out of it is a visit to a person, which is its own flow.",
+      "status": "resolved",
+      "steps": [
+        "start · PostDetail · 15 «opinions on this post» → PostOpinions",
+        "end · arrival at PostOpinions"
+      ],
+      "boards": [
+        "PostDetail",
+        "PostOpinions"
+      ]
     }
   ],
   "boardsOnFlows": {
@@ -1537,6 +1654,7 @@
         "make-your-key",
         "open-a-posts-pictures",
         "reply-to-a-post",
+        "trace-a-score-to-its-records",
         "verify-the-email",
         "visit-an-author",
         "watch-the-stream"
@@ -1553,6 +1671,7 @@
         "follow-a-citation",
         "open-a-posts-pictures",
         "reply-to-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -1673,6 +1792,7 @@
         "pick-a-kept-draft-back-up",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -1700,6 +1820,7 @@
         "remove-your-post",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author"
       ],
       "endpoint": [
@@ -1810,6 +1931,7 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -1891,6 +2013,7 @@
         "reply-to-a-post",
         "sign-in",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "undo-the-narrowing",
         "verify-the-email-as-a-member",
         "visit-an-author",
@@ -1915,6 +2038,7 @@
         "guest-turns-applicant",
         "open-a-posts-pictures",
         "reply-to-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -1929,6 +2053,7 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -1944,8 +2069,30 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
+      ],
+      "endpoint": []
+    },
+    "FeedEntry": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "trace-a-score-to-its-records"
+      ],
+      "endpoint": [
+        "trace-a-score-to-its-records"
+      ]
+    },
+    "FeedEntryMoved": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
       ],
       "endpoint": []
     },
@@ -1960,6 +2107,7 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -1975,6 +2123,7 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author"
       ],
       "endpoint": []
@@ -1988,6 +2137,7 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -2004,6 +2154,7 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -2044,6 +2195,7 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -2112,6 +2264,7 @@
         "reply-to-a-post",
         "restore-your-key",
         "sign-in-with-the-key-elsewhere",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -2125,6 +2278,7 @@
         "guest-turns-applicant",
         "open-a-posts-pictures",
         "reply-to-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
@@ -2165,12 +2319,15 @@
         "reply-to-a-post",
         "search-and-open-a-post",
         "take-a-stance-on-a-post",
-        "visit-an-author"
+        "trace-a-score-to-its-records",
+        "visit-an-author",
+        "who-holds-an-opinion-on-this"
       ],
       "endpoint": [
         "open-a-posts-pictures",
         "open-the-viewer",
-        "search-and-open-a-post"
+        "search-and-open-a-post",
+        "who-holds-an-opinion-on-this"
       ]
     },
     "PostDetailVideo": {
@@ -2182,10 +2339,19 @@
         "reel-to-detail",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author"
       ],
       "endpoint": [
         "reel-to-detail"
+      ]
+    },
+    "PostOpinions": {
+      "flows": [
+        "who-holds-an-opinion-on-this"
+      ],
+      "endpoint": [
+        "who-holds-an-opinion-on-this"
       ]
     },
     "Profile": {
@@ -2307,6 +2473,7 @@
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "watch-the-stream"
       ],
       "endpoint": []
@@ -2331,6 +2498,38 @@
         "publish-words"
       ],
       "endpoint": []
+    },
+    "RankHop": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "trace-a-score-to-its-records"
+      ],
+      "endpoint": []
+    },
+    "RankPath": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "trace-a-score-to-its-records"
+      ],
+      "endpoint": []
+    },
+    "RankRecords": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "trace-a-score-to-its-records"
+      ],
+      "endpoint": [
+        "trace-a-score-to-its-records"
+      ]
     },
     "ReaderPostMenu": {
       "flows": [
@@ -2401,6 +2600,7 @@
         "remove-your-post",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author"
       ],
       "endpoint": [
@@ -2551,6 +2751,7 @@
         "open-a-topic",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author"
       ],
       "endpoint": [
@@ -2593,6 +2794,7 @@
         "publish-words",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
         "visit-an-author",
         "vouch-back-for-your-inviter",
         "watch-the-stream"
@@ -2704,55 +2906,33 @@
     }
   },
   "gapsOnFlows": [
-    "ApplicantFeed/11: Post Score drill-down (backlog item 13)",
     "ApplicantFeed/18: the chat surface (not designed)",
     "ApplicantWaiting/15: the chat surface (not designed)",
-    "ApplicantWaiting/8: Post Score drill-down (backlog item 13)",
-    "ComposeExpired/11: Post Score drill-down (backlog item 13)",
     "ComposeExpired/18: the chat surface (not designed)",
-    "ComposeLanded/7: Post Score drill-down (backlog item 13)",
     "DeleteAccountCanceled/16: the chat surface (not designed)",
-    "DeleteAccountCanceled/9: Post Score drill-down (backlog item 13)",
     "Explore/2: the Sky (backlog item 16 — last on purpose)",
     "Explore/9: the chat surface (not designed)",
     "ExploreSearch/5: the item's surface (not designed)",
     "ExploreSearch/7: the chat surface (not designed)",
     "ExploreSearch/8: the offer's surface (not designed)",
     "Feed/16: the chat surface (not designed)",
-    "Feed/9: Post Score drill-down (backlog item 13)",
-    "FeedBare/11: Post Score drill-down (backlog item 13)",
     "FeedCover/17: the chat surface (not designed)",
-    "FeedCover/8: Post Score drill-down (backlog item 13)",
     "FeedDeleting/16: the chat surface (not designed)",
-    "FeedDeleting/9: Post Score drill-down (backlog item 13)",
     "FeedFar/16: the chat surface (not designed)",
-    "FeedFar/9: Post Score drill-down (backlog item 13)",
     "FeedGallery/15: the chat surface (not designed)",
-    "FeedGallery/8: Post Score drill-down (backlog item 13)",
     "FeedHidden/15: the chat surface (not designed)",
-    "FeedHidden/8: Post Score drill-down (backlog item 13)",
     "FeedNarrowed/16: the chat surface (not designed)",
-    "FeedNarrowed/9: Post Score drill-down (backlog item 13)",
     "FeedNothing/8: the chat surface (not designed)",
     "FeedUnread/16: the chat surface (not designed)",
-    "FeedUnread/9: Post Score drill-down (backlog item 13)",
-    "KeyElsewhere/10: Post Score drill-down (backlog item 13)",
     "KeyElsewhere/17: the chat surface (not designed)",
-    "Main/11: Post Score drill-down (backlog item 13)",
-    "PostDetail/7: Post Score drill-down (backlog item 13)",
-    "PostDetailVideo/10: Post Score drill-down (backlog item 13)",
     "Profile/1: the chat surface (not designed)",
     "Profile/7: the invites screen (not designed)",
     "ProfileApplicant/1: the chat surface (not designed)",
     "ProfileComments/5: the chat surface (not designed)",
     "ProfileOther/5: the chat surface (not designed)",
     "ProfileOtherHeld/5: the chat surface (not designed)",
-    "ProfilePosts/13: Post Score drill-down (backlog item 13)",
     "ProfilePosts/5: the chat surface (not designed)",
     "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
-    "Removed/4: Post Score drill-down (backlog item 13)",
-    "TagPage/9: Post Score drill-down (backlog item 13)",
-    "VouchBack/11: Post Score drill-down (backlog item 13)",
     "VouchBack/18: the chat surface (not designed)",
     "Wallet/14: the chat surface (not designed)",
     "Wallet/2: the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)",

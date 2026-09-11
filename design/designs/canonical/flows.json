@@ -452,7 +452,8 @@
       "waypoints": [
         { "board": "FeedEntry", "via": 2 },
         { "board": "RankPath", "via": 2 },
-        { "board": "RankHop", "via": 2 }
+        { "board": "RankHop", "via": 2 },
+        { "board": "RankRecords" }
       ]
     },
     {
