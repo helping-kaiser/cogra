@@ -54,12 +54,9 @@ import com.cogra.feature.stance.StanceControlRoute
 
 @Composable
 fun FeedRoute(
-    /** Null while the auth phase resolves; the write/join affordances wait. */
-    signedIn: Boolean?,
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
-    onSignInOrJoin: () -> Unit,
     /**
      * The band's chats affordance. Null draws no control: the signed-in
      * reader's chat surface is an explicit gap on the canvas
@@ -92,7 +89,6 @@ fun FeedRoute(
     FeedScreen(
         onShare = { postId -> context.sharePost(viewModel.shareUrl(postId)) },
         state = state,
-        signedIn = signedIn,
         expiredLabel = expiredLabel,
         onExpiredDismissed = onExpiredDismissed,
         onOpenDraft = onOpenDraft,
@@ -102,7 +98,6 @@ fun FeedRoute(
         onOpenPost = onOpenPost,
         onOpenActor = onOpenActor,
         onOpenTopic = onOpenTopic,
-        onSignInOrJoin = onSignInOrJoin,
         onChats = onChats,
         keyBanner = keyBanner,
         borrowedViewBand = borrowedViewBand,
@@ -115,13 +110,11 @@ fun FeedRoute(
 @Composable
 fun FeedScreen(
     state: FeedUiState,
-    signedIn: Boolean?,
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
-    onSignInOrJoin: () -> Unit,
     /** Hands a post to the platform's own share sheet. */
     onShare: (String) -> Unit = {},
     onChats: (() -> Unit)? = null,
@@ -140,9 +133,9 @@ fun FeedScreen(
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
 ) {
     // The collapsing top (design.md §6): the bar hides scrolling down
-    // and returns after a third of a screen of upward scroll; the key
-    // banner — or the guest notice, for the signed-out reader — rides
-    // the same region and gate, so the card follows the reader.
+    // and returns after a third of a screen of upward scroll; the
+    // borrowed-view band and the key banner ride the same region and
+    // gate, so they follow the reader.
     //
     // The band's two pieces sit IN the bar rather than in a block of
     // their own above it. Nesting band and cards inside one gate makes
@@ -167,13 +160,9 @@ fun FeedScreen(
                     scrollBehavior = collapsingTop.scrollBehavior,
                 )
                 CollapsingTopBanner(collapsingTop) {
-                    if (signedIn == false) {
-                        GuestBanner(onSignInOrJoin)
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            borrowedViewBand()
-                            keyBanner()
-                        }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        borrowedViewBand()
+                        keyBanner()
                     }
                 }
             }
@@ -388,31 +377,6 @@ private fun ExpiredCard(
                 Button(onClick = onOpenDraft, modifier = Modifier.testTag("feed_expired_open")) {
                     Text(stringResource(R.string.content_expired_open))
                 }
-            }
-        }
-    }
-}
-
-/**
- * The guest notice: the feed's one sign-in-or-join entry, riding the
- * collapsing top in place of a separate header action (design.md §6).
- */
-@Composable
-private fun GuestBanner(onSignInOrJoin: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("feed_guest_banner"),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.content_guest_body))
-            // Filled: joining is the one committing action a guest has
-            // on this surface (design.md §6).
-            Button(
-                onClick = onSignInOrJoin,
-                modifier = Modifier.testTag("feed_signin"),
-            ) {
-                Text(stringResource(R.string.content_feed_signin))
             }
         }
     }

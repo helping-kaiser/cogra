@@ -11,21 +11,26 @@
 // store and not the router. Both are read at mount and applied before the
 // first paint, so opening a post and coming back is not a fresh feed.
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
+import { fetchBorrowedView, fetchMe, type BorrowedVantage } from "@/lib/api/auth-api";
 import { fetchPosts, type PostView } from "@/lib/api/content-api";
 import { appendDeduped } from "@/lib/api/pagination";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthPhase } from "@/lib/session/provider";
+import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationProgress } from "@/lib/signing/provider";
 import { RestoreCard } from "@/app/applicant-status";
 import { StatusBanners } from "@/app/status-banners";
-import { Button, buttonClassName } from "@/lib/ui/button";
-import { Card } from "@/lib/ui/card";
+import {
+  BorrowedViewBand,
+  borrowedViewLine,
+  SIGN_IN_OR_JOIN,
+} from "@/lib/ui/borrowed-view-band";
+import { Button } from "@/lib/ui/button";
 import { CograBand } from "@/lib/ui/cogra-band";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
 import { PostCard } from "@/lib/ui/post-card";
@@ -37,22 +42,70 @@ import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import { recallFeed, rememberFeed, rememberFeedOffset } from "./feed-memory";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
-function GuestBanner() {
+/**
+ * The band, for the reader whose feed is not their own — guest, applicant,
+ * and the landed member who has not pointed back yet (`design/readme.md`
+ * §13; Android's twin in `feature:home`).
+ *
+ * WHETHER a band shows is the contract's call: `borrowedView` answers null
+ * the moment the reader's own view exists — their vouch-back — and the band
+ * leaving is that rule rather than a gap. The account state is asked only
+ * to pick the wording, and only once there is a vantage to word.
+ */
+function BorrowedView({ signedOut }: { signedOut: boolean }) {
+  const client = useApolloClient();
+  const guard = useAuthGuard();
+  const router = useRouter();
+  const [vantage, setVantage] = useState<BorrowedVantage | null>(null);
+  const [member, setMember] = useState(false);
+
+  // Re-read when the session flips, not only on mount: the answer is
+  // per-reader, so a sign-in or a sign-out under a mounted feed would
+  // otherwise leave the previous reader's name under the bar. The guard
+  // rides along for the same reason the other reads use it — a stale
+  // access token must refresh rather than demote an applicant to the
+  // anonymous answer.
+  useEffect(() => {
+    let cancelled = false;
+    void guard.run(() => fetchBorrowedView(client)).then(async (outcome) => {
+      if (cancelled) return;
+      // A read that did not answer names nobody: the band is an honesty
+      // label over a feed already on screen, not a thing to guess at.
+      const borrowed = outcome.kind === "success" ? outcome.value : null;
+      setVantage(borrowed);
+      if (borrowed === null || signedOut) return;
+      const me = await guard.run(() => fetchMe(client));
+      if (cancelled) return;
+      // An unanswered account read takes the applicant's line: it is the
+      // weaker claim, where the vouch-back line asks for an act.
+      setMember(me.kind === "success" && me.value.accountState === "MEMBER");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, guard, signedOut]);
+
+  if (vantage === null) return null;
+  const { handle } = vantage;
+  const line = signedOut
+    ? borrowedViewLine.join(handle)
+    : member
+      ? borrowedViewLine.vouchBack(handle)
+      : borrowedViewLine.applicant(handle);
   return (
-    <Card testId="feed-guest-banner">
-      <p className="text-body-medium text-on-surface-variant">
-        You&apos;re browsing as a guest — sign in or join to post and vouch.
-      </p>
-      {/* Filled: joining is the one committing action a guest has on
-          this surface (design.md §6). */}
-      <Link
-        href="/login"
-        data-testid="feed-signin"
-        className={buttonClassName({ size: "sm", selfStart: true })}
-      >
-        Sign in or join
-      </Link>
-    </Card>
+    <BorrowedViewBand
+      testId="feed-borrowed-view"
+      handle={handle}
+      displayName={vantage.displayName.value}
+      line={line}
+      // The action rides the guest's reading alone. The other two name an
+      // act performed elsewhere — the application runs itself, the
+      // vouch-back has its own card below — and one act offered by two
+      // controls on one screen is the ambiguity §2.4 refuses.
+      actionLabel={signedOut ? SIGN_IN_OR_JOIN : undefined}
+      // Pushes /login, so back returns to the reading context.
+      onAction={signedOut ? () => router.push("/login") : undefined}
+    />
   );
 }
 
@@ -184,13 +237,15 @@ export function FeedView({
         {/* A tab root wears the mark, not a page title: the reader knows which
             tab they are on from the bar, and the band's other half works. */}
         <CograBand>
+          {/* The band carries its own gutter — it is a bare line under the
+              identity band, not a card in the stack below it. Nothing is
+              drawn while the phase resolves: the two readings differ, and
+              guessing puts the wrong sentence on screen for a frame. */}
+          {phase !== "resolving" && <BorrowedView signedOut={phase === "signedOut"} />}
           <div className="flex flex-col gap-4 px-6">
             {/* Must-act, so it collapses into the header and follows the
                 reader back up instead of living only at the top. */}
             {phase === "signedIn" && keyOnDevice === false && !noKeyYet && <RestoreCard />}
-            {/* The signed-out reader's card rides the same slot: the one
-                sign-in-or-join entry, in place of a header action. */}
-            {phase === "signedOut" && <GuestBanner />}
           </div>
         </CograBand>
       </CollapsingTop>

@@ -181,7 +181,7 @@ before it is signed, and anything half-finished says who acts next.
 
 **Guest copy invites, it does not nag.**
 
-- `You're browsing as a guest — sign in or join to post and vouch.`
+- `Browsing from @mira's view — join to build your own.`
 - `Join the conversation` / `Posting and profiles need an account.` /
   `Keep browsing`
 - `Just looking? Browse the feed →`
@@ -2915,12 +2915,13 @@ whole canvas rather than a fix to one board.
   messaging belongs on every tab root; the apps draw it the release a
   chat surface exists to receive the tap. Nothing is redrawn — the edges
   stay as they are, and the docblock says which half is the end state.
-- **The borrowed-view band rides the ranker.** It names a borrowed
-  *ranking* vantage and the feed is chronological until slice 3, so the
-  band and the borrowed-vantage field the contract owes land with the
-  ranker; the guest notice stands until then. Drawn ahead of built is
-  the staging rule, not the label-versus-behaviour divergence the Newest
-  ruling refuses — that one is about what a shipped control claims.
+- **Both borrowed-view bands ship with the vantage, not the ranker**
+  (jakob, 2026-09-10). The band's sentence names whose *view* the reader
+  borrows, and that is true the moment the contract serves the vantage —
+  the ranker arriving in slice 3 changes the order those posts come in,
+  not whose they are. So the guest band replaces the guest notice and
+  the applicant band shows from the moment the account exists, both over
+  a newest-first feed.
 - **The gate**: **128 screens**, **958 edges**, **81 gaps** and **flows
   58/53/5**, every one unchanged — three edges were reworded in place,
   and nothing was drawn or pointed at that was not there before.

@@ -56,11 +56,9 @@ class ContentScreensTest {
 
     private fun renderFeed(
         state: FeedUiState,
-        signedIn: Boolean? = true,
         onOpenPost: (String) -> Unit = {},
         onOpenActor: (String) -> Unit = {},
         onOpenTopic: (String) -> Unit = {},
-        onSignInOrJoin: () -> Unit = {},
         onLoadMore: () -> Unit = {},
         onRefresh: () -> Unit = {},
         keyBanner: @Composable () -> Unit = {},
@@ -74,13 +72,11 @@ class ContentScreensTest {
                 onShare = onShare,
                 stanceControl = { target, tag -> onStance(target, tag) },
                 state = state,
-                signedIn = signedIn,
                 onRefresh = onRefresh,
                 onLoadMore = onLoadMore,
                 onOpenPost = onOpenPost,
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
-                onSignInOrJoin = onSignInOrJoin,
                 onChats = onChats,
                 keyBanner = keyBanner,
                 borrowedViewBand = borrowedViewBand,
@@ -291,43 +287,26 @@ class ContentScreensTest {
         assertThat(more).isTrue()
     }
 
+    // The band rides the same collapsing top as the key banner: away
+    // scrolling down, back with the returning bar. Whose view it names
+    // and which reading it wears belong to the band's own test — the
+    // feed knows only that the slot rides this region.
     @Test
-    fun theGuestBannerCarriesTheSignInEntry() {
-        var joining = false
-        renderFeed(
-            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
-            signedIn = false,
-            onSignInOrJoin = { joining = true },
-        )
-        compose.onNodeWithTag("feed_guest_banner").assertExists()
-        compose.onNodeWithTag("feed_signin").performClick()
-        assertThat(joining).isTrue()
-    }
-
-    @Test
-    fun aSignedInReaderSeesNoGuestBanner() {
-        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
-        compose.onNodeWithTag("feed_guest_banner").assertDoesNotExist()
-        compose.onNodeWithTag("feed_signin").assertDoesNotExist()
-    }
-
-    @Test
-    fun aResolvingPhaseWithholdsTheSignInEntry() {
-        renderFeed(FeedUiState(loading = false), signedIn = null)
-        compose.onNodeWithTag("feed_signin").assertDoesNotExist()
-    }
-
-    // The guest notice rides the same collapsing top as the key banner:
-    // away scrolling down, back with the returning bar.
-    @Test
-    fun theGuestBannerRidesTheCollapsingTop() {
+    fun theBorrowedViewBandRidesTheCollapsingTop() {
         renderFeed(
             FeedUiState(loading = false, posts = (1..30).map { testPost("p$it") }),
-            signedIn = false,
+            borrowedViewBand = {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(24.dp)
+                        .testTag("borrowed_band"),
+                )
+            },
         )
-        compose.onNodeWithTag("feed_guest_banner").assertExists()
+        compose.onNodeWithTag("borrowed_band").assertExists()
         compose.onNodeWithTag("feed_list").performTouchInput { swipeUp() }
-        compose.onNodeWithTag("feed_guest_banner").assertDoesNotExist()
+        compose.onNodeWithTag("borrowed_band").assertDoesNotExist()
     }
 
     @Test
