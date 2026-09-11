@@ -473,7 +473,7 @@ is a different thing from a piece the apps have not reached yet.
 |---|---|
 | `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SettingsGroup`, `SettingsRow`, `Switch`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton`, `NodeMark` |
-| `components/forms/` | `TextField`, `FieldLabel`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
+| `components/forms/` | `TextField`, `FieldLabel`, `FieldSupport`, `FieldCount`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
 | `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `StagedReference`, `TopicRemovable`, `Caret` |
 | `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
@@ -3845,6 +3845,84 @@ Ruled by jakob the same day.
   origin set, which is the whole of the witness diff. `Settings`' frame
   and its canvas slot grow 1845 → **2027** for the People group,
   measured rather than guessed.
+
+### The caps-affordance round — 2026-09-11
+
+Ten ruled length caps and no drawn way to say so (backlog 52), and the
+tag picker's refused name (46.3) — one round, because a cap and its
+refusal are one component's problem. Ruled by jakob the same day.
+
+- **A capped field is silent until the writer is near the cap.** The
+  affordance is a LATE COUNTER: nothing under the field while there is
+  room, then a quiet remaining count at the end of the supporting row,
+  `--error` only once it is past. Never the persistent Material counter
+  and never a meter — a number that sits under an empty field turns
+  writing into a budget, and a bar turns a sentence into progress. What
+  a writer needs is a warning in time to finish the thought; everything
+  before that is pressure, not information.
+- **The threshold is the last tenth, never fewer than the last 20.** The
+  count appears at `remaining <= max(20, round(cap / 10))`. The tenth
+  keeps the warning proportional — the description warns at 450, the
+  body at 4,500 — and the floor keeps a short cap from warning too late
+  to act on, since a tenth of the 50-character display name is five,
+  which arrives after the word that will be cut is already written. Both
+  halves are drawn: title and display name are floor-driven, description
+  and body tenth-driven.
+- **The unit is the Unicode scalar value,** which is what every ruled cap
+  counts in and what `[...string]` iterates. `.length` counts UTF-16 code
+  units and would tell a writer of emoji they had spent twice what they
+  had. Nothing on screen says *scalar value*: the reader's word is
+  characters, as it already is in `A password is at least 12
+  characters.`
+- **The count is a third element in the supporting row, not a third
+  state of the supporting slot.** M3's own text field puts supporting
+  text at the start of that row and the character count at its end; the
+  slot keeps its two states (hint, error) untouched and the count sits
+  beside whichever is live. `FieldSupport` is that row, assigned once —
+  `FieldLabel`'s counterpart under the field — so the composer's growing
+  body box, which is not a `TextField`, renders the same geometry
+  instead of drawing its own.
+- **The field atom's one error state now reaches every field.** The
+  outline and label in `--error`, the message below, replacing the hint
+  — the input-error round's shape, extended to the caps and to the tag
+  name, which closes the web/Android divergence the caps lane hit: one
+  drawn refusal, both clients.
+- **The atom colours the count; the surface words the message.** A field
+  error is worded per field and per surface, so `A title is at most 100
+  characters.` belongs to the board and the arithmetic belongs to the
+  component. An atom that wrote the sentence would flatten nine fields
+  into one house line.
+- **The tag picker's refusal is the same state in the search bar's
+  idiom.** `TagPickerRefused`: the pill takes an inset `--error` ring,
+  the naming rule under it turns into the refusal, and the `Signs as`
+  preview goes — it is a promise about the record the tap will make, and
+  a string that can be no name has no such record. The candidate list is
+  simply empty; a second voice saying what the field has already said
+  would be noise.
+- **The sweep is the cap reaching the field, not the counter reaching
+  the board.** All nine drawable caps are on their fields — title 100,
+  alt 1,000, description 500, words 5,000, comment 2,000, reason 140,
+  display name 50, bio 500, website 2,048 — and no resting board moved,
+  because no fixture is near its cap. What is drawn is the resting
+  state; the affordance is demonstrated where a state demonstrates it.
+  The password maximum is never drawn, and the device label has no
+  field.
+- **Three state boards, one per field shape.** `ComposeDetailsCaps`
+  carries the input near its cap and the textarea past it on one screen
+  (`ComposePickedErrors`' reason: a step drawn with enough in it to show
+  its whole vocabulary), `ComposeWordsCaps` carries the growing body box
+  past 5,000, and `TagPickerRefused` the name. Each fixture is the
+  length it claims — `6 left` off 94 of 100, `7 over` off 507 of 500 —
+  computed from the text drawn, never spelled onto the board.
+- **A field over its cap disables the step.** `Next` goes inert on both
+  compose boards, which is what the title cap already does in the
+  product; the badge stays on the control and its edge says it goes
+  nowhere, the disabled Sign's own pair.
+- **The gate**: 152 → **155 boards**, 1137 → **1158 edges**, gaps hold at
+  **57** and flows at **60/57/3**. The witness moved by exactly two
+  lines: `ComposeDetailsCaps` joins `cite-something` and
+  `describe-your-pictures` as a ninth and seventh origin, because the
+  stage it draws carries those controls.
 
 ## 14. Index
 

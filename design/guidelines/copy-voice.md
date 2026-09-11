@@ -906,3 +906,58 @@ the group anatomy's own rule. With nobody hidden the row reads `None`.
 and each row carries `Unhide` and the moment of the hiding in the ages
 vocabulary (`Hidden 3d`, `Hidden 12.08.2026`) — the removal mark's own
 precedent: the word, then the ladder or the date.
+
+## Awaiting blessing — the caps-affordance round
+
+Drawn on `ComposeDetailsCaps`, `ComposeWordsCaps` and `TagPickerRefused`,
+and up for review in the same pass. Two families: the count a capped
+field shows near its cap, and the refusal it shows past it.
+
+**The count is two words, and the second one is the reader's side.**
+`6 left` while there is room, `7 over` past it — never `94/100`, which
+is the field reporting on itself in the statistics register §3 refuses,
+and never a bare number, which would leave the reader to guess whether
+it counts what is written or what is left. *Left* is the word because
+the count only ever appears when what is left is the thing worth
+knowing.
+
+**Characters is the reader's word for the unit,** as it already is in
+`A password is at least 12 characters.` and `3–30 characters: a–z, 0–9,
+_`. The caps are counted in Unicode scalar values; nothing on screen
+says so, and nothing should.
+
+**Every over-cap refusal is one construction,** the blessed password
+line's own, turned to the other bound — a field's length rule said once,
+whichever end of it the writer met:
+
+- `A title is at most 100 characters.` — the composer's title.
+- `A description is at most 500 characters.` — a post's description.
+  **Drawn** on `ComposeDetailsCaps`.
+- `A post's words are at most 5,000 characters.` — the words body.
+  **Drawn** on `ComposeWordsCaps`. The plural is the field's: the body
+  is words, not a word count.
+- `A comment is at most 2,000 characters.` — the comment body, in the
+  composer and the edit alike.
+- `A picture's description is at most 1,000 characters.` — the describe
+  sheet, and `A video's description…` on its other shape. The
+  possessive is what keeps it apart from the post's description.
+- `A reason is at most 140 characters.` — the sensitive sheet's `Why?`.
+- `A display name is at most 50 characters.` · `A bio is at most 500
+  characters.` · `A website address is at most 2,048 characters.` —
+  the profile edit.
+
+Thousands are grouped the way every other figure in the product groups
+them (`MoneyFigure`: `12,500.00`), so the body's cap reads `5,000`.
+
+**The tag name's refusal restates the rule it broke**, in the rule's own
+words — the line under the picker's field says `Letters, digits, dot,
+dash and underscore. Capitals become lowercase.` at rest, and in the
+refused state:
+
+- `A tag name is letters, digits, dot, dash and underscore.` — **drawn**
+  on `TagPickerRefused`.
+- `A tag name is at most 128 characters.` — the gate's other half, in
+  the same construction as every cap above. Copy-only.
+
+*Name*, not *tag*, because the string is what is wrong and the tag is
+fine — there is no tag yet.
