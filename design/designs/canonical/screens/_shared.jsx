@@ -876,7 +876,7 @@ function ComposeDetailsBody() {
             name="The long way home — @ada"
             sub="Post"
             src="post-photo.jpg"
-            value="+0.10 / +0.10"
+            pair={{ pDirected: 0.1, pInterest: 0.1 }}
             onEdit={() => {}}
           />
           <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
@@ -949,7 +949,7 @@ function EditComposeBody() {
             name="The long way home — @ada"
             sub="Post"
             src="post-photo.jpg"
-            value="+0.10 / +0.10"
+            pair={{ pDirected: 0.1, pInterest: 0.1 }}
             onEdit={() => {}}
           />
           <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
