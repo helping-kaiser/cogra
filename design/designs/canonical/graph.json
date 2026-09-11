@@ -65,6 +65,7 @@
     "CommentEditVideo": "the comment edit when the comment's body is a clip — content, not a tap",
     "EditComposeVideo": "the post edit when the post's body is a clip — content, not a tap",
     "EditWords": "the post edit when the post's body is words — content, not a tap; it is also where a media post lands once its last picture is removed, the field arriving empty",
+    "FeedUnread": "the same feed with something waiting in the notifications list — the dot is a state the account arrives in, not a tap",
     "FeedGallery": "a feed whose post carries several pictures — content, not a tap",
     "FeedCover": "a feed whose posts carry clips, one before its first play and one the device will not autoplay — content and device, not a tap",
     "ViewerLandscape": "the viewer with the device turned — rotation, not a tap",
@@ -155,6 +156,7 @@
     { "from": "ApplicantFeed", "via": 17, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "ProfileApplicant" }] },
     { "from": "ApplicantFeed", "via": 18, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "ApplicantFeed", "via": 19, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "ApplicantFeed", "via": 20, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "ApplicantWaiting", "via": 1, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "ApplicantWaiting", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
@@ -173,6 +175,7 @@
     { "from": "ApplicantWaiting", "via": 15, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "ApplicantWaiting", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "ApplicantWaiting", "via": 17, "kind": "back", "label": "Got it", "to": [{ "terminal": "self", "case": "the waiting card steps aside, and stays away on this device" }] },
+    { "from": "ApplicantWaiting", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "VouchBack", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "VouchBack", "via": 2, "kind": "back", "label": "Not now", "to": [{ "terminal": "self", "case": "the vouch card steps aside" }] },
@@ -193,6 +196,7 @@
     { "from": "VouchBack", "via": 17, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "VouchBack", "via": 18, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "VouchBack", "via": 19, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "VouchBack", "via": 20, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "VouchBackPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog" }] },
     { "from": "VouchBackPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
@@ -217,6 +221,7 @@
     { "from": "KeyElsewhere", "via": 16, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "KeyElsewhere", "via": 17, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "KeyElsewhere", "via": 18, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "KeyElsewhere", "via": 19, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "InviteEntry", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "FeedBare", "case": "the arrow is a link, not history — from a root of the funnel, up is the public front door" }] },
     { "from": "InviteEntry", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing" }] },
@@ -331,6 +336,7 @@
     { "from": "Wallet", "via": 12, "kind": "nav", "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "scrolled — back to the top; at the top, nothing" }] },
     { "from": "Wallet", "via": 13, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "Wallet", "via": 14, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "Wallet", "via": 15, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "WalletEmpty", "via": 1, "kind": "detour", "label": "? — What is CGT?", "to": [{ "board": "HelpDialog", "case": "the What-is-CGT text" }] },
     { "from": "WalletEmpty", "via": 2, "kind": "advance", "label": "copy the address", "to": [{ "terminal": "self", "case": "the address lands on the clipboard" }] },
@@ -341,6 +347,7 @@
     { "from": "WalletEmpty", "via": 7, "kind": "nav", "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "scrolled — back to the top; at the top, nothing" }] },
     { "from": "WalletEmpty", "via": 8, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "WalletEmpty", "via": 9, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "WalletEmpty", "via": 10, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "WalletSetup", "via": 1, "kind": "detour", "label": "? — Your wallet key", "to": [{ "board": "HelpDialog", "case": "the Your-wallet-key text" }] },
     { "from": "WalletSetup", "via": 2, "kind": "advance", "label": "Create and publish", "to": [{ "board": "WalletAddressSeal" }] },
@@ -350,6 +357,7 @@
     { "from": "WalletSetup", "via": 6, "kind": "nav", "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "scrolled — back to the top; at the top, nothing" }] },
     { "from": "WalletSetup", "via": 7, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "WalletSetup", "via": 8, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "WalletSetup", "via": 9, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "WalletAddressSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "WalletSetup", "case": "one stage back" }] },
     { "from": "WalletAddressSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "WalletSetup", "case": "the flow left — the wallet still waits for setup" }] },
@@ -375,6 +383,7 @@
     { "from": "WalletKeyAbsent", "via": 8, "kind": "nav", "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "scrolled — back to the top; at the top, nothing" }] },
     { "from": "WalletKeyAbsent", "via": 9, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "WalletKeyAbsent", "via": 10, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "WalletKeyAbsent", "via": 11, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "WalletGuest", "via": 1, "kind": "back", "label": "Keep browsing", "to": [{ "terminal": "back", "case": "back to the feed they came from" }] },
     { "from": "WalletGuest", "via": 2, "kind": "advance", "label": "Sign in or join", "to": [{ "board": "SignIn" }] },
@@ -391,6 +400,7 @@
     { "from": "WalletApplicant", "via": 4, "kind": "nav", "label": "nav · Wallet", "to": [{ "terminal": "self", "case": "scrolled — back to the top; at the top, nothing" }] },
     { "from": "WalletApplicant", "via": 5, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "ProfileApplicant" }] },
     { "from": "WalletApplicant", "via": 6, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "WalletApplicant", "via": 7, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "WalletCampaign", "via": 1, "kind": "back", "label": "back — to the wallet", "to": [{ "board": "Wallet" }] },
     { "from": "WalletCampaign", "via": 2, "kind": "advance", "label": "campaign deposit row", "to": [{ "gap": "the rail record's view (not boarded — the traceability promise)" }] },
@@ -411,6 +421,7 @@
     { "from": "Explore", "via": 7, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "Explore", "via": 8, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "Explore", "via": 9, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "Explore", "via": 10, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "ExploreSearch", "via": 1, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing refines" }, { "board": "ExploreNone", "case": "nothing carries that name" }] },
     { "from": "ExploreSearch", "via": 2, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "ExploreFilter" }] },
@@ -459,6 +470,26 @@
     { "from": "Feed", "via": 15, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "Feed", "via": 16, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "Feed", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "Feed", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
+
+    { "from": "FeedUnread", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
+    { "from": "FeedUnread", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
+    { "from": "FeedUnread", "via": 3, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
+    { "from": "FeedUnread", "via": 4, "kind": "advance", "label": "post media", "to": [{ "board": "PostDetail", "case": "pictures — the post opens" }, { "board": "PostDetailVideo", "case": "a clip wider than tall — the post opens" }, { "board": "Reel", "case": "a portrait clip — the stream opens" }] },
+    { "from": "FeedUnread", "via": 5, "kind": "detour", "label": "More (caption)", "to": [{ "terminal": "self", "case": "the caption unfolds" }] },
+    { "from": "FeedUnread", "via": 6, "kind": "advance", "label": "tag chip", "to": [{ "board": "TagPage" }] },
+    { "from": "FeedUnread", "via": 7, "kind": "advance", "label": "reference count", "to": [{ "board": "RefsSheet" }] },
+    { "from": "FeedUnread", "via": 8, "kind": "advance", "label": "stance face", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }] },
+    { "from": "FeedUnread", "via": 9, "kind": "detour", "label": "Post Score", "to": [{ "gap": "Post Score drill-down (backlog item 13)" }] },
+    { "from": "FeedUnread", "via": 10, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
+    { "from": "FeedUnread", "via": 11, "kind": "nav", "label": "nav · Feed", "to": [{ "terminal": "self", "case": "scrolled — back to the top" }, { "terminal": "self", "case": "at the top — the feed refreshes" }] },
+    { "from": "FeedUnread", "via": 12, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "FeedUnread", "via": 13, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "FeedUnread", "via": 14, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
+    { "from": "FeedUnread", "via": 15, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "FeedUnread", "via": 16, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "FeedUnread", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "FeedUnread", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "FeedSheet", "via": 1, "kind": "detour", "label": "? — How the filter works", "to": [{ "board": "HelpDialog", "case": "the filter text" }] },
     { "from": "FeedSheet", "via": 2, "kind": "advance", "label": "filter chips (kinds · forms · also show)", "to": [{ "terminal": "self", "case": "adjusts what the feed admits" }] },
@@ -484,6 +515,7 @@
     { "from": "FeedNarrowed", "via": 15, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedNarrowed", "via": 16, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "FeedNarrowed", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "FeedNarrowed", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "FeedNothing", "via": 1, "kind": "advance", "label": "filter chip (Nothing · showing seen)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedNothing", "via": 2, "kind": "advance", "label": "Show posts again", "to": [{ "board": "Feed", "case": "the default restored" }] },
@@ -493,6 +525,7 @@
     { "from": "FeedNothing", "via": 6, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "FeedNothing", "via": 7, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedNothing", "via": 8, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "FeedNothing", "via": 9, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "FeedFar", "via": 1, "kind": "advance", "label": "filter chip (3 kinds · 4 changes)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedFar", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -511,6 +544,7 @@
     { "from": "FeedFar", "via": 15, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedFar", "via": 16, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "FeedFar", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "FeedFar", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "ReplyEntry", "via": 1, "kind": "advance", "label": "comment author chips", "to": [{ "board": "ProfileOther" }] },
     { "from": "ReplyEntry", "via": 2, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "board": "CommentMenu", "case": "the comment's sheet (master)" }] },
@@ -1016,6 +1050,7 @@
     { "from": "ComposeExpired", "via": 17, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "ComposeExpired", "via": 18, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "ComposeExpired", "via": 19, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "ComposeExpired", "via": 20, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "FeedGallery", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedGallery", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -1033,6 +1068,7 @@
     { "from": "FeedGallery", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedGallery", "via": 15, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "FeedGallery", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "FeedGallery", "via": 17, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "FeedCover", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedCover", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -1052,6 +1088,7 @@
     { "from": "FeedCover", "via": 16, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "FeedCover", "via": 17, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
     { "from": "FeedCover", "via": 18, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "FeedCover", "via": 19, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "Reel", "via": 1, "kind": "back", "label": "back to the feed", "to": [{ "terminal": "back", "case": "the stream closes on the feed it narrowed" }] },
     { "from": "Reel", "via": 2, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "the sticky decision every video shares" }] },
@@ -1213,6 +1250,7 @@
     { "from": "Profile", "via": 12, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "Profile", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "Profile", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "terminal": "self", "case": "scrolled — back to the top; at the top, nothing" }] },
+    { "from": "Profile", "via": 15, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "ProfileMoreFailed", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "Profile", "case": "the page comes this time — the row gives way to rows" }, { "terminal": "self", "case": "still nothing — the row stays where it stood", "info": true }] },
 
@@ -1294,6 +1332,7 @@
     { "from": "ProfileApplicant", "via": 12, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick", "case": "first post — the wizard opens, the act stages" }, { "terminal": "self", "case": "one post already staged — the snackbar answers", "info": true }] },
     { "from": "ProfileApplicant", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletApplicant" }] },
     { "from": "ProfileApplicant", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "terminal": "self", "case": "scrolled — back to the top; at the top, nothing" }] },
+    { "from": "ProfileApplicant", "via": 15, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
     { "from": "ProfilePosts", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the chip was" }] },
     { "from": "ProfilePosts", "via": 2, "kind": "detour", "label": "profile overflow ⋮", "to": [{ "board": "ProfileMenu", "case": "another's profile sheet (master)" }] },
     { "from": "ProfilePosts", "via": 3, "kind": "advance", "label": "the figures row", "to": [{ "board": "ProfileStances" }] },
@@ -1402,6 +1441,27 @@
 
     { "from": "ChangeEmailConfirm", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings", "case": "the change stays live for its window — the Email row leads back here" }] },
     { "from": "ChangeEmailConfirm", "via": 2, "kind": "advance", "label": "Confirmation code", "to": [{ "terminal": "self", "case": "typing — the code from the current address" }] },
-    { "from": "ChangeEmailConfirm", "via": 3, "kind": "advance", "label": "Confirm email change", "to": [{ "board": "Settings", "case": "the link was clicked too — the address moves and the snackbar answers" }, { "terminal": "self", "case": "this side only — the change waits for the new address's link, and the row still reads the old address" }] }
+    { "from": "ChangeEmailConfirm", "via": 3, "kind": "advance", "label": "Confirm email change", "to": [{ "board": "Settings", "case": "the link was clicked too — the address moves and the snackbar answers" }, { "terminal": "self", "case": "this side only — the change waits for the new address's link, and the row still reads the old address" }] },
+
+    { "from": "Notifications", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "the root the bell was tapped on" }] },
+    { "from": "Notifications", "via": 2, "kind": "advance", "label": "a comment on your post", "to": [{ "board": "ReplyEntry", "case": "the post, its thread open on the comment" }] },
+    { "from": "Notifications", "via": 3, "kind": "advance", "label": "a reply to your comment", "to": [{ "board": "ReplyEntry", "case": "the same thread, open on the reply" }] },
+    { "from": "Notifications", "via": 4, "kind": "advance", "label": "an opinion on your profile", "to": [{ "board": "ProfileOther", "case": "the person who gave it" }] },
+    { "from": "Notifications", "via": 5, "kind": "advance", "label": "a mention of you", "to": [{ "board": "PostDetail", "case": "the post that mentions you" }] },
+    { "from": "Notifications", "via": 6, "kind": "advance", "label": "a citation of your content", "to": [{ "board": "PostDetail", "case": "the post that cites it" }] },
+    { "from": "Notifications", "via": 7, "kind": "advance", "label": "someone landed through your invite", "to": [{ "board": "ProfileOther", "case": "the new member" }] },
+    { "from": "Notifications", "via": 8, "kind": "advance", "label": "your application approved", "to": [{ "board": "ProfileOther", "case": "the inviter who vouched" }] },
+    { "from": "Notifications", "via": 9, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
+    { "from": "Notifications", "via": 10, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "Notifications", "via": 11, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "Notifications", "via": 12, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
+    { "from": "Notifications", "via": 13, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+
+    { "from": "NotificationsEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "the root the bell was tapped on" }] },
+    { "from": "NotificationsEmpty", "via": 2, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
+    { "from": "NotificationsEmpty", "via": 3, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "NotificationsEmpty", "via": 4, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "NotificationsEmpty", "via": 5, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
+    { "from": "NotificationsEmpty", "via": 6, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] }
   ]
 }

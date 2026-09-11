@@ -776,6 +776,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedUnread.dc.html",
+      "title": "Feed · something waiting",
+      "x": 2400,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "Money.dc.html",
       "title": "Money · the CGT figure",
       "x": 0,
@@ -1122,7 +1131,7 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 3696,
+      "h": 3782,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1131,7 +1140,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 2766,
+      "h": 2809,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1146,10 +1155,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -1870,
+      "x": -2160,
       "y": 0,
-      "w": 1450,
-      "h": 1984,
+      "w": 1740,
+      "h": 2053,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1158,7 +1167,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1275,
+      "h": 1361,
       "page": "money",
       "title": "Money & Wallet · flow map"
     },
@@ -1167,7 +1176,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 2996,
+      "h": 3082,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1212,7 +1221,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2782,
+      "h": 3291,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1536,6 +1545,24 @@
       "title": "Settings · hidden accounts",
       "x": 1920,
       "y": 4058,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "Notifications.dc.html",
+      "title": "Notifications · what happened",
+      "x": 0,
+      "y": 5128,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "NotificationsEmpty.dc.html",
+      "title": "Notifications · nothing yet",
+      "x": 480,
+      "y": 5128,
       "w": 390,
       "h": 844,
       "page": "profile"

@@ -40,6 +40,9 @@ export interface ContentRowProps {
   chevron?: boolean;
   /** The same card with nothing to press — a record with no destination. */
   inert?: boolean;
+  /** The shell's unread dot on the row's trailing edge: this arrived and has
+   *  not been opened. The bell's own mark at row scale, never a weight change. */
+  unread?: boolean;
   /** Where the row goes. */
   onOpen?: () => void;
 }

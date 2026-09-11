@@ -1435,6 +1435,35 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* THE NOTIFICATIONS ROUND'S THREE BOARDS. The list borrows the chronicle's row
+   anatomy, and each row is its own via — seven kinds, seven destinations. The
+   lit feed is `Feed`'s numbering exactly; only its bell's accessible name
+   differs, which is why that marker sits here and not in the sweep below. */
+Object.assign(FLOW_MARKERS, {
+  Notifications: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">@ada commented on your post<", tag: "button" },
+    { n: 3, find: ">@tobias replied to your comment<", tag: "button" },
+    { n: 4, find: ">@sol gave an opinion on you<", tag: "button" },
+    { n: 5, find: ">@mira mentioned you<", tag: "button" },
+    { n: 6, find: ">@ada cited your post<", tag: "button" },
+    { n: 7, find: ">@juno landed through your invite<", tag: "button" },
+    { n: 8, find: ">@mira approved your application<", tag: "button" },
+    ...nav(9),
+  ],
+  NotificationsEmpty: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  FeedUnread: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(11),
+    { n: 18, find: 'aria-label="Notifications — something new"', tag: "button" },
+  ],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
@@ -1442,13 +1471,32 @@ Object.assign(FLOW_MARKERS, {
 const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 9,
-  Feed: 16, FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedGallery: 15,
-  FeedCover: 17,
+  Feed: 16, FeedUnread: 16, FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16,
+  FeedGallery: 15, FeedCover: 17,
   Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
   WalletGuest: 8, WalletApplicant: 6,
 };
 for (const [board, n] of Object.entries(BAND_CHATS)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Chats"', tag: "button" });
+}
+
+/* THE BELL RIDES THE BAND (jakob 2026-09-11), right-most on every bottom-bar
+   root, so it sweeps exactly as chats does: each board's next free number, and
+   one edge each into the notifications list. The guest boards are absent
+   because they opt out of the bell — nothing can be addressed to an account
+   that does not exist. `FeedUnread` is absent because its bell wears the unread
+   name and carries its marker in its own list above. */
+const BAND_BELL = {
+  ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
+  ComposeExpired: 20, Explore: 10,
+  Feed: 18, FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17,
+  FeedCover: 19,
+  Wallet: 15, WalletEmpty: 10, WalletSetup: 9, WalletKeyAbsent: 11,
+  WalletApplicant: 7,
+  Profile: 15, ProfileApplicant: 15,
+};
+for (const [board, n] of Object.entries(BAND_BELL)) {
+  (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Notifications"', tag: "button" });
 }
 
 /* SHARE JOINED THE ACTION ROW (jakob, review round 1), so every board drawing a
@@ -1457,7 +1505,7 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
    the platform's own sheet. */
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
-  KeyElsewhere: 18, Feed: 17, FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16,
+  KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
 };
 for (const [board, n] of Object.entries(CARD_SHARE)) {

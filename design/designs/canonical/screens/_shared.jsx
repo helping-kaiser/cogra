@@ -7,6 +7,7 @@ const {
   OverflowMenu,
   ReferenceRow,
   CograBand,
+  BandIcon,
   BottomNav,
   ALL_SLOTS,
   PageHeader,
@@ -497,9 +498,9 @@ function HelpDot({ ariaLabel = "How searching works", ...rest }) {
   return <SystemHelpDot ariaLabel={ariaLabel} {...rest} />;
 }
 
-/* The own-profile band cluster (profile round): the overflow and the gear on
-   the band's edge — chats arrives built into the band itself. Shared by the
-   member and applicant own-profile boards.
+/* The own-profile band cluster (profile round): the overflow and the gear as
+   the profile's own trailing pair — chats and the bell arrive built into the
+   band itself. Shared by the member and applicant own-profile boards.
 
    THE ⋮ IS WHERE YOUR PRIVATE STATE LIVES (readme §13, the private-viewer-state
    round). Saved and History are lists only you can see, and a profile page has
@@ -508,27 +509,18 @@ function HelpDot({ ariaLabel = "How searching works", ...rest }) {
    than acting on its own.
 
    The dot keeps the slot left of the gear. Material's app bar would put an
-   overflow last; the gear has been the band's right edge since the profile
-   round, and moving it would move the thing every reader already aims at. */
-function ProfileBandIcon({ name, label }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      className="cg-state cg-focus"
-      style={{ display: "grid", placeItems: "center", height: "var(--touch-target-min)", width: "var(--touch-target-min)", border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
-    >
-      <Icon name={name} />
-    </button>
-  );
-}
-function ProfileBand({ children }) {
+   overflow last, and the gear has been the pair's right edge since the profile
+   round — moving it would move the thing every reader already aims at. The
+   pair is `trailing`, so the bell sits outboard of both: notifications are one
+   corner on every root, never a different corner per tab (`CograBand`). */
+function ProfileBand({ unread = false, children }) {
   return (
     <CograBand
+      unread={unread}
       trailing={
         <span style={{ display: "flex", alignItems: "center" }}>
-          <ProfileBandIcon name="more_vert" label="More on your profile" />
-          <ProfileBandIcon name="settings" label="Settings" />
+          <BandIcon name="more_vert" label="More on your profile" />
+          <BandIcon name="settings" label="Settings" />
         </span>
       }
     >
