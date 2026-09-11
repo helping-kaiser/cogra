@@ -883,13 +883,14 @@
         "CommentEditVideo",
         "ComposeCited",
         "ComposeDetails",
+        "ComposeDetailsCaps",
         "ComposeDetailsVideo",
         "EditCompose",
         "ReplyCited",
         "ReplySeal"
       ],
       "steps": [
-        "start · «+ Cite something» on 8 boards → ReferencePicker",
+        "start · «+ Cite something» on 9 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → back — the pick lands in the composer's references"
       ],
       "boards": [
@@ -898,6 +899,7 @@
         "CommentEditVideo",
         "ComposeCited",
         "ComposeDetails",
+        "ComposeDetailsCaps",
         "ComposeDetailsVideo",
         "EditCompose",
         "ReplyCited",
@@ -986,19 +988,21 @@
       "startsOn": [
         "CommentEdit",
         "ComposeDetails",
+        "ComposeDetailsCaps",
         "ComposeUploading",
         "ReplyMediaErrors",
         "ReplyPictures",
         "ReplyPicturesWeb"
       ],
       "steps": [
-        "start · «Describe the pictures» on 6 boards → ComposeDescribe",
+        "start · «Describe the pictures» on 7 boards → ComposeDescribe",
         "end · ComposeDescribe · 3 «Done» → back — the sheet closes"
       ],
       "boards": [
         "ComposeDescribe",
         "CommentEdit",
         "ComposeDetails",
+        "ComposeDetailsCaps",
         "ComposeUploading",
         "ReplyMediaErrors",
         "ReplyPictures",
@@ -1517,6 +1521,13 @@
         "add-a-topic",
         "publish-while-the-uploads-run"
       ]
+    },
+    "ComposeDetailsCaps": {
+      "flows": [
+        "cite-something",
+        "describe-your-pictures"
+      ],
+      "endpoint": []
     },
     "ComposeDetailsVideo": {
       "flows": [

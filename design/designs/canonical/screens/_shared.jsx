@@ -960,6 +960,37 @@ function WordsBody({ paragraphs, cap, used, error }) {
   );
 }
 
+/* THE WORDS PATH'S FIRST STAGE, whole — `ComposeWords` itself, and the same
+   stage drawn against its cap (`ComposeWordsCaps`). One markup for both, the
+   `ReplyDraft` reason again: the stage is not a different stage because the
+   body has grown long, and two copies of it would drift about the prompt, the
+   escape and the foot.
+
+   `used` IS THE WHOLE BODY, THE PARAGRAPHS ARE WHAT IS ON SCREEN. A body near
+   five thousand characters does not fit the box it is written in — a writer
+   that far in sees the last few lines and nothing above them — so the caps
+   board draws the tail and states the length. */
+const WORDS_STAGE_BODY = [
+  "Three weekends of walking the same stretch at low tide, tracing where the salt crust draws its lines.",
+  "The rubbings pick up what the light misses. Paper against the crust, the side of a wax stick, and whatever the wind allows — none of them took longer than the walk out to make.",
+  "If you ever drive it, stop at the third headland and look down for once.",
+];
+
+function ComposeWordsBody({ paragraphs = WORDS_STAGE_BODY, used, error, nextDisabled = false }) {
+  return (
+    <>
+      <WizardHeader title="New post" />
+      <PickPrompt caption="The body is your words." escapeLabel="Add pictures instead" />
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, padding: "8px 24px 24px", overflow: "hidden" }}>
+        <FieldLabel>What do you want to publish?</FieldLabel>
+        <WordsBody cap={5000} paragraphs={paragraphs} used={used} error={error} />
+        <Button style={{ width: "100%", marginTop: 12 }} disabled={nextDisabled}>Next</Button>
+      </div>
+    </>
+  );
+}
+
 /* THE PICTURE PATH'S DETAILS STAGE, whole — `ComposeDetails` itself, and what
    the reference pair sheet stands on. Factored for `ReplySealBody`'s reason: a
    sheet covers the surface the reader came from, and that surface has to be the
