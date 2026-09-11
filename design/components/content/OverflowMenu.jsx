@@ -38,7 +38,12 @@ import { BottomSheet, SheetItem } from "../core/BottomSheet.jsx";
    · Escape closes it, a press outside closes it, and nothing behind it is inert \u2014
      an overflow menu is not a decision the reader has to resolve.
    · Nothing in here takes `error` colouring. A destructive item is drawn like the
-     rest; the confirmation it opens is where the weight belongs. */
+     rest; the confirmation it opens is where the weight belongs.
+   · A ROW THAT NAMES AN ACTOR TAKES ITS WORDS FROM THE ACTOR'S MASTER. The hide
+     row spells a handle — `Hide @ada` — and a redacted author has none, so its
+     label comes from `ActorChip`'s `HIDE_ACTOR_LABEL` and reads `Hide this
+     account` there. The row stands either way: hiding is about an actor, and a
+     redacted actor still ranks into the reader's feed. */
 
 export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", presentation = "sheet", placement = "header" }) {
   const [open, setOpen] = React.useState(false);

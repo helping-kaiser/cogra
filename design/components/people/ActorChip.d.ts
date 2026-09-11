@@ -23,6 +23,15 @@ export declare function ActorChip(props: ActorChipProps): JSX.Element;
 export declare const REDACTED_ACTOR_NAME: string;
 
 /**
+ * The label of a menu row that hides an actor: `Hide @ada` where there is a
+ * handle to name, `Hide this account` where the actor is redacted and there is
+ * none. The row itself stays either way — hiding is about an actor, and a
+ * redacted actor still ranks into the reader's feed — so only the wording
+ * gives way. Every menu that carries the row takes its label from here.
+ */
+export declare const HIDE_ACTOR_LABEL: (handle?: string | null, redacted?: boolean) => string;
+
+/**
  * The circular avatar: a photo where there is one, the monogram where there is
  * not. Decorative either way — the adjacent text names the actor, so the photo
  * carries no alt text. A broken image falls back to the monogram silently.

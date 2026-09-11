@@ -15,6 +15,7 @@ const {
   DeletionBand,
   MonogramAvatar,
   ActorChip,
+  HIDE_ACTOR_LABEL,
   ProfileHeader,
   EmptyState,
   LoadingState,
@@ -372,7 +373,7 @@ const OWN_POST_MENU = [
   { label: "Remove", onSelect: () => {} },
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [...CARD_MENU, { label: "Hide @ada", onSelect: () => {} }, LICENSE_ROW];
+const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} }, LICENSE_ROW];
 /* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
    both doors, and this is the comment's). A post's door is a count row on its
    detail surface; a comment has no detail surface of its own — it lives inside a
@@ -427,7 +428,7 @@ const PROFILE_MENU = [
   SAVE_ROW,
   { label: "Mention in a new post", onSelect: () => {} },
   { label: "Share this profile", onSelect: () => {} },
-  { label: "Hide @ada", onSelect: () => {} },
+  { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} },
 ];
 
 /* Your own profile's menu (the private-viewer-state round): the two private
