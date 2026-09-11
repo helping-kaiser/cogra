@@ -5,7 +5,7 @@ import { Snackbar } from "../core/Snackbar.jsx";
 import { JoinPrompt } from "../core/JoinPrompt.jsx";
 import { StancePad } from "./StancePad.jsx";
 import { StanceAlternates } from "./StanceAlternates.jsx";
-import { StanceCoachMark, STANCE_PAD_HELP } from "./StanceCoachMark.jsx";
+import { StanceCoachMark, STANCE_PAD_HELP, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { SeveranceConfirm } from "./SeveranceConfirm.jsx";
 import {
   bundleReadout,
@@ -473,8 +473,8 @@ export function StanceControl({
             {explaining ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
                 {STANCE_PAD_HELP.map((line) => (
-                  <p key={line} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
-                    {line}
+                  <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
+                    <HelpLine line={line} />
                   </p>
                 ))}
                 <button

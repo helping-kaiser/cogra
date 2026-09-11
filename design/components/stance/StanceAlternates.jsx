@@ -2,7 +2,7 @@ import React from "react";
 import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { StanceSlider } from "./StanceSlider.jsx";
-import { STANCE_ALTERNATES_HELP } from "./StanceCoachMark.jsx";
+import { STANCE_ALTERNATES_HELP, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { clampDimension, DIRECTED_LABEL, DIRECTED_POLES, INTEREST_LABEL, INTEREST_POLES } from "./StanceReadout.jsx";
 
 /* The alternate inputs (design.md §8.6) — paired sliders and direct entry. Same
@@ -162,8 +162,8 @@ export function StanceAlternates({
           }}
         >
           {STANCE_ALTERNATES_HELP.map((line) => (
-            <p key={line} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
-              {line}
+            <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
+              <HelpLine line={line} />
             </p>
           ))}
           <button
