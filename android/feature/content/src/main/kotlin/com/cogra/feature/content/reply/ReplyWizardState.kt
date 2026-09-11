@@ -4,6 +4,8 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.content.isCommentBodyTooLong
+import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.feature.content.ReferenceSectionState
@@ -273,7 +275,13 @@ data class ReplyWizardState(
      * (D16). So the words alone decide whether the composer may advance
      * — a picture never stands in for them.
      */
-    val bodyReady: Boolean get() = body.isNotBlank()
+    val bodyReady: Boolean get() = body.isNotBlank() && !bodyTooLong
+
+    /** The reply body's own cap. */
+    val bodyTooLong: Boolean get() = isCommentBodyTooLong(body)
+
+    /** The sensitive mark's reason, capped the same way every authored field is. */
+    val sensitiveReasonTooLong: Boolean get() = sensitive && isSensitiveReasonTooLong(sensitiveReason)
 
     /**
      * What this submit stages, counted the way the batch is priced —
@@ -302,7 +310,7 @@ data class ReplyWizardState(
      * holds the button for.
      */
     val canSign: Boolean
-        get() = !submitting && !keyAbsent && bodyReady && uploadsComplete
+        get() = !submitting && !keyAbsent && bodyReady && uploadsComplete && !sensitiveReasonTooLong
 
     /**
      * Whether leaving would lose something, and so has to ask first.

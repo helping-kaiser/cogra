@@ -503,10 +503,19 @@ logged, and never returned by the API.
 
 ### Password requirements
 
-- Minimum 12 characters; no maximum.
+- Minimum 12 characters, maximum 128 — Argon2id's cost is paid
+  per byte hashed, so an unbounded password is unbounded hashing
+  work an attacker can spend the server's own CPU on for free.
+  128 clears the floor NIST SP 800-63B and OWASP both require
+  (permitting at least 64 characters) with room to spare.
 - No composition rules (forced uppercase / digit / symbol).
   Composition rules reduce entropy by predictable means without
   improving real strength.
+- Both bounds apply only where a new password is chosen —
+  registration, change, and reset. Login never enforces the
+  maximum: an account whose password predates the cap still
+  verifies against its own stored hash, so a length choice made
+  under a since-tightened rule never locks its owner out.
 - Checked against a known-breach corpus at registration and
   password change (the reset applies the same requirements): the
   HIBP Pwned Passwords range API, a k-anonymity hash-prefix
@@ -648,7 +657,9 @@ pattern; rationale for this project below.
 - **Row shape.** `id`, `user_id`, `token_hash`, `created_at`,
   `last_used_at`, `expires_at`, `device_label` (short
   user-readable string for the session list, e.g. derived from
-  User-Agent), `revoked_at` (nullable), `revoked_reason`
+  User-Agent; at most 100 characters, trimmed, with blank folding
+  to absent — refused field-level at `["deviceLabel"]` on register
+  and login alike), `revoked_at` (nullable), `revoked_reason`
   (`rotated | owner | security`, set with `revoked_at`), and — on
   rotated rows — the successor link: `successor_id` plus
   `successor_enc`, the successor's token sealed under the

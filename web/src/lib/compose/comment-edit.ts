@@ -14,6 +14,7 @@
 import type { GalleryEntryDraft } from "@/lib/api/content-api";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { COMMENT_ATTACHMENT_CAP } from "./comment-media";
+import { commentBodyProblem } from "./reply-wizard";
 import type { PickedAsset } from "./wizard";
 
 export type EditPicture =
@@ -105,11 +106,17 @@ export function keptPreviews(gallery: EditGallery): Readonly<Record<string, stri
 }
 
 /**
- * Why the edit cannot be signed yet, or null. Only the ADDED pictures can
- * hold it up: an attachment names an asset id, and one that is still
- * uploading has none yet.
+ * Why the edit cannot be signed yet, or null.
+ *
+ * The words answer to the same cap a fresh comment does — `commentBodyProblem`
+ * is the reply composer's own check, pinned to the server's `commentBodyChars`
+ * once, not re-derived here. Past that, only the ADDED pictures can hold it
+ * up: an attachment names an asset id, and one that is still uploading has
+ * none yet.
  */
-export function editBlocked(gallery: EditGallery): string | null {
+export function editBlocked(gallery: EditGallery, words: string): string | null {
+  const bodyIssue = commentBodyProblem(words);
+  if (bodyIssue !== null) return bodyIssue;
   const failed = uploadsFailed(gallery);
   if (failed > 0) {
     return failed === 1 ? "One picture didn't upload." : `${failed} pictures didn't upload.`;
