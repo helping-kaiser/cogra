@@ -1876,14 +1876,15 @@ Three things the boards do not carry, each named where the lane hit it.
    text (1000) and for whatever the description and the sensitive reason
    are eventually capped at. The lane shipped the refusal alone: the
    message where the words are, and the step's Next disabled.
-2. **The 2.0 field atom draws no error state at all.** The web
-   `TextField` carries an `error` slot its own note calls "the one place
-   the failure role is spent"; `CograTextField` carries nothing of the
-   kind, so the two clients say one refusal in two shapes — under the
-   label on web, a house `ErrorLine` below the field on Android. One
-   drawn field-error state would close that, and would give the alt-text
-   cap a home on Android, which this lane left unmirrored rather than
-   invent one inside the drawn `DescribeSheet`.
+2. **The field-error state is drawn on one client only.** The design's
+   `TextField` has carried `error` — outline, label and message — since
+   the input-error round; the implementation's `CograTextField` carries
+   nothing of the kind, so the two clients say one refusal in two
+   shapes — under the label on web, a house `ErrorLine` below the field
+   on Android. The design-side gap is narrower: no capped field's
+   refusal was drawn until this round, and the alt-text cap had no home
+   on Android, which the caps lane left unmirrored rather than invent
+   one inside the drawn `DescribeSheet`.
 3. **A cap and its refusal are one component's problem, drawn once.**
    Item 46.3 filed the same gap from the tag side — "the picker's
    refused-name state is undrawn" — and this is its other half: the
