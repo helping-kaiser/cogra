@@ -2077,3 +2077,13 @@ the sky or sth", an animation welcome. Not a notification (the
 approved kind already notifies the vouch-in); this is the crown of
 the entry flow, a dedicated surface after reciprocation. Runs as its
 own standalone mini-round after round 4 of the MVP queue.
+
+### 59 · The minus sign disagrees with its own guideline · *system*
+
+Found by the score-and-opinions round: readme §3 writes negative pairs
+with U+2212 MINUS (`−0.90 / +0.30`), but `formatDimension`'s
+`Intl.NumberFormat` emits ASCII U+002D, so every board in the canvas
+paints `-0.20 / +0.10`. System-wide and pre-existing; changing the
+formatter moves every board with a negative pair, so it is its own
+pass — rule which character wins, then conform formatter or guideline
+and re-render.
