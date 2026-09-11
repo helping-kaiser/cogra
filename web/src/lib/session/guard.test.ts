@@ -99,3 +99,70 @@ describe("auth guard", () => {
     expect(refresh).toHaveBeenCalledWith("before");
   });
 });
+
+// F3-2: `run` learns the token was missing from the SERVER'S ANSWER, which
+// arrives only after the whole body has been transferred — so a video went up
+// once to be refused and once to land. `prime` is what stops the send that was
+// known to be wasted before it was made.
+describe("priming a token before a body goes up", () => {
+  it("refreshes when this tab holds no access token", async () => {
+    const store = createTokenStore();
+    const { refresher, refresh } = refresherReturning(true);
+    const guard = createGuard(store, refresher);
+
+    await guard.prime();
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+    // Null, not a stale value: there is nothing to compare against, and the
+    // refresher's "someone else already rotated it" shortcut must not fire.
+    expect(refresh).toHaveBeenCalledWith(null);
+  });
+
+  it("does nothing when a token is already in hand", async () => {
+    const store = createTokenStore();
+    store.save({ accessToken: "a", refreshToken: "r", accountId: "acct-1" });
+    const { refresher, refresh } = refresherReturning(true);
+    const guard = createGuard(store, refresher);
+
+    await guard.prime();
+
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  // Ten pictures start at once. Rotating the pair ten times would spend nine
+  // refresh tokens for nothing — and reuse of a rotated token is exactly what
+  // a session's replay detection treats as theft.
+  it("refreshes once for however many uploads start together", async () => {
+    const store = createTokenStore();
+    const { refresher, refresh } = refresherReturning(true);
+    const guard = createGuard(store, refresher);
+
+    await Promise.all([guard.prime(), guard.prime(), guard.prime()]);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  // A signed-out tab has no refresh token either. The call still goes out and
+  // is still refused — priming removes a wasted send, never a refusal.
+  it("gives up quietly when there is nothing to refresh with", async () => {
+    const store = createTokenStore();
+    const { refresher } = refresherReturning(false);
+    const guard = createGuard(store, refresher);
+
+    await expect(guard.prime()).resolves.toBeUndefined();
+  });
+
+  it("primes again on a later upload once the first attempt is done", async () => {
+    const store = createTokenStore();
+    const { refresher, refresh } = refresherReturning(false);
+    const guard = createGuard(store, refresher);
+
+    await guard.prime();
+    await guard.prime();
+
+    // The single-flight latch is for callers that overlap, not a once-ever
+    // gate: a tab still holding no token must try again rather than give up
+    // and send anonymous for the rest of its life.
+    expect(refresh).toHaveBeenCalledTimes(2);
+  });
+});

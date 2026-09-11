@@ -28,11 +28,13 @@ import { useRef, useState } from "react";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { CoverRow } from "@/lib/ui2/compose/cover-row";
 import type { CoverAsset } from "@/lib/compose/wizard";
+import { cssRatio, tileRatio } from "@/lib/ui2/media/aspect";
 import { formatDuration } from "@/lib/ui2/media/video";
 
 export function CoverStep({
   videoUrl,
   durationMs,
+  clipRatio,
   framePreviews,
   cover,
   coverPreview,
@@ -46,6 +48,14 @@ export function CoverStep({
   /** An object URL for the picked clip — the preview plays the local file. */
   videoUrl: string | null;
   durationMs: number;
+  /**
+   * The picked clip's own ratio, or null before the probe lands.
+   *
+   * THE PREVIEW SHOWS THE OUTPUT FORMAT, not a fixed frame (jakob 2026-09-11,
+   * ruled final): landscape stays landscape, square stays square, and anything
+   * taller than 4:5 shows at 4:5 — which is exactly what the post will be.
+   */
+  clipRatio: number | null;
   /** Object URLs for the offered frames, in the order they were taken. */
   framePreviews: readonly string[];
   cover: CoverAsset | null;
@@ -70,6 +80,7 @@ export function CoverStep({
         ref={video}
         url={videoUrl}
         durationMs={durationMs}
+        clipRatio={clipRatio}
         playing={playing}
         onPlaying={setPlaying}
       />
@@ -115,17 +126,39 @@ function Preview({
   ref,
   url,
   durationMs,
+  clipRatio,
   playing,
   onPlaying,
 }: {
   ref: React.RefObject<HTMLVideoElement | null>;
   url: string | null;
   durationMs: number;
+  clipRatio: number | null;
   playing: boolean;
   onPlaying: (next: boolean) => void;
 }) {
+  // THE FRAME IS THE OUTPUT FORMAT. The element used to run at `w-full` under a
+  // `max-h-96` with no ratio at all, and a replaced element sizes itself from
+  // its intrinsic shape — so a 480x854 clip wanted 342x608, the cap took the
+  // difference out of the HEIGHT alone, and `object-cover` cropped the result
+  // into 342x384. Every vertical clip previewed as a square that way, and a
+  // landscape one only looked right because it never reached the cap.
+  //
+  // `tileRatio` is the feed's own derivation rather than a second opinion:
+  // whatever the post will be shaped like, this is shaped like it too.
+  const reserved = tileRatio(clipRatio);
   return (
-    <div className="relative overflow-hidden rounded-medium bg-surface-container-high">
+    <div
+      style={{
+        aspectRatio: url === null ? undefined : cssRatio(reserved),
+        // The cap narrows the frame instead of reshaping it — the same bound,
+        // for the same reason, as the feed tile's.
+        maxWidth: url === null ? undefined : `calc(24rem * ${reserved})`,
+        marginInline: "auto",
+      }}
+      data-testid="wizard-cover-preview-frame"
+      className="relative w-full overflow-hidden rounded-medium bg-surface-container-high"
+    >
       {url === null ? (
         <div className="grid h-80 place-items-center text-label-medium text-on-surface-variant">
           Video
@@ -140,7 +173,10 @@ function Preview({
           onPlay={() => onPlaying(true)}
           onPause={() => onPlaying(false)}
           onEnded={() => onPlaying(false)}
-          className="block max-h-96 w-full object-cover"
+          // The frame above owns the shape now; the element fills it. Still
+          // `object-cover`, because a clip taller than 4:5 centre-crops to it —
+          // now against a frame that IS 4:5 rather than against a squashed box.
+          className="block size-full object-cover"
         />
       )}
       {!playing && url !== null && (
