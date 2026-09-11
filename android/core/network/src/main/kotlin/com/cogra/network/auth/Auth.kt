@@ -40,14 +40,15 @@ import kotlinx.serialization.json.Json
  * the one answer that is never wrong. Sending it anonymous would serve
  * a signed-in reader somebody else's view and look like a working app.
  */
-class SessionUnreadableException :
-    Exception("the session store holds a record it cannot open")
+class SessionUnreadableException : Exception("the session store holds a record it cannot open")
 
 /** The header a call sets to skip the gate — stripped before the wire. */
 internal const val SESSION_BYPASS_HEADER = "X-Cogra-Session-Bypass"
 
 /** Refresh this far before `exp` rather than sending a token about to die. */
 private const val CLOCK_SKEW_SECONDS = 30L
+
+private const val MILLIS_PER_SECOND = 1_000L
 
 @Serializable
 private data class AccessClaims(val exp: Long? = null)
@@ -112,7 +113,10 @@ class SessionGate @Inject constructor(
  * parse counts as good — the server answers it, and [AuthGuard] still
  * refresh-and-replays on the refusal.
  */
-internal fun expired(access: String, nowSeconds: Long = System.currentTimeMillis() / 1000): Boolean {
+internal fun expired(
+    access: String,
+    nowSeconds: Long = System.currentTimeMillis() / MILLIS_PER_SECOND,
+): Boolean {
     val exp = expiry(access) ?: return false
     return exp - CLOCK_SKEW_SECONDS <= nowSeconds
 }
