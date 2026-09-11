@@ -1194,7 +1194,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2371,
+      "h": 2782,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1294,7 +1294,7 @@
       "x": 0,
       "y": 1928,
       "w": 390,
-      "h": 1845,
+      "h": 2027,
       "page": "profile"
     },
     {
@@ -1458,6 +1458,60 @@
       "w": 390,
       "h": 844,
       "page": "compose"
+    },
+    {
+      "file": "ProfileOwnMenu.dc.html",
+      "title": "Profile · your own menu",
+      "x": 3840,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "Saved.dc.html",
+      "title": "Saved · what you kept",
+      "x": 0,
+      "y": 4058,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SavedEmpty.dc.html",
+      "title": "Saved · nothing kept yet",
+      "x": 480,
+      "y": 4058,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "History.dc.html",
+      "title": "History · what you have read",
+      "x": 960,
+      "y": 4058,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "HistoryEmpty.dc.html",
+      "title": "History · nothing seen yet",
+      "x": 1440,
+      "y": 4058,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsHidden.dc.html",
+      "title": "Settings · hidden accounts",
+      "x": 1920,
+      "y": 4058,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
     }
   ],
   "annotations": [

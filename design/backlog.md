@@ -1911,6 +1911,30 @@ Password maximum (128) is implementation-side only — Argon2 cost
 bounding, never drawn as a counter or meter — and sits outside this
 affordance round's scope.
 
+**Ruled 2026-09-11** (the MVP design-queue rulings, dev-state
+`cogra/tmp_dev/2026-09-11-mvp-design-queue-rulings.md`): the
+affordance is the **late counter** — a field stays silent until the
+writer nears the cap (last ~10%, minimum last 20 scalar values),
+then a quiet remaining count appears, `--error` only when over;
+never a persistent counter, never a meter. The 2.0 field atom gains
+its **one drawn error state** — the message below the field in
+`--error` — closing the web/Android refusal divergence, with 46.3's
+refused tag name riding the same state. The round sweeps the
+affordance across every capped field's board, and carries the
+MVP-wide hand-drawn/outdated audit: the implementation UI overhaul
+will copy the boards 1:1, so nothing hand-drawn where a master
+exists survives the round.
+
+Specimens already on the sweep's list (found by the viewer-state
+round): the component specimens' stale menus (`sheet.card.html` /
+`content.card.html` lead with `License terms` and carry a
+`Copy link` / `Report this` the product doesn't have) and their
+ages (`sensitive.card.html` says `2w`); and copy-voice's own
+second-line examples (`Changed 3 weeks ago`, `Last created
+12 August`) contradict the ages ruling on its own page — the
+examples predate it and need jakob's word on whether settings
+prose follows the ladder like everything else.
+
 ### 53 · Geek mode — glyph-first signal numbers · *design* · **drawn 2026-09-11**
 
 A friend's proposal, jakob adopted it scoped (the full record:
@@ -2006,3 +2030,24 @@ batch could not settle:
    formatters are master-side helpers the bundle does not expose to
    screens. A check in the design gate that validates those literals
    against the format contract would close the rest.
+
+### 55 · The opinions-on-content list · *design*
+
+jakob, 2026-09-11 (the MVP design-queue rulings): the profile's
+"opinions on you" needs its content mirror — who holds opinions on
+this post or comment, and in what way. **No author gating**: everyone
+can check every post and comment, the way everyone can read a
+profile's counts. Rides round 4 of the MVP queue (the slice-3
+remainders, beside the item-13 drill-down). Entry point awaiting
+jakob's word — recommended: a bottom sheet from a row on the detail
+(the tags-&-references sheet's pattern) plus the comment ⋮ menu.
+Contract implication: a per-node opinion-holders query, ungated.
+
+### 56 · The design linter walks the build's node_modules · *tooling*
+
+Found by the viewer-state round: a worktree needs its own `npm ci` in
+`design/_build`, and the linter then reports `markdown-title-unminted`
+advisories on the vendored readmes (6 in the round's run — all from
+`design/_build/node_modules/*/README.md`, zero from authored content).
+The linter should skip gitignored trees; until it does, every lane
+reading the advisory count must check where the advisories come from.

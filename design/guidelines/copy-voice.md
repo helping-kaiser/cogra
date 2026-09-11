@@ -405,18 +405,19 @@ validation exists yet to trigger them):
 
 ## Menu rows
 
-The words the three overflow menus put in front of a reader, settled in
+The words the four overflow menus put in front of a reader, settled in
 spelling — one `License terms` everywhere, never the British spelling:
 
 - `License terms` — the one row, on a post's menu and a comment's
-  alike. It opens the terms in a sheet over the surface the reader
+  alike. It closes both menus, the rarest read of the product sitting
+  last, and opens the terms in a sheet over the surface the reader
   asked from.
 - `Cite in a new post` — on a post's menu and a comment's alike.
 - `Mention in a new post` — the same row on a person, and the same
   fact; only the far end of the reference differs.
 - `Share this profile` — another's profile.
-- `Share your profile` — your own, where it is the accessible name of
-  the band's share glyph rather than a row, the menu having gone.
+- `Share your profile` — your own, the row that closes the band's menu
+  under the two private lists.
 
 ## The license block
 
@@ -852,3 +853,56 @@ section · `Your feed is showing nothing — everything is switched off.`
 round, named here so the review pass has them in one place: `Un-tag`,
 the edit body's `Withdrawn: #coastroad`, and the acts card's
 `Tags withdrawn` row label.
+
+## Awaiting blessing — the private-viewer-state round
+
+Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,
+`HistoryEmpty`, `SettingsHidden`, the three content menus and the
+settings page, and up for review in the same pass.
+
+**The reader's word is save** (jakob's ruling). `Save` on a post, a
+comment and a person alike — never *bookmark*, which is a filing word
+for a thing readers think of as keeping. The surface it fills is
+`Saved`, and the row in your own profile's menu is that same word, so
+the act and the place cannot drift apart.
+
+**The saved row says what the next tap will do.** `Remove from saved`,
+not the word *Saved* sitting there as a status. A control says what
+will happen (§3), and this row is the only place a reader can learn or
+change whether a thing is kept — the card carries no mark of it.
+
+**Hiding names its person.** `Hide @ada`, on the post menu and on the
+profile menu, because the handle is what a reader recognises and what
+they will look for again in settings. The pair on the other side is
+`Hidden accounts` and `Unhide`.
+
+**Hiding is confirm-free, and the snackbar is the whole ceremony.**
+`@ada is hidden — their posts stay out of your feed.` with `Undo`
+beside it. It says what changed and how far it reaches, which is what
+stops a reader wondering whether they have done something to someone.
+
+**Saving is confirmed like every other completed act.** `Saved.` The
+sheet closes on the tap, so without the snackbar nothing would answer
+it — §3's rule, applied.
+
+**The second list is `History`.** Posts you have read, newest reading
+first. *View history* is the contract's word and stays there.
+
+**Two empty states, and each says why the list is empty.**
+`Nothing saved yet. A post, a comment or a person can be saved from its
+own menu, and it waits here.` names the gesture, because no card shows
+a saving affordance at rest and a reader who has never opened a ⋮ has
+no other way to find it. `Nothing here yet. Posts you read show up here
+on their own, newest first.` says the opposite thing — that this one
+fills without being asked.
+
+**The settings group is `People`,** its row `Hidden accounts` with a
+bare count, and its footnote `Hiding someone clears your own feed of
+them. Nothing changes for them, and their profile still opens if you go
+looking.` The footnote carries the whole of what hiding means, which is
+the group anatomy's own rule. With nobody hidden the row reads `None`.
+
+**The sheet is titled by the row that opened it** — `Hidden accounts` —
+and each row carries `Unhide` and the moment of the hiding in the ages
+vocabulary (`Hidden 3d`, `Hidden 12.08.2026`) — the removal mark's own
+precedent: the word, then the ladder or the date.
