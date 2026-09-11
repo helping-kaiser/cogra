@@ -138,7 +138,7 @@ export function ProfileHeader({
       {/* The actions row. On someone else's profile the stance leads and
           Message stands beside it, the pair every social profile puts here
           (jakob 2026-09-01) — the stance where Follow goes, the chat one tap
-          away. On your own there is no stance to take, so the row is the two
+          away. On your own there is no opinion to give, so the row is the two
           things you do to your own record. Everything shares the width. */}
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
         {own ? (
