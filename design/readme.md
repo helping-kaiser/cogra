@@ -4094,6 +4094,66 @@ mechanics were already specified — `docs/instances/erasure.md` §2 and §5
   delete group, measured rather than guessed — the harness reproduced the
   recorded 2027 on the pre-change board before it was trusted for 2163.
 
+### The media true-shape round — 2026-09-11
+
+jakob's implementation-session ruling, confirmed here after a pixel check
+found the boards drawing a capped tile where the product draws a true
+one. The height cap is gone; what bounds a card tile is its shape.
+
+- **`--media-max-height` retires entirely**, and `--post-chrome-height`
+  and `--safe-area-top` with it — both existed only to feed its formula,
+  and a token nothing reads is a number pretending to be a decision.
+  `MediaAttachment` keeps no default for `maxHeight`. A card tile stands
+  at its TRUE ratio at full width: on a 390px phone a `wide` tile is 219,
+  a `square` one 390, a `tall` one 487. The crop vocabulary's 4:5 is the
+  only bound left, and it is a SHAPE rather than a ceiling. The prop
+  itself stays, because one surface still holds media below its shape's
+  own scale on purpose — a comment's inset pictures at 220px, so the
+  media joins the words instead of turning the comment into a post.
+- **Which scopes "a post fits the screen" to wide and square.** A card at
+  those shapes sits inside the phone whole, affordance row included. A
+  vertical post runs past the fold and the reader scrolls to reach its
+  affordances: jakob built the biggest post the system can make, saw it
+  barely miss, and took it — *"insta also does this."* The alternative
+  spends the picture's height on every reader forever to save one scroll.
+  `MediaAttachment`'s header had still been claiming the opposite — that
+  a capped tile is *fitted* inside whatever height is left — which the
+  2026-09-03 no-letterboxing rule had already overtaken.
+- **Five boards changed height; thirty-one changed only markup.** The
+  rendered diff is the census, and every byte of it is one declaration
+  leaving 36 boards. Where the tile was `wide` (204px at the card's
+  content width), `square` (390), or a comment's (220/240), the cap was
+  never binding and nothing moved. The five that grew are the ones
+  carrying a 4:5 frame, 420 → 487.5 each: `FeedCover`, `FeedGallery`,
+  `LadderMax`, `PostDetail`, `PostDetailVideo`. All five are 390×844
+  phone boards that clip at the fold by design — three of them already
+  overflowed before the round — so no frame moved for them. Four boards
+  in the canvas carry a frame of their own; one of those grew.
+- **`FeedShapes` redraws, and its frame and canvas slot grow 1934 →
+  2059**, measured rather than guessed — the harness reproduced the
+  recorded 1934 on the pre-change board before it was trusted for 2059.
+  The board had pinned the cap's own formula with a phone's height
+  written in where `100dvh` stood, so its three clips stood 219 · 376 ·
+  376 and the prose called two shapes at one height the honest
+  presentation. They stand 219 · 390 · 487 now, which is what the board
+  exists to show: three shapes, three heights, at one width.
+- **The wizard's cover preview is the clip's output format**, never a
+  square specimen: what `ComposeCover` shows is the shape the post will
+  stand at. The clip on that path is square — `ComposeCoverPlaying` plays
+  the same one through `MediaAttachment` at `ratio="square"` — so the
+  preview is 342 × 342, unchanged in pixels and derived now rather than
+  pinned. A 16:9 clip's would be 342 × 192; a vertical clip never reaches
+  the step at all, because its default is no cover.
+- **The card's text clamps were already conform** — title one line,
+  description two, and `More` under a media post's caption always. What
+  was stale was the `media` card's own inventory, which had the
+  description clamping to one. The text body's ceiling stays at 18 lines;
+  its derivation had been floor(376 ÷ 20) against the capped tile, and
+  with the cap gone there is no one tile height to derive it from.
+- **The gate did not move**: 169 screens, 1263 edges, 63 gaps, flows
+  61/58/3. No flow pin anchors on a tile's `max-height` — the media pins
+  find `aspect-ratio`, which no tile lost.
+
 ## 14. Index
 
 **Root**
