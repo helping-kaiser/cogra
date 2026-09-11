@@ -43,6 +43,25 @@ pub const DEFAULT_STANCE: f64 = 0.1;
 /// spending the round trip to find out.
 pub const MAX_TITLE_CHARS: usize = 100;
 
+/// The longest description a Post carries (post.md §1), Unicode scalar
+/// values like every cap on this surface. The words beside a picture,
+/// so its ceiling sits well below the words-only body's.
+pub const MAX_DESCRIPTION_CHARS: usize = 500;
+
+/// The longest a Post's words-body may run (post.md §1) when the body
+/// is words and not media, Unicode scalar values.
+pub const MAX_POST_BODY_CHARS: usize = 5000;
+
+/// The longest a Comment's body may run (comment.md §1), Unicode scalar
+/// values. A comment's body is mandatory and never XOR'd with its
+/// media, so this bounds the text a comment always carries.
+pub const MAX_COMMENT_BODY_CHARS: usize = 2000;
+
+/// The longest a self-mark's public reason may run (post.md §1), Unicode
+/// scalar values — short by design: the reason is a content warning
+/// read before the veil is lifted, not a second body.
+pub const MAX_SENSITIVE_REASON_CHARS: usize = 140;
+
 /// The resolution the canonical string renders and the wire accepts:
 /// three decimal places. A degree is a judgment, not a measurement, so
 /// the grid is coarse enough to be readable and fine enough that no
@@ -493,6 +512,14 @@ fn stance_range(field: &'static str, v: f64) -> Result<(), ContentError> {
 /// media, and the asymmetry is the design's, not an oversight.
 fn post_body(content: Option<String>, gallery: &PlannedGallery) -> Result<String, ContentError> {
     let words = content.filter(|c| !c.trim().is_empty());
+    if let Some(words) = &words {
+        if words.chars().count() > MAX_POST_BODY_CHARS {
+            return Err(ContentError::BadInput {
+                field: "content",
+                message: format!("the body is longer than {MAX_POST_BODY_CHARS} characters"),
+            });
+        }
+    }
     let has_media = !gallery.attachment_ids.is_empty();
     match (words, has_media) {
         (Some(_), true) => Err(ContentError::BadInput {
@@ -527,6 +554,43 @@ fn checked_title(raw: Option<String>) -> Result<Option<String>, ContentError> {
     }
 }
 
+/// The description as the envelope will carry it: the same trim,
+/// length-check and blank-fold `checked_title` runs, at the
+/// description's own cap.
+///
+/// Create and edit both come through here, so an edit cannot land a
+/// description a create would have refused.
+fn checked_description(raw: Option<String>) -> Result<Option<String>, ContentError> {
+    match raw.as_deref().map(str::trim) {
+        Some(description) if description.chars().count() > MAX_DESCRIPTION_CHARS => {
+            Err(ContentError::BadInput {
+                field: "description",
+                message: format!(
+                    "the description is longer than {MAX_DESCRIPTION_CHARS} characters"
+                ),
+            })
+        }
+        Some(description) if !description.is_empty() => Ok(Some(description.to_string())),
+        _ => Ok(None),
+    }
+}
+
+/// A comment's body, length-checked at its own cap. A comment's body is
+/// mandatory — never XOR'd with media the way a post's is — so this only
+/// bounds the length; emptiness is enforced upstream of this surface.
+///
+/// Create and edit both come through here, so an edit cannot land a
+/// body a create would have refused.
+fn checked_comment_body(content: String) -> Result<String, ContentError> {
+    if content.chars().count() > MAX_COMMENT_BODY_CHARS {
+        return Err(ContentError::BadInput {
+            field: "content",
+            message: format!("the comment is longer than {MAX_COMMENT_BODY_CHARS} characters"),
+        });
+    }
+    Ok(content)
+}
+
 /// The author's self-mark as the envelope carries it, or a refusal.
 ///
 /// A reason without the switch is refused rather than dropped: the author
@@ -536,6 +600,16 @@ fn checked_title(raw: Option<String>) -> Result<Option<String>, ContentError> {
 /// render as nothing.
 fn self_mark(draft: SelfMarkDraft) -> Result<Option<SensitiveMark>, ContentError> {
     let reason = draft.reason.filter(|r| !r.trim().is_empty());
+    if let Some(reason) = &reason {
+        if reason.chars().count() > MAX_SENSITIVE_REASON_CHARS {
+            return Err(ContentError::BadInput {
+                field: "sensitiveReason",
+                message: format!(
+                    "the reason is longer than {MAX_SENSITIVE_REASON_CHARS} characters"
+                ),
+            });
+        }
+    }
     match (draft.sensitive, reason) {
         (false, Some(_)) => Err(ContentError::BadInput {
             field: "sensitiveReason",
@@ -573,6 +647,7 @@ pub async fn prepare_post<B: L1Boundary>(
     let p_d = draft.p_directed.unwrap_or(DEFAULT_STANCE);
     stance_range("pDirected", p_d)?;
     let title = checked_title(draft.title)?;
+    let description = checked_description(draft.description)?;
     let tags = topics::plan_batch(&draft.tags)?;
     let citations = references::plan_batch(pool, &draft.references).await?;
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
@@ -584,7 +659,7 @@ pub async fn prepare_post<B: L1Boundary>(
     let payload = CograContent {
         node,
         title,
-        description: draft.description,
+        description,
         body: Some(body),
         media: gallery.manifest,
         sensitive: mark,
@@ -732,6 +807,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
         return Err(ContentError::NotCreator);
     }
     let title = checked_title(draft.title)?;
+    let description = checked_description(draft.description)?;
     let gallery = media::plan_gallery(pool, viewer, GalleryKind::Post, &draft.attachments).await?;
     let body = post_body(draft.content, &gallery)?;
     let mark = self_mark(draft.sensitive)?;
@@ -741,7 +817,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     let payload = CograContent {
         node: post.id,
         title,
-        description: draft.description,
+        description,
         body: Some(body),
         media: gallery.manifest,
         sensitive: mark,
@@ -790,6 +866,7 @@ pub async fn prepare_comment<B: L1Boundary>(
     let p_i = draft.p_interest.unwrap_or(DEFAULT_STANCE);
     stance_range("pDirected", p_d)?;
     stance_range("pInterest", p_i)?;
+    let content = checked_comment_body(draft.content)?;
     let tags = topics::plan_batch(&draft.tags)?;
     let citations = references::plan_batch(pool, &draft.references).await?;
     let gallery =
@@ -803,7 +880,7 @@ pub async fn prepare_comment<B: L1Boundary>(
         node,
         title: None,
         description: None,
-        body: Some(draft.content),
+        body: Some(content),
         media: gallery.manifest,
         sensitive: mark,
     }
@@ -871,6 +948,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     if comment.author_id != viewer {
         return Err(ContentError::NotCreator);
     }
+    let content = checked_comment_body(draft.content)?;
     let gallery =
         media::plan_gallery(pool, viewer, GalleryKind::Comment, &draft.attachments).await?;
     let mark = self_mark(draft.sensitive)?;
@@ -882,7 +960,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
         node: comment.id,
         title: None,
         description: None,
-        body: Some(draft.content),
+        body: Some(content),
         media: gallery.manifest,
         sensitive: mark,
     }

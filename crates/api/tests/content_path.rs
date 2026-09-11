@@ -361,6 +361,280 @@ async fn a_post_title_is_capped_at_a_hundred_characters(pool: PgPool) {
     );
 }
 
+/// The description's own cap, the same unit and the same blank-fold rule
+/// as the title's — checked on a create and on an edit alike.
+///
+/// A post description is capped at five hundred Unicode scalar values on a create and on an edit alike, with a blank description folding to absent.
+/// ´claim:content:a-description-stops-at-five-hundred-characters´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_description_is_capped_at_five_hundred_characters(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("alice").await;
+
+    let draft = |description: &str| PostDraft {
+        title: None,
+        description: Some(description.into()),
+        content: Some("The body".into()),
+        license: license(),
+        p_directed: None,
+        tags: vec![],
+        references: vec![],
+        attachments: vec![],
+        sensitive: Default::default(),
+    };
+
+    let at_cap = "é".repeat(content::MAX_DESCRIPTION_CHARS);
+    let prepared = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&at_cap))
+        .await
+        .expect("a description at the cap prepares");
+    assert_eq!(
+        CograContent::decode_payload(&prepared.writes[0].proposal.payload)
+            .expect("decodes")
+            .description,
+        Some(at_cap)
+    );
+
+    let over = "x".repeat(content::MAX_DESCRIPTION_CHARS + 1);
+    let refused = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&over)).await;
+    assert!(
+        matches!(
+            refused,
+            Err(ContentError::BadInput {
+                field: "description",
+                ..
+            })
+        ),
+        "one character past the cap is refused at the description"
+    );
+
+    let post = rig.post(actor, &key, "Parent", "Words").await;
+    let edit = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        actor,
+        PostEditDraft {
+            id: post,
+            title: None,
+            description: Some(over),
+            content: Some("Words".into()),
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await;
+    assert!(
+        matches!(
+            edit,
+            Err(ContentError::BadInput {
+                field: "description",
+                ..
+            })
+        ),
+        "an edit cannot land a description a create would have refused"
+    );
+}
+
+/// The words-body's own cap: a post's body when it carries words rather
+/// than media, checked wherever `post_body` is — create and edit alike.
+///
+/// A post's words-body is capped at five thousand Unicode scalar values on a create and on an edit alike.
+/// ´claim:content:a-post-body-stops-at-five-thousand-characters´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_body_is_capped_at_five_thousand_characters(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("alice").await;
+
+    let draft = |content: &str| PostDraft {
+        title: None,
+        description: None,
+        content: Some(content.into()),
+        license: license(),
+        p_directed: None,
+        tags: vec![],
+        references: vec![],
+        attachments: vec![],
+        sensitive: Default::default(),
+    };
+
+    let at_cap = "é".repeat(content::MAX_POST_BODY_CHARS);
+    let prepared = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&at_cap))
+        .await
+        .expect("a body at the cap prepares");
+    assert_eq!(
+        CograContent::decode_payload(&prepared.writes[0].proposal.payload)
+            .expect("decodes")
+            .body,
+        Some(at_cap)
+    );
+
+    let over = "x".repeat(content::MAX_POST_BODY_CHARS + 1);
+    let refused = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&over)).await;
+    assert!(
+        matches!(
+            refused,
+            Err(ContentError::BadInput {
+                field: "content",
+                ..
+            })
+        ),
+        "one character past the cap is refused at the body"
+    );
+
+    let post = rig.post(actor, &key, "Parent", "Words").await;
+    let edit = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        actor,
+        PostEditDraft {
+            id: post,
+            title: None,
+            description: None,
+            content: Some(over),
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await;
+    assert!(
+        matches!(
+            edit,
+            Err(ContentError::BadInput {
+                field: "content",
+                ..
+            })
+        ),
+        "an edit cannot land a body a create would have refused"
+    );
+}
+
+/// A comment's body answers to its own, tighter cap — a comment is
+/// mandatory text and never XOR'd with media the way a post's body is,
+/// so this only bounds length.
+///
+/// A comment's body is capped at two thousand Unicode scalar values on a create and on an edit alike.
+/// ´claim:content:a-comment-body-stops-at-two-thousand-characters´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_comment_body_is_capped_at_two_thousand_characters(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("alice").await;
+    let post = rig.post(actor, &key, "Parent", "Words").await;
+
+    let draft = |content: &str| CommentDraft {
+        target: post,
+        content: content.into(),
+        license: license(),
+        p_directed: None,
+        p_interest: None,
+        tags: vec![],
+        references: vec![],
+        attachments: vec![],
+        sensitive: Default::default(),
+    };
+
+    let at_cap = "é".repeat(content::MAX_COMMENT_BODY_CHARS);
+    let prepared = content::prepare_comment(&rig.pool, &rig.boundary, GC, actor, draft(&at_cap))
+        .await
+        .expect("a comment at the cap prepares");
+    assert_eq!(
+        CograContent::decode_payload(&prepared.writes[0].proposal.payload)
+            .expect("decodes")
+            .body,
+        Some(at_cap)
+    );
+
+    let over = "x".repeat(content::MAX_COMMENT_BODY_CHARS + 1);
+    let refused = content::prepare_comment(&rig.pool, &rig.boundary, GC, actor, draft(&over)).await;
+    assert!(
+        matches!(
+            refused,
+            Err(ContentError::BadInput {
+                field: "content",
+                ..
+            })
+        ),
+        "one character past the cap is refused at the comment body"
+    );
+
+    let comment_id = prepared.node;
+    let edit = content::prepare_comment_edit(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        actor,
+        CommentEditDraft {
+            id: comment_id,
+            content: over,
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await;
+    assert!(
+        matches!(
+            edit,
+            Err(ContentError::BadInput {
+                field: "content",
+                ..
+            })
+        ),
+        "an edit cannot land a comment body a create would have refused"
+    );
+}
+
+/// The self-mark's public reason answers to its own short cap — a
+/// content warning read before the veil lifts, not a second body.
+///
+/// A self-mark's reason is capped at a hundred forty Unicode scalar values.
+/// ´claim:content:a-sensitive-reason-stops-at-a-hundred-forty-characters´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_sensitive_reason_is_capped_at_a_hundred_forty_characters(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, _key) = rig.funded_actor("alice").await;
+
+    let draft = |reason: &str| PostDraft {
+        title: None,
+        description: None,
+        content: Some("The body".into()),
+        license: license(),
+        p_directed: None,
+        tags: vec![],
+        references: vec![],
+        attachments: vec![],
+        sensitive: content::SelfMarkDraft {
+            sensitive: true,
+            reason: Some(reason.into()),
+        },
+    };
+
+    let at_cap = "é".repeat(content::MAX_SENSITIVE_REASON_CHARS);
+    let prepared = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&at_cap))
+        .await
+        .expect("a reason at the cap prepares");
+    assert_eq!(
+        CograContent::decode_payload(&prepared.writes[0].proposal.payload)
+            .expect("decodes")
+            .sensitive
+            .expect("marked")
+            .reason,
+        Some(at_cap)
+    );
+
+    let over = "x".repeat(content::MAX_SENSITIVE_REASON_CHARS + 1);
+    let refused = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&over)).await;
+    assert!(
+        matches!(
+            refused,
+            Err(ContentError::BadInput {
+                field: "sensitiveReason",
+                ..
+            })
+        ),
+        "one character past the cap is refused at the reason"
+    );
+}
+
 /// The gesture is a genesis Publish — target the mint of its own act,
 /// `p_i` census-fixed at 1, the license structural — and its envelope
 /// decodes back to the draft, node id included. Landing leaves the
