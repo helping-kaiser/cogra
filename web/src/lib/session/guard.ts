@@ -9,29 +9,33 @@ import type { TokenStore } from "./token-store";
 export type AuthGuard = {
   run<T>(block: () => Promise<Outcome<T>>): Promise<Outcome<T>>;
   /**
-   * Get a token IN HAND before sending something expensive.
+   * Settle this tab's session: a token in hand, or the knowledge that there
+   * is none to have. Resolving is the whole contract — settled is not signed
+   * in, and an anonymous tab settles as anonymous.
    *
    * `run` discovers a missing token from the server's answer, which is the
-   * right shape for a request whose cost is a round trip and the wrong one for
-   * a request whose cost is a file: the body is transferred in full before the
-   * refusal comes back, so the replay sends it a SECOND time. A tab's access
-   * token lives in memory alone and reads answer anonymous callers with
-   * viewer-shaped nulls rather than refusals, so a freshly loaded page reaches
-   * the composer holding nothing and the upload is the first call to find out
-   * — which made the doubling the normal case for a video rather than a rare
-   * one.
+   * right shape for a request whose cost is a round trip and the wrong one
+   * for two kinds of call. For a request whose cost is a file: the body is
+   * transferred in full before the refusal comes back, so the replay sends it
+   * a SECOND time. And for a read the server answers rather than refuses: a
+   * tab's access token lives in memory alone, so a freshly loaded page sends
+   * every mount-time read without one, and viewer-shaped nulls come back as
+   * success — the guest's view, with no refusal for `run` to replay and
+   * nothing to refetch when the token lands.
    *
-   * Nothing here replaces `run`: a token that expires mid-upload is still the
-   * replay's job. This only removes the send that was known to be wasted
-   * before it was made.
+   * So this runs ahead of both: the whole browser chain waits on it
+   * (`apollo-link.ts`), and the uploads ask for it by name before they build
+   * their bytes. Nothing here replaces `run` — a token that expires mid-call
+   * is still the replay's job.
    */
   prime(): Promise<void>;
 };
 
 export function createGuard(store: TokenStore, refresher: Refresher): AuthGuard {
-  // One refresh for however many uploads start at once. The refresher
+  // One refresh for however many callers arrive at once — the page's whole
+  // first wave of reads, or ten pictures starting together. The refresher
   // serializes its callers, but a queue of primes each passing a null stale
-  // token would rotate the pair once per picture — and rotating a refresh
+  // token would rotate the pair once per caller — and rotating a refresh
   // token more often than needed is exactly what reuse detection watches for.
   let priming: Promise<unknown> | null = null;
 
