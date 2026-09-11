@@ -55,7 +55,7 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, ove
     <button
       type="button"
       onClick={onOpenDetail}
-      className="cg-state cg-focus"
+      className="cg-state cg-focus cg-hit"
       style={{
         flex: "none",
         display: "inline-flex",
