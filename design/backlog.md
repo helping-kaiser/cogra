@@ -2052,3 +2052,18 @@ advisories on the vendored readmes (6 in the round's run — all from
 `design/_build/node_modules/*/README.md`, zero from authored content).
 The linter should skip gitignored trees; until it does, every lane
 reading the advisory count must check where the advisories come from.
+
+### 57 · The masters' prose still says "standing" off-screen · *design*
+
+The sweep (2026-09-11) conformed every reader-visible string and every
+self-contradicting doc, but ~151 sites of `standing`/`stance` prose
+remain in `*.jsx` docblocks, `*.d.ts` and `*.prompt.md` (top files:
+`StanceReadout.jsx` 15, `StanceReadout.d.ts` 11, `TagPad.jsx` 6,
+`StancePad.jsx` 6, `StanceControl.jsx` 6). Many are legitimately the
+model's own word for the record and the fold; separating those from
+reader-facing prose is a judgment pass of its own. Related smalls from
+the same sweep: `Post Score` in prose and in the graph's gap names
+(renaming has graph-artefact consequences); `sheet.card.html`'s
+specimen `SheetTitle` the live `OverflowMenu` doesn't render;
+`feed-filter.card.html:46`'s history sentence naming the replaced
+segmented row; the frozen search-ideation canvases' `3w` ages.
