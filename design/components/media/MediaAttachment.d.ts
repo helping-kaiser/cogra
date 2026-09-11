@@ -42,9 +42,9 @@ export interface MediaAttachmentProps {
   /** "cover" (default) fills the tile; "contain" fits the frame inside it. */
   fit?: "contain" | "cover";
   /**
-   * Defaults to `var(--media-max-height)` — the height that leaves the rest of
-   * the post on screen above the bottom bar. A capped tile fits its frame; it
-   * never crops to obey the cap.
+   * No default — a card tile stands at its true shape, full width. Only a
+   * surface that holds media below the shape's own scale passes a bound here;
+   * a comment's inset pictures are the one that does.
    */
   maxHeight?: string;
   /**

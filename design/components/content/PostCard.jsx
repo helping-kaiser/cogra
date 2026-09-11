@@ -57,14 +57,12 @@ const CLAMP = (lines) => ({
 const DESCRIPTION_CLAMP_LINES = 2;
 
 /* THE TEXT BODY'S CEILING — a text post stands about as tall as a media post,
-   never taller, so a feed of both keeps one rhythm. Derived from the tokens
-   rather than chosen, and against the picture the reader actually sees: a 4:5
-   crop wants 447.5px at the card's 358px content width, but `--media-max-height`
-   caps it first — on the 390×844 board, 844 less the 44px safe area, the 64px
-   bottom bar and the 360px worst-case chrome leaves 376px.
-   `--text-body-medium--line-height` is 1.25rem = 20px, so floor(376 / 20) = 18
-   lines. Past that the body folds and `More` opens it. The detail view is the
-   read surface and clamps nothing. */
+   never taller, so a feed of both keeps one rhythm. Eighteen lines at
+   `--text-body-medium--line-height` (1.25rem = 20px) is 360px of words, the
+   scale of the crops a media post puts in the same place: at the card's 358px
+   content width a square stands 358 and a 4:5 crop 447.5. Past it the body
+   folds and `More` opens it. The detail view is the read surface and clamps
+   nothing. */
 const TEXT_BODY_CLAMP_LINES = 18;
 
 /* A static render cannot measure a paragraph, so the opener is offered on an
@@ -305,8 +303,8 @@ export function PostCard({
       {/* THE AFFORDANCE ROW. The stance control leads — it is the gesture the
           product lives on — then the Post Score, then comments, then anything
           else a post grows. ONE LINE, NEVER WRAPPING: a second row of
-          affordances reads as a second kind of thing, and it costs the height a
-          post does not have (see `--media-max-height`). That is the constraint
+          affordances reads as a second kind of thing, and it costs height a
+          post cannot spare. That is the constraint
           that keeps every affordance here glyph-plus-number — words would not
           fit, which is a feature. Nothing in here may take `primaryContainer`:
           the stance knob already spends it.

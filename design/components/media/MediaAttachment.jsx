@@ -10,13 +10,16 @@ import { VideoTransport } from "./VideoControls.jsx";
      multiples. SPACE IS RESERVED BEFORE LOAD SO CONTENT NEVER JUMPS." That is the
      load-bearing rule and the reason this exists ahead of the feature: a layout
      designed without reserved space is a layout that will jump.
-   · A POST FITS THE SCREEN. The card — author row, media, text, affordances —
-     must sit inside the phone's height minus the top safe area and the bottom
-     bar, or the reader never sees a post whole and has to scroll to reach the
-     affordances. Media is the only part that can flex, so the cap lands here:
-     `--media-max-height`, which budgets for the WORST-CASE chrome rather than the
-     average — see tokens/spacing.css. A capped tile is not cropped: the frame is
-     fitted inside whatever height is left.
+   · A TILE STANDS AT ITS TRUE SHAPE, FULL WIDTH (jakob 2026-09-11). Nothing
+     bounds its height but the crop vocabulary's 4:5, and that is a SHAPE, not a
+     ceiling: a wide tile is 219px on a 390px phone, a square one 390, a tall one
+     487. A tile shrunk to fit a card inside the screen shows every reader less
+     of the picture than its author shaped — on every phone, forever — which is
+     the more expensive loss.
+   · WHICH SCOPES "A POST FITS THE SCREEN" TO WIDE AND SQUARE. A card at those
+     shapes sits inside the phone whole, affordance row included, and the feed
+     scrolls past it. A VERTICAL post runs past the fold and the reader scrolls
+     to reach the affordances; that is ruled acceptable.
    · The tile sits at the medium (12px) rung inside a card, on
      `surfaceContainerHigh` — a step above the card's own fill, so an unloaded
      tile reads as a reserved region rather than a hole.
@@ -164,7 +167,10 @@ export function MediaAttachment({
   label = "Media",
   radius = "var(--radius-medium)",
   fit = "cover",
-  maxHeight = "var(--media-max-height)",
+  /* No default: a card tile is its own shape at full width. A surface that
+     deliberately holds media to a smaller scale than the shape gives — a
+     comment's inset pictures — passes its own bound here. */
+  maxHeight,
   controls = "sound",
   resting = false,
   playing = true,
@@ -302,8 +308,8 @@ export function MediaAttachment({
 
    Every frame renders at the ONE frame ratio: the explicit `ratio` prop, else
    the first item's, so uncropped sets (a comment's pictures) pass a fixed frame
-   (square) and fit each whole frame inside it — a pager whose height changed
-   per swipe would bounce the card under the reader's thumb. */
+   (square) and each display-crops to it — a pager whose height changed per
+   swipe would bounce the card under the reader's thumb. */
 export function MediaGallery({ items = [], ratio, radius, maxHeight }) {
   const [page, setPage] = React.useState(0);
   const stripRef = React.useRef(null);
