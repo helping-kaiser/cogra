@@ -36,6 +36,24 @@ export interface FieldCountProps {
 
 export declare function FieldCount(props: FieldCountProps): JSX.Element | null;
 
+/** The supporting row under a field, assigned once: the message or the hint at
+ *  its start, the late counter at its end. `TextField` renders it for its own
+ *  field; a capped field that is not a `TextField` renders it directly. Renders
+ *  nothing when there is nothing to say. */
+export interface FieldSupportProps {
+  /** Id of the message line, named by the control's `aria-describedby`. */
+  id?: string;
+  /** Id of the count, named by the same. */
+  countId?: string;
+  hint?: string;
+  error?: string;
+  value?: string;
+  cap?: number;
+  used?: number;
+}
+
+export declare function FieldSupport(props: FieldSupportProps): JSX.Element | null;
+
 /** The house labeled text input — and, with `rows`, the house textarea. */
 export interface TextFieldProps {
   label: string;

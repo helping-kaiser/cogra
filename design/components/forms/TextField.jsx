@@ -114,6 +114,37 @@ export function FieldCount({ value, cap, used, id }) {
   );
 }
 
+/* THE SUPPORTING ROW, ASSIGNED ONCE — `FieldLabel`'s counterpart under the
+   field. `TextField` renders it for its own field, and a capped field that is
+   NOT a `TextField` (the composer's growing body box) renders it directly, so
+   the two cannot drift about where the message sits or where the count sits
+   beside it. It renders nothing at all when there is nothing to say, which is
+   the state every field in the product is in at rest. */
+
+export function FieldSupport({ id, countId, hint, error, value, cap, used }) {
+  const reading = countReading(value, cap, used);
+  if (!error && !hint && !reading) return null;
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)", flex: "none" }}>
+      {(error || hint) && (
+        <span
+          id={id}
+          role={error ? "alert" : undefined}
+          style={{
+            fontSize: "var(--text-body-small)",
+            lineHeight: "var(--text-body-small--line-height)",
+            letterSpacing: "var(--text-body-small--letter-spacing)",
+            color: error ? "var(--error)" : "var(--text-secondary)",
+          }}
+        >
+          {error || hint}
+        </span>
+      )}
+      <FieldCount id={countId} value={value} cap={cap} used={used} />
+    </div>
+  );
+}
+
 /* THE LABEL ROW, ASSIGNED ONCE. `TextField` renders it over its own field, and
    the composer's captions over sections that are NOT fields — Pictures, Video,
    Cover, Topics, References — render it over a tray or a list. Those captions
@@ -231,25 +262,7 @@ export function TextField({
           style={shared}
         />
       )}
-      {(error || hint || reading) && (
-        <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
-          {(error || hint) && (
-            <span
-              id={supportId}
-              role={error ? "alert" : undefined}
-              style={{
-                fontSize: "var(--text-body-small)",
-                lineHeight: "var(--text-body-small--line-height)",
-                letterSpacing: "var(--text-body-small--letter-spacing)",
-                color: error ? "var(--error)" : "var(--text-secondary)",
-              }}
-            >
-              {error || hint}
-            </span>
-          )}
-          <FieldCount id={countId} value={value} cap={cap} used={used} />
-        </div>
-      )}
+      <FieldSupport id={supportId} countId={countId} hint={hint} error={error} value={value} cap={cap} used={used} />
     </div>
   );
 }

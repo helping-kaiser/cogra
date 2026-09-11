@@ -31,6 +31,7 @@ export function Screen() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6, minHeight: 0 }}>
           <FieldLabel>What do you want to publish?</FieldLabel>
           <WordsBody
+            cap={5000}
             paragraphs={[
               "Three weekends of walking the same stretch at low tide, tracing where the salt crust draws its lines.",
               "If you ever drive it, stop at the third headland and look down for once.",
@@ -40,7 +41,7 @@ export function Screen() {
           <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
         </div>
 
-        <TextField label="Title" corner="Optional" value="Salt maps of the coast road" />
+        <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Tags</FieldLabel>
