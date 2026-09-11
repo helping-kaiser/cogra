@@ -77,13 +77,13 @@ export function Screen() {
             variant="campaign"
             image="post-photo.jpg"
             title="Postcard run"
-            second="Settled 28 Aug · 1,730.00 returned"
+            second="Settled 3d · 1,730.00 returned"
             onOpen={() => {}}
           />
           <ContentRow
             variant="campaign"
             title="Salt maps launch"
-            second="Settled 12 Jul · fully paid out"
+            second="Settled 12.07.2026 · fully paid out"
             glyph="campaign"
             onOpen={() => {}}
           />
