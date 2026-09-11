@@ -1153,10 +1153,9 @@ community-redacted actor.
 posts stay out of your feed.` with `Undo`. The second clause is the one
 that matters: what a reader wonders after hiding someone is whether
 they have done something *to* that person, and the answer is that they
-have changed their own feed and nothing else. `Undo` is the only
-snackbar action in the product — hiding is a comfort a reader may have
-meant for one post rather than for a person, and the way back costs
-nothing.
+have changed their own feed and nothing else. `Undo` beside it: hiding
+is a comfort a reader may have meant for one post rather than for a
+person, and the way back costs nothing.
 
 ## Awaiting blessing — the score-and-opinions round
 
@@ -1233,3 +1232,23 @@ having already said what was counted.
 `Nothing here yet — write the first post.` shape: calm, and naming the
 one thing that would fill it. It never scolds and it carries no `error`
 colour; a comment nobody has answered is not a fault.
+
+## Awaiting blessing — the follow-up bundle
+
+Two strings, drawn on `SavedUndo` and owed by the redacted-actor law.
+
+**Unsaving's snackbar.** `Removed from Saved.` with `Undo`, the second
+snackbar in the product to carry an action. It names the LIST and not
+the row: the thing that went is the one the reader just pressed, and
+the fact they may want reversed is that it is no longer kept. The pair
+is deliberately lopsided against saving's bare `Saved.` — saving costs
+a reader nothing to repeat, and a mis-pressed unsave costs them finding
+the thing again.
+
+**The hide row with no name to say.** `Hide this account`, where the
+author is a deleted account and there is no handle to spell. It stands
+beside `Hide @ada`, never instead of it, and the row never drops: the
+act is about an ACTOR, the actor is still there, and its content still
+ranks into the reader's feed. The system's voice for the same reason
+`Deleted account` is — it is the product saying what the tap does when
+it cannot say whose.

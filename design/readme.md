@@ -4403,6 +4403,62 @@ One label was aligned in passing: `FeedHidden`'s score edge read `Post
 score` where the other 21 read `Post Score`, which would have dropped it
 silently from the control start.
 
+### The follow-up bundle — 2026-09-11
+
+jakob's go on the review round's standing recommendations, taken in one
+pass: one board, one law, and two sweeps.
+
+- **Unsaving gets hiding's treatment.** `SavedUndo` is the Saved list a
+  moment after a row's unsave — the row gone, the ones behind it moved
+  up, and `Removed from Saved.` with `Undo` over them. It is drawn for
+  `FeedHidden`'s reason: the act takes no dialog and leaves no mark, so
+  a list one row shorter and one line saying so ARE the whole design.
+  The line names the LIST rather than the row — the thing that went is
+  the one the reader just pressed, and the list is the fact they may
+  want back. Three rows are left and all three drawn kinds are among
+  them, so the mixed list goes on reading as one. Nothing marks the
+  space the row was in, and nothing happened to the post: it still
+  stands in its author's chronicle, still ranks, still opens. The
+  `Unsave` control moved into the shared screen helpers on the way —
+  it is drawn on two boards now, and a control spelled twice drifts.
+- **A hide row cannot say a name that is gone.** On a deleted author's
+  post or comment the reader's menu reads `Hide this account`;
+  everywhere else it spells the handle. The ROW stays either way —
+  hiding is a read-side comfort about an ACTOR, and a redacted actor
+  still ranks into the reader's feed — so only the wording gives way.
+  `ActorChip` composes it (`HIDE_ACTOR_LABEL`, beside
+  `REDACTED_ACTOR_NAME`), because every menu that carries the row
+  builds its label from an actor and a fallback spelled per menu is a
+  fallback that drifts; `OverflowMenu`'s own rules send every such row
+  there. **No board draws it**: the law and the master's fallback are
+  the entire mechanism, and a second `ReaderPostMenu` differing in one
+  word would be four-fifths of a board already on the canvas.
+- **The score reads `Post score` in prose, wherever prose says it** —
+  `readme` in six places, `ExplainableNumber` across its three files,
+  `PostCard`'s prompt, `ReelRail`, the score glyph's note in `Icon`,
+  the media card, the core-loop prototype's notes, and `shell.mjs`.
+  The graph's 23 edge labels keep `Post Score`, and the maps generated
+  from them with it: `flows.json` starts `trace-a-score-to-its-records`
+  by matching that label, so the string is a key there and not a word.
+  Gap names were the same exception and no longer carry it — item 13's
+  gaps closed with the drill-down.
+- **The text clamp is founded on the square tile.** Eighteen lines at
+  20px is 360px of words against a square crop's 358 at the card's
+  content width, so a text post comes to rest at the neutral media
+  shape rather than rising into the 4:5 wall a picture may take. The
+  value did not move; what it is measured against is now written down.
+- **The gate**: 178 → **179 boards**, 1327 → **1336 edges**, gaps hold
+  at **43** and flows at **63/60/3**. The nine new edges are
+  `SavedUndo`'s own — the back arrow, the rows, its five nav slots, the
+  unsave that fires it again, and `Undo` appended last so no via
+  renumbers. `Saved`/8 stops being a self-informing detour and becomes
+  the advance onto the new board, which is the only edge that moved.
+  The witness moved in origin lists alone: `SavedUndo` joins the four
+  publish flows that start on the bar, whose `nav · New post` start
+  grows 44 → 45 boards. No `.dc.html` but the new one changed — the
+  sweeps are comments and prose, and the shared `Unsave` renders the
+  markup it rendered inside `Saved`.
+
 ## 14. Index
 
 **Root**
