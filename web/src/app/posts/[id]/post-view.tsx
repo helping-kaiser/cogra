@@ -554,6 +554,9 @@ export function PostView({
   const header = (isCreator: boolean) => (
     <PageHeader
       backHref="/feed"
+      // The feed restores the place the reader left it in; scrolling it to the
+      // top would land on top of that restore.
+      backScroll={false}
       backLabel="Back to feed"
       backTestId="post-back"
       action={
