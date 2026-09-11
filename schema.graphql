@@ -443,6 +443,11 @@ enum ErrorCode {
 	"""
 	FORBIDDEN
 	"""
+	The viewer's email is not yet verified; acting is gated until it
+	is.
+	"""
+	EMAIL_NOT_VERIFIED
+	"""
 	The referenced object does not exist.
 	"""
 	NOT_FOUND
