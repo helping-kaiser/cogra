@@ -8,7 +8,7 @@ import React from "react";
    colour as emphasis on recency, never as direction. Heights normalize to
    the largest bar; a zero settlement is a visible stub, not a gap. */
 
-export function EarnedChart({ points = [], caption = "Earned · last settlements", height = 64 }) {
+export function EarnedChart({ points = [], caption = "Earned · last payouts", height = 64 }) {
   if (points.length === 0) return null;
   const max = Math.max(...points.map((p) => p.amount), 0.000001);
   return (

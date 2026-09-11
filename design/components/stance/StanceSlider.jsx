@@ -21,7 +21,12 @@ import { formatDimension, formatUnsigned } from "./StanceReadout.jsx";
    THE POLES ARE NAMED. A track says nothing about what either end means, and
    the axis label alone was carrying too much: "Against" and "For" under the
    ends make the control readable at a glance instead of after a sentence.
-   `body-small` on `onSurfaceVariant` so they inform without competing. */
+   `body-small` on `onSurfaceVariant` so they inform without competing.
+
+   THE VALUE IN THE LABEL IS THE GEEK READING (`cg-exact`, readme §13). The
+   poles, the label and the thumb's position say where the axis stands without
+   it; the range input announces its own value to a screen reader in both
+   modes, so nothing spoken is lost when the number is not painted. */
 
 export function StanceSlider({ label, value, onChange, minLabel, maxLabel, id, min = -1, max = 1 }) {
   const format = min < 0 ? formatDimension : formatUnsigned;
@@ -40,7 +45,7 @@ export function StanceSlider({ label, value, onChange, minLabel, maxLabel, id, m
           fontWeight: "var(--text-label-large--font-weight)",
         }}
       >
-        {label} {format(value)}
+        {label} <span className="cg-exact">{format(value)}</span>
       </label>
       <input
         id={fieldId}

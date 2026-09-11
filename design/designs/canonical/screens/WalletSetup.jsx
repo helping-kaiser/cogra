@@ -19,7 +19,7 @@ export function Screen() {
             This is where your reach pays off — payouts and tips, held by your own key, never by CoGra.
           </p>
           <p style={{ margin: 0, position: "relative", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-            The key is made on this device and restored by the recovery code you already have. Publishing your payout address is one signed action.
+            The key is made on this browser and restored by the recovery code you already have. Publishing your payout address is one signature.
           </p>
           <div style={{ position: "relative", display: "flex", justifyContent: "flex-end", paddingTop: 4 }}>
             <Button>Create and publish</Button>

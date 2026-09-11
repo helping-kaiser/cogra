@@ -7,9 +7,9 @@ import React from "react";
      · The FACE is the lossy readout of the EDGE BEING AUTHORED — this pick, not
        the bundle it joins. Conflating the two would make the face mean something
        different depending on history, which is exactly what a readout must not do.
-       The EXACT PAIR sits with it and is equally default: the face carries the
-       feel and the pair carries the fact, and hiding either makes the other harder
-       to trust.
+       The EXACT PAIR rides the same line in a `cg-exact` span: the face carries
+       the feel by default and the numbers paint only in geek mode (readme §13,
+       the geek-mode rule). Both are always drawn, so the markup is one markup.
      · "Resulting stance" sits BELOW the field — the bundle after the pick.
 
    DIVERGENCE FROM THE SOURCE: the anchor's WORDS ARE NO LONGER DRAWN. The source
@@ -77,8 +77,8 @@ export const INTEREST_POLES = ["Less", "More"];
 /** What the middle pair is: the edge being authored, not the standing. */
 export const PICK_LABEL = "Your pick";
 
-export const SEVERED_LABEL = "Severed";
-export const NO_STANDING_LABEL = "No stance yet";
+export const SEVERED_LABEL = "Walked back";
+export const NO_STANDING_LABEL = "No opinion yet";
 /** What a bundle standing at exactly (0, 0) reads as. */
 export const ZERO_BUNDLE_EMOJI = "🤷";
 /** The face an unauthored target wears at rest — the dotted-line face, deliberately
@@ -189,6 +189,25 @@ export function nearestAnchor(pair) {
   return best;
 }
 
+/** The nearest TAG anchor, over the thirteen objects rather than the twenty
+ *  faces. Exported because the rows that draw a tag's pair without the pad —
+ *  `TaggedRow`, `ReferenceRow`'s topic edge — need the same glyph the pad
+ *  shows, and a second walk of the table would be a second table. */
+export function nearestTagAnchor(pair) {
+  let best = TAG_ANCHORS[0];
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const anchor of TAG_ANCHORS) {
+    const dd = anchor.pDirected - pair.pDirected;
+    const di = anchor.pInterest - pair.pInterest;
+    const distance = dd * dd + di * di;
+    if (distance < bestDistance) {
+      best = anchor;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
 /** The readout a STANDING wears. The table never speaks for zero. */
 export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
   if (pair.pDirected === 0 && pair.pInterest === 0) return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
@@ -211,7 +230,7 @@ export function StanceValue({ pDirected, pInterest, showPair = true }) {
     >
       <span aria-hidden="true" style={{ fontSize: "var(--text-title-medium)" }}>{readout.emoji}</span>
       {showPair && (
-        <span aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+        <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
           {formatStancePair(pair)}
         </span>
       )}
@@ -273,11 +292,11 @@ export function localLanding(rawSum, pick) {
 }
 
 export function standingLine(bundle, targetLabel) {
-  if (bundle === undefined) return "Checking your current stance…";
-  if (bundle === null || bundle.records === 0) return `${ZERO_BUNDLE_EMOJI} No stance on ${targetLabel} yet.`;
-  if (bundle.severed) return `${ZERO_BUNDLE_EMOJI} You've severed ${targetLabel}.`;
+  if (bundle === undefined) return "Checking your current opinion…";
+  if (bundle === null || bundle.records === 0) return `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.`;
+  if (bundle.severed) return `${ZERO_BUNDLE_EMOJI} You've walked ${targetLabel} back to nothing.`;
   // Face and pair; the words ride the spoken line beside it.
-  return `Current stance ${bundleReadout(bundle.current).emoji} ${formatStancePair(bundle.current)}`;
+  return `Current opinion ${bundleReadout(bundle.current).emoji} ${formatStancePair(bundle.current)}`;
 }
 
 /**
@@ -294,11 +313,18 @@ export function standingLine(bundle, targetLabel) {
  *
  * `capped` is false when the sum never reached the clip, and then there is only
  * one number to show and no aside to make.
+ *
+ * THE ONE EXEMPTION FROM GEEK MODE (jakob's ruling, backlog item 53). These two
+ * numbers carry no `cg-exact` marker and paint in both modes: the sheet exists to
+ * show the DIFFERENCE between the raw sum and the fold, and the faces are a
+ * lossy readout — the two would wear the same glyph, which is the whole content
+ * of the sheet erased. A reader about to walk back everything they have said is
+ * owed the arithmetic, whatever their reading setting says.
  */
 export function severanceParts(bundle, targetLabel) {
-  if (bundle === undefined) return { sentence: "Checking your current stance…" };
+  if (bundle === undefined) return { sentence: "Checking your current opinion…" };
   if (bundle === null || bundle.records === 0) {
-    return { sentence: `${ZERO_BUNDLE_EMOJI} No stance on ${targetLabel} yet.` };
+    return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
   }
   const raw = formatStancePair(bundle.rawSum);
   const folded = formatStancePair(bundle.current);
@@ -306,28 +332,45 @@ export function severanceParts(bundle, targetLabel) {
 }
 
 export function landingLine(landing) {
-  if (landing === null || landing === undefined) return "Working out the resulting stance…";
-  if (landing.severed) return "Resulting stance: nothing — this nets everything you've said about it back to zero.";
+  if (landing === null || landing === undefined) return "Adding it up…";
+  if (landing.severed) return "This takes you back to zero.";
   if (landing.inert) {
     const directedInert = landing.landing.pDirected === 0;
     const interestInert = landing.landing.pInterest === 0;
-    if (directedInert && interestInert) return "Resulting stance: carries nothing.";
-    if (directedInert) return "Resulting stance: your side of it carries nothing.";
-    if (interestInert) return "Resulting stance: what reaches you carries nothing.";
+    if (directedInert && interestInert) return "Resulting opinion: carries nothing.";
+    if (directedInert) return "Resulting opinion: your side of it carries nothing.";
+    if (interestInert) return "Resulting opinion: what reaches you carries nothing.";
   }
   const readout = bundleReadout(landing.landing);
-  return `Resulting stance ${readout.emoji} ${formatStancePair(landing.landing)}`;
+  return `Resulting opinion ${readout.emoji} ${formatStancePair(landing.landing)}`;
 }
 
-/** The confirmation a signed gesture leaves. Names where it LEFT the viewer.
-    A transient surface is read away from the pad, so the words stay here: this
-    line IS the accessible text, with no visual redundancy to carry them. */
+/* The confirmation a signed gesture leaves. Names where it LEFT the viewer.
+
+   IT IS BUILT FROM SPANS, NOT A SENTENCE (jakob's ruling, the geek round —
+   backlog item 53.1). A snackbar that spelled the pair in prose was the one
+   Group A reading the mode could not reach: a sentence carries no marker. So
+   the face is the reading, the digits ride a `cg-exact` span behind it, and a
+   screen-reader twin says the whole thing — including the anchor's word, which
+   the eye gets from the face — in both modes.
+
+   The severed line has no pair to show and stays a plain string. */
 export function signedLine(standing, records, severed, targetLabel) {
-  const acts = records === 1 ? "Signed" : `Signed ${records} actions`;
-  const where = severed
-    ? `You've severed ${targetLabel}.`
-    : `Current stance: ${bundleReadout(standing).label}, ${formatStanceWords(standing)}`;
-  return `${acts}, still settling. ${where}`;
+  const acts = records === 1 ? "Signed" : `Signed ${records} things`;
+  if (severed) return `${acts}, still settling. You've walked ${targetLabel} back to nothing.`;
+  const readout = bundleReadout(standing);
+  return (
+    <>
+      <span aria-hidden="true">
+        {`${acts}, still settling. Current opinion `}
+        {readout.emoji}
+        <span className="cg-exact">{` (${formatStancePair(standing)})`}</span>
+      </span>
+      <span style={SR_ONLY}>
+        {`${acts}, still settling. Current opinion: ${readout.label}, ${formatStanceWords(standing)}`}
+      </span>
+    </>
+  );
 }
 
 /** Face and pair, and the words for a reader who cannot see the face (§8.3). */
@@ -339,9 +382,11 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
       {/* NEVER WRAPS. This sits in the post card's affordance row, which is one
           line by rule — a pair broken across two text lines reads as a two-line
           block even when the row height has not changed. */}
-      <span aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+      <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
         {formatStancePair(pair)}
       </span>
+      {/* The spoken reading is the same in both modes: geek mode is a drawing
+          setting, and a reader on a screen reader is owed the values either way. */}
       <span style={SR_ONLY}>{`${readout.label}, ${formatStanceWords(pair)}`}</span>
     </span>
   );
@@ -349,28 +394,28 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
 
 /** The standing, split for rendering: either a sentence, or a readout to lay out. */
 export function standingParts(bundle, targetLabel) {
-  if (bundle === undefined) return { sentence: "Checking your current stance…" };
-  if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No stance on ${targetLabel} yet.` };
-  if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} You've severed ${targetLabel}.` };
+  if (bundle === undefined) return { sentence: "Checking your current opinion…" };
+  if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
+  if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} You've walked ${targetLabel} back to nothing.` };
   const readout = bundleReadout(bundle.current);
   return {
-    label: "Current stance",
+    label: "Current opinion",
     emoji: readout.emoji,
     pair: formatStancePair(bundle.current),
-    spoken: `Current stance: ${readout.label}, ${formatStanceWords(bundle.current)}`,
+    spoken: `Current opinion: ${readout.label}, ${formatStanceWords(bundle.current)}`,
   };
 }
 
 /** The landing, split the same way. */
 export function landingParts(landing) {
-  if (landing === null || landing === undefined) return { sentence: "Working out the resulting stance…" };
+  if (landing === null || landing === undefined) return { sentence: "Adding it up…" };
   if (landing.severed || landing.inert) return { sentence: landingLine(landing) };
   const readout = bundleReadout(landing.landing);
   return {
-    label: "Resulting stance",
+    label: "Resulting opinion",
     emoji: readout.emoji,
     pair: formatStancePair(landing.landing),
-    spoken: `Resulting stance: ${readout.label}, ${formatStanceWords(landing.landing)}`,
+    spoken: `Resulting opinion: ${readout.label}, ${formatStanceWords(landing.landing)}`,
   };
 }
 
@@ -399,7 +444,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
       </span>
       <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
         <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", lineHeight: 1.2 }}>{emoji}</span>
-        <span style={{ fontSize: "var(--text-body-small)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }}>{pair}</span>
+        <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }}>{pair}</span>
       </span>
       <span style={SR_ONLY}>{spoken}</span>
     </div>

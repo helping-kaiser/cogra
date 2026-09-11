@@ -1911,7 +1911,7 @@ Password maximum (128) is implementation-side only — Argon2 cost
 bounding, never drawn as a counter or meter — and sits outside this
 affordance round's scope.
 
-### 53 · Geek mode — glyph-first signal numbers · *design* · **ruled 2026-09-11, undrawn**
+### 53 · Geek mode — glyph-first signal numbers · *design* · **drawn 2026-09-11**
 
 A friend's proposal, jakob adopted it scoped (the full record:
 dev-state `cogra/tmp_dev/2026-09-11-geek-mode-rulings.md`). Runs as
@@ -1937,10 +1937,53 @@ reshaped.
 
 Canvas mechanism (answered from shell.mjs, jakob agreed to the
 toggle): a `geek` data-props chip beside the theme chip, landing as
-`data-geek` on the screen root with the same broadcast; masters
-always render glyph AND number, the number span carries a marker
-class hidden by base CSS unless geek is on. No board forks; SR text
-already carries the values.
+`data-geek` on the screen root with its own `cograGeek` broadcast;
+masters always render glyph AND number, the number span carries
+`cg-exact` and one base rule hides it unless geek is on. No board
+forks; every hidden number keeps a screen-reader twin, so nothing
+spoken moves with the mode.
+
+Drawn 2026-09-11 (readme §13, *Geek mode*), and reviewed the same
+evening — nine further rulings, all drawn in the round's own PR: the
+gesture inverted (a tap opens the pad, a held finger signs the gentle
+default), the affordance rows spread across the card, help and coach
+sentences made emoji-first, the reference rows given the stance face,
+the Post score and the rank taken back out of the mode, the wording
+table applied, `opinion` made the reader's word, and the `Settings`
+canvas slot un-clipped. What is left:
+
+1. ~~The snackbar a signed stance leaves still reads its numbers.~~
+   **Closed by the review round.** `signedLine` is built from spans:
+   the face is drawn, the pair rides a `cg-exact` tail, and a
+   screen-reader twin carries the anchor's word and both axes in either
+   mode.
+2. ~~The wide anchor's words in non-geek mode.~~ **Closed by
+   `ProfileOtherHeld`** (jakob asked for the held state drawn,
+   2026-09-11: "in normal mode nothing changes"): the held wide anchor
+   is the face alone by ruling, the pair rides its `cg-exact` span
+   inside the anchor's own `flex: 1` half, and Message keeps its width
+   in both modes — the row's geometry is mode-invariant. (The unset
+   case reads `Your opinion` — shortened same day, the longer label
+   overflowed the wide anchor.)
+3. ~~A citation row's pair has no glyph to fall back to.~~
+   **Closed by the review round.** `ReferenceRow`'s non-topic rows and
+   `StagedReference` read `nearestAnchor` and draw the nearest of the
+   twenty faces beside the hidden pair; the anchor's WORD stays off a
+   citation, so the spoken reading is the pair exactly (`RefPair`'s
+   rule).
+4. ~~The staged-act snackbars were left alone deliberately.~~
+   **Closed same day** (jakob: "update the flags"): both lines follow
+   the applicant vocabulary — `Your post waits with your application —
+   it arrives with you.`, and the opinion variant with it.
+5. ~~Two vocabularies still split where the ruling stopped.~~
+   **Closed same day** (jakob: "update the flags"): the severance
+   prose walks back (`Walked back`, `You've walked @ada back to
+   nothing.`, "…that is what this walks back"); the `Signed actions`
+   dialog is `How signing works` ("…is signed on its own, in your
+   name"); the Writing footnote opens `Everything you sign is paid
+   for separately.`; the two wallet lines end `— one signature.` The
+   filter's first section, whose ruled name duplicated the reading
+   sheet's own title, is `Kinds`.
 
 ### 54 · What the numbers census left standing · *design*
 
@@ -1951,9 +1994,15 @@ batch could not settle:
    past ("recency is a feeling, history is a date"); a campaign's
    "Runs 6 more days · ends 8 Sep" (WalletCampaign, WalletCampaigns)
    is unruled — needs jakob's word on how a future moment is spelled.
-2. **Pair-string format has no drift guard.** Screens hand-write
-   pair strings by design (the bundle exposes leading-capital names
-   only; `formatTagPair`/`formatStancePair` stay master-side), so
-   nothing catches a screen typing `+0.4 / 0.9` one-decimal. A check
-   in the design gate that validates `pair=`/`value=` literals
-   against the format contract would close it.
+2. **Pair-string format has no drift guard where a pair is still
+   hand-written.** The list masters no longer take one: `TaggedRow`,
+   `ReferenceRow` and `StagedReference` take `{ pDirected, pInterest }`
+   and format it themselves (item 53), which closed the drift on every
+   list surface and is what surfaced the `+0.4 · 0.1` in
+   `StagedReference`'s own prompt sidecar. What is left is the
+   hand-drawn pad readouts — `RefPair`, `ComposePad`, `TagPad`,
+   `TagPadCompose`, `PadKeyAbsent` and the shared pad body — which
+   spell their face and their pair because the lookups and the
+   formatters are master-side helpers the bundle does not expose to
+   screens. A check in the design gate that validates those literals
+   against the format contract would close the rest.

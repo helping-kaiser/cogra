@@ -1163,13 +1163,14 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 
 [data-flow] { position: relative; }
 [data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
+.screen:not([data-geek="on"]) .cg-exact { display: none !important; }
   </style>
 </helmet>
-<div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
+<div class="screen" data-theme="{{theme}}" data-geek="{{geek}}" style="width: 390px; height: 844px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
 <header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:48px;padding:0 var(--space-3)"><div style="display:flex;align-items:center;gap:var(--space-2)"><a data-flow="1" href="#" aria-label="Back to the post" class="cg-state cg-focus" style="height:48px;width:48px;display:grid;place-items:center;border-radius:var(--radius-full);color:var(--text-secondary);text-decoration:none;flex:none"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></a><h1 style="margin:0;font-size:var(--text-title-large);line-height:var(--text-title-large--line-height);font-weight:var(--text-title-large--font-weight);white-space:nowrap">Add a tag</h1></div><button data-flow="2" type="button" aria-label="How searching works" class="cg-focus" style="display:grid;place-items:center;height:var(--touch-target-min);width:var(--touch-target-min);border:0;background:none;border-radius:var(--radius-full);cursor:pointer;flex:none"><span aria-hidden="true" style="display:grid;place-items:center;height:32px;width:32px;border-radius:var(--radius-full);border:1px solid var(--border-hairline);color:var(--primary);font-family:var(--font-sans);font-size:var(--text-label-large);font-weight:var(--text-label-large--font-weight)">?</span></button></header><div style="flex:none"><div style="padding:4px 16px 12px 16px"><div data-flow="3" style="display:flex;align-items:center;gap:var(--space-3);height:48px;padding:0 16px;border-radius:var(--radius-full);background:var(--surface-container-high);color:var(--on-surface);box-sizing:border-box"><span style="display:inline-flex;color:var(--text-secondary)" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg></span><span style="font-size:var(--text-body-large);line-height:var(--text-body-large--line-height);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">salt</span><span aria-hidden="true" style="margin-left:auto;width:2px;height:22px;background:var(--primary);flex:none"></span></div></div></div><div style="flex:1;overflow:hidden;display:flex;flex-direction:column"><button data-flow="4" type="button" class="cg-state cg-focus" style="display:flex;align-items:center;gap:var(--space-3);min-height:var(--touch-target-min);width:100%;border:0;background:none;padding:var(--space-1) var(--space-6);cursor:pointer;font-family:var(--font-sans);color:var(--on-surface);text-align:left"><span style="height:32px;width:32px;flex:none;display:grid;place-items:center;border-radius:var(--radius-small);background:var(--surface-container-highest);color:var(--text-secondary);overflow:hidden;font-family:var(--font-sans);font-size:var(--text-title-medium);font-weight:var(--text-title-medium--font-weight)" aria-hidden="true">#</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">saltmaps</span></span><span aria-hidden="true" style="flex:none;display:inline-flex;color:var(--text-secondary)"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg></span></button><button data-flow="4" type="button" class="cg-state cg-focus" style="display:flex;align-items:center;gap:var(--space-3);min-height:var(--touch-target-min);width:100%;border:0;background:none;padding:var(--space-1) var(--space-6);cursor:pointer;font-family:var(--font-sans);color:var(--on-surface);text-align:left"><span style="height:32px;width:32px;flex:none;display:grid;place-items:center;border-radius:var(--radius-small);background:var(--surface-container-highest);color:var(--text-secondary);overflow:hidden;font-family:var(--font-sans);font-size:var(--text-title-medium);font-weight:var(--text-title-medium--font-weight)" aria-hidden="true">#</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">saltmarsh</span></span><span aria-hidden="true" style="flex:none;display:inline-flex;color:var(--text-secondary)"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg></span></button><button data-flow="4" type="button" class="cg-state cg-focus" style="display:flex;align-items:center;gap:var(--space-3);min-height:var(--touch-target-min);width:100%;border:0;background:none;padding:var(--space-1) var(--space-6);cursor:pointer;font-family:var(--font-sans);color:var(--on-surface);text-align:left"><span style="height:32px;width:32px;flex:none;display:grid;place-items:center;border-radius:var(--radius-small);background:var(--surface-container-highest);color:var(--text-secondary);overflow:hidden;font-family:var(--font-sans);font-size:var(--text-title-medium);font-weight:var(--text-title-medium--font-weight)" aria-hidden="true">#</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">saltcrust</span></span><span aria-hidden="true" style="flex:none;display:inline-flex;color:var(--text-secondary)"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg></span></button><button data-flow="4" type="button" class="cg-state cg-focus" style="display:flex;align-items:center;gap:var(--space-3);min-height:var(--touch-target-min);width:100%;border:0;background:none;padding:var(--space-1) var(--space-6);cursor:pointer;font-family:var(--font-sans);color:var(--on-surface);text-align:left"><span style="height:32px;width:32px;flex:none;display:grid;place-items:center;border-radius:var(--radius-small);background:var(--surface-container-highest);color:var(--text-secondary);overflow:hidden;font-family:var(--font-sans);font-size:var(--text-title-medium);font-weight:var(--text-title-medium--font-weight)" aria-hidden="true">#</span><span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">saltflats</span></span><span aria-hidden="true" style="flex:none;display:inline-flex;color:var(--text-secondary)"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg></span></button><div style="flex:1"></div><p style="margin:0;padding:8px 24px 16px;font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);color:var(--text-secondary)">Any name works, used or not — nobody owns a tag. It is yours the moment you sign.</p></div>
 </div>
 </x-dc>
-<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"},"geek":{"editor":"enum","options":["off","on"],"default":"off"}}'>
 class Component extends DCLogic {
   componentDidMount() {
     this.media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -1182,28 +1183,41 @@ class Component extends DCLogic {
       } else if (d && d.cograThemeQuery && this.state && this.state.remote && event.source) {
         try { event.source.postMessage({ cograTheme: this.state.remote }, "*"); } catch (e) {}
       }
+      if (d && (d.cograGeek === "off" || d.cograGeek === "on")) {
+        if (!this.state || this.state.remoteGeek !== d.cograGeek) this.setState({ remoteGeek: d.cograGeek });
+      } else if (d && d.cograGeekQuery && this.state && this.state.remoteGeek && event.source) {
+        try { event.source.postMessage({ cograGeek: this.state.remoteGeek }, "*"); } catch (e) {}
+      }
     };
     window.addEventListener("message", this.onMsg);
-    try {
-      const askWalk = (w, depth) => {
-        if (depth > 5) return;
-        let n = 0;
-        try { n = w.length; } catch (e) { n = 0; }
-        for (let i = 0; i < n; i++) {
-          let c = null;
-          try { c = w[i]; } catch (e) { c = null; }
-          if (c) {
-            try { c.postMessage({ cograThemeQuery: true }, "*"); } catch (e) {}
-            askWalk(c, depth + 1);
+    this.tell = (payload) => {
+      try {
+        const walk = (w, depth) => {
+          if (depth > 5) return;
+          let n = 0;
+          try { n = w.length; } catch (e) { n = 0; }
+          for (let i = 0; i < n; i++) {
+            let c = null;
+            try { c = w[i]; } catch (e) { c = null; }
+            if (c) {
+              try { c.postMessage(payload, "*"); } catch (e) {}
+              walk(c, depth + 1);
+            }
           }
-        }
-      };
-      askWalk(window.top, 0);
-    } catch (e) {}
+        };
+        walk(window.top, 0);
+      } catch (e) {}
+    };
+    this.tell({ cograThemeQuery: true });
+    this.tell({ cograGeekQuery: true });
   }
   componentDidUpdate(prevProps) {
     if (prevProps.theme !== this.props.theme && this.state && this.state.remote) {
       this.setState({ remote: null });
+    }
+    if (prevProps.geek !== this.props.geek) {
+      if (this.state && this.state.remoteGeek) this.setState({ remoteGeek: null });
+      if (this.tell) this.tell({ cograGeek: this.props.geek === "on" ? "on" : "off" });
     }
   }
   componentWillUnmount() {
@@ -1216,7 +1230,9 @@ class Component extends DCLogic {
     const dark = mode === "auto"
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
       : mode === "dark";
-    return { theme: dark ? "dark" : "light" };
+    const remoteGeek = this.state ? this.state.remoteGeek : null;
+    const geek = remoteGeek ?? this.props.geek ?? "off";
+    return { theme: dark ? "dark" : "light", geek };
   }
 }
 </script>

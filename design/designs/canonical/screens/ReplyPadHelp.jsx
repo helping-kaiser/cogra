@@ -30,8 +30,10 @@ export function Screen() {
             Toward what you answer
           </h2>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Replying also signs where you stand on the post you answer — for or against, and how much of it reaches you. It
-            starts at a gentle +0.10 / +0.10 and rides the same signature as your reply.
+            Replying also signs your opinion on the post you answer — for or against, and how much of it reaches you. It
+            starts at a gentle <span aria-hidden="true">🙂</span>
+            <ExactTail exact=" (+0.10 / +0.10)" spoken="Nice, For or against +0.10, How much reaches you +0.10" /> and rides
+            the same signature as your reply.
           </p>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
             Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.

@@ -41,19 +41,19 @@ export function Screen() {
         <SheetTitle>Tags &amp; references</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
           <SectionLabel>Tags</SectionLabel>
-          <ReferenceRow kind="topic" name="photography" pair="+0.40 / 0.90" onOpen={() => {}} />
-          <ReferenceRow kind="topic" name="coastroad" pair="+0.10 / 1.00" pending onOpen={() => {}} />
+          <ReferenceRow kind="topic" name="photography" pair={{ pDirected: 0.4, pInterest: 0.9 }} onOpen={() => {}} />
+          <ReferenceRow kind="topic" name="coastroad" pair={{ pDirected: 0.1, pInterest: 1 }} pending onOpen={() => {}} />
           <SectionLabel>References</SectionLabel>
-          <ReferenceRow kind="person" name="Mira Voss" src="inviter.jpg" pair="+0.10 / +0.10" onOpen={() => {}} />
-          <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" pair="+0.55 / +0.20" onOpen={() => {}} />
-          <ReferenceRow kind="post" name="Low tide at six tomorrow — anyone walking the flats?" pair="+0.10 / +0.10" onOpen={() => {}} />
-          <ReferenceRow kind="comment" name="That stretch after the second bend…" pair="+0.10 / +0.10" onOpen={() => {}} />
-          <ReferenceRow kind="proposal" name="Mark the flooded dip on the coast road" pair="+0.25 / +0.15" onOpen={() => {}} />
-          <ReferenceRow kind="item" name="Salt-crust rubbing, framed" pair="+0.10 / +0.10" onOpen={() => {}} />
-          <ReferenceRow kind="campaign" name="Coast road cleanup week" pair="+0.40 / +0.40" onOpen={() => {}} />
-          <ReferenceRow kind="offer" name="Offer on: Salt-crust rubbing, framed" pair="+0.10 / +0.10" onOpen={() => {}} />
-          <ReferenceRow kind="chat" name="Coast walkers" pair="+0.10 / +0.10" onOpen={() => {}} />
-          <ReferenceRow kind="message" name="Crust held all the way past the slipway today." sub="in Coast walkers" pair="+0.10 / +0.10" pending onOpen={() => {}} />
+          <ReferenceRow kind="person" name="Mira Voss" src="inviter.jpg" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
+          <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" pair={{ pDirected: 0.55, pInterest: 0.2 }} onOpen={() => {}} />
+          <ReferenceRow kind="post" name="Low tide at six tomorrow — anyone walking the flats?" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
+          <ReferenceRow kind="comment" name="That stretch after the second bend…" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
+          <ReferenceRow kind="proposal" name="Mark the flooded dip on the coast road" pair={{ pDirected: 0.25, pInterest: 0.15 }} onOpen={() => {}} />
+          <ReferenceRow kind="item" name="Salt-crust rubbing, framed" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
+          <ReferenceRow kind="campaign" name="Coast road cleanup week" pair={{ pDirected: 0.4, pInterest: 0.4 }} onOpen={() => {}} />
+          <ReferenceRow kind="offer" name="Offer on: Salt-crust rubbing, framed" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
+          <ReferenceRow kind="chat" name="Coast walkers" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
+          <ReferenceRow kind="message" name="Crust held all the way past the slipway today." sub="in Coast walkers" pair={{ pDirected: 0.1, pInterest: 0.1 }} pending onOpen={() => {}} />
         </div>
       </BottomSheet>
     </>

@@ -4,7 +4,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions" />
+      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 16px 24px", overflow: "hidden" }}>
         <PayoutAddress address={SOL_ADDRESS} label="Current" />
         <PayoutAddress
@@ -14,7 +14,7 @@ export function Screen() {
           caption="New payouts and tips land here. Every earlier address stays on your public record."
         />
 
-        <ActsCard rows={[{ label: "Address", value: "A new payout address", count: "1 action" }]} total="1 signed action" />
+        <ActsCard rows={[{ label: "Address", value: "A new payout address", count: "1" }]} total="1 thing, signed" />
 
         <div style={{ flex: 1 }} />
 
