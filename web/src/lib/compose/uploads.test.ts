@@ -44,7 +44,7 @@ function clientAnswering(data: unknown): ApolloClient {
  * A guard that only passes the block through. The refresh-and-replay it adds
  * is `guard.test.ts`'s subject; here it would only hide which call was made.
  */
-const guard: AuthGuard = { run: (block) => block() };
+const guard: AuthGuard = { run: (block) => block(), prime: async () => {} };
 
 /**
  * The server's answer to a request that carried no access token, exactly as
@@ -55,10 +55,21 @@ const unauthenticatedError = () =>
     errors: [{ message: "authentication required", extensions: { code: "UNAUTHENTICATED" } }],
   });
 
-/** A real guard over a refresher that always succeeds — the tab that heals. */
+/**
+ * A real guard over a refresher that always succeeds — the tab that heals.
+ *
+ * THE TAB ALREADY HOLDS A TOKEN, and that is what makes this the replay's own
+ * scenario rather than the prime's. A tab holding nothing never reaches the
+ * replay any more: `prime` fetches a token before the bytes go, precisely so a
+ * body is not sent once to be refused and once to land. What still reaches the
+ * replay is a token that was in hand and had EXPIRED — which cannot be known
+ * before the server says so, and is what these two pin.
+ */
 function guardThatRefreshes() {
   const refresh = vi.fn<Refresher["refresh"]>().mockResolvedValue(true);
-  return { guard: createGuard(createTokenStore(), { refresh }), refresh };
+  const store = createTokenStore();
+  store.save({ accessToken: "expired", refreshToken: "r", accountId: "acct-1" });
+  return { guard: createGuard(store, { refresh }), refresh };
 }
 
 /** Refuses the first call the way an anonymous request is refused, then answers. */
@@ -391,6 +402,33 @@ describe("runVideoUpload", () => {
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
     // The cover reports nothing at all: there was no cover to report on.
     expect(poster.seen).toEqual([]);
+  });
+
+  // F3-2, the slow half. A tab that LOADED rather than signed in holds no
+  // access token, and reads never wake the refresh because an anonymous reader
+  // is answered with nulls rather than a refusal — so the upload was the call
+  // that found out, after the whole clip had been transferred, and the replay
+  // sent it again. Measured against the dev API: an anonymous `uploadMedia`
+  // takes all 517,077 bytes of a 500 KB clip before answering UNAUTHENTICATED.
+  it("gets a token in hand BEFORE the clip's bytes go, not after", async () => {
+    encodable();
+    const order: string[] = [];
+    const client = {
+      mutate: vi.fn(async () => {
+        order.push("upload");
+        return { data: { uploadMedia: { media: { id: "media-video" }, userErrors: [] } } };
+      }),
+    } as unknown as ApolloClient;
+    const priming: AuthGuard = {
+      run: (block) => block(),
+      prime: async () => {
+        order.push("prime");
+      },
+    };
+
+    await runVideoUpload(client, priming, clip, null, steps().step, steps().step);
+
+    expect(order).toEqual(["prime", "upload"]);
   });
 
   it("still strips a faceless clip before it goes", async () => {

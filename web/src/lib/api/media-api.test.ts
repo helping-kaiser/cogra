@@ -110,7 +110,7 @@ describe("uploadMedia", () => {
 });
 
 describe("uploadVideo", () => {
-  const passthrough: AuthGuard = { run: (block) => block() };
+  const passthrough: AuthGuard = { run: (block) => block(), prime: async () => {} };
 
   /** A parts run with no network: what it was asked for, and what it answers. */
   function uploader(failure: string | null = null) {
@@ -290,6 +290,7 @@ describe("uploadVideo", () => {
         wrapped.push(`call-${n++}`);
         return block();
       },
+      prime: async () => {},
     };
     server.use(beginHandler(session()), completeHandler(payload(media("m"))));
     await uploadVideo(

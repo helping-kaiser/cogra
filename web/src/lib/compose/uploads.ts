@@ -89,6 +89,8 @@ export async function runUpload(
   }
 
   step({ kind: "uploading" });
+  // A token in hand before the bytes go, or they go twice — see `prime`.
+  await guard.prime();
   const uploaded = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
 
   if (uploaded.kind === "success") {
@@ -181,6 +183,7 @@ export async function runVideoUpload(
   }
 
   onCover({ kind: "uploading" });
+  await guard.prime();
   const poster = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
   if (poster.kind !== "success") {
     const message =
@@ -227,6 +230,9 @@ async function sendVideo(
   }
 
   onVideo({ kind: "uploading" });
+  // THE CLIP IS THE BODY WORTH PROTECTING. A picture sent twice costs a
+  // moment; a video sent twice is the whole wait, twice.
+  await guard.prime();
   const uploaded = await uploadVideo(client, guard, { blob: stripped.blob, coverMediaId });
 
   if (uploaded.kind === "success") {

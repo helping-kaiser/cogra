@@ -37,7 +37,7 @@ import { createWriteSigner, type WriteSigner } from "./write-signer";
 
 const server = startMswServer();
 
-const passthroughGuard: AuthGuard = { run: (block) => block() };
+const passthroughGuard: AuthGuard = { run: (block) => block(), prime: async () => {} };
 
 function client() {
   return new ApolloClient({
