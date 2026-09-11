@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { COMMENT_ATTACHMENT_CAP } from "./comment-media";
+import { COMMENT_BODY_MAX_CHARS } from "./reply-wizard";
 import {
   addTo,
   describedCount,
+  editBlocked,
   editClaims,
   galleryChanged,
   galleryOf,
@@ -120,6 +122,28 @@ describe("what the edit leaves standing", () => {
   it("sends a blank description as none, so a reader is told nothing rather than nothing-at-all", () => {
     const gallery = withAltText(landed(addTo(galleryOf([]), picked(1)), "new-0", "m9"), "new-0", "   ");
     expect(editClaims(gallery)).toEqual([{ mediaId: "m9", altText: null }]);
+  });
+});
+
+describe("editBlocked", () => {
+  it("is quiet on an empty gallery and words at the cap", () => {
+    expect(editBlocked(galleryOf([]), "x".repeat(COMMENT_BODY_MAX_CHARS))).toBeNull();
+  });
+
+  // Scalar values, matching the server's count: the astral fixture is the
+  // whole point.
+  it("refuses words past the cap, counting scalar values and not code units", () => {
+    const astralAtCap = "🧂".repeat(COMMENT_BODY_MAX_CHARS);
+    expect(astralAtCap.length).toBe(2 * COMMENT_BODY_MAX_CHARS);
+    expect(editBlocked(galleryOf([]), astralAtCap)).toBeNull();
+
+    const over = "x".repeat(COMMENT_BODY_MAX_CHARS + 1);
+    expect(editBlocked(galleryOf([]), over)).toMatch(/too long/i);
+  });
+
+  it("still reports a pending upload once the words are within the cap", () => {
+    const gallery = addTo(galleryOf([]), picked(1));
+    expect(editBlocked(gallery, "fine")).toBe("One picture is still uploading.");
   });
 });
 

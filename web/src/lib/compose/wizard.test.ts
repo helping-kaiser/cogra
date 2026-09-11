@@ -10,13 +10,16 @@ import { PUBLIC_DOMAIN } from "@/lib/license";
 import {
   advanceGate,
   attachmentClaims,
+  BODY_MAX_CHARS,
   bodyContent,
   bodyGate,
+  DESCRIPTION_MAX_CHARS,
   emptyWizard,
   nextStep,
   POST_ATTACHMENT_CAP,
   previousStep,
   sealGate,
+  SENSITIVE_REASON_MAX_CHARS,
   signedActions,
   stepsFor,
   TITLE_MAX_CHARS,
@@ -224,6 +227,24 @@ describe("the body XOR", () => {
     const blank = run(emptyWizard(), { type: "mode", mode: "words" }, { type: "words", words: "   " });
     expect(bodyGate(blank)).toEqual({ ok: false, reason: "The post needs a body." });
   });
+
+  // Scalar values, as every other cap: the astral fixture is the whole point.
+  it("refuses a words-mode body past the cap, counting scalar values and not code units", () => {
+    const withWords = (words: string) =>
+      run(emptyWizard(), { type: "mode", mode: "words" }, { type: "words", words });
+
+    const atCap = withWords("é".repeat(BODY_MAX_CHARS));
+    expect(bodyGate(atCap).ok).toBe(true);
+
+    const astralAtCap = withWords("🧂".repeat(BODY_MAX_CHARS));
+    expect(astralAtCap.words.length).toBe(2 * BODY_MAX_CHARS);
+    expect(bodyGate(astralAtCap).ok).toBe(true);
+
+    const over = withWords("x".repeat(BODY_MAX_CHARS + 1));
+    const blocked = bodyGate(over);
+    expect(blocked.ok).toBe(false);
+    expect(blocked.ok === false && blocked.reason).toMatch(/too long/i);
+  });
 });
 
 describe("the picker", () => {
@@ -425,7 +446,7 @@ describe("the details and the sheets", () => {
     expect(advanceGate(state).ok).toBe(true);
   });
 
-  // The one rule the details screen owns. The count is the SERVER'S unit —
+  // The rules the details screen owns. The count is the SERVER'S unit —
   // scalar values — so the astral fixture is the whole point: `.length` would
   // read it as double and refuse a title the server takes.
   it("refuses a title past the cap, counting scalar values and not code units", () => {
@@ -446,6 +467,56 @@ describe("the details and the sheets", () => {
     expect(blocked.ok === false && blocked.reason).toMatch(/too long/i);
     // The seal is the boundary the server sees, so it refuses it too.
     expect(sealGate(uploaded(over)).ok).toBe(false);
+  });
+
+  it("refuses a description past the cap, counting scalar values and not code units", () => {
+    const withDescription = (description: string) =>
+      run(
+        emptyWizard(),
+        picks(1),
+        { type: "description", description },
+        { type: "goto", step: "details" },
+      );
+
+    const atCap = withDescription("é".repeat(DESCRIPTION_MAX_CHARS));
+    expect(advanceGate(atCap).ok).toBe(true);
+    expect(sealGate(uploaded(atCap)).ok).toBe(true);
+
+    const astralAtCap = withDescription("🧂".repeat(DESCRIPTION_MAX_CHARS));
+    expect(astralAtCap.description.length).toBe(2 * DESCRIPTION_MAX_CHARS);
+    expect(advanceGate(astralAtCap).ok).toBe(true);
+
+    const over = withDescription("x".repeat(DESCRIPTION_MAX_CHARS + 1));
+    const blocked = advanceGate(over);
+    expect(blocked.ok).toBe(false);
+    expect(blocked.ok === false && blocked.reason).toMatch(/too long/i);
+    expect(sealGate(uploaded(over)).ok).toBe(false);
+  });
+
+  // The reason is entered on the seal itself, so the seal is the only place
+  // this cap is ever checked — and only while the mark is on: a leftover
+  // over-length reason from a mark switched back off is never sent, so it
+  // must not hold the seal shut.
+  it("refuses an over-length sensitive reason only while marked", () => {
+    const withReason = (sensitive: boolean, sensitiveReason: string) =>
+      uploaded(run(emptyWizard(), picks(1), { type: "sensitive", sensitive }, { type: "sensitiveReason", sensitiveReason }));
+
+    const atCap = withReason(true, "é".repeat(SENSITIVE_REASON_MAX_CHARS));
+    expect(sealGate(atCap).ok).toBe(true);
+
+    const astralAtCap = withReason(true, "🧂".repeat(SENSITIVE_REASON_MAX_CHARS));
+    expect(astralAtCap.sensitiveReason.length).toBe(2 * SENSITIVE_REASON_MAX_CHARS);
+    expect(sealGate(astralAtCap).ok).toBe(true);
+
+    const over = withReason(true, "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1));
+    const blocked = sealGate(over);
+    expect(blocked.ok).toBe(false);
+    expect(blocked.ok === false && blocked.reason).toMatch(/too long/i);
+
+    // The same over-length text, left behind by an unmark, is never sent and
+    // so never refuses.
+    const unmarked = withReason(false, "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1));
+    expect(sealGate(unmarked).ok).toBe(true);
   });
 
   it("starts on the account's default licence and the low-defaults stance", () => {

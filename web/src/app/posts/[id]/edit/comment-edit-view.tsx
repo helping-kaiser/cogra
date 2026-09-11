@@ -40,6 +40,7 @@ import {
   pictureId,
   type EditGallery,
 } from "@/lib/compose/comment-edit";
+import { commentBodyProblem } from "@/lib/compose/reply-wizard";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 
@@ -148,6 +149,7 @@ export function CommentEditView({
           multiline
           rows={3}
           testId="comment-edit-input"
+          error={commentBodyProblem(words) ?? undefined}
         />
 
         <div className="flex flex-col gap-1.5">

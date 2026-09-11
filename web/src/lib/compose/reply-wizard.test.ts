@@ -5,6 +5,8 @@ import { newReferenceDraft } from "@/lib/references/draft";
 import { COMMENT_ATTACHMENT_CAP } from "./comment-media";
 import {
   advanceGate,
+  COMMENT_BODY_MAX_CHARS,
+  commentBodyProblem,
   DEFAULT_REPLY_STANCE,
   emptyReply,
   nextStep,
@@ -18,6 +20,7 @@ import {
   type ReplyState,
   type ReplyTarget,
 } from "./reply-wizard";
+import { SENSITIVE_REASON_MAX_CHARS } from "./wizard";
 
 const POST_TARGET: ReplyTarget = {
   id: "post-1",
@@ -94,6 +97,13 @@ describe("the two stages", () => {
   });
 });
 
+describe("commentBodyProblem", () => {
+  it("is quiet at the cap and speaks past it", () => {
+    expect(commentBodyProblem("x".repeat(COMMENT_BODY_MAX_CHARS))).toBeNull();
+    expect(commentBodyProblem("x".repeat(COMMENT_BODY_MAX_CHARS + 1))).toMatch(/too long/i);
+  });
+});
+
 describe("the gate", () => {
   it("refuses a wordless comment — the words are the mandatory half", () => {
     const gate = advanceGate(emptyReply(POST_TARGET));
@@ -107,6 +117,42 @@ describe("the gate", () => {
 
   it("lets words alone through — the pictures are the optional half", () => {
     expect(advanceGate(withWords()).ok).toBe(true);
+  });
+
+  // Scalar values, as every other cap in the compose lanes: the astral
+  // fixture is the whole point — `.length` would read it as double and
+  // refuse words the server takes.
+  it("refuses words past the cap, counting scalar values and not code units", () => {
+    const atCap = withWords("é".repeat(COMMENT_BODY_MAX_CHARS));
+    expect(advanceGate(atCap).ok).toBe(true);
+
+    const astralAtCap = withWords("🧂".repeat(COMMENT_BODY_MAX_CHARS));
+    expect(astralAtCap.words.length).toBe(2 * COMMENT_BODY_MAX_CHARS);
+    expect(advanceGate(astralAtCap).ok).toBe(true);
+
+    const over = withWords("x".repeat(COMMENT_BODY_MAX_CHARS + 1));
+    const blocked = advanceGate(over);
+    expect(blocked.ok).toBe(false);
+    expect(blocked.ok === false && blocked.reason).toMatch(/too long/i);
+    // The seal is the boundary the server sees, so it refuses it too.
+    expect(sealGate(over).ok).toBe(false);
+  });
+
+  // The reason is entered on the seal itself, so the seal is the only place
+  // this cap is checked — and only while the mark is on, exactly as the post
+  // wizard's own sealGate: a leftover reason from a mark switched back off is
+  // never sent, so it must not hold the seal shut.
+  it("refuses an over-length sensitive reason only while marked", () => {
+    const withReason = (sensitive: boolean, reason: string) =>
+      reduce(withWords(), { type: "sensitive", sensitive }, { type: "sensitiveReason", reason });
+
+    const over = withReason(true, "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1));
+    const blocked = sealGate(over);
+    expect(blocked.ok).toBe(false);
+    expect(blocked.ok === false && blocked.reason).toMatch(/too long/i);
+
+    const unmarked = withReason(false, "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1));
+    expect(sealGate(unmarked).ok).toBe(true);
   });
 
   // ReplyPicturesWeb's Next leads to the seal OR to the gated seal, so the
