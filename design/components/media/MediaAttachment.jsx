@@ -28,7 +28,7 @@ import { VideoTransport } from "./VideoControls.jsx";
      machine-guessed description.
    · THE RATIO VOCABULARY IS THE CROP RULING'S (readme §13, compose): tall 4:5,
      square 1:1, wide 1.91:1 — one shape for the whole post, chosen at the crop
-     step. `tall` is also the CAP: uncropped media (a comment's pictures never
+     step. `tall` is also the CLAMP: uncropped media (a comment's pictures never
      crop — jakob 2026-08-31) is not shown taller than 4:5; a 9:16 tile eats a
      phone screen whole, which is the opposite of a scrollable feed.
    · NOTHING IS LETTERBOXED (jakob 2026-09-03). A tile is filled, never fitted:
