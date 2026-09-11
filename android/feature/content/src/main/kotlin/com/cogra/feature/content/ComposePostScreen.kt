@@ -54,6 +54,8 @@ import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.media.MediaGallery
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
+import com.cogra.domain.content.MAX_POST_BODY_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.topics.TagNameProblem
 import com.cogra.domain.topics.canonicalTagName
@@ -199,14 +201,7 @@ fun ComposePostScreen(
                 return@Column
             }
             TitleField(state.title, state.titleTooLong, onTitleChange)
-            OutlinedTextField(
-                value = state.description,
-                onValueChange = onDescriptionChange,
-                label = { Text(stringResource(R.string.content_field_description)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("compose_description"),
-            )
+            DescriptionField(state.description, state.descriptionTooLong, onDescriptionChange)
             // WORDS XOR MEDIA (D16, api-spec.md "The body XOR"): a media
             // post's body IS its gallery, so this surface shows it
             // instead of a words field it could only refuse. It authors
@@ -229,19 +224,7 @@ fun ComposePostScreen(
                     modifier = Modifier.testTag("compose_media_note"),
                 )
             } else {
-                OutlinedTextField(
-                    value = state.body,
-                    onValueChange = onBodyChange,
-                    label = { Text(stringResource(R.string.content_field_body)) },
-                    minLines = 6,
-                    isError = state.emptyBody,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("compose_body"),
-                )
-                if (state.emptyBody) {
-                    ErrorLine(R.string.content_error_empty_body, "compose_empty_body")
-                }
+                BodyField(state.body, state.emptyBody, state.bodyTooLong, onBodyChange)
             }
             // Tags are never fields of the post record (post.md §3) —
             // but this is where an author changes them (F3): the
@@ -354,6 +337,60 @@ private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) 
         ErrorLine(
             text = stringResource(R.string.content_error_title_too_long, MAX_TITLE_CHARS),
             testTag = "compose_title_too_long",
+        )
+    }
+}
+
+/**
+ * The description and the one refusal it can earn — the field's own cap,
+ * said where the words are rather than at the submit.
+ */
+@Composable
+private fun DescriptionField(value: String, tooLong: Boolean, onValueChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(stringResource(R.string.content_field_description)) },
+        isError = tooLong,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("compose_description"),
+    )
+    if (tooLong) {
+        ErrorLine(
+            text = stringResource(R.string.content_error_description_too_long, MAX_DESCRIPTION_CHARS),
+            testTag = "compose_description_too_long",
+        )
+    }
+}
+
+/**
+ * The words body and the one slot its two refusals share: an empty body
+ * and an over-long one are both the server's `["content"]` refusal, and a
+ * second independent line would say the same thing twice.
+ */
+@Composable
+private fun BodyField(
+    value: String,
+    empty: Boolean,
+    tooLong: Boolean,
+    onValueChange: (String) -> Unit,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(stringResource(R.string.content_field_body)) },
+        minLines = 6,
+        isError = empty || tooLong,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("compose_body"),
+    )
+    when {
+        empty -> ErrorLine(R.string.content_error_empty_body, "compose_empty_body")
+        tooLong -> ErrorLine(
+            text = stringResource(R.string.content_error_body_too_long, MAX_POST_BODY_CHARS),
+            testTag = "compose_body_too_long",
         )
     }
 }

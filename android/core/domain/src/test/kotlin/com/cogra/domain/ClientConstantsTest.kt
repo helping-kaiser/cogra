@@ -8,7 +8,14 @@
 
 package com.cogra.domain
 
+import com.cogra.domain.content.MAX_BIO_CHARS
+import com.cogra.domain.content.MAX_COMMENT_BODY_CHARS
+import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
+import com.cogra.domain.content.MAX_DISPLAY_NAME_CHARS
+import com.cogra.domain.content.MAX_POST_BODY_CHARS
+import com.cogra.domain.content.MAX_SENSITIVE_REASON_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
+import com.cogra.domain.content.MAX_WEBSITE_URL_CHARS
 import com.cogra.domain.media.RESUMABLE_THRESHOLD_BYTES
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.signing.TERMINAL_REFUSALS
@@ -75,7 +82,20 @@ class ClientConstantsTest {
 
     @Test
     fun `the authored-text caps the composers refuse on are the contract's`() {
-        assertThat(MAX_TITLE_CHARS).isEqualTo(group("content").int("titleChars"))
+        val content = group("content")
+        assertThat(MAX_TITLE_CHARS).isEqualTo(content.int("titleChars"))
+        assertThat(MAX_DESCRIPTION_CHARS).isEqualTo(content.int("descriptionChars"))
+        assertThat(MAX_POST_BODY_CHARS).isEqualTo(content.int("postBodyChars"))
+        assertThat(MAX_COMMENT_BODY_CHARS).isEqualTo(content.int("commentBodyChars"))
+        assertThat(MAX_SENSITIVE_REASON_CHARS).isEqualTo(content.int("sensitiveReasonChars"))
+    }
+
+    @Test
+    fun `the authored-text caps the profile form refuses on are the contract's`() {
+        val profile = group("profile")
+        assertThat(MAX_DISPLAY_NAME_CHARS).isEqualTo(profile.int("displayNameChars"))
+        assertThat(MAX_BIO_CHARS).isEqualTo(profile.int("bioChars"))
+        assertThat(MAX_WEBSITE_URL_CHARS).isEqualTo(profile.int("websiteUrlChars"))
     }
 
     // Set equality, not containment: a code the backend added to the
