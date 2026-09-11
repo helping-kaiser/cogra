@@ -1308,11 +1308,22 @@ function SettingsBody() {
           <SettingsRow label="Default license" value="Public domain" onOpen={() => {}} />
         </SettingsGroup>
 
+        {/* THE EXACT VALUES ARE A READING SETTING, and a client-local one —
+            like the theme, never an L2 preference (jakob's ruling, backlog item
+            53). Off is the drawn state because glyph-first is the product's
+            default: the faces, the tag objects and the `graph` mark carry every
+            signal number until a reader asks for the digits. */}
         <SettingsGroup
           label="Reading"
-          footnote="Every feed starts from this. A change made inside a feed lasts until you change it back, on that device only."
+          footnote="Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device."
         >
           <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} />
+          <SettingsRow
+            checked={false}
+            label="Show exact values"
+            status="The numbers behind the faces and the glyphs."
+            onOpen={() => {}}
+          />
         </SettingsGroup>
 
         <SettingsGroup
