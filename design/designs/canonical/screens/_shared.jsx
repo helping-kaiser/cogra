@@ -499,36 +499,31 @@ function HelpDot({ ariaLabel = "How searching works", ...rest }) {
   return <SystemHelpDot ariaLabel={ariaLabel} {...rest} />;
 }
 
-/* The own-profile band cluster (profile round): the overflow and the gear as
-   the profile's own trailing pair — chats and the bell arrive built into the
-   band itself. Shared by the member and applicant own-profile boards.
+/* The own-profile band cluster (profile round): the gear as the profile's own
+   trailing control — chats and the bell arrive built into the band itself.
+   Shared by the member and applicant own-profile boards.
 
-   THE ⋮ IS WHERE YOUR PRIVATE STATE LIVES (readme §13, the private-viewer-state
-   round). Saved and History are lists only you can see, and a profile page has
-   no row to hang them off — its one wide control is the person. So they sit in
-   the band's menu with Share your profile, and the dot opens a sheet rather
-   than acting on its own.
-
-   The dot keeps the slot left of the gear. Material's app bar would put an
-   overflow last, and the gear has been the pair's right edge since the profile
-   round — moving it would move the thing every reader already aims at. The
-   pair is `trailing`, so the bell sits outboard of both: notifications are one
-   corner on every root, never a different corner per tab (`CograBand`). */
+   THE GEAR IS ALL THE BAND CARRIES (the band law, jakob 2026-09-11). Settings
+   is this tab's own screen-level control, so it is what `trailing` holds, and
+   the ⋮ went down to the actions row beside the other things the page does.
+   What the dot holds did not change — Saved, History, Share your profile, the
+   private state's one door (readme §13, the private-viewer-state round) — only
+   where the reader reaches for it. */
 function ProfileBand({ unread = false, children }) {
   return (
-    <CograBand
-      unread={unread}
-      trailing={
-        <span style={{ display: "flex", alignItems: "center" }}>
-          <BandIcon name="more_vert" label="More on your profile" />
-          <BandIcon name="settings" label="Settings" />
-        </span>
-      }
-    >
+    <CograBand unread={unread} trailing={<BandIcon name="settings" label="Settings" />}>
       {children}
     </CograBand>
   );
 }
+
+/* Your own profile's ⋮, in the one place it now stands: closing the actions
+   row, after Edit profile and Invites. Written once, so the three boards that
+   draw your own header cannot disagree about what the dot holds. */
+const ownProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More on your profile" items={OWN_PROFILE_MENU} />;
+
+/* Another person's ⋮, likewise: closing their actions row after Message. */
+const otherProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More about @ada" items={PROFILE_MENU} />;
 
 /* The chronicle's tab row (profile round, 2026-09-01): the `TabBar` master
    holding the chronicle's own three glyphs. What lives here is the tab data —
@@ -614,6 +609,7 @@ function ProfileOwnBody({ tail = null }) {
             onInvites={() => {}}
             onAvatarChange={() => {}}
             onCounts={() => {}}
+            menu={ownProfileMenu()}
           />
         </div>
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
@@ -632,16 +628,16 @@ function ProfileOwnBody({ tail = null }) {
 }
 
 /* Someone else's profile, whole — shared the moment its own overflow menu
-   needed the same page with a sheet over it (readme §13, the menus round). */
+   needed the same page with a sheet over it (readme §13, the menus round).
+
+   THE HEADER BAR CARRIES ONLY THE WAY BACK (the band law, jakob 2026-09-11).
+   The ⋮ came down into the actions row, where Message gave up the half of the
+   row it did not need; a detail surface's top bar is where a reader looks for
+   the way out, and this page's rare acts belong beside its common ones. */
 function ProfileOtherBody({ bundle } = {}) {
   return (
     <>
-      <PageHeader
-        title="@ada"
-        backHref="#"
-        backLabel="Back"
-        action={<OverflowMenu ariaLabel="More about @ada" items={PROFILE_MENU} />}
-      />
+      <PageHeader title="@ada" backHref="#" backLabel="Back" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
@@ -656,6 +652,7 @@ function ProfileOtherBody({ bundle } = {}) {
             onCounts={() => {}}
             onCommit={() => {}}
             onMessage={() => {}}
+            menu={otherProfileMenu()}
             showHandle={false}
           />
         </div>

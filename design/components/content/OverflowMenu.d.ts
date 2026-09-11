@@ -21,6 +21,14 @@ export interface OverflowMenuProps {
    * surface; `align` only applies to it.
    */
   presentation?: "sheet" | "menu";
+  /**
+   * Where the trigger stands. "header" (default) rides a 24px line — a card
+   * header, a `PageHeader` action — as a 48px box pulled back by -12px into
+   * the gutter around it. "row" stands in a row of controls, where a profile's
+   * ⋮ now lives: 40px of ink beside the row's buttons, no pull, the 48px
+   * target kept through `cg-hit`.
+   */
+  placement?: "header" | "row";
 }
 
 export declare function OverflowMenu(props: OverflowMenuProps): JSX.Element | null;

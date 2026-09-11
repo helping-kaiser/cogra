@@ -11,8 +11,24 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    product is stances on things, and a person is the most consequential thing to
    have one on. On a profile it wears the wide anchor — the row's one action,
    stretched to the row (jakob 2026-09-01, "the stance icon looks lost" at
-   anchor size). Everything rarer — mention, share — lives in the screen's
-   top-bar overflow, never down here.
+   anchor size).
+
+   THE ⋮ CLOSES THE ROW (the band law, jakob 2026-09-11). No band carries an
+   overflow any more and a detail surface's header gives one back to the page
+   it belongs to, so this row ends with the page's own dot: on your own profile
+   after Edit profile and Invites, on someone else's after Message. A profile's
+   rarer acts — mention, share, save, hide — are the page's, not the shell's,
+   and they now sit a thumb's width from the things they act beside.
+
+   MESSAGE IS SIZED BY ITS WORD, NOT BY THE ROW (jakob: "the message button
+   already is so wide.. with quite a lot of padding"). Splitting the row in
+   half gave one word a button the length of a paragraph; the room it gives
+   back is what the ⋮ costs. THE ROW IS STILL MODE-INVARIANT — the rule
+   `ProfileOtherHeld` was drawn to record. Message takes its content width in
+   both reading modes and the anchor takes the remainder, so the exact pair a
+   geek reader turns on paints INSIDE the anchor's own space and nothing in the
+   row moves. Sizing Message by content makes that stronger than `flex: 1`
+   did: a width derived from one word cannot depend on what the anchor says.
 
    THE SHAPE IS THE COMPACT ONE (jakob 2026-09-01): avatar left, the name and
    the figures in the column beside it — the layout every social profile has
@@ -69,6 +85,7 @@ export function ProfileHeader({
   onInvites,
   onAvatarChange,
   onCounts,
+  menu,
   showHandle = true,
 }) {
   const name = displayName && displayName.trim() ? displayName : handle;
@@ -139,7 +156,9 @@ export function ProfileHeader({
           Message stands beside it, the pair every social profile puts here
           (jakob 2026-09-01) — the stance where Follow goes, the chat one tap
           away. On your own there is no opinion to give, so the row is the two
-          things you do to your own record. Everything shares the width. */}
+          things you do to your own record. The page's ⋮ closes the row in
+          either case. The widths: the stance takes what is left, Message takes
+          its word, and your own two buttons share what the dot leaves. */}
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
         {own ? (
           <>
@@ -152,12 +171,13 @@ export function ProfileHeader({
               <StanceControl wide targetLabel={"@" + handle} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
             </div>
             {onMessage && (
-              <Button variant="outline" onClick={onMessage} style={{ flex: 1 }}>
+              <Button variant="outline" onClick={onMessage} style={{ flex: "none" }}>
                 Message
               </Button>
             )}
           </>
         )}
+        {menu}
       </div>
     </header>
   );

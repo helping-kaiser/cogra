@@ -25,6 +25,7 @@ export function Screen() {
             onInvites={() => {}}
             onAvatarChange={() => {}}
             onCounts={() => {}}
+            menu={ownProfileMenu()}
           />
         </div>
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />

@@ -30,7 +30,8 @@ export interface ProfileHeaderProps {
   taught?: boolean;
   bundle?: StanceBundle | null;
   onCommit?: (pick: StancePair, bundle: StanceBundle) => void;
-  /** Someone else's profile only, beside the stance control. */
+  /** Someone else's profile only, beside the stance control. Sized by its own
+   *  word, not by the row — the width the ⋮ needs comes from here. */
   onMessage?: () => void;
   onEdit?: () => void;
   /** The viewer's own profile only, beside Edit profile. */
@@ -39,6 +40,10 @@ export interface ProfileHeaderProps {
   onAvatarChange?: () => void;
   /** Opens the figures as one tap target, both directions, on the stances page. */
   onCounts?: () => void;
+  /** The page's own overflow, closing the actions row — an `OverflowMenu` with
+   *  `placement="row"`. No band carries a ⋮ (the band law), so a profile's
+   *  rare acts hang off the row that holds its other acts. */
+  menu?: React.ReactNode;
   /** Off where the screen's own top bar already carries @handle. Defaults to true. */
   showHandle?: boolean;
 }
