@@ -198,11 +198,13 @@ describe("a clip's shape", () => {
     expect(screen.getByTestId("thread").className).toContain("object-cover");
   });
 
-  it("reserves the clip's own shape, so the height cap crops instead of squeezing", () => {
+  it("reserves the clip's own shape, full-width and uncapped", () => {
     render(<MediaTile src={CLIP} mimeType="video/mp4" sourceRatio={16 / 9} testId="moving" />);
     const frame = screen.getByTestId("moving-frame");
     expect(frame.style.aspectRatio).toBe(`${16 / 9} / 1`);
-    expect(frame.style.maxHeight).toBe("var(--media-max-height)");
+    // The default frame's ratio is already clamped by `tileRatio`, so no
+    // separate height cap competes with it here.
+    expect(frame.style.maxHeight).toBe("");
     expect(screen.getByTestId("moving").className).toContain("size-full");
   });
 

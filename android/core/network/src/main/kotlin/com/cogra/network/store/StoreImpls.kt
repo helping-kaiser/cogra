@@ -10,6 +10,7 @@ import com.cogra.crypto.encodeProposal
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.IdentityStore
+import com.cogra.domain.store.SessionRead
 import com.cogra.domain.store.TokenStore
 import java.util.Base64
 import javax.inject.Inject
@@ -51,21 +52,33 @@ private fun unb64(s: String): ByteArray = Base64.getDecoder().decode(s)
 class TokenStoreImpl @Inject constructor(private val store: EncryptedStore) : TokenStore {
 
     override val tokens: Flow<AuthTokens?> = store.watch(KEY).map { bytes ->
-        bytes?.let { decodeTokens(it) }
+        bytes?.let { (decodeTokens(it) as? SessionRead.Present)?.tokens }
     }
 
-    override suspend fun current(): AuthTokens? = store.get(KEY)?.let { decodeTokens(it) }
+    override suspend fun current(): AuthTokens? = (read() as? SessionRead.Present)?.tokens
 
-    /** A record that decodes to garbage is no session — marked, never fatal. */
-    private suspend fun decodeTokens(bytes: ByteArray): AuthTokens? {
+    /**
+     * The DataStore read suspends until the first load has finished, so
+     * this answers what the device holds and never "nothing yet".
+     */
+    override suspend fun read(): SessionRead = when (val stored = store.read(KEY)) {
+        StoredValue.Absent -> SessionRead.None
+        StoredValue.Unreadable -> SessionRead.Unreadable
+        is StoredValue.Present -> decodeTokens(stored.bytes)
+    }
+
+    /** A record that decodes to garbage is a fault — marked, never fatal. */
+    private suspend fun decodeTokens(bytes: ByteArray): SessionRead {
         val stored = try {
             json.decodeFromString<StoredTokens>(bytes.decodeToString())
         } catch (_: SerializationException) {
             store.markStorageLost()
-            return null
+            return SessionRead.Unreadable
         }
-        val account = stored.account ?: return null
-        return AuthTokens(stored.access, stored.refresh, account)
+        // A pre-multi-account record is deliberately no session at all,
+        // not a fault: the next login overwrites it.
+        val account = stored.account ?: return SessionRead.None
+        return SessionRead.Present(AuthTokens(stored.access, stored.refresh, account))
     }
 
     override suspend fun save(tokens: AuthTokens) {
