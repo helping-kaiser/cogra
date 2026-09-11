@@ -520,7 +520,7 @@ which is what makes a guess expensive.
 
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
-| `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
+| `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post score and its explanation is four screens deep | — |
 | `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
@@ -862,7 +862,7 @@ sum actually exceeded it.
 "Intentional additions" above. All four are §6 requirements the product
 has not met yet, not new ideas.
 
-**One affordance row.** The stance control leads, the Post Score follows,
+**One affordance row.** The stance control leads, the Post score follows,
 then anything else the post grows — so each surface stops arranging them
 itself. Nothing in that row may take `primaryContainer`; the stance knob
 already spends the screen's one loud surface.
@@ -873,7 +873,7 @@ It is now a `License terms` item in the new `OverflowMenu`, which every
 post and comment carries — the row carries what a reader reaches for, the
 menu carries the rest.
 
-**The Post Score is a card prop, shown as `graph_3` plus the number.**
+**The Post score is a card prop, shown as `graph_3` plus the number.**
 Not the word "Score", and never an emoji: the product's only emoji
 vocabulary is the stance readout, and a second face on the same card
 would make both unreadable. Uncapped, negative allowed, never coloured —
@@ -1253,7 +1253,7 @@ as Q46 in docs/open-questions.md):
   maps of the coast road*").
 - **Ranks on every kind**, quiet viewer-relative numbers on the
   row's right edge; explained by the "?", drill-down waits for the
-  Post Score screens (item 13).
+  Post score screens (item 13).
 - **The Explore tab at rest**: recent searches (device-local) plus
   a PROMINENT entry into THE SKY — the 3D graph view (item 16) — never a
   small side thing. Typing drops the Sky entry off the bottom
@@ -1713,7 +1713,7 @@ entry first". What stands:
   wallet's traceability promise owes,
   the settings and invites screens, the chat surface (its band entry
   now on every tab root), the item / offer surfaces, the Sky
-  (item 16), and item 13's Post Score drill-down. Cross-flow reuse
+  (item 16), and item 13's Post score drill-down. Cross-flow reuse
   is wired as edges into the master boards (the describe sheet, the
   gated seal, the license / sensitive sheets, the key-absent seal,
   the stance pad, and the three pattern boards — the guest gate, the
@@ -3208,7 +3208,7 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   drawn, then jakob's review removed the follow anchors and the
   comment's reply affordances), 79 →
   **56 gaps**, and flows 58/53/5 → **58/55/3**. The twenty-four close
-  and one opens — `TagPage`'s own Post Score row, which every board
+  and one opens — `TagPage`'s own Post score row, which every board
   drawing a post card carries. `open-a-topic` and `add-a-topic` resolve
   for the first time, which is the round's headline: both had been
   blocked since the flow set was authored. No hand-drawn board moved a
