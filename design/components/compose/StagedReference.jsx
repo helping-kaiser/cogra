@@ -2,6 +2,7 @@ import React from "react";
 import { NodeMark } from "../content/ReferenceRow.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { BUTTON_CLASS } from "../core/Button.jsx";
+import { formatStancePair, SR_ONLY } from "../stance/StanceReadout.jsx";
 
 /* A reference already staged in a composer (item 17, the conformance round):
    the citation the author has committed to, shown back to them — the kind's
@@ -34,8 +35,15 @@ import { BUTTON_CLASS } from "../core/Button.jsx";
 
 /* The row minus its ×: the mark, what it points at, and the pair it signs. One
    markup whether or not it is pressable, so the drawing cannot drift between
-   the two states. */
-function Body({ kind, name, sub, src, value }) {
+   the two states.
+
+   THE PAIR ARRIVES AS NUMBERS AND THE ROW FORMATS IT (backlog item 53). A
+   citation signs both axes (`ReferenceInput`, api-spec.md), so it wears the
+   stance shape; the digits ride a `cg-exact` span and paint only in geek mode
+   (readme §13), with a screen-reader-only twin so nothing spoken moves with
+   the setting. */
+function Body({ kind, name, sub, src, pair }) {
+  const exact = pair ? formatStancePair(pair) : null;
   return (
     <>
       <NodeMark kind={kind} name={name} src={src} />
@@ -43,15 +51,18 @@ function Body({ kind, name, sub, src, value }) {
         <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
         {sub && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{sub}</span>}
       </span>
-      {value && (
-        <span style={{ flex: "none", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{value}</span>
+      {exact && (
+        <>
+          <span className="cg-exact" aria-hidden="true" style={{ flex: "none", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{exact}</span>
+          <span style={SR_ONLY}>{exact}</span>
+        </>
       )}
     </>
   );
 }
 
-export function StagedReference({ kind = "post", name, sub, src, value, onRemove, onEdit }) {
-  const body = <Body kind={kind} name={name} sub={sub} src={src} value={value} />;
+export function StagedReference({ kind = "post", name, sub, src, pair, onRemove, onEdit }) {
+  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} />;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}>
       {/* The button adds no box of its own — no border, no background, no
