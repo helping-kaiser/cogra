@@ -8,7 +8,7 @@
 <style>body{padding:16px}.col{display:flex;flex-direction:column;gap:14px;max-width:420px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.bar{border-radius:var(--radius-medium);overflow:hidden}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { PageHeader, BottomNav, Icon, Button, SegmentedFilter, TabBar, BorrowedViewBand, ALL_SLOTS } = window.CoGraDesignSystem_9084ba;
+const { PageHeader, BottomNav, Icon, Button, SegmentedFilter, TabBar, BorrowedViewBand, DeletionBand, ALL_SLOTS } = window.CoGraDesignSystem_9084ba;
 const link = {color:"var(--primary)",fontSize:"var(--text-label-large)",textDecoration:"none"};
 function Demo(){
   const [active,setActive]=React.useState("feed");
@@ -32,6 +32,10 @@ function Demo(){
     <BorrowedViewBand handle="mira" displayName="Mira Halvorsen" actionLabel="Sign in or join"/>
     <span className="lbl">The applicant reading — same vantage, no join entry</span>
     <BorrowedViewBand handle="mira" line="Browsing from @mira's view while your application lands."/>
+    <span className="lbl">Deletion band — the borrowed band's sibling: a confirmed deletion's countdown and its cancel, on every logged-in surface until the deadline. Filled and on-surface where that one is transparent and secondary, and never error-coloured — the reader asked for this</span>
+    <DeletionBand days={6}/>
+    <span className="lbl">The content-level reading — the opt-in named, the same band</span>
+    <DeletionBand days={1} content/>
     <span className="lbl">Bottom bar — what ships today: feed, the compose action, profile</span>
     <div className="bar"><BottomNav inline active={active} onSelect={setActive}/></div>
     <span className="lbl">Bottom bar — all five slots, once Explore and Wallet have surfaces</span>
