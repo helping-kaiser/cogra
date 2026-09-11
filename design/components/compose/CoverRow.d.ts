@@ -14,7 +14,9 @@ export interface CoverRowProps {
   /** The field label above the strip. */
   label?: string;
   /** Up to four samples — 1s, 10%, 50%, 90%. Samples that land on the same
-   *  frame collapse, so fewer tiles is a valid strip, never a gap. */
+   *  frame collapse, so fewer tiles is a valid strip, never a gap. Empty is
+   *  the capture-fails state: the gallery tile stands alone, and `caption`
+   *  says why. */
   frames?: CoverFrame[];
   /** Index of the outlined frame; the rest sit at 65%. */
   selected?: number;
