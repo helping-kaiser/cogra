@@ -1421,14 +1421,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">#SaltMaps<", tag: "div" },
     { n: 4, find: ">saltmaps<", tag: "button" },
   ],
-  TagPair: [
-    { n: 1, find: 'data-field="How much it is about this"', tag: "div" },
-    { n: 1, find: 'data-field="How sure you are"', tag: "div" },
+  TagPad: [
+    { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  // The citation's twin of TagPair — the pad instead of the sliders, because
-  // both of a citation's axes are signed. Same three controls.
+  // The same sheet with the pick at the withdrawal. The warning is prose, not a
+  // control, so the three live things are the ones `TagPad` already has.
+  TagPadWithdraw: [
+    { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
+    { n: 2, find: ">Done</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The citation's twin of TagPad — the same pad over two signed axes, because
+  // both of a citation's parameters are signed. Same three controls.
   RefPair: [
     { n: 1, find: 'aria-label="The pair this citation signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
