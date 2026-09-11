@@ -1,0 +1,132 @@
+<!-- @dsCard group="Components" viewport="1100x720" name="Tag anchor map" subtitle="Where the thirteen tag anchors sit — a positions reference for implementers. Never drawn in the product." -->
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+body{margin:0;padding:16px;background:var(--surface);color:var(--on-surface)}
+.grid{display:flex;gap:28px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:10px}
+.lbl{font-size:var(--text-label-small);letter-spacing:var(--text-label-small--letter-spacing);font-weight:var(--text-label-small--font-weight);color:var(--text-secondary)}
+.note{max-width:34rem;margin:0;font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);color:var(--text-secondary)}
+/* The faces overflow the drawn square at the extremes — an anchor at 0.95 really
+   does sit at the edge — so the field keeps a margin to spill into. */
+.bleed{padding:26px}
+.field{position:relative;border-radius:var(--radius-large);background:var(--surface-container-highest);overflow:visible}
+.axes{position:absolute;inset:8px;font-size:var(--text-label-small);color:var(--text-secondary)}
+.axes span{position:absolute;background:var(--surface-container-highest);padding:0 2px}
+/* The mark's FACE centre is the anchor's coordinate; the number hangs below it. */
+.mark{position:absolute;transform:translateX(-50%);margin-top:-11px;display:flex;flex-direction:column;align-items:center;line-height:1}
+.face{font-size:20px;height:22px;line-height:22px;opacity:var(--opacity-resting-face);filter:grayscale(1)}
+.num{font-size:9px;letter-spacing:0.2px;color:var(--text-secondary);white-space:nowrap}
+/* The withdrawal edge. Relevance 0 is the axis's own end rather than ground the
+   knob passes over, so it is marked at the field's border and named, never drawn
+   as one of the interior dead-ground lines a signed axis carries. */
+.edge{position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--text-secondary);opacity:0.45}
+.edgelbl{position:absolute;left:0;top:-20px;font-size:9px;letter-spacing:0.2px;color:var(--text-secondary);white-space:nowrap}
+.words{border-collapse:collapse;font-size:var(--text-body-small)}
+.words td{padding:2px 10px 2px 0;vertical-align:baseline}
+.words td.g{font-size:16px}
+.words td.w{color:var(--text-secondary)}
+.words th{padding:8px 10px 2px 0;text-align:left;font-size:var(--text-label-small);letter-spacing:var(--text-label-small--letter-spacing);font-weight:var(--text-label-small--font-weight);color:var(--text-secondary)}
+</style>
+</head><body><div id="root"></div>
+<script type="text/babel">
+const NS = window.CoGraDesignSystem_9084ba;
+const { TAG_ANCHORS } = NS;
+
+const FIELD = 560;
+/* The pad's own mapping, over the reach a Tag's census gives it: the drawn field
+   IS the value space, and both axes run 0 to 1, so a coordinate is a plain
+   percentage of the square with no centre to offset from. */
+const xOf = (pDirected) => pDirected * 100;
+const yOf = (pInterest) => 100 - pInterest * 100;
+const rel = (v) => new Intl.NumberFormat(undefined, { signDisplay: "always", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+const con = (v) => new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+
+/* The three certainty bands, top down, and the floater after them. */
+const ROWS = [
+  { label: "Certain", at: 0.9 },
+  { label: "Fairly sure", at: 0.55 },
+  { label: "Guessing", at: 0.15 },
+];
+
+function Field() {
+  return (
+    <div className="bleed">
+      <div className="field" style={{ width: FIELD, height: FIELD }}>
+        <div className="edge" />
+        <span className="edgelbl">relevance 0 — the withdrawal</span>
+        <div className="axes">
+          <span style={{ left: 0, top: "50%", transform: "translateY(-50%)" }}>Barely</span>
+          <span style={{ right: 0, top: "50%", transform: "translateY(-50%)" }}>Entirely</span>
+          <span style={{ left: "50%", top: 0, transform: "translateX(-50%)" }}>Certain</span>
+          <span style={{ left: "50%", bottom: 0, transform: "translateX(-50%)" }}>Guessing</span>
+        </div>
+        {TAG_ANCHORS.map((a) => (
+          <div key={a.emoji} className="mark" style={{ left: `${xOf(a.pDirected)}%`, top: `${yOf(a.pInterest)}%` }} title={a.label}>
+            <span className="face">{a.emoji}</span>
+            <span className="num">{`${rel(a.pDirected)} / ${con(a.pInterest)}`}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Words() {
+  return (
+    <table className="words">
+      <tbody>
+        {ROWS.map((row) => (
+          <React.Fragment key={row.label}>
+            <tr><th colSpan={2}>{row.label}</th></tr>
+            {TAG_ANCHORS.filter((a) => a.pInterest === row.at).map((a) => (
+              <tr key={a.emoji}>
+                <td className="g">{a.emoji}</td>
+                <td className="w">{a.label}</td>
+              </tr>
+            ))}
+          </React.Fragment>
+        ))}
+        <tr><th colSpan={2}>The floating thirteenth</th></tr>
+        {TAG_ANCHORS.filter((a) => !ROWS.some((r) => r.at === a.pInterest)).map((a) => (
+          <tr key={a.emoji}>
+            <td className="g">{a.emoji}</td>
+            <td className="w">{a.label}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function Demo() {
+  return (
+    <div className="grid">
+      <div className="col">
+        <span className="lbl">The field — four aboutness bands by three certainty bands, plus the floater</span>
+        <Field />
+      </div>
+      <div className="col">
+        <span className="lbl">The words each face speaks</span>
+        <Words />
+        <p className="note">
+          A reference for implementers, not a surface. The product field draws its four axis
+          words and nothing else; these faces appear one at a time, as the readout above the
+          pad. Each mark carries its exact pair — relevance signed, confidence unsigned, the
+          two shapes <code>formatTagPair</code> assigns.
+        </p>
+        <p className="note">
+          Not one glyph here appears in the stance table, and that is the contract rather than
+          a coincidence of picking: a face means one family or the other, never both. The table
+          lives in <code>StanceReadout.jsx</code>, which this card reads.
+        </p>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<Demo />);
+</script></body></html>
