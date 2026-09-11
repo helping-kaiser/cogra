@@ -2,7 +2,7 @@
 <baseline version="1.0">
     <file name="src/main/kotlin/com/cogra/network/Mapping.kt">
         <error line="18" column="1" source="standard:import-ordering" />
-        <error line="70" column="5" source="standard:class-signature" />
+        <error line="71" column="5" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/network/auth/Auth.kt">
         <error line="12" column="1" source="standard:import-ordering" />
@@ -30,31 +30,31 @@
     </file>
     <file name="src/main/kotlin/com/cogra/network/repo/RepositoryImpls.kt">
         <error line="6" column="1" source="standard:import-ordering" />
-        <error line="140" column="5" source="standard:class-signature" />
         <error line="141" column="5" source="standard:class-signature" />
-        <error line="141" column="34" source="standard:class-signature" />
         <error line="142" column="5" source="standard:class-signature" />
-        <error line="221" column="5" source="standard:class-signature" />
+        <error line="142" column="34" source="standard:class-signature" />
+        <error line="143" column="5" source="standard:class-signature" />
         <error line="222" column="5" source="standard:class-signature" />
-        <error line="222" column="34" source="standard:class-signature" />
         <error line="223" column="5" source="standard:class-signature" />
-        <error line="271" column="5" source="standard:class-signature" />
+        <error line="223" column="34" source="standard:class-signature" />
+        <error line="224" column="5" source="standard:class-signature" />
         <error line="272" column="5" source="standard:class-signature" />
-        <error line="272" column="34" source="standard:class-signature" />
         <error line="273" column="5" source="standard:class-signature" />
-        <error line="328" column="5" source="standard:class-signature" />
+        <error line="273" column="34" source="standard:class-signature" />
+        <error line="274" column="5" source="standard:class-signature" />
         <error line="329" column="5" source="standard:class-signature" />
-        <error line="329" column="34" source="standard:class-signature" />
         <error line="330" column="5" source="standard:class-signature" />
-        <error line="495" column="5" source="standard:class-signature" />
-        <error line="496" column="5" source="standard:class-signature" />
-        <error line="496" column="34" source="standard:class-signature" />
-        <error line="497" column="5" source="standard:class-signature" />
-        <error line="763" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="860" column="5" source="standard:class-signature" />
-        <error line="861" column="5" source="standard:class-signature" />
-        <error line="861" column="34" source="standard:class-signature" />
-        <error line="862" column="5" source="standard:class-signature" />
+        <error line="330" column="34" source="standard:class-signature" />
+        <error line="331" column="5" source="standard:class-signature" />
+        <error line="505" column="5" source="standard:class-signature" />
+        <error line="506" column="5" source="standard:class-signature" />
+        <error line="506" column="34" source="standard:class-signature" />
+        <error line="507" column="5" source="standard:class-signature" />
+        <error line="791" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="910" column="5" source="standard:class-signature" />
+        <error line="911" column="5" source="standard:class-signature" />
+        <error line="911" column="34" source="standard:class-signature" />
+        <error line="912" column="5" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/network/repo/Stance.kt">
         <error line="1" column="1" source="standard:filename" />

@@ -11,11 +11,29 @@ query Me {
     displayName {
       value
     }
+    # WHOSE KEY THE ACCOUNT ACCEPTS. A custody slot holding a key says
+    # nothing on its own about whose it is, so the signer compares this
+    # against the slot's public half before it signs anything
+    # (`key-usable.ts`). Null is the pre-attach window.
+    actorPubkey
     accountState
     hasReciprocated
     invitedBy {
       id
       handle
+    }
+  }
+}
+
+# Whose view this reader browses from (api-spec.md "Queries") — the one
+# read behind the borrowed-view band, and the only account-shaped read a
+# signed-out reader makes. Null once their own view exists.
+query BorrowedView {
+  borrowedView {
+    id
+    handle
+    displayName {
+      value
     }
   }
 }
@@ -30,9 +48,7 @@ mutation ConfirmPasswordReset($input: ConfirmPasswordResetInput!) {
   confirmPasswordReset(input: $input) {
     ok
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -48,9 +64,7 @@ mutation CreateKeyBackupChallenge {
   createKeyBackupChallenge {
     challenge
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -59,9 +73,7 @@ mutation UploadKeyBackup($input: UploadKeyBackupInput!) {
   uploadKeyBackup(input: $input) {
     ok
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -70,9 +82,7 @@ mutation ChangePassword($input: ChangePasswordInput!) {
   changePassword(input: $input) {
     ok
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -84,9 +94,7 @@ mutation ChangeHandle($input: ChangeHandleInput!) {
       handle
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }
@@ -103,9 +111,7 @@ mutation ConfirmEmailChange($input: ConfirmEmailChangeInput!) {
       id
     }
     userErrors {
-      message
-      code
-      field
+      ...UserErrorFields
     }
   }
 }

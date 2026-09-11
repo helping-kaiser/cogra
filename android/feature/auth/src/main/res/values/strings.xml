@@ -23,6 +23,7 @@
     <string name="reset_requested">If that address has an account, a reset token is on its way.</string>
     <string name="reset_token">Reset token</string>
     <string name="reset_new_password">New password</string>
+    <string name="reset_password_rules">At least 12 characters.</string>
     <string name="reset_confirm">Set new password</string>
     <string name="reset_token_invalid">The reset token is invalid or expired.</string>
 

@@ -1,6 +1,21 @@
 //! Genesis-bootstrap integration: the fresh run, the both-sides gate, the
 //! idempotent re-run, the crash-repair path, and the unrepairable state
 //! (architecture.md "Genesis bootstrap").
+//!
+//! **Why this suite writes `l1_*` SQL directly** — the one place outside
+//! `l1-standin` that does, and a deliberate exception to CLAUDE.md's SQL
+//! boundary rather than an oversight. What is under test is what the
+//! bootstrap does when the *substrate* is in a state it did not put it
+//! in: a wiped mirror, an act sealed but never approved, an author
+//! sequence occupied by something else. The seam has no operation for
+//! any of that — by design, since a substrate does not offer "forget the
+//! last hour" — so the only way to build those states is to write the
+//! tables. The exception is bounded: it lives in test code, it never
+//! ships, and it goes away with the tables at the swap, when the
+//! bootstrap's crash windows have to be re-tested against whatever the
+//! real Layer 1 offers instead. `l1-standin`'s `table_ownership` test
+//! guards the migration set, which is the copy that outlives the swap;
+//! this file is not in its scope and does not need to be.
 
 use api::bootstrap::{BootstrapError, BootstrapOutcome, GenesisInput, ensure_operator_login, run};
 use api::l1::{L1Boundary, StandInBoundary};
@@ -147,6 +162,55 @@ async fn crash_before_the_l1_half_is_repaired(pool: PgPool) {
             .await
             .expect("gate")
     );
+}
+
+/// The repair path is where a changed input is most dangerous: the
+/// stored parameter rows are reloaded only for keys, and the Charter
+/// about to be sealed is built wholly from the current input — so
+/// without a check the immutable record would permanently contradict the
+/// rows already committed. `guidelines_hash` is recomputed from a file on
+/// every invocation, which is how the values genuinely differ across
+/// runs in production.
+///
+/// A repair run whose genesis input disagrees with what the first run committed is refused rather than sealing the contradiction.
+/// ´claim:bootstrap:a-changed-genesis-input-is-refused-on-repair´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_repair_run_with_changed_input_is_refused(pool: PgPool) {
+    let host = standin(&pool);
+    run(&host, &pool, input()).await.expect("first run");
+
+    for table in [
+        "mirror_record_legs",
+        "mirror_records",
+        "l1_act_legs",
+        "l1_acts",
+        "l1_epochs",
+        "l1_node_state",
+        "l1_accounts",
+    ] {
+        sqlx::query(&format!("DELETE FROM {table}"))
+            .execute(&pool)
+            .await
+            .expect("wipe");
+    }
+    sqlx::query("UPDATE mirror_epoch_cursor SET last_epoch = -1")
+        .execute(&pool)
+        .await
+        .expect("cursor reset");
+
+    let changed = GenesisInput {
+        guidelines_hash: "c0ffee".into(),
+        ..input()
+    };
+    let err = run(&host, &pool, changed).await.expect_err("diverged");
+    assert!(matches!(err, BootstrapError::Diverged(_)), "got {err:?}");
+    assert!(
+        err.to_string().contains("guidelines_hash"),
+        "the refusal names the parameter that disagreed: {err}"
+    );
+
+    let outcome = run(&host, &pool, input()).await.expect("unchanged repairs");
+    assert_eq!(outcome, BootstrapOutcome::Repaired);
 }
 
 /// The recorded L0 address of a cast member, for building act identifiers.
@@ -301,9 +365,10 @@ async fn a_sealed_unapproved_act_is_recovered(pool: PgPool) {
     );
 }
 
-/// The same identifier holding different content — what a re-run with
-/// changed genesis input would produce — is refused as divergence rather
-/// than replayed.
+/// The same identifier holding different content is refused as
+/// divergence rather than replayed. The divergence is driven through the
+/// substrate here because that is what this claim covers; a re-run with
+/// changed *input* is a different path, covered below.
 ///
 /// One identifier holding different content is refused as divergence rather than replayed over.
 /// ´claim:bootstrap:divergence-is-refused-not-replayed´
@@ -556,7 +621,7 @@ async fn missing_l2_half_with_l1_records_is_unrepairable(pool: PgPool) {
     }
 
     let err = run(&host, &pool, input()).await.expect_err("unrepairable");
-    assert!(matches!(err, BootstrapError::Unrepairable));
+    assert!(matches!(err, BootstrapError::Unrepairable(_)));
 }
 
 /// The credentials verify like any login, and the uploaded blob is a
@@ -592,30 +657,10 @@ async fn the_operator_login_completes_the_genesis_account(pool: PgPool) {
         .await
         .expect("query")
         .expect("blob row");
-    let code_bytes: [u8; 16] = {
-        const ALPHABET: &[u8; 32] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-        let mut bits: u64 = 0;
-        let mut nbits = 0u32;
-        let mut out = Vec::new();
-        for c in code.chars().filter(|c| *c != '-') {
-            let v = ALPHABET
-                .iter()
-                .position(|a| *a as char == c)
-                .expect("crockford char") as u64;
-            bits = (bits << 5) | v;
-            nbits += 5;
-            if nbits >= 8 {
-                nbits -= 8;
-                out.push(((bits >> nbits) & 0xFF) as u8);
-            }
-        }
-        out.try_into().expect("16 code bytes")
-    };
-    let opened = common::l1::key_backup::open(
-        &blob,
-        &common::l1::key_backup::RecoveryCode::from_bytes(code_bytes),
-    )
-    .expect("the printed code opens the blob");
+    let retyped = common::l1::key_backup::RecoveryCode::from_input(&code)
+        .expect("the printed code reads back through the reference parser");
+    let opened =
+        common::l1::key_backup::open(&blob, &retyped).expect("the printed code opens the blob");
     let custodied = genesis::system_key(&pool, credentials.actor_id)
         .await
         .expect("query")
@@ -640,5 +685,5 @@ async fn the_operator_login_requires_a_bootstrapped_instance(pool: PgPool) {
     let err = ensure_operator_login(&pool, "operator", "op@example.com", "pw pw pw pw")
         .await
         .expect_err("no genesis actor yet");
-    assert!(matches!(err, BootstrapError::Unrepairable));
+    assert!(matches!(err, BootstrapError::Unrepairable(_)));
 }

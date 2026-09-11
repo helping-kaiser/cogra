@@ -1,3 +1,6 @@
+export declare const DIMENSION_MIN: number;
+export declare const DIMENSION_MAX: number;
+
 /** One picked or folded pair: two continuous values in the closed [-1, +1]. */
 export interface StancePair {
   /** On screen: "For or against". Never "valence", never "p_d". */
@@ -41,6 +44,18 @@ export interface StanceReadoutProps {
 
 export declare function StanceReadout(props: StanceReadoutProps): JSX.Element;
 
+/** A stance RECORD's face and pair, drawn plainly wherever a stance is data
+ *  rather than a control — the stances page's rows, the chronicle's stance
+ *  entries. Never interactive. */
+export interface StanceValueProps {
+  pDirected: number;
+  pInterest: number;
+  /** Shows the exact pair beside the face. Defaults to true. */
+  showPair?: boolean;
+}
+
+export declare function StanceValue(props: StanceValueProps): JSX.Element;
+
 /** The standing and the pick's face — everything above the pad's field. */
 export interface StanceStandingProps {
   pick: StancePair;
@@ -60,6 +75,13 @@ export declare function StanceLandingLine(props: StanceLandingLineProps): JSX.El
 
 /** The twenty-anchor contract of design.md §8.4. Both clients read these values. */
 export declare const STANCE_ANCHORS: readonly (StancePair & { emoji: string; label: string })[];
+/**
+ * The thirteen-anchor contract a tag's pair reads through — four aboutness
+ * bands by three certainty bands, plus the floating thirteenth. Disjoint from
+ * `STANCE_ANCHORS` by ruling: no glyph appears in both tables. Both clients
+ * read these values.
+ */
+export declare const TAG_ANCHORS: readonly (StancePair & { emoji: string; label: string })[];
 export declare const ORIGIN: StancePair;
 export declare const TAP_DEFAULT: StancePair;
 export declare const DIRECTED_LABEL: string;
@@ -69,6 +91,10 @@ export declare function bundleReadout(pair: StancePair, zeroLabel?: string): { e
 export declare function formatStancePair(pair: StancePair): string;
 export declare function formatStanceWords(pair: StancePair): string;
 export declare function formatDimension(value: number): string;
+/** Two decimals, no sign — for an axis whose range has no negative half. */
+export declare function formatUnsigned(value: number): string;
+/** A tag's pair: relevance signed, confidence unsigned, so the two families never look alike. */
+export declare function formatTagPair(pair: StancePair): string;
 export declare function localLanding(rawSum: StancePair, pick: StancePair): StanceLanding;
 export declare function standingLine(bundle: StanceBundle | null | undefined, targetLabel: string): string;
 export declare function landingLine(landing: StanceLanding | null): string;
@@ -83,8 +109,30 @@ export declare function landingParts(landing: StanceLanding | null): object;
 export declare const DIRECTED_POLES: readonly string[];
 export declare const INTEREST_POLES: readonly string[];
 export declare const PICK_LABEL: string;
+/** Wording for a standing at exactly (0, 0) that has records behind it. */
+export declare const SEVERED_LABEL: string;
+/** Wording for a standing at exactly (0, 0) that has never had a record. */
+export declare const NO_STANDING_LABEL: string;
+/** What a bundle standing at exactly (0, 0) reads as. */
+export declare const ZERO_BUNDLE_EMOJI: string;
+/** The face an unauthored target wears at rest, deliberately outside the
+ *  anchor table so an empty control cannot read as a standing already held. */
+export declare const RESTING_FACE_EMOJI: string;
 /** Visually hidden, still read aloud — where the anchors' words live. */
 export declare const SR_ONLY: React.CSSProperties;
 export declare function signedLine(standing: StancePair, records: number, severed: boolean, targetLabel: string): string;
-export declare function clampPair(pair: StancePair): StancePair;
-export declare function clampDimension(value: number): number;
+export declare function clampPair(pair: StancePair, ranges?: PadRanges): StancePair;
+export declare function clampDimension(value: number, min?: number, max?: number): number;
+
+/** How far each of the pad's two slots reaches — the census's business, not the control's. */
+export interface PadRanges {
+  pDirected: { min: number; max: number };
+  pInterest: { min: number; max: number };
+}
+
+/** Both slots signed — what a stance and a citation fill. */
+export declare const STANCE_RANGES: PadRanges;
+/** The lowest relevance the tag field offers — below it lies the withdrawal, which the field does not carry. */
+export declare const TAG_RELEVANCE_FLOOR: number;
+/** What a tag's pair fills: confidence 0 to 1, relevance from the floor to 1. */
+export declare const TAG_RANGES: PadRanges;

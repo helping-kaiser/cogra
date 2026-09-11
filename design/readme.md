@@ -99,6 +99,22 @@ What that means for design work:
 | Android app (Compose, Material 3) | not recreated; its design rules are identical by contract, and the web kit is the faithful surface |
 | Marketing site, docs site | none exist in the source |
 
+**Desktop is out of design scope until the mobile set is complete.** Both
+clients render at phone width and that is what this system draws. A
+desktop visitor gets whatever the mobile-derived layout gives — not
+optimized, and accepted as such. The desktop variant is a design round of
+its own, later.
+
+**The canvas draws the whole app; each release builds its slice.**
+Designing feature by feature would move the same surfaces every time a new
+one arrived beside them, and every move is frontend work done twice — so
+the boards settle the end state once and the apps add the pieces their
+slice binds. An affordance whose destination is neither designed nor built
+stays out of the apps until one exists: never a dead control, and never a
+label that says what the code does not do (the feed's filter reads
+*Newest* until the ranker ships, §13 below). A drawn surface a release does
+not carry yet is staged, not divergent.
+
 ---
 
 ## 3. Content fundamentals
@@ -111,6 +127,9 @@ will happen; the confirmation says what happened.
 
 - Control: `Sign and publish` · `Sign comment` · `Sign the edit` · `Set`
 - Confirmation: `Signed — it's in the thread now, still settling.`
+
+**A completed action is confirmed by a snackbar, on both platforms.** The
+snackbar is the confirmation; a line of the layout turned green is not one.
 
 **Second person for the reader, first-person plural only for the
 system's own acts.** "You" is the reader; "we" appears only where the
@@ -321,10 +340,11 @@ rule covers all three button variants:
 - **Press** — state layer at **10%**. Never a scale-down, never a shadow
   change: the direction is calm, and a control that shrinks under the
   thumb performs.
-- **Focus** — a 2px `onSurface` ring at 2px offset (`:focus-visible`).
-  `onSurface` rather than `primary` because a primary ring vanishes
-  against a filled primary button, and this one reads on the page ground
-  and on the loud surface alike, in both themes. Nothing removes it.
+- **Focus** — the platform's own indicator: on the web a 2px `onSurface`
+  ring at 2px offset (`:focus-visible`), on Android Compose's M3 focus
+  treatment. `onSurface` rather than `primary` because a primary ring
+  vanishes against a filled primary button, and this one reads on the page
+  ground and on the loud surface alike, in both themes. Nothing removes it.
 - **Disabled** — **38%** opacity on the whole control (Material's value,
   and the one place the AA guarantee is waived by convention: a disabled
   control is not an available target).
@@ -450,21 +470,25 @@ is a different thing from a piece the apps have not reached yet.
 
 | Directory | Components |
 |---|---|
-| `components/core/` | `Button`, `Card`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
-| `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton` |
-| `components/forms/` | `TextField`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
-| `components/navigation/` | `PageHeader`, `BottomNav`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
-| `components/compose/` | `WizardHeader`, `MediaThumb`, `PickedRow`, `DescribeCounter`, `PickedSheet`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `ActsCard` |
+| `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SettingsGroup`, `SettingsRow`, `Switch`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
+| `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton`, `NodeMark` |
+| `components/forms/` | `TextField`, `FieldLabel`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
+| `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
+| `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `StagedReference`, `TopicRemovable`, `Caret` |
 | `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
-| `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader` |
+| `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
 | `components/states/` | `EmptyState`, `LoadingState` |
-| `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending` |
-| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `StanceCoachMark`, `SeveranceConfirm` |
-| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `MediaViewer`, `VideoTransport`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
+| `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
+| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `StanceCoachMark`, `SeveranceConfirm` |
+| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
-Each has a sibling `.d.ts` (props contract) and `.prompt.md` (what &
-when, plus a usage example). Each directory has one `@dsCard` HTML
+The pair a component is documented by is its **module file's**: every
+`.jsx` has a sibling `.d.ts` (props contract) and `.prompt.md` (what &
+when, plus a usage example), and a module that draws a family covers the
+whole family in that one pair — `MediaAttachment.jsx` also holds
+`MediaGallery` and `MediaDisc`, `VideoControls.jsx` the transport, the
+timeline and the seek line. Each directory has one `@dsCard` HTML
 showing its states.
 
 **Buttons are Material's three and no others**: filled for the one
@@ -474,6 +498,14 @@ the label carries the emphasis, not the border. What separates a button
 from a link is what the control does: performing an action is a button,
 going somewhere is a link. A button dressed as an underlined link is
 neither.
+
+**A component never states a raw type value.** Type arrives as a role,
+and a role is four tokens together — size, line-height, weight and
+tracking. A component that spells `letterSpacing: "0.4px"` beside
+`var(--text-label-small)` has left the ramp for a number nothing
+maintains: the token says `0.03125rem`, and the two drift the moment
+the ramp is retuned. Take all four or take none; if a role needs a
+value the ramp does not carry, the ramp is what changes.
 
 ### 7.1 Proposed — built ahead of the product
 
@@ -487,7 +519,7 @@ which is what makes a guess expensive.
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
-| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and topics outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
+| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
 fixes the slots and their order, so `BottomNav` simply accepts
@@ -534,13 +566,13 @@ paper over:
   the segments are equal width, and the control is only for two to four
   **mutually exclusive** options over one list.
 - `Chip` and `TopicChip` — the combinable counterpart, and a topic. Same
-  pill, told apart by what they do: a chip acts, a topic navigates. 32px
+  pill, told apart by what they do: a chip acts, a tag navigates. 32px
   drawn, 48px tapped, selection colour only with no check glyph (a check
   reflows every label in the row as the reader picks).
 - `FeedFilter` (+ `FilterTrigger`, `OrderSection`, `FilterSection`) —
   **what the feed actually needs**, and the reason the
   segmented row was the wrong control. Ten kinds of ranked content that
-  combine (posts, comments, chats, messages, profiles, proposals, topics,
+  combine (posts, comments, chats, messages, profiles, proposals, tags,
   items, campaigns, offers — `FEED_KINDS`, one list shared with search),
   forms of post that combine (photos and video with no text posts is a
   legitimate feed), an order that does not (ranked, the default, or
@@ -599,8 +631,18 @@ paper over:
   hairline (M3's 2px checkbox border loses to §4's one-weight rule),
   `primary` fill with the inlined `check` glyph when checked, and the whole
   row — label included — as the 48px target.
+- `SettingsGroup` / `SettingsRow` / `Switch` — the settings anatomy, and the
+  house switch with it. Both apps ship a settings screen whose sections each
+  invented a layout, and the design had drawn none of it; one row shape is
+  what lets a page of eight groups read as a page. A quiet heading above, a
+  filled card of rows, a footnote under — the footnote being what keeps a row
+  to one line of status. The trailing edge is the variant (a switch, a value
+  and a chevron, a chevron, or a control of the row's own), and the chevron
+  means one thing only: this opens another surface. The switch was drawn once
+  on the sensitive sheet and stayed a control while there was one of it; a
+  second surface is what makes it a component.
 - `BorrowedViewBand` — §13's borrowed vantage point, as a component: names
-  whose view a guest or applicant feed is ranked from, carries the one
+  whose view a guest or applicant feed shows, carries the one
   sign-in-or-join entry, and subsumes the guest notice on those surfaces.
 
 ---
@@ -682,7 +724,7 @@ Nothing vanishes silently, and none of these use `error` colouring.
   it. — `RedactedContent`, and `PostCard`'s `redacted` prop
 - **Sensitive** — a gentle blur with tap to reveal, warm wording.
   **The whole body veils as one**: media, text and description under a
-  single veil, the title and topics outside it and readable, so a
+  single veil, the title and tags outside it and readable, so a
   reader can decide from the frame without touching the content. One
   tap reveals everything — the reader decided once, and asking again
   per item turns one decision into five. **The veil names its source** —
@@ -995,6 +1037,15 @@ may serve any actor's view of the shared record to any reader. So:
   over to the member's own view the moment their first stance exists —
   the vouch-back — which the inviter seeded anyway, so the feed barely
   moves at the handover.
+- **The vantage resolves to the most specific actor available**, and
+  the band names whichever one it lands on. An invite-link visitor
+  borrows the inviter. An applicant borrows their own inviter — the
+  person who already chose them, and whose stances their first
+  vouch-back will echo. A bare visitor borrows genesis, strictly as the
+  fallback when nobody more particular is known. The order matters more
+  than any single rung: a reader should be shown the nearest real
+  perspective the arrival carries, and genesis is what is left when the
+  arrival carries none.
 
 To port to the product docs as an open-questions resolution.
 
@@ -1005,12 +1056,14 @@ entry, the vouch screen, the key ceremony, recovery code, sign-in,
 restore) is a full-focus task screen with a back arrow, never a
 bottom sheet. Canonical screens: `designs/canonical/`. During the
 dev phase the collapsing top and the sign-in screen carry an APK
-download line.
+download line. **It is the web's alone** — the line offers a browser
+visitor the app they are not in, and the app itself never carries it.
 
 The recovery-code screen is a trap: no back affordance, and the only
 way out is the code typed or pasted back. A think-twice dialog gates
-entry to it. Where a bottom bar exists, the stance pad rests 16px
-above the bar rather than the screen edge. First-time onboarding is
+entry to it. The parked stance pad rests 16px above
+whatever it parks over — the bottom bar where one exists, a sheet's
+bottom edge otherwise; one number everywhere (ruled 2026-09-10). First-time onboarding is
 per-control, never a tour, and on the entry screens only the pad
 carries it — what it is for, how it opens, that nothing signs until
 Set, and that the input can be swapped in settings.
@@ -1043,7 +1096,7 @@ lands whole or not at all (resolves Q43). License collapses to one
 line reading the author's default (an account setting; Public domain
 until changed) and opens as a bottom sheet — immutable after
 signing. Sensitive self-marking is one switch opening a bottom
-sheet: it veils the body and the description; the title and topics
+sheet: it veils the body and the description; the title and tags
 stay readable so choosing to look is informed; an optional reason is
 shown on the veil. Every stance a write signs is disclosed and
 adjustable: the post's own attachment on a one-axis pad (For/Against
@@ -1060,8 +1113,9 @@ picture; there the draft is the safety, so nothing asks on the way
 out. The reply wizard and the comment edit keep no draft: leaving
 them discards, so a non-empty composer is asked first — one shared
 dialog (the *DiscardConfirm* board) reading "Discard this reply?"
-or, from an edit, "Discard this edit?", body "Nothing is kept.",
-*Keep writing* beside a filled *Discard*. An empty composer leaves
+or, from an edit, "Discard this edit?", body "Nothing is kept.", a
+quiet *Discard* beside a filled *Keep writing* — the safe answer
+carries the weight, as it does everywhere else. An empty composer leaves
 at once — a confirm with nothing to lose is noise. Signing exits to
 the post's own detail view wearing *Still settling*, with the
 snackbar "Signed — it's in the thread now, still settling." An act
@@ -1138,12 +1192,12 @@ the detail view is just about the post.
 
 ### Reference rows and signed pairs — 2026-08-28
 
-A card never lists its references inline, and its topics line is
+A card never lists its references inline, and its tags line is
 **one line on every variant: at most two chips, then the counts in
-words** — `#coastroad #saltmarsh · 23 topics · 3 references`. A
+words** — `#coastroad #saltmarsh · 23 tags · 3 references`. A
 clipped parade of half-chips says nothing; the counts are the
 readable fact and the way in. They open the
-**topics-and-references sheet** (on a detail surface the whole line
+**tags-and-references sheet** (on a detail surface the whole line
 is the opener; in a feed the chips still navigate). The sheet is
 the full set's home: every signed act gets one row — **leading
 mark · name · the signed pair** — one row shape across every node
@@ -1151,18 +1205,20 @@ kind (`ReferenceRow`), reused by search's results (item 9).
 
 - **The leading mark says the kind, without a word beside it.** A
   person keeps their avatar; a media post its cover; a text post the
-  letter T as a tile; a topic its #; the rest carry node-type glyphs
+  letter T as a tile; a tag its #; the rest carry node-type glyphs
   — proposal `how_to_vote`, item `inventory_2`, campaign `campaign`,
   offer `sell`, chat `forum`, comment `chat_bubble`. Item and offer
   deliberately do not share a silhouette (box vs price tag).
-- **The pair is public record**: set at compose on each picked topic
-  and reference (a changeable default of +0.10 / +0.10), edited
-  through the reader's chosen stance input (the pad, or whatever
-  their settings swap in), and displayed on the row for any reader.
+- **The pair is public record**: set at compose on each picked tag and
+  reference, and displayed on the row for any reader. The changeable
+  defaults differ because the census does — a reference is +0.10 /
+  +0.10 with both axes signed, a tag is **+0.1 / 1**, its confidence
+  bounded to [0, 1] and starting full. Both are edited on the pad, each
+  over the reach its own census gives it.
 - A signed reference is a compose-time act; an @handle typed in text
   is only coloured text, never a record. They must not look identical
   — the typed handle is colour, the reference is a row in the sheet.
-- Comments wear the same topics-and-citations line as posts
+- Comments wear the same tags-and-citations line as posts
   (`TopicsLine`, shared) and the same overflow menu.
 
 ### The search rulings — 2026-08-28
@@ -1183,7 +1239,7 @@ as Q46 in docs/open-questions.md):
   shared transiently with the viewer's chosen ranker. **The feed
   carries this same ordering section** (backlog item 19 — the
   canonical feed screens never drew the filter at all).
-- **Scope operators**: `@handle <text>` and `#topic <text>` scope
+- **Scope operators**: `@handle <text>` and `#tag <text>` scope
   the query; the remainder matches the scoped author's own content
   AND the names of their acts' targets — a comment through its
   post's title, an offer through its item's name, a message through
@@ -1228,7 +1284,7 @@ The rulings that put it on screen:
   "Everything".
 - **One kind list.** `FEED_KINDS` grows to search's ten and both
   surfaces share it — posts, comments, chats, messages, profiles,
-  proposals, topics, items, campaigns, offers — and the word is
+  proposals, tags, items, campaigns, offers — and the word is
   **"Profiles"** everywhere, never "People".
 - **One ordering section.** `OrderSection` — the Ranked/Newest swap
   with "Show what you've already seen" (default off — what you've
@@ -1595,7 +1651,15 @@ entry first". What stands:
   an edge target. `boardKinds` marks reference boards (anatomy plates,
   the maps themselves) that are vocabulary, not destinations;
   `scanExempt` names boards whose semantic elements are inactive in
-  the drawn state (the pad board under its scrim).
+  the drawn state (the pad board under its scrim). **A pattern
+  exemplar is exempt for the second reason**: it is drawn on a real
+  surface to show one behaviour, and only that behaviour is its
+  own — the surface's other controls belong to the board that owns
+  them and are wired there, so wiring them twice would give one
+  control two edges. `NetworkError` is the exemplar: the retry the
+  failure offers is the board's whole subject, and its `scanExempt`
+  line names `ComposeSeal` as the home of the rest. The next pattern
+  board says the same and cites this rule.
 - **Every edge declares its `kind`** — what the control *does*, not
   where it lands. Five, and never a default: **`advance`** is
   forward progress toward a journey's conclusion (Next, Sign, Save,
@@ -1616,9 +1680,8 @@ entry first". What stands:
 - **Numbers are stamped by the build, never by components.** JSX
   screens get them from `_build/flow-markers.mjs` — markup anchors
   applied after render, throwing on drift — so the design system
-  never carries canvas metadata; hand boards carry the attributes
-  directly. Repeated per-post controls wear the same number on every
-  instance: one edge covers them. **The badge sits inside the
+  never carries canvas metadata. Repeated per-post controls wear the
+  same number on every instance: one edge covers them. **The badge sits inside the
   element's corner**, not hanging past it: outside, anything that
   clips its overflow eats it, and 470 of 1091 badges were drawing
   cut or invisible — the gate verifies the attribute, not the paint.
@@ -1640,7 +1703,7 @@ entry first". What stands:
   Profile page joined 2026-09-01 — 699 edges over all 93 boards, no
   board unreached, no interactable unedged). The 108 gaps are the
   visible to-do: the reader's post / comment / profile menus, the
-  topic page (ruled — a search subpage) and the topic picker,
+  tag page (ruled — a search subpage) and the tag picker,
   field/mismatch error states, the applicant's once-each
   acting boards (ruled), the settlement/tip/rail record views the
   wallet's traceability promise owes,
@@ -1651,8 +1714,8 @@ entry first". What stands:
   gated seal, the license / sensitive sheets, the key-absent seal,
   the stance pad, and the three pattern boards — the guest gate, the
   network error, key-absent acting) rather than duplicated boards.
-- **The topic picker's interim entry** (jakob 2026-09-02): until the
-  picker board exists, the apps' entry is the existing topic field,
+- **The tag picker's interim entry** (jakob 2026-09-02): until the
+  picker board exists, the apps' entry is the existing tag field,
   opened as a sheet from the seal. The gap and the blocked
   `add-a-topic` flow stand — the interim is what the apps ship, not
   the design owed.
@@ -2171,9 +2234,8 @@ the ruling that an applicant stages each kind of act once (2026-09-01).
 
 ### The input-error round — 2026-09-03
 
-Five of item 23's still-owed gaps — field-error, wrong-credentials,
-wrong-code, code-mismatch — closed onto boards (jakob's rulings the
-same day).
+Item 23's field-error, wrong-credentials, wrong-code and code-mismatch
+gaps, closed onto boards (jakob's rulings the same day).
 
 - **A field error wears M3's own text-field error state**: the
   outline and label switch to `--error`, and a body-small supporting
@@ -2195,8 +2257,8 @@ same day).
 - **Each surface words its own error.** Unlike the offline board, one
   network-error master answering for every surface, an input error is
   worded per field and per surface — "That handle is taken." is not
-  interchangeable with "That code doesn't check out." — so each of the
-  five boards carries its own copy, not a shared component's default
+  interchangeable with "That code doesn't check out." — so each
+  errored board carries its own copy, not a shared component's default
   text.
 - **Componentize before you alter.** Hand-coded boards get rebuilt
   from real masters before an error state is drawn onto them, and this
@@ -2207,17 +2269,21 @@ same day).
   marked.** A field only re-validates as the reader types once it
   already carries an error — an unmarked field stays quiet until the
   next submit, so typing never produces a field that turns red out of
-  nowhere.
+  nowhere. **The recovery gate is the rule's one named exception**:
+  its confirm button never enables on a diverged prefix, so there is
+  no submit to wait for and a signal held for one would never come.
+  The mismatch line answers the typing itself, the moment the typed
+  text stops being a prefix of the code.
 
-Five boards drawn: `JoinErrors` (Handle taken, Password too short —
+Four boards drawn: `JoinErrors` (Handle taken, Password too short —
 Email untouched), `SignInError` (the form-level fault line),
-`RestoreError` (the recovery-code field), `RecoveryCodeMismatch` (the
-confirm field — `RecoveryCode` grew an `error` pass-through to reach
-it, mirroring `TextField`'s own anatomy, since the component draws its
-own field rather than composing `TextField`), and `ProfileEditError`
-(Display name). Each board's submit control keeps its parent's other
-outcomes and replaces only the gap with a `self` case — the line
-updates in place rather than sending the reader anywhere. Census 114
+`RestoreError` (the recovery-code field), and `RecoveryCodeMismatch`
+(the confirm field — `RecoveryCode` grew an `error` pass-through to
+reach it, since the confirm field belongs to the master and a surface
+has no other way through to `TextField`'s error state). Each board's
+submit control keeps its parent's other outcomes and replaces only
+the gap with a `self` case — the line updates in place rather than
+sending the reader anywhere. Census 114
 → 109 gaps, 867 → 897 edges; the 56/51/5 flow census is unchanged,
 since no declared flow walks an error path.
 
@@ -2233,25 +2299,43 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   every surface's edge lands on it. `ReaderPostMenu`, `CommentMenu`
   and `ProfileMenu` join the sheet boards that were already mastered
   this way (the filter, the references sheet, the own-post menu).
-- **The license unfolds where it was asked about.** Its row closes
-  the sheet and opens the terms on the card beneath — a state of the
-  card, never a surface of its own, so the row that revealed them
-  reads **Hide license** in the same position, and both cards gained
-  `defaultShowLicense` to draw the unfolded state (the missing-variant
-  rule; `StanceControl`'s `defaultOpen` is the precedent). `PostLicense`
-  is that state drawn, and it is a declared **entry** rather than the
-  target of a tap, because nothing navigates to reach it.
+- **The license comes up in a sheet.** The row closes the menu and
+  raises the terms over the surface the reader asked from — a drawer
+  they drop by the scrim, the swipe, or Escape, which is the way back
+  a block unfolded inside the post never had. The terms are never a
+  state of the card, so no card carries them and no row ever reads
+  *Hide license*. `PostLicense` draws the sheet over the post detail
+  and `CommentLicense` over the thread: **two boards, because the
+  surface beneath is half of what the sheet says** — pointing the
+  comment's row at the post's board would answer a question about a
+  comment with a post's terms, on a screen the reader is two sheets
+  above. They carry the two readings besides, Ada's credit-on-every-use
+  against the comment's public domain. Both are `scanExempt` and wire
+  one number, the wash: the terms are a block to read, not controls.
+- **A sheet over a sheet dims what it covers and takes the next
+  rung.** `BottomSheet`'s `stacked` lifts the upper sheet a layer, so
+  the wash it already draws falls between the two instead of under
+  both, and its surface moves to `surfaceContainerHighest` — elevation
+  is tonal, and two surfaces at one rung claim one elevation. The
+  sheet below keeps its top edge, its handle and its title in view,
+  dimmed: depth you can see beats depth you infer. `CommentMenu` and
+  `CommentLicense` are the two boards that stack, both over the
+  comments thread.
 - **The terms are drawn, not printed.** A quiet inset at the medium
-  rung: a caption naming what unfolded, then one row per axis with the
-  two readings aligned so the pair reads as a pair. It takes **no
-  fill** — the card is already the highest container rung, and a
-  filled inset over it would invert between the themes — and no
-  colour, the terms being neither warning nor promotion. Public domain
-  is the pair readers already have a word for, so the word rides the
-  caption while the rows still spell what it means. The read side got
-  its **own readings**: the chooser's hints address the author
-  declaring the terms, and on a read surface "Every use credits you"
-  tells a reuser they are owed the credit they in fact owe.
+  rung: a caption naming the words the reader tapped, then one row per
+  axis with the two readings aligned so the pair reads as a pair. It
+  takes **no fill** — the sheet it sits in is a raised container
+  already, and a filled inset over it would invert between the
+  themes — and no colour, the terms being neither warning nor
+  promotion. Public domain is the pair readers already have a word
+  for, so the word rides the caption while the rows still spell what
+  it means. The sheet takes **no `SheetTitle`**: the inset heads
+  itself, and a heading above it would say License terms twice, a few
+  pixels apart, in two sizes — the sheet's name lives on its
+  `aria-label`. The read side got its
+  **own readings**: the chooser's hints address the author declaring
+  the terms, and on a read surface "Every use credits you" tells a
+  reuser they are owed the credit they in fact owe.
 - **Citing and mentioning are one fact.** Both stage a **Reference
   edge**; the word only records what sits at the far end — citing for
   a passive node, mentioning for a person. So both rows open the same
@@ -2279,17 +2363,17 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   there is no attaching one to a post that landed — the row starts a
   new post pointing at the old one.
 - **Referencing from any other kind lives inside that kind's own
-  wizard.** The reply seal already carries Add a topic and Cite
+  wizard.** The reply seal already carries + Add a tag and Cite
   something side by side: with only two stages, the seal *is* where a
-  comment's topics and references are named. `ReplyCited` draws that
+  comment's tags and references are named. `ReplyCited` draws that
   surface once a citation is staged — the reference joining the acts
   card rather than sitting beside it, because a staged reference is an
-  act and the total has to count it. Staged topics and references are
+  act and the total has to count it. Staged tags and references are
   unstageable everywhere: the reply's staged rows carry the same
   remove the post's details rows do, and ReplySeal's componentize pass
-  inherits it. Like `PostLicense`, it is a
-  declared **entry**: the picker hands its pick back to the composer
-  it was opened from, so no tap reaches this state.
+  inherits it. It is a declared **entry**: the picker hands its pick
+  back to the composer it was opened from, so no tap reaches this
+  state.
 - **Only what exists gets a row.** The post and comment menus hold
   License terms and Cite in a new post; another's profile holds Mention
   in a new post and Share this profile. Report, hide and bookmark are
@@ -2315,8 +2399,8 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   arrival at the details stage with the reference staged. The words
   path's `Next` carries the second outcome that says so, which is what
   lets the search reach that board honestly instead of teleporting to
-  it. There is no check-a-license flow — a reveal in place is not a
-  journey.
+  it. There is no check-a-license flow — a detour into a sheet and
+  back out of it is not a journey.
 - **`ComposeDetails` componentized.** The picture path's details stage
   is now JSX over the masters like its twin `ComposeCited`, and the
   conversion closed the drift that prompted it — the hand board's
@@ -2325,8 +2409,1289 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   pair alone, and the ×.
 - **The gate**: 103 → 82 gaps and 897 → 938 edges. The twenty-four
   closed, and three reopened as fresh instances of surfaces already
-  owed — the topic picker on the new composer board and again on the
+  owed — the tag picker on the new composer board and again on the
   reply's cited seal, the score drill-down on the new detail state.
+
+### The conformance round — 2026-09-04
+
+Before any new surface, the canvas and the library were brought to
+the law they already claimed: whatever is drawn by hand is drawn by
+a master, and every master is one component with variants as props
+(jakob's mandate and rulings, same day).
+
+- **The library owed itself the most.** The bare primary word — a
+  text action with no pill and no minimum width — was re-implemented
+  five times inside `components/` and more on boards. It is now
+  **`InlineAction`**, Button's sibling so button vocabulary has one
+  home, in two rungs: label-large from the seal rows' documented
+  deviation, label-small from the describe/upload family. The rule
+  between them: a Button when the action owns its line, an
+  InlineAction when it rides at the end of somebody else's.
+- **Field labels come from the field.** `TextField`'s own `label` +
+  `corner` slots are the one label anatomy, and **`FieldLabel`** is
+  TextField's named export for captions over things that are not
+  fields — a `label` element when it has a control to point at, a
+  `span` when it does not. The composer's Title and Description
+  gained their accessible names by this ruling.
+- **One identity row under four lists** — **`ContentRow`**: ledger,
+  campaign, door, chronicle. The chronicle is two lines like every
+  other row — the act as its title line, the snippet cut to one line
+  with an ellipsis; no chronicle content needs a third line, and a
+  cut-off excerpt continues where the card opens. The door's glyph
+  rides the system's 20px; the chronicle's inner gaps are the row's
+  own.
+- **One hairline fact row in two emphases** — **`FactRow`**: seal
+  (label strong, value quiet, rules enclosing) and ledger (label
+  quiet, value strong, rules separating).
+- **One tab row** — **`TabBar`**, cell-driven: a cell with an icon
+  takes its accessible name from its label, a text cell's name is
+  its own words. The data decides, so the two can never contradict.
+- **Drawn controls are real controls.** "Show all" in the pick tray
+  is a button, not a span — resting look unchanged, the keyboard
+  path and the 48px target restored.
+- **The inverse Button is a variant, not an override** — the filled
+  button on a tonal panel, documented where Button lives.
+- **Masters gained**: `QuotedRow`, `CropViewport`, `CoverRow` (the
+  raw HTML frame strip became JSX), `PickTray`, `PickPrompt`,
+  `QuietNote`, `ActsFooter`, `SealFooter`, `WizardHeader`'s
+  `stageLabel` + `help`, `Caret`; **graduated from the prelude**:
+  `TopicRemovable`, `StagedReference`, `RefusedFile`, `StanceRow`,
+  `SectionLabel`.
+- **Contracts tell the truth.** Every `.d.ts` describes its `.jsx`,
+  in both directions — declared-but-absent props removed, present-
+  but-undeclared exports added.
+- **The bar the lanes ran under**: pixel-identity outside the named
+  rulings, every render hunk attributed or the lane stops. Three
+  seal boards, both crops and the final batch came out
+  byte-identical; the visible deltas are exactly the ruled ones.
+- **A post's body is words XOR media, and the card says so.** The
+  fixtures had been drawing an impossible post — a picture with a
+  body paragraph AND a description under it. `PostCard` now encodes
+  the law: a media post carries no `content` (handed both, it draws
+  the media and drops the words), and both kinds order **title ·
+  body · description**, the caption last, with the 4px seam between
+  the two fields. The description clamps to **two lines** in the
+  feed; a text body clamps at **18** — floor(376px ÷ 20px), the
+  height a picture takes once `--media-max-height` has capped it, so
+  a feed of both kinds keeps one rhythm. The detail view clamps
+  nothing. Every fixture with a picture now carries its words as the
+  description, the stream's caption takes the description too, and
+  the caption paragraph took its own role's leading — unclassed text
+  had been inheriting body-large's.
+- **The compose wizard's ten legacy boards converted** (jakob's
+  ruling: all of them). `ComposeWords`, `ComposePick`, `ComposeCrop`,
+  `ComposeCover`, `ComposeDraft`, `ComposeLicense`, `ComposeSensitive`,
+  `ComposePad`, `ComposeKeyAbsent` and `ComposeSeal` were hand
+  `.dc.html` with no source behind them; each now renders from
+  `screens/` over the masters, and the last inert "Show all" on the
+  canvas became `PickTray`'s button. What moved and why: the seal is
+  `ComposeSealUploading`'s anatomy without the upload gate, and its
+  stance row now reads the **pair** `StanceReadout` spells — it had
+  printed one number while the reference row two lines above printed
+  two. The cover strip is `CoverRow`, so its "A picture" caption goes
+  (the master says a dashed square with the picture glyph is not a
+  photograph, and two other boards already draw it that way). The
+  license rows and the sensitive switch became real controls the way
+  `Checkbox` makes a row one. The grids' local tile palette — four
+  colours with no token behind them — reads off the surface-container
+  rungs, as `ComposePickVideo`'s dead grid already did.
+- **The last nine legacy boards converted**, and with them the
+  canvas: `ReplyCompose`, `ReplyPad`, `ReplySeal`, `EditCompose`,
+  `EditActs`, `DiscardConfirm`, `HelpDialog`, `NetworkError` and
+  `PadKeyAbsent`. Every board now renders from `screens/`; nothing
+  on the canvas hand-copies component markup. What moved and why:
+  the reply's seal reconciles with `ReplyCited`, its staged twin —
+  one add-row pair, drawn once in the prelude, and one "+ Cite
+  something" between them where the bare board had spelled the kinds
+  out. `ReplyPad` **takes** `StancePad`: a reply's stance is toward
+  somebody else's post, so both parameters are the author's and the
+  square is the right value space — the refusal above is about one's
+  own post, not about pads. `NetworkError` is `ComposeSeal` unsent,
+  so its stance row took the same pair correction the seal's did.
+  `DiscardConfirm` draws the reply composer from the prelude rather
+  than a copy, which is where the two boards' "+ Add" words stopped
+  disagreeing. `PadKeyAbsent`'s feed card, drawn before the body-XOR
+  round, arrived carrying everything `PostCard` grew since — its
+  topics, its citation line, its share, and the resting face the pad
+  above it says it has.
+- **Three masters were refused, each for the same reason**: the
+  component and the board are not the same thing. `CropViewport`
+  locks a shape and masks around it, which is right for a profile
+  picture and a video cover and wrong for the post crop, where the
+  author is choosing the shape. `LicenseChooser` draws the two axes
+  as wrapped native radios; the sheet gives each reading its own row
+  and reads the master's tiers for the words, so the layout diverges
+  and the terms cannot. `StancePad` is the square where both parameters are the
+  author's, and on one's own post the second is not — your own post
+  always reaches you in full, so that board draws **one axis**, and
+  the system owns no one-axis pad to draw it with.
+- **Held for rulings** (each parked in the backlog with its
+  question): ChipMini's tone, the reply seal's staged-reference
+  placement, the Mark drawings, the wizard footer's shape, the
+  comments-sheet shell, the "+ Cite something" voices, the topic
+  chip's ×, and the acts line's target.
+- **The gate**: 939 edges · 82 gaps · flows 58/53/5, unchanged end
+  to end — which is the round's whole claim: the canvas redrawn
+  from masters without the graph moving.
+
+### The parked rulings — 2026-09-08
+
+The questions the conformance round held, answered by jakob and
+applied in one pass. Every visible pixel on the canvas moves for one
+of these and nothing else.
+
+- **An overlay sits over the REAL surface.** A sheet, a dialog or a
+  wash covers the surface the reader came from, so the board draws
+  that surface whole rather than a shortened stand-in of it — the
+  round's largest visible change, on six boards. The post's seal, the
+  reply's seal and the post edit are each written once in
+  `_shared.jsx` and drawn by the board that owns them and by every
+  overlay over them, by the same rule that moved `ReplyDraft` there:
+  a body on a second board stops being board-local. The under-layers
+  stay inert, which is what their `scanExempt` lines already say, so
+  the graph does not move.
+- **The text body's clamp is derived against the picture the reader
+  sees.** `--media-max-height` caps a 4:5 crop before its uncapped
+  447.5px — 376px on the 390×844 board — so the ceiling is
+  floor(376 ÷ 20) = **18** lines, and a text post again stands as
+  tall as the media post beside it rather than ~64px taller.
+- **`SheetTitle` owns the heading's row.** `trailing` takes what the
+  line carries besides the name — the screen's one "?", the switch a
+  sheet exists for — and the license and sensitive sheets stop
+  assembling that row by hand. Their names take the master's
+  `title-medium`.
+- **`HelpDot` has an `inverse`**, `Button`'s word for the same
+  situation: on a tonal panel the ring and the glyph take the panel's
+  own `currentColor` instead of spending `--border-hairline` and
+  `--primary` inside a block that has a colour family already. The
+  two key-absent boards adopt it and render byte-identical.
+- **An acts row that offers an act is the button.** `ActsCard`'s
+  second row kind has no value slot to clip, so the seal's add-rows
+  keep the 48px target their word promises instead of having it cut
+  back to the ink. Truncation stays where a long value needs it.
+- **A pattern exemplar wires only the behaviour it exemplifies** —
+  the `scanExempt` convention's stated rule now (§13, canvas pages),
+  with `NetworkError` as its exemplar: the surface's other controls
+  belong to the board that owns them, and wiring them twice would
+  give one control two edges.
+- **The discard dialog gives its filled button to the safe answer**,
+  `RemoveConfirm`'s weighting. A think-twice dialog exists to make
+  the costly answer deliberate; the destructive word stays quiet.
+- **The license sheet reads the master's tiers.** `ATTRIBUTION_TIERS`
+  and `PROVENANCE_TIERS` carry the readings and their hints, so the
+  sheet keeps its own layout — one axis per section, one reading per
+  row — and cannot say a shorter version of what a license promises.
+- **The one-axis pad names a face the table has**: at +0.30 the
+  nearest `STANCE_ANCHORS` row is the first, 🙂 "Nice".
+- **A component never states a raw type value** (§7). The quiet note
+  and the acts footer take `--text-label-small--letter-spacing`, and
+  the label-small line gains 0.1px of tracking on 32 boards.
+- **The composer's "+ Add" speaks in one voice** — the bare small
+  word on all five sites. An action riding the end of somebody else's
+  line is an `InlineAction`; the pill is for an action that owns its
+  line.
+- **The edit's staged reference shows the whole staged fact**, as
+  `ComposeDetails` draws it: the kind under the name, and the pair
+  the citation signs.
+- **Item 35 ruled** (video playback): media is full-bleed on card and
+  detail alike, the handover is a shared element on the media frame
+  with the chrome fading, and a video post's card description says
+  `1 clip · 0:24` rather than "1 picture". All three are conform
+  items for the apps.
+- **A display name is optional.** Account creation never asks for
+  one, so nothing may require it later: an explicit null clears the
+  field, and a profile with no name written is presented by its
+  handle (api-spec's profile-update clause; the breaking schema
+  change is backlog item 36).
+  With the requirement gone, "A display name can't be empty." became
+  a false sentence and `ProfileEditError` retired with it — profile
+  edit has no true local failure left to exemplify, so Save's edge
+  carries the seal alone and no gap opens.
+- **The gate**: 921 edges · 81 gaps · flows 58/53/5 at the round's
+  close. The rulings themselves moved nothing — the under-layers
+  grew real controls only on boards the scan already exempts — and
+  the six edges that left were `ProfileEditError`'s, gone with the
+  board.
+
+### The slice-2.5 rulings — 2026-09-08
+
+The readiness census for slice 2.5 found the media path itself
+gap-free and the blocks elsewhere: three stale contracts, one
+missing destination, and a handful of drawing questions only jakob
+could close. These are the answers, and what each one moved.
+
+- **A tap on a gallery card's picture opens the post.** Every
+  single-media card's region is «post media» and opens the post;
+  the two gallery boards drew a pager and no way in, so a reader
+  on a gallery card could not reach the post through its picture.
+  The pager keeps the swipe and gains the tap — one region, two
+  gestures, declared the way the stance face already declares its
+  tap and its press-and-hold: one via, two outcomes. The edge
+  count does not move, because a second outcome is not a second
+  edge.
+- **A portrait clip's tap opens the post detail until the stream
+  ships.** The stream is slice 3's surface and the canvas draws it
+  as the end state; 2.5.2 needs the tap to land somewhere real in
+  the meantime, and the post detail is where every other media tap
+  already goes. A roadmap sentence, no rewiring — slice 3 takes
+  the tap back when it arrives.
+- **A post-scale clip upload failure takes `ReplyVideoFailed`
+  1:1.** The comment scale is drawn, the fault is the same fault,
+  and the blessing is the precedent the web avatar flow and web
+  `ReplyVideo` already ride. No board.
+- **The cover preview's playing state is its own board.** The
+  video conform round ruled that the cover "is the clip's face
+  wherever the clip isn't running, and never returns once playback
+  has started" — so a play disc and a pause button cannot share a
+  frame, and rest and playing cannot share a board. *Cover · the
+  preview playing* draws the post detail's own transport over the
+  running clip, which retires web's native-controls deviation. It
+  carries **no fullscreen toggle**: the clip is not published yet,
+  there is no viewer to open, and a drawn control the graph cannot
+  wire would have to invent a gap to point at. `MediaAttachment`
+  passes `fullscreen` through for it and every other board renders
+  byte-identical.
+- **The reply seal earns the orphaned line.** "Replying also signs
+  where you stand on the post it answers." stands as a `QuietNote`
+  beneath the ruled block — `FactRow` grows no note slot, because
+  the line is a fact about replying rather than about any one row.
+  It lands on both states of the seal: they are one surface, and a
+  note on one of them only is a disagreement.
+- **`Chip`'s borderless `readout` tone** is the seal board's 26px
+  chip, and `ChipMini` is retired — answered in the sources
+  already, and recorded here because the backlog was still calling
+  it held.
+- **Every field error announces and names its field.** The
+  supporting line carries an id the control names in
+  `aria-describedby`; in the error state the control adds
+  `aria-invalid` and the line takes `role="alert"` — the W3C forms
+  tutorial's own wiring, applied uniformly rather than field by
+  field, because a rule about which errors are worth announcing is
+  a rule nobody can predict. Markup only: no pixel moved, proved
+  by the renders, whose every changed byte is one of those four
+  attributes.
+- **The wizard footer came back with its premise corrected, and
+  was ruled the day after.** Thirteen boards draw a Next, not
+  twelve; four hand-draw the padded footer, not three, and they
+  are exactly the four whose content runs edge to edge. The other
+  nine sit in a column that already owns the padding, each ending
+  on its own bottom value, so a master owning `12px 24px 16px`
+  either doubles their sides to 48px or lifts the button out of
+  the column and flattens nine rhythms into one. Ruled 2026-09-09:
+  `WizardFooter` is scoped to the edge-to-edge anatomy. The four
+  take it and no pixel moves; the nine keep their column-owned
+  spacing. The padding is what separates the three feet — this one
+  owns its sides because nothing above it does, `SealFooter` owns
+  none because it sits in a padded column, and a sheet's Done row
+  is a third shape again.
+- **The docs say what is true now.** The sensitive self-mark's
+  contract field ships and 2.5.3 stops claiming it does not; the
+  stream is slice 3's, not 2.7's, which is Search; share is on the
+  feed card with the row's stated order. `comment.md` gains the
+  comment's media grammar — four pictures or one video with its
+  poster, the clip at half a post's budget — and says the no-cover
+  rule of the gallery so it cannot be read as denying the clip its
+  face. `api-spec.md`'s post edit takes the nullable body the
+  shipped schema already has, and its tag-and-citation line states
+  the mechanics without denying that the edit surface stages them:
+  the records are separate gestures, the seal is one.
+- **The gate**: 119 → **120 screens**, 921 → **930 edges**, **81
+  gaps** and **flows 58/53/5** unchanged. Every unit of that
+  movement is the cover preview's board and the nine edges it
+  brought. Nothing else on the canvas moved a pixel except the
+  reply seal's three boards, which gained the line, and the
+  license sheet's two axis labels, which swapped a raw `0.5px` for
+  the tracking token that is the same half-pixel.
+
+### The audit answers — 2026-09-09
+
+The implementation session's UI-conformance audit closed with a queue:
+eight places where the boards or the docs contradicted themselves, and a
+row of questions the apps could not build past. These are the answers.
+
+**The scope ruling comes first, because it reframes several of them.**
+*Desktop is out of design scope until the mobile set is complete* — jakob:
+"we currently dont design and build for desktop.. if someone uses desktop
+they will see whatever there is, not optimized". The statement lives in
+§2. The desktop card idiom and the desktop fullscreen viewer park into a
+desktop round of their own.
+
+- **The board was right and the prose was stale, three times over.**
+  `DiscardConfirm` fills *Keep writing*, the safe answer, and the entry
+  record says so; `ReaderPostMenu`'s docblock still carried the in-place
+  license reveal the menus round replaced with a sheet; §7's component
+  inventory had fallen behind its own directories, and the documentation
+  pair belongs to the module file, not to each component it exports.
+- **`ReplyMediaErrors` takes its siblings' foot line.** Pictures are in
+  its tray uploading, so "…and they upload while you write" is true
+  there; no rule ever suppressed the upload half on a refusal.
+- **One add control, one voice.** `CommentEditActs` drew "+ Add · 1 of 4"
+  as a text button where `CommentEdit` drew the ruled InlineAction. The
+  ruled line wins on both.
+- **The display-name field says `Optional`** — item 36 ruled the name
+  optional, and Bio and Website already say it.
+- **Page titles are `title-large`**: every board's band title, and M3's
+  top-app-bar spec. `headline-small`'s home is a dialog heading, and the
+  type table names both.
+- **0.38 is the one disabled opacity**, Material's own. `--opacity-disabled`
+  had no reader left and is retired; `--opacity-resting-face` carries the
+  same number for a different purpose and stays.
+- **`--surface-field` is retired.** It named a fill `TextField` reversed
+  away from, and its only readers were the stance pad's field, which take
+  `surfaceContainerHighest` direct.
+- **§7's two named breakers take tokens.** `InlineAction`'s `sm` rung
+  reads `--text-label-small--letter-spacing`, the same half-pixel it spelled;
+  the over-media stance face takes `--size-face-over-media`, because the
+  emoji is a mark sized to the line face that stands in for it rather than
+  a rung of the type ramp.
+- **The details stage's Next is full-width**, like every other stage.
+  `ComposeDetails` and `ComposeCited` leaned on the column's stretch
+  instead of saying so, which is how the two apps came to differ.
+- **The waiting card can be put away.** It is the one task card naming
+  nothing to do, so it gains `Got it` in `TaskCard`'s secondary dress, and
+  **the dismissal is remembered on the device**: putting it away twice
+  would say the first tap did nothing.
+- **The APK line is the web's alone.** It offers a browser visitor the app
+  they are not in, and the app never carries it.
+- **Where `navigator.share` is absent the control copies the link**, and a
+  snackbar says *Link copied*. One action, never a menu of ours.
+- **Android's autoplay-suppressed signal is named**: *Remove animations*
+  (an animator duration scale of 0), or Data Saver restricting background
+  data. Those two are what the play-disc card reads.
+- **Focus is a platform split** — Compose's M3 focus treatment on Android,
+  the 2px `:focus-visible` ring on the web (§4).
+- **A completed action is confirmed by a snackbar on both platforms** (§3).
+  Web's coloured success line is the deviation and conforms in its catch-up.
+- **Explore and search land with slice 2.7's backend** — no surface built
+  against the exact-match lookup before it.
+- **The feed's filter honestly reads Newest until slice 3's ranker
+  ships**; the label and the behaviour never silently diverge.
+- **Which affordance folds into the ⋮ first was already answered** by the
+  share record above: the action row's order is also its queue, and share
+  is the first to move.
+- **The draft board's fresh-start line ends on its dash** — *"Or start
+  fresh —"*. The ruling is jakob's of 2026-08-31, recorded here now: the
+  grid below the offer is the rest of the sentence, and a clause spelling
+  out how a new post starts would repeat the fresh composer's caption.
+  Android has drawn it since that day; `ComposeDraft` takes it with this
+  round, and the web conforms in its catch-up.
+- **The gate**: 930 → **931 edges**, with **120 screens**, **81 gaps** and
+  **flows 58/53/5** unchanged. The one edge is the waiting card's `Got
+  it`. The fresh-start line is the one other drawn change; beyond those,
+  nothing moved a pixel — the type table and the retired tokens are
+  comments and declarations, the tracking token is the half-pixel the
+  literal was, and no board draws the over-media face.
+### The audit states — 2026-09-09
+
+Six of the conformance audit's open questions, ruled by jakob the same
+day and closed onto boards. Every one of them was a state the product
+genuinely reaches and the design had never drawn, so both apps invented
+an answer — and where two apps invent, they disagree.
+
+- **The chronicle scrolls like the feed.** No Show more, no page
+  numbers: infinite scroll, which leaves nothing to draw at rest and
+  exactly one thing to draw when it fails. `ProfileMoreFailed` is that
+  row — `Couldn't load more` with a `Retry` beside it, standing where
+  the next page would have been. It is **quiet, not `--error`**, and
+  that is the ruling's own word carried into the drawing: rows are
+  already on screen, so the page that didn't come means stale, not
+  gone. `EmptyState` refuses the colour for the same reason, and the
+  three things `--error` is allowed to mean — fault lines, signing
+  failures, field errors — do not include a list that stopped growing.
+  The in-flight state needs no board: it is `LoadingState`'s `Loading…`
+  in the same slot.
+- **An absence and a fault are opposite states.** `ProfileNotFound` is
+  terminal — the answer arrived and it was no, so it draws `EmptyState`
+  and offers no way on, because nothing about trying again makes a
+  profile exist. `ProfileUnreachable` is `NetworkError`'s family — no
+  answer arrived, so it keeps the failure voice and a Retry. What the
+  exemplar keeps and this one cannot is the point of the pair: the
+  seal's fault leaves a whole signed post standing beneath it because
+  the send is what failed, and here the read is what failed, so there
+  is nothing beneath it to keep.
+- **The reset link's destination exists at last.** `ResetNew` is one
+  password field and one commitment, with no field to paste the link's
+  own secret into — which is what made both apps put **token** on
+  screen, the word §3 bans. The boards never carried it: `Reset` has
+  said `Send reset link` all along, and the finding is the apps
+  diverging from the board, not the board needing a fix. What the
+  design owed was the destination, and the word leaves the apps when
+  they take the drawn lines. It draws no back arrow, for `Verified`'s
+  reason — a mail link has no previous screen of ours behind it.
+- **A malformed invite gets one line.** `That doesn't look like an
+  invite link.`, in the shape the register already uses for a local
+  format failure, on `InviteEntryError`. `JoinInvalid` answers a link
+  the product read and refused; this answers something it could not
+  read as a link at all — two facts, two boards.
+- **Android's verification landing is links-only.** `VerifiedApp` and
+  `VerifyExpired` are what App Links open when the URL reaches the app
+  instead of a browser. The browser landing tells the reader the app
+  already knows and sends them back to it, which is addressed to
+  somebody who is not there once the app is what opened. **No in-app
+  token paste** — the link is the proof, and the field Android ships
+  today existed only because this board did not.
+- **The reply pad's "?" opens its own topic.** The copy was never
+  missing: **Toward what you answer** has been in `copy-voice.md` since
+  the compose-session rulings, and it says the true thing — a reply's
+  stance is toward the post it answers, both axes, on the reply's own
+  signature. What was missing was a board drawing it and an edge
+  pointing there; `ReplyPad`'s "?" led to the seal's Signed-actions
+  dialog. Android left the dot out rather than open the post pad's
+  topic, which says "only for-or-against is yours to set" and is the
+  opposite of what is true here — the right call about the wrong
+  problem. `ReplyPadHelp` draws it over `ReplyPadBody`, the pad's real
+  surface lifted into `_shared.jsx` so the board underneath a modal is
+  never a stand-in.
+- **The gate**: 120 → **128 screens**, 930 → **957 edges**, **81 gaps**
+  and **flows 58/53/5** unchanged — no journey gained a blocker, and no
+  gap was closed or opened, because every board this round drew was a
+  state nothing had ever pointed at. The witness was re-blessed once,
+  for the growth the flow layer documents: `nav · New post` is declared
+  as a control, so its origin census grew from 25 boards to 27 when the
+  two full-chrome profile states joined it. No board outside the round's
+  own moved a pixel — `ReplyPad` included, whose drawing was lifted to a
+  helper and re-rendered byte-identical.
+
+The two rounds landed together, and the canvas at their close:
+**128 screens · 958 edges · 81 gaps · flows 58/53/5**.
+
+### The recovery and sensitive rulings — 2026-09-09
+
+Two loose ends the W0 conform lanes filed, ruled by jakob the same day
+(backlog items 41 and 42). Both are places where a board and a
+component said different things and each app picked a different one.
+
+- **The earned button stands, and the mismatch is a diverged prefix.**
+  "I've written it down" keeps `disabled={!matches}` — the code is
+  shown once, so leaving the screen is earned by typing it back, not
+  by pressing past it. That makes the press no trigger for anything,
+  so the mismatch line answers the typing instead: it appears the
+  moment the typed text stops being a prefix of the code, and never
+  before. An empty field says nothing, and a correct partial says
+  nothing — it is still on its way to being right, while a prefix that
+  has diverged never can be. The two halves are owned apart: the
+  surface words the line, the master decides the moment. The entry
+  map's edge reads the divergence, and `RecoveryCodeMismatch` now
+  holds a real diverged prefix — the line answers typing, so a board
+  drawing it over an empty field drew a state the surface cannot
+  reach.
+- **The recovery gate is the timing rule's one named exception.** *On
+  submit, then live only where already marked* is the rule, and it is
+  written for a form with a submit to wait for. This gate has none:
+  the confirm button never enables while the prefix is diverged, so a
+  signal held for submit is a signal that never comes.
+- **The sensitive sheet says the words, not the description.** *Veils
+  the pictures and the words until a reader chooses to look.* One line
+  for both scales, because the comment editor's Mark row opens the
+  same sheet: a comment has no description to name, and a post's
+  description is words. The "?" behind the sheet is separately blessed
+  copy and still says *the description* — item 42 carries it.
+- **The gate**: **128 screens**, **958 edges**, **81 gaps** and **flows
+  58/53/5**, every one unchanged — nothing was drawn or pointed at that
+  was not there before. Three boards moved a pixel and no more:
+  `ComposeSensitive` for its line, `RecoveryCodeMismatch` for the
+  prefix in its field, and `MapEntry`, which is 13px taller because the
+  reworded edge wraps.
+
+### The shell round's stops — 2026-09-09
+
+Three stops the w1-web conform lane filed against the shell (backlog
+item 43), ruled by jakob the same day. The middle one is a rule for the
+whole canvas rather than a fix to one board.
+
+- **The entry arrows name boards.** The header's arrow is a link and
+  never history, so a deep-linked visitor has to land somewhere: the
+  three entry screens that pointed at `back` now name a destination.
+  `InviteEntry` and `SignIn` are roots of the funnel and up from a root
+  is the public front door, `FeedBare`. `Restore` is reached only from
+  signed-in surfaces whose key is absent, so up is that reader's own
+  home — `KeyElsewhere`, which is also where the app opens for them, and
+  which re-offers the restore they walked away from. All six entry
+  screens name a board now, so the entry band's layout task can take
+  them together instead of splitting the flow's look.
+- **The canvas draws the whole app; each release builds its slice.**
+  Designing feature by feature would move the same surfaces every time a
+  new one arrived beside them, and every move is frontend work done
+  twice — so the boards settle the end state and the apps add the pieces
+  their slice binds. An affordance whose destination is neither designed
+  nor built stays out until one exists: never a dead control, never a
+  label saying what the code does not do. The statement lives in §2, and
+  the Newest ruling above is the same principle read from the label's
+  end.
+- **The chats affordance is end-state truth.** `CograBand`'s line and
+  the graph's gap were never in conflict. The band carries chats because
+  messaging belongs on every tab root; the apps draw it the release a
+  chat surface exists to receive the tap. Nothing is redrawn — the edges
+  stay as they are, and the docblock says which half is the end state.
+- **The guest and applicant bands ship now; the rank waits.** A band
+  that names whose view this is tells the truth the moment it is drawn,
+  and the vantage it names — the genesis moderator for a bare arrival,
+  the inviter for an applicant — is knowable without a ranker. So both
+  bands stand from the start, reading newest like every other feed until
+  slice 3. What waits for the ranker is the borrowed *order*, the
+  invite-link vantage and the contract field it needs, and the band's
+  line about ranking. Naming a vantage a feed does not yet rank from is
+  the staging rule, not the label-versus-behaviour divergence the Newest
+  ruling refuses — that one is about what a shipped control claims.
+- **The gate**: **128 screens**, **958 edges**, **81 gaps** and **flows
+  58/53/5**, every one unchanged — three edges were reworded in place,
+  and nothing was drawn or pointed at that was not there before.
+  `MapEntry` is the only board that moved: three readouts take their new
+  destinations, three connectors appear where a terminal drew none, and
+  two inbound counts rise with them.
+### The settings round — 2026-09-09
+
+The surface three shipped "?" texts had been promising and no board had
+ever drawn. Both apps have shipped a full settings screen since slice 1;
+the design owed it a shape, and 2.5.3's default-license preference owed
+it a home. Ruled by jakob the same day (backlog item 20).
+
+- **One scrolling page, ordered by use.** Theme, taking a stance,
+  writing, reading, key backup, sessions, credentials, sign out — a
+  frequency ranking, not a taxonomy, which is why credentials sit near
+  the bottom where a taxonomist would have led with them. It is a task
+  the reader leaves rather than a place they live in, so it carries no
+  bottom bar and the back arrow goes where the gear was. The board draws
+  the whole scroll: the ruling this round records is an order, and an
+  order cut off at 844px is an order nobody can review.
+- **`SettingsGroup` and `SettingsRow` are the anatomy**, minted here
+  because eight groups improvising eight layouts is the page the ruling
+  asked us to leave behind. A quiet heading above, a filled card of
+  rows, a footnote under it — and the footnote is what keeps a row
+  short: the fact a group owes the reader is said once, beneath it,
+  instead of inside every row. The trailing edge is the variant, and
+  the chevron means one thing only: this opens another surface. The
+  **house switch** joins them: drawn once on the sensitive sheet, and a
+  component the moment a second surface wanted one.
+- **No leading icons, and that is §5 rather than taste.** The page
+  would want brightness, palette, key, devices, logout, and the
+  system has none of them; icons here are exported from Material's set,
+  never drawn. Grouping and headings do the scanning work an inset
+  grouped list asks of them anyway.
+- **Theme is drawn on the page, not behind a picker.** It is the one
+  setting whose effect is the surface the reader is standing on, so a
+  chooser covering the page would hide the very thing it changes. Three
+  one-word readings need no explaining and take the segmented control,
+  which sheds the group's card: a bordered pill inside a filled card is
+  two containers saying the same thing a few pixels apart. The stance
+  input's three readings each need a line, so they stay rows.
+- **Credentials become rows.** Both apps stack three whole forms — six
+  fields, three commitments — on the settings page itself. Each is now
+  a row showing where it stands, and the three screens behind them are
+  gaps, honestly named. That is the round's one deliberate subtraction
+  from what ships.
+- **The default license is the contract's first account preference.**
+  It joins `UserPreferences`, the cross-device type `api-spec.md`
+  already carried, and its row opens the sheet the seal opens — one
+  license surface, never a second. Theme and the stance input stay
+  device-local and out of the contract.
+- **The backup ceremony splits in two.** The settings card stops
+  showing a code inline (item 41.1): `SettingsBackup` states the
+  consequence and takes the proof, and the drawn `RecoveryCode` board
+  is what the commitment leads to, trap and all. It is `Restore`'s
+  shape on purpose — the two screens ask for the same secret in the
+  same words for opposite reasons. **The proof step is the platform's**:
+  a screen-lock gate where the OS offers one, the current code where it
+  cannot.
+- **`YourKey` draws the revealed state**, because what no other surface
+  shows is what an export looks like: two encodings of one secret, each
+  named exactly — PEM, PKCS#8, hex, Ed25519, §3's stated exception. The
+  gate in front of it is the platform's, like the backup's.
+- **The gate**: 128 → **131 screens**, 958 → **979 edges**, 81 → **82
+  gaps**, and **flows 58/53/5** unchanged. The three new boards carry 21
+  edges; two gaps closed where the profile's gear had pointed at
+  nothing, and three opened where the credential rows now point at
+  screens the round did not draw. No board outside the round's own moved
+  a pixel — only the generated maps, which grew with the edges.
+
+Reviewed the same day, and finished on the review's own ruling. The
+page had five rows pointing at nothing of its own: two borrowed a board
+from another screen, three ended in an honest gap.
+jakob's reading was that a canonical canvas which stops at the row is
+a canvas implementation finishes by guessing, and guessing is where a
+settings page starts looking improvised. Six boards close it, and none
+of them invents a control.
+
+- **A borrowed sheet is not a drawn board.** Pointing the license row
+  at `ComposeLicense` and the reading row at `FeedSheet` was true about
+  the control and silent about the surface: those boards draw the seal
+  and the feed beneath their sheets, and neither is what a reader is
+  standing on when they open the row. `SettingsLicense` and
+  `SettingsReading` draw the same sheets over the settings page, which
+  is what the product actually shows.
+- **The page beneath is the page, not a few of its rows.** Both boards
+  render `SettingsBody` — the same body `Settings` draws — because the
+  ruling this round records is an ORDER, and a hand-made handful of
+  rows under a wash would be a second order nobody ratified. `Settings`
+  frames the whole scroll; these two keep the phone's 844 and let the
+  page run past it, the way a scrolling page under a sheet does.
+- **A settings sheet is titled by the row that opened it.** The seal's
+  sheet needs no heading — the composer is still visible around it —
+  but a sheet that covers the surface it came from has to say what it
+  is. The title is the row's own words, so the two cannot drift, and
+  the "?" moves onto the heading's row, which is `SheetTitle`'s own
+  rule. Neither sheet gained a control; one gained a heading.
+- **The license sheet's settings reading is the one line it owed.**
+  *Terms for anyone who reuses this* is written for the post being
+  signed and stays there. The account default says what it actually
+  does: where every new post starts, binding nothing already
+  published — `api-spec.md`'s own wording, said to a reader. It keeps
+  `Done`: over settings nothing reacts behind a sheet to be watched,
+  and both of the page's sheets commit.
+- **The filter's two ends now meet.** The help text has always said
+  *your default lives in settings*; this is settings, and it is the
+  same sheet — `FeedFilterSheet`, the half of `FeedFilter` that is not
+  the pill. Search took the trigger alone because it owns its sheet;
+  settings takes the sheet alone because its row is the trigger. The
+  order section keeps §13's standing obligation: the drawn default is
+  `Ranked`, and until slice 3's ranker ships the shipped one reads
+  Newest, here as in the feed.
+- **Three credential screens, one family.** `ChangePassword`,
+  `ChangeHandle` and `ChangeEmail` take `Restore`'s column, which
+  `SettingsBackup` already took: heading, the consequence, the fields,
+  one commitment, the thing to know last. Each carries a fact the apps
+  leave to be discovered — the password change keeps THIS device signed
+  in where a reset does not, a freed handle is claimable and its links
+  die, and an email change is proved from both ends.
+- **The email change is two boards, and the line both apps ship is
+  wrong.** *Check both inboxes — either message's code confirms the
+  change* tells a reader one message finishes the job. `auth.md` and
+  `api-spec.md` agree it does not: the mutation takes either side's
+  proof in either order, but the change applies only once BOTH have
+  landed — and the two errands differ, a code to type from the current
+  address and a link to click at the new one. The code field does not
+  exist until the messages have gone, so the request and the
+  confirmation are two states and two boards.
+- **What is drawn is the resting state.** Validation is on submit
+  (§13's timing rule), so an untouched form has nothing marked. The
+  marked states of all four task screens are undrawn, and so is the
+  half-confirmed email — the graph carries that one as an outcome of
+  the confirm rather than a board.
+- **The gate**: 131 → **137 screens**, 979 → **1006 edges**, 82 → **79
+  gaps**, and **flows 58/53/5** unchanged. The six boards carry 27
+  edges and close exactly the three credential gaps, opening none. No
+  hand-drawn board moved a pixel — not even `Settings`, whose body
+  moved to `_shared.jsx` byte for byte; only the five generated maps,
+  which follow the edges.
+
+Reviewed on the boards themselves, and three findings came back. Each
+is a thing the drawing said that the surface would not hold.
+
+- **A reading squeezed to a stub is not a reading.** `LicenseAxis` gave
+  the tier's name flex-basis zero, so `Credit commercially` and
+  `Record commercially` broke over two lines while their consequence
+  wrapped ragged beside them — and the axis stopped reading as a
+  column, which is the one thing an axis of three has to do. The name
+  now takes the width its words need and the consequence takes what is
+  left, ragged to the LEFT so every row ends where the one-line rows
+  end. The dot and the consequence centre on the name's first line, so
+  a longer consequence grows the row downward and nothing above moves.
+  **The defect was the seal's too** — `ComposeLicense` had shipped it
+  since the conformance round, and one master carries both sheets, so
+  the compose board is the fix's second attributed hunk.
+- **A sheet that covers its own trigger has to commit somewhere the
+  reader can reach.** Titled, the filter sheet runs past its 88% and
+  `Reset` became the last scrolled item, at the screen's bottom lip
+  with nothing under it. `FeedFilterSheet` gains a `foot`: given one it
+  owns its height, the sections scroll inside it, and the Done row —
+  the license sheets' third anatomy — is pinned beneath them, clear of
+  the safe area the sheet already pads for. Given none it is sized by
+  its content, so the feed's own sheet is unchanged; the feed's filter
+  is the one that applies live, and the one with no `Done`.
+- **A confirmation that draws one half reads as the whole.**
+  `ChangeEmailConfirm` showed the field for the code and nothing for
+  the link waiting at the new address, and `Confirm email change` said
+  the press finished the job. `auth.md` is explicit that it does not.
+  Both sides are drawn as a pair now, each naming its address and
+  saying it is still outstanding, and the commitment is `Confirm the
+  code` — what pressing it actually does.
+- **The gate**: **137 screens**, **1006 edges**, **79 gaps**, **flows
+  58/53/5** — every count unchanged, because none of the three is a
+  route. Four boards moved: the three reviewed, plus `ComposeLicense`
+  through the shared axis. `FeedSheet`'s only diff is a generated
+  `useId` value, which followed the master's new branch and no pixel.
+
+### The tag round — 2026-09-09
+
+Every `#chip` in the system pointed at a gap, and there were
+twenty-four of them — the most any one undrawn surface had ever
+carried. Slice 2.3 shipped the topic page, the picker and the pair
+sliders in both apps in August; the canvas had drawn none of them, so
+what the apps ship had never been ruled. Ruled by jakob the same day.
+
+- **"Tag" is the word on screen; "topic" is the word in the record.**
+  Tags is what people already call these, and *topic* came in from the
+  L1 author — so it stays where it belongs, in the contract, the docs
+  and the graph, and never reaches a label, a count, a placeholder, an
+  accessible name or a "?" text. The sweep took `FieldLabel`,
+  `FEED_KINDS`' label, `TopicsLine`'s worded counts, the sheet's title
+  and accessible name, Explore's placeholder, four blessed "?" strings,
+  the graph's own edge labels and case texts, and both flow
+  descriptions. **The law stops at the code's names**: `TopicChip`,
+  `TopicsLine`, `TopicRemovable`, the `topics` prop, `kind="topic"`,
+  the `NODE_GLYPHS` keys and the `open-a-topic` / `add-a-topic` flow
+  names all stay, because they name the record and nobody using the
+  product reads them. `FEED_KINDS` is the law in one line — value
+  `topics`, label `Tags`. One word keeps its ordinary sense: a help
+  dialog's *topic* is its subject, which is why `ReplyPad`'s case text
+  was left alone.
+- **One spelling, and it is the bare word.** `+ Add a tag`, drawn as
+  `InlineAction` on all nine composers that offer it, retiring the
+  outline button seven of them wore. The tag block now takes the
+  References block's exact anatomy — label, the staged set, the bare
+  word under it — because staging a tag and staging a citation are the
+  same errand and two shapes for it was an accident of when each was
+  drawn. The nine also collapse the marker table's two pins into one.
+- **The page is a subpage of search**, so its arrow is a link to
+  Explore and it carries no bottom bar — the settings round's rule for
+  a surface a reader arrives at, reads and leaves. Its title is the tag
+  with its `#`.
+- **No order control, and the contract is the reason.** `taggedContent`
+  is limit-bounded and returns a plain list, newest claim first; the
+  schema says a Relay connection "would promise a pagination the read
+  cannot honour", and a Ranked/Newest swap would promise an ordering it
+  cannot serve either. So there is no order section, no pagination and
+  no load-more. In the end state the ranker orders this list — a
+  staging note, never a control.
+- **Following is a stance, and its surface waits for slice 3.**
+  hashtag.md §3 makes a follow an **Affinity** record toward the Type,
+  parameters signed over [-1, +1], so the stance control is its input —
+  but a stance anchor on the page header's trailing edge read as a
+  stance readout for the post the reader arrived from, and jakob's
+  review removed it. The tag page carries no follow control; the
+  gesture gets its surface in slice 3's round, which is also when the
+  roadmap first lets it ship (topic follow is client-hidden until the
+  topic feed lands).
+- **Every row carries its claim's pair, plainly.** A signed act is
+  public record, so `TaggedRow` simply shows it — and the reveal
+  gesture on content surfaces stays the tags-and-references sheet.
+  A chip's tap goes to the tag's page, on every surface, always.
+- **The empty page is contractual, not an error.** Every well-formed
+  name already denotes a Type, so `hashtag(name)` resolves without a
+  registry row; the board says the tag exists and the list does not
+  yet, and never "not found".
+- **The picker has no creation gesture, and cannot.** A Type anchors
+  vacuously and is a commons — a never-used name is unused, not
+  missing — so there is no `Create #foo` anywhere, and the footnote
+  carries the mechanic instead. Its candidate list is the end state:
+  Hashtag `name` is indexed, but only from 2.7, and
+  `referenceCandidates` explicitly refuses to offer topics today, so
+  the apps ship type-only until then. The legality gate is stated under
+  the field and canonicalization is previewed live, because a reader is
+  choosing a permanent public endpoint.
+- **The pair editor is the pad** (`TagPad`), over the reach the census
+  gives a Tag rather than over a stance's square — see *The tag pad*
+  below. Defaults are `TagInput`'s, **+0.1 and 1**. The staged chip
+  became a button for the first time: the conformance round left the
+  pill inert because removal was the only thing a tag was for, and now
+  it is not.
+- **A tag's pair is written unlike a stance's, deliberately.**
+  Relevance keeps its sign because the sign is the content; confidence
+  drops it, because a `+` on a value with no negative half advertises a
+  pole that does not exist. `+0.40 / 0.90`, assigned once in
+  `formatTagPair`. The compose default for a tag is **+0.1 / 1**;
+  references keep +0.10 / +0.10, both axes being signed there.
+- **A tag is a search result kind**, wearing the `#` tile and a rank on
+  its right edge — never a use count, which would be nobody's view in
+  particular and unexplainable.
+- **The looks bar.** Mastodon's hashtag page gives the shape: the tag
+  as the title, a chronological column of whole posts (its header
+  follow was taken first and removed at review — above). Refused: its
+  "N people talking"
+  figure (a global popularity count is the badge farming §3 rules out);
+  Instagram's media grid (this list is not all media) though not its
+  absent order switcher, which we reach by the opposite route — it
+  curates algorithmically and we cannot; X's Top / Latest / People tabs
+  (a segmented row of tiers the contract cannot serve, on a page that
+  would then be search again); Tumblr's "post this tag" button (a
+  compose entrance nothing has ruled). The no-creation rule is where
+  this product parts from all four, and the contract forces it.
+- **The gate**: 137 → **142 screens**, 1006 → **1039 edges** (1043
+  drawn, then jakob's review removed the follow anchors and the
+  comment's reply affordances), 79 →
+  **56 gaps**, and flows 58/53/5 → **58/55/3**. The twenty-four close
+  and one opens — `TagPage`'s own Post Score row, which every board
+  drawing a post card carries. `open-a-topic` and `add-a-topic` resolve
+  for the first time, which is the round's headline: both had been
+  blocked since the flow set was authored. No hand-drawn board moved a
+  pixel it was not sent to move — the nine composers took the spelling,
+  the six that stage a tag took a via stamp, and the maps followed the
+  edges.
+
+### The small-rulings batch — 2026-09-10
+
+Twelve questions the audit and conform lanes had left standing, none of
+them large enough to have earned a round of its own. Ruled by jakob in
+one sitting.
+
+- **A comment clip's cover crops exactly as the clip does.** The post
+  scale's rule reaches the comment scale unchanged — the cover is the
+  same clip's face, so one frame holds both — and letterboxing exists
+  nowhere, pictures included.
+- **A staged citation's pair is set on the pad.** Both of a citation's
+  axes are signed, so the square is its own shape corner to corner.
+  Item 18's remaining half, closed.
+- **A tag that would need cutting is not drawn as a chip.** `TopicsLine`
+  folds it into the worded counts instead, so a reader gets either a
+  whole name or a number saying how many are left. The ellipsis retires:
+  a truncated name is one the reader can neither read nor tap.
+- **Settling shows in the sheet, never on the chip.** A chip is a
+  destination, and a destination wearing a state says the state belongs
+  to the place rather than to the act. The tags-and-references sheet is
+  where the act is, so that is where it says it is still settling.
+- **The borrowed-view band dies after signing, not on approach.** While
+  the vouch-back is unsigned the reader has no stance of their own and
+  the view is still borrowed, so the band stands through the whole
+  approach to the pad and goes when the signature lands.
+- **The Collective founding-name force is removed.**
+  `PrepareCollectiveInput`'s `displayName` is optional, an explicit null
+  clears it exactly as on a person's profile, and a Collective with none
+  written is presented by its handle. The handle is the only name the
+  product requires, of anyone.
+- **Each "?" names its own dialog.** The three stance pads read `Where
+  you stand on it`, `Toward what you answer` and `Your first stance` —
+  their own dialogs' titles, the way every other "?" in the system
+  already takes its subject. One name across three surfaces says only
+  that a dialog exists; `How stances work` stays where the control
+  itself is the subject.
+- **An @-scope hit on a tag is indirect, and the drawing stands.** The
+  row's second line says the route out loud ("tagged by @sol"). A
+  person's scope holds their acts, and the tag is what one of those acts
+  points at — never a direct hit of its own.
+- **A field's flow badge moves to the field's wrapper.** `::after`
+  generates no box on a replaced element, so a badge pinned to the
+  `<input>` was valid and invisible at once. It moves where it paints
+  and the gate accepts it there: a marker nobody can see verifies its
+  own presence and nothing else.
+- **Three closures.** The license sheets take the 88% height class, like
+  every sheet not deliberately taller. A settings section label binds to
+  the group it heads by sitting nearer to it than to the group above,
+  rather than floating equidistant between them. And `--surface-pad` is
+  not minted — one padding token across every surface would name a
+  resemblance the surfaces do not have.
+- **The settings round's copy is blessed** and sits in the register's
+  topical sections, the page's own words and the six subpages alike.
+- **The media edit's body line is blessed**: "A post's body is words or
+  media, never both." It states the body's rule, never a lock on the
+  post in front of the reader — an edit carries complete state and may
+  flip the kind outright, every picture replaced by words or the words
+  by a gallery. Web's profile save answers with nothing; a snackbar line
+  is drafted and awaits blessing.
+
+### The citation's pair, and the settling row — 2026-09-10
+
+Two rulings the tag round left standing, both about a pair the author
+sets and a reader reads. Ruled by jakob the same day.
+
+- **A staged citation's pair editor is the pad, in a sheet
+  (`RefPair`).** The instrument follows the census, not the surface.
+  `ReferenceInput` (api-spec.md) gives a citation relevance `[-1, 1]`
+  and support `[-1, 1]` — both signed — so the pad's square over two
+  signed axes fits it exactly.
+- **The poles are the citation's, in the slots the contract assigns.**
+  Relevance occupies `pDirected`, the pad's horizontal, and asks how
+  much this post leans on what it cites — `Barely` to `Entirely`, the
+  words `TagPad` uses for the same slot. Support occupies
+  `pInterest`, the vertical, and is endorsing against refuting, so
+  `Against` and `For` ride there. Those two words sit on the horizontal
+  when the pad carries a stance: the rotation is the contract's doing,
+  and the pad names its poles on the field so that no reader has to
+  carry the mapping in their head. `StancePad` therefore takes its four
+  words as `axes`, defaulting to `STANCE_AXES` — the control owns the
+  geometry, the record family owns the words.
+- **The face rides the pair.** The readout carries the nearest anchor's
+  face beside the exact numbers, and the lookup is `STANCE_ANCHORS`
+  unchanged, because the citation's two axes fill the two slots the
+  contract assigns. The anchor's WORD stays behind: it names a feeling
+  about a stance, and a citation is not one, so the spoken reading names
+  the two axes and their values instead. The readout sits above the
+  field, where a thumb cannot cover it.
+- **The row opens it, the × still removes.** `StagedReference` takes
+  `onEdit` on `TopicRemovable`'s terms: pressable only where there is
+  something else a citation is for, two separately named controls
+  ("Remove &lt;name&gt;", "&lt;name&gt; — set how it relates"), and inert
+  without it. One phrase for opening a pair editor, whichever family
+  the pair belongs to. Four composers wear it — the details stage, the
+  cited details stage, the post edit, and the reply's seal with a
+  citation staged, which borrows the sheet as it borrows the license
+  and sensitive sheets.
+- **The chip says nothing about the order; the sheet does.** A staged
+  tag or citation that is signed but not yet ordered on L1 reads
+  `Still settling` in the tags-and-references sheet — `PendingMarker`'s
+  own words, its own two tokens, no colour and no type role of its own.
+  It rides the pair at the row's edge rather than the name, because
+  what has not landed is the act, not the node it points at: the
+  attachment `TaggedRow` already makes.
+- **The gate**: 142 → **143 screens**, 1039 → **1046 edges**, gaps hold
+  at **56** and flows at **58/55/3** — the round adds a destination, not
+  a journey. `ComposeDetails` is factored to `_shared.jsx` so the sheet
+  stands on the real stage rather than a stand-in of it, the overlay
+  rule from 2026-09-08.
+
+### The bottom bar's re-tap ladder — 2026-09-10
+
+The bar's slots each had a destination and no behaviour: a tap on the
+tab the reader was already standing on did nothing — in the graph,
+where twenty-four edges read *already here*, and in both apps, which
+navigate and let the framework find nothing to do. Ruled by jakob the
+same day (backlog item 47). The slots are stateful re-entry points, and
+a single tap — everywhere, with no second gesture to learn — climbs a
+four-rung ladder.
+
+- **Another tab returns in the state it was left**, its whole stack and
+  its scroll, not its root. A tab never opened arrives at its root,
+  fresh. That is the rung that makes the other three matter: if a tab
+  reset on every visit there would be no state to re-enter.
+- **The tab you are on pops to its own root** from anywhere deep in it,
+  and the root's scroll is wherever it was left — a pop is not a
+  reload.
+- **At the root, scrolled, the tap goes to the top**, animated, so the
+  jump reads as travel over a list the reader still owns.
+- **At the top, only the feed answers.** It refreshes and loads what is
+  new; Explore, Wallet and Profile do nothing, having nothing the
+  reader is waiting on.
+
+- **Refresh has exactly two gestures, both deliberate** — the re-tap at
+  the top, and the pull-down while all the way at the top. A restored
+  feed shows the list as it was left; nothing reloads merely because a
+  reader came back, because a feed that moves under a returning reader
+  loses the place they were keeping. **The indicator is the platform's
+  own**, so the system draws none.
+- **The pull-down lives on every full-screen scrolling root** (ruled
+  2026-09-10): the feed in all its views, the profile pages and the
+  chronicle, search results, the wallet's history, the tag page — and
+  **never inside a bottom sheet**, where pulling down already means
+  dismiss and one gesture may not mean two things. The re-tap refresh
+  stays the feed's alone; the pull-down is the gesture every root
+  answers.
+- **A stack is where a screen was opened FROM, never what it is
+  about.** A post detail, an actor's profile and a tag page reached
+  from the feed are Feed's stack, and one screen may sit in two tabs at
+  two positions at once. The Profile TAB is your own profile; your own
+  profile reached from a chip in the feed is still Feed's. The reel
+  stream is Feed's too, which is what its edge has said since the reel
+  round.
+- **The compose slot has no ladder** — it is an action, not a
+  destination, the deviation the master already declares, and the
+  kept-draft rules govern what a second tap meets.
+- **A transient is not state.** A sheet or dialog that was up when the
+  reader left is gone when they return; a tab restores its screen and
+  its scroll, never what was covering them.
+- **Every viewer class climbs the same ladder.** Guest, applicant and
+  key-absent readers get the identical four rungs, and the gates in
+  front of the slots are unchanged — one shell for everyone is the
+  bar's standing rule, and the ladder is part of the shell.
+- **The state is the session's.** A restart lands on Feed's root,
+  fresh; nothing is promised across launches.
+- **Back is the platform's.** Android's system back pops within the
+  current stack, then from another tab's root to Feed's root, then
+  leaves — never a tab switch mid-stack. On the web the tabs are
+  routes: the browser's back and forward own the history, the ladder
+  governs clicks on the nav, and scroll is restored per route entry.
+
+- **The graph had already drawn the pop, and only the pop.** A deep
+  board's active-tab edge has always named the tab's root as a board —
+  `PostDetail`'s Feed slot lands on `Feed`, `ProfileOther`'s Profile
+  slot on `Profile` — so rung two was drawn before it was ruled, and no
+  edge changed shape to record this. What said nothing was the root
+  boards' own edge, and those twenty-four self-terminals now carry the
+  scroll and, on the feed's roots alone, the refresh as a second
+  outcome. The cross-tab edges keep naming each tab's ROOT: a restored
+  stack has no single board to point at, and the root is the honest
+  representative of one.
+- **It is ahead of both apps, unevenly.** Neither does anything on an
+  active-tab tap, so rungs two through four are a conform item for the
+  implementation session. The rest is further along than the drawing
+  suggested: Android already restores a tab's stack and scroll, already
+  pops to the root from a drill-in, and already carries a
+  pull-to-refresh; the web restores the feed alone and has no pull
+  gesture at all, its feed view stating the absence as intent — new
+  posts from a reload or from Retry — which this ruling overrides.
+- **The gate**: screens, edges, gaps and flows all unchanged by this
+  round — twenty-four cases were reworded in
+  place, and nothing was drawn or pointed at that was not there before.
+  No hand-drawn board moved a pixel; six map boards grew where the
+  longer case wraps.
+
+### The batch's review — 2026-09-10
+
+jakob's review of the small-rulings batch, ruled in one sitting. The
+edit body's editability and the single-long-tag state are ruled in the
+same review and recorded with the boards that draw them.
+
+- **Wherever a pair is being set, the readout shows the nearest anchor's
+  face.** Emojis whenever possible: a face is the fastest rough read of
+  where a knob currently sits, and the exact pair beside it carries the
+  fact for anyone who wants it. `RefPair` takes it — the lookup is
+  `STANCE_ANCHORS` unchanged, the two slots being the ones the contract
+  assigns. What does not travel with the face is the anchor's word: it
+  names a feeling about a stance, so a citation keeps the face and
+  speaks its own two axes instead. A pair whose axes the anchor table
+  cannot speak for — a tag's census-bounded confidence — has no face to
+  be nearest to, which is what "whenever possible" excludes.
+- **A reference count counts every kind.** The number on a card is the
+  length of the list the sheet draws, whatever kind of node each row
+  points at, a cited chat message included. A count that quietly dropped
+  a kind would say the sheet holds less than it does, and the sheet is
+  the only place the number can be checked.
+- **The key-absent settings rows open drawn boards.** Item 20's review
+  rule reaches its last two: `SettingsBackupKeyAbsent` and
+  `YourKeyAbsent` draw what the Recovery code and Your key rows open
+  when the key is elsewhere. Both ride the drawn pattern —
+  a `tertiary-container` notice leading the page, restore first, the one
+  "?" on the key — and both stop short of the act, because making a new
+  code needs the key and the key page's whole body is the key. Neither
+  carries an escape hatch: nothing is staged, so the back arrow is the
+  way out, which is `WalletKeyAbsent`'s shape.
+- **The license sheets keep the 88% cap.** They stay content-sized; the
+  raised cap binds only when terms run long enough to reach it.
+- **The gate**: 143 → **145 screens**, 1046 → **1052 edges**, gaps hold
+  at **56** and flows at **58/55/3**. The two new boards join the
+  restore flow, whose control-start now reads six boards rather than
+  four, and the witness is re-blessed for that.
+
+### The edit body round — 2026-09-10
+
+One ruling, from jakob's hand review of the small-rulings batch: post
+editing must alter the BODY as well — remove and add pictures, remove a
+video, change the words — and a complete swap from a media post to a
+text post or back is allowed. The body line blessed that same day said
+as much in copy; the edit board still drew a body nobody could touch.
+
+- **The gallery is not a readout.** The picked row keeps its one
+  affordance, and beside it stands the add control the composer and
+  the comment edit already spell — "+ Add pictures · 2 of 10", what is
+  held against the cap. Nothing else on the edit changes: an edit was
+  always a post being composed with its answers filled in, and this is
+  the answer that had been left read-only.
+- **The blessed line is finally drawn.** "A post's body is words or
+  media, never both." was blessed for this surface and appeared on no
+  board. It sits under the gallery, where copy-voice puts it — saying
+  why no words field stands there, and by saying it as the body's rule
+  rather than this post's, saying that the field can come back.
+- **Show all over the edit is its own board (`EditPicked`).** The
+  overlay rule of 2026-09-08 decides this: a sheet covers the surface
+  the reader came from, and `ComposePicked` draws the PICK STEP —
+  a tray, a prompt offering "Write words instead", a wizard foot — which
+  an author editing a published post was never on. `EditCompose`'s row
+  now opens the sheet over `EditComposeBody`, and `ComposePicked`'s Done
+  stops claiming an origin it no longer has.
+- **The flip has a destination, and it is one board.** `EditWords` is
+  the edit with `WordsBody` where the row stands. A words post opened
+  for editing arrives there as an entry, the way `EditComposeVideo` is
+  one for a clip; so does a media post whose last picture was just
+  removed, with the field empty. They are the same surface, so drawing
+  the second separately would be drawing the first twice — the arriving
+  edge carries the difference in its case, which is what a case is for.
+- **The removals now land somewhere.** `EditPicked`'s last × and
+  `EditComposeVideo`'s × both point at `EditWords`. The video edge's
+  words — "the post is its words" — were already written and pointed at
+  `self`; a sentence that names a destination should reach one.
+- **A clip's share of the flip is the × alone.** No add control joins
+  the video edit: a body one clip fills has nothing to add to, and a
+  clip is never swapped for another. The quiet line stands where the
+  control would, from the staging copy — its second half, "Its cover
+  comes next", is the wizard's and is dropped where the cover is already
+  on screen.
+- **The words edit carries no description.** A description is how words
+  stand beside pictures (the compose flow, above); with the body already
+  words it has no job, and a second prose field would only ask the
+  author which one the post is. The title stays — it names a post of
+  either kind.
+- **The growing body field moved to `_shared.jsx` (`WordsBody`).** It
+  was hand-spelled on `ComposeWords` because no `TextField` grows; a
+  second board needing it made it board-local no longer. `ComposeWords`
+  renders byte-identically after the move, which is what a factoring
+  owes.
+- **The gate**: 143 → **145 screens**, 1046 → **1064 edges**, gaps hold
+  at **56** and flows at **58/55/3** — the round adds destinations, not
+  journeys. The witness was re-blessed for one line: `ComposePicked`'s
+  Done case, reworded because the edit no longer opens it. `EditActs`
+  and `TagPad` redrew where the shared edit body grew its two rows.
+
+### The tag pad — 2026-09-10
+
+What a staged tag chip opens, and what the pair it sets reads as.
+Ruled by jakob the same day.
+
+- **The pair editor is the pad (`TagPad`).** Aboutness and certainty
+  are one place rather than two tracks, and a place is picked in one
+  gesture. The contract's slots are untouched — relevance in
+  `pDirected`, confidence in `pInterest` (`TagInput`, api-spec.md) — so
+  what the reader drags is what the record carries.
+- **The field is drawn over the reach the census gives.** Confidence
+  is census-bounded to `c ∈ [0, 1]` (hashtag.md §4), and the composer
+  authors only the positive half of relevance: an author saying what
+  their own post is about says how much, never how much it is not. So
+  the square is the reachable square corner to corner, with no half
+  hanging dead, and the poles on the field are `Barely` to `Entirely`
+  across, `Guessing` up to `Certain`. `StancePad` takes the bound as
+  `ranges` the way it already takes the poles as `axes` — the control
+  owns the geometry, the census owns how far each slot reaches — and
+  every pad already drawn renders byte-identically under it.
+- **The dead-ground lines belong to a signed axis only.** They mark
+  where an axis's zero falls, and both of this pad's axes start at
+  zero, so it draws none: a hairline along the field's own edge reads
+  as a border, not as a meaning.
+- **The face is the tag's own, and the table is disjoint from the
+  stance faces.** Thirteen anchors, not one glyph shared with
+  `STANCE_ANCHORS` — a face that means "Like this" about a post must
+  never also mean "locked on" about a topic, or the one lossy readout
+  the system has starts lying about which family a reader is looking
+  at. A tag is a claim about what a post is about and has no mood to
+  wear, so its table is objects rather than faces.
+- **The table is four aboutness bands by three certainty bands, plus a
+  floating thirteenth.** Certain, from `Barely`: 🔍 "had to look, but
+  it's in there" · 🔗 "definitely linked" · 🔒 "locked on" · 🎯
+  "exactly this". Fairly sure: 💧 "a drop of it, I think" · 🧩 "a piece
+  of the picture" · 🧲 "pulled toward it" · 🗝️ "likely the key to it".
+  Guessing: ❔ "faint maybe" · 🎲 "could go either way" · 🎣 "fishing
+  for it" · 🔮 "big claim, divined". And 💯 "all of it, full stop",
+  which floats just left of 🎯 and higher, so the very top of the field
+  is reachable without taking the Entirely corner from the row that
+  owns it. The twelve sit at band centres — aboutness 0.15, 0.45, 0.72,
+  0.95, certainty 0.15, 0.55, 0.90 — and 💯 at 0.86 / 0.95. Like
+  `STANCE_ANCHORS`, these values are the contract: both clients read
+  them.
+- **The readout is one glyph beside the exact pair**, in the labelled
+  block every pair-setting readout wears, above the field where a thumb
+  cannot cover it. The numbers are `formatTagPair`'s — relevance
+  signed, confidence unsigned. The anchor's word does come with it
+  here, unlike a citation's: these words were written for this table
+  and say what the pair claims, so the spoken reading carries the word
+  and both axes.
+- **The non-drag equivalent is the two labelled tracks.** The pad is a
+  drag gesture, so §10's standing demand reaches it as it reaches the
+  stance pad: `StanceSlider` carries the tag's own bound and poles, and
+  typed entry takes that bound rather than the stance's. It has to
+  exist and be reachable, not be drawn a second time.
+- **The gate**: 147 → **148 screens**, 1070 → **1073 edges**, gaps hold
+  at **56** and flows at **58/55/3** — the round adds a state, not a
+  journey. The witness did not move: no declared flow crosses this
+  sheet.
+
+### The tag field's floor, and the untag — 2026-09-11
+
+jakob's review of the tag pad round. The field let a drag reach
+relevance 0, which is not the faintest claim a tag can make but the
+withdrawal; this round takes that value off the field and gives the act
+a control of its own.
+
+- **The field starts just above nothing.** Relevance runs from
+  `TAG_RELEVANCE_FLOOR` — 0.01 — up to 1, so no drag can land on a
+  withdrawal and there is no edge left to warn about. Withdrawing is a
+  different act from weakening a claim, not the far end of one, and an
+  axis carrying both put the heaviest act exactly where the lightest
+  drag lands. The floor makes the left pole true as well: `Barely` is a
+  fair reading of 0.01 and never was one of 0. The value is the
+  contract's, like the anchors — both clients read it. (Supersedes the
+  tag pad round's informing withdrawal state, which is deleted.)
+- **The readout needs no special case.** `formatTagPair`'s two decimals
+  render the floor as `+0.01`, which is the truth of it, so the system
+  keeps its one number format.
+- **Untagging is its own gesture, drawn only at an edit** (`TagPad`). A
+  tag on a post that already carries it stands, so taking it off is a
+  record — the body's `Withdrawn:` line names it and the acts card
+  counts it — and an act of that weight is asked for by a control that
+  says what it does. `Un-tag` — the reader's word, api-spec's own noun
+  for the r-0 record — takes `Sever`'s place in the foot and `Sever`'s
+  restraint with it: the walk-away pushed left of the decisions, a text
+  button, no colour of its own. The chip's × at an edit asks for the
+  same staged withdrawal without the pad roundtrip (jakob 2026-09-11) —
+  two doors, one act.
+- **It stages, and the seal signs.** The sheet closes, the chip leaves
+  the row for the withdrawn line already drawn beneath it, and the acts
+  card counts one more action, which the edit seals together with
+  everything else (item 37). Nothing asks twice: the seal is the
+  willing act, and a second layer over a staged, reversible change
+  guards nothing.
+- **A composer's pad carries no un-tag control** (`TagPadCompose`). Nothing
+  on that path is signed yet, so there is no tag to withdraw — the
+  chip's × unstages on the spot, and the same control here would name
+  an act that does not exist. Two boards because two contexts reach the
+  sheet holding different controls; everything else about them is one
+  drawing.
+- **The gate**: **148 screens** hold — the withdrawal state out, the
+  composer's pad into its freed slot — 1073 → **1074 edges**, gaps hold
+  at **56** and flows at **58/55/3**. The witness did not move: no
+  declared flow crosses either sheet.
+
+### The video-cover round — 2026-09-10
+
+Three rulings about the still a clip wears, and the wizard they rewrite
+(backlog item 49, jakob's rulings the same day).
+
+- **`CoverCrop` is wired into the wizard on both platforms.** Every
+  **gallery**-sourced cover passes the locked crop at the clip's ratio
+  before upload; a **frame** needs none, because it was cut from the clip
+  and already carries its shape. Only the cropped export ever leaves the
+  device — the original frame can hold what the author never meant to
+  share. **Web takes the cover step and its crop 1:1**, the file dialog
+  playing the picker's part, which is the avatar flow's blessing again and
+  why there is no web board. The cover shares the clip's ratio and crops
+  identically; that rule stands unrevised.
+- **The 4:5 feed clamp stands, confirmed explicitly** — jakob's reason, in
+  his words: *"taller than 4:5 is reserved for the reel scroller."* The
+  three shapes now stand on one board (*Feed · the clip's three shapes*)
+  so the presentation can be checked rather than recited: 16:9 and 1:1
+  display true, anything taller than 4:5 centre-crops to it, and nothing
+  is ever letterboxed. **What the board also shows is the height cap.**
+  A post fits the screen, so `--media-max-height` bounds every tile, and
+  at a phone's 390×844 it lands at 376px: the 16:9 clip is 219px and never
+  reaches it, while the square and the vertical clip both stand at 376,
+  filled. The crop vocabulary is not what reshapes them — it never governs
+  a clip — the cap is. The board pins that cap to a phone's value, because
+  its own frame is taller than a phone and `--media-max-height` is measured
+  against the viewport.
+- **No-cover is first-class, and the default is shape-keyed.** A
+  **vertical** clip defaults to **no cover**: the cover step is skipped and
+  what it would have been is one optional **"Add a cover"** door on
+  details. Horizontal and square clips keep the frame picker. **Shape
+  alone decides, never length.** jakob's reasons, recorded: an autoplaying
+  video that has a cover **looks broken** — the cover flashes for an
+  instant before playback takes it away — and a short-vertical author must
+  not be marched through a step they were always going to skip. *"Videos
+  are always moving, never at rest."*
+- **The coverless clip's face is its first frame**, cropped exactly as the
+  clip is. The suppressed-autoplay card wears it under the play disc;
+  quoted targets and history rows take it as their thumbnail. Nothing on a
+  reading surface branches on it — `MediaAttachment` is handed a still and
+  shows it, and whether that still was chosen or taken was settled while
+  the post was written.
+- **The door is a field's empty state, not a second entrance.** The
+  picture path refuses a second way into the crop, and this does not break
+  that rule: for a vertical clip the door is the *only* entrance, because
+  the step it opens was never walked. A clip that came through the cover
+  step therefore shows no door — its face is chosen and the step is one
+  Back away. At **edit** the door opens the gallery directly, since frames
+  are not re-offered there.
+- **When extraction fails, the step shrinks rather than lying** (*Cover ·
+  no frames came back*): `CoverRow` given no frames keeps only its way out
+  to the gallery, under a line saying why, over the **neutral tile** — a
+  clip that yields no still reserves its space and says what belongs
+  there, because the rule against inventing imagery is not suspended by an
+  error. The duration stays; the play disc does not. Next stays live: a
+  post can always go without a cover.
+- **Comment scale inherits at its scale.** There is no step to skip in a
+  one-screen composer, so the cover **row** is what gives way: a vertical
+  clip's reply opens with the door (*Reply · the clip didn't upload*), and
+  the row is what the door opens (*Reply · a video and its cover*) — one
+  drawing, because there is one row; what differs is whether anyone had to
+  ask for it. The two edit surfaces hold the field's two states, one each:
+  `EditComposeVideo` the door, `CommentEditVideo` the face and its
+  Change.
+- **Three wizard edges were wrong and are fixed.** `ComposeCover`'s back
+  arrow reached `ComposePick` when the stage behind it is
+  `ComposePickVideo`; `ComposeCrop`'s Next still offered the cover step,
+  a path no post can walk, since a body is pictures or one clip; and the
+  video path landed on the picture path's details board. The last of those
+  is why the round drew `ComposeDetailsVideo` at all.
+- **The gate**: 147 → **150 screens**, 1070 → **1082 edges**, gaps hold at
+  **56**, flows 58/55/3 → **60/57/3**. The witness was re-blessed for the
+  path's new middle: `publish-a-video` ends through `ComposeDetailsVideo`,
+  and `publish-a-vertical-video` and `give-a-vertical-clip-a-cover` are
+  newly declared. `CLIP_CANOE` moved into `_shared.jsx` — a third screen
+  wanted it — and every board that already drew it renders byte-identically.
 
 ## 14. Index
 

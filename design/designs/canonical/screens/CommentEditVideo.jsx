@@ -14,29 +14,27 @@
    change affordance is the gallery alone, and the picture it brings back goes
    through the cover's crop (CoverCrop) before it lands here again.
 
+   THIS COMMENT HAS A COVER, so the row shows the face and the way to change it.
+   That is a choice its author made — a vertical clip's default is no cover
+   (jakob 2026-09-10), and one that has one had the door opened. The other half
+   of the same field is `EditComposeVideo`'s: a clip without a cover shows "Add
+   a cover" and no picture, because an edit must never present a row presuming
+   something the post does not have. One contract, one field, two states, drawn
+   once each across the two scales.
+
    NO "a video is the whole comment" LINE HERE. That line exists to explain an
    add control that went missing; the edit surface has labelled fields instead,
    and Video sitting above Cover says the shape of the body without a sentence.
 
-   The words, topics, citations and the license row are unchanged from
+   The words, tags, citations and the license row are unchanged from
    CommentEdit: one screen, one batch, the license locked. */
-
-function FieldLabel({ children }) {
-  return (
-    <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-      {children}
-    </span>
-  );
-}
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" action={<SystemHelpDot ariaLabel="Editing" />} />
+      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Your comment on "The long way home".
-        </p>
+        <QuietNote>Your comment on "The long way home".</QuietNote>
 
         <TextField label="Words" rows={2} value="Eighteen seconds of the same headland, if the light comes through at all." />
 
@@ -57,44 +55,34 @@ export function Screen() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Topics</FieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, minHeight: 32, padding: "4px 12px", borderRadius: "var(--radius-full)", background: "var(--secondary-container)", color: "var(--on-secondary-container)", fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-              #glovebox
-              <Icon name="close" size={16} />
-            </span>
-            <Button variant="outline" size="sm">Add a topic</Button>
+            <TopicRemovable topic="glovebox" onEdit={() => {}} />
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>References</FieldLabel>
-          <Button variant="text" size="sm" selfStart>+ Cite something</Button>
+          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderTop: "1px solid var(--border-hairline)" }}>
-            <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>License</span>
-            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Public domain</span>
-            <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-              <Icon name="lock" size={16} />
-            </span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
-            <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>Sensitive</span>
-            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Not marked</span>
-            <Button variant="text" size="sm">Mark</Button>
-          </div>
+          <FactRow
+            label="License"
+            value="Public domain"
+            action={
+              <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
+                <Icon name="lock" size={16} />
+              </span>
+            }
+          />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          This creates 2 signed actions
-          <span style={{ display: "inline-flex" }}>
-            <Icon name="expand_more" size={16} />
-          </span>
-        </div>
+        <ActsFooter count={2} />
         <Button style={{ width: "100%" }}>Sign the edit</Button>
       </div>
     </>

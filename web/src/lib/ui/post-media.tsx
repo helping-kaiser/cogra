@@ -36,7 +36,14 @@ type Attachment = {
   url: string;
   altText?: string | null;
   status: string;
-  mimeType?: string | null;
+  /**
+   * THE CONTRACT'S `String!`, TYPED AS ONE. Every read that carries a
+   * gallery selects it, and typing it optional let an omitted selection
+   * reach here as `undefined` — which draws an image tile where a player
+   * belongs, silently, on exactly the read that forgot the field. Non-null
+   * makes that a compile error at the query boundary instead.
+   */
+  mimeType: string;
   options: { aspectRatio?: string | null; durationMs?: number | null };
   coverMedia?: {
     url: string;
@@ -51,6 +58,13 @@ type Bearer = {
   moderationStatus?: string;
 };
 
+/** A bearer plus the authored text fields, which carry their own statuses. */
+type Payload = Bearer & {
+  title?: { status: string } | null;
+  description?: { status: string } | null;
+  content?: { status: string } | null;
+};
+
 export function hasMedia(node: Bearer): boolean {
   return node.attachments.length > 0;
 }
@@ -59,6 +73,26 @@ export function galleryIsRedacted(node: Bearer): boolean {
   return (
     node.attachmentsStatus === "REDACTED" ||
     node.attachments.some((attachment) => attachment.status === "REDACTED")
+  );
+}
+
+/**
+ * Whether the record's payload has been removed.
+ *
+ * REDACTION IS RECORD-GRANULAR (design/components/content/PostCard.prompt.md,
+ * "`redacted` renders the skeleton, not a field"):
+ * an illegal verdict removes the payload, so title, description, body, media
+ * and the license go at once. There is no redacted title beside a surviving
+ * body, and no field is veiled or blanked on its own — the card draws the
+ * skeleton instead. Any field answering REDACTED therefore says the whole
+ * payload is gone.
+ */
+export function payloadIsRedacted(node: Payload): boolean {
+  return (
+    galleryIsRedacted(node) ||
+    node.title?.status === "REDACTED" ||
+    node.description?.status === "REDACTED" ||
+    node.content?.status === "REDACTED"
   );
 }
 
@@ -73,9 +107,7 @@ export function removalReason(node: Bearer): RemovalReason {
 
 /** Whether a node's gallery is the moving kind — one clip rather than pictures. */
 export function commentHasVideo(node: Bearer): boolean {
-  return node.attachments.some((attachment) =>
-    (attachment.mimeType ?? "").startsWith("video/"),
-  );
+  return node.attachments.some((attachment) => attachment.mimeType.startsWith("video/"));
 }
 
 /**
@@ -104,7 +136,7 @@ export function galleryItems(node: Bearer): readonly GalleryItem[] {
       // inventing a description would be worse than saying nothing.
       altText: attachment.altText ?? null,
       sourceRatio: ratio,
-      mimeType: attachment.mimeType ?? null,
+      mimeType: attachment.mimeType,
       poster: posterFor(attachment),
       durationMs: attachment.options.durationMs ?? null,
     };
@@ -135,6 +167,7 @@ export function PostMedia({
   bleed = "card",
   radius,
   ratio,
+  fit,
   maxHeight,
   preloadLead = false,
   surface = "full",
@@ -149,6 +182,8 @@ export function PostMedia({
   // card's rung and a comment-scale cap instead of running to the edges.
   radius?: string;
   ratio?: number;
+  /** Overrides the frame's own crop-fitting — see `MediaGallery`'s `fit`. */
+  fit?: "contain" | "cover";
   maxHeight?: string;
   preloadLead?: boolean;
   onOpen?: (index: number) => void;
@@ -168,6 +203,7 @@ export function PostMedia({
           items={galleryItems(node)}
           radius={radius ?? "0px"}
           ratio={ratio}
+          fit={fit}
           maxHeight={maxHeight}
           preloadLead={preloadLead}
           surface={surface}

@@ -1,4 +1,5 @@
 import React from "react";
+import { InlineAction } from "../core/Button.jsx";
 import { MediaThumb } from "./MediaThumb.jsx";
 
 /* The picked-pictures row (media slice, 2026-08-31): the composer's summary of
@@ -42,7 +43,7 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
             flex: 1,
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
-            letterSpacing: "0.4px",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
             color: "var(--text-secondary)",
           }}
         >
@@ -67,35 +68,25 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
    field with no stated purpose reads as a chore, and the one thing that makes
    it worth writing — someone is listening to it — was behind a "?" nobody
    opens. Same words as the sheet's own sub-line, so the row and the sheet it
-   opens say one thing. */
+   opens say one thing.
+
+   The word takes its size from the sentence rather than re-declaring it: the
+   paragraph is already set in `label-small`, which is exactly the `sm` rung's
+   own type, so `inherit` and the rung's tokens are the same measurement said
+   two ways. The counting half of the line is a plain span — it is not
+   pressable, and only the verb is. */
 export function DescribeCounter({ described, total, onDescribe, subject = "pictures" }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px" }}>
-        <button
-          type="button"
-          onClick={onDescribe}
-          className="cg-state cg-focus cg-hit"
-          style={{
-            border: 0,
-            background: "none",
-            padding: 0,
-            cursor: "pointer",
-            fontFamily: "var(--font-sans)",
-            fontSize: "inherit",
-            lineHeight: "inherit",
-            fontWeight: "var(--text-label-small--font-weight)",
-            letterSpacing: "0.5px",
-            color: "var(--primary)",
-          }}
-        >
+      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }}>
+        <InlineAction size="sm" onClick={onDescribe} style={{ fontSize: "inherit", lineHeight: "inherit" }}>
           Describe the {subject}
-        </button>{" "}
+        </InlineAction>{" "}
         <span style={{ color: "var(--text-secondary)" }}>
           · {described} of {total} described
         </span>
       </p>
-      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
         Read aloud to people who can&apos;t see it.
       </p>
     </div>

@@ -6,7 +6,23 @@
     <string name="recovery_code_copied">Copied</string>
     <string name="recovery_code_type_back">Type or paste the code to confirm</string>
     <string name="recovery_code_saved">I\'ve written it down</string>
+    <string name="recovery_code_mismatch">That doesn\'t match the code above.</string>
     <string name="pending_settling">Still settling</string>
+
+    <!-- The borrowed-view band (design.md §13, 2026-08-27). The band names
+         the vantage point a guest or applicant feed is ranked from; the
+         three readings differ only in what the reader can do about it. -->
+    <string name="borrowed_view_join">Browsing from @%1$s\'s view — join to build your own.</string>
+    <string name="borrowed_view_applicant">Browsing from @%1$s\'s view while your application lands.</string>
+    <string name="borrowed_view_vouch_back">Browsing from @%1$s\'s view — vouch back to start your own.</string>
+    <string name="borrowed_view_sign_in_or_join">Sign in or join</string>
+
+    <!-- The read shell's band (design.md §6). -->
+    <string name="cogra_band_chats">Chats</string>
+
+    <!-- The house page header's back target (design.md §11). An icon never
+         carries meaning alone: the label lives in the accessibility tree. -->
+    <string name="page_header_back">Back</string>
 
     <!-- The topic chip (design.md §6). -->
     <string name="topic_chip_remove">Remove %1$s</string>
@@ -122,8 +138,18 @@
          for anyone who met the control after the one-time coach mark was
          spent. It says what the two axes are and what actually signs,
          because nothing here should be learned by accident. -->
-    <string name="stance_explain">What this is</string>
-    <string name="stance_explain_body">Drag to say two things at once: how you stand on it, and how much you want it in your world. Nothing is signed until you press Set — letting go just leaves your pick where you put it.</string>
+    <string name="stance_explain">How stances work</string>
+    <!--
+      The master's four lines, in the order a reader needs them: what the
+      field means, what commits, why the three readouts differ, and what
+      the way out costs (design/components/stance/StanceCoachMark.jsx).
+      The third is the one nobody can guess.
+    -->
+    <string name="stance_explain_field">Drag the knob to where you stand. Left to right is against to for; bottom to top is how much more of it you want reaching you.</string>
+    <string name="stance_explain_commit">Letting go changes nothing. Set signs it, Cancel leaves without signing.</string>
+    <string name="stance_explain_adds">Your pick is one new thing you\'re saying. It adds to what you\'ve said before, which is why the resulting stance is a different number.</string>
+    <string name="stance_explain_sever">Sever walks everything you\'ve said back to nothing. It has its own confirmation, and it costs one signed action per record.</string>
+    <string name="stance_explain_back">Back to the pad</string>
 
     <!-- Screen-reader labels for the cover row. `contentDescription` is
          what TalkBack announces, so an unlocalized literal here has no
@@ -131,4 +157,36 @@
     <string name="designsystem_cover_frame">Frame %1$d</string>
     <string name="designsystem_cover_own">Your own cover picture</string>
     <string name="designsystem_cover_own_action">A cover picture of your own</string>
+
+    <!-- The video surface's two controls. Both are labelled by what the
+         press does, not by what the clip is doing, which is what a
+         screen reader announces on a button. -->
+    <string name="designsystem_video_play">Play</string>
+    <string name="designsystem_video_pause">Pause</string>
+    <string name="designsystem_video_mute">Mute</string>
+    <string name="designsystem_video_unmute">Unmute</string>
+
+    <!-- The gallery's dot row, read as a position. Positional arguments
+         because the order of the two numbers is a property of the
+         language, not of the layout. -->
+    <string name="designsystem_gallery_position">Picture %1$d of %2$d</string>
+
+    <!-- The sensitive veil (design/components/honesty/SensitiveVeil.jsx).
+         The veil names its source unconditionally: an author's own warning
+         and the platform's verdict read back as the same veil, so an
+         unnamed source would read as the other one. A reason, where the
+         author gave one, follows on the same line. -->
+    <string name="sensitive_veil_label">Sensitive — tap to view</string>
+    <string name="sensitive_source_author">The author\'s warning</string>
+    <string name="sensitive_source_platform">The platform\'s verdict</string>
+    <string name="sensitive_source_with_reason">%1$s — %2$s</string>
+    <!-- The veil is one target: the label and the source line are read as
+         one thing, and the whole block is the reveal. -->
+    <string name="sensitive_veil_description">%1$s. %2$s</string>
+
+    <!-- A surface that has nothing to show yet
+         (design/components/states/EmptyState.jsx). A line of text, never
+         a spinner: motion clarifies where something came from and never
+         performs. -->
+    <string name="loading_state">Loading…</string>
 </resources>

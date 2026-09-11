@@ -14,6 +14,21 @@ export type ReferenceKind =
   | "chat"
   | "message";
 
+/**
+ * A node kind's leading mark, on any surface: a person's avatar, a media
+ * post's cover, the text post's T tile, a topic's # tile, or the kind's glyph
+ * from the one semantic assignment (`NODE_GLYPHS`).
+ */
+export interface NodeMarkProps {
+  kind?: ReferenceKind;
+  /** The person's display name — read by `MonogramAvatar` for its fallback. */
+  name?: string;
+  /** A person's avatar photo or a media post's cover. */
+  src?: string;
+}
+
+export declare function NodeMark(props: NodeMarkProps): JSX.Element;
+
 export interface ReferenceRowProps {
   /** Decides the leading mark: avatar, cover, T tile, # tile, or node glyph. */
   kind?: ReferenceKind;
@@ -43,6 +58,12 @@ export interface ReferenceRowProps {
    * `rank` and `value`. Decorative — the row's own tap is the action.
    */
   trailing?: JSX.Element;
+  /**
+   * The act is signed but not yet ordered on L1: the row wears the pending
+   * marker under its pair. This sheet is the only surface that says so — a
+   * chip on a card shows nothing pending.
+   */
+  pending?: boolean;
   /** The row navigates to the node it names. */
   onOpen?: () => void;
 }

@@ -28,6 +28,12 @@ export interface MediaThumbProps {
    */
   video?: boolean;
   duration?: string;
+  /**
+   * The neutral tile's words — shown only where there is no `src`, so a clip
+   * that yields no still reserves its space and says what belongs there. The
+   * play disc is dropped in that state; the duration stays.
+   */
+  label?: string;
   /** Renders the X, top-right. Hidden on a failed tile (its ways out are in the line). */
   onRemove?: () => void;
   removeLabel?: string;

@@ -574,8 +574,13 @@ type Landing {
 interface Actor implements Node {
   # + Node fields (id, createdAt, updatedAt, outgoingRecords, incomingRecords)
   "The unique mention handle — one namespace across Users,
-   Collectives, and system actors."
+   Collectives, and system actors. The one required name: an actor
+   always has it, and a profile with nothing else written is
+   presented by it."
   handle: ModeratedText!
+  "The written name shown above the handle. Optional — `value` is
+   null where the actor never wrote one, the same shape every
+   optional moderated field takes."
   displayName: ModeratedText!
   avatar: ModeratedMedia!
   websiteUrl: ModeratedText!
@@ -662,6 +667,12 @@ type Record {
    after payload removal — the one-way erasure that leaves the
    structural record as the visible mark (substrate.md §7)."
   payloadState: PayloadState!
+  "When the payload went REDUCED; null while FULL. The mark's own
+   moment — never-erase-silently makes the mark the trace removal
+   leaves, and a mark that cannot say when is half a mark. Distinct
+   from updatedAt, which documents the fold-winning revision's
+   promotion."
+  redactedAt: DateTime
   "The content witness reference — L1's evidence that the carried
    payload matches what was committed; verification material, never
    content."
@@ -890,7 +901,7 @@ type MediaAttachment {
 }
 
 type MediaOptions {
-  "Container aspect ratio as \"W:H\", so layout reserves space pre-load."
+  "The displayed shape after container rotation, as \"W:H\", so layout reserves space pre-load."
   aspectRatio: String
   "Duration in milliseconds; null until video lands."
   durationMs: Int
@@ -1427,6 +1438,12 @@ type UserPreferences {
   "Sensitive-content filter aggressiveness: 0 (show everything) to 10
    (strictest); null when unset, so the frontend default applies."
   contentFilteringSeverityLevel: Int
+  "The license the composer starts a new post from; null when unset, so
+   the composer starts at public domain (0/0). It seeds the authoring-time
+   declaration and binds nothing: the license is settled per post at its
+   genesis signing, and changing this never reaches a post already
+   published."
+  defaultLicense: License
 }
 
 "An outstanding invite link issued by an actor — service-side
@@ -1939,6 +1956,15 @@ type Query {
    a client cannot express generically, since it does not yet know
    its own id."
   me: User
+
+  "The actor whose view this reader browses from — a feed is rooted
+   in the viewer's own outgoing stances, so a reader with none is
+   served someone else's, and the borrowed-view band names it
+   (design/readme.md §13). An anonymous reader borrows the Genesis
+   Moderator's view; an applicant keeps their inviter's from the
+   moment the account exists; a landed member has their own, and
+   null is that rule rather than missing data."
+  borrowedView: Actor
 
   "Fetch any node by id. The generic accessor for heterogeneous ids
    — e.g. resolving a ranked feed's mixed-type UUID list."
@@ -2714,6 +2740,15 @@ sub-surfaces: the inputs below are the target contract, and each
 arrives with the work that carries it (media with the media
 follow-up, `actAs` with collectives).
 
+A Post's title is **at most 100 characters**, trimmed, with blank
+folded to absent so `""` and null cannot mean two different
+nothings — refused field-level at `["title"]`, on a create and an
+edit alike, before a single act is staged. The unit is the
+Unicode scalar value, the same one every character cap here
+counts in. The number leaves through `client-constants.json`
+(`content.titleChars`), so a composer refuses the title the
+server would refuse rather than spending the round trip.
+
 A tag batch is checked whole before a single act is staged, each
 refusal a field-level `userError` naming the offender: at most
 **ten** tags per batch, a named constant; names compared after
@@ -2906,13 +2941,18 @@ input PreparePostInput {
 "Edit a Post — stages one ordinary-role Publish + payload record
  at attachment 0 carrying the Post's complete new content state;
  an omitted title, description, or gallery is a Post without one.
- Only the eligible author's edit is prepared. New tags or
- citations are their own gestures, not edit fields."
+ Only the eligible author's edit is prepared. A tag or a citation
+ is its own record rather than a field of this input — which is a
+ statement about the records, not about the screen: the edit
+ surface stages them beside the edit and seals the whole batch
+ under one signature, one act count, all or none."
 input PreparePostEditInput {
   id: UUID!
   title: String
   description: String
-  content: String!
+  "The words half of the body, under the same exclusive-or a create
+   carries."
+  content: String
   attachments: [AttachmentInput!]
   "The self-mark the edit leaves standing — complete state like the
    body, so omitting it unmarks the post."
@@ -3016,10 +3056,11 @@ input PrepareReferenceWithdrawalInput {
  Registration: L1's own profile-update idiom, payload only, never
  identity (substrate.md §9). Covers the display fields and the
  witnessed payout address (a Liquid address — ledger.md). Omitted
- fields are untouched. displayName refuses the explicit-null
- clear — a profile always shows a name. For a Collective's
- profile, actAs routes through its governed edit flow. The handle
- is L2 account state, not profile payload — see changeHandle."
+ fields are untouched; an explicit null clears the field,
+ displayName included — a profile with no name written is
+ presented by its handle. For a Collective's profile, actAs routes
+ through its governed edit flow. The handle is L2 account state,
+ not profile payload — see changeHandle."
 input PrepareProfileUpdateInput {
   displayName: String
   bio: String
@@ -3229,6 +3270,12 @@ says so.
   another account's, a video, removed, or absent is refused at
   `["attachments", "<i>", "coverMediaId"]`, as is a cover named on
   an attachment that is not a video.
+- **A profile picture is the uploader's own still**, so an avatar
+  answers to the picture cap and never the video one — the profile
+  carries one image, picked and cropped circular 1:1, and no
+  profile surface plays a clip. A video, another account's asset, a
+  removed one, or an id naming nothing is refused at
+  `["avatarMediaId"]`.
 - **Ten pictures per post, four per comment — or, at either
   scale, one video with its cover**, checked whole before a single
   act is staged, each refusal naming the offender at
@@ -3522,7 +3569,9 @@ stakes, and weight overrides ride the collective-side payloads.
  namespace at prepare."
 input PrepareCollectiveInput {
   handle: String!
-  displayName: String!
+  "Optional, as on any profile — a Collective with none written is
+   presented by its handle."
+  displayName: String
   description: String
   avatarMediaId: UUID
   websiteUrl: String
@@ -4275,6 +4324,9 @@ type MarkChatReadPayload { chat: Chat! }
 input SetPreferencesInput {
   "0 (show everything) to 10 (strictest); null restores the default."
   contentFilteringSeverityLevel: Int
+  "The license new posts start from; null restores public domain (0/0).
+   Both axes take the same three readings the composer publishes."
+  defaultLicense: LicenseInput
 }
 type SetPreferencesPayload { preferences: UserPreferences! }
 

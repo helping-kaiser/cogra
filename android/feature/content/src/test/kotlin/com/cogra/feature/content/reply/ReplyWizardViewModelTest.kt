@@ -65,6 +65,7 @@ class ReplyWizardViewModelTest {
         var lastTags: List<TagClaim> = emptyList()
         var lastReferences: List<ReferenceClaim> = emptyList()
         var lastStance: Pair<Double?, Double?>? = null
+        var lastMark: Pair<Boolean, String?>? = null
         var calls = 0
 
         override suspend fun prepareComment(
@@ -76,6 +77,8 @@ class ReplyWizardViewModelTest {
             attachments: List<AttachmentClaim>,
             pDirected: Double?,
             pInterest: Double?,
+            sensitive: Boolean,
+            sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
             calls += 1
             lastContent = content
@@ -83,6 +86,7 @@ class ReplyWizardViewModelTest {
             lastTags = tags
             lastReferences = references
             lastStance = pDirected to pInterest
+            lastMark = sensitive to sensitiveReason
             return outcome
                 ?: Outcome.Success(
                     PreparedContentView("c1", listOf(sealer.stage(Family.REGISTRATION))),
@@ -128,11 +132,9 @@ class ReplyWizardViewModelTest {
     private class ScriptedProcessor : ThrowingMediaProcessor() {
         var processed: ProcessedPicture? = ProcessedPicture(ByteArray(4), 100, 100)
         var ratio: Float? = 1f
-        var size: Long? = 1_000
 
         override suspend fun process(uri: String, crop: CropSpec): ProcessedPicture? = processed
         override suspend fun aspectRatio(uri: String): Float? = ratio
-        override suspend fun sizeBytes(uri: String): Long? = size
     }
 
     private class ScriptedVideo : ThrowingVideoProcessor() {
@@ -216,19 +218,24 @@ class ReplyWizardViewModelTest {
         assertThat(refused.uri).isNull()
     }
 
+    /**
+     * HT-17. The still cap is spent on the ENCODED bytes — the ones that
+     * would be sent — so a picture breaks it at its upload rather than at
+     * the pick, and nothing leaves either way.
+     */
     @Test
-    fun anOversizePictureIsRefusedBeforeAByteLeaves() = runTest(dispatcher) {
-        processor.size = ReplyWizardViewModel.MAX_PICTURE_BYTES + 1
+    fun anOversizePictureFailsItsUploadBeforeAByteLeaves() = runTest(dispatcher) {
+        val overCap = (ReplyWizardViewModel.MAX_PICTURE_BYTES + 1).toInt()
+        processor.processed = ProcessedPicture(ByteArray(overCap), 100, 100)
         val vm = viewModel()
 
         vm.onPicked("huge.jpg")
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(media.order).isEmpty()
-        val refused = vm.state.value.refused.single()
-        assertThat(refused.reason).isEqualTo(UploadFailure.PICTURE_TOO_BIG)
-        // It is a readable picture, so the row can preview it.
-        assertThat(refused.uri).isEqualTo("huge.jpg")
+        val upload = vm.state.value.picked.single().upload
+        assertThat((upload as AssetUpload.Failed).reason)
+            .isEqualTo(UploadFailure.PICTURE_TOO_BIG)
     }
 
     @Test
@@ -379,6 +386,39 @@ class ReplyWizardViewModelTest {
             .containsExactly(AttachmentClaim("m1", "A picture"))
         assertThat(content.lastStance).isEqualTo(0.4 to -0.2)
         assertThat(vm.state.value.outcome).isEqualTo(ReplyOutcome.Signed("c1"))
+    }
+
+    @Test
+    fun theSealSendsTheAuthorsOwnMarkAndItsReason() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onBodyChange("Well answered")
+        vm.onNext()
+        vm.onSensitiveChange(true)
+        vm.onSensitiveReasonChange("One rubbing includes a dead seabird.")
+
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastMark)
+            .isEqualTo(true to "One rubbing includes a dead seabird.")
+    }
+
+    @Test
+    fun unmarkingDropsTheReasonWithIt() = runTest(dispatcher) {
+        // The contract refuses a reason without the mark, and a reason
+        // kept out of sight would come back with the switch as words
+        // the author never re-read.
+        val vm = viewModel()
+        vm.onBodyChange("Well answered")
+        vm.onNext()
+        vm.onSensitiveChange(true)
+        vm.onSensitiveReasonChange("A reason")
+        vm.onSensitiveChange(false)
+        assertThat(vm.state.value.sensitiveReason).isEmpty()
+
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastMark).isEqualTo(false to null)
     }
 
     @Test

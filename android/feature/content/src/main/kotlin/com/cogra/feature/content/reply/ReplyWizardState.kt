@@ -9,15 +9,15 @@ import com.cogra.domain.repo.ContentRepository
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
-import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.CoverChoice
+import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.inFlight
 import com.cogra.feature.content.wizard.pickedPictures
 import com.cogra.feature.content.wizard.withAltText
 import com.cogra.feature.content.wizard.withSourceRatio
 import com.cogra.feature.content.wizard.withUpload
-import com.cogra.feature.content.wizard.PickedAsset
-import com.cogra.feature.content.wizard.RefusedPick
 
 /**
  * The reply wizard's stages, in the order the canonical boards draw
@@ -41,12 +41,12 @@ enum class ReplyStep { Compose, Seal }
  * the two declaring sections). One at a time: each is a drawer the
  * author opened over the same seal.
  *
- * **There is no `Sensitive`** — jakob 2026-09-01: `ReplySeal`'s "Mark"
- * row (graph.json `via=8`) is not built until a veiled comment has a
- * face, because the row without the veiled result is a switch whose
- * effect nothing draws (design/backlog.md item 25 part 4, which names
- * this lane as the one it blocks). The wire contract keeps its
- * `sensitive` field, defaulted and untouched.
+ * [Sensitive] is `ReplySeal`'s Mark row (graph.json `via=8`), opening
+ * the one `ComposeSensitive` sheet every marking surface opens. It
+ * waited on a veiled comment having a face — a switch whose result
+ * nothing draws is not a control — and design/backlog.md item 25 part 4
+ * built that face on 2026-09-02: "the reply-wizard lanes can implement
+ * ReplySeal 1:1".
  *
  * [Topics] and [References] carry the sections the post wizard shows
  * inline on its details stage. The seal draws them as rows, and
@@ -54,7 +54,7 @@ enum class ReplyStep { Compose, Seal }
  * picker `graph.json` points at is **not boarded**, so the row opens the
  * topic entry the app already ships rather than a screen invented here.
  */
-enum class ReplySealSheet { None, License, Stance, Topics, References }
+enum class ReplySealSheet { None, License, Stance, Sensitive, Topics, References }
 
 /** Whether the reply answers the post itself or one of its comments. */
 enum class ReplyTargetKind { Post, Comment }
@@ -152,6 +152,14 @@ data class ReplyWizardState(
     val pDirected: Double = DEFAULT_P,
     /** Effort — the pad's vertical axis, More against Less. */
     val pInterest: Double = DEFAULT_P,
+    /**
+     * The author's own sensitive mark. On a comment the veil covers the
+     * words and pictures as one — there is no description to leave
+     * standing (ruling 42).
+     */
+    val sensitive: Boolean = false,
+    /** Shown on the veil; only ever sent under [sensitive]. */
+    val sensitiveReason: String = "",
     val sheet: ReplySealSheet = ReplySealSheet.None,
 
     /** Which picture `DescribeSheet` is describing, by index into [picked]. */
@@ -215,9 +223,21 @@ data class ReplyWizardState(
         get() = uploadedIds.size == picked.size &&
             (!isVideoComment || coverMediaId != null)
 
-    /** Any drawer open over the current stage. */
+    /**
+     * The stance pad is parked over the page, not a drawer.
+     *
+     * It is `position: fixed` at the lower centre of the viewport, the
+     * same place every time, because muscle memory is part of the
+     * control (design/readme.md §"Fixed elements"). Riding the sheet
+     * host would draw a second sheet chrome around it — the doubled
+     * surface F2-10 reports — and would park it wherever the drawer
+     * happened to stop.
+     */
+    val padOpen: Boolean get() = sheet == ReplySealSheet.Stance
+
+    /** Any drawer open over the current stage — the pad is not one. */
     val anySheetOpen: Boolean
-        get() = sheet != ReplySealSheet.None || describingIndex != null
+        get() = (sheet != ReplySealSheet.None && !padOpen) || describingIndex != null
 
     /**
      * How many picks carry a description — `DescribeCounter`'s count.
@@ -359,8 +379,10 @@ fun ReplyWizardState.advanced(): ReplyWizardState? = when (step) {
  * comments keep no drafts.
  */
 fun ReplyWizardState.retreated(): ReplyWizardState? = when {
-    // A sheet is a drawer over the stage: it closes before the stage moves.
-    anySheetOpen -> closedSheets()
+    // A drawer sits over the stage, and so does the parked pad: either
+    // closes before the stage moves. Backing out of the pad stages
+    // nothing, exactly as its own Cancel does.
+    anySheetOpen || padOpen -> closedSheets()
     step == ReplyStep.Compose -> null
     else -> copy(step = ReplyStep.Compose)
 }

@@ -9,11 +9,15 @@ import React from "react";
 /** Content authored and signed but not yet ordered on L1. Shows in FULL to every
     reader — not just its author — under a quiet line saying it is still settling.
     Nothing is greyed out or held back: the content is real, only its place in the
-    order is not. */
-export function PendingMarker({ label = "Still settling" }) {
-  return (
-    <p style={{ margin: 0, fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }}>{label}</p>
-  );
+    order is not.
+
+    `inline` is the phrasing form, for a marker that lands inside a row which is
+    itself a button: a `<button>` takes phrasing content, so a `<p>` inside one is
+    illegal markup. Same two tokens, same words — only the box changes. */
+export function PendingMarker({ label = "Still settling", inline = false }) {
+  const ink = { fontSize: "var(--text-label-small)", color: "var(--text-secondary)" };
+  if (inline) return <span style={ink}>{label}</span>;
+  return <p style={{ margin: 0, ...ink }}>{label}</p>;
 }
 
 /** The edit marker: a soft marker with an optional tap to see what changed.

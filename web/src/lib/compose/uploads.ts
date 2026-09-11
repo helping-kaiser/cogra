@@ -12,8 +12,10 @@ import { uploadMedia, uploadVideo, UploadPartsError } from "@/lib/api/media-api"
 import type { Outcome, UserError } from "@/lib/api/outcome";
 import type { AuthGuard } from "@/lib/session/guard";
 import { mediaRefusalMessage } from "@/lib/ui/error-messages";
+import { pictureTooBig } from "@/lib/ui2/media/caps";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import { stripVideoMetadata } from "@/lib/ui2/media/strip-video";
+import { TOO_BIG_PICTURE } from "./pick";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
 export type UploadStep = (next: AssetUpload) => void;
@@ -47,9 +49,18 @@ function transportMessage(outcome: Outcome<unknown> & { kind: "failed" }): strin
  * the two kinds are told apart because only one of them is worth a retry
  * button — a picture this browser cannot decode will not decode on the second
  * press either.
+ *
+ * THE UPLOAD IS GUARDED like every other authenticated call. The access token
+ * lives in this tab's memory alone, so a tab that has loaded rather than signed
+ * in holds none until something refreshes it — and in a composer the picture is
+ * usually the FIRST authenticated call the page makes, with no earlier
+ * `UNAUTHENTICATED` to have woken the refresh. Unguarded it fails on a freshly
+ * loaded page and keeps failing, because the retry button re-sends the same
+ * anonymous request.
  */
 export async function runUpload(
   client: ApolloClient,
+  guard: AuthGuard,
   asset: PickedAsset,
   /**
    * The post's shape. Undefined on a comment, which has no crop step at all —
@@ -71,9 +82,14 @@ export async function runUpload(
     });
     return;
   }
+  if (pictureTooBig(encoded.blob)) {
+    // Not retryable: the same source encodes to the same bytes next time.
+    step({ kind: "failed", message: TOO_BIG_PICTURE, retryable: false });
+    return;
+  }
 
   step({ kind: "uploading" });
-  const uploaded = await uploadMedia(client, { blob: encoded.blob });
+  const uploaded = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
 
   if (uploaded.kind === "success") {
     step({ kind: "done", mediaId: uploaded.value.id });
@@ -145,9 +161,16 @@ export async function runVideoUpload(
     onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
     return;
   }
+  // A cover is an ordinary still and rides the still cap, on the encoded bytes
+  // exactly as a picture does.
+  if (pictureTooBig(encoded.blob)) {
+    onCover({ kind: "failed", message: TOO_BIG_PICTURE, retryable: false });
+    onVideo({ kind: "failed", message: "The cover didn't upload.", retryable: true });
+    return;
+  }
 
   onCover({ kind: "uploading" });
-  const poster = await uploadMedia(client, { blob: encoded.blob });
+  const poster = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
   if (poster.kind !== "success") {
     const message =
       poster.kind === "refused"

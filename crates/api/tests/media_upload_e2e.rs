@@ -24,7 +24,7 @@ use tower::ServiceExt;
 use uuid::Uuid;
 
 mod rig;
-use rig::TestMailer;
+use rig::{TestMailer, photo_with_location};
 
 const BOUNDARY: &str = "cogra-test-boundary";
 
@@ -216,31 +216,6 @@ async fn body_json(response: axum::response::Response) -> Value {
             String::from_utf8_lossy(&bytes)
         )
     })
-}
-
-fn chunk(fourcc: &[u8; 4], payload: &[u8]) -> Vec<u8> {
-    let mut out = Vec::new();
-    out.extend_from_slice(fourcc);
-    out.extend_from_slice(&(payload.len() as u32).to_le_bytes());
-    out.extend_from_slice(payload);
-    if payload.len() % 2 == 1 {
-        out.push(0);
-    }
-    out
-}
-
-/// A 1×1 lossless WebP carrying an EXIF chunk with a location in it —
-/// the shape a phone camera hands over, and the shape that must never
-/// reach public storage intact.
-fn photo_with_location() -> Vec<u8> {
-    let mut body = chunk(b"VP8L", &[0x2F, 0x00, 0x00, 0x00, 0x00, 0x88, 0x88, 0x08]);
-    body.extend_from_slice(&chunk(b"EXIF", b"GPS 52.5200 N 13.4050 E"));
-    let mut out = Vec::new();
-    out.extend_from_slice(b"RIFF");
-    out.extend_from_slice(&((4 + body.len()) as u32).to_le_bytes());
-    out.extend_from_slice(b"WEBP");
-    out.extend_from_slice(&body);
-    out
 }
 
 /// The whole carriage round trip. The digest the contract publishes is
@@ -541,6 +516,110 @@ fn h264_movie(sample_ms: u32) -> Vec<u8> {
     writer.into_writer().into_inner()
 }
 
+/// Overwrites the identity tkhd matrix `mp4::Mp4Writer` stamps with a
+/// 90-degree quarter turn.
+///
+/// The 36-byte matrix is nine big-endian `i32` terms in ISO/IEC
+/// 14496-12's order `a b u c d v x y w`; the identity leaves `a`, `d`
+/// and `w` at fixed-point 1.0 and every other term at 0. `mvhd` (the
+/// movie header) carries the same identity matrix every unrotated box
+/// gets, so the run is not unique in the file on its own — the search
+/// is scoped to the bytes after the track header's own `tkhd` fourcc,
+/// located by name rather than by trusting either box's byte offset,
+/// since the exact layout the writer produces is the `mp4` crate's
+/// business, not this crate's.
+///
+/// The patched values are a 90-degree turn per ISO/IEC 14496-12: `a`
+/// and `d` go to 0, and `b` and `c` take the unity terms `a` and `d`
+/// vacated, with `c` negated.
+fn rotate_quarter_turn(bytes: &[u8]) -> Vec<u8> {
+    #[rustfmt::skip]
+    const IDENTITY: [u8; 36] = [
+        0x00, 0x01, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x01, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        0x40, 0x00, 0x00, 0x00,
+    ];
+
+    let mut tkhd_hits = bytes.windows(4).enumerate().filter(|(_, w)| *w == b"tkhd");
+    let (tkhd_at, _) = tkhd_hits.next().expect("the fixture carries a tkhd box");
+    assert!(
+        tkhd_hits.next().is_none(),
+        "exactly one track is expected; a second tkhd would make the scoped search ambiguous"
+    );
+
+    let mut hits = bytes[tkhd_at..]
+        .windows(IDENTITY.len())
+        .enumerate()
+        .filter(|(_, window)| *window == IDENTITY);
+    let (offset, _) = hits
+        .next()
+        .expect("the tkhd box carries the writer's identity matrix");
+    assert!(
+        hits.next().is_none(),
+        "the identity matrix must appear exactly once after tkhd, or patching it is ambiguous"
+    );
+    let at = tkhd_at + offset;
+
+    let (quarter_turn_a, quarter_turn_b, quarter_turn_c, quarter_turn_d) =
+        (0i32, 0x0001_0000i32, -0x0001_0000i32, 0i32);
+    let mut out = bytes.to_vec();
+    out[at..at + 4].copy_from_slice(&quarter_turn_a.to_be_bytes());
+    out[at + 4..at + 8].copy_from_slice(&quarter_turn_b.to_be_bytes());
+    out[at + 12..at + 16].copy_from_slice(&quarter_turn_c.to_be_bytes());
+    out[at + 16..at + 20].copy_from_slice(&quarter_turn_d.to_be_bytes());
+    out
+}
+
+/// A real MP4 carrying one H.264 track coded landscape — the shape a
+/// phone's encoder writes before its tkhd matrix turns the picture for
+/// display.
+fn landscape_h264_movie(sample_ms: u32) -> Vec<u8> {
+    let config = mp4::Mp4Config {
+        major_brand: "isom".parse().expect("a brand"),
+        minor_version: 512,
+        compatible_brands: vec![
+            "isom".parse().expect("a brand"),
+            "mp41".parse().expect("a brand"),
+        ],
+        timescale: 1000,
+    };
+    let mut writer = mp4::Mp4Writer::write_start(std::io::Cursor::new(Vec::new()), &config)
+        .expect("the writer starts");
+    writer
+        .add_track(&mp4::TrackConfig {
+            track_type: mp4::TrackType::Video,
+            timescale: 1000,
+            language: "und".into(),
+            media_conf: mp4::MediaConfig::AvcConfig(mp4::AvcConfig {
+                width: 1920,
+                height: 1080,
+                seq_param_set: vec![0x67, 0x42, 0x00, 0x1E, 0x00],
+                pic_param_set: vec![0x68, 0xCE, 0x3C, 0x80],
+            }),
+        })
+        .expect("a track");
+    writer
+        .write_sample(
+            1,
+            &mp4::Mp4Sample {
+                start_time: 0,
+                duration: sample_ms,
+                rendering_offset: 0,
+                is_sync: true,
+                bytes: bytes::Bytes::from_static(&[0, 0, 0, 1]),
+            },
+        )
+        .expect("a sample");
+    writer.write_end().expect("the writer finishes");
+    writer.into_writer().into_inner()
+}
+
 /// The field path a refusal names, so a test asserts where the client
 /// will actually read the message.
 fn refused_at(payload: &Value) -> Vec<String> {
@@ -596,6 +675,73 @@ async fn a_video_uploads_with_its_duration_and_poster(pool: PgPool) {
 
     let key = format!("{}.mp4", uploaded["media"]["id"].as_str().expect("id"));
     assert!(rig.blobs.exists(&key).await.expect("head"));
+}
+
+/// A portrait phone clip — coded landscape, carried by a 90-degree tkhd
+/// matrix — uploads with the displayed shape in its aspect ratio, not
+/// the coded one the container's `stsd` states.
+///
+/// A rotated video uploads with the aspect ratio its tkhd matrix displays, not the landscape shape its track was coded in.
+/// ´claim:media:a-rotated-video-uploads-with-its-displayed-shape´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_rotated_video_uploads_with_its_displayed_aspect_ratio(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let rotated = rotate_quarter_turn(&landscape_h264_movie(2_500));
+    let uploaded = rig.upload(&token, &rotated).await;
+    assert_eq!(
+        uploaded["userErrors"].as_array().map(Vec::len),
+        Some(0),
+        "a valid rotated video is accepted: {uploaded}"
+    );
+    assert_eq!(uploaded["media"]["mimeType"], "video/mp4");
+    assert_eq!(
+        uploaded["media"]["options"]["aspectRatio"], "9:16",
+        "the track is coded 1920x1080 (16:9) but the matrix turns it a \
+         quarter, so the displayed shape — and the aspect ratio the \
+         contract publishes — is 9:16"
+    );
+}
+
+/// An asset row is immutable once written, poster included, so the
+/// second upload cannot take the poster it names — and being handed the
+/// first upload's row as a success would leave the author with neither
+/// an error nor what they asked for.
+///
+/// Re-uploading identical bytes under a different poster is refused against coverMediaId rather than silently keeping the first poster.
+/// ´claim:media:a-re-upload-may-not-rename-the-poster´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_re_upload_naming_a_different_poster_is_refused(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let first_cover = rig.upload(&token, &photo_with_location()).await;
+    let first_id =
+        Uuid::parse_str(first_cover["media"]["id"].as_str().expect("id")).expect("a uuid");
+    let second_cover = rig.upload(&token, &rig::animated_webp()).await;
+    let second_id =
+        Uuid::parse_str(second_cover["media"]["id"].as_str().expect("id")).expect("a uuid");
+    assert_ne!(first_id, second_id, "two distinct stills");
+
+    let movie = h264_movie(3_000);
+    let stored = rig.upload_with_cover(&token, &movie, Some(first_id)).await;
+    assert_eq!(stored["media"]["coverMedia"]["id"], first_id.to_string());
+
+    let again = rig.upload_with_cover(&token, &movie, Some(second_id)).await;
+    assert_eq!(
+        refused_at(&again),
+        vec!["coverMediaId"],
+        "the poster the author just chose is not silently discarded: {again}"
+    );
+
+    let same = rig.upload_with_cover(&token, &movie, Some(first_id)).await;
+    assert_eq!(
+        same["media"]["id"], stored["media"]["id"],
+        "naming the same poster still deduplicates: {same}"
+    );
 }
 
 /// The four ways a named poster is wrong, each refused against the field

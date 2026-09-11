@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -43,13 +44,17 @@ class RecoveryCodeConfirmTest {
     private val clipboard = FakeClipboard()
     private var confirmed = 0
 
-    private fun show(matches: (String) -> Boolean = { it.trim() == CODE }) {
+    private fun show(
+        matches: (String) -> Boolean = { it.trim() == CODE },
+        diverged: (String) -> Boolean = { typed -> typed.isNotEmpty() && !CODE.startsWith(typed) },
+    ) {
         compose.setContent {
             CompositionLocalProvider(LocalClipboard provides clipboard) {
                 RecoveryCodeConfirm(
                     code = CODE,
                     explainer = "keep it",
                     matches = matches,
+                    diverged = diverged,
                     onConfirmed = { confirmed++ },
                 )
             }
@@ -72,6 +77,69 @@ class RecoveryCodeConfirmTest {
 
         compose.onNodeWithTag("recovery_code_saved").assertIsNotEnabled()
         assertThat(confirmed).isEqualTo(0)
+    }
+
+    // The line is the field's own supporting text, so it merges into the
+    // field's node — which is what has TalkBack read it with the field.
+    private fun mismatchLine() =
+        compose.onNodeWithTag("recovery_code_mismatch", useUnmergedTree = true)
+
+    // A diverging character — CODE's fifth character is 'E', not 'Z' —
+    // fires the line at once; the earlier characters were a correct
+    // partial right up to that point.
+    @Test
+    fun aDivergingCharacterSaysSoRatherThanOnlyClosingTheButton() {
+        show()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDZ")
+
+        mismatchLine().assertExists()
+    }
+
+    @Test
+    fun anUntouchedFieldIsNotYetAMistake() {
+        show()
+
+        mismatchLine().assertDoesNotExist()
+    }
+
+    // Ruling 41.2: a correct-so-far partial is still on its way to being
+    // right, not a mistake — "ABCDE" is CODE's own first five characters.
+    @Test
+    fun aCorrectPartialShowsNoMismatchLine() {
+        show()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDE")
+
+        mismatchLine().assertDoesNotExist()
+    }
+
+    @Test
+    fun theMismatchLineGoesWhenTheCodeIsAnswered() {
+        show()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDZ")
+        mismatchLine().assertExists()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextClearance()
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput(CODE)
+
+        mismatchLine().assertDoesNotExist()
+    }
+
+    // Backspacing a diverged character off the end lands back on a
+    // valid prefix, and the line clears the instant it does.
+    @Test
+    fun backspacingOffTheDivergedCharacterClearsTheMismatchLine() {
+        show()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCDZ")
+        mismatchLine().assertExists()
+
+        compose.onNodeWithTag("recovery_code_typed_back").performTextClearance()
+        compose.onNodeWithTag("recovery_code_typed_back").performTextInput("ABCD")
+
+        mismatchLine().assertDoesNotExist()
     }
 
     @Test

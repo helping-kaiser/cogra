@@ -9,76 +9,77 @@
    device may no longer hold; the gallery is the one way in, through the
    cover's crop (CoverCrop).
 
+   THIS CLIP IS VERTICAL, SO IT HAS NO COVER (jakob 2026-09-10), and the row
+   says so by being a door rather than a picture: "Add a cover", where a clip
+   that has one wears its face and "Change the cover" (CommentEditVideo draws
+   that half, the same contract at the other scale). An edit must never present
+   a cover row presuming one exists — the field would then show a picture the
+   post does not have, and every path out of it would be a change to something
+   unset. The door is the empty state of the same field, and what it opens is
+   the same gallery, through the same crop.
+
    The clip's own move is to leave whole. A post that loses its clip is a post
    with words, the same way a post that loses its pictures is — the body
-   changes, the post does not become another one. */
-
-function FieldLabel({ children }) {
-  return (
-    <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-      {children}
-    </span>
-  );
-}
+   changes, the post does not become another one. That sentence used to end at
+   itself; since the edit body round (2026-09-10) it lands somewhere, and the
+   somewhere is `EditWords`, drawn. The × is the whole of this board's share of
+   the flip: a clip is never swapped for another clip, and there is no add
+   control to offer, so the quiet line stands where one would. */
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" action={<SystemHelpDot ariaLabel="Editing" />} />
+      <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Video</FieldLabel>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MediaThumb src="post-photo.jpg" alt="" width={96} height={54} fit="cover" video onRemove={() => {}} removeLabel="Remove this video" />
+            <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} fit="cover" video onRemove={() => {}} removeLabel="Remove this video" />
           </div>
           <DescribeCounter subject="video" described={1} total={1} onDescribe={() => {}} />
+          {/* Where the picture edit's "+ Add" stands, a clip gets the quiet
+              line instead (copy-voice, *Staging a video*): there is nothing
+              to add to a body one clip already fills. The staging line's
+              second half — "Its cover comes next" — is the wizard's, and is
+              dropped here because the cover is on this screen, above. */}
+          <QuietNote>A video is the whole post.</QuietNote>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Cover</FieldLabel>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MediaThumb src="post-photo.jpg" alt="" width={96} height={54} fit="cover" />
-            <Button variant="text" size="sm">Change the cover</Button>
-          </div>
+          <InlineAction size="sm" selfStart>
+            Add a cover
+          </InlineAction>
+          <QuietNote>It plays the moment it is on screen, so it starts on its own first frame.</QuietNote>
         </div>
 
         <TextField label="Title" corner="Optional" value="The long way home" />
         <TextField label="Description" corner="Optional" rows={2} value="Took the coast road instead of the tunnel. Four hours longer, worth every minute." />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Topics</FieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, minHeight: 32, padding: "4px 12px", borderRadius: "var(--radius-full)", background: "var(--secondary-container)", color: "var(--on-secondary-container)", fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-              #coastroad
-              <Icon name="close" size={16} />
-            </span>
-            <Button variant="outline" size="sm">Add a topic</Button>
+            <TopicRemovable topic="coastroad" onEdit={() => {}} />
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderTop: "1px solid var(--border-hairline)" }}>
-            <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>License</span>
-            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Public domain</span>
-            <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-              <Icon name="lock" size={16} />
-            </span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
-            <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>Sensitive</span>
-            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Not marked</span>
-            <Button variant="text" size="sm">Mark</Button>
-          </div>
+          <FactRow
+            label="License"
+            value="Public domain"
+            action={
+              <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
+                <Icon name="lock" size={16} />
+              </span>
+            }
+          />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          This creates 3 signed actions
-          <span style={{ display: "inline-flex" }}>
-            <Icon name="expand_more" size={16} />
-          </span>
-        </div>
+        <ActsFooter count={3} />
         <Button style={{ width: "100%" }}>Sign the edit</Button>
       </div>
     </>

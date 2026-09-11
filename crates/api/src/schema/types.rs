@@ -31,8 +31,8 @@ use l1_standin::StandIn;
 use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
-    ActorByAddressLoader, CommentByNodeLoader, CommentGalleryLoader, MediaByIdLoader,
-    PostByNodeLoader, PostGalleryLoader,
+    ActorByAddressLoader, ActorByIdLoader, CommentByNodeLoader, CommentGalleryLoader,
+    MediaByIdLoader, PayloadStateLoader, PostByNodeLoader, PostGalleryLoader,
 };
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
 
@@ -160,6 +160,46 @@ impl StanceBundle {
     }
 }
 
+/// The actor whose view this account still borrows: their inviter until
+/// the account's own first stance toward them exists — the vouch-back —
+/// and nobody after (`design/readme.md` §13). Vacuously nobody without an
+/// inviter, which is the genesis account's case.
+///
+/// ONE QUERY PATH BEHIND TWO QUESTIONS. `User.hasReciprocated` drives the
+/// reciprocation prompt and `Query.borrowedView` drives the band, and §13
+/// puts both on the same moment: the view hands over exactly when the
+/// prompt is answered. Deriving one from the other keeps that a fact of
+/// the code rather than a promise two copies would eventually break.
+///
+/// A missing address answers "still borrowing": no Opinion can exist
+/// without both, because a keyless account has signed nothing.
+pub(crate) async fn borrowed_vantage(
+    ctx: &Context<'_>,
+    account: &store::ActorIdentity,
+) -> async_graphql::Result<Option<store::ActorIdentity>> {
+    let pool = ctx.data::<PgPool>()?;
+    let Some(inviter) = store::inviter_of(pool, account.id).await? else {
+        return Ok(None);
+    };
+    if store::reciprocation_latched(pool, account.id).await? {
+        return Ok(None);
+    }
+    let (Some(account_address), Some(inviter_address)) = (&account.l0_address, &inviter.l0_address)
+    else {
+        return Ok(Some(inviter));
+    };
+    let source = NodeId::Addr(account_address.clone()).to_string();
+    let target = NodeId::Prof(inviter_address.clone()).to_string();
+    if mirror::has_opinion_toward(pool, &source, &target).await? {
+        store::latch_reciprocated(pool, account.id).await?;
+        return Ok(None);
+    }
+    if staged::has_live_targeting(pool, account.id, Family::Opinion, &target).await? {
+        return Ok(None);
+    }
+    Ok(Some(inviter))
+}
+
 /// Resolves the `viewerStance` field shared by every stance-able node.
 /// Null for a viewer who has none — an unauthenticated reader, or one
 /// whose account has no actor on the graph yet.
@@ -233,11 +273,42 @@ pub enum ErrorCode {
     ChallengeExpired,
 }
 
+/// The refusals that end a two-signature handshake for good, so the
+/// device may drop the material it was holding (api-spec.md "The write
+/// flow").
+///
+/// The server decides this, not the clients: it is the server that knows
+/// which of its own refusals a retry could ever clear. Everything absent
+/// from this list — a `RateLimited` backoff, an `Internal` fault, an
+/// `Unauthenticated` that a refresh heals, a code a build does not yet
+/// know — leaves the handshake resumable, which is why the list is
+/// stated positively rather than as its complement.
+pub const TERMINAL_WRITE_REFUSALS: [ErrorCode; 6] = [
+    ErrorCode::SignatureInvalid,
+    ErrorCode::StagedWriteExpired,
+    ErrorCode::NotFound,
+    ErrorCode::BadInput,
+    ErrorCode::Forbidden,
+    ErrorCode::WriteRuleFailed,
+];
+
+/// How many times a device re-reads a staged write waiting for the host
+/// seal before giving up and leaving the write to `resume`.
+///
+/// A budget about the server's own latency belongs to the server: the
+/// stand-in seals inside the submit call, so this bounded poll covers
+/// only the asynchronous contract a real Layer 1 is allowed to take.
+pub const SEAL_POLL_ATTEMPTS: u32 = 5;
+
+/// The wait between the attempts [`SEAL_POLL_ATTEMPTS`] budgets.
+pub const SEAL_POLL_INTERVAL_MS: u64 = 1_000;
+
 /// An expected business outcome, carried as data on the mutation payload
 /// — the list is empty exactly when the mutation succeeded.
 #[derive(SimpleObject, Debug, Clone)]
 pub struct UserError {
-    /// Human-readable description of the refusal.
+    /// Developer-facing description of the refusal, for logs and
+    /// debugging. Clients localize off `code`, never off this string.
     pub message: String,
     pub code: ErrorCode,
     /// Path into the nested input naming the offending field; null for a
@@ -528,15 +599,11 @@ impl Record {
     /// FULL until the payload controller removes; a reduced record
     /// keeps its structure and witness forever (layers.md §5).
     async fn payload_state(&self, ctx: &Context<'_>) -> async_graphql::Result<PayloadState> {
-        let pool = ctx.data::<PgPool>()?;
-        let reduced = sqlx::query_scalar!(
-            r#"SELECT payload_state = 'reduced' AS "reduced!"
-               FROM act_payloads WHERE act_id = $1"#,
-            self.0.record_id,
-        )
-        .fetch_optional(pool)
-        .await?
-        .unwrap_or(false);
+        let reduced = ctx
+            .data::<DataLoader<PayloadStateLoader>>()?
+            .load_one(self.0.record_id.clone())
+            .await?
+            .unwrap_or(false);
         Ok(if reduced {
             PayloadState::Reduced
         } else {
@@ -1063,25 +1130,7 @@ impl User {
         if !self.is_viewer(ctx) {
             return Ok(true);
         }
-        let pool = ctx.data::<PgPool>()?;
-        let Some(inviter) = store::inviter_of(pool, self.identity.id).await? else {
-            return Ok(true);
-        };
-        if store::reciprocation_latched(pool, self.identity.id).await? {
-            return Ok(true);
-        }
-        let (Some(viewer_address), Some(inviter_address)) =
-            (&self.identity.l0_address, &inviter.l0_address)
-        else {
-            return Ok(false);
-        };
-        let source = NodeId::Addr(viewer_address.clone()).to_string();
-        let target = NodeId::Prof(inviter_address.clone()).to_string();
-        if mirror::has_opinion_toward(pool, &source, &target).await? {
-            store::latch_reciprocated(pool, self.identity.id).await?;
-            return Ok(true);
-        }
-        Ok(staged::has_live_targeting(pool, self.identity.id, Family::Opinion, &target).await?)
+        Ok(borrowed_vantage(ctx, &self.identity).await?.is_none())
     }
 
     /// The account's service state — gates acting through CoGra (auth.md
@@ -1332,11 +1381,7 @@ where
     G: async_graphql::OutputType,
 {
     use async_graphql::connection::query;
-    if first.is_some_and(|n| n > MAX_PAGE_SIZE) || last.is_some_and(|n| n > MAX_PAGE_SIZE) {
-        return Err(async_graphql::Error::new(format!(
-            "first/last may be at most {MAX_PAGE_SIZE}"
-        )));
-    }
+    validate_page_args(first, last, after.as_deref(), before.as_deref())?;
     let first = match (first, last) {
         (None, None) => Some(DEFAULT_PAGE_SIZE),
         (first, _) => first,
@@ -2198,20 +2243,22 @@ pub(super) fn gallery_cost(bound: usize, child_complexity: usize) -> usize {
     bound * child_complexity + 1
 }
 
-/// One profile picture by the direct foreign key the version row holds.
+/// One profile picture by the direct foreign key the version row holds,
+/// through the loader that already answers for assets by id.
 ///
-/// A direct read rather than a loader: a profile carries at most two
-/// pictures and a page carries few profiles, so there is no fan-out here
-/// of the shape a gallery has. A row the FK names but the store no longer
-/// holds reads null rather than failing the profile.
+/// A page is capped at `MAX_PAGE_SIZE` posts, every post resolves its
+/// author, and every author resolves an avatar — so a hundred distinct
+/// authors is a hundred asset reads, the same fan-out a gallery has one
+/// level in. A row the FK names but the store no longer holds reads null
+/// rather than failing the profile.
 async fn profile_image(
     ctx: &Context<'_>,
     id: Uuid,
 ) -> async_graphql::Result<Option<MediaAttachmentType>> {
-    let pool = ctx.data::<PgPool>()?;
-    Ok(postgres_store::media::by_id(pool, id)
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?
+    Ok(ctx
+        .data::<DataLoader<MediaByIdLoader>>()?
+        .load_one(id)
+        .await?
         .map(MediaAttachmentType::asset))
 }
 
@@ -2324,8 +2371,9 @@ async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<Strin
     let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
         return Ok(None);
     };
-    let pool = ctx.data::<PgPool>()?;
-    Ok(store::actor_identity(pool, viewer.user_id)
+    Ok(ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(viewer.user_id)
         .await?
         .and_then(|identity| identity.l0_address))
 }
@@ -2343,7 +2391,9 @@ async fn topic_claims(
     include_pending: bool,
 ) -> async_graphql::Result<Vec<TopicClaim>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(author) = store::actor_identity(pool, author_id)
+    let Some(author) = ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
         .await?
         .and_then(|identity| identity.l0_address)
     else {
@@ -2398,7 +2448,9 @@ async fn reference_claims(
     include_pending: bool,
 ) -> async_graphql::Result<Vec<ReferenceClaim>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(author) = store::actor_identity(pool, author_id)
+    let Some(author) = ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
         .await?
         .and_then(|identity| identity.l0_address)
     else {
@@ -2513,8 +2565,9 @@ pub enum CommentTarget {
 }
 
 async fn author_user(ctx: &Context<'_>, author_id: Uuid) -> async_graphql::Result<Option<User>> {
-    let pool = ctx.data::<PgPool>()?;
-    Ok(store::actor_identity(pool, author_id)
+    Ok(ctx
+        .data::<DataLoader<ActorByIdLoader>>()?
+        .load_one(author_id)
         .await?
         .map(|identity| User {
             identity,
@@ -2677,12 +2730,19 @@ pub struct KeysetPage {
     pub limit: i64,
 }
 
-pub fn keyset_page(
+/// The page arguments every connection field accepts, checked once
+/// (api-spec.md "Pagination").
+///
+/// Both connection helpers used to check a subset of these, so the same
+/// input was refused differently depending on which field a client hit
+/// — and one of the two delegated the missing rules to the library,
+/// which answers in its own words.
+pub fn validate_page_args(
     first: Option<i32>,
-    after: Option<String>,
     last: Option<i32>,
-    before: Option<String>,
-) -> async_graphql::Result<KeysetPage> {
+    after: Option<&str>,
+    before: Option<&str>,
+) -> async_graphql::Result<()> {
     if first.is_some_and(|n| n > MAX_PAGE_SIZE) || last.is_some_and(|n| n > MAX_PAGE_SIZE) {
         return Err(async_graphql::Error::new(format!(
             "first/last may be at most {MAX_PAGE_SIZE}"
@@ -2696,6 +2756,16 @@ pub fn keyset_page(
             "paginate forward (first/after) or backward (last/before), not both",
         ));
     }
+    Ok(())
+}
+
+pub fn keyset_page(
+    first: Option<i32>,
+    after: Option<String>,
+    last: Option<i32>,
+    before: Option<String>,
+) -> async_graphql::Result<KeysetPage> {
+    validate_page_args(first, last, after.as_deref(), before.as_deref())?;
     let backward = last.is_some() || before.is_some();
     let cursor = match if backward { &before } else { &after } {
         Some(s) => Some(decode_landing_cursor(s)?),
@@ -2810,7 +2880,6 @@ where
 
 /// The shared comments/replies read: a target's direct children,
 /// newest-first in landing order.
-#[allow(clippy::too_many_arguments)]
 async fn comments_connection(
     ctx: &Context<'_>,
     target: Uuid,
@@ -2851,6 +2920,8 @@ async fn comments_connection(
 /// picture.
 #[derive(SimpleObject, Debug, Clone, Default)]
 pub struct MediaOptions {
+    /// The displayed aspect ratio, after container rotation — derived by
+    /// the server from the bytes, never supplied.
     pub aspect_ratio: Option<String>,
     pub duration_ms: Option<i32>,
 }
@@ -3021,6 +3092,35 @@ impl MediaAttachmentType {
 
     async fn created_at(&self) -> DateTime<Utc> {
         self.asset.created_at
+    }
+}
+
+#[cfg(test)]
+mod page_tests {
+    use super::{MAX_PAGE_SIZE, validate_page_args};
+
+    /// The two connection helpers share this, so a client hitting an
+    /// offset list and a client hitting a keyset list are refused the
+    /// same input in the same words.
+    ///
+    /// The page arguments are refused by one rule: over the cap, negative, or mixing the two directions.
+    /// ´claim:pagination:one-rule-refuses-the-page-arguments´
+    #[test]
+    fn the_page_arguments_are_refused_by_one_rule() {
+        assert!(validate_page_args(Some(10), None, None, None).is_ok());
+        assert!(validate_page_args(None, Some(10), None, Some("c")).is_ok());
+        assert!(validate_page_args(None, None, None, None).is_ok());
+
+        assert!(validate_page_args(Some(MAX_PAGE_SIZE + 1), None, None, None).is_err());
+        assert!(validate_page_args(None, Some(MAX_PAGE_SIZE + 1), None, None).is_err());
+        assert!(validate_page_args(Some(-1), None, None, None).is_err());
+        assert!(validate_page_args(None, Some(-1), None, None).is_err());
+        assert!(
+            validate_page_args(Some(10), None, None, Some("c")).is_err(),
+            "first with before mixes the directions"
+        );
+        assert!(validate_page_args(Some(10), Some(10), None, None).is_err());
+        assert!(validate_page_args(None, Some(10), Some("c"), None).is_err());
     }
 }
 

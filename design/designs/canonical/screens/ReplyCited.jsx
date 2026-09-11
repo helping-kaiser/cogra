@@ -1,9 +1,14 @@
 /* THE REPLY'S SEAL WITH A REFERENCE STAGED (readme §13, the menus round).
    Referencing from inside a comment lives inside the comment's own wizard: the
-   seal already carries "+ Add a topic" and "+ Cite something" side by side,
+   seal already carries "+ Add a tag" and "+ Cite something" side by side,
    because in a two-stage wizard the seal IS the stage where a comment's
-   topics and references are named. This is what that surface looks like once
+   tags and references are named. This is what that surface looks like once
    the picker has handed one back.
+
+   THE NAME OPENS THE CITATION'S PAIR (jakob 2026-09-10). A comment's citation
+   carries the same two signed axes a post's does, so it gets the same editor —
+   `RefPair`, the master on the compose page — and the row keeps two separately
+   named controls, the name and the ×.
 
    A STAGED REFERENCE IS AN ACT, so it joins the acts card rather than sitting
    beside it — the total counts it, and the all-or-nothing subline appears the
@@ -15,35 +20,9 @@
    same shape — a state of a surface, drawn because it is designed, declared as
    an entry because no tap reaches it. */
 
-function SealRow({ label, value, action, last }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderTop: "1px solid var(--border-hairline)", borderBottom: last ? "1px solid var(--border-hairline)" : undefined }}>
-      <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap" }}>{label}</span>
-      {value}
-      <button
-        type="button"
-        className="cg-state cg-focus cg-hit"
-        style={{ border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)", color: "var(--primary)", flex: "none" }}
-      >
-        {action}
-      </button>
-    </div>
-  );
-}
-
-/* The card's own affordance rows — a primary word where a value would sit, so
-   what you could still add lines up with what you have already added. */
-function AddRow({ children }) {
-  return (
-    <button
-      type="button"
-      className="cg-state cg-focus"
-      style={{ border: 0, background: "none", padding: 0, textAlign: "left", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "0.5px", color: "var(--primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-    >
-      {children}
-    </button>
-  );
-}
+/* The card's own affordance rows are `_shared.jsx`'s `ADD_ROWS` — `ReplySeal`
+   draws the same pair without the staged reference, and the two are one
+   surface in two states. */
 
 export function Screen() {
   return (
@@ -51,17 +30,11 @@ export function Screen() {
       <WizardHeader
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
-        action={
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>Last step</span>
-            <SystemHelpDot ariaLabel="Signed actions" />
-          </span>
-        }
+        stageLabel="Last step"
+        help="Signed actions"
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Reply to "The long way home" — 89 characters.
-        </p>
+        <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
 
         <ActsCard
           rows={[
@@ -70,7 +43,17 @@ export function Screen() {
               label: "Reference",
               value: (
                 <span style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
-                  <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Tide tables and the third headland — @juno</span>
+                  {/* The citation's own pair opens from the name, as it does on
+                      every composer that stages one — the × keeps its own name
+                      beside it (`StagedReference`'s rule, jakob 2026-09-10). */}
+                  <button
+                    type="button"
+                    aria-label="Tide tables and the third headland — set how it relates"
+                    className="cg-state cg-focus"
+                    style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
+                  >
+                    Tide tables and the third headland — @juno
+                  </button>
                   <button
                     type="button"
                     aria-label="Remove Tide tables and the third headland"
@@ -83,29 +66,29 @@ export function Screen() {
               ),
               count: "1 action",
             },
-            { label: "", value: <AddRow>+ Add a topic</AddRow>, count: "1 more action" },
-            { label: "", value: <AddRow>+ Cite something</AddRow>, count: "1 more action" },
+            ...ADD_ROWS,
           ]}
           total="2 signed actions"
           note="they land together, or none does"
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <SealRow
+          <FactRow
             label="Toward what you answer"
             value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
             action="Adjust"
           />
-          <SealRow label="License" value={<span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Public domain — your default</span>} action="Change" />
-          <SealRow label="Sensitive" value={<span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Not marked</span>} action="Mark" last />
+          <FactRow label="License" value="Public domain — your default" action="Change" />
+          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
+
+        {/* `ReplySeal` carries the same line: the two are one surface in two
+            states, and a note on one of them only is a disagreement. */}
+        <QuietNote>Replying also signs where you stand on the post it answers.</QuietNote>
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <Button style={{ width: "100%" }}>Sign comment</Button>
-          <Button variant="text" style={{ width: "100%" }}>Back</Button>
-        </div>
+        <SealFooter signLabel="Sign comment" />
       </div>
     </>
   );

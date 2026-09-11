@@ -23,7 +23,13 @@ import { Icon } from "../navigation/Icon.jsx";
      play/pause — there, presence on screen is the policy.
 
    Uncropped tiles (a reply's pictures) pass `width`/`height` and
-   `fit="contain"` so the whole frame shows inside the tile. */
+   `fit="contain"` so the whole frame shows inside the tile.
+
+   THE NEUTRAL TILE (video-cover round, 2026-09-10) is the sourceless state:
+   where a clip yields no still at all — extraction came back with nothing —
+   the tile reserves its space and `label` says what belongs there, the way
+   `MediaAttachment`'s reserved region does. Never invent imagery: a clip with
+   no face shows the absence rather than a borrowed picture. */
 
 function Ring({ progress, size = 26 }) {
   const r = 12;
@@ -59,6 +65,7 @@ export function MediaThumb({
   failed = false,
   video = false,
   duration,
+  label,
   onRemove,
   removeLabel = "Remove this picture",
 }) {
@@ -66,7 +73,10 @@ export function MediaThumb({
   const h = height ?? size;
   const edge = Math.min(w, h);
   const disc = Math.max(20, Math.min(56, Math.round(edge * 0.26)));
-  const playable = video && !failed && typeof progress !== "number";
+  /* The disc rides a scrim over a frame. With no frame the tile IS the
+     absence, and a play control drawn on nothing reads as chrome — the
+     duration stays, because the clip's length is known either way. */
+  const playable = video && src && !failed && typeof progress !== "number";
   return (
     <div
       style={{
@@ -93,6 +103,20 @@ export function MediaThumb({
               : { width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: failed ? 0.5 : 1 }
           }
         />
+      )}
+      {!src && label && (
+        <span
+          style={{
+            fontSize: "var(--text-label-small)",
+            lineHeight: "var(--text-label-small--line-height)",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
+            color: "var(--text-secondary)",
+            padding: "0 var(--space-2)",
+            textAlign: "center",
+          }}
+        >
+          {label}
+        </span>
       )}
       {playable && (
         <span
@@ -126,7 +150,7 @@ export function MediaThumb({
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
             fontWeight: "var(--text-label-small--font-weight)",
-            letterSpacing: "0.5px",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
           }}
         >
           {duration}
@@ -145,7 +169,7 @@ export function MediaThumb({
             fontSize: "var(--text-label-small)",
             lineHeight: "var(--text-label-small--line-height)",
             fontWeight: "var(--text-label-small--font-weight)",
-            letterSpacing: "0.5px",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
           }}
         >
           Cover
@@ -181,8 +205,8 @@ export function MediaThumb({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "12px",
-            lineHeight: "16px",
+            fontSize: "var(--text-label-medium)",
+            lineHeight: "var(--text-label-medium--line-height)",
             fontWeight: 700,
           }}
         >

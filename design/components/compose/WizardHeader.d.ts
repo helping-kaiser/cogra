@@ -1,9 +1,10 @@
 /**
  * The composer flows' header: the arrow steps ONE STAGE BACK (never out of
- * the flow), the X LEAVES the whole flow from any stage with the draft kept —
- * no confirmation, because every leave keeps the draft. The X sits between
- * the title and the trailing controls; `action` (the Next pill, or the seal's
- * "Last step" + "?") keeps the right edge.
+ * the flow), the X LEAVES the whole flow from any stage — keeping the draft
+ * where there is one to keep, discarding where there is not, as `leaveLabel`
+ * says. The stage's forward action lives at the foot of the content column,
+ * never here, so the top-right corner keeps one meaning for the whole flow.
+ * What the corner carries is passive: the stage's name and the screen's "?".
  */
 export interface WizardHeaderProps {
   title?: string;
@@ -14,7 +15,14 @@ export interface WizardHeaderProps {
   onLeave?: () => void;
   /** Defaults to "Leave — your draft is kept"; a flow with nothing to keep (the avatar's) passes "Leave". */
   leaveLabel?: string;
-  /** The stage's trailing controls — the Next pill, or "Last step" + the "?". */
+  /** The stage's name, quiet and trailing — "Last step" on every seal. */
+  stageLabel?: string;
+  /** The screen's one "?", by its aria-label: what the dialog behind it
+   *  explains ("Signed actions", "Changing your picture"). */
+  help?: string;
+  onHelp?: () => void;
+  /** Anything else passive the corner must carry; it follows the pair above.
+   *  A bare help dot is `help`, not this. */
   action?: React.ReactNode;
 }
 

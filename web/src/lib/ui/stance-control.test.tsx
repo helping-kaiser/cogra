@@ -1298,6 +1298,31 @@ describe("the alternate inputs", () => {
     alreadyTaught();
   });
 
+  // readme §13, the stance round: the route is `Choose your stance`, visually
+  // hidden until focused — one tab away, never printed beside every stance in
+  // a feed, and never in front of the card's affordance row.
+  it("stand behind a route that is named but not drawn", async () => {
+    mount();
+    await settle();
+    const route = screen.getByTestId(`${PREFIX}-choose`);
+    expect(route).toHaveTextContent("Choose your stance");
+    expect(route.className).toContain("sr-only");
+    expect(route.className).toContain("focus:not-sr-only");
+  });
+
+  // The card's affordance row is one line that never wraps, and this control
+  // is the widest thing in it: the reading's WORDS give way, never the face
+  // and never the pair — the two channels §8.3 and §10 need on screen.
+  it("shorten their words rather than push the affordance row off one line", async () => {
+    mount({ seed: { "post-1": { records: [{ pDirected: 0.55, pInterest: 0.2 }] } } });
+    await settle();
+    expect(screen.getByTestId(`${PREFIX}-resting-face`).className).toContain("flex-none");
+    expect(screen.getByTestId(`${PREFIX}-resting-exact`).className).toContain("flex-none");
+    const words = screen.getByTestId(`${PREFIX}-resting-exact`).previousElementSibling;
+    expect(words).toHaveTextContent("Like this");
+    expect(words?.className).toContain("truncate");
+  });
+
   it("are reachable without ever dragging", async () => {
     mount();
     await settle();

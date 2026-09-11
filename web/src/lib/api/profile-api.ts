@@ -42,6 +42,10 @@ export type RecordRow = {
   postId: string | null;
 };
 
+/**
+ * One page of the chronicle per fetch — the server's own default, pinned
+ * to `client-constants.json` in `lib/client-constants.test.ts`.
+ */
 export const PROFILE_PAGE_SIZE = 20;
 
 export async function fetchProfileByHandle(

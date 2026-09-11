@@ -8,8 +8,10 @@ import { WashCard } from "./WashCard.jsx";
    one surface that spells CGT (readme §13, Money figures): mark and word
    adjacent at display size, the "?" (What is CGT?) beside them. The ≈ L-BTC
    line reads the public ladder market — an estimate, never a promise, hidden
-   at zero. `delta` is the recent-earnings chip ("+14.40 this week"): quiet
-   pride, real number, omitted when there is nothing new. */
+   at zero. `delta` is the recent-earnings chip: quiet pride, real number,
+   omitted when there is nothing new. It is an AMOUNT, not a string — money is
+   `MoneyFigure`'s and never formatted by hand (readme §13, Money figures), so
+   the chip renders the figure itself and adds "this week". */
 
 export function WalletBalance({ amount = 0, approx, delta, onHelp }) {
   return (
@@ -41,7 +43,7 @@ export function WalletBalance({ amount = 0, approx, delta, onHelp }) {
       {(approx || delta) && amount !== 0 && (
         <div style={{ position: "relative", display: "flex", alignItems: "center", gap: "var(--space-3)", flexWrap: "wrap" }}>
           {approx && (
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
               ≈ {approx} L-BTC right now
             </span>
           )}
@@ -58,10 +60,11 @@ export function WalletBalance({ amount = 0, approx, delta, onHelp }) {
                 fontSize: "var(--text-label-small)",
                 lineHeight: "var(--text-label-small--line-height)",
                 fontWeight: "var(--text-label-small--font-weight)",
-                letterSpacing: "0.5px",
+                letterSpacing: "var(--text-label-small--letter-spacing)",
               }}
             >
-              {delta}
+              <MoneyFigure amount={delta} signed />
+              &nbsp;this week
             </span>
           )}
         </div>

@@ -9,15 +9,14 @@
 use async_graphql::{Context, Object, SimpleObject};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
-use common::l1::identifier::NodeId;
-use postgres_store::{PgPool, auth as store, content as content_store, mirror, staged};
+use postgres_store::{PgPool, auth as store, content as content_store, genesis, mirror, staged};
 use uuid::Uuid;
 
 use super::types::{
     Actor, CommentType, CursorKey, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType,
     Record, RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User,
-    connection_cost, content_cursor, content_cursor_key, keyset_connection, keyset_page, list_cost,
-    list_limit, resolve_reference_target,
+    borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
+    keyset_page, list_cost, list_limit, resolve_reference_target,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -110,6 +109,51 @@ impl Query {
         Ok(store::actor_identity(pool, viewer.user_id)
             .await?
             .map(|identity| User::from_viewer(identity, viewer)))
+    }
+
+    /// The actor whose view this reader is browsing from
+    /// (`design/readme.md` §13). A feed is rooted in the viewer's own
+    /// outgoing stances, and a reader who has none is served someone
+    /// else's view — named, always, by the borrowed-view band, which
+    /// reads this field to know whose name to say.
+    ///
+    /// **The most specific available vantage wins**, and the answer
+    /// always carries whose view it is. In preference order:
+    ///
+    /// 1. An **invite-link arrival**, still signed out, borrows **the
+    ///    inviter's** view, resolved from the link id. That resolution
+    ///    arrives with slice 3 and its own band-line ruling.
+    /// 2. An **applicant** borrows **their inviter's**, from the moment
+    ///    the account exists and before either proof is in — and a
+    ///    **landed member** keeps borrowing it until their own first
+    ///    stance toward them exists, the vouch-back.
+    /// 3. A **bare visitor**, with nothing more specific to go on,
+    ///    borrows the **Genesis Moderator's** view. Strictly the
+    ///    fallback: it is the only vantage that names no relationship
+    ///    the reader arrived through.
+    ///
+    /// **The handle is load-bearing, not decoration.** The band speaks
+    /// the name, because a borrowed rank the reader cannot attribute is
+    /// exactly the unlabelled feed §9 refuses — so this resolves to an
+    /// `Actor`, never to a bare "yes, borrowed".
+    ///
+    /// Null is the end of the ladder: the reader's view is their own.
+    /// It is the rule the band reads as "disappear", not missing data.
+    async fn borrowed_view(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
+        let pool = ctx.data::<PgPool>()?;
+        let vantage = match ctx.data::<Option<Viewer>>()?.as_ref().copied() {
+            None => genesis::genesis_moderator(pool).await?,
+            Some(viewer) => match store::actor_identity(pool, viewer.user_id).await? {
+                Some(account) => borrowed_vantage(ctx, &account).await?,
+                None => None,
+            },
+        };
+        Ok(vantage.map(|identity| {
+            Actor::User(User {
+                identity,
+                viewer_session: None,
+            })
+        }))
     }
 
     /// One user by id or unique handle — exactly one argument
@@ -212,20 +256,10 @@ impl Query {
     /// content nodes resolve here today; null for an unknown id.
     async fn node(&self, ctx: &Context<'_>, id: Uuid) -> async_graphql::Result<Option<Node>> {
         let pool = ctx.data::<PgPool>()?;
-        match content_store::content_kind(pool, id)
+        Ok(crate::nodes::resolve_content(pool, id)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?
-        {
-            Some("post") => Ok(content_store::post(pool, id)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?
-                .map(|p| Node::Post(PostType(p)))),
-            Some("comment") => Ok(content_store::comment(pool, id)
-                .await
-                .map_err(|e| async_graphql::Error::new(e.to_string()))?
-                .map(|c| Node::Comment(CommentType(c)))),
-            _ => Ok(None),
-        }
+            .map(typed_node))
     }
 
     /// Batch node lookup — order preserved; an unknown id yields null
@@ -242,11 +276,14 @@ impl Query {
                 super::types::MAX_PAGE_SIZE
             )));
         }
-        let mut out = Vec::with_capacity(ids.len());
-        for id in ids {
-            out.push(self.node(ctx, id).await?);
-        }
-        Ok(out)
+        let pool = ctx.data::<PgPool>()?;
+        let resolved = crate::nodes::resolve_content_many(pool, &ids)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(ids
+            .iter()
+            .map(|id| resolved.get(id).cloned().map(typed_node))
+            .collect())
     }
 
     /// One L1 record by its own identifier — the unit of the chronicle.
@@ -271,7 +308,10 @@ impl Query {
     /// id that resolves to no known node yields an empty page rather than
     /// an error — the same contract a null slot in `nodes` carries.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
-    #[allow(clippy::too_many_arguments)]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the schema declares; grouping them into a struct would change the published contract"
+    )]
     async fn records(
         &self,
         ctx: &Context<'_>,
@@ -297,10 +337,7 @@ impl Query {
             ..Default::default()
         };
         if let Some(author) = author {
-            match store::actor_identity(pool, author)
-                .await?
-                .and_then(|i| i.l0_address)
-            {
+            match crate::nodes::address_of(pool, author).await? {
                 Some(address) => filter.author = Some(address),
                 None => {
                     return Ok(keyset_connection(Vec::new(), &page, record_cursor, Record));
@@ -472,29 +509,26 @@ async fn lookup_actor(
     }
 }
 
-/// A UUID as a mirror identifier: a content node's mint id, or an
-/// actor's Profile node — the two shapes records target this slice.
+/// A resolved content row as the `Node` union serves it.
+fn typed_node(content: crate::nodes::ContentNode) -> Node {
+    match content {
+        crate::nodes::ContentNode::Post(post) => Node::Post(PostType(post)),
+        crate::nodes::ContentNode::Comment(comment) => Node::Comment(CommentType(comment)),
+    }
+}
+
+/// A UUID as a mirror identifier, through the crate's one resolver
+/// (`nodes::resolve_id`) so that a chronicle filter and a gesture cannot
+/// disagree about what an id names.
+///
 /// A pending content node resolves here like any other, through its
 /// display row, so `records(target:)` on it is well-formed and empty
-/// rather than falling through to the actor branch: the chronicle
-/// contains only ordered fact (api-spec.md "The graph is a chronicle").
-/// A UUID naming neither resolves to no actor, hence to an empty page.
+/// rather than naming nothing: the chronicle contains only ordered fact
+/// (api-spec.md "The graph is a chronicle"). A UUID naming no node at
+/// all resolves to `None`, hence to an empty page.
 async fn uuid_to_node_string(pool: &PgPool, id: Uuid) -> async_graphql::Result<Option<String>> {
-    match content_store::content_kind(pool, id)
+    Ok(crate::nodes::resolve_id(pool, id)
         .await
         .map_err(|e| async_graphql::Error::new(e.to_string()))?
-    {
-        Some("post") => Ok(content_store::post(pool, id)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?
-            .map(|p| p.l1_node_id)),
-        Some("comment") => Ok(content_store::comment(pool, id)
-            .await
-            .map_err(|e| async_graphql::Error::new(e.to_string()))?
-            .map(|c| c.l1_node_id)),
-        _ => Ok(store::actor_identity(pool, id)
-            .await?
-            .and_then(|i| i.l0_address)
-            .map(|address| NodeId::Prof(address).to_string())),
-    }
+        .map(|node| node.to_string()))
 }

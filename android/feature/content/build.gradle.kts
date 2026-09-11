@@ -25,6 +25,20 @@ android {
     }
 }
 
+// `client-constants.json` is read from the repo root at test time
+// rather than compiled in, so it belongs to no source set and Gradle
+// cannot see it. Undeclared, the up-to-date check and the build cache
+// both hand back a pass computed against the previous `make constants`
+// output. Declaring a runtime-read file as a task input is Gradle's own
+// answer (user manual, "Incremental build"); `workingDir` is stated
+// because the test names the file by a path relative to this module.
+tasks.withType<Test>().configureEach {
+    workingDir = projectDir
+    inputs.file(file("../../../client-constants.json"))
+        .withPropertyName("clientConstants")
+        .withPathSensitivity(PathSensitivity.NONE)
+}
+
 dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
@@ -49,6 +63,8 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(testFixtures(project(":core:domain")))
     testImplementation(libs.truth)
+    // Reads the repo-root contract artifact; nothing in main parses JSON.
+    testImplementation(libs.kotlinx.serialization.json)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.robolectric)

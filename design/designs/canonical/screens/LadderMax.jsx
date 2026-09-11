@@ -1,6 +1,6 @@
 /* The post ladder — the maximal collapsed card, held under the height cap
    by the system itself: the media honors --media-max-height, the title and
-   description clamp, topics and citations share one line. */
+   description clamp, tags and citations share one line. */
 export function Screen() {
   return (
     <>
@@ -10,7 +10,6 @@ export function Screen() {
           author={SOL}
           title="Salt maps of the coast road, walked three weekends at low tide"
           description="Rubbings from three weekends at low tide — paper against the salt crust, the side of a wax stick, and whatever the wind allowed."
-          content="Three weekends of walking the same stretch at low tide, tracing where the salt crust draws its lines."
           timestamp="3d"
           media={[{ src: "post-photo.jpg", ratio: "tall", fit: "cover" }]}
           topics={["fieldnotes", "coastroad"]}

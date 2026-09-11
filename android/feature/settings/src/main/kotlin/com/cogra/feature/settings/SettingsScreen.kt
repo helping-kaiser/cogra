@@ -24,8 +24,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -46,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.KeyGate
 import com.cogra.core.designsystem.PasswordTextField
@@ -55,7 +54,8 @@ import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.rememberKeyGate
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.MIN_HANDLE_LENGTH
+import com.cogra.domain.handleValid
+import com.cogra.domain.identity.recoveryCodePrefixDiverged
 import com.cogra.domain.identity.recoveryCodeTypedBack
 import com.cogra.domain.stance.StanceInputMode
 
@@ -171,9 +171,7 @@ fun SettingsScreen(
             }
         },
         snackbarHost = {
-            SnackbarHost(snackbarHostState) { data ->
-                Snackbar(snackbarData = data, modifier = Modifier.testTag("settings_snackbar"))
-            }
+            CograSnackbarHost(snackbarHostState, testTag = "settings_snackbar")
         },
     ) { padding ->
         Column(
@@ -368,6 +366,7 @@ private fun BackupSection(
                         code = code,
                         explainer = stringResource(R.string.settings_backup_code_explainer),
                         matches = { recoveryCodeTypedBack(code, it) },
+                        diverged = { recoveryCodePrefixDiverged(code, it) },
                         onConfirmed = onBackupCodeSaved,
                     )
                 }
@@ -467,6 +466,10 @@ private fun CredentialsSection(
                 value = state.newHandle,
                 onValueChange = onNewHandleChange,
                 label = { Text(stringResource(R.string.settings_new_handle)) },
+                // The join form's own line: a screen that gates on the handle
+                // grammar and does not state it disables its button for a
+                // reason the reader cannot see.
+                supportingText = { Text(stringResource(R.string.settings_handle_rules)) },
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -474,7 +477,7 @@ private fun CredentialsSection(
             )
             Button(
                 onClick = onChangeHandle,
-                enabled = state.newHandle.length >= MIN_HANDLE_LENGTH && !state.busy,
+                enabled = handleValid(state.newHandle) && !state.busy,
                 modifier = Modifier.testTag("settings_change_handle"),
             ) {
                 Text(stringResource(R.string.settings_change_handle))

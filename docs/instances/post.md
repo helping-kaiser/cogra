@@ -60,9 +60,10 @@ The Publish record carries:
 
 A Post's **body is words or media, never both** — one picture, a
 set, or one video with a cover. Words that belong beside a
-picture are the description. Title and description stay optional;
-the body is the one thing a Post cannot go without, and the
-envelope carries either a body text or a manifest.
+picture are the description. Title and description stay optional,
+and a title runs to at most 100 characters; the body is the one
+thing a Post cannot go without, and the envelope carries either a
+body text or a manifest.
 
 One act, two homes. L1 accepts the structural record with the
 payload witness; CoGra — the carriage service — holds the payload

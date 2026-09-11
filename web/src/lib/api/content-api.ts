@@ -151,7 +151,10 @@ export function sensitiveInput(sensitive: boolean | undefined, reason: string | 
   };
 }
 
-/** One page per fetch; the server default is the same number. */
+/**
+ * One page per fetch — the server's own default, pinned to
+ * `client-constants.json` in `lib/client-constants.test.ts`.
+ */
 export const CONTENT_PAGE_SIZE = 20;
 
 /**
@@ -254,18 +257,27 @@ export async function fetchPostDetail(
   });
 }
 
+/** An author's own mark on their comment, as the edit surface holds it. */
+export type CommentSelfMark = {
+  readonly sensitive: boolean;
+  /** The line shown on the veil; empty when the mark carries none. */
+  readonly reason: string;
+};
+
 /**
  * The author's own sensitive mark on one comment — what its edit switch shows.
  *
  * Its own read rather than a field on the detail query: see the operation's own
  * note. Null means the comment is gone; the caller keeps the switch where it
  * was rather than guessing at false, because guessing false would offer to
- * unveil something the author had veiled.
+ * unveil something the author had veiled. The reason travels with the mark for
+ * the same reason: an edit carries complete state, so a reason left behind is a
+ * reason erased.
  */
 export async function fetchCommentSelfMark(
   client: ApolloClient,
   id: string,
-): Promise<Outcome<boolean | null>> {
+): Promise<Outcome<CommentSelfMark | null>> {
   const fetched = await fetchOutcome(() =>
     client.query({
       query: CommentSelfMarkDocument,
@@ -274,7 +286,12 @@ export async function fetchCommentSelfMark(
     }),
   );
   if (fetched.kind !== "success") return fetched;
-  return success(fetched.value.comment?.sensitiveSelfMark ?? null);
+  const comment = fetched.value.comment;
+  if (!comment) return success(null);
+  return success({
+    sensitive: comment.sensitiveSelfMark,
+    reason: comment.sensitiveReason ?? "",
+  });
 }
 
 function liftPrepared(payload: {
@@ -346,6 +363,13 @@ export async function preparePostEdit(
      */
     sensitive: boolean;
     sensitiveReason?: string;
+    /**
+     * The gallery the edit LEAVES STANDING — complete, not a delta, and
+     * required for the same reason the mark is. An omitted gallery is an empty
+     * gallery on the wire, so an edit that forgot to re-state it would replace
+     * an image post's body with the words in the form and destroy the media.
+     */
+    attachments: readonly GalleryEntryDraft[];
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -358,6 +382,7 @@ export async function preparePostEdit(
             title: fields.title,
             description: fields.description,
             content: fields.content,
+            attachments: attachmentInputs(fields.attachments),
             ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
           },
         },
@@ -383,6 +408,14 @@ export async function prepareComment(
      * server applies the +0.1 policy default to each.
      */
     stance?: StancePair;
+    /**
+     * The author's own sensitive mark, as ReplySeal's third term row sets it.
+     * Stated rather than omitted for the reason an edit states it: the mark is
+     * complete state on the wire, and a comment that carries one has to say so
+     * on the record that mints it.
+     */
+    sensitive?: boolean;
+    sensitiveReason?: string;
   },
 ): Promise<Outcome<PreparedContent>> {
   return payloadOutcome(
@@ -397,6 +430,7 @@ export async function prepareComment(
             // A comment is words PLUS optional pictures — the words-or-media
             // XOR is the post's rule alone (D16), so both travel together.
             attachments: attachmentInputs(fields.attachments),
+            ...sensitiveInput(fields.sensitive, fields.sensitiveReason),
             // Tagging is part of the compose gesture on a comment as on
             // a post (api-spec.md `PrepareCommentInput.tags`, "same rules
             // as on a Post") — one batch on the minting record.

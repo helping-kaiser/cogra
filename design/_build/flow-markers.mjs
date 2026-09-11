@@ -65,6 +65,7 @@ export const FLOW_MARKERS = {
     ...post({ author: 1, menu: 2, media: 3, more: 4, topic: 5, refs: 6, stance: 7, score: 8, comments: 9 }),
     secondComments(9),
     ...nav(10),
+    { n: 17, find: ">Got it</button>", tag: "button" },
   ],
   VouchBack: [
     filter,
@@ -74,9 +75,9 @@ export const FLOW_MARKERS = {
     ...nav(13),
   ],
   VouchBackPad: [
-    { n: 1, find: 'aria-label="How stances work"', tag: "button" },
+    { n: 1, find: 'aria-label="Your first stance"', tag: "button" },
     { n: 2, find: 'aria-label="Stance', tag: "div" },
-    { n: 2, find: ">Choose your stance</button>", tag: "button" },
+    { n: 2, find: ">Choose your stance on @mira</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
   ],
@@ -87,7 +88,7 @@ export const FLOW_MARKERS = {
       (m) => m.find !== 'aria-label="Take a stance on this post"'
     ),
     { n: 9, find: 'aria-label="Your stance on this post', tag: "button" },
-    { n: 9, find: ">Choose your stance</button>", tag: "button" },
+    { n: 9, find: ">Choose your stance on this post</button>", tag: "button" },
     ...nav(12),
   ],
 };
@@ -156,8 +157,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Yours</button>", tag: "button" },
     { n: 4, find: ">You took part</button>", tag: "button" },
     { n: 5, find: "In escrow · runs 6 more days", tag: "button" },
-    { n: 6, find: "Settled 28 Aug", tag: "button" },
-    { n: 6, find: "Settled 12 Jul", tag: "button" },
+    { n: 6, find: "Settled 3d", tag: "button" },
+    { n: 6, find: "Settled 12.07.2026", tag: "button" },
   ],
 });
 
@@ -171,7 +172,7 @@ const signedPost = (at) => [
   { n: at.more, find: ">More</button>", tag: "button", all: true },
   { n: at.topic, find: '<a href="/t/', tag: "a", all: true },
   { n: at.stance, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-  { n: at.stance, find: ">Choose your stance</button>", tag: "button", all: true },
+  { n: at.stance, find: ">Choose your stance on this post</button>", tag: "button", all: true },
   { n: at.score, find: ">Post Score</span>", tag: "button", all: true },
 ];
 const searchShell = (fieldText, nRow) => [
@@ -183,7 +184,7 @@ const searchShell = (fieldText, nRow) => [
 
 Object.assign(FLOW_MARKERS, {
   Explore: [
-    { n: 1, find: "Search people, posts, topics", tag: "div" },
+    { n: 1, find: "Search people, posts, tags", tag: "div" },
     { n: 2, find: ">Enter the Sky</button>", tag: "button" },
     { n: 3, find: ">@sol salt</span>", tag: "button" },
     { n: 3, find: ">#saltmaps</span>", tag: "button" },
@@ -191,6 +192,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(4),
   ],
   ExploreSearch: [
+    { n: 14, find: ">saltmaps<", tag: "button" },
     ...searchShell("@sol salt", 9),
     { n: 4, find: "Salt maps of the coast road", tag: "button" },
     { n: 4, find: "First try at a rubbing", tag: "button" },
@@ -251,8 +253,7 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-// The Comments page (JSX boards; the three hand boards carry their attributes
-// directly). Sheet boards are scanExempt; badges stamped on under-scrim
+// The Comments page. Sheet boards are scanExempt; badges stamped on under-scrim
 // repeats sit dimmed beneath the wash, which reads correctly.
 Object.assign(FLOW_MARKERS, {
   ReplyEntry: [
@@ -261,7 +262,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: '<a href="/t/', tag: "a", all: true },
     { n: 4, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
     { n: 4, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
-    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: "Add a comment</label>", tag: "label" },
@@ -273,7 +275,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: "scroll-snap-type:x mandatory", tag: "div" },
     { n: 4, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
     { n: 4, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
-    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: ">Edit</button>", tag: "button" },
     { n: 7, find: "Add a comment</label>", tag: "label" },
@@ -281,17 +284,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   CommentEdit: [
+    { n: 14, find: "aria-label=\"#glovebox — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
-    { n: 4, find: 'rows="3"', tag: "textarea" },
+    { n: 4, find: 'data-field="Words"', tag: "div" },
     { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
     { n: 6, find: "+ Add pictures · 1 of 4", tag: "button" },
     { n: 7, find: ">Describe the pictures</button>", tag: "button" },
-    { n: 8, find: "#glovebox", tag: "span" },
-    { n: 9, find: ">Add a topic</button>", tag: "button" },
+    { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
+    { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "This creates 2 signed actions", tag: "div" },
+    { n: 11, find: "This creates 2 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
   ],
@@ -340,9 +344,8 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
-// The Compose page's JSX boards (the 13 hand boards carry their attributes
-// directly). The sheet boards are scanExempt; only the sheet layer and its
-// scrim are stamped.
+// The Compose page's boards. The sheet boards are scanExempt; only the sheet
+// layer and its scrim are stamped.
 Object.assign(FLOW_MARKERS, {
   ReferencePicker: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
@@ -386,9 +389,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  // TWO SCRIMS on this board — the thread's and the menu's — and both take the
-  // same number: the edge is "tap outside", and outside the menu is the whole
-  // screen whichever wash the finger lands on.
+  // TWO WASHES on this board — the thread's, and the menu's stacked over the
+  // thread it dims — and both take the same number: the edge is "tap outside",
+  // and outside the menu is the whole screen.
   CommentMenu: [
     { n: 1, find: ">License terms</button>", tag: "button" },
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
@@ -399,40 +402,36 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Share this profile</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  // The detail view with the terms unfolded — PostDetail's own anatomy, so its
-  // numbering is PostDetail's, unchanged.
-  PostLicense: [
-    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
-    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
-    { n: 3, find: '<a href="/u/', tag: "a" },
-    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
-    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
-    { n: 6, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 6, find: ">Choose your stance</button>", tag: "button" },
-    { n: 7, find: ">Post Score</span>", tag: "button" },
-    { n: 8, find: 'aria-label="3 comments"', tag: "button" },
-    { n: 9, find: 'aria-label="Share this post"', tag: "button" },
-    ...nav(10),
-  ],
+  // The license sheet, over the post and over the thread. Both are scanExempt:
+  // the terms are a block to read, not a set of controls, so the only thing
+  // either board wires is the wash that drops the sheet. CommentLicense has two
+  // — the thread's and the sheet's stacked over it — and they take the same
+  // number, as on CommentMenu: outside the sheet is outside it.
+  PostLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div" }],
+  CommentLicense: [{ n: 1, find: 'class="cg-scrim-in"', tag: "div", all: true }],
   ComposeCited: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: "<input", tag: "input" },
-    { n: 4, find: "<textarea", tag: "textarea" },
-    { n: 5, find: ">Add a topic</button>", tag: "button" },
+    { n: 3, find: 'data-field="Title"', tag: "div" },
+    { n: 4, find: 'data-field="Description"', tag: "div" },
+    { n: 5, find: "+ Add a tag", tag: "button" },
     { n: 6, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 7, find: "+ Cite something", tag: "button" },
     { n: 8, find: ">Next</button>", tag: "button" },
+    { n: 9, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
   ],
   ComposeDetails: [
+    { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 12, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
+    { n: 13, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
-    { n: 4, find: "<input", tag: "input" },
-    { n: 5, find: "<textarea", tag: "textarea" },
-    { n: 6, find: "#fieldnotes", tag: "span" },
-    { n: 6, find: "#coastroad", tag: "span" },
-    { n: 7, find: ">Add a topic</button>", tag: "button" },
+    { n: 4, find: 'data-field="Title"', tag: "div" },
+    { n: 5, find: 'data-field="Description"', tag: "div" },
+    { n: 6, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 6, find: 'aria-label="Remove #coastroad"', tag: "button" },
+    { n: 7, find: "+ Add a tag", tag: "button" },
     { n: 8, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 9, find: "+ Cite something", tag: "button" },
     { n: 10, find: ">Next</button>", tag: "button" },
@@ -447,7 +446,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: '<a href="/u/', tag: "a", all: true },
     { n: 3, find: 'aria-label="Take a stance on this post"', tag: "button", all: true },
-    { n: 3, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 3, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 4, find: ">Post Score</span>", tag: "button", all: true },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(6),
@@ -457,9 +456,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 3, find: '<a href="/u/', tag: "a", all: true },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
-    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 6, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 6, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 6, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 7, find: ">Post Score</span>", tag: "button", all: true },
     { n: 8, find: 'aria-label="0 comments"', tag: "button" },
     ...nav(9),
@@ -475,15 +474,118 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: '<a href="/t/', tag: "a", all: true },
     { n: 9, find: ">· 1 reference<", tag: "span" },
     { n: 10, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 10, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 10, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 11, find: ">Post Score</span>", tag: "button", all: true },
     { n: 12, find: 'aria-label="3 comments"', tag: "button" },
     ...nav(13),
   ],
 });
 
-// The Media page (HelpDialog, the one Patterns board, carries its attributes
-// directly as a hand board).
+// The compose wizard's LEGACY BOARDS, converted (the conformance round): ten
+// boards that were hand-authored `.dc.html` with no source behind them now
+// render from `screens/`, so their inline `data-flow` stamps become markers
+// here. Same numbers, same elements, same edges — only the authorship moved.
+// The seal's three sheet boards are scanExempt; only the sheet layer and its
+// scrim are stamped, and the seal beneath them is inert in those states.
+Object.assign(FLOW_MARKERS, {
+  ComposeWords: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Add pictures instead</button>", tag: "button" },
+    { n: 5, find: "1px solid var(--border-field)", tag: "div" },
+  ],
+  ComposePick: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Write words instead</button>", tag: "button" },
+    { n: 5, find: ">Show all</button>", tag: "button" },
+    { n: 6, find: ">Cover</span>", tag: "div" },
+    { n: 7, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 8, find: ">Your photos app</span>", tag: "button" },
+    // Every tile of the roll is the same control repeated — one edge covers
+    // them, the way one edge covers a feed's repeated per-post affordances.
+    { n: 9, find: "position:relative;width:125px", tag: "div", all: true },
+  ],
+  ComposeCrop: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Tall 4:5</button>", tag: "button" },
+    { n: 4, find: ">Square 1:1</button>", tag: "button" },
+    { n: 4, find: ">Wide 1.91:1</button>", tag: "button" },
+    { n: 5, find: "transform:scale(1.15)", tag: "div" },
+    { n: 6, find: "position:relative;width:48px", tag: "div", all: true },
+  ],
+  ComposeCover: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: "transform:translate(-50%, -50%)", tag: "span" },
+    { n: 4, find: 'class="cg-cover-frame"', tag: "div", all: true },
+    { n: 5, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 6, find: ">Next</button>", tag: "button" },
+  ],
+  ComposeCoverPlaying: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Pause"', tag: "button" },
+    { n: 4, find: 'aria-label="Back ten seconds"', tag: "button" },
+    { n: 4, find: 'aria-label="Forward ten seconds"', tag: "button" },
+    { n: 5, find: 'aria-label="Seek"', tag: "div" },
+    { n: 6, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 7, find: 'class="cg-cover-frame"', tag: "div", all: true },
+    { n: 8, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 9, find: ">Next</button>", tag: "button" },
+  ],
+  ComposeDraft: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Discard</button>", tag: "button" },
+    { n: 4, find: ">Continue</button>", tag: "button" },
+  ],
+  ComposeSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: ">Sign and publish</button>", tag: "button" },
+    { n: 8, find: ">Back</button>", tag: "button" },
+  ],
+  ComposeKeyAbsent: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Change</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Your key"', tag: "button" },
+    { n: 5, find: ">Restore the key</button>", tag: "button" },
+    { n: 6, find: ">Keep the draft, restore later</button>", tag: "button" },
+  ],
+  ComposeLicense: [
+    { n: 1, find: 'aria-label="License"', tag: "button" },
+    { n: 2, find: 'data-axis="credit"', tag: "label", all: true },
+    { n: 3, find: 'data-axis="record"', tag: "label", all: true },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ComposeSensitive: [
+    { n: 1, find: 'aria-label="Sensitive"', tag: "button" },
+    { n: 2, find: 'role="switch"', tag: "button" },
+    { n: 3, find: 'data-field="Why?"', tag: "div" },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ComposePad: [
+    { n: 1, find: 'aria-label="Where you stand on it"', tag: "button" },
+    { n: 2, find: 'aria-label="Stance pad', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-wash", tag: "div" },
+  ],
+});
+
+// The Media page.
 Object.assign(FLOW_MARKERS, {
   FeedGallery: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
@@ -493,7 +595,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">More</button>", tag: "button" },
     { n: 6, find: '<a href="/t/', tag: "a", all: true },
     { n: 7, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 7, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 7, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 8, find: ">Post Score</span>", tag: "button", all: true },
     { n: 9, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="1 comment"', tag: "button" },
@@ -511,19 +613,19 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
-    { n: 5, find: ">Show all</span>", tag: "span" },
+    { n: 5, find: ">Show all</button>", tag: "button" },
     { n: 6, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 7, find: ">Remove it</button>", tag: "button", all: true },
   ],
   ComposeDescribe: [
     { n: 1, find: 'aria-label="Describing pictures"', tag: "button" },
-    { n: 2, find: 'rows="2"', tag: "textarea" },
+    { n: 2, find: 'data-field="What&#x27;s in the picture"', tag: "div" },
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   ComposeDescribeVideo: [
     { n: 1, find: 'aria-label="Describing pictures"', tag: "button" },
-    { n: 2, find: 'rows="2"', tag: "textarea" },
+    { n: 2, find: 'data-field="What&#x27;s in the video"', tag: "div" },
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
@@ -540,6 +642,26 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "transform:scale(1.15)", tag: "div" },
   ],
+  // The video-cover round's two wizard boards. The cover step with no frames
+  // keeps ComposeCover's numbering minus the strip and the preview's disc,
+  // which is what "the same step, smaller" means in the graph as well.
+  ComposeCoverNoFrames: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 4, find: ">Next</button>", tag: "button" },
+  ],
+  ComposeDetailsVideo: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Describe the video</button>", tag: "button" },
+    { n: 4, find: ">Add a cover</button>", tag: "button" },
+    { n: 5, find: 'data-field="Title"', tag: "div" },
+    { n: 6, find: 'data-field="Description"', tag: "div" },
+    { n: 7, find: "+ Add a tag", tag: "button" },
+    { n: 8, find: "+ Cite something", tag: "button" },
+    { n: 9, find: ">Next</button>", tag: "button" },
+  ],
   ReplyVideoFailed: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
@@ -548,57 +670,59 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Retry</button>", tag: "button" },
     { n: 6, find: ">Remove it</button>", tag: "button" },
     { n: 7, find: ">Describe the video</button>", tag: "button" },
-    { n: 8, find: 'class="cg-cover-frame"', tag: "div", all: true },
-    { n: 9, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 8, find: ">Add a cover</button>", tag: "button" },
   ],
   CommentEditVideo: [
+    { n: 14, find: "aria-label=\"#glovebox — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the edit is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
-    { n: 4, find: 'rows="2"', tag: "textarea" },
+    { n: 4, find: 'data-field="Words"', tag: "div" },
     { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 6, find: ">Describe the video</button>", tag: "button" },
     { n: 7, find: ">Change the cover</button>", tag: "button" },
-    { n: 8, find: "#glovebox", tag: "span" },
-    { n: 9, find: ">Add a topic</button>", tag: "button" },
+    { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
+    { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "This creates 2 signed actions", tag: "div" },
+    { n: 11, find: "This creates 2 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
   ],
   EditComposeVideo: [
+    { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 5, find: ">Describe the video</button>", tag: "button" },
-    { n: 6, find: ">Change the cover</button>", tag: "button" },
-    { n: 7, find: 'value="The long way home"', tag: "input" },
-    { n: 8, find: 'rows="2"', tag: "textarea" },
-    { n: 9, find: "#coastroad", tag: "span" },
-    { n: 10, find: ">Add a topic</button>", tag: "button" },
-    { n: 11, find: "This creates 3 signed actions", tag: "div" },
+    { n: 6, find: ">Add a cover</button>", tag: "button" },
+    { n: 7, find: 'data-field="Title"', tag: "div" },
+    { n: 8, find: 'data-field="Description"', tag: "div" },
+    { n: 9, find: 'aria-label="Remove #coastroad"', tag: "button" },
+    { n: 10, find: "+ Add a tag", tag: "button" },
+    { n: 11, find: "This creates 3 signed actions", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
   ],
   ComposeUploading: [
+    { n: 12, find: "aria-label=\"#tidemarket — set how it relates\"", tag: "button" },
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
     { n: 4, find: ">Retry</button>", tag: "button" },
     { n: 5, find: ">Remove it</button>", tag: "button" },
     { n: 6, find: ">Describe the pictures</button>", tag: "button" },
-    { n: 7, find: 'type="text"', tag: "input" },
-    { n: 8, find: 'rows="2"', tag: "textarea" },
-    { n: 9, find: "#tidemarket", tag: "span" },
-    { n: 10, find: ">Add a topic</button>", tag: "button" },
+    { n: 7, find: 'data-field="Title"', tag: "div" },
+    { n: 8, find: 'data-field="Description"', tag: "div" },
+    { n: 9, find: 'aria-label="Remove #tidemarket"', tag: "button" },
+    { n: 10, find: "+ Add a tag", tag: "button" },
     { n: 11, find: ">Next</button>", tag: "button" },
   ],
   ReplyCited: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
     { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
-    { n: 4, find: "+ Add a topic", tag: "button" },
+    { n: 4, find: "+ Add a tag", tag: "button" },
     { n: 5, find: "+ Cite something", tag: "button" },
     { n: 6, find: ">Adjust</button>", tag: "button" },
     { n: 7, find: ">Change</button>", tag: "button" },
@@ -606,6 +730,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Sign comment</button>", tag: "button" },
     { n: 10, find: ">Back</button>", tag: "button" },
     { n: 11, find: 'aria-label="Remove Tide tables', tag: "button" },
+    { n: 12, find: "aria-label=\"Tide tables and the third headland — set how it relates\"", tag: "button" },
   ],
   ComposeSealUploading: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -622,7 +747,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: ">Write words instead</button>", tag: "button" },
-    { n: 5, find: ">Show all</span>", tag: "span" },
+    { n: 5, find: ">Show all</button>", tag: "button" },
     { n: 6, find: 'aria-label="Remove this picture"', tag: "button" },
     { n: 7, find: "1px dashed var(--border-field)", tag: "div" },
     { n: 8, find: ">Choose from your files</button>", tag: "button" },
@@ -657,7 +782,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">More</button>", tag: "button", all: true },
     { n: 6, find: '<a href="/t/', tag: "a", all: true },
     { n: 7, find: 'aria-label="Your stance on this post', tag: "button", all: true },
-    { n: 7, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 7, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 8, find: ">Post Score</span>", tag: "button", all: true },
     { n: 9, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="1 comment"', tag: "button" },
@@ -670,7 +795,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Turn sound on"', tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a" },
     { n: 4, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 4, find: ">Choose your stance</button>", tag: "button" },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     { n: 6, find: 'aria-label="Share this post"', tag: "button" },
     { n: 7, find: ">Post Score</span>", tag: "button" },
@@ -684,9 +809,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More on this post"', tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a" },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
-    { n: 5, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 6, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 6, find: ">Choose your stance</button>", tag: "button" },
+    { n: 6, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 7, find: ">Post Score</span>", tag: "button" },
     { n: 8, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="Share this post"', tag: "button" },
@@ -700,9 +825,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Seek"', tag: "div" },
     { n: 6, find: 'aria-label="Turn sound on"', tag: "button" },
     { n: 7, find: '<a href="/u/', tag: "a" },
-    { n: 8, find: 'aria-label="Topics and references"', tag: "button" },
+    { n: 8, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 9, find: 'aria-label="Take a stance on this post"', tag: "button" },
-    { n: 9, find: ">Choose your stance</button>", tag: "button" },
+    { n: 9, find: ">Choose your stance on this post</button>", tag: "button" },
     { n: 10, find: ">Post Score</span>", tag: "button" },
     { n: 11, find: 'aria-label="2 comments"', tag: "button" },
     { n: 12, find: 'aria-label="Share this post"', tag: "button" },
@@ -759,6 +884,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "Three weekends of walking the same stretch", tag: "button" },
     ...nav(10),
   ],
+  // The failed next page is this board's whole subject; the profile beneath it
+  // is `Profile`'s and is wired there (the pattern-exemplar exemption).
+  ProfileMoreFailed: [{ n: 1, find: ">Retry</button>", tag: "button" }],
+  ProfileNotFound: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  ProfileUnreachable: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Retry</button>", tag: "button" },
+    ...nav(3),
+  ],
   ProfileApplicant: [
     ...ownProfile(),
     { n: 9, find: "First light over the flats", tag: "button" },
@@ -769,7 +903,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Stances on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Take a stance on @ada"', tag: "button" },
-    { n: 4, find: ">Choose your stance</button>", tag: "button" },
+    { n: 4, find: ">Choose your stance on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
     { n: 6, find: 'aria-label="Comments"', tag: "button" },
@@ -794,7 +928,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Stances on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Take a stance on @ada"', tag: "button" },
-    { n: 4, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your stance on @ada</button>", tag: "button" },
+    { n: 4, find: ">Choose your stance on this post</button>", tag: "button", all: true },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
     { n: 6, find: 'aria-label="Comments"', tag: "button" },
@@ -825,7 +960,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="More on this comment"', tag: "button", all: true },
     { n: 9, find: 'aria-label="Your stance on this comment', tag: "button", all: true },
     { n: 9, find: 'aria-label="Take a stance on this comment"', tag: "button", all: true },
-    { n: 9, find: ">Choose your stance</button>", tag: "button", all: true },
+    { n: 9, find: ">Choose your stance on this comment</button>", tag: "button", all: true },
+    /* The own-profile skip-link ("@ada") is the profile's own stance control's
+       accessible-text twin, not the comment's — via 4 (its face two rows up),
+       matching ProfileOther's convention of stamping both the aria-label and
+       the skip-link text under the same via (jakob 2026-09-10). */
+    { n: 4, find: ">Choose your stance on @ada</button>", tag: "button" },
     { n: 10, find: ">Reply</button>", tag: "button", all: true },
     { n: 11, find: "View 2 replies", tag: "button" },
     { n: 17, find: ">On “", tag: "button", all: true },
@@ -834,9 +974,9 @@ Object.assign(FLOW_MARKERS, {
   ProfileEdit: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Change picture</button>", tag: "button" },
-    { n: 3, find: 'value="Sol Ferreira"', tag: "input" },
-    { n: 4, find: "whatever the wind allows.</textarea>", tag: "textarea" },
-    { n: 5, find: 'value="solferreira.art"', tag: "input" },
+    { n: 3, find: 'data-field="Display name"', tag: "div" },
+    { n: 4, find: 'data-field="Bio"', tag: "div" },
+    { n: 5, find: 'data-field="Website"', tag: "div" },
     { n: 6, find: ">Save</button>", tag: "button" },
   ],
   ProfileEditSeal: [
@@ -848,6 +988,111 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* The settings round's three boards. A `SettingsRow` is anchored on its own
+   label — the words are what a reader presses, and the row is the element the
+   marker walks back to whichever variant it is (a button, or the label around
+   a choice's radio). The stance choice's three radios share one number the way
+   the chronicle's three tabs do: one control, one edge. */
+Object.assign(FLOW_MARKERS, {
+  Settings: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">Light</button>", tag: "button" },
+    { n: 2, find: ">Dark</button>", tag: "button" },
+    { n: 2, find: ">Auto</button>", tag: "button" },
+    { n: 3, find: 'name="settings-stance-input"', tag: "label", all: true },
+    { n: 4, find: ">Confirm multi-action submits</span>", tag: "button" },
+    { n: 5, find: ">Default license</span>", tag: "button" },
+    { n: 6, find: ">What your feed shows</span>", tag: "button" },
+    { n: 7, find: ">Recovery code</span>", tag: "button" },
+    { n: 8, find: ">Your key</span>", tag: "button" },
+    { n: 9, find: ">Revoke</button>", tag: "button", all: true },
+    { n: 10, find: ">Sign out everywhere else</span>", tag: "button" },
+    { n: 11, find: ">Password</span>", tag: "button" },
+    { n: 12, find: ">Handle</span>", tag: "button" },
+    { n: 13, find: ">Email</span>", tag: "button" },
+    { n: 14, find: ">Don&#x27;t remember this account on this device</span>", tag: "button" },
+    { n: 15, find: ">Sign out</span>", tag: "button" },
+  ],
+  SettingsBackup: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'data-field="Current recovery code"', tag: "div" },
+    { n: 3, find: ">Create a new recovery code</button>", tag: "button" },
+  ],
+  YourKey: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'aria-label="Copy the PEM block"', tag: "button" },
+    { n: 3, find: 'aria-label="Copy the raw hex"', tag: "button" },
+  ],
+  // Both key-absent twins carry the same three controls in the same order —
+  // the back arrow, the panel's one "?", and the restore — because they draw
+  // the same notice over two bodies.
+  SettingsBackupKeyAbsent: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'aria-label="Your key"', tag: "button" },
+    { n: 3, find: ">Restore the key</button>", tag: "button" },
+  ],
+  YourKeyAbsent: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'aria-label="Your key"', tag: "button" },
+    { n: 3, find: ">Restore the key</button>", tag: "button" },
+  ],
+});
+
+// The settings subpages (jakob's review 2026-09-09): the two sheets its rows
+// open, and the three credential screens behind its Credentials rows.
+//
+// THE TWO SHEETS DRAW THE SETTINGS PAGE BENEATH THEM, which is why neither
+// takes `FeedSheet`'s or `ComposeLicense`'s markers verbatim: the page under
+// the wash has switches and a segmented pill of its own, so a `role="switch"`
+// or `aria-pressed=` sweep would badge the theme control through the scrim.
+// The sheet's own controls are matched by what only they carry — the chip's
+// pill geometry, the order options' words.
+Object.assign(FLOW_MARKERS, {
+  SettingsLicense: [
+    { n: 1, find: 'aria-label="License"', tag: "button" },
+    { n: 2, find: 'data-axis="credit"', tag: "label", all: true },
+    { n: 3, find: 'data-axis="record"', tag: "label", all: true },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  SettingsReading: [
+    { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
+    { n: 2, find: 'style="display:inline-flex;align-items:center;position:relative;height:32px', tag: "button", all: true },
+    { n: 3, find: ">Ranked</button>", tag: "button" },
+    { n: 3, find: ">Newest</button>", tag: "button" },
+    { n: 4, find: "already seen", tag: "label" },
+    { n: 5, find: ">Reset</button>", tag: "button" },
+    { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // Two password fields, one reveal affordance: the toggle is the same control
+  // drawn twice, so it carries one number on both — the rule the repeated
+  // per-post controls keep.
+  ChangePassword: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'data-field="Current password"', tag: "div" },
+    { n: 3, find: 'data-field="New password"', tag: "div" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
+    { n: 5, find: ">Change password</button>", tag: "button" },
+  ],
+  ChangeHandle: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'data-field="New handle"', tag: "div" },
+    { n: 3, find: ">Change handle</button>", tag: "button" },
+  ],
+  ChangeEmail: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'data-field="New email"', tag: "div" },
+    { n: 3, find: 'data-field="Current password"', tag: "div" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: ">Change email</button>", tag: "button" },
+  ],
+  ChangeEmailConfirm: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'data-field="Confirmation code"', tag: "div" },
+    { n: 3, find: ">Confirm the code</button>", tag: "button" },
+  ],
+});
+
 // The entry round's boards, componentized off the real masters (input-errors
 // bite 1, 2026-09-03): PasswordField and Checkbox bring their own real
 // <input>/<button> elements the hand markup only drew as shapes, so every
@@ -856,19 +1101,19 @@ Object.assign(FLOW_MARKERS, {
 Object.assign(FLOW_MARKERS, {
   Join: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="handle"', tag: "input" },
-    { n: 3, find: 'id="email"', tag: "input" },
-    { n: 4, find: 'id="password"', tag: "input" },
+    { n: 2, find: 'data-field="Handle"', tag: "div" },
+    { n: 3, find: 'data-field="Email"', tag: "div" },
+    { n: 4, find: 'data-field="Password"', tag: "div" },
     { n: 5, find: 'aria-label="Show password"', tag: "button" },
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
   ],
   SignIn: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="signin-email"', tag: "input" },
-    { n: 3, find: 'id="signin-password"', tag: "input" },
+    { n: 2, find: 'data-field="Email"', tag: "div" },
+    { n: 3, find: 'data-field="Password"', tag: "div" },
     { n: 4, find: 'aria-label="Show password"', tag: "button" },
-    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 6, find: ">Sign in</button>", tag: "button" },
     { n: 7, find: ">Forgot password?</button>", tag: "button" },
     { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
@@ -877,40 +1122,37 @@ Object.assign(FLOW_MARKERS, {
   ],
   Restore: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="recovery-code"', tag: "input" },
-    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 2, find: 'data-field="Recovery code"', tag: "div" },
+    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 4, find: ">Restore the key</button>", tag: "button" },
   ],
   RecoveryCode: [
     { n: 1, find: ">Copy</button>", tag: "button" },
-    { n: 2, find: 'type="text"', tag: "input" },
+    { n: 2, find: 'data-field="Type or paste the code to confirm"', tag: "div" },
     { n: 3, find: ">I&#x27;ve written it down</button>", tag: "button" },
   ],
 });
 
-/* The five errored boards (input-errors bite 3, 2026-09-03): each copies its
+/* The errored boards (input-errors bite 3, 2026-09-03): each copies its
    parent's control anatomy exactly, so its markers reuse the parent's
    `find` patterns 1:1 — the error props change styling and a supporting
-   line, never the elements a reader can tap. ProfileEditError is the one
-   exception: Display name's value goes empty to match "can't be empty",
-   so its marker keys off that empty attribute instead of the master's
-   sample name. */
+   line, never the elements a reader can tap. */
 Object.assign(FLOW_MARKERS, {
   JoinErrors: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="handle"', tag: "input" },
-    { n: 3, find: 'id="email"', tag: "input" },
-    { n: 4, find: 'id="password"', tag: "input" },
+    { n: 2, find: 'data-field="Handle"', tag: "div" },
+    { n: 3, find: 'data-field="Email"', tag: "div" },
+    { n: 4, find: 'data-field="Password"', tag: "div" },
     { n: 5, find: 'aria-label="Show password"', tag: "button" },
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
   ],
   SignInError: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="signin-email"', tag: "input" },
-    { n: 3, find: 'id="signin-password"', tag: "input" },
+    { n: 2, find: 'data-field="Email"', tag: "div" },
+    { n: 3, find: 'data-field="Password"', tag: "div" },
     { n: 4, find: 'aria-label="Show password"', tag: "button" },
-    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 6, find: ">Sign in</button>", tag: "button" },
     { n: 7, find: ">Forgot password?</button>", tag: "button" },
     { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
@@ -919,22 +1161,205 @@ Object.assign(FLOW_MARKERS, {
   ],
   RestoreError: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: 'id="recovery-code"', tag: "input" },
-    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "input" },
+    { n: 2, find: 'data-field="Recovery code"', tag: "div" },
+    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 4, find: ">Restore the key</button>", tag: "button" },
   ],
   RecoveryCodeMismatch: [
     { n: 1, find: ">Copy</button>", tag: "button" },
-    { n: 2, find: 'type="text"', tag: "input" },
+    { n: 2, find: 'data-field="Type or paste the code to confirm"', tag: "div" },
     { n: 3, find: ">I&#x27;ve written it down</button>", tag: "button" },
   ],
-  ProfileEditError: [
+});
+
+/* The entry-and-keys family, converted off the masters (legacy-conversion lane
+   A, 2026-09-04): the eight boards that had only hand markup until now. The
+   via numbers are the hand boards' own — every one of them re-anchored to the
+   element the master renders in that slot, so graph.json needed no edit. The
+   fields key off `id` (they start empty, so there is no value text to key
+   off), and the back arrows off PageHeader's accessible name. */
+Object.assign(FLOW_MARKERS, {
+  InviteEntry: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: ">Change picture</button>", tag: "button" },
-    { n: 3, find: 'value=""', tag: "input" },
-    { n: 4, find: "whatever the wind allows.</textarea>", tag: "textarea" },
-    { n: 5, find: 'value="solferreira.art"', tag: "input" },
-    { n: 6, find: ">Save</button>", tag: "button" },
+    { n: 2, find: 'data-field="Invite link"', tag: "div" },
+    { n: 3, find: ">Continue</button>", tag: "button" },
+    { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
+    { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
+  ],
+  InviteEntryError: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Invite link"', tag: "div" },
+    { n: 3, find: ">Continue</button>", tag: "button" },
+    { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
+    { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
+  ],
+  JoinInvalid: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Invite link"', tag: "div" },
+    { n: 3, find: ">Continue</button>", tag: "button" },
+    { n: 4, find: ">Already have an account? Sign in</button>", tag: "button" },
+    { n: 5, find: ">Just looking? Browse the feed", tag: "button" },
+  ],
+  Reset: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Email"', tag: "div" },
+    { n: 3, find: ">Send reset link</button>", tag: "button" },
+  ],
+  // No back arrow: a mail link has no previous screen of ours behind it.
+  ResetNew: [
+    { n: 1, find: 'data-field="New password"', tag: "div" },
+    { n: 2, find: 'aria-label="Show password"', tag: "button" },
+    { n: 3, find: ">Set the new password</button>", tag: "button" },
+  ],
+  KeyCeremony: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Create my recovery code</button>", tag: "button" },
+    { n: 3, find: ">Not now</button>", tag: "button" },
+  ],
+  // The ceremony's two dialogs. Both are scanExempt: the arrow and the words
+  // beneath the scrim are inactive while the ask is open, so only the
+  // dialog's own pair carries a number — the hand boards stamped exactly
+  // these two and left the arrow bare.
+  KeyConfirm: [
+    { n: 1, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Show my code</button>", tag: "button" },
+  ],
+  KeyDecline: [
+    { n: 1, find: ">I accept the risk</button>", tag: "button" },
+    { n: 2, find: ">Go back</button>", tag: "button" },
+  ],
+  Verified: [{ n: 1, find: ">Back to CoGra</button>", tag: "button" }],
+  // Neither draws a back arrow: a mail link has no previous screen of ours.
+  VerifiedApp: [{ n: 1, find: ">Go to the feed</button>", tag: "button" }],
+  VerifyExpired: [
+    { n: 1, find: ">Resend the link</button>", tag: "button" },
+    { n: 2, find: ">Go to the feed</button>", tag: "button" },
+  ],
+  // The ask over the borrowed view, also scanExempt. TWO "Sign in or join"
+  // buttons stand on this board — the band's and the ask's — and both take
+  // the number, the way the comments page's under-scrim repeats do: one edge
+  // covers them, because both words lead to the same screen.
+  GuestGate: [
+    { n: 1, find: ">Keep browsing</button>", tag: "button" },
+    { n: 2, find: ">Sign in or join</button>", tag: "button", all: true },
+  ],
+});
+
+/* The reply and edit wizards, the two overlays and the pattern boards
+   (legacy-conversion lane C, 2026-09-04): the last nine boards that had only
+   hand markup. Their via numbers are the hand boards' own — every one
+   re-anchored to the element the master renders in that slot, so graph.json
+   needed no edit. Five of the nine are overlay states and were already drawn
+   with only the top layer live; they take a `scanExempt` line saying so, and
+   `NetworkError` takes one saying why a pattern exemplar wires only its
+   retry. */
+Object.assign(FLOW_MARKERS, {
+  ReplyCompose: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    // The words the reply is made of — the body itself is the "control",
+    // the way the composer boards stamp their fields.
+    { n: 4, find: "The third headland light is real", tag: "p" },
+    { n: 5, find: "+ Add pictures or a video", tag: "button" },
+  ],
+  ReplyPad: [
+    { n: 1, find: 'aria-label="Toward what you answer"', tag: "button" },
+    { n: 2, find: 'aria-label="Stance pad for the post you answer"', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-wash", tag: "div" },
+  ],
+  // The bare seal. `ReplyCited` is this list plus its staged reference's ×.
+  ReplySeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 4, find: "+ Add a tag", tag: "button" },
+    { n: 5, find: "+ Cite something", tag: "button" },
+    { n: 6, find: ">Adjust</button>", tag: "button" },
+    { n: 7, find: ">Change</button>", tag: "button" },
+    { n: 8, find: ">Mark</button>", tag: "button" },
+    { n: 9, find: ">Sign comment</button>", tag: "button" },
+    { n: 10, find: ">Back</button>", tag: "button" },
+  ],
+  EditCompose: [
+    { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Editing"', tag: "button" },
+    { n: 4, find: 'aria-label="Manage the pictures"', tag: "button" },
+    { n: 5, find: 'data-field="Title"', tag: "div" },
+    { n: 6, find: 'data-field="Description"', tag: "div" },
+    { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 8, find: "+ Add a tag", tag: "button" },
+    { n: 9, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 10, find: "+ Cite something", tag: "button" },
+    { n: 11, find: "This creates 3 signed actions", tag: "button" },
+    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    { n: 13, find: ">Mark</button>", tag: "button" },
+    { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+    { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
+  ],
+  // Show all over the edit. The sheet is the same `PickedSheet` ComposePicked
+  // draws, so the markers are its markers — but the REMOVE anchors are spelled
+  // exactly rather than by the "Remove" prefix, because the edit beneath this
+  // sheet has remove buttons of its own (its tag chips, its staged citation)
+  // and a prefix match with `all` would badge them through the scrim.
+  EditPicked: [
+    { n: 1, find: "cursor:grab", tag: "span", all: true },
+    { n: 2, find: ">Describe</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Remove the cover"', tag: "button" },
+    { n: 3, find: 'aria-label="Remove picture 2"', tag: "button" },
+    { n: 4, find: ">Done</button>", tag: "button" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // The words edit. Marker 4 is the growing body box, anchored on the field
+  // border: it is the FIRST such border on the board, standing above the
+  // title's own field, and `applyFlowMarkers` takes the first match.
+  EditWords: [
+    { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 12, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Editing"', tag: "button" },
+    { n: 4, find: "1px solid var(--border-field)", tag: "div" },
+    { n: 5, find: "+ Add pictures or a video", tag: "button" },
+    { n: 6, find: 'data-field="Title"', tag: "div" },
+    { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 8, find: "+ Add a tag", tag: "button" },
+    { n: 9, find: "This creates 3 signed actions", tag: "button" },
+    { n: 10, find: ">Sign the edit</button>", tag: "button" },
+    { n: 11, find: ">Mark</button>", tag: "button" },
+  ],
+  EditActs: [
+    { n: 1, find: ">Done</button>", tag: "button" },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  NetworkError: [{ n: 1, find: ">Retry</button>", tag: "button" }],
+  // TWO "Restore the key" buttons stand on this board — the feed's own card
+  // beneath the wash and the pad's notice above it — and both take the number,
+  // the way the guest gate's two asks do: one edge covers them, because both
+  // words lead to the same screen.
+  PadKeyAbsent: [
+    { n: 1, find: 'aria-label="Your key"', tag: "button" },
+    { n: 2, find: ">Restore the key</button>", tag: "button", all: true },
+    { n: 3, find: ">Keep it pending, restore later</button>", tag: "button" },
+  ],
+  HelpDialog: [
+    { n: 1, find: ">Close</button>", tag: "button" },
+    { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ReplyPadHelp: [
+    { n: 1, find: ">Close</button>", tag: "button" },
+    { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  DiscardConfirm: [
+    { n: 1, find: ">Keep writing</button>", tag: "button" },
+    { n: 2, find: ">Discard</button>", tag: "button" },
   ],
 });
 
@@ -966,6 +1391,76 @@ const CARD_SHARE = {
 for (const [board, n] of Object.entries(CARD_SHARE)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Share this post"', tag: "button", all: true });
 }
+
+/* THE TAG ROUND'S FIVE BOARDS. The page borrows the feed card's whole anatomy,
+   so it borrows the feed boards' numbering with it; the two picker states
+   borrow `ReferencePicker`'s.
+
+   ONE VIA STILL CARRIES EVERY SKIP-LINK ON THE PAGE (backlog item 46.1). The
+   skip-link's text now names its target — `StanceControl`'s `targetLabel`,
+   the same source the face beside it reads — so the three on this page (two
+   posts, one comment) no longer share one anonymous "Choose your stance". The
+   VIA NUMBERING ITSELF is unchanged here: it is still one edge for all three,
+   where each FACE keeps its own (a post's, a comment's). Splitting the via to
+   match is a graph.json call, left standing for jakob to rule on. */
+Object.assign(FLOW_MARKERS, {
+  TagPage: [
+    { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
+    { n: 2, find: ">Choose your stance on this post</button>", tag: "button", all: true },
+    { n: 2, find: ">Choose your stance on this comment</button>", tag: "button" },
+    { n: 3, find: '<a href="/u/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 5, find: ">More</button>", tag: "button", all: true },
+    { n: 6, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 7, find: '<a href="/t/', tag: "a", all: true },
+    { n: 8, find: 'aria-label="Your stance on this post', tag: "button", all: true },
+    { n: 9, find: ">Post Score</span>", tag: "button", all: true },
+    { n: 10, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
+    { n: 12, find: ">On \u201c", tag: "button", all: true },
+    { n: 13, find: 'aria-label="More on this comment"', tag: "button" },
+    { n: 14, find: 'aria-label="Your stance on this comment', tag: "button" },
+  ],
+  TagPageEmpty: [
+    { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
+  ],
+  TagPicker: [
+    { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
+    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 3, find: ">salt<", tag: "div" },
+    { n: 4, find: ">saltmaps<", tag: "button" },
+    { n: 4, find: ">saltmarsh<", tag: "button" },
+    { n: 4, find: ">saltcrust<", tag: "button" },
+    { n: 4, find: ">saltflats<", tag: "button" },
+  ],
+  TagPickerTyping: [
+    { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
+    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 3, find: ">#SaltMaps<", tag: "div" },
+    { n: 4, find: ">saltmaps<", tag: "button" },
+  ],
+  TagPad: [
+    { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
+    { n: 2, find: ">Un-tag</button>", tag: "button" },
+    { n: 3, find: ">Done</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The composer's twin of the pad. It has no `Withdraw` — nothing is signed on
+  // that path yet — so its three live things are the pad, `Done` and the scrim.
+  TagPadCompose: [
+    { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
+    { n: 2, find: ">Done</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The citation's twin of TagPad — the same pad over two signed axes, because
+  // both of a citation's parameters are signed. Same three controls.
+  RefPair: [
+    { n: 1, find: 'aria-label="The pair this citation signs"', tag: "div" },
+    { n: 2, find: ">Done</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+});
 
 export function applyFlowMarkers(name, html) {
   const markers = FLOW_MARKERS[name];

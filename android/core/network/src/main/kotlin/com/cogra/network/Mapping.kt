@@ -32,6 +32,7 @@ import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
+import com.cogra.domain.ModerationState
 import com.cogra.domain.PostView
 import com.cogra.domain.ProfileView
 import com.cogra.domain.Outcome
@@ -198,6 +199,10 @@ internal fun ApplicationFields.toInfo(): ApplicationInfo = ApplicationInfo(
 internal fun com.cogra.network.graphql.type.FieldModerationStatus.toDomain(): FieldStatus =
     runCatching { FieldStatus.valueOf(rawValue) }.getOrDefault(FieldStatus.UNKNOWN)
 
+/** A state this build cannot name is never read as a verdict. */
+internal fun com.cogra.network.graphql.type.ModerationStatus.toDomain(): ModerationState =
+    runCatching { ModerationState.valueOf(rawValue) }.getOrDefault(ModerationState.UNKNOWN)
+
 internal fun ProfileFields.toDomain(): ProfileView = ProfileView(
     id = id,
     handle = handle,
@@ -205,6 +210,7 @@ internal fun ProfileFields.toDomain(): ProfileView = ProfileView(
     bio = ModeratedField(bio.value, bio.status.toDomain()),
     websiteUrl = ModeratedField(websiteUrl.value, websiteUrl.status.toDomain()),
     avatar = avatar?.mediaFields?.toDomain(),
+    updatedAt = updatedAt,
 )
 
 /**
@@ -378,6 +384,7 @@ internal fun PostFields.toDomain(): PostView = PostView(
     references = references.map { it.referenceClaimFields.toDomain() },
     attachments = attachments.map { it.mediaFields.toDomain() },
     attachmentsStatus = attachmentsStatus.toDomain(),
+    moderation = moderationStatus.toDomain(),
 )
 
 internal fun CommentFields.toDomain(): CommentView = CommentView(
@@ -394,6 +401,9 @@ internal fun CommentFields.toDomain(): CommentView = CommentView(
     references = references.map { it.referenceClaimFields.toDomain() },
     attachments = attachments.map { it.mediaFields.toDomain() },
     attachmentsStatus = attachmentsStatus.toDomain(),
+    moderation = moderationStatus.toDomain(),
+    sensitiveSelfMark = sensitiveSelfMark,
+    sensitiveReason = sensitiveReason,
 )
 
 internal fun LicenseChoice.toInput(): LicenseInput = LicenseInput(

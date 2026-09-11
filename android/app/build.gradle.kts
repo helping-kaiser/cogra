@@ -90,6 +90,21 @@ android {
     }
 }
 
+// `design-tokens.json` is read from the repo root at test time rather
+// than compiled in, so it belongs to no source set and Gradle cannot
+// see it. Undeclared, the up-to-date check and the build cache both
+// hand back a pass computed against the previous `make tokens` output —
+// a palette edit would report green without ColorSchemeTest running.
+// Declaring a runtime-read file as a task input is Gradle's own answer
+// (user manual, "Incremental build"); `workingDir` is stated because
+// the test names the file by a path relative to this module.
+tasks.withType<Test>().configureEach {
+    workingDir = projectDir
+    inputs.file(file("../../design-tokens.json"))
+        .withPropertyName("designTokens")
+        .withPathSensitivity(PathSensitivity.NONE)
+}
+
 dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:designsystem"))
@@ -114,6 +129,9 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    // ProcessLifecycleOwner: the shell hands the video stage the one
+    // lifecycle whose scope matches it — the process, not a screen.
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(platform(libs.androidx.compose.bom))

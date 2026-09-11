@@ -138,14 +138,25 @@ fun localLanding(raw: StancePair, pick: StancePair): StanceProjection {
 
 /**
  * The clip the graph reads a folded parameter through: every dimension
- * is a continuous value on the closed `[-1, +1]` ([edges.md §1]).
+ * is a continuous value on the closed `[-1, +1]` ([edges.md §1]). Three
+ * steps, in this order, and `stance-fold-vectors.json` pins each —
+ * every client has to land on the same bits or the same bundle reads
+ * differently on two devices.
  *
- * A sum that lands on zero is normalised away from `-0.0`, which is a
- * real Double and would otherwise print as "-0.00" and fail an exact
- * zero test the severance rules depend on.
+ * 1. Not-a-number folds to zero. `coerceIn` passes NaN straight
+ *    through, and a NaN reaching the control would poison every
+ *    comparison downstream — including the exact-zero tests severance
+ *    turns on, which NaN fails in both directions.
+ * 2. Clamp to the closed interval. Infinities land on the bounds.
+ * 3. A zero is the positive one. `-0.0` is a real Double that would
+ *    print as "-0.00" and carry different bits than the zero the other
+ *    clients produce.
  */
-private fun clipDimension(sum: Double): Double =
-    sum.coerceIn(-1.0, 1.0).let { if (it == 0.0) 0.0 else it }
+internal fun clipDimension(sum: Double): Double {
+    if (sum.isNaN()) return 0.0
+    val clipped = sum.coerceIn(-1.0, 1.0)
+    return if (clipped == 0.0) 0.0 else clipped
+}
 
 /**
  * What netting the bundle to `(0, 0)` would actually take (design.md

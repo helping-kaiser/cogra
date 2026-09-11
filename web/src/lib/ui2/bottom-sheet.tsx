@@ -13,7 +13,9 @@
 // without any of them being reimplemented — which is the documented platform
 // answer and the same one `join-prompt` already takes in the 1.0 layer.
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+
+import { exitDuration, SHEET_OUT_MS } from "@/lib/ui/motion";
 
 export function BottomSheet({
   open,
@@ -31,12 +33,33 @@ export function BottomSheet({
   testId?: string;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
+  // A DISMISSAL EXITS THE EDGE IT ENTERED FROM (design/tokens/transitions.css).
+  // `close()` drops the element out of the top layer at once, so the sheet is
+  // held open for the length of its exit animation and closed after.
+  //
+  // Which way it is going is derived from the prop as it changes, adjusted
+  // during render rather than in an effect — React's own "you might not need an
+  // effect": an effect that sets state on every open would cascade a render.
+  const [closing, setClosing] = useState(false);
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    setClosing(!open);
+  }
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
+    if (open) {
+      if (!dialog.open) dialog.showModal();
+      return;
+    }
+    if (!dialog.open) return;
+    const timer = setTimeout(() => {
+      setClosing(false);
+      dialog.close();
+    }, exitDuration(SHEET_OUT_MS));
+    return () => clearTimeout(timer);
   }, [open]);
 
   return (
@@ -54,7 +77,9 @@ export function BottomSheet({
       // default, and this one rises from the edge it will go back to. It may
       // fill the screen up to a sliver below the top, so the rounded corners
       // keep a strip of the surface behind visible.
-      className="mt-auto mb-0 max-h-[92dvh] w-full max-w-[42rem] rounded-t-extra-large border-0 bg-surface-container-high p-0 text-on-surface backdrop:bg-scrim/50"
+      className={`${
+        closing ? "cg-sheet-out" : "cg-sheet-in"
+      } mt-auto mb-0 max-h-[92dvh] w-full max-w-[42rem] rounded-t-extra-large border-0 bg-surface-container-high p-0 text-on-surface backdrop:bg-scrim/50`}
     >
       <div className="flex max-h-[92dvh] flex-col">
         {/* The drag handle is drawn but not a control: the sheet is dropped

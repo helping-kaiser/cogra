@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL_SHOWN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"5b1030f3b363","components/compose/DescribeSheet.jsx":"bcc91f82beee","components/compose/MediaThumb.jsx":"36b454665a85","components/compose/PickedRow.jsx":"6bb23e6042dc","components/compose/PickedSheet.jsx":"952252dd4d23","components/compose/UploadNotice.jsx":"d178689c7d88","components/compose/WizardHeader.jsx":"53ce0aad9241","components/content/CommentCard.jsx":"337cb31db015","components/content/OverflowMenu.jsx":"fa89204ca7b5","components/content/PostCard.jsx":"3f7c847a9c0f","components/content/ReferenceRow.jsx":"bad43ae893d4","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TopicsLine.jsx":"b3bfa12c4d86","components/core/BottomSheet.jsx":"8c75a6d0f693","components/core/Button.jsx":"ff5a90231bbe","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"48c703bd16e0","components/core/HelpDot.jsx":"eabf92544b27","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"a6b3171b05e1","components/forms/PasswordField.jsx":"6f714084cce7","components/forms/RecoveryCode.jsx":"f153ef01978a","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"4bc89566dbcb","components/honesty/PendingMarker.jsx":"28eaaf4ffa77","components/honesty/SensitiveVeil.jsx":"73819cc142d6","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"9690b37fd6d3","components/media/MediaViewer.jsx":"8de3eaa8144c","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"7c8b95b2687f","components/media/ReelRail.jsx":"9e5e1f908b8f","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"66c07c53862e","components/navigation/BottomNav.jsx":"53a749d4ddf1","components/navigation/CograBand.jsx":"177723728533","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"8fedb2f39e19","components/navigation/Icon.jsx":"792a402b9ec3","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"63d3f3e7404c","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/proposed/ExplainableNumber.jsx":"9a4a12a0d268","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"0b50770f4aa0","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"9dd1bf8386ce","components/stance/StancePad.jsx":"f6eda3aa07e3","components/stance/StanceReadout.jsx":"3c01d2740d9a","components/stance/StanceSlider.jsx":"325286a6b95d","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"964687345182","components/wallet/LedgerRow.jsx":"96a7cfea6280","components/wallet/PayoutAddress.jsx":"d7783723d684","components/wallet/WalletBalance.jsx":"3ff65daba8d2","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"1a69aa16a143"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"60be373be4f6","components/compose/ActsFooter.jsx":"18f6b3a04c86","components/compose/Caret.jsx":"7c8616dba407","components/compose/CoverRow.jsx":"c52618a34fe5","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"d8ac1f091ba5","components/compose/MediaThumb.jsx":"7a4e260a43ac","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"947836ad201f","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"2d4da59a66f8","components/compose/TopicRemovable.jsx":"e36e24c12cfb","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f1ad3e7f28e4","components/content/CommentCard.jsx":"29b2af1a2f4e","components/content/OverflowMenu.jsx":"fa89204ca7b5","components/content/PostCard.jsx":"83f0dc4b1542","components/content/ReferenceRow.jsx":"33ed49cd49ac","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TaggedRow.jsx":"3e4ec49372ea","components/content/TopicsLine.jsx":"6b9e07b63f21","components/core/BottomSheet.jsx":"7887a3ccf45b","components/core/Button.jsx":"49115256e31e","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"c0fe5f63cbb7","components/core/ContentRow.jsx":"cde9cf105af1","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"fd5bdff663fb","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"9d59a9de6678","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"0c3ff52ac00f","components/honesty/PendingMarker.jsx":"7428662f343f","components/honesty/SensitiveVeil.jsx":"6b693d3c9af2","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"46b9010c8478","components/media/MediaViewer.jsx":"8de3eaa8144c","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"9e5e1f908b8f","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"1eb54848dfa9","components/navigation/BottomNav.jsx":"97b7b37b3100","components/navigation/CograBand.jsx":"6350fa5e6832","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"e19c5e8532c5","components/navigation/Icon.jsx":"5a982b28005b","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"8f609947a202","components/navigation/TabBar.jsx":"2d2f44c5a698","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/people/StanceRow.jsx":"6296d2136f98","components/proposed/ExplainableNumber.jsx":"9a4a12a0d268","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"839fba4349fe","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"9c18be9b6efb","components/stance/StancePad.jsx":"be49bf0f663c","components/stance/StanceReadout.jsx":"c5ca7962b725","components/stance/StanceSlider.jsx":"bffd4db66fd7","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"2cea15cee817","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"b41a5971e24e","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -8,274 +8,23 @@ const __ds_scope = {};
 
 (__ds_ns.__errors = __ds_ns.__errors || []);
 
-// components/compose/ActsCard.jsx
-try { (() => {
-/* The seal's acts card (media slice, 2026-08-31 — extracted the moment a
-   second seal needed it: the profile-picture seal joined the post's and the
-   reply's). The container-highest card listing what one signature commits:
-   one row per act kind — quiet label, the value, the count — and the total as
-   the footer row. The all-or-nothing sentence, when a seal carries more than
-   one act, belongs to the screen below the card, not in it. */
-
-function ActsCard({
-  rows = [],
-  total,
-  note
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      borderRadius: "var(--radius-medium)",
-      background: "var(--surface-container-highest)",
-      padding: "4px var(--space-4)"
-    }
-  }, rows.map((row, index) => /*#__PURE__*/React.createElement("div", {
-    key: index,
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-2)",
-      minHeight: "44px",
-      borderBottom: "1px solid var(--border-hairline)"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: "none",
-      width: "76px",
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      fontWeight: "var(--text-label-small--font-weight)",
-      letterSpacing: "0.5px",
-      color: "var(--text-secondary)"
-    }
-  }, row.label), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      minWidth: 0,
-      fontSize: "var(--text-body-medium)",
-      lineHeight: "var(--text-body-medium--line-height)",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
-    }
-  }, row.value), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: "none",
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px",
-      color: "var(--text-secondary)"
-    }
-  }, row.count))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      gap: "2px",
-      minHeight: "48px",
-      padding: "6px 0"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-medium)",
-      lineHeight: "var(--text-body-medium--line-height)",
-      fontWeight: "var(--text-label-large--font-weight)"
-    }
-  }, total), note && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px",
-      color: "var(--text-secondary)"
-    }
-  }, note)));
-}
-__ds_scope.ActsCard = ActsCard;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/ActsCard.jsx", error: String((e && e.message) || e) }); }
-
-// components/core/BottomSheet.jsx
-try { (() => {
-/* The bottom sheet (backlog item 3). `design.md` §6 lists sheets in the
-   scaffolding and the product never built one, so three surfaces were each
-   improvising: the overflow menu, the license terms, a filter.
-
-   WHY A SHEET AND NOT A DIALOG. A dialog is a question the reader has to answer
-   before anything else can happen. A sheet is a drawer of choices they opened and
-   can close by looking away — so it comes from the edge they pulled it from, it
-   does not trap focus, and nothing behind it is inert. Choosing a dialog for a
-   drawer is how a product starts asking permission to show a menu.
-
-   Rules it keeps:
-   · `surfaceContainerHigh` at the 28px rung, TOP CORNERS ONLY — the bottom edge
-     is the screen's, and a rounded bottom on a surface flush to the edge draws a
-     gap that is not there.
-   · The grab handle is `outlineVariant`, 32×4, and it is not a control: it says
-     which edge this came from and which way it goes back.
-   · It covers the bottom bar rather than sitting above it. A sheet is a decision
-     surface; a navigation bar under it would offer to leave mid-decision.
-   · Scrim at 50%, and pressing it closes. Escape closes. Both because a drawer
-     the reader opened is a drawer the reader can drop.
-   · Never open beside the stance pad: one parked surface at a time, and the pad
-     owns the same corner of the screen.
-   · Enters over 400ms from the bottom, leaves over 200ms to the bottom
-     (`tokens/transitions.css`) — a dismissal exits the edge it entered from. */
-
-/* `height` pins the sheet at a fixed size instead of letting content set it —
-   the comments sheet fills the screen up to a sliver below the top (readme §13,
-   2026-08-28), and a pinned input row at its foot needs the surface itself to
-   own the height. The children then manage their own scrolling. */
-function BottomSheet({
-  open = false,
-  onClose,
-  ariaLabel,
-  children,
-  inline = false,
-  maxHeight = "62%",
-  height
-}) {
-  const [shown, setShown] = React.useState(open);
-  const [closing, setClosing] = React.useState(false);
-  React.useEffect(() => {
-    if (open) {
-      setShown(true);
-      setClosing(false);
-      return undefined;
-    }
-    if (!shown) return undefined;
-    setClosing(true);
-    const timer = setTimeout(() => {
-      setShown(false);
-      setClosing(false);
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [open, shown]);
-  React.useEffect(() => {
-    if (!open || inline) return undefined;
-    const onKey = event => {
-      if (event.key === "Escape" && onClose) onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [open, inline, onClose]);
-  const surface = /*#__PURE__*/React.createElement("div", {
-    role: "dialog",
-    "aria-modal": "false",
-    "aria-label": ariaLabel,
-    className: inline ? undefined : closing ? "cg-sheet-out" : "cg-sheet-in",
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 0,
-      background: "var(--surface-dialog)",
-      color: "var(--on-surface)",
-      borderRadius: "var(--radius-extra-large) var(--radius-extra-large) 0 0",
-      padding: "var(--space-2) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px))",
-      ...(inline ? {
-        position: "relative",
-        width: "100%"
-      } : {
-        position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 41,
-        ...(height ? {
-          height,
-          overflow: "hidden"
-        } : {
-          maxHeight,
-          overflowY: "auto"
-        })
-      })
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      alignSelf: "center",
-      height: "4px",
-      width: "32px",
-      flex: "none",
-      borderRadius: "var(--radius-full)",
-      background: "var(--border-hairline)",
-      marginBottom: "var(--space-3)"
-    }
-  }), children);
-  if (inline) return surface;
-  if (!shown) return null;
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    "aria-hidden": "true",
-    onPointerDown: onClose,
-    className: closing ? "cg-scrim-out" : "cg-scrim-in",
-    style: {
-      position: "fixed",
-      inset: 0,
-      zIndex: 40,
-      background: "var(--scrim-dialog)"
-    }
-  }), surface);
-}
-
-/* One row in a sheet: `label-large`, the 48px minimum, left-aligned, one line.
-   No icons in the list — a mixed list of iconned and un-iconned rows is how an
-   icon set starts to look accidental (§5). */
-function SheetItem({
-  label,
-  onSelect,
-  ariaLabel
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onSelect,
-    "aria-label": ariaLabel,
-    className: "cg-state cg-focus",
-    style: {
-      display: "flex",
-      alignItems: "center",
-      minHeight: "var(--touch-target-min)",
-      border: 0,
-      background: "none",
-      padding: "0 var(--space-6)",
-      cursor: "pointer",
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      letterSpacing: "var(--text-label-large--letter-spacing)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      color: "var(--on-surface)",
-      textAlign: "left"
-    }
-  }, label);
-}
-
-/* A sheet's own heading, when the choices need naming. `title-medium`, sentence
-   case, and never a close button beside it: the scrim and Escape already do that,
-   and a third way out is a third thing to read. */
-function SheetTitle({
-  children
-}) {
-  return /*#__PURE__*/React.createElement("h2", {
-    style: {
-      margin: 0,
-      padding: "0 var(--space-6) var(--space-2)",
-      fontSize: "var(--text-title-medium)",
-      lineHeight: "var(--text-title-medium--line-height)",
-      fontWeight: "var(--text-title-medium--font-weight)"
-    }
-  }, children);
-}
-__ds_scope.BottomSheet = BottomSheet;
-__ds_scope.SheetItem = SheetItem;
-__ds_scope.SheetTitle = SheetTitle;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/BottomSheet.jsx", error: String((e && e.message) || e) }); }
-
 // components/core/Button.jsx
 try { (() => {
-/* The house button (design.md §6): Material's three vocabularies and no others.
-   Filled `primary`/`onPrimary` for the one committing action on a surface,
-   outlined for a secondary action, text for a tertiary one. Both unfilled
-   variants put `primary` on the LABEL — the label carries the emphasis, not the
-   border, and a body-coloured label on an outlined button reads as disabled.
+/* The house button (design.md §6): Material's three vocabularies, and no others
+   on the page's own ground. Filled `primary`/`onPrimary` for the one committing
+   action on a surface, outlined for a secondary action, text for a tertiary
+   one. Both unfilled variants put `primary` on the LABEL — the label carries
+   the emphasis, not the border, and a body-coloured label on an outlined button
+   reads as disabled.
+
+   `inverse` is the fourth, and it is not a fourth emphasis: it is the filled
+   button standing on a TONAL PANEL instead of the page. The key-absent notice
+   is a `tertiary-container` block, and a `primary` fill inside it is a second
+   colour arguing with the panel's own; the filled button there takes the
+   panel's pair and turns it over — `on-tertiary-container` as the fill,
+   `tertiary-container` as the label. Same shape, same weight, one colour
+   family. Use it only inside such a panel; on the page's ground it is `primary`
+   that carries a committing action.
 
    The pill at every size (Material's button shape, not a rung of the shape
    scale); both sizes carry `label-large`. Heights are TRUE heights (border-box):
@@ -296,6 +45,11 @@ const VARIANTS = {
   text: {
     background: "transparent",
     color: "var(--primary)",
+    border: "1px solid transparent"
+  },
+  inverse: {
+    background: "var(--on-tertiary-container)",
+    color: "var(--tertiary-container)",
     border: "1px solid transparent"
   }
 };
@@ -341,6 +95,92 @@ function buttonStyle({
    of target, which is how the unconditional 48px promise survives a dense row.
    Pass it wherever `buttonStyle` is used on a raw <button>. */
 const BUTTON_CLASS = "cg-state cg-focus cg-hit";
+
+/* The two rungs of the bare word. `lg` is `Button`'s own `label-large`; `sm`
+   is `label-small`, the size the composer's running text is set in — the word
+   has to match the sentence it sits inside, or it reads as a button that fell
+   into a paragraph.
+
+   Both rungs take all four tokens of their role: a role is size, leading,
+   weight and tracking together (§7), and a rung that spells one of them as a
+   number leaves the ramp for a value nothing maintains. */
+const INLINE_SIZES = {
+  lg: {
+    fontSize: "var(--text-label-large)",
+    lineHeight: "var(--text-label-large--line-height)",
+    fontWeight: "var(--text-label-large--font-weight)",
+    letterSpacing: "var(--text-label-large--letter-spacing)"
+  },
+  sm: {
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
+    fontWeight: "var(--text-label-small--font-weight)",
+    letterSpacing: "var(--text-label-small--letter-spacing)"
+  }
+};
+
+/* THE BARE PRIMARY WORD — `Button`'s vocabulary with the button's body taken
+   away: the same `label-large` in `primary`, and nothing else. No pill, no
+   padding, no 64px minimum, no shape.
+
+   WHEN THIS AND NOT `Button variant="text"`. A text button is still a button:
+   it holds the 64px minimum so a short label keeps its weight, and it reserves
+   room around the word. That is right when the action OWNS ITS LINE — a dialog
+   footer, the foot of a wizard. It is wrong when the action rides at the end
+   of a line the reader is already reading: on a seal row the label, the value
+   and the action share one line by ruling, and the pill's minimum is what
+   wraps it. So — a `Button` for an action on its own line, an `InlineAction`
+   for one at the end of somebody else's.
+
+   It keeps every promise the pill keeps. `BUTTON_CLASS` rides along, so ink
+   that is 20px tall still answers to a 48px target, and the state layer and
+   focus ring are the same ones.
+
+   `flex: "none"` belongs to the `lg` rung and not to the atom. The large word
+   ends a flex ROW whose middle is the part allowed to give — a seal row, the
+   payout address — so it declares that it is not the one that gives. The small
+   word rides inside running text: the describe counter and the upload error
+   set it in a paragraph, and the picked sheet stacks it in a column under a
+   name. There is no row there to give, and a flex declaration on an inline
+   word in a paragraph is noise. `selfStart` is the column case's one layout
+   word, matching `Button`'s prop of the same name — it leads the style object
+   because that is where the sheet writes it. */
+function InlineAction({
+  children,
+  onClick,
+  size = "lg",
+  selfStart = false,
+  disabled = false,
+  type = "button",
+  ariaLabel,
+  className,
+  style
+}) {
+  const rung = INLINE_SIZES[size] ?? INLINE_SIZES.lg;
+  return /*#__PURE__*/React.createElement("button", {
+    type: type,
+    disabled: disabled,
+    onClick: onClick,
+    "aria-label": ariaLabel,
+    className: className ? `${BUTTON_CLASS} ${className}` : BUTTON_CLASS,
+    style: {
+      alignSelf: selfStart ? "flex-start" : undefined,
+      border: 0,
+      background: "none",
+      padding: 0,
+      cursor: disabled ? "default" : "pointer",
+      fontFamily: "var(--font-sans)",
+      fontSize: rung.fontSize,
+      lineHeight: rung.lineHeight,
+      fontWeight: rung.fontWeight,
+      letterSpacing: rung.letterSpacing,
+      color: "var(--primary)",
+      opacity: disabled ? "var(--state-disabled)" : undefined,
+      flex: size === "sm" ? undefined : "none",
+      ...style
+    }
+  }, children);
+}
 function Button({
   children,
   variant = "primary",
@@ -372,154 +212,125 @@ function Button({
 }
 __ds_scope.buttonStyle = buttonStyle;
 __ds_scope.BUTTON_CLASS = BUTTON_CLASS;
+__ds_scope.InlineAction = InlineAction;
 __ds_scope.Button = Button;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Button.jsx", error: String((e && e.message) || e) }); }
 
-// components/core/HelpDot.jsx
+// components/compose/ActsCard.jsx
 try { (() => {
-/* The "?" affordance — the one-per-screen door to a plain dialog (readme §13:
-   captions stay to one short line; the full explanation lives behind a small
-   "?", at most one per screen, top-right of the header or of the sheet/card it
-   explains). A 32px ring inside the 48px target. It began as a screen helper
-   on the search boards and moved into the system when the filter sheet — a
-   master — needed to carry one. */
+const { InlineAction } = __ds_scope;
+/* The seal's acts card (media slice, 2026-08-31 — extracted the moment a
+   second seal needed it: the profile-picture seal joined the post's and the
+   reply's). The container-highest card listing what one signature commits:
+   one row per act kind — quiet label, the value, the count — and the total as
+   the footer row. The all-or-nothing sentence, when a seal carries more than
+   one act, belongs to the screen below the card, not in it.
 
-function HelpDot({
-  ariaLabel = "What is this?",
-  onOpen
+   TWO ROW KINDS, and the difference is what the row IS. A row with a `value` is
+   a fact: the value slot ends a long one in an ellipsis, because a signed act's
+   name can run past the card and the row still has to hold one line. A row with
+   an `action` is a control — what could still be added, lined up with what has
+   been — and there the whole row is the button. Truncation belongs to the value
+   slot alone: an action row has no slot to clip, so the 48px target the word
+   promises reaches the row's own edges instead of being cut back to the ink. */
+
+const ROW = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-2)",
+  minHeight: "44px",
+  borderBottom: "1px solid var(--border-hairline)"
+};
+const LABEL = {
+  flex: "none",
+  width: "76px",
+  fontSize: "var(--text-label-small)",
+  lineHeight: "var(--text-label-small--line-height)",
+  fontWeight: "var(--text-label-small--font-weight)",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
+  color: "var(--text-secondary)"
+};
+const COUNT = {
+  flex: "none",
+  fontSize: "var(--text-label-small)",
+  lineHeight: "var(--text-label-small--line-height)",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
+  color: "var(--text-secondary)"
+};
+function ActsCard({
+  rows = [],
+  total,
+  note
 }) {
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": ariaLabel,
-    onClick: onOpen,
-    className: "cg-focus",
-    style: {
-      display: "grid",
-      placeItems: "center",
-      height: "var(--touch-target-min)",
-      width: "var(--touch-target-min)",
-      border: 0,
-      background: "none",
-      borderRadius: "var(--radius-full)",
-      cursor: "pointer",
-      flex: "none"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      display: "grid",
-      placeItems: "center",
-      height: "32px",
-      width: "32px",
-      borderRadius: "var(--radius-full)",
-      border: "1px solid var(--border-hairline)",
-      color: "var(--primary)",
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-label-large)",
-      fontWeight: "var(--text-label-large--font-weight)"
-    }
-  }, "?"));
-}
-__ds_scope.HelpDot = HelpDot;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/HelpDot.jsx", error: String((e && e.message) || e) }); }
-
-// components/forms/TextField.jsx
-try { (() => {
-/* The house labeled text input. `label-large` label above a field on the
-   EXTRA-SMALL rung (4px) — Material's text-field corner — with a 1px `outline`
-   border and a transparent fill. `mono` dresses codes and identifiers in the
-   platform monospace: the one exception to Figtree (design.md §3), a legibility
-   device for strings read character by character.
-
-   `error` is Material 3's documented text-field error state: the outline and
-   label both switch to `--error`, and a body-small supporting line in
-   `--error` renders below the field carrying the message. The message is
-   always words (direction-by-words) — this component renders it verbatim,
-   no icon. This line is TextField-internal, separate from any screen-level
-   helper span a board already draws under the field. */
-
-function TextField({
-  label,
-  corner,
-  value,
-  onChange,
-  type = "text",
-  autoComplete,
-  mono = false,
-  placeholder,
-  rows,
-  id,
-  error
-}) {
-  const generated = React.useId();
-  const fieldId = id ?? generated;
-  const shared = {
-    borderRadius: "var(--radius-extra-small)",
-    border: error ? "1px solid var(--error)" : "1px solid var(--border-field)",
-    background: "transparent",
-    color: "var(--on-surface)",
-    padding: rows ? "8px" : "8px 12px",
-    fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)",
-    fontSize: "var(--text-body-large)",
-    lineHeight: "var(--text-body-large--line-height)",
-    minWidth: 0,
-    width: "100%",
-    boxSizing: "border-box"
-  };
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
-      gap: "var(--space-1)"
+      borderRadius: "var(--radius-medium)",
+      background: "var(--surface-container-highest)",
+      padding: "4px var(--space-4)"
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, rows.map((row, index) => row.action ? /*#__PURE__*/React.createElement(InlineAction, {
+    key: index,
+    size: "sm",
+    onClick: row.onAct,
     style: {
-      display: "flex",
-      alignItems: "baseline",
-      gap: "var(--space-2)"
+      ...ROW,
+      textAlign: "left"
     }
-  }, /*#__PURE__*/React.createElement("label", {
-    htmlFor: fieldId,
+  }, /*#__PURE__*/React.createElement("span", {
+    style: LABEL
+  }, row.label), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      letterSpacing: "var(--text-label-large--letter-spacing)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      color: error ? "var(--error)" : undefined
+      minWidth: 0,
+      whiteSpace: "nowrap"
     }
-  }, label), corner && /*#__PURE__*/React.createElement("span", {
+  }, row.action), /*#__PURE__*/React.createElement("span", {
+    style: COUNT
+  }, row.count)) : /*#__PURE__*/React.createElement("div", {
+    key: index,
+    style: ROW
+  }, /*#__PURE__*/React.createElement("span", {
+    style: LABEL
+  }, row.label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, row.value), /*#__PURE__*/React.createElement("span", {
+    style: COUNT
+  }, row.count))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      gap: "2px",
+      minHeight: "48px",
+      padding: "6px 0"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, total), note && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
     }
-  }, corner)), rows ? /*#__PURE__*/React.createElement("textarea", {
-    id: fieldId,
-    rows: rows,
-    value: value,
-    placeholder: placeholder,
-    onChange: event => onChange && onChange(event.target.value),
-    style: shared
-  }) : /*#__PURE__*/React.createElement("input", {
-    id: fieldId,
-    type: type,
-    value: value,
-    placeholder: placeholder,
-    autoComplete: autoComplete,
-    onChange: event => onChange && onChange(event.target.value),
-    style: shared
-  }), error && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-small)",
-      lineHeight: "var(--text-body-small--line-height)",
-      letterSpacing: "var(--text-body-small--letter-spacing)",
-      color: "var(--error)"
-    }
-  }, error));
+  }, note)));
 }
-__ds_scope.TextField = TextField;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/TextField.jsx", error: String((e && e.message) || e) }); }
+__ds_scope.ActsCard = ActsCard;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/ActsCard.jsx", error: String((e && e.message) || e) }); }
 
 // components/navigation/Icon.jsx
 try { (() => {
@@ -550,6 +361,7 @@ const PATHS = {
   person: ["M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"],
   person_outline: ["M12 6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2m0 10c2.7 0 5.8 1.29 6 2H6c.23-.72 3.31-2 6-2m0-12C9.79 4 8 5.79 8 8s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 10c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"],
   add: ["M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"],
+  image: ["M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"],
   search: ["M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"],
   wallet: ["M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"],
   settings: ["M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"],
@@ -721,6 +533,745 @@ __ds_scope.NODE_GLYPHS = NODE_GLYPHS;
 __ds_scope.Icon = Icon;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/Icon.jsx", error: String((e && e.message) || e) }); }
 
+// components/compose/ActsFooter.jsx
+try { (() => {
+const { Icon, BUTTON_CLASS } = __ds_scope;
+/* "This creates 2 signed actions ⌄" (item 17, the conformance round): the one
+   line above the sign button on the edit wizards, saying how much a signature
+   commits before it is given.
+
+   IT IS THE SHORT FORM OF `ActsCard`. Where a seal has room, the card lists
+   every act with its own count and the all-or-nothing subline; where the
+   screen is an edit and the acts are the obvious consequence of what was just
+   typed, the same fact rides on one centred line and the chevron says the
+   detail is there for the asking. Same sentence either way — an author who
+   opens the card should read the number they already saw.
+
+   IT SITS DIRECTLY ON THE BUTTON IT QUALIFIES, with no gap of its own: the
+   footer is the last thing before Sign, and the spacer above it is what pushes
+   the pair to the bottom of the column. That order is the point — the count is
+   read on the way to the button, not after it.
+
+   THE WHOLE LINE IS THE BUTTON (jakob's ruling, the conformance round), not
+   the chevron: a 16px glyph is not a target, and the sentence is what the
+   author is reading when they decide they want the detail. It carries no
+   label of its own — the sentence IS the name, which is the only name that
+   would be right. The button adds no box: no border, no background, no
+   padding, the type spelled out because a button inherits none of it — so
+   the line is drawn exactly as before, and the state layer, the focus ring
+   and the 48px target arrive with `BUTTON_CLASS`. */
+
+function ActsFooter({
+  count,
+  onOpen
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpen,
+    className: BUTTON_CLASS,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
+      border: 0,
+      background: "none",
+      padding: 0,
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, "This creates ", count, " signed actions", /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "expand_more",
+    size: 16
+  })));
+}
+__ds_scope.ActsFooter = ActsFooter;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/ActsFooter.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/Caret.jsx
+try { (() => {
+/* THE COMPOSER'S TEXT CURSOR, STANDING STILL (item 17, the conformance round).
+   A board is a photograph of a moment, and the moment a reply composer is worth
+   drawing is mid-sentence. The caret at the end of the words is the whole
+   difference between a body someone is writing and a body someone finished:
+   without it the reply reads as already said, and the board stops being a
+   composer.
+
+   IT IS DECORATION, NOT A CONTROL. The real surfaces put a real `<textarea>`
+   here and the platform draws its own cursor, blinking, where the insertion
+   point actually is. This is the still frame of that — 2px of `--primary`, the
+   height of one `body-large` line, sitting on the text baseline's bottom so it
+   ends the last word rather than floating past it. Nothing focuses it and
+   nothing reads it aloud.
+
+   IT BELONGS AT THE END OF THE WORDS, inside the paragraph, never on a line of
+   its own: a cursor with a line to itself is a loading bar. */
+
+function Caret() {
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-block",
+      width: 2,
+      height: 20,
+      background: "var(--primary)",
+      verticalAlign: "text-bottom",
+      marginLeft: 1
+    }
+  });
+}
+__ds_scope.Caret = Caret;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/Caret.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/CoverRow.jsx
+try { (() => {
+const { Icon } = __ds_scope;
+/* The video's face (item 17, the conformance round): the strip of frames cut
+   from the clip, plus the one tile that is not a frame at all.
+
+   FOUR FRAMES, NOT THREE (jakob 2026-09-03): 1s, 10%, 50%, 90% of the clip. 1s
+   clears the fade-in black that t=0 so often is, and the three ratios spread
+   the rest. On a clip short enough that two samples land on the same frame they
+   collapse and fewer tiles show — offering the same picture twice is a choice
+   that isn't one, so the strip takes the frames it is given and draws no
+   placeholder for a fifth.
+
+   THE CHOSEN FRAME IS OUTLINED, THE REST ARE DIMMED. Selection is the primary
+   outline offset off the tile, not a check badge — the tiles are 56px and a
+   badge at that size covers the thing being chosen. The unchosen frames sit at
+   65% so the strip reads as one picture framed several ways, which is what it
+   is.
+
+   THE LAST TILE IS A DIFFERENT KIND OF THING and says so by not being a
+   photograph: a dashed square with the picture glyph, the same shape as the
+   frames so the row still scans as one strip. It is the way out to the gallery,
+   and a picture chosen there goes through `CropViewport` first, because a
+   picture of your own is the only cover that can disagree with the clip's
+   shape.
+
+   THE ROW IS THE WHOLE CLUSTER — the "Cover" field label, the strip, and the
+   line underneath — because those three only ever appear together. The comment
+   composer inlines it at 56px and the post's cover stage draws it larger; both
+   want the label and the line.
+
+   NO FRAMES IS A STATE THE ROW HOLDS (video-cover round, 2026-09-10): hand it
+   an empty `frames` and what remains is the way out to the gallery, alone,
+   under a `caption` that says why. Extraction can come back with nothing, and
+   a strip of blank tiles would offer pictures that do not exist. The row shrinks
+   to the one path that still works rather than growing a state of its own.
+
+   THE ROW IS NOT ALWAYS THERE (same round). A vertical clip's default is no
+   cover, so at comment scale the row gives way to an "Add a cover" door and
+   appears when the door is opened; a horizontal or square clip wears it from
+   the start. The row draws the choosing, never the decision to choose. */
+
+const TILE = {
+  width: 56,
+  height: 56,
+  borderRadius: "var(--radius-small)",
+  overflow: "hidden",
+  flex: "none"
+};
+const FILL = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  display: "block"
+};
+function CoverRow({
+  label = "Cover",
+  frames = [],
+  selected = 0,
+  caption = "A frame, or a picture of your own."
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      letterSpacing: "var(--text-label-large--letter-spacing)"
+    }
+  }, label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8
+    }
+  }, frames.map((frame, index) => /*#__PURE__*/React.createElement("div", {
+    key: frame.src ? `${frame.src}-${index}` : index,
+    className: "cg-cover-frame",
+    style: index === selected ? {
+      ...TILE,
+      outline: "2px solid var(--primary)",
+      outlineOffset: 1
+    } : {
+      ...TILE,
+      opacity: 0.65
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    src: frame.src,
+    alt: "",
+    style: frame.transform ? {
+      ...FILL,
+      transform: frame.transform
+    } : FILL
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "cg-cover-own",
+    style: {
+      width: 56,
+      height: 56,
+      borderRadius: "var(--radius-small)",
+      border: "1px dashed var(--border-field)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: "var(--text-secondary)",
+      boxSizing: "border-box",
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "image",
+    size: 20
+  }))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, caption));
+}
+__ds_scope.CoverRow = CoverRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/CoverRow.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/CropViewport.jsx
+try { (() => {
+/* The crop surface (item 17, the conformance round): the picture at the size
+   it will be cut, with everything outside the cut darkened.
+
+   THE MASK IS ONE BOX SHADOW, not four dimming panels. `0 0 0 400px` spreads a
+   45% black outward from the window's own edges, so the darkened region is
+   whatever the frame has left over — no arithmetic, nothing to keep in sync
+   when the window moves, and the hairline that marks the cut is the same box's
+   border. 400px is simply larger than the frame's own 390.
+
+   THE SHAPE IS LOCKED TO WHAT THE PICTURE WILL BE. A profile picture is shown
+   in a circle everywhere it appears, so it is cut in a circle; a video's cover
+   is shown at the clip's ratio, so it is cut at that ratio. There are no shape
+   chips on either — choosing a shape here would let the result disagree with
+   the thing it is the face of.
+
+   THE WINDOW IS ALWAYS CENTRED, and that is why it takes a height and not a
+   position: it is inset `inset` from each side, and the leftover height splits
+   evenly above and below. The circle's 342 square lands at top 24, the cover's
+   342×192 at top 99, and neither board has to state a coordinate. */
+
+function CropViewport({
+  src,
+  alt = "",
+  shape = "circle",
+  scale = 1,
+  origin = "50% 50%",
+  size = 390,
+  inset = 24,
+  height
+}) {
+  const width = size - inset * 2;
+  const windowHeight = height ?? width;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      width: size,
+      height: size,
+      margin: `0 -${inset}px`,
+      overflow: "hidden",
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: alt,
+    style: {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      display: "block",
+      transform: `scale(${scale})`,
+      transformOrigin: origin
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      left: inset,
+      top: (size - windowHeight) / 2,
+      width,
+      height: windowHeight,
+      borderRadius: shape === "circle" ? "var(--radius-full)" : "var(--radius-small)",
+      boxShadow: "0 0 0 400px rgba(0,0,0,0.45)",
+      border: "1px solid rgba(255,255,255,0.7)",
+      boxSizing: "border-box"
+    }
+  }));
+}
+__ds_scope.CropViewport = CropViewport;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/CropViewport.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/BottomSheet.jsx
+try { (() => {
+/* The bottom sheet (backlog item 3). `design.md` §6 lists sheets in the
+   scaffolding and the product never built one, so three surfaces were each
+   improvising: the overflow menu, the license terms, a filter.
+
+   WHY A SHEET AND NOT A DIALOG. A dialog is a question the reader has to answer
+   before anything else can happen. A sheet is a drawer of choices they opened and
+   can close by looking away — so it comes from the edge they pulled it from, it
+   does not trap focus, and nothing behind it is inert. Choosing a dialog for a
+   drawer is how a product starts asking permission to show a menu.
+
+   Rules it keeps:
+   · `surfaceContainerHigh` at the 28px rung — a rung higher when it is
+     `stacked` — TOP CORNERS ONLY: the bottom edge is the screen's, and a
+     rounded bottom on a surface flush to the edge draws a gap that is not
+     there.
+   · The grab handle is `outlineVariant`, 32×4, and it is not a control: it says
+     which edge this came from and which way it goes back.
+   · It covers the bottom bar rather than sitting above it. A sheet is a decision
+     surface; a navigation bar under it would offer to leave mid-decision.
+   · Scrim at 50%, and pressing it closes. Escape closes. Both because a drawer
+     the reader opened is a drawer the reader can drop.
+   · Never open beside the stance pad: one parked surface at a time, and the pad
+     owns the same corner of the screen.
+   · Enters over 400ms from the bottom, leaves over 200ms to the bottom
+     (`tokens/transitions.css`) — a dismissal exits the edge it entered from. */
+
+/* `height` pins the sheet at a fixed size instead of letting content set it —
+   the comments sheet fills the screen up to a sliver below the top (readme §13,
+   2026-08-28), and a pinned input row at its foot needs the surface itself to
+   own the height. The children then manage their own scrolling. */
+
+/* `stacked` is the sheet that opens over another sheet — the comment's menu and
+   the comment's license, both over the comments thread. A SHEET OVER A SHEET IS
+   DRAWN AS LAYERS. Left flat, the upper sheet's wash resolves beneath the lower
+   sheet's surface: nothing dims, and two surfaces of one colour meet at a
+   shadowless seam. Stacked, the sheet takes the layer above, so the wash it
+   already draws — the same `--scrim-dialog` — falls BETWEEN the two and dims
+   what it covers, while the sheet below keeps its top edge, its handle and its
+   title visible above this one. Its surface takes the next tonal rung,
+   `surfaceContainerHighest`: elevation is tonal (`tokens/semantic.css`), and two
+   surfaces at one rung claim one elevation. */
+function BottomSheet({
+  open = false,
+  onClose,
+  ariaLabel,
+  children,
+  inline = false,
+  maxHeight = "62%",
+  height,
+  stacked = false
+}) {
+  const [shown, setShown] = React.useState(open);
+  const [closing, setClosing] = React.useState(false);
+  React.useEffect(() => {
+    if (open) {
+      setShown(true);
+      setClosing(false);
+      return undefined;
+    }
+    if (!shown) return undefined;
+    setClosing(true);
+    const timer = setTimeout(() => {
+      setShown(false);
+      setClosing(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [open, shown]);
+  React.useEffect(() => {
+    if (!open || inline) return undefined;
+    const onKey = event => {
+      if (event.key === "Escape" && onClose) onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, inline, onClose]);
+
+  /* The wash's layer; the surface rides one above it, so a stacked sheet's wash
+     clears the sheet below instead of sliding under it. */
+  const washLayer = stacked ? 42 : 40;
+  const surface = /*#__PURE__*/React.createElement("div", {
+    role: "dialog",
+    "aria-modal": "false",
+    "aria-label": ariaLabel,
+    className: inline ? undefined : closing ? "cg-sheet-out" : "cg-sheet-in",
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 0,
+      background: stacked ? "var(--surface-container-highest)" : "var(--surface-dialog)",
+      color: "var(--on-surface)",
+      borderRadius: "var(--radius-extra-large) var(--radius-extra-large) 0 0",
+      padding: "var(--space-2) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px))",
+      ...(inline ? {
+        position: "relative",
+        width: "100%"
+      } : {
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: washLayer + 1,
+        ...(height ? {
+          height,
+          overflow: "hidden"
+        } : {
+          maxHeight,
+          overflowY: "auto"
+        })
+      })
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      alignSelf: "center",
+      height: "4px",
+      width: "32px",
+      flex: "none",
+      borderRadius: "var(--radius-full)",
+      background: "var(--border-hairline)",
+      marginBottom: "var(--space-3)"
+    }
+  }), children);
+  if (inline) return surface;
+  if (!shown) return null;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    onPointerDown: onClose,
+    className: closing ? "cg-scrim-out" : "cg-scrim-in",
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: washLayer,
+      background: "var(--scrim-dialog)"
+    }
+  }), surface);
+}
+
+/* One row in a sheet: `label-large`, the 48px minimum, left-aligned, one line.
+   No icons in the list — a mixed list of iconned and un-iconned rows is how an
+   icon set starts to look accidental (§5). */
+function SheetItem({
+  label,
+  onSelect,
+  ariaLabel
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onSelect,
+    "aria-label": ariaLabel,
+    className: "cg-state cg-focus",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      minHeight: "var(--touch-target-min)",
+      border: 0,
+      background: "none",
+      padding: "0 var(--space-6)",
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      color: "var(--on-surface)",
+      textAlign: "left"
+    }
+  }, label);
+}
+
+/* A sheet's own heading, when the choices need naming. `title-medium`, sentence
+   case, and never a close button beside it: the scrim and Escape already do that,
+   and a third way out is a third thing to read.
+
+   `trailing` is the slot for what the heading line carries besides its name — the
+   screen's one "?", or the switch the sheet exists for. It is the heading's own
+   row, so a sheet that needs one stops assembling a heading by hand; a close
+   control is still the one thing it never takes. */
+function SheetTitle({
+  children,
+  trailing
+}) {
+  const heading = {
+    fontSize: "var(--text-title-medium)",
+    lineHeight: "var(--text-title-medium--line-height)",
+    fontWeight: "var(--text-title-medium--font-weight)"
+  };
+  if (!trailing) {
+    return /*#__PURE__*/React.createElement("h2", {
+      style: {
+        margin: 0,
+        padding: "0 var(--space-6) var(--space-2)",
+        ...heading
+      }
+    }, children);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      padding: "0 var(--space-6) var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: 0,
+      flex: 1,
+      ...heading
+    }
+  }, children), trailing);
+}
+__ds_scope.BottomSheet = BottomSheet;
+__ds_scope.SheetItem = SheetItem;
+__ds_scope.SheetTitle = SheetTitle;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/BottomSheet.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/HelpDot.jsx
+try { (() => {
+/* The "?" affordance — the one-per-screen door to a plain dialog (readme §13:
+   captions stay to one short line; the full explanation lives behind a small
+   "?", at most one per screen, top-right of the header or of the sheet/card it
+   explains). A 32px ring inside the 48px target. It began as a screen helper
+   on the search boards and moved into the system when the filter sheet — a
+   master — needed to carry one. */
+
+/* `inverse` is `Button`'s word for the same situation: the component standing on
+   a TONAL PANEL instead of the page's ground. On the page the ring is
+   `--border-hairline` and the glyph `--primary`; inside a `tertiary-container`
+   block that pair is a second colour family arguing with the panel's own, so
+   there the dot takes the panel's `currentColor` for both. The geometry is the
+   same either way — 32px of ring inside the 48px target. Use it only inside such
+   a panel. */
+const RINGS = {
+  page: {
+    border: "1px solid var(--border-hairline)",
+    color: "var(--primary)"
+  },
+  inverse: {
+    border: "1px solid currentColor"
+  }
+};
+function HelpDot({
+  ariaLabel = "What is this?",
+  onOpen,
+  variant = "page"
+}) {
+  const ring = RINGS[variant] ?? RINGS.page;
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": ariaLabel,
+    onClick: onOpen,
+    className: "cg-focus",
+    style: {
+      display: "grid",
+      placeItems: "center",
+      height: "var(--touch-target-min)",
+      width: "var(--touch-target-min)",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      cursor: "pointer",
+      flex: "none",
+      color: variant === "inverse" ? "inherit" : undefined
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      display: "grid",
+      placeItems: "center",
+      height: "32px",
+      width: "32px",
+      borderRadius: "var(--radius-full)",
+      ...ring,
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-label-large)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, "?"));
+}
+__ds_scope.HelpDot = HelpDot;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/HelpDot.jsx", error: String((e && e.message) || e) }); }
+
+// components/forms/TextField.jsx
+try { (() => {
+/* The house labeled text input. `label-large` label above a field on the
+   EXTRA-SMALL rung (4px) — Material's text-field corner — with a 1px `outline`
+   border and a transparent fill. `mono` dresses codes and identifiers in the
+   platform monospace: the one exception to Figtree (design.md §3), a legibility
+   device for strings read character by character.
+
+   SUPPORTING TEXT IS ONE SLOT WITH TWO STATES, which is Material 3's own
+   arrangement rather than two independent lines. `hint` is the base: the
+   body-small line in `--text-secondary` that says what the field will accept
+   ("3–30 characters: a–z, 0–9, _"). `error` is that same line in its error
+   state — the outline and the label switch to `--error` with it, and the
+   message replaces the hint rather than joining it. A field never carries both
+   at once: the rule the reader broke is the rule they needed to read, and two
+   lines under one input is where the eye stops knowing which one is live.
+
+   The message is always words (direction-by-words) — this component renders it
+   verbatim, no icon.
+
+   THE SUPPORTING LINE IS WIRED TO THE FIELD (jakob's ruling, the slice-2.5
+   round), the way the W3C's own forms tutorial wires one: the line carries an
+   id and the control names it in `aria-describedby`, so the rule a field will
+   accept is read out with the field rather than sitting beside it unreachable.
+   In the error state the control adds `aria-invalid` (WCAG technique ARIA21)
+   and the line takes `role="alert"`, because a message that appears in answer
+   to something the reader just did has to announce itself — a screen reader
+   that has moved on never comes back to look. Announcing is uniform: every
+   field error, not a judgement per field about which ones would be noticed
+   anyway. None of it draws a pixel. */
+
+/* THE LABEL ROW, ASSIGNED ONCE. `TextField` renders it over its own field, and
+   the composer's captions over sections that are NOT fields — Pictures, Video,
+   Cover, Topics, References — render it over a tray or a list. Those captions
+   have always been dressed as field labels; assigning that anatomy here is what
+   keeps them from drifting apart. A caption whose section IS a field belongs in
+   `TextField`'s `label` and `corner` instead, and every one of them is written
+   that way.
+
+   `htmlFor` CHOOSES THE ELEMENT. With one, the word names a control and the row
+   is a `<label>`. Without one there is no control to name, so it is a `<span>`:
+   a `<label>` with no `for` is a label in name only (HTML Living Standard
+   §4.10.4), and a topic tray is not a labelable control. */
+
+function FieldLabel({
+  children,
+  htmlFor,
+  corner,
+  error
+}) {
+  const Name = htmlFor ? "label" : "span";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: "var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement(Name, {
+    htmlFor: htmlFor,
+    style: {
+      flex: 1,
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      color: error ? "var(--error)" : undefined
+    }
+  }, children), corner && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      color: "var(--text-secondary)"
+    }
+  }, corner));
+}
+function TextField({
+  label,
+  corner,
+  value,
+  onChange,
+  type = "text",
+  autoComplete,
+  mono = false,
+  placeholder,
+  rows,
+  id,
+  hint,
+  error
+}) {
+  const generated = React.useId();
+  const fieldId = id ?? generated;
+  const supportId = `${fieldId}-support`;
+  const described = error || hint ? supportId : undefined;
+  const shared = {
+    borderRadius: "var(--radius-extra-small)",
+    border: error ? "1px solid var(--error)" : "1px solid var(--border-field)",
+    background: "transparent",
+    color: "var(--on-surface)",
+    padding: rows ? "8px" : "8px 12px",
+    fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)",
+    fontSize: "var(--text-body-large)",
+    lineHeight: "var(--text-body-large--line-height)",
+    minWidth: 0,
+    width: "100%",
+    boxSizing: "border-box"
+  };
+  return (
+    /*#__PURE__*/
+    // A REPLACED ELEMENT CANNOT HOST THE FLOW BADGE'S ::after (shell.mjs) — an
+    // <input>/<textarea> paints nothing for a `data-flow` it carries directly,
+    // so the badge belongs on the field as a whole instead. `data-field` names
+    // that whole for flow-markers.mjs to find and stamp (jakob's ruling A9,
+    // backlog item 40), the same way `data-axis` lets it stamp `LicenseAxis`'s
+    // row rather than its own hidden radio.
+    React.createElement("div", {
+      "data-field": label,
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--space-1)"
+      }
+    }, /*#__PURE__*/React.createElement(FieldLabel, {
+      htmlFor: fieldId,
+      corner: corner,
+      error: error
+    }, label), rows ? /*#__PURE__*/React.createElement("textarea", {
+      id: fieldId,
+      rows: rows,
+      value: value,
+      placeholder: placeholder,
+      "aria-describedby": described,
+      "aria-invalid": error ? "true" : undefined,
+      onChange: event => onChange && onChange(event.target.value),
+      style: shared
+    }) : /*#__PURE__*/React.createElement("input", {
+      id: fieldId,
+      type: type,
+      value: value,
+      placeholder: placeholder,
+      autoComplete: autoComplete,
+      "aria-describedby": described,
+      "aria-invalid": error ? "true" : undefined,
+      onChange: event => onChange && onChange(event.target.value),
+      style: shared
+    }), (error || hint) && /*#__PURE__*/React.createElement("span", {
+      id: supportId,
+      role: error ? "alert" : undefined,
+      style: {
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        letterSpacing: "var(--text-body-small--letter-spacing)",
+        color: error ? "var(--error)" : "var(--text-secondary)"
+      }
+    }, error || hint))
+  );
+}
+__ds_scope.FieldLabel = FieldLabel;
+__ds_scope.TextField = TextField;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/TextField.jsx", error: String((e && e.message) || e) }); }
+
 // components/compose/DescribeSheet.jsx
 try { (() => {
 const { BottomSheet, Button, HelpDot, TextField, Icon } = __ds_scope;
@@ -793,7 +1344,7 @@ function DescribeSheet({
       margin: 0,
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
     }
   }, "Read aloud to people who can't see it.")), /*#__PURE__*/React.createElement(HelpDot, {
@@ -881,7 +1432,13 @@ const { Icon } = __ds_scope;
      play/pause — there, presence on screen is the policy.
 
    Uncropped tiles (a reply's pictures) pass `width`/`height` and
-   `fit="contain"` so the whole frame shows inside the tile. */
+   `fit="contain"` so the whole frame shows inside the tile.
+
+   THE NEUTRAL TILE (video-cover round, 2026-09-10) is the sourceless state:
+   where a clip yields no still at all — extraction came back with nothing —
+   the tile reserves its space and `label` says what belongs there, the way
+   `MediaAttachment`'s reserved region does. Never invent imagery: a clip with
+   no face shows the absence rather than a borrowed picture. */
 
 function Ring({
   progress,
@@ -926,6 +1483,7 @@ function MediaThumb({
   failed = false,
   video = false,
   duration,
+  label,
   onRemove,
   removeLabel = "Remove this picture"
 }) {
@@ -933,7 +1491,10 @@ function MediaThumb({
   const h = height ?? size;
   const edge = Math.min(w, h);
   const disc = Math.max(20, Math.min(56, Math.round(edge * 0.26)));
-  const playable = video && !failed && typeof progress !== "number";
+  /* The disc rides a scrim over a frame. With no frame the tile IS the
+     absence, and a play control drawn on nothing reads as chrome — the
+     duration stays, because the clip's length is known either way. */
+  const playable = video && src && !failed && typeof progress !== "number";
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: "relative",
@@ -963,7 +1524,16 @@ function MediaThumb({
       display: "block",
       opacity: failed ? 0.5 : 1
     }
-  }), playable && /*#__PURE__*/React.createElement("span", {
+  }), !src && label && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)",
+      padding: "0 var(--space-2)",
+      textAlign: "center"
+    }
+  }, label), playable && /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
       left: "50%",
@@ -992,7 +1562,7 @@ function MediaThumb({
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
       fontWeight: "var(--text-label-small--font-weight)",
-      letterSpacing: "0.5px"
+      letterSpacing: "var(--text-label-small--letter-spacing)"
     }
   }, duration), cover && /*#__PURE__*/React.createElement("span", {
     style: {
@@ -1006,7 +1576,7 @@ function MediaThumb({
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
       fontWeight: "var(--text-label-small--font-weight)",
-      letterSpacing: "0.5px"
+      letterSpacing: "var(--text-label-small--letter-spacing)"
     }
   }, "Cover"), typeof progress === "number" && !failed && /*#__PURE__*/React.createElement("span", {
     style: {
@@ -1034,8 +1604,8 @@ function MediaThumb({
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      fontSize: "12px",
-      lineHeight: "16px",
+      fontSize: "var(--text-label-medium)",
+      lineHeight: "var(--text-label-medium--line-height)",
       fontWeight: 700
     }
   }, "!"), onRemove && !failed && /*#__PURE__*/React.createElement("button", {
@@ -1067,9 +1637,148 @@ function MediaThumb({
 __ds_scope.MediaThumb = MediaThumb;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/MediaThumb.jsx", error: String((e && e.message) || e) }); }
 
+// components/compose/PickPrompt.jsx
+try { (() => {
+const { Button } = __ds_scope;
+/* The pick step's prompt (item 17, the conformance round): the line above the
+   tray that says what may be picked, with the way out of the media path beside
+   it.
+
+   THE ESCAPE RIDES THE INSTRUCTION, not the header and not the tray. An author
+   who opened the picker by mistake — or who came for a photo and decided the
+   words are the post — must be able to leave the media path at the moment they
+   read what it wants, which is this line. Putting it in the header would make
+   it compete with the X that leaves the whole composer; putting it under the
+   tray would make it the thing you find only after failing to pick.
+
+   IT IS A TEXT BUTTON, at `sm`, deliberately quieter than anything in the tray
+   below. Picking is what this step is for; writing instead is the alternative,
+   offered without being urged. */
+
+function PickPrompt({
+  caption,
+  escapeLabel,
+  onEscape
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "8px 24px"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      flex: 1,
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      color: "var(--text-secondary)"
+    }
+  }, caption), /*#__PURE__*/React.createElement(Button, {
+    variant: "text",
+    size: "sm",
+    onClick: onEscape
+  }, escapeLabel));
+}
+__ds_scope.PickPrompt = PickPrompt;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickPrompt.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/PickTray.jsx
+try { (() => {
+const { InlineAction } = __ds_scope;
+/* The pick step's tray (item 17, the conformance round): the band under the
+   caption that says what has been picked so far — "Picked · N", the way into
+   the Show all sheet, and the thumbnails themselves.
+
+   IT IS THE PART OF THE STEP THAT DOES NOT CHANGE. Below the tray's hairline
+   the four pick boards diverge completely — the device gallery grid on the
+   phone, a dashed drop region on the web, an inert grid once a clip is staged,
+   a list of refusals when files were turned away. Above it they are the same
+   band to the pixel. So the tray ends where its own `borderBottom` ends, and
+   what follows is the board's business, not the master's.
+
+   THE THUMBNAILS ARE CHILDREN, not a prop. Every board tiles the same
+   `MediaThumb` but asks it for something different — a cover badge, a remove
+   X, a 114×64 video frame with its own remove label — and a tray that took an
+   items array would have to grow a prop for each. The tray owns the band; the
+   caller owns the pictures.
+
+   "SHOW ALL" IS A REAL BUTTON (jakob, ruling D). It was drawn as a span, which
+   is a link that cannot be reached by keyboard, cannot be pressed, and tells a
+   screen reader nothing — the one control on the band, and the only inert
+   thing on it. It is the bare primary word at the size the band is set in, so
+   `InlineAction size="sm"` IS its resting look, value for value: the state
+   layer, the focus ring and the 48px target arrive with it and nothing on the
+   band moves.
+
+   NO "Show all" WHEN THERE IS NOTHING TO SHOW: one staged clip is not a set to
+   reorder, so the video board omits `onShowAll` and the count stops being a
+   flex row — it is the only thing on its line, so it does not need to push
+   anything to the end of one. */
+
+const COUNT = {
+  fontSize: "var(--text-label-small)",
+  lineHeight: "var(--text-label-small--line-height)",
+  fontWeight: "var(--text-label-small--font-weight)",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
+  color: "var(--text-secondary)"
+};
+function PickTray({
+  count,
+  onShowAll,
+  showAllLabel = "Show all",
+  caption,
+  clip = false,
+  children
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+      padding: "4px 24px 12px",
+      borderBottom: "1px solid var(--border-hairline)"
+    }
+  }, onShowAll ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      ...COUNT
+    }
+  }, "Picked \xB7 ", count), /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    onClick: onShowAll
+  }, showAllLabel)) : /*#__PURE__*/React.createElement("span", {
+    style: COUNT
+  }, "Picked \xB7 ", count), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      overflow: clip ? "hidden" : undefined
+    }
+  }, children, caption && /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, caption)));
+}
+__ds_scope.PickTray = PickTray;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickTray.jsx", error: String((e && e.message) || e) }); }
+
 // components/compose/PickedRow.jsx
 try { (() => {
-const { MediaThumb } = __ds_scope;
+const { InlineAction, MediaThumb } = __ds_scope;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The picked-pictures row (media slice, 2026-08-31): the composer's summary of
    the body — thumbnails and the count, one tappable row.
@@ -1115,7 +1824,7 @@ function PickedRow({
       flex: 1,
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
     }
   }, caption));
@@ -1135,7 +1844,13 @@ function PickedRow({
    field with no stated purpose reads as a chore, and the one thing that makes
    it worth writing — someone is listening to it — was behind a "?" nobody
    opens. Same words as the sheet's own sub-line, so the row and the sheet it
-   opens say one thing. */
+   opens say one thing.
+
+   The word takes its size from the sentence rather than re-declaring it: the
+   paragraph is already set in `label-small`, which is exactly the `sm` rung's
+   own type, so `inherit` and the rung's tokens are the same measurement said
+   two ways. The counting half of the line is a plain span — it is not
+   pressable, and only the verb is. */
 function DescribeCounter({
   described,
   total,
@@ -1153,23 +1868,14 @@ function DescribeCounter({
       margin: 0,
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px"
+      letterSpacing: "var(--text-label-small--letter-spacing)"
     }
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
+  }, /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
     onClick: onDescribe,
-    className: "cg-state cg-focus cg-hit",
     style: {
-      border: 0,
-      background: "none",
-      padding: 0,
-      cursor: "pointer",
-      fontFamily: "var(--font-sans)",
       fontSize: "inherit",
-      lineHeight: "inherit",
-      fontWeight: "var(--text-label-small--font-weight)",
-      letterSpacing: "0.5px",
-      color: "var(--primary)"
+      lineHeight: "inherit"
     }
   }, "Describe the ", subject), " ", /*#__PURE__*/React.createElement("span", {
     style: {
@@ -1180,7 +1886,7 @@ function DescribeCounter({
       margin: 0,
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
     }
   }, "Read aloud to people who can't see it."));
@@ -1191,7 +1897,7 @@ __ds_scope.DescribeCounter = DescribeCounter;
 
 // components/compose/PickedSheet.jsx
 try { (() => {
-const { BottomSheet, SheetTitle, Button, Icon, MediaThumb } = __ds_scope;
+const { BottomSheet, SheetTitle, Button, InlineAction, Icon, MediaThumb } = __ds_scope;
 /* Show all — the per-picture manager (media slice, 2026-08-31): opened by the
    pick step's "Show all" and by the details step's picked row. One home for
    every per-picture concern:
@@ -1270,23 +1976,10 @@ function PickedSheet({
       lineHeight: "var(--text-label-small--line-height)",
       color: "var(--text-secondary)"
     }
-  }, "Described") : /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: item.onDescribe,
-    className: "cg-state cg-focus cg-hit",
-    style: {
-      alignSelf: "flex-start",
-      border: 0,
-      background: "none",
-      padding: 0,
-      cursor: "pointer",
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      fontWeight: "var(--text-label-small--font-weight)",
-      letterSpacing: "0.5px",
-      color: "var(--primary)"
-    }
+  }, "Described") : /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    selfStart: true,
+    onClick: item.onDescribe
   }, "Describe")), /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-label": `Remove ${index === 0 ? "the cover" : `picture ${index + 1}`}`,
@@ -1310,7 +2003,7 @@ function PickedSheet({
       padding: "var(--space-3) var(--space-6) 0",
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
     }
   }, "The first one is the cover \u2014 drag to reorder."), /*#__PURE__*/React.createElement("div", {
@@ -1329,6 +2022,7 @@ __ds_scope.PickedSheet = PickedSheet;
 
 // components/compose/UploadNotice.jsx
 try { (() => {
+const { InlineAction } = __ds_scope;
 /* The two upload notices (media slice, 2026-08-31). Upload runs in the
    background from the moment a picture has its crop (the crop happens on the
    device; only the cropped export is uploaded), so most posts never see
@@ -1406,224 +2100,144 @@ function UploadErrorLine({
   onRetry,
   onRemove
 }) {
-  const link = {
-    border: 0,
-    background: "none",
-    padding: 0,
-    cursor: "pointer",
-    fontFamily: "var(--font-sans)",
-    fontSize: "var(--text-label-small)",
-    lineHeight: "var(--text-label-small--line-height)",
-    fontWeight: "var(--text-label-small--font-weight)",
-    letterSpacing: "0.5px",
-    color: "var(--primary)"
-  };
   return /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px"
+      letterSpacing: "var(--text-label-small--letter-spacing)"
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--error)"
     }
-  }, message), " ", onRetry && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onRetry,
-    className: "cg-state cg-focus cg-hit",
-    style: link
+  }, message), " ", onRetry && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    onClick: onRetry
   }, "Retry"), " ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--text-secondary)"
     }
-  }, "\xB7"), " "), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onRemove,
-    className: "cg-state cg-focus cg-hit",
-    style: link
+  }, "\xB7"), " "), /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    onClick: onRemove
   }, "Remove it"));
 }
 __ds_scope.UploadStatusLine = UploadStatusLine;
 __ds_scope.UploadErrorLine = UploadErrorLine;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/UploadNotice.jsx", error: String((e && e.message) || e) }); }
 
-// components/navigation/PageHeader.jsx
+// components/compose/RefusedFile.jsx
 try { (() => {
-const { Icon } = __ds_scope;
-/* The house page header (Android's TopAppBar): a back arrow, the page title, and
-   an optional trailing action — one pattern for every inner surface. The arrow is
-   a LINK, not history.back(), so a deep-linked visitor with no history still lands
-   somewhere sensible. Tab roots carry no back arrow.
+const { MediaThumb, UploadErrorLine } = __ds_scope;
+/* A file the surface turned away (item 17, the conformance round): the tile
+   wearing `MediaThumb`'s failed badge, and beside it the words saying which
+   rule the file broke.
 
-   The arrow is the Material `arrow_back` glyph, 24px on `onSurfaceVariant` — it
-   replaced the interim `←` character when the icon exports landed (2026-08-26).
-   The title is `title-large`.
+   THE REFUSAL IS DRAWN WHERE THE FILE WAS OFFERED — never in a dialog, never
+   in a snackbar. The author is looking at the pick step; the answer belongs on
+   it, under the tray that took the rest.
 
-   THE HEADER OWNS ITS BAND: 48px tall, 12px of its own side padding, and a 48px
-   square back target with no negative margins. It used to grow a 24px glyph to a
-   44px target with `margin: -10px`, which was both under the 48px minimum and a
-   bet on the caller providing 24px of gutter — inside a frame with none, the
-   target bled outside the surface and was clipped. 12px of padding plus a
-   centred glyph in a 48px target puts the arrow exactly on the 24px screen
-   gutter without depending on anyone. */
+   REMOVE IT IS THE ONLY WAY OUT, so no Retry is offered. Retrying cannot make
+   a file smaller or a format readable — a control that would fail the same way
+   twice is worse than no control, and `UploadErrorLine` drops the link when no
+   `onRetry` is given. That is the difference between this and an upload that
+   failed: one is a refusal, the other is a network.
 
-function PageHeader({
-  title,
-  backHref,
-  backLabel,
-  onBack,
-  action
+   A FILE NOTHING CAN READ HAS NO PREVIEW, so the tile is empty on purpose
+   rather than carrying a stand-in glyph. The empty square is the honest
+   picture of a file the surface could not open.
+
+   ONE FILE, ONE LINE, THE NEAREST REASON (jakob 2026-09-03): a file is judged
+   on its own — size and format — before it is judged against the body it wants
+   to join. So an oversized clip is refused by its cap, not by the mixed-kind
+   rule it also breaks. */
+
+function RefusedFile({
+  src,
+  alt = "",
+  video = false,
+  message,
+  onRemove
 }) {
-  return /*#__PURE__*/React.createElement("header", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: "var(--space-3)",
-      minHeight: "48px",
-      padding: "0 var(--space-3)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
       gap: "var(--space-2)"
     }
-  }, (backHref || onBack) && /*#__PURE__*/React.createElement("a", {
-    href: backHref ?? "#",
-    "aria-label": backLabel,
-    onClick: onBack,
-    className: "cg-state cg-focus",
+  }, /*#__PURE__*/React.createElement(MediaThumb, {
+    src: src,
+    alt: alt,
+    video: video,
+    failed: true
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
-      height: "48px",
-      width: "48px",
-      display: "grid",
-      placeItems: "center",
-      borderRadius: "var(--radius-full)",
-      color: "var(--text-secondary)",
-      textDecoration: "none",
-      flex: "none"
+      flex: 1,
+      minWidth: 0
     }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "arrow_back"
-  })), title !== undefined && /*#__PURE__*/React.createElement("h1", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-title-large)",
-      lineHeight: "var(--text-title-large--line-height)",
-      fontWeight: "var(--text-title-large--font-weight)",
-      // A page title is a name and never wraps — a two-line header
-      // steals the content's first row (seen on the seals, where the
-      // trailing group is widest).
-      whiteSpace: "nowrap"
-    }
-  }, title)), action);
+  }, /*#__PURE__*/React.createElement(UploadErrorLine, {
+    message: message,
+    onRemove: onRemove
+  })));
 }
-__ds_scope.PageHeader = PageHeader;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/PageHeader.jsx", error: String((e && e.message) || e) }); }
+__ds_scope.RefusedFile = RefusedFile;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/RefusedFile.jsx", error: String((e && e.message) || e) }); }
 
-// components/compose/WizardHeader.jsx
+// components/compose/SealFooter.jsx
 try { (() => {
-const { PageHeader, Icon } = __ds_scope;
-/* The wizard's header (jakob 2026-08-31): TWO ways out, each doing one thing.
+const { Button } = __ds_scope;
+/* The seal's foot (item 17, the conformance round, jakob's ruling G): the pair
+   of full-width buttons that ends every signing surface in the system — the
+   post's seal, the reply's, the profile picture's, the profile's, the payout
+   address's, the wallet change's.
 
-   · The ARROW steps ONE STAGE BACK — never out of the flow. Details reaches
-     crop with it; the system back gesture does the same.
-   · The X LEAVES the whole flow from any stage. Where a draft is kept — the
-     post wizard, the post edit, the profile picture — the leave keeps it and
-     nothing asks, because nothing is lost (the return surface is the draft
-     prompt). The reply wizard and the comment edit keep no draft, so leaving
-     them discards: a non-empty composer asks first, through the discard
-     confirm; an empty one leaves silently. `leaveLabel` says which of the
-     two this X does. Without it, an author five stages deep was stuck
-     backing out tap by tap.
+   THE PAIR IS THE GRAMMAR OF A SEAL. Commit is filled and first; the way back
+   is the text button under it, full width so the two read as one block rather
+   than a button with a link stuck beneath. Back goes UP one stage — it is the
+   header arrow said again at the bottom, where the thumb is — and it never
+   leaves the flow. Leaving is the header's X, and that separation is the whole
+   reason the seal can afford a Back at all.
 
-   The header carries ONLY the ways out (jakob 2026-09-01): the stage's
-   forward action — Next, Sign — always lives at the bottom of the content
-   column, never up here, so the top-right corner keeps one meaning through
-   the whole flow. (It used to hold Next on early stages; an author trained
-   on that corner hit the X once Next moved down.) `action` remains for
-   passive trailing info only — a stage label, the help dot. */
+   ONLY THE VERB CHANGES. "Sign and publish", "Sign the change", "Sign
+   comment" — the label names what is being signed, because a seal that says
+   only "Sign" makes the author scroll up to find out what for. Back is the
+   same word on all six, and takes no argument.
 
-function WizardHeader({
-  title,
-  backHref = "#",
-  backLabel = "Back a step",
-  onBack,
-  onLeave,
-  leaveLabel = "Leave — your draft is kept",
-  action
+   `disabled` IS THE UPLOAD'S GATE, not a validation state. Nothing signs until
+   the content it signs exists, so the seal that is still uploading wears it
+   and the words above the pair say why. A disabled button with no line
+   explaining it is the one shape this must never take. */
+
+function SealFooter({
+  signLabel,
+  backLabel = "Back",
+  disabled = false,
+  onSign,
+  onBack
 }) {
-  return /*#__PURE__*/React.createElement(PageHeader, {
-    title: title,
-    backHref: backHref,
-    backLabel: backLabel,
-    onBack: onBack,
-    action: /*#__PURE__*/React.createElement("span", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-2)"
-      }
-    }, /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      "aria-label": leaveLabel,
-      onClick: onLeave,
-      className: "cg-state cg-focus",
-      style: {
-        height: "48px",
-        width: "48px",
-        display: "grid",
-        placeItems: "center",
-        border: 0,
-        background: "none",
-        borderRadius: "var(--radius-full)",
-        color: "var(--text-secondary)",
-        cursor: "pointer",
-        flex: "none",
-        padding: 0
-      }
-    }, /*#__PURE__*/React.createElement(Icon, {
-      name: "close"
-    })), action)
-  });
-}
-__ds_scope.WizardHeader = WizardHeader;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/WizardHeader.jsx", error: String((e && e.message) || e) }); }
-
-// components/core/Card.jsx
-try { (() => {
-/* Material's FILLED card (design.md §2.4): `surfaceContainerHighest` against the
-   page's `surface`, the medium shape rung, 16px padding, 12px inner gap — no
-   border and no shadow. The step up off the page ground is what makes a card read
-   as a card; an outline on top of it would be Material's *outlined* card, a
-   different component. */
-
-function Card({
-  children,
-  as = "section",
-  ariaLabel,
-  style
-}) {
-  const Tag = as;
-  return /*#__PURE__*/React.createElement(Tag, {
-    "aria-label": ariaLabel,
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
-      gap: "var(--card-gap)",
-      borderRadius: "var(--radius-medium)",
-      background: "var(--surface-card)",
-      color: "var(--on-surface)",
-      padding: "var(--card-padding)",
-      ...style
+      gap: 8
     }
-  }, children);
+  }, /*#__PURE__*/React.createElement(Button, {
+    disabled: disabled,
+    onClick: onSign,
+    style: {
+      width: "100%"
+    }
+  }, signLabel), /*#__PURE__*/React.createElement(Button, {
+    variant: "text",
+    onClick: onBack,
+    style: {
+      width: "100%"
+    }
+  }, backLabel));
 }
-__ds_scope.Card = Card;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Card.jsx", error: String((e && e.message) || e) }); }
+__ds_scope.SealFooter = SealFooter;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/SealFooter.jsx", error: String((e && e.message) || e) }); }
 
 // components/people/ActorChip.jsx
 try { (() => {
@@ -1744,15 +2358,26 @@ try { (() => {
 /** Content authored and signed but not yet ordered on L1. Shows in FULL to every
     reader — not just its author — under a quiet line saying it is still settling.
     Nothing is greyed out or held back: the content is real, only its place in the
-    order is not. */
+    order is not.
+
+    `inline` is the phrasing form, for a marker that lands inside a row which is
+    itself a button: a `<button>` takes phrasing content, so a `<p>` inside one is
+    illegal markup. Same two tokens, same words — only the box changes. */
 function PendingMarker({
-  label = "Still settling"
+  label = "Still settling",
+  inline = false
 }) {
+  const ink = {
+    fontSize: "var(--text-label-small)",
+    color: "var(--text-secondary)"
+  };
+  if (inline) return /*#__PURE__*/React.createElement("span", {
+    style: ink
+  }, label);
   return /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
-      fontSize: "var(--text-label-small)",
-      color: "var(--text-secondary)"
+      ...ink
     }
   }, label);
 }
@@ -1792,10 +2417,724 @@ __ds_scope.PendingMarker = PendingMarker;
 __ds_scope.EditedMarker = EditedMarker;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/honesty/PendingMarker.jsx", error: String((e && e.message) || e) }); }
 
+// components/content/ReferenceRow.jsx
+try { (() => {
+const { Icon, NODE_GLYPHS, MonogramAvatar, PendingMarker } = __ds_scope;
+/* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
+   result-row shape search reuses: EVERY row is leading mark · name · value, so
+   a heterogeneous list reads as one list.
+
+   THE LEADING MARK SAYS THE KIND, without a word beside it. A person keeps
+   their avatar — people are circles everywhere in this system. Every other
+   kind is a 32px tile at the small rung: a media post wears its cover, a text
+   post the letter T (a tile, not a glyph — no icon set has "text post"), and
+   the rest carry their node-type glyph — proposal `how_to_vote`, item
+   `inventory_2`, campaign `campaign`, offer `sell`, chat `forum`, comment
+   `chat_bubble`. A topic's tile is the same # its chip wears. Silhouettes are
+   deliberately distinct: an item is a box, an offer the price tag.
+
+   THE VALUE is the pair the author signed on this act — set at compose (a
+   changeable default), shown here for any reader: a signed act is public
+   record. Right-aligned, `body-small`, never coloured.
+
+   AN ACT STILL SETTLING SAYS SO HERE, AND ONLY HERE (jakob's ruling,
+   2026-09-10). A chip on a card shows nothing pending — a tag's word is the tag's
+   word whether or not the record has been ordered yet — so this sheet is the one
+   surface that admits a staged-not-yet-landed tag or citation, in the same words
+   every other unsettled record wears (`PendingMarker`).
+
+   IT RIDES THE PAIR, NOT THE NAME. What has not landed is the ACT, not the node
+   it points at: the post is there, the citation of it is the thing still finding
+   its place in the order. So the marker stacks under the pair at the row's edge —
+   the attachment `TaggedRow` already makes, where the marker sits with the
+   claim's numbers and not with the content they describe. */
+
+/** A node kind's mark, on any surface: avatar, cover, T, #, or the kind's
+ *  glyph from the ONE semantic assignment (`NODE_GLYPHS`, the glyph atoms). */
+function NodeMark({
+  kind,
+  name,
+  src
+}) {
+  if (kind === "person") return /*#__PURE__*/React.createElement(MonogramAvatar, {
+    name: name,
+    src: src,
+    size: "md"
+  });
+  const tile = {
+    height: "32px",
+    width: "32px",
+    flex: "none",
+    display: "grid",
+    placeItems: "center",
+    borderRadius: "var(--radius-small)",
+    background: "var(--surface-container-highest)",
+    color: "var(--text-secondary)",
+    overflow: "hidden"
+  };
+  if (kind === "post" && src) {
+    return /*#__PURE__*/React.createElement("span", {
+      style: tile,
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("img", {
+      src: src,
+      alt: "",
+      style: {
+        height: "100%",
+        width: "100%",
+        objectFit: "cover"
+      }
+    }));
+  }
+  const letter = kind === "topic" ? "#" : kind === "post" ? "T" : null;
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...tile,
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-title-medium)",
+      fontWeight: "var(--text-title-medium--font-weight)"
+    },
+    "aria-hidden": "true"
+  }, letter ?? /*#__PURE__*/React.createElement(Icon, {
+    name: NODE_GLYPHS[kind],
+    size: 18
+  }));
+}
+
+/* `sub` is the INDIRECT-HIT line (readme §13, the search rulings): a scoped
+   query that matched through an act's target says both halves — the comment
+   row reads "on <post title>", the offer row "on <item name>". Without it an
+   indirect hit is indistinguishable from a mishit. `value` is the row's right
+   edge: the signed pair in the references sheet, the viewer-relative rank in
+   ranked search results, the age past the seam. (`pair` remains as its old
+   name.) */
+function ReferenceRow({
+  kind = "post",
+  name,
+  sub,
+  src,
+  pair,
+  value,
+  rank,
+  trailing,
+  pending = false,
+  onOpen
+}) {
+  const edge = value ?? pair;
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpen,
+    className: "cg-state cg-focus",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-3)",
+      minHeight: "var(--touch-target-min)",
+      width: "100%",
+      border: 0,
+      background: "none",
+      padding: "var(--space-1) var(--space-6)",
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      color: "var(--on-surface)",
+      textAlign: "left"
+    }
+  }, /*#__PURE__*/React.createElement(NodeMark, {
+    kind: kind,
+    name: name,
+    src: src
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, name), sub && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, sub)), trailing ? /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      flex: "none",
+      display: "inline-flex",
+      color: "var(--text-secondary)"
+    }
+  }, trailing) : rank ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: "none",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "4px",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "graph",
+    size: 14
+  }), rank) : (edge || pending) && /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: "none",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-end",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap"
+    }
+  }, edge, pending && /*#__PURE__*/React.createElement(PendingMarker, {
+    inline: true
+  })));
+}
+__ds_scope.NodeMark = NodeMark;
+__ds_scope.ReferenceRow = ReferenceRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/ReferenceRow.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/StagedReference.jsx
+try { (() => {
+const { NodeMark, Icon, BUTTON_CLASS } = __ds_scope;
+/* A reference already staged in a composer (item 17, the conformance round):
+   the citation the author has committed to, shown back to them — the kind's
+   mark, what it points at, the pair signed on the act, and the × that takes it
+   back out.
+
+   THE MARK IS `NodeMark`, so a person arrives as a circle and everything else
+   as its tile. Citing a post and mentioning a person stage the same fact, and a
+   row that drew them differently would deny it — which is the whole point of
+   the menus round.
+
+   IT IS THE COMPOSER'S TWIN OF `ReferenceRow`, not a variant of it. The reading
+   row is a way in: it is pressable, it navigates, and it has no ×. This one
+   navigates nowhere — the author is holding it, not following it. Two jobs, two
+   rows, one mark.
+
+   AND THE ROW IS A BUTTON WHEN, AND ONLY WHEN, THERE IS SOMETHING ELSE A
+   CITATION IS FOR (`onEdit`, jakob's ruling 2026-09-10) — `TopicRemovable`'s
+   rule, said for the other family. The conformance round left the row inert
+   because removal was the only thing a staged citation was for; it no longer
+   is. A citation's two axes are BOTH signed (`ReferenceInput`, api-spec.md), so
+   unlike a tag's pair this one is the stance pad's own shape, and what the row
+   opens is that pad in a sheet. Given no `onEdit` the row stays exactly as
+   inert as the conformance round left it.
+
+   EACH CONTROL NAMES ITS OWN CITATION — "Remove <name>", "<name> — set how it
+   relates" — because a block of these is a block of identically-named controls
+   otherwise. The phrase is the one a staged tag already wears: opening a pair
+   editor is one gesture, whichever family the pair belongs to. */
+
+/* The row minus its ×: the mark, what it points at, and the pair it signs. One
+   markup whether or not it is pressable, so the drawing cannot drift between
+   the two states. */
+function Body({
+  kind,
+  name,
+  sub,
+  src,
+  value
+}) {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(NodeMark, {
+    kind: kind,
+    name: name,
+    src: src
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, name), sub && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      color: "var(--text-secondary)"
+    }
+  }, sub)), value && /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: "none",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap"
+    }
+  }, value));
+}
+function StagedReference({
+  kind = "post",
+  name,
+  sub,
+  src,
+  value,
+  onRemove,
+  onEdit
+}) {
+  const body = /*#__PURE__*/React.createElement(Body, {
+    kind: kind,
+    name: name,
+    sub: sub,
+    src: src,
+    value: value
+  });
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      minHeight: 48,
+      padding: "8px 12px",
+      borderRadius: "var(--radius-small)",
+      background: "var(--surface-container-highest)",
+      boxSizing: "border-box"
+    }
+  }, onEdit ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": `${name} — set how it relates`,
+    onClick: onEdit,
+    className: BUTTON_CLASS,
+    style: {
+      flex: 1,
+      minWidth: 0,
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      border: 0,
+      background: "none",
+      padding: 0,
+      borderRadius: "var(--radius-small)",
+      color: "inherit",
+      font: "inherit",
+      letterSpacing: "inherit",
+      textAlign: "left",
+      cursor: "pointer"
+    }
+  }, body) : body, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": `Remove ${name}`,
+    onClick: onRemove,
+    className: "cg-state cg-focus",
+    style: {
+      flex: "none",
+      display: "grid",
+      placeItems: "center",
+      height: 32,
+      width: 32,
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      color: "var(--text-secondary)",
+      cursor: "pointer",
+      padding: 0
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "close",
+    size: 18
+  })));
+}
+__ds_scope.StagedReference = StagedReference;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/StagedReference.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/TopicRemovable.jsx
+try { (() => {
+const { Icon, BUTTON_CLASS } = __ds_scope;
+/* A tag staged on a composer (item 17, the conformance round): the hash and
+   the word in the secondary container, with the × that takes it back out. The
+   file keeps the record's word and draws the reader's (the naming law, readme
+   §13, the tag round).
+
+   IT IS NOT A `Chip`. A chip is a control the reader presses to change what
+   they are looking at — a filter, a readout. This is a piece of the thing being
+   authored, shown back to the author. Same pill, different job, so it keeps the
+   `secondary-container` pair rather than borrowing the chip's.
+
+   THE HASH IS DRAWN, NOT TYPED. The author names a tag; the mark that says
+   what kind of name it is belongs to the row that shows it back.
+
+   THE × IS ITS OWN BUTTON (jakob's ruling, the conformance round). It was
+   drawn as a glyph, which cannot be reached by keyboard and tells a screen
+   reader nothing — `PickTray`'s "Show all" had exactly this shape and was
+   ruled the same way. The button adds no box of its own — no border, no
+   background, no padding, colour inherited — so the drawing is the glyph it
+   always was, and the state layer, the focus ring and the 48px target arrive
+   with `BUTTON_CLASS`.
+
+   AND THE PILL IS A BUTTON WHEN, AND ONLY WHEN, THERE IS SOMETHING ELSE A TAG
+   IS FOR (`onEdit`, the tag round). The conformance round left the pill inert
+   with a reason — making it pressable would have said removal was the only
+   thing a tag was for, and at the time it was. It no longer is: a staged tag
+   carries a relevance/confidence pair the author may set, and the pair editor
+   is what the pill opens. Given no `onEdit` the pill stays exactly as inert as
+   that ruling left it.
+
+   THE DEVIATION IS WHAT IT SAYS (`pair`). A tag sitting at the contract's
+   default — relevance +0.1, confidence 1 (`TagInput`, api-spec.md) — says
+   nothing, and one the author moved says where it moved to. That is the
+   filter trigger's rule (readme §13, "the trigger speaks deviations only")
+   applied to the one other place this system shows a set of authored values
+   back: a row of pills each carrying two numbers is the clipped parade
+   `TopicsLine` already refuses.
+
+   EACH CONTROL NAMES ITS OWN TAG. "Remove #coastroad", "#coastroad — set how
+   it relates", with the hash the pill draws, because a row of these is a row
+   of identically-named controls otherwise. */
+
+/* The deviation rides at the pill's own small rung on the container's dimmer
+   ink — present enough to read, quiet enough that a row of default tags is
+   still a row of words. */
+const PAIR = {
+  fontSize: "var(--text-label-small)",
+  lineHeight: "var(--text-label-small--line-height)",
+  fontWeight: "var(--text-label-small--font-weight)",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
+  opacity: 0.75
+};
+function TopicRemovable({
+  topic,
+  pair,
+  onRemove,
+  onEdit
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6,
+      minHeight: 32,
+      padding: "4px 12px",
+      borderRadius: "var(--radius-full)",
+      background: "var(--secondary-container)",
+      color: "var(--on-secondary-container)",
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      letterSpacing: "var(--text-label-large--letter-spacing)"
+    }
+  }, onEdit ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": `#${topic} — set how it relates`,
+    onClick: onEdit,
+    className: BUTTON_CLASS,
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6,
+      border: 0,
+      background: "none",
+      padding: 0,
+      borderRadius: "var(--radius-full)",
+      color: "inherit",
+      font: "inherit",
+      letterSpacing: "inherit",
+      cursor: "pointer"
+    }
+  }, "#", topic, pair && /*#__PURE__*/React.createElement("span", {
+    style: PAIR
+  }, pair)) : /*#__PURE__*/React.createElement(React.Fragment, null, "#", topic, pair && /*#__PURE__*/React.createElement("span", {
+    style: PAIR
+  }, pair)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": `Remove #${topic}`,
+    onClick: onRemove,
+    className: BUTTON_CLASS,
+    style: {
+      flex: "none",
+      display: "inline-flex",
+      border: 0,
+      background: "none",
+      padding: 0,
+      borderRadius: "var(--radius-full)",
+      color: "inherit",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "close",
+    size: 16
+  })));
+}
+__ds_scope.TopicRemovable = TopicRemovable;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/TopicRemovable.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/WizardFooter.jsx
+try { (() => {
+const { Button } = __ds_scope;
+/* The foot of a wizard step whose CONTENT RUNS EDGE TO EDGE (jakob's ruling R9,
+   the slice-2.5 round): the pick step and its states — the device gallery, the
+   staged clip, the picked set, the refused batch.
+
+   IT OWNS THE SIDE PADDING BECAUSE NOTHING ABOVE IT DOES. A step drawn as a
+   padded column hands its footer the margins for free, and the Next button just
+   sits in the column — that is the other nine wizard steps, and they are not
+   this. A step whose grid and tray band reach both edges has no column to
+   inherit from, so the 24px sides live HERE, in the one region that must not
+   touch the edge. The vertical pair is its own: 12 above, 16 below, the button
+   held off the screen's bottom lip.
+
+   NOT THE SEAL'S FOOT AND NOT A SHEET'S ACTION ROW. `SealFooter` deliberately
+   owns no padding — it is dropped into a padded column and would double the
+   margins if it carried its own. A sheet's Done row (`ComposeLicense`) is a
+   hairline, a summary line and a button sharing a row inside the sheet's own
+   inset. Three feet, three anatomies; the padding is what tells them apart. */
+
+function WizardFooter({
+  label = "Next",
+  onNext
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 24px 16px"
+    }
+  }, /*#__PURE__*/React.createElement(Button, {
+    onClick: onNext,
+    style: {
+      width: "100%"
+    }
+  }, label));
+}
+__ds_scope.WizardFooter = WizardFooter;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/WizardFooter.jsx", error: String((e && e.message) || e) }); }
+
+// components/navigation/PageHeader.jsx
+try { (() => {
+const { Icon } = __ds_scope;
+/* The house page header (Android's TopAppBar): a back arrow, the page title, and
+   an optional trailing action — one pattern for every inner surface. The arrow is
+   a LINK, not history.back(), so a deep-linked visitor with no history still lands
+   somewhere sensible. Tab roots carry no back arrow.
+
+   The arrow is the Material `arrow_back` glyph, 24px on `onSurfaceVariant` — it
+   replaced the interim `←` character when the icon exports landed (2026-08-26).
+   The title is `title-large`.
+
+   THE HEADER OWNS ITS BAND: 48px tall, 12px of its own side padding, and a 48px
+   square back target with no negative margins. It used to grow a 24px glyph to a
+   44px target with `margin: -10px`, which was both under the 48px minimum and a
+   bet on the caller providing 24px of gutter — inside a frame with none, the
+   target bled outside the surface and was clipped. 12px of padding plus a
+   centred glyph in a 48px target puts the arrow exactly on the 24px screen
+   gutter without depending on anyone. */
+
+function PageHeader({
+  title,
+  backHref,
+  backLabel,
+  onBack,
+  action
+}) {
+  return /*#__PURE__*/React.createElement("header", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: "var(--space-3)",
+      minHeight: "48px",
+      padding: "0 var(--space-3)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)"
+    }
+  }, (backHref || onBack) && /*#__PURE__*/React.createElement("a", {
+    href: backHref ?? "#",
+    "aria-label": backLabel,
+    onClick: onBack,
+    className: "cg-state cg-focus",
+    style: {
+      height: "48px",
+      width: "48px",
+      display: "grid",
+      placeItems: "center",
+      borderRadius: "var(--radius-full)",
+      color: "var(--text-secondary)",
+      textDecoration: "none",
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "arrow_back"
+  })), title !== undefined && /*#__PURE__*/React.createElement("h1", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-title-large)",
+      lineHeight: "var(--text-title-large--line-height)",
+      fontWeight: "var(--text-title-large--font-weight)",
+      // A page title is a name and never wraps — a two-line header
+      // steals the content's first row (seen on the seals, where the
+      // trailing group is widest).
+      whiteSpace: "nowrap"
+    }
+  }, title)), action);
+}
+__ds_scope.PageHeader = PageHeader;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/PageHeader.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/WizardHeader.jsx
+try { (() => {
+const { HelpDot, PageHeader, Icon } = __ds_scope;
+/* The wizard's header (jakob 2026-08-31): TWO ways out, each doing one thing.
+
+   · The ARROW steps ONE STAGE BACK — never out of the flow. Details reaches
+     crop with it; the system back gesture does the same.
+   · The X LEAVES the whole flow from any stage. Where a draft is kept — the
+     post wizard, the post edit, the profile picture — the leave keeps it and
+     nothing asks, because nothing is lost (the return surface is the draft
+     prompt). The reply wizard and the comment edit keep no draft, so leaving
+     them discards: a non-empty composer asks first, through the discard
+     confirm; an empty one leaves silently. `leaveLabel` says which of the
+     two this X does. Without it, an author five stages deep was stuck
+     backing out tap by tap.
+
+   The header carries ONLY the ways out (jakob 2026-09-01): the stage's
+   forward action — Next, Sign — always lives at the bottom of the content
+   column, never up here, so the top-right corner keeps one meaning through
+   the whole flow. (It used to hold Next on early stages; an author trained
+   on that corner hit the X once Next moved down.) `action` remains for
+   passive trailing info only — a stage label, the help dot.
+
+   WHICH IS WHY `stageLabel` AND `help` ARE SLOTS OF THEIR OWN (item 17, the
+   conformance round). "Passive trailing info" turned out to be one thing in
+   practice: on every seal in the system — the post's, the reply's, the
+   picture's, the profile's, the address's, the wallet change's — it is the
+   stage's name and the screen's one "?", in that order. Six boards were
+   assembling that pair by hand through the generic slot, which is six chances
+   for the gap, the colour or the wrap to drift. The header now names it.
+
+   THE ROW EXISTS ONLY WHEN THERE IS SOMETHING TO SPACE. `help` on its own —
+   what the comment and post edits carry, where the screen has a "?" but no
+   stage to name — is the dot and nothing around it. A flex row with one child
+   in it is a wrapper pretending to be a layout.
+
+   `action` stays, and stays generic, for whatever neither of those covers. A
+   board that passes both gets the pair first and its own node after. */
+
+function WizardHeader({
+  title,
+  backHref = "#",
+  backLabel = "Back a step",
+  onBack,
+  onLeave,
+  leaveLabel = "Leave — your draft is kept",
+  stageLabel,
+  help,
+  onHelp,
+  action
+}) {
+  return /*#__PURE__*/React.createElement(PageHeader, {
+    title: title,
+    backHref: backHref,
+    backLabel: backLabel,
+    onBack: onBack,
+    action: /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-2)"
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-label": leaveLabel,
+      onClick: onLeave,
+      className: "cg-state cg-focus",
+      style: {
+        height: "48px",
+        width: "48px",
+        display: "grid",
+        placeItems: "center",
+        border: 0,
+        background: "none",
+        borderRadius: "var(--radius-full)",
+        color: "var(--text-secondary)",
+        cursor: "pointer",
+        flex: "none",
+        padding: 0
+      }
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "close"
+    })), stageLabel ? /*#__PURE__*/React.createElement("span", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 8
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        color: "var(--text-secondary)",
+        whiteSpace: "nowrap"
+      }
+    }, stageLabel), help && /*#__PURE__*/React.createElement(HelpDot, {
+      ariaLabel: help,
+      onOpen: onHelp
+    })) : help && /*#__PURE__*/React.createElement(HelpDot, {
+      ariaLabel: help,
+      onOpen: onHelp
+    }), action)
+  });
+}
+__ds_scope.WizardHeader = WizardHeader;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/WizardHeader.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/Card.jsx
+try { (() => {
+/* Material's FILLED card (design.md §2.4): `surfaceContainerHighest` against the
+   page's `surface`, the medium shape rung, 16px padding, 12px inner gap — no
+   border and no shadow. The step up off the page ground is what makes a card read
+   as a card; an outline on top of it would be Material's *outlined* card, a
+   different component. */
+
+function Card({
+  children,
+  as = "section",
+  ariaLabel,
+  style
+}) {
+  const Tag = as;
+  return /*#__PURE__*/React.createElement(Tag, {
+    "aria-label": ariaLabel,
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--card-gap)",
+      borderRadius: "var(--radius-medium)",
+      background: "var(--surface-card)",
+      color: "var(--on-surface)",
+      padding: "var(--card-padding)",
+      ...style
+    }
+  }, children);
+}
+__ds_scope.Card = Card;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Card.jsx", error: String((e && e.message) || e) }); }
+
 // components/forms/LicenseChooser.jsx
 try { (() => {
 /* The license surface (platform-guidelines.md §5), shared by the two composers
-   that declare one and the two read surfaces that show it.
+   that declare one and the sheet the read surfaces open to show it.
 
    Two axes, each a degree on [0,1] — credit and public record of use. The chooser
    offers NAMED READINGS ONLY: the axes are continuous on the wire, but a degree
@@ -1834,12 +3173,11 @@ const PUBLIC_DOMAIN = {
   provenance: 0
 };
 
-/* THE MENU ROW THAT REVEALS THE TERMS is an atom (readme §13, atoms): one
+/* THE MENU ROW THAT OPENS THE TERMS is an atom (readme §13, atoms): one
    assignment, many surfaces. The cards prepend it to their own overflow menus
    and the detail surfaces' headers spell the same menu, so the words live here
    rather than in each of them. */
 const LICENSE_MENU_LABEL = "License terms";
-const LICENSE_MENU_LABEL_SHOWN = "Hide license";
 
 /* THE READER'S READINGS, not the author's. The chooser's hints address the
    author declaring the terms ("Every use credits you"), which on a read surface
@@ -1966,14 +3304,14 @@ function LicenseChooser({
 
 /** What a landed node's qualifiers oblige, on the read surface.
 
-   A QUIET INSET, NOT A PARAGRAPH. The terms are the one thing on a card a
+   A QUIET INSET, NOT A PARAGRAPH. The terms are the one thing about a post a
    reader may have to act on — a reuser checking what they owe — so they are
    drawn as a block that can be read at a glance rather than a sentence to be
-   parsed: the caption names what unfolded (the words the reader tapped), and
-   each axis states its own reading on its own row, the two readings aligned so
-   the pair reads as a pair.
+   parsed: the caption names the words the reader tapped, and each axis states
+   its own reading on its own row, the two readings aligned so the pair reads
+   as a pair.
 
-   It takes NO fill. The card ground is already the highest container rung, so a
+   It takes NO fill. The sheet it comes up in is a raised container already, so a
    filled inset on top of it would either invert between the themes or claim an
    elevation this owes nothing to; a hairline at the medium rung recesses it in
    both. Nothing here is coloured — the terms are neither a warning nor a
@@ -2038,7 +3376,6 @@ __ds_scope.ATTRIBUTION_TIERS = ATTRIBUTION_TIERS;
 __ds_scope.PROVENANCE_TIERS = PROVENANCE_TIERS;
 __ds_scope.PUBLIC_DOMAIN = PUBLIC_DOMAIN;
 __ds_scope.LICENSE_MENU_LABEL = LICENSE_MENU_LABEL;
-__ds_scope.LICENSE_MENU_LABEL_SHOWN = LICENSE_MENU_LABEL_SHOWN;
 __ds_scope.licenseReadings = licenseReadings;
 __ds_scope.LicenseChooser = LicenseChooser;
 __ds_scope.LicenseTerms = LicenseTerms;
@@ -2262,6 +3599,47 @@ const ORIGIN = {
   pDirected: 0,
   pInterest: 0
 };
+
+/* THE BOUNDS TRAVEL WITH THE RECORD FAMILY, exactly as the axis words do. The
+   pad's two slots are `pDirected` and `pInterest`; what fills them, and how far
+   each one reaches, is the census's business and not the control's. A stance
+   fills both slots with signed Dimensions; a Tag's confidence is
+   census-bounded to `c ∈ [0, 1]` (hashtag.md §4, `TagInput` in api-spec.md),
+   and the tag pad authors only the positive half of relevance. Naming the
+   range as data keeps one pad honest about two families instead of a second
+   pad drifting from the first. */
+const STANCE_RANGES = {
+  pDirected: {
+    min: DIMENSION_MIN,
+    max: DIMENSION_MAX
+  },
+  pInterest: {
+    min: DIMENSION_MIN,
+    max: DIMENSION_MAX
+  }
+};
+
+/* THE TAG FIELD STARTS JUST ABOVE NOTHING (jakob's ruling, 2026-09-11).
+   Relevance 0 is the withdrawal — re-tagging at `r = 0`, an ordinary priced,
+   visible record (hashtag.md §4) — and that is not a degree of aboutness the
+   way every other point on this axis is. Ending the axis there put the
+   heaviest act on the field where the lightest drag lands, so the field
+   carries claims only and the floor is where a claim stops being one. It also
+   makes the left pole true: `Barely` is a fair reading of 0.01 and never was
+   one of 0. Withdrawing is asked for by its own control instead.
+
+   The floor is the contract's, like the anchors — both clients read it. */
+const TAG_RELEVANCE_FLOOR = 0.01;
+const TAG_RANGES = {
+  pDirected: {
+    min: TAG_RELEVANCE_FLOOR,
+    max: DIMENSION_MAX
+  },
+  pInterest: {
+    min: 0,
+    max: DIMENSION_MAX
+  }
+};
 /** What a plain tap commits — the repo-wide low-defaults policy. */
 const TAP_DEFAULT = {
   pDirected: 0.1,
@@ -2398,15 +3776,105 @@ const STANCE_ANCHORS = [{
   emoji: "💀",
   label: "Absolutely not"
 }];
-function clampDimension(value) {
+
+/* THE TAG TABLE IS ITS OWN, AND IT IS DISJOINT FROM THE STANCE FACES (jakob's
+   ruling, the tag pad round). Not one glyph appears in both tables, and that is
+   the point rather than an accident of picking: a face that means "Like this"
+   on a post must never also mean "locked on" about a topic, or the one lossy
+   readout the system has starts lying about which family a reader is looking
+   at. The stance table is twenty faces; this one is thirteen objects.
+
+   IT READS AS A SENTENCE ABOUT AN OBJECT, NOT A FEELING. A tag is a claim
+   about what a post is about — it has no mood to wear — so each row names a
+   thing that stands in for a degree of aboutness held at a degree of
+   certainty: a key, a magnet, a die, a fishhook.
+
+   THE GRID IS FOUR BY THREE. Aboutness runs Barely → Entirely across four
+   columns, certainty runs Guessing → Certain up three rows, and the twelve
+   sit at the band centres. `💯` is the thirteenth and floats: it sits just
+   left of `🎯` and higher, so the very top of the field — all of it, said
+   flat out — is reachable without stealing the Entirely corner from the row
+   that owns it.
+
+   LIKE `STANCE_ANCHORS`, THIS TABLE IS THE CONTRACT — both clients read these
+   thirteen rows, and a change here changes both apps. The words are the
+   spoken reading, never drawn beside the face: §8.3's rule that the face
+   carries the feel and the pair carries the fact holds for a tag too. */
+const TAG_ANCHORS = [{
+  pDirected: 0.15,
+  pInterest: 0.9,
+  emoji: "🔍",
+  label: "had to look, but it's in there"
+}, {
+  pDirected: 0.45,
+  pInterest: 0.9,
+  emoji: "🔗",
+  label: "definitely linked"
+}, {
+  pDirected: 0.72,
+  pInterest: 0.9,
+  emoji: "🔒",
+  label: "locked on"
+}, {
+  pDirected: 0.95,
+  pInterest: 0.9,
+  emoji: "🎯",
+  label: "exactly this"
+}, {
+  pDirected: 0.15,
+  pInterest: 0.55,
+  emoji: "💧",
+  label: "a drop of it, I think"
+}, {
+  pDirected: 0.45,
+  pInterest: 0.55,
+  emoji: "🧩",
+  label: "a piece of the picture"
+}, {
+  pDirected: 0.72,
+  pInterest: 0.55,
+  emoji: "🧲",
+  label: "pulled toward it"
+}, {
+  pDirected: 0.95,
+  pInterest: 0.55,
+  emoji: "🗝️",
+  label: "likely the key to it"
+}, {
+  pDirected: 0.15,
+  pInterest: 0.15,
+  emoji: "❔",
+  label: "faint maybe"
+}, {
+  pDirected: 0.45,
+  pInterest: 0.15,
+  emoji: "🎲",
+  label: "could go either way"
+}, {
+  pDirected: 0.72,
+  pInterest: 0.15,
+  emoji: "🎣",
+  label: "fishing for it"
+}, {
+  pDirected: 0.95,
+  pInterest: 0.15,
+  emoji: "🔮",
+  label: "big claim, divined"
+}, {
+  pDirected: 0.86,
+  pInterest: 0.95,
+  emoji: "💯",
+  label: "all of it, full stop"
+}];
+function clampDimension(value, min = DIMENSION_MIN, max = DIMENSION_MAX) {
   if (Number.isNaN(value)) return 0;
-  const bounded = Math.min(DIMENSION_MAX, Math.max(DIMENSION_MIN, value));
+  const bounded = Math.min(max, Math.max(min, value));
   return bounded === 0 ? 0 : bounded;
 }
-function clampPair(pair) {
+function clampPair(pair, ranges = STANCE_RANGES) {
   return {
-    pDirected: clampDimension(pair.pDirected),
-    pInterest: clampDimension(pair.pInterest)
+    pDirected: clampDimension(pair.pDirected, ranges.pDirected.min, ranges.pDirected.max),
+    pInterest: clampDimension(pair.pInterest, ranges.pInterest.min, ranges.pInterest.max)
   };
 }
 
@@ -2482,9 +3950,30 @@ function formatDimension(value) {
   }).format(value);
 }
 
+/** Unsigned, two decimals — for a value whose range has no negative half. */
+function formatUnsigned(value) {
+  return new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
 /** `+0.40 / +0.20`-style. Valence first, matching the pad's horizontal-then-vertical order. */
 function formatStancePair(pair) {
   return `${formatDimension(pair.pDirected)} / ${formatDimension(pair.pInterest)}`;
+}
+
+/* A TAG'S PAIR IS NOT A STANCE'S, AND IT MUST NOT LOOK LIKE ONE (jakob's
+   ruling, the tag round). Relevance is a signed Dimension over [-1, +1] and
+   keeps the sign, which is the whole content of the value. Confidence is
+   census-bounded to [0, 1] (hashtag.md §4, `TagInput` in api-spec.md), so a
+   `+` on it advertises a pole that does not exist — it reads unsigned:
+   `+0.40 / 0.90`. Two decimals either way, the system's one number format.
+   The difference between the two shapes is the point: a reader who can tell a
+   tag's pair from a stance's at a glance is being told the truth about which
+   family they are looking at. */
+function formatTagPair(pair) {
+  return `${formatDimension(pair.pDirected)} / ${formatUnsigned(pair.pInterest)}`;
 }
 
 /** The same two values with their axes named, for surfaces without the pad's layout. */
@@ -2732,6 +4221,9 @@ function StanceLandingLine({
 __ds_scope.DIMENSION_MIN = DIMENSION_MIN;
 __ds_scope.DIMENSION_MAX = DIMENSION_MAX;
 __ds_scope.ORIGIN = ORIGIN;
+__ds_scope.STANCE_RANGES = STANCE_RANGES;
+__ds_scope.TAG_RELEVANCE_FLOOR = TAG_RELEVANCE_FLOOR;
+__ds_scope.TAG_RANGES = TAG_RANGES;
 __ds_scope.TAP_DEFAULT = TAP_DEFAULT;
 __ds_scope.DIRECTED_LABEL = DIRECTED_LABEL;
 __ds_scope.INTEREST_LABEL = INTEREST_LABEL;
@@ -2744,13 +4236,16 @@ __ds_scope.ZERO_BUNDLE_EMOJI = ZERO_BUNDLE_EMOJI;
 __ds_scope.RESTING_FACE_EMOJI = RESTING_FACE_EMOJI;
 __ds_scope.SR_ONLY = SR_ONLY;
 __ds_scope.STANCE_ANCHORS = STANCE_ANCHORS;
+__ds_scope.TAG_ANCHORS = TAG_ANCHORS;
 __ds_scope.clampDimension = clampDimension;
 __ds_scope.clampPair = clampPair;
 __ds_scope.nearestAnchor = nearestAnchor;
 __ds_scope.bundleReadout = bundleReadout;
 __ds_scope.StanceValue = StanceValue;
 __ds_scope.formatDimension = formatDimension;
+__ds_scope.formatUnsigned = formatUnsigned;
 __ds_scope.formatStancePair = formatStancePair;
+__ds_scope.formatTagPair = formatTagPair;
 __ds_scope.formatStanceWords = formatStanceWords;
 __ds_scope.localLanding = localLanding;
 __ds_scope.standingLine = standingLine;
@@ -2766,12 +4261,13 @@ __ds_scope.StanceLandingLine = StanceLandingLine;
 
 // components/stance/StancePad.jsx
 try { (() => {
-const { clampDimension, clampPair, ORIGIN } = __ds_scope;
+const { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_RANGES } = __ds_scope;
 /* The pad's field: a SOFT ROUNDED SQUARE, and THE DRAWN FIELD IS THE VALUE SPACE
-   (design.md §8.3). The knob travels exactly the field, the corners are (±1, ±1),
-   and the knob never leaves the drawn shape — what the finger sees is what the
-   value does. Horizontal runs Against → For, vertical runs Less → More, and those
-   four words are drawn on the field; screen y grows downward and connection grows
+   (design.md §8.3). The knob travels exactly the field, the corners are the two
+   axes' own ends — (±1, ±1) for a stance, (0, 0) to (1, 1) for a tag — and the
+   knob never leaves the drawn shape, so what the finger sees is what the value
+   does. Horizontal runs Against → For, vertical runs Less → More, and those four
+   words are drawn on the field; screen y grows downward and connection grows
    upward, so the vertical mapping inverts.
 
    Containment is STRUCTURAL, not arithmetic: the knob's centre travels a box inset
@@ -2782,6 +4278,20 @@ const { clampDimension, clampPair, ORIGIN } = __ds_scope;
    The pick is ACCUMULATED TRAVEL from where the pointer went down, never its
    absolute position: the pad opens at the origin wherever the press landed. */
 
+/* THE FIELD'S FOUR WORDS ARE THE SLOTS' WORDS, NOT THE STANCE'S. The pad's
+   geometry is bound to `(pDirected, pInterest)` — horizontal is the directed
+   slot, vertical the interest slot — and a stance is not the only record whose
+   two user parameters are both signed. A citation's are too (`ReferenceInput`,
+   api-spec.md), and they mean different things in the same two slots, so the
+   words that name the poles travel with the record family rather than living
+   in the control. The default is the stance's four, because the stance is what
+   this pad was drawn for. */
+const STANCE_AXES = {
+  left: DIRECTED_POLES[0],
+  right: DIRECTED_POLES[1],
+  bottom: INTEREST_POLES[0],
+  top: INTEREST_POLES[1]
+};
 const FIELD_CORNER_RADIUS_PX = 16;
 const KNOB_DIAMETER_PX = 20;
 function knobTravelInset(cornerRadius = FIELD_CORNER_RADIUS_PX, knobDiameter = KNOB_DIAMETER_PX) {
@@ -2793,33 +4303,68 @@ function padTravelHalfExtent(rect, inset = KNOB_TRAVEL_INSET_PX) {
   return Math.max(0, Math.min(rect.width, rect.height) / 2 - inset);
 }
 
+/** How much one pixel of travel is worth on an axis that spans `range`. */
+function perPixel(range, halfExtent) {
+  return (range.max - range.min) / (2 * halfExtent);
+}
+
+/** Where a value sits on its axis, 0 at the range's low end and 1 at its high end. */
+function fractionOf(value, range) {
+  return (value - range.min) / (range.max - range.min);
+}
+
+/* A PERCENTAGE IS ROUNDED BEFORE IT REACHES A STYLE. Binary floating point makes
+   the same position come out as 55 or as 55.00000000000001 depending on the order
+   the multiply and the add happen in, and a rendered board is compared byte for
+   byte by the design gate. Six decimals is far below a device pixel on any field
+   this pad is drawn at, so nothing moves and the output stops depending on
+   arithmetic order. */
+function percent(fraction) {
+  return Math.round(fraction * 1e8) / 1e6;
+}
+
 /** The pair this much travel picks, starting from `base`. Clamped once, on the sum. */
-function padPairFrom(base, rect, travel, inset = KNOB_TRAVEL_INSET_PX) {
+function padPairFrom(base, rect, travel, inset = KNOB_TRAVEL_INSET_PX, ranges = STANCE_RANGES) {
   const halfExtent = padTravelHalfExtent(rect, inset);
-  if (halfExtent === 0) return clampPair(base);
+  if (halfExtent === 0) return clampPair(base, ranges);
   return clampPair({
-    pDirected: base.pDirected + travel.dx / halfExtent,
-    pInterest: base.pInterest - travel.dy / halfExtent
-  });
+    pDirected: base.pDirected + travel.dx * perPixel(ranges.pDirected, halfExtent),
+    pInterest: base.pInterest - travel.dy * perPixel(ranges.pInterest, halfExtent)
+  }, ranges);
 }
 
 /** Where the knob sits, as a percentage of the travel box. */
-function padPercentOf(pair) {
+function padPercentOf(pair, ranges = STANCE_RANGES) {
+  const bounded = clampPair(pair, ranges);
   return {
-    x: 50 + clampDimension(pair.pDirected) * 50,
-    y: 50 - clampDimension(pair.pInterest) * 50
+    x: percent(fractionOf(bounded.pDirected, ranges.pDirected)),
+    y: 100 - percent(fractionOf(bounded.pInterest, ranges.pInterest))
   };
+}
+
+/* THE DEAD-GROUND LINE MARKS THE AXIS'S ZERO, so an axis that never reaches
+   zero has none to draw. On a stance's signed square both lines cross the
+   middle and the inert cross is legible dead ground (§8.3). The tag pad's
+   confidence starts at zero and its relevance above it, so neither line falls
+   anywhere but the field's own edge, where a hairline would read as a border
+   rather than as a meaning. */
+function zeroPercentOf(range) {
+  return range.min < 0 && range.max > 0 ? percent(fractionOf(0, range)) : null;
 }
 function StancePad({
   value = ORIGIN,
   onChange,
   fieldRef,
-  showAxes = true
+  showAxes = true,
+  axes = STANCE_AXES,
+  ranges = STANCE_RANGES
 }) {
   const localRef = React.useRef(null);
   const ref = fieldRef ?? localRef;
   const drag = React.useRef(null);
-  const knob = padPercentOf(value);
+  const knob = padPercentOf(value, ranges);
+  const zeroAcross = zeroPercentOf(ranges.pInterest);
+  const zeroDown = zeroPercentOf(ranges.pDirected);
   const onPointerDown = event => {
     if (!onChange) return;
     drag.current = {
@@ -2836,7 +4381,7 @@ function StancePad({
     onChange(padPairFrom(from.base, field.getBoundingClientRect(), {
       dx: event.clientX - from.x,
       dy: event.clientY - from.y
-    }));
+    }, KNOB_TRAVEL_INSET_PX, ranges));
   };
   const endDrag = () => {
     drag.current = null;
@@ -2853,23 +4398,23 @@ function StancePad({
       width: "100%",
       touchAction: "none",
       borderRadius: "var(--radius-large)",
-      background: "var(--surface-field)"
+      background: "var(--surface-container-highest)"
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, zeroAcross !== null && /*#__PURE__*/React.createElement("div", {
     "aria-hidden": "true",
     style: {
       position: "absolute",
       left: 0,
-      top: "50%",
+      top: `${zeroAcross}%`,
       height: "1px",
       width: "100%",
       background: "var(--border-hairline)"
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), zeroDown !== null && /*#__PURE__*/React.createElement("div", {
     "aria-hidden": "true",
     style: {
       position: "absolute",
-      left: "50%",
+      left: `${zeroDown}%`,
       top: 0,
       width: "1px",
       height: "100%",
@@ -2890,28 +4435,28 @@ function StancePad({
       top: "50%",
       transform: "translateY(-50%)"
     }
-  }, "Against"), /*#__PURE__*/React.createElement("span", {
+  }, axes.left), /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
       right: 0,
       top: "50%",
       transform: "translateY(-50%)"
     }
-  }, "For"), /*#__PURE__*/React.createElement("span", {
+  }, axes.right), /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
       left: "50%",
       top: 0,
       transform: "translateX(-50%)"
     }
-  }, "More"), /*#__PURE__*/React.createElement("span", {
+  }, axes.top), /*#__PURE__*/React.createElement("span", {
     style: {
       position: "absolute",
       left: "50%",
       bottom: 0,
       transform: "translateX(-50%)"
     }
-  }, "Less")), /*#__PURE__*/React.createElement("div", {
+  }, axes.bottom)), /*#__PURE__*/React.createElement("div", {
     "aria-hidden": "true",
     style: {
       position: "absolute",
@@ -2930,6 +4475,7 @@ function StancePad({
     }
   })));
 }
+__ds_scope.STANCE_AXES = STANCE_AXES;
 __ds_scope.FIELD_CORNER_RADIUS_PX = FIELD_CORNER_RADIUS_PX;
 __ds_scope.KNOB_DIAMETER_PX = KNOB_DIAMETER_PX;
 __ds_scope.knobTravelInset = knobTravelInset;
@@ -2942,17 +4488,28 @@ __ds_scope.StancePad = StancePad;
 
 // components/stance/StanceSlider.jsx
 try { (() => {
-const { formatDimension } = __ds_scope;
-/* One stance dimension as an ordinary range input: a float in the closed [-1, +1],
-   step 0.01, with the two-decimal value in the label. Android's StanceSlider.
+const { formatDimension, formatUnsigned } = __ds_scope;
+/* One authored dimension as an ordinary range input: a float, step 0.01, with
+   the two-decimal value in the label. Android's StanceSlider.
 
-   This is part of the ACCESSIBLE path (design.md §8.6, §10) — the pad is a drag
-   gesture, and a drag gesture always has a non-drag equivalent.
+   For a STANCE this is the ACCESSIBLE path (design.md §8.6, §10) — the pad is a
+   drag gesture, and a drag gesture always has a non-drag equivalent.
 
-   THE POLES ARE NAMED. A track running from −1 to +1 says nothing about what
-   either end means, and the axis label alone was carrying too much: "Against" and
-   "For" under the ends make the control readable at a glance instead of after a
-   sentence. `body-small` on `onSurfaceVariant` so they inform without competing. */
+   FOR A TAG'S PAIR IT IS THE NON-DRAG EQUIVALENT (jakob's ruling, the tag pad
+   round). A tag's pair is set on the pad, and the pad is a drag gesture, so
+   §10's standing demand applies there exactly as it does to a stance: the
+   equivalent has to exist and be reachable. Two labelled tracks are it, with
+   the tag's own poles and its own bound.
+
+   THE RANGE IS A PROP, AND THE FORMAT FOLLOWS IT. `min`/`max` default to the
+   stance range; an axis with no negative half drops the sign from its readout
+   for the reason `formatTagPair` gives — a `+` advertising a pole that does
+   not exist. A caller states the bound, never a screen redrawing the control.
+
+   THE POLES ARE NAMED. A track says nothing about what either end means, and
+   the axis label alone was carrying too much: "Against" and "For" under the
+   ends make the control readable at a glance instead of after a sentence.
+   `body-small` on `onSurfaceVariant` so they inform without competing. */
 
 function StanceSlider({
   label,
@@ -2960,44 +4517,54 @@ function StanceSlider({
   onChange,
   minLabel,
   maxLabel,
-  id
+  id,
+  min = -1,
+  max = 1
 }) {
+  const format = min < 0 ? formatDimension : formatUnsigned;
   const generated = React.useId();
   const fieldId = id ?? generated;
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "var(--space-1)"
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    htmlFor: fieldId,
-    style: {
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      fontWeight: "var(--text-label-large--font-weight)"
-    }
-  }, label, " ", formatDimension(value)), /*#__PURE__*/React.createElement("input", {
-    id: fieldId,
-    type: "range",
-    min: -1,
-    max: 1,
-    step: 0.01,
-    value: value,
-    onChange: event => onChange && onChange(Number(event.target.value)),
-    style: {
-      width: "100%",
-      accentColor: "var(--primary)"
-    }
-  }), (minLabel || maxLabel) && /*#__PURE__*/React.createElement("div", {
-    "aria-hidden": "true",
-    style: {
-      display: "flex",
-      justifyContent: "space-between",
-      fontSize: "var(--text-body-small)",
-      color: "var(--text-secondary)"
-    }
-  }, /*#__PURE__*/React.createElement("span", null, minLabel), /*#__PURE__*/React.createElement("span", null, maxLabel)));
+  return (
+    /*#__PURE__*/
+    // Same reasoning as TextField's own `data-field`: `type="range"` is a
+    // replaced element too and cannot host the flow badge's ::after, so the
+    // badge names the slider as a whole (jakob's ruling A9, backlog item 40).
+    React.createElement("div", {
+      "data-field": label,
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--space-1)"
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      htmlFor: fieldId,
+      style: {
+        fontSize: "var(--text-label-large)",
+        lineHeight: "var(--text-label-large--line-height)",
+        fontWeight: "var(--text-label-large--font-weight)"
+      }
+    }, label, " ", format(value)), /*#__PURE__*/React.createElement("input", {
+      id: fieldId,
+      type: "range",
+      min: min,
+      max: max,
+      step: 0.01,
+      value: value,
+      onChange: event => onChange && onChange(Number(event.target.value)),
+      style: {
+        width: "100%",
+        accentColor: "var(--primary)"
+      }
+    }), (minLabel || maxLabel) && /*#__PURE__*/React.createElement("div", {
+      "aria-hidden": "true",
+      style: {
+        display: "flex",
+        justifyContent: "space-between",
+        fontSize: "var(--text-body-small)",
+        color: "var(--text-secondary)"
+      }
+    }, /*#__PURE__*/React.createElement("span", null, minLabel), /*#__PURE__*/React.createElement("span", null, maxLabel)))
+  );
 }
 __ds_scope.StanceSlider = StanceSlider;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceSlider.jsx", error: String((e && e.message) || e) }); }
@@ -3120,10 +4687,16 @@ const { DialogSurface, buttonStyle, BUTTON_CLASS, StanceSlider, STANCE_ALTERNATE
    Severance is findable from the open pad; for anyone whose input is an alternate
    the pad never opens, so it is findable here instead. */
 
+/* THE BOUND IS A PROP HERE TOO, for `StanceSlider`'s reason: the typed route and
+   the dragged one must not disagree about what a value may be. A field that
+   refuses −1 on one axis and accepts it on another is the census speaking, and
+   the census travels with the record family. */
 function DirectEntry({
   label,
   value,
-  onChange
+  onChange,
+  min = -1,
+  max = 1
 }) {
   const id = React.useId();
   return /*#__PURE__*/React.createElement("div", {
@@ -3143,11 +4716,11 @@ function DirectEntry({
     id: id,
     type: "number",
     inputMode: "decimal",
-    min: -1,
-    max: 1,
+    min: min,
+    max: max,
     step: 0.01,
     value: value,
-    onChange: event => onChange && onChange(clampDimension(Number(event.target.value))),
+    onChange: event => onChange && onChange(clampDimension(Number(event.target.value), min, max)),
     style: {
       width: "6rem",
       borderRadius: "var(--radius-extra-small)",
@@ -3170,13 +4743,15 @@ function StanceAlternates({
   busy = false,
   children,
   landing,
-  inline = false
+  inline = false,
+  helpLabel = "How stances work"
 }) {
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
   // interaction is the genuinely new idea in this control, and a reader meeting it
   // as two sliders has nothing to infer it from — the pad at least teaches it by
-  // being a square.
+  // being a square. `helpLabel` mirrors `StanceControl`'s own prop (ruling A7):
+  // the caller passing one pad's name passes the same name here.
   const [explaining, setExplaining] = React.useState(false);
   /* THE DIALOG MUST NOT RESIZE WHEN THE HELP OPENS. The pad gets this for free — it
      is parked by its bottom edge, so its actions stay put however tall it is. This
@@ -3205,7 +4780,7 @@ function StanceAlternates({
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-expanded": explaining,
-    "aria-label": "How stances work",
+    "aria-label": helpLabel,
     onClick: () => setExplaining(shown => !shown),
     className: BUTTON_CLASS,
     style: {
@@ -3608,7 +5183,8 @@ function StanceControl({
   padInset = 16,
   padNote,
   wide = false,
-  overMedia = false
+  overMedia = false,
+  helpLabel = "How stances work"
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -3789,7 +5365,7 @@ function StanceControl({
   }) : /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true",
     style: {
-      fontSize: overMedia ? "26px" : "var(--text-title-large)",
+      fontSize: overMedia ? "var(--size-face-over-media)" : "var(--text-title-large)",
       lineHeight: 1,
       opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
       filter: restingFace === null ? "grayscale(1)" : "none"
@@ -3826,7 +5402,7 @@ function StanceControl({
     style: {
       fontFamily: "var(--font-sans)"
     }
-  }, "Choose your stance")), coach && /*#__PURE__*/React.createElement(StanceCoachMark, {
+  }, "Choose your stance on ", targetLabel)), coach && /*#__PURE__*/React.createElement(StanceCoachMark, {
     onDismiss: () => setCoach(false),
     style: {
       position: "absolute",
@@ -3866,7 +5442,7 @@ function StanceControl({
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-expanded": explaining,
-    "aria-label": "How stances work",
+    "aria-label": helpLabel,
     onClick: () => setExplaining(shown => !shown),
     className: BUTTON_CLASS,
     style: {
@@ -3977,7 +5553,8 @@ function StanceControl({
     onSever: openSeverance,
     landing: /*#__PURE__*/React.createElement(StanceLandingLine, {
       landing: landing
-    })
+    }),
+    helpLabel: helpLabel
   }, /*#__PURE__*/React.createElement(StanceStanding, {
     pick: pick,
     bundle: bundle,
@@ -4154,44 +5731,114 @@ try { (() => {
 /* Chips (backlog items 4 and 8).
 
    TWO CHIPS, ONE SHAPE. A `Chip` is a filter the reader turns on and off; a
-   `TopicChip` is a topic that goes somewhere. They look alike on purpose — both
+   `TopicChip` is a tag that goes somewhere. They look alike on purpose — both
    are a word in a pill — and they are told apart by what they do, which is the
-   same test that separates a button from a link (§7).
+   same test that separates a button from a link (§7). The component keeps the
+   record's word and draws the reader's (the naming law, readme §13).
 
    WHEN A CHIP AND NOT A SEGMENTED FILTER. Chips are for a set the reader can
    combine, or one that grows: seven kinds of ranked content, an open list of
-   topics. A segmented filter is for two to four alternatives where exactly one
+   tags. A segmented filter is for two to four alternatives where exactly one
    is true. Using chips for the exclusive case loses "one of these" ; using a
    segmented row for the combinable case loses the combination.
 
    32px drawn, 48px tapped: `cg-hit` grows the target without inflating a row of
    seven of them past the height of the screen. Selection is
    `secondaryContainer`, colour only \u2014 no check glyph, because a leading check on
-   the selected chips reflows every label in the row as the reader picks. */
+   the selected chips reflows every label in the row as the reader picks.
 
-const PILL = {
+   Both wear the same pill and the same size rung, because a size the tag half
+   of the family does not understand is exactly the drift this file exists to
+   prevent. */
+
+/* TWO SIZES, ONE PILL. `md` is the chip proper — a control the thumb reaches,
+   32px drawn and 48px tapped. `sm` is the same pill 24px tall on `label-small`.
+   Neither gets a smaller tap target: where a control must be small, it stays
+   `md` and the row loses a word instead. */
+const SIZES = {
+  md: {
+    height: "32px",
+    padding: "0 var(--space-3)",
+    fontSize: "var(--text-label-large)",
+    lineHeight: "var(--text-label-large--line-height)",
+    letterSpacing: "var(--text-label-large--letter-spacing)",
+    fontWeight: "var(--text-label-large--font-weight)"
+  },
+  sm: {
+    height: "24px",
+    padding: "0 var(--space-2)",
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
+    fontWeight: "var(--text-label-small--font-weight)"
+  }
+};
+
+/* The size rung is woven into the pill rather than layered over it, so the
+   declarations come out in one fixed order at either size. */
+function pill(size) {
+  const rung = SIZES[size] ?? SIZES.md;
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    position: "relative",
+    height: rung.height,
+    padding: rung.padding,
+    borderRadius: "var(--radius-full)",
+    fontFamily: "var(--font-sans)",
+    fontSize: rung.fontSize,
+    lineHeight: rung.lineHeight,
+    letterSpacing: rung.letterSpacing,
+    fontWeight: rung.fontWeight,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    textDecoration: "none"
+  };
+}
+
+/* THE READOUT TONE (jakob's ruling, the conformance round). A readout is a chip
+   the reader is being SHOWN — the tags inside the acts card, where what a
+   signature will carry is read back to its author — and it is not a control:
+   no press, no state layer, no target, so no button and no `switch` role over
+   something nothing can switch. It is the borderless `secondary-container`
+   pill, 24px true, and it takes the `secondary-container` pair for the same
+   reason `TopicRemovable` does: what is drawn there is a piece of the thing
+   being authored, not a filter over somebody else's.
+
+   IT HAS ONE RUNG, the small one. A readout that offered a size choice would be
+   a control again; `size` belongs to the filter tone.
+
+   The box is `min-height` and padding rather than the filter pill's fixed
+   height, because a readout has to grow with the reader's text setting instead
+   of clipping it — nothing here is a target that a growing box would move.
+   `flex: none` is the acts row's business: that row's value slot clips, and a
+   tag shrunk to nothing would be a lie about what is being signed. */
+const READOUT = {
   display: "inline-flex",
   alignItems: "center",
-  position: "relative",
-  height: "32px",
-  padding: "0 var(--space-3)",
+  minHeight: "24px",
+  padding: "2px 8px",
   borderRadius: "var(--radius-full)",
-  fontFamily: "var(--font-sans)",
-  fontSize: "var(--text-label-large)",
-  lineHeight: "var(--text-label-large--line-height)",
-  letterSpacing: "var(--text-label-large--letter-spacing)",
-  fontWeight: "var(--text-label-large--font-weight)",
-  cursor: "pointer",
-  whiteSpace: "nowrap",
-  textDecoration: "none"
+  background: "var(--secondary-container)",
+  color: "var(--on-secondary-container)",
+  fontSize: "var(--text-label-small)",
+  lineHeight: "var(--text-label-small--line-height)",
+  fontWeight: "var(--text-label-small--font-weight)",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
+  flex: "none"
 };
 function Chip({
   label,
   selected = false,
   onToggle,
   ariaLabel,
-  disabled = false
+  disabled = false,
+  size = "md",
+  tone = "filter"
 }) {
+  if (tone === "readout") return /*#__PURE__*/React.createElement("span", {
+    style: READOUT
+  }, label);
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     role: "switch",
@@ -4201,7 +5848,7 @@ function Chip({
     onClick: onToggle,
     className: "cg-state cg-focus cg-hit",
     style: {
-      ...PILL,
+      ...pill(size),
       border: selected ? "1px solid transparent" : "1px solid var(--border-field)",
       background: selected ? "var(--secondary-container)" : "transparent",
       color: selected ? "var(--on-secondary-container)" : "var(--text-body)",
@@ -4210,18 +5857,21 @@ function Chip({
   }, label);
 }
 
-/* A topic. The `#` is part of the word, not an icon: readers type it, and a topic
-   without it reads as a name. It navigates, so it is an anchor. */
+/* A tag. The `#` is part of the word, not an icon: readers type it, and a tag
+   without it reads as a name. It navigates — always to the tag's own page, on
+   every surface (jakob's ruling, the tag round: a chip tap is never a reveal) —
+   so it is an anchor. */
 function TopicChip({
   topic,
   href,
   onClick,
   inert = false,
+  size = "md",
   style: override
 }) {
   const name = topic.replace(/^#/, "");
   const style = {
-    ...PILL,
+    ...pill(size),
     border: "1px solid var(--border-hairline)",
     background: "var(--surface-card)",
     color: "var(--text-body)",
@@ -4247,30 +5897,80 @@ __ds_scope.TopicChip = TopicChip;
 // components/content/TopicsLine.jsx
 try { (() => {
 const { TopicChip } = __ds_scope;
-/* The topics-and-citations line a content card wears, shared by PostCard and
+/* The tags-and-citations line a content card wears, shared by PostCard and
    CommentCard — it appeared on a second surface, so it moved here (the repo's
    own rule; a copy is never the answer).
 
    AT MOST TWO CHIPS, THEN THE COUNTS (readme §13, 2026-08-28): a clipped
-   parade of half-chips says nothing, so the line shows up to two topics whole
-   — each capped so both always fit beside the counts — and states the rest in
-   words: "· 23 topics · 3 references". The counts are the readable fact AND
-   the way in: the topics-and-references sheet is the full set's home. Never a
-   wrap, never a second row (readme §13's collapse order).
+   parade of half-chips says nothing, so the line shows up to two tags whole
+   and states the rest in words: "· 23 tags · 3 references". A tag never gets
+   cut to make room — one that would need cutting is not drawn as a chip at
+   all; it folds into the counts instead (jakob's ruling A3). The counts are
+   the readable fact AND the way in: the tags-and-references sheet is the
+   full set's home. Never a wrap, never a second row (readme §13's collapse
+   order).
+
+   THE FILE AND ITS PROPS KEEP THE RECORD'S WORD (the naming law, readme §13,
+   the tag round): `TopicsLine`, `topics` — what the graph carries is a topic.
+   Every string it renders says "tag", which is what the reader calls it.
 
    Two tap models, never mixed: in a summary card the chips navigate to their
-   topics and the counts open the sheet; on a detail surface pass `onOpen` and
-   the WHOLE LINE is one control opening the sheet, the chips inert inside it. */
+   tag pages and the counts open the sheet; on a detail surface pass `onOpen`
+   and the WHOLE LINE is one control opening the sheet, the chips inert
+   inside it. */
 
 const VISIBLE_CHIPS = 2;
-/* Two capped chips + the counts fit a 390px card at its 16px insets. */
-const CHIP_CAP = {
-  display: "inline-block",
-  boxSizing: "border-box",
-  maxWidth: "96px",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  lineHeight: "30px"
+
+/* WHOLE OR FOLDED, NEVER CUT. This line renders at one fixed context only —
+   a 390px card, 16px insets, so a 358px content width — so "does it fit" is
+   a threshold derived from that context rather than measured live: this
+   file renders through ReactDOMServer, no DOM and no real glyph metrics, so
+   the check has to run ahead of paint, on the strings alone. Fit is judged
+   for the LINE, not a chip in isolation — a tag's chip can cost more of the
+   358px when the count beside it is short, and less when the count is long.
+
+   The per-character costs below are real measurement, not a guess: probed
+   in a live render of this exact pill and this exact counts span, in
+   Figtree, against every topic name this repo's canonical fixtures use.
+   Both average a little under the constants here (chip text: label-large,
+   14px/500, averaged 7.28px/char across the corpus, worst single word
+   8.68px/char; counts text: body-small, 12px/400, averaged 5.39px/char,
+   worst 5.63px/char) — the constants round up from the average rather than
+   the worst single word, because the worst-per-character words in the
+   corpus are short ones a single wide letter dominates, and a short word's
+   error is a few px, not a systemic one. A chip's pill also always costs
+   26px beyond its text: 12px of padding and a 1px border either side.
+
+   The line tries two chips, then one, then none, keeping the first
+   candidate whose estimated total — every shown chip's pill, the resulting
+   counts span, and a var(--space-2) gap between every pair of them — clears
+   358px. Whichever count of chips survives is always a PREFIX of `topics`:
+   there's no version of this line where a later, shorter tag is shown and
+   an earlier, longer one is folded instead. */
+const CHIP_TEXT_AVG_PX = 7.5;
+const COUNTS_TEXT_AVG_PX = 5.5;
+const PILL_OVERHEAD_PX = 26;
+const GAP_PX = 8;
+const LINE_BUDGET_PX = 358;
+function chipLabel(topic) {
+  return `#${topic.replace(/^#/, "")}`;
+}
+function estimateChipWidth(topic) {
+  return PILL_OVERHEAD_PX + chipLabel(topic).length * CHIP_TEXT_AVG_PX;
+}
+function estimateCountsWidth(text) {
+  return text.length * COUNTS_TEXT_AVG_PX;
+}
+function estimateLineWidth(shownTopics, hiddenTopics, references) {
+  const counts = countsText(hiddenTopics, references);
+  const items = shownTopics.length + (counts ? 1 : 0);
+  if (items === 0) return 0;
+  const chipsWidth = shownTopics.reduce((sum, topic) => sum + estimateChipWidth(topic), 0);
+  const countsWidth = counts ? estimateCountsWidth(counts) : 0;
+  return chipsWidth + countsWidth + (items - 1) * GAP_PX;
+}
+const CHIP_STYLE = {
+  flex: "none"
 };
 const COUNT_STYLE = {
   flex: "none",
@@ -4281,7 +5981,7 @@ const COUNT_STYLE = {
 };
 function countsText(hiddenTopics, references) {
   const parts = [];
-  if (hiddenTopics > 0) parts.push(hiddenTopics === 1 ? "1 topic" : `${hiddenTopics} topics`);
+  if (hiddenTopics > 0) parts.push(hiddenTopics === 1 ? "1 tag" : `${hiddenTopics} tags`);
   if (references > 0) parts.push(references === 1 ? "1 reference" : `${references} references`);
   if (parts.length === 0) return null;
   return `· ${parts.join(" · ")}`;
@@ -4294,6 +5994,14 @@ const LINE = {
   overflow: "hidden",
   minWidth: 0
 };
+function visibleChips(topics, references) {
+  const cap = Math.min(VISIBLE_CHIPS, topics.length);
+  for (let n = cap; n > 0; n--) {
+    const shown = topics.slice(0, n);
+    if (estimateLineWidth(shown, topics.length - n, references) <= LINE_BUDGET_PX) return shown;
+  }
+  return [];
+}
 function TopicsLine({
   topics = [],
   references = 0,
@@ -4301,13 +6009,13 @@ function TopicsLine({
   onOpenReferences
 }) {
   if (topics.length === 0 && references === 0) return null;
-  const visible = topics.slice(0, VISIBLE_CHIPS);
+  const visible = visibleChips(topics, references);
   const counts = countsText(topics.length - visible.length, references);
   if (onOpen) {
     return /*#__PURE__*/React.createElement("button", {
       type: "button",
       onClick: onOpen,
-      "aria-label": "Topics and references",
+      "aria-label": "Tags and references",
       className: "cg-state cg-focus",
       style: {
         ...LINE,
@@ -4323,7 +6031,7 @@ function TopicsLine({
       key: topic,
       topic: topic,
       inert: true,
-      style: CHIP_CAP
+      style: CHIP_STYLE
     })), counts && /*#__PURE__*/React.createElement("span", {
       style: COUNT_STYLE
     }, counts));
@@ -4333,7 +6041,7 @@ function TopicsLine({
   }, visible.map(topic => /*#__PURE__*/React.createElement(TopicChip, {
     key: topic,
     topic: topic,
-    style: CHIP_CAP
+    style: CHIP_STYLE
   })), counts && (onOpenReferences ? /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenReferences,
@@ -4688,10 +6396,21 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
      a feed card, the sound disc and nothing else; `"transport"` — a detail view,
      play/pause and a real timeline; `"play"` — the one card that draws play,
      because the device suppressed autoplay and nothing is going to start; and
-     `"none"` where the surface draws its own.
+     `"none"` where the surface draws its own. `fullscreen` rides through to the
+     transport for the one surface that has no fullscreen to offer — the
+     composer's cover preview, where the clip is not published yet and there is
+     no viewer to open.
    · THE COVER IS THE CLIP'S FACE WHEREVER THE CLIP ISN'T RUNNING (`resting`):
      first paint before autoplay, and every context where autoplay is suppressed
      — reduced motion, data saver. It never returns once playback has started.
+   · A CLIP NEED NOT HAVE ONE (jakob 2026-09-10). A vertical clip's default is
+     NO cover, so `poster` is then the clip's FIRST FRAME, cropped exactly as
+     the clip is — the same 4:5 centre-crop the frame takes, because a face
+     that stood at another shape would not be this clip's. Nothing here
+     branches on it: the tile is handed a still and shows it, and whether that
+     still was chosen or taken is an authoring fact. Where a clip yields no
+     frame at all, `poster` and `src` are both absent and the reserved region's
+     `label` stands — never a borrowed picture.
 
    The sound toggle shows the CURRENT state (`volume_up` = sound on) and its
    accessible name says what the tap will DO. A sensitive post veils the WHOLE
@@ -4803,7 +6522,8 @@ function MediaAttachment({
   playing = true,
   elapsed = "0:00",
   duration = "0:00",
-  progress = 0
+  progress = 0,
+  fullscreen = true
 }) {
   const [muted, setMuted] = useGlobalMute();
   const videoRef = React.useRef(null);
@@ -4892,6 +6612,7 @@ function MediaAttachment({
     duration: duration,
     progress: progress,
     muted: muted,
+    fullscreen: fullscreen,
     onToggleMute: () => setMuted(!muted)
   }));
 }
@@ -5273,6 +6994,11 @@ const REASONS = {
  * What is left around it is the skeleton, and the skeleton is the point: the
  * author, the timestamp, the thread position, the standing, the stance a reader
  * can still take. No record leaves the graph, and no removal is silent.
+ *
+ * `when` is the redaction's own moment (the contract's `redactedAt`), never
+ * the content's age, and it speaks the one age vocabulary every timestamp
+ * speaks (ruled 2026-09-09): the minutes/hours/days ladder to 30 days, the
+ * date past it.
  */
 function RedactedContent({
   reason = "illegal",
@@ -5316,7 +7042,7 @@ __ds_scope.RedactedContent = RedactedContent;
 
 // components/content/CommentCard.jsx
 try { (() => {
-const { Card, Button, ActorChip, PendingMarker, EditedMarker, LicenseTerms, LICENSE_MENU_LABEL, LICENSE_MENU_LABEL_SHOWN, StanceControl, OverflowMenu, Icon, NODE_GLYPHS, TopicsLine, MediaGallery, SensitiveVeil } = __ds_scope;
+const { Card, Button, ActorChip, PendingMarker, EditedMarker, LICENSE_MENU_LABEL, StanceControl, OverflowMenu, Icon, NODE_GLYPHS, TopicsLine, MediaGallery, SensitiveVeil } = __ds_scope;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -5365,25 +7091,24 @@ function CommentCard({
   onReply,
   onEdit,
   own = false,
+  attach = false,
   targetLabel = "this comment",
   target,
   targetKind = "post",
   onOpenTarget,
   actions,
   menuItems = [],
-  defaultShowLicense = false,
   topics = [],
   references = 0,
   onOpenReferences,
   children
 }) {
   // Same rule as PostCard: the license is a rare read, so it arrives from the
-  // menu rather than sitting on the comment, and it unfolds on the card itself
-  // rather than on a surface of its own. `defaultShowLicense` draws it unfolded.
-  const [showLicense, setShowLicense] = React.useState(defaultShowLicense);
+  // menu rather than sitting on the comment, and it comes up in a sheet over
+  // the thread rather than on the card.
   const items = license ? [{
-    label: showLicense ? LICENSE_MENU_LABEL_SHOWN : LICENSE_MENU_LABEL,
-    onSelect: () => setShowLicense(shown => !shown)
+    label: LICENSE_MENU_LABEL,
+    onSelect: () => {}
   }, ...menuItems] : menuItems;
   /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
      has no title to leave outside it, so what carries the informed choice is
@@ -5408,7 +7133,11 @@ function CommentCard({
       marginLeft: `${Math.min(depth, MAX_INDENT_DEPTH) * 12}px`,
       listStyle: "none"
     }
-  }, /*#__PURE__*/React.createElement(Card, null, target && onOpenTarget && /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement(Card, {
+    style: attach ? {
+      borderTopLeftRadius: 0
+    } : undefined
+  }, target && onOpenTarget && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenTarget,
     className: "cg-state cg-focus",
@@ -5473,8 +7202,6 @@ function CommentCard({
     topics: topics,
     references: references,
     onOpenReferences: onOpenReferences
-  }), license && showLicense && /*#__PURE__*/React.createElement(LicenseTerms, {
-    license: license
   }), edited && /*#__PURE__*/React.createElement(EditedMarker, null), pending && /*#__PURE__*/React.createElement(PendingMarker, null), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -5869,7 +7596,7 @@ __ds_scope.ShareButton = ShareButton;
 
 // components/content/PostCard.jsx
 try { (() => {
-const { Card, ActorChip, PendingMarker, EditedMarker, LicenseTerms, LICENSE_MENU_LABEL, LICENSE_MENU_LABEL_SHOWN, StanceControl, ExplainableNumber, MediaGallery, MediaViewer, RedactedContent, SensitiveScope, SensitiveVeil, OverflowMenu, ShareButton, Icon, TopicsLine } = __ds_scope;
+const { Card, ActorChip, PendingMarker, EditedMarker, LICENSE_MENU_LABEL, StanceControl, ExplainableNumber, MediaGallery, MediaViewer, RedactedContent, SensitiveScope, SensitiveVeil, OverflowMenu, ShareButton, Icon, TopicsLine } = __ds_scope;
 /* The post card of design.md §6 — "author (avatar, display name, handle,
    timestamp), optional title, optional description, body, media gallery, stance
    control", with the text-only, single-image, gallery, with-title and
@@ -5883,12 +7610,21 @@ const { Card, ActorChip, PendingMarker, EditedMarker, LicenseTerms, LICENSE_MENU
    below it as a byline — including on a media post, where every other product
    would put the picture first.
 
+   THE BODY IS WORDS XOR MEDIA. `docs/instances/post.md`: "A Post's body is words
+   or media, never both — words that belong beside a picture are the
+   description." So a media post carries NO `content`: the words beside the
+   picture ARE the description, and the card draws them under it. A text post's
+   body is `content`, with the description under it as its caption. One order for
+   both kinds — TITLE · BODY · DESCRIPTION — so the two shapes read as one card
+   re-proportioned rather than two layouts. Handed both (an impossible post), the
+   card draws the documented media reading and the `content` never appears: the
+   manifest is the body, and half a card is better than an invented one.
+
    A MEDIA POST IS THE SAME CARD, RE-PROPORTIONED. The media runs full-bleed to the
    card's edges and is the largest thing in it; the text around it is trimmed to
-   what orients the reader. Order: author · title · media · caption · markers ·
+   what orients the reader. Order: author · title · media · description · markers ·
    affordance row. The title stays ABOVE the media because it titles the thing —
-   below it, it reads as a caption and the caption reads as a second caption. The
-   body sits below, clamped, with an explicit opener.
+   below it, it reads as a caption and the caption reads as a second caption.
 
    The stance control sits OUTSIDE the link region: it acts, it does not navigate. */
 
@@ -5898,7 +7634,31 @@ const CLAMP = lines => ({
   WebkitBoxOrient: "vertical",
   overflow: "hidden"
 });
+
+/* THE DESCRIPTION IS TWO LINES in the feed, on both kinds of post. It is the
+   caption, not the body: enough to say what the thing is, never enough to
+   become the reading. */
+const DESCRIPTION_CLAMP_LINES = 2;
+
+/* THE TEXT BODY'S CEILING — a text post stands about as tall as a media post,
+   never taller, so a feed of both keeps one rhythm. Derived from the tokens
+   rather than chosen, and against the picture the reader actually sees: a 4:5
+   crop wants 447.5px at the card's 358px content width, but `--media-max-height`
+   caps it first — on the 390×844 board, 844 less the 44px safe area, the 64px
+   bottom bar and the 360px worst-case chrome leaves 376px.
+   `--text-body-medium--line-height` is 1.25rem = 20px, so floor(376 / 20) = 18
+   lines. Past that the body folds and `More` opens it. The detail view is the
+   read surface and clamps nothing. */
+const TEXT_BODY_CLAMP_LINES = 18;
+
+/* A static render cannot measure a paragraph, so the opener is offered on an
+   estimate from the same tokens: at `--text-body-medium` (0.875rem = 14px) the
+   sans averages about half an em to the glyph, so 358 / 7 ≈ 51 characters to
+   the line. A media post needs no estimate — its caption is clamped to two
+   lines and the opener always stands under it. */
+const CHARS_PER_LINE = 51;
 function PostCard({
+  attach = false,
   author,
   title,
   description,
@@ -5930,8 +7690,7 @@ function PostCard({
   sensitive,
   topics = [],
   references = 0,
-  menuItems = [],
-  defaultShowLicense = false
+  menuItems = []
 }) {
   const detail = variant === "detail";
   // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
@@ -5948,12 +7707,6 @@ function PostCard({
   // thread position, and the stance a reader can still take all survive, because
   // no record leaves the graph and no removal is silent.
   const hasMedia = !redacted && Array.isArray(media) && media.length > 0;
-  // The license is a term over downstream reuse, checked once in a hundred
-  // readings — so it is not on the initial view. It arrives when asked for, from
-  // the overflow menu, and stays until the reader is done with it. The reveal is
-  // a state of THIS card, never a surface of its own (readme §13, the menus
-  // round); `defaultShowLicense` is how a board draws it unfolded.
-  const [showLicense, setShowLicense] = React.useState(defaultShowLicense);
   // A media post's caption is clamped and openable in place. The SUMMARY title
   // clamps to one line (readme §13's collapse order: the title gives way before
   // media or the affordance row ever shrink); the detail title never clamps.
@@ -5963,10 +7716,14 @@ function PostCard({
   // looking at one picture.
   const [viewing, setViewing] = React.useState(null);
 
-  // The license rode the payload, so a redacted record has none to show.
+  // The license is a term over downstream reuse, checked once in a hundred
+  // readings — so it is not on the card at all. The menu's row opens it in a
+  // sheet over whatever surface the reader asked from (readme §13, the menus
+  // round), and the card's only part in it is carrying the row. The license
+  // rode the payload, so a redacted record has none to show.
   const items = license && !redacted ? [{
-    label: showLicense ? LICENSE_MENU_LABEL_SHOWN : LICENSE_MENU_LABEL,
-    onSelect: () => setShowLicense(shown => !shown)
+    label: LICENSE_MENU_LABEL,
+    onSelect: () => {}
   }, ...menuItems] : menuItems;
   const heading = title ? /*#__PURE__*/React.createElement("h2", {
     style: {
@@ -5980,11 +7737,19 @@ function PostCard({
       })
     }
   }, title) : null;
+
+  // WORDS XOR MEDIA: the picture is the body, so a media post draws no
+  // `content` even when a caller hands it one.
+  const words = hasMedia ? null : content;
   const descriptionStyle = {
     margin: 0,
     fontSize: "var(--text-body-medium)",
+    // The page ground sets `body-large` leading on everything unclassed, which
+    // on a two-line caption at body-medium reads as a gap, not a paragraph. The
+    // role's own line-height comes with the role.
+    lineHeight: "var(--text-body-medium--line-height)",
     color: "var(--text-secondary)",
-    ...(hasMedia && !open && !detail ? CLAMP(1) : null)
+    ...(!open && !detail ? CLAMP(DESCRIPTION_CLAMP_LINES) : null)
   };
   const contentStyle = {
     margin: 0,
@@ -5992,7 +7757,7 @@ function PostCard({
     lineHeight: detail ? "var(--text-body-large--line-height)" : "var(--text-body-medium--line-height)",
     ...(detail ? {
       whiteSpace: "pre-wrap"
-    } : CLAMP(hasMedia && !open ? 2 : 4))
+    } : open ? null : CLAMP(TEXT_BODY_CLAMP_LINES))
   };
   // THE VEIL WRAPS THE PARAGRAPH, never the text inside it: the clamp's
   // `overflow: hidden` then clips the TEXT before the blur applies, so the halo
@@ -6000,15 +7765,20 @@ function PostCard({
   const veiledParagraph = node => veil ? /*#__PURE__*/React.createElement(SensitiveVeil, {
     kind: "text"
   }, node) : node;
-  const caption = /*#__PURE__*/React.createElement(React.Fragment, null, description && veiledParagraph(/*#__PURE__*/React.createElement("p", {
-    style: descriptionStyle
-  }, description)), content && veiledParagraph(/*#__PURE__*/React.createElement("p", {
+  // BODY FIRST, DESCRIPTION UNDER IT, on both kinds. The 4px seam between them
+  // is the card's own gap: two fields, one visible join.
+  const caption = /*#__PURE__*/React.createElement(React.Fragment, null, words && veiledParagraph(/*#__PURE__*/React.createElement("p", {
     style: contentStyle
-  }, content)));
+  }, words)), description && veiledParagraph(/*#__PURE__*/React.createElement("p", {
+    style: descriptionStyle
+  }, description)));
 
   // Only where there is something folded away. "More" is a text control, not a
-  // link: it opens the text in place and never navigates.
-  const opener = hasMedia && !detail && (content || description) ? /*#__PURE__*/React.createElement("button", {
+  // link: it opens the text in place and never navigates. A media post's caption
+  // is clamped to two lines and always carries it; a text post's body has 18
+  // lines to fill first, so there the opener waits on the estimate above.
+  const folded = hasMedia ? Boolean(description) : words && words.length > TEXT_BODY_CLAMP_LINES * CHARS_PER_LINE || description && description.length > DESCRIPTION_CLAMP_LINES * CHARS_PER_LINE;
+  const opener = !detail && folded ? /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-expanded": open,
     onClick: () => setOpen(shown => !shown),
@@ -6105,9 +7875,7 @@ function PostCard({
     items: media,
     index: viewing,
     onClose: () => setViewing(null)
-  }), redacted ? /*#__PURE__*/React.createElement(RedactedContent, redacted === true ? {} : redacted) : linkedText, !redacted && opener, license && showLicense && !redacted && /*#__PURE__*/React.createElement(LicenseTerms, {
-    license: license
-  }), !redacted && /*#__PURE__*/React.createElement(TopicsLine, {
+  }), redacted ? /*#__PURE__*/React.createElement(RedactedContent, redacted === true ? {} : redacted) : linkedText, !redacted && opener, !redacted && /*#__PURE__*/React.createElement(TopicsLine, {
     topics: topics,
     references: references,
     onOpen: detail ? onOpenReferences ?? (() => {}) : undefined,
@@ -6159,182 +7927,449 @@ function PostCard({
     targetLabel: targetLabel,
     onShare: onShare
   }), actions));
-  return /*#__PURE__*/React.createElement(Card, null, veil ? /*#__PURE__*/React.createElement(SensitiveScope, null, body) : body);
+
+  /* `attach` squares the top-left corner so a row flag (TaggedRow) fuses with
+     the card instead of floating beside its curve (jakob's review, the tag
+     round). */
+  return /*#__PURE__*/React.createElement(Card, {
+    style: attach ? {
+      borderTopLeftRadius: 0
+    } : undefined
+  }, veil ? /*#__PURE__*/React.createElement(SensitiveScope, null, body) : body);
 }
 __ds_scope.PostCard = PostCard;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/PostCard.jsx", error: String((e && e.message) || e) }); }
 
-// components/content/ReferenceRow.jsx
+// components/content/TaggedRow.jsx
 try { (() => {
-const { Icon, NODE_GLYPHS, MonogramAvatar } = __ds_scope;
-/* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
-   result-row shape search reuses: EVERY row is leading mark · name · value, so
-   a heterogeneous list reads as one list.
+const { PendingMarker } = __ds_scope;
+/* One row of a tag's page (readme §13, the tag round): the claim that put this
+   content here, and then the content itself.
 
-   THE LEADING MARK SAYS THE KIND, without a word beside it. A person keeps
-   their avatar — people are circles everywhere in this system. Every other
-   kind is a 32px tile at the small rung: a media post wears its cover, a text
-   post the letter T (a tile, not a glyph — no icon set has "text post"), and
-   the rest carry their node-type glyph — proposal `how_to_vote`, item
-   `inventory_2`, campaign `campaign`, offer `sell`, chat `forum`, comment
-   `chat_bubble`. A topic's tile is the same # its chip wears. Silhouettes are
-   deliberately distinct: an item is a box, an offer the price tag.
+   THE PAIR BELONGS TO THE ROW, NOT THE CARD. `taggedContent` hands back
+   `{ node, relevance, confidence, pending }` (api-spec.md) — the node is the
+   post or the comment, and the pair is a fact about the TAG RECORD pointing at
+   it, not about the post. So the card is drawn by its own master, untouched,
+   and the claim sits above it. Neither `PostCard` nor `CommentCard` learns
+   anything about tags they did not already know, and no board that lists them
+   elsewhere moves a pixel.
 
-   THE VALUE is the pair the author signed on this act — set at compose (a
-   changeable default), shown here for any reader: a signed act is public
-   record. Right-aligned, `body-small`, never coloured. */
+   THE PAIR IS PLAIN (jakob's ruling, the tag round). A signed act is public
+   record, so it is simply shown — there is no reveal gesture here and none
+   anywhere else on a content surface: a chip's tap goes to the tag's page, and
+   what a node's own tags are worth is read in the tags-and-references sheet.
+   `formatTagPair`'s shape says which family this is — relevance signed over
+   [-1, +1], confidence unsigned over [0, 1].
 
-/** A node kind's mark, on any surface: avatar, cover, T, #, or the kind's
- *  glyph from the ONE semantic assignment (`NODE_GLYPHS`, the glyph atoms). */
-function NodeMark({
-  kind,
-  name,
-  src
+   "TAGGED" NEEDS NO NAME BESIDE IT. The page is titled by the tag, so
+   repeating it on every row is noise; the word says which act the numbers
+   belong to, and the numbers say what it claimed.
+
+   A CLAIM STILL IN FLIGHT SAYS SO, with the same marker every other
+   unsettled record wears.
+
+   THE CLAIM IS ATTACHED, NOT HOVERING (jakob's review, 2026-09-09, twice
+   refined): the line draws as a flag flush with the screen's left edge, zero
+   gap to the card, and the card squares its top-left corner under it
+   (`attach` on the card masters) — so flag and card fuse into one
+   folder-tab silhouette instead of a rounded card with a sticker floating
+   near its curve. A free-floating line between cards belonged to neither
+   neighbour. */
+
+function TaggedRow({
+  pair,
+  pending = false,
+  children
 }) {
-  if (kind === "person") return /*#__PURE__*/React.createElement(MonogramAvatar, {
-    name: name,
-    src: src,
-    size: "md"
-  });
-  const tile = {
-    height: "32px",
-    width: "32px",
-    flex: "none",
-    display: "grid",
-    placeItems: "center",
-    borderRadius: "var(--radius-small)",
-    background: "var(--surface-container-highest)",
-    color: "var(--text-secondary)",
-    overflow: "hidden"
-  };
-  if (kind === "post" && src) {
-    return /*#__PURE__*/React.createElement("span", {
-      style: tile,
-      "aria-hidden": "true"
-    }, /*#__PURE__*/React.createElement("img", {
-      src: src,
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      alignSelf: "flex-start",
+      gap: "var(--space-2)",
+      padding: "2px 10px",
+      background: "var(--surface-container-high)",
+      borderRadius: "var(--radius-small) var(--radius-small) 0 0",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      color: "var(--text-secondary)"
+    }
+  }, /*#__PURE__*/React.createElement("span", null, "Tagged"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      whiteSpace: "nowrap"
+    }
+  }, pair), pending && /*#__PURE__*/React.createElement(PendingMarker, null)), children);
+}
+__ds_scope.TaggedRow = TaggedRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/TaggedRow.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/ContentRow.jsx
+try { (() => {
+const { Icon, MonogramAvatar, PendingMarker, StanceValue } = __ds_scope;
+/* THE IDENTITY ROW — the card-lite line every list in this product is built
+   from: a 40px disc saying who or what, two lines of words saying which and
+   when, and whatever the list keeps on its trailing edge.
+
+   ONE MASTER, because the wallet's history, the campaigns list, the campaigns
+   door and the chronicle were four copies of one row, and four copies drift in
+   four directions — the door's glyph had grown 2px, the chronicle's inner gaps
+   had grown 1px and 2px, and nobody had decided any of it. The variants below
+   are the differences that are DESIGNED; everything else is now one value.
+
+   THE DISC LEADS, and what fills it is an order of precedence, not a choice:
+   a picture if there is one, else a monogram for a name, else a stance face,
+   else the glyph for the kind. It always sits in a 40px box that can carry a
+   badge, whether or not this row wants one — a badge that moved the words when
+   it appeared would make the same list two rhythms.
+
+   THE SECOND LINE IS ONE LINE, in every variant, ellipsized. A row in a list is
+   scanned, not read: the moment one row can be two lines tall, the reader loses
+   the vertical rhythm that lets them skim past nine of them to find the tenth.
+   Where the whole snippet matters, the row's destination is where it belongs. */
+
+const VARIANTS = {
+  /* The wallet's history. Its trailing edge is money, which is body-sized
+     because a figure is read, not glanced at, and quiet while it is pending. */
+  ledger: {
+    second: "label-small",
+    trailing: "body-medium",
+    loud: true,
+    disc: "container"
+  },
+  /* A campaign in a list. The disc is the campaign's cover — a TILE, because a
+     campaign is a thing with a face, not somebody with one. */
+  campaign: {
+    second: "label-small",
+    trailing: "body-medium",
+    loud: true,
+    disc: "container",
+    image: "tile"
+  },
+  /* A doorway into a section. The filled disc is deliberate: it is the one row
+     in the wallet that is an entrance rather than an entry, and the fill is what
+     says so without a word of chrome. */
+  door: {
+    second: "label-small",
+    trailing: "body-medium",
+    loud: true,
+    disc: "primary"
+  },
+  /* A record in the chronicle. Its second line is the act's own words, so it
+     takes body type rather than the label type a context line wears — and its
+     trailing edge is a TIME, which is a quiet fact rather than the row's point,
+     so it is the one variant whose trailing edge is not `loud`. */
+  chronicle: {
+    second: "body-medium",
+    trailing: "label-small",
+    loud: false,
+    disc: "container"
+  }
+};
+const TYPE = {
+  "label-small": {
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)"
+  },
+  "body-medium": {
+    fontSize: "var(--text-body-medium)",
+    lineHeight: "var(--text-body-medium--line-height)"
+  }
+};
+const TONES = {
+  container: {
+    background: "var(--surface-container-high)",
+    color: "var(--text-secondary)"
+  },
+  primary: {
+    background: "var(--primary)",
+    color: "var(--on-primary)"
+  }
+};
+function Disc({
+  image,
+  imageShape,
+  name,
+  face,
+  glyph,
+  tone
+}) {
+  if (image) {
+    return /*#__PURE__*/React.createElement("img", {
+      src: image,
       alt: "",
       style: {
-        height: "100%",
-        width: "100%",
-        objectFit: "cover"
+        width: "40px",
+        height: "40px",
+        borderRadius: imageShape === "tile" ? "var(--radius-small)" : "var(--radius-full)",
+        objectFit: "cover",
+        display: "block"
       }
-    }));
+    });
   }
-  const letter = kind === "topic" ? "#" : kind === "post" ? "T" : null;
+  if (name) return /*#__PURE__*/React.createElement(MonogramAvatar, {
+    name: name,
+    size: 40
+  });
   return /*#__PURE__*/React.createElement("span", {
     style: {
-      ...tile,
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-title-medium)",
-      fontWeight: "var(--text-title-medium--font-weight)"
-    },
-    "aria-hidden": "true"
-  }, letter ?? /*#__PURE__*/React.createElement(Icon, {
-    name: NODE_GLYPHS[kind],
-    size: 18
+      width: "40px",
+      height: "40px",
+      borderRadius: "var(--radius-full)",
+      ...(TONES[tone] ?? TONES.container),
+      display: "grid",
+      placeItems: "center"
+    }
+  }, face ? /*#__PURE__*/React.createElement(StanceValue, {
+    pDirected: face.pDirected,
+    pInterest: face.pInterest,
+    showPair: false
+  }) : /*#__PURE__*/React.createElement(Icon, {
+    name: glyph ?? "wallet",
+    size: 20
   }));
 }
-
-/* `sub` is the INDIRECT-HIT line (readme §13, the search rulings): a scoped
-   query that matched through an act's target says both halves — the comment
-   row reads "on <post title>", the offer row "on <item name>". Without it an
-   indirect hit is indistinguishable from a mishit. `value` is the row's right
-   edge: the signed pair in the references sheet, the viewer-relative rank in
-   ranked search results, the age past the seam. (`pair` remains as its old
-   name.) */
-function ReferenceRow({
-  kind = "post",
-  name,
-  sub,
-  src,
-  pair,
-  value,
-  rank,
+function ContentRow({
+  variant = "ledger",
+  title,
+  titleAside,
+  second,
   trailing,
+  pending = false,
+  image,
+  name,
+  face,
+  glyph,
+  direction,
+  chevron = true,
+  inert = false,
   onOpen
 }) {
-  const edge = value ?? pair;
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onOpen,
-    className: "cg-state cg-focus",
+  const shape = VARIANTS[variant] ?? VARIANTS.ledger;
+  /* A row is a control unless it is declared not to be. `inert` is the
+     chronicle's case: a record of something that happened, which has no
+     destination — the same card, with nothing to press. */
+  const Tag = inert ? "div" : "button";
+  const ellipsis = {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap"
+  };
+  const heading = /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      ...ellipsis
+    }
+  }, title);
+  return /*#__PURE__*/React.createElement(Tag, {
+    type: inert ? undefined : "button",
+    onClick: inert ? undefined : onOpen,
+    className: inert ? undefined : "cg-state cg-focus",
     style: {
       display: "flex",
       alignItems: "center",
       gap: "var(--space-3)",
-      minHeight: "var(--touch-target-min)",
       width: "100%",
       border: 0,
-      background: "none",
-      padding: "var(--space-1) var(--space-6)",
-      cursor: "pointer",
+      borderRadius: "var(--radius-medium)",
+      background: "var(--surface-card)",
+      padding: "var(--space-3)",
+      cursor: onOpen ? "pointer" : "default",
       fontFamily: "var(--font-sans)",
       color: "var(--on-surface)",
-      textAlign: "left"
+      textAlign: "left",
+      boxSizing: "border-box"
     }
-  }, /*#__PURE__*/React.createElement(NodeMark, {
-    kind: kind,
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "relative",
+      flex: "none",
+      width: "40px",
+      height: "40px"
+    }
+  }, /*#__PURE__*/React.createElement(Disc, {
+    image: image,
+    imageShape: shape.image,
     name: name,
-    src: src
-  }), /*#__PURE__*/React.createElement("span", {
+    face: face,
+    glyph: glyph,
+    tone: shape.disc
+  }), direction && /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      right: "-3px",
+      bottom: "-3px",
+      width: "18px",
+      height: "18px",
+      borderRadius: "var(--radius-full)",
+      background: "var(--primary)",
+      color: "var(--on-primary)",
+      display: "grid",
+      placeItems: "center",
+      border: "2px solid var(--surface)",
+      boxSizing: "content-box",
+      transform: direction === "in" ? "rotate(180deg)" : undefined
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "arrow_outward",
+    size: 11
+  }))), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
       minWidth: 0,
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      gap: "1px"
+    }
+  }, titleAside ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: "var(--space-2)",
+      minWidth: 0
+    }
+  }, heading, /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...TYPE["label-small"],
+      color: "var(--text-secondary)",
+      flex: "none"
+    }
+  }, titleAside)) : heading, second && /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...TYPE[shape.second],
+      color: "var(--text-secondary)",
+      ...ellipsis
+    }
+  }, second)), (trailing || pending) && /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: "none",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-end",
+      gap: "2px"
     }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      fontSize: "var(--text-body-medium)",
-      lineHeight: "var(--text-body-medium--line-height)",
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis"
+      ...TYPE[shape.trailing],
+      color: pending || !shape.loud ? "var(--text-secondary)" : "var(--on-surface)"
     }
-  }, name), sub && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-small)",
-      lineHeight: "var(--text-body-small--line-height)",
-      color: "var(--text-secondary)",
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis"
-    }
-  }, sub)), trailing ? /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
+  }, trailing), pending && /*#__PURE__*/React.createElement(PendingMarker, null)), chevron && /*#__PURE__*/React.createElement("span", {
     style: {
       flex: "none",
       display: "inline-flex",
       color: "var(--text-secondary)"
-    }
-  }, trailing) : rank ? /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: "none",
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "4px",
-      fontSize: "var(--text-body-small)",
-      lineHeight: "var(--text-body-small--line-height)",
-      color: "var(--text-secondary)",
-      whiteSpace: "nowrap"
-    }
+    },
+    "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(Icon, {
-    name: "graph",
-    size: 14
-  }), rank) : edge && /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: "none",
-      fontSize: "var(--text-body-small)",
-      lineHeight: "var(--text-body-small--line-height)",
-      color: "var(--text-secondary)",
-      whiteSpace: "nowrap"
-    }
-  }, edge));
+    name: "chevron_right",
+    size: 18
+  })));
 }
-__ds_scope.NodeMark = NodeMark;
-__ds_scope.ReferenceRow = ReferenceRow;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/ReferenceRow.jsx", error: String((e && e.message) || e) }); }
+__ds_scope.ContentRow = ContentRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/ContentRow.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/FactRow.jsx
+try { (() => {
+const { InlineAction } = __ds_scope;
+/* A FACT ROW: one hairline line reading label · value, with an optional action
+   at the end of it. The wizard's "What you sign" list and the wallet's campaign
+   facts are the same row — they disagree only about which half is the quiet
+   one, and that disagreement is the variant.
+
+   `seal` is the list a reader checks before signing. The LABEL is the strong
+   half, because what they read down is the names of the things they are about
+   to put their name on; the value is the current answer, and it goes quiet. Its
+   rules ENCLOSE — a hairline above every row and one below the last — so the
+   block reads as a bounded list standing on the page's own ground.
+
+   `ledger` is a list of facts about something already made. There the label is
+   the question and the VALUE is the answer, so the value keeps `on-surface` and
+   right-aligns while the label goes quiet. Its rules SEPARATE — under every row
+   but the last — because the block sits inside a card that already bounds it.
+
+   THE ROW HOLDS ONE LINE, which is why the action slot draws an `InlineAction`
+   and never a `Button`: the pill's 64px minimum width is exactly what wraps a
+   row ruled to stay on one.
+
+   The 44px minimum is the row's own, not a tap target — the row is not
+   pressable; the word at its end is, and that word brings its own 48px. */
+
+const EMPHASIS = {
+  seal: {
+    label: {
+      whiteSpace: "nowrap"
+    },
+    value: {
+      color: "var(--text-secondary)"
+    },
+    /* A node in the seal's value slot draws its own line — the stance readout
+       is a face and a pair, not a sentence — so only a string gets the voice. */
+    wrapNodes: false,
+    border: last => ({
+      borderTop: "1px solid var(--border-hairline)",
+      borderBottom: last ? "1px solid var(--border-hairline)" : undefined
+    })
+  },
+  ledger: {
+    label: {
+      color: "var(--text-secondary)"
+    },
+    value: {
+      textAlign: "right"
+    },
+    wrapNodes: true,
+    border: last => ({
+      borderBottom: last ? undefined : "1px solid var(--border-hairline)"
+    })
+  }
+};
+function FactRow({
+  label,
+  value,
+  action,
+  onAction,
+  emphasis = "seal",
+  last = false
+}) {
+  const shape = EMPHASIS[emphasis] ?? EMPHASIS.seal;
+  const type = {
+    fontSize: "var(--text-body-medium)",
+    lineHeight: "var(--text-body-medium--line-height)"
+  };
+  const wrapped = value != null && (typeof value === "string" || shape.wrapNodes) ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...type,
+      ...shape.value
+    }
+  }, value) : value;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      minHeight: "44px",
+      ...shape.border(last)
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      ...type,
+      ...shape.label
+    }
+  }, label), wrapped, typeof action === "string" ? /*#__PURE__*/React.createElement(InlineAction, {
+    onClick: onAction
+  }, action) : action);
+}
+__ds_scope.FactRow = FactRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/FactRow.jsx", error: String((e && e.message) || e) }); }
 
 // components/core/MoneyFigure.jsx
 try { (() => {
@@ -6446,6 +8481,479 @@ __ds_scope.CgtMark = CgtMark;
 __ds_scope.MoneyFigure = MoneyFigure;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/MoneyFigure.jsx", error: String((e && e.message) || e) }); }
 
+// components/core/QuietNote.jsx
+try { (() => {
+/* The quiet note (item 17, the conformance round): one line in the smallest
+   type the system has, telling the reader something true about the surface
+   they are standing on — what it is ("Your comment on 'The long way home'"),
+   how it works ("Words first — pictures can join them"), or what a gesture
+   does ("Drag to move, pinch to zoom").
+
+   IT NEVER ASKS FOR ANYTHING. No action, no error, no warning: it is a fact
+   offered on the way past, and the moment a line needs the reader to do
+   something it stops being this and becomes a button, a hint under a field, or
+   `UploadErrorLine`. That is why it carries no colour of its own beyond
+   `text-secondary` — a note in `--error` is not a note.
+
+   IT SITS WITH WHAT IT DESCRIBES and carries no spacing of its own: `margin`
+   is zeroed and the column it lives in owns the gap. The crop boards put it
+   under the viewport, the seals above the button, the reply composers above
+   the foot — one component, because on all of them it is the same small true
+   line, and eighteen copies of a type ramp is how a type ramp drifts.
+
+   NEAR-TWINS ARE DELIBERATELY NOT THIS ONE. The lines that centre themselves,
+   carry a board's own padding, or ride inline inside a row are that board's,
+   and folding a `textAlign` or a `padding` prop in here would make this the
+   place layout decisions get made. */
+
+function QuietNote({
+  children
+}) {
+  return /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, children);
+}
+__ds_scope.QuietNote = QuietNote;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/QuietNote.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/QuotedRow.jsx
+try { (() => {
+const { MonogramAvatar } = __ds_scope;
+/* THE THING BEING ANSWERED, held above the answer. Every reply composer opens
+   with it: whose post this is and how it starts, on a tone of its own so the
+   words the reader is about to type are visibly not part of it.
+
+   It is CONTAINED and it is INERT. Contained, because the composer's own body
+   sits on the page's ground with no box at all — the box is the whole signal
+   that this block is quoted rather than written. Inert, because the reader is
+   already inside the thing it names: a row that navigated away from a composer
+   holding unsent words would be a trap, and there is nowhere for it to go.
+
+   The snippet ellipsizes and the title does not. The title is a name and a
+   handle — losing its end loses who — while the snippet is only a taste, and
+   one line of it is the point. That is why the column carries no gap: title and
+   snippet are one two-line address, not two facts. */
+
+function QuotedRow({
+  title,
+  snippet,
+  name,
+  src
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      minHeight: "56px",
+      padding: "var(--space-2) var(--space-3)",
+      borderRadius: "var(--radius-small)",
+      background: "var(--surface-container-highest)"
+    }
+  }, /*#__PURE__*/React.createElement(MonogramAvatar, {
+    name: name,
+    size: 32,
+    src: src
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, title), snippet && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      color: "var(--text-secondary)",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }
+  }, snippet)));
+}
+__ds_scope.QuotedRow = QuotedRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/QuotedRow.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/SectionLabel.jsx
+try { (() => {
+/* A quiet section caption (item 17, the conformance round): the small
+   secondary word that names a group on a sectioned surface — the references
+   sheet's groups, Explore's recents.
+
+   IT IS A CAPTION, NOT A HEADING. It carries no heading level and no weight of
+   its own beyond `label-small`: what it names is already visible underneath
+   it, and the label's whole job is to be findable while scanning past. A
+   surface whose sections need real headings has outgrown this.
+
+   ITS PADDING IS ASYMMETRIC ON PURPOSE — 12 above, 4 below — so the label sits
+   with the group it opens rather than floating between two of them. It carries
+   the screen gutter itself, because it is placed in the scroll column beside
+   full-bleed rows that carry their own.
+
+   A NEAR-TWIN LIVES ON THE MONEY SPEC BOARD and is deliberately not this one:
+   that board's label differs in padding, and a spec board's job is to draw a
+   specimen, not to consume the system. */
+
+function SectionLabel({
+  children
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "block",
+      padding: "12px 24px 4px",
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      fontWeight: "var(--text-label-small--font-weight)",
+      letterSpacing: "var(--text-label-small--letter-spacing, 0.5px)",
+      color: "var(--text-secondary)"
+    }
+  }, children);
+}
+__ds_scope.SectionLabel = SectionLabel;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/SectionLabel.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/SettingsRow.jsx
+try { (() => {
+const { Icon, QuietNote } = __ds_scope;
+/* THE SETTINGS ROW AND ITS GROUP (the settings round) — one anatomy every
+   setting follows, so a page of them reads as a page rather than as a stack of
+   cards that each invented a layout.
+
+   THE GROUP IS THE UNIT, not the row. A caption names it, a filled card holds
+   its rows, and a footnote under the card carries whatever the group has to
+   explain. That split is what keeps a row short: the row says what this setting
+   is and where it stands, the footnote says the thing the reader needs once and
+   never again. A sentence of explanation inside every row is how a settings
+   page becomes a wall.
+
+   THE CAPTION IS A REAL HEADING drawn quietly — `title-small` on
+   `text-secondary`, sentence case, sitting above the card rather than inside
+   it. `SectionLabel` is deliberately not reused: it says a surface whose
+   sections need real headings has outgrown it, and this one has — these
+   sections are the page's structure and an assistive reader navigates by them.
+
+   ROWS ARE SEPARATED BY A HAIRLINE, INSET TO THE ROW'S OWN PADDING, and never
+   after the last. Inside one container the rows need a boundary; between
+   containers the gap already is one. The inset is what says the line divides
+   rows rather than cutting the card.
+
+   THE TRAILING EDGE IS THE VARIANT, and there are four:
+
+   - a SWITCH, for something that is on or off and takes effect the moment it is
+     pressed. The whole row is the switch — the label is its label, so the row
+     is one target announced once, and the knob moves as well as changing
+     colour, because colour alone is not a state.
+   - a VALUE and a chevron, for a choice made somewhere else. The value is the
+     current answer in the reader's own words and the chevron means one thing
+     only: this opens another surface. A row that shows a value and opens
+     nothing is a fact, not a setting.
+   - a chevron ALONE, for a row that only goes somewhere.
+   - a NODE, for a row that carries its own control — the sessions list, whose
+     rows are things with an action each rather than settings. Such a row is
+     `inert`: the row is not the target, the word at its end is.
+
+   A ROW MAY ALSO BE A CHOICE — `selected` draws the leading radio one of a
+   group wears. The dot is `ComposeLicense`'s, to the pixel, so the license
+   sheet and a settings choice are visibly the same question asked twice.
+
+   THE SECOND LINE SHOWS STATUS, NOT DESCRIPTION. "Last used 2 days ago" earns
+   its line; "lets you choose how you take a stance" restates the label. The
+   exception is a switch, where the line has to say what turning it on does,
+   because the label alone cannot.
+
+   A `bare` GROUP DROPS THE CARD, for the one case that earns it: a group whose
+   whole content is a control that draws its own container. A segmented pill
+   inside a filled card is a bordered box on a filled surface — two containers
+   saying the same thing a few pixels apart. Only the fill goes: the heading and
+   the footnote keep their inset, so a page of groups keeps one left edge for
+   its words and another for its containers.
+
+   AN ACTION ROW IS A ROW, NOT A BUTTON DROPPED IN A CARD. `action` puts the
+   label on `primary` and drops the chevron: Sign out, Sign out everywhere else.
+   It is not `error`-coloured — `error` is for failure only (readme §4), and
+   leaving is not a failure. */
+
+const LABEL_TYPE = {
+  fontSize: "var(--text-label-large)",
+  lineHeight: "var(--text-label-large--line-height)",
+  fontWeight: "var(--text-label-large--font-weight)",
+  letterSpacing: "var(--text-label-large--letter-spacing)"
+};
+const STATUS_TYPE = {
+  fontSize: "var(--text-body-small)",
+  lineHeight: "var(--text-body-small--line-height)",
+  letterSpacing: "var(--text-body-small--letter-spacing)",
+  color: "var(--text-secondary)"
+};
+const VALUE_TYPE = {
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  letterSpacing: "var(--text-body-medium--letter-spacing)",
+  color: "var(--text-secondary)"
+};
+
+/* The house switch. Drawn once on the sensitive sheet and a component from the
+   moment a second surface wanted one — the system's own rule about a piece
+   appearing twice. 44×24 with an 18px knob, the sheet's geometry kept: M3's
+   52×32 track carries a 2px outline, and §4 rules that nothing in this system
+   does. Off is the hairline `outline` a pressable control wears; on is
+   `primary`, and the knob travels, so the state is never colour alone. */
+function Switch({
+  checked = false,
+  ariaLabel,
+  onChange,
+  decorative = false
+}) {
+  const Tag = decorative ? "span" : "button";
+  return /*#__PURE__*/React.createElement(Tag, {
+    type: decorative ? undefined : "button",
+    role: decorative ? undefined : "switch",
+    "aria-checked": decorative ? undefined : checked ? "true" : "false",
+    "aria-label": decorative ? undefined : ariaLabel,
+    "aria-hidden": decorative ? "true" : undefined,
+    onClick: decorative ? undefined : onChange,
+    className: decorative ? undefined : "cg-state cg-focus cg-hit",
+    style: {
+      position: "relative",
+      width: 44,
+      height: 24,
+      flex: "none",
+      border: checked ? 0 : "1px solid var(--border-field)",
+      boxSizing: checked ? undefined : "border-box",
+      padding: 0,
+      borderRadius: "var(--radius-full)",
+      background: checked ? "var(--primary)" : "transparent",
+      cursor: decorative ? undefined : "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      [checked ? "right" : "left"]: 3,
+      top: 3,
+      width: 18,
+      height: 18,
+      borderRadius: "var(--radius-full)",
+      background: checked ? "var(--on-primary)" : "var(--border-field)"
+    }
+  }));
+}
+
+/* The choice dot — `ComposeLicense`'s radio, drawn from the same values so the
+   two surfaces cannot drift. */
+function ChoiceDot({
+  selected
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      width: 18,
+      height: 18,
+      flex: "none",
+      boxSizing: "border-box",
+      borderRadius: "var(--radius-full)",
+      border: selected ? "5px solid var(--primary)" : "1px solid var(--border-field)"
+    }
+  });
+}
+const ROW_BOX = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-4)",
+  width: "100%",
+  minHeight: 56,
+  padding: "var(--space-2) var(--space-4)",
+  boxSizing: "border-box",
+  border: 0,
+  background: "transparent",
+  textAlign: "left",
+  fontFamily: "var(--font-sans)",
+  color: "var(--on-surface)"
+};
+function SettingsRow({
+  label,
+  status,
+  value,
+  trailing,
+  checked,
+  selected,
+  name,
+  action = false,
+  chevron,
+  inert = false,
+  onOpen
+}) {
+  const isSwitch = checked !== undefined;
+  const isChoice = selected !== undefined;
+  const showChevron = chevron ?? (!isSwitch && !isChoice && !action && !trailing && !inert);
+  const words = /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      display: "flex",
+      flexDirection: "column",
+      gap: 2
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...LABEL_TYPE,
+      color: action ? "var(--primary)" : undefined
+    }
+  }, label), status && /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...STATUS_TYPE,
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    }
+  }, status));
+  const tail = /*#__PURE__*/React.createElement(React.Fragment, null, value !== undefined && /*#__PURE__*/React.createElement("span", {
+    style: {
+      ...VALUE_TYPE,
+      flex: "none"
+    }
+  }, value), trailing, isSwitch && /*#__PURE__*/React.createElement(Switch, {
+    checked: checked,
+    decorative: true
+  }), showChevron && /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      flex: "none",
+      display: "inline-flex",
+      color: "var(--text-secondary)"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "chevron_right",
+    size: 18
+  })));
+
+  /* A choice row is a real radio with the drawn dot beside it, the way
+     `Checkbox` and the license sheet build theirs: the input carries the
+     semantics and the group, the label carries the words and the target. */
+  if (isChoice) {
+    return /*#__PURE__*/React.createElement("label", {
+      className: "cg-state cg-focus",
+      style: {
+        ...ROW_BOX,
+        position: "relative",
+        cursor: "pointer"
+      }
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "radio",
+      name: name,
+      defaultChecked: selected,
+      style: {
+        position: "absolute",
+        opacity: 0,
+        width: "1px",
+        height: "1px",
+        margin: 0
+      }
+    }), /*#__PURE__*/React.createElement(ChoiceDot, {
+      selected: selected
+    }), words);
+  }
+  if (isSwitch) {
+    return /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      role: "switch",
+      "aria-checked": checked ? "true" : "false",
+      onClick: onOpen,
+      className: "cg-state cg-focus",
+      style: {
+        ...ROW_BOX,
+        position: "relative",
+        cursor: "pointer"
+      }
+    }, words, tail);
+  }
+  if (inert) {
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        ...ROW_BOX,
+        position: "relative"
+      }
+    }, words, tail);
+  }
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpen,
+    className: "cg-state cg-focus",
+    style: {
+      ...ROW_BOX,
+      position: "relative",
+      cursor: "pointer"
+    }
+  }, words, tail);
+}
+function SettingsGroup({
+  label,
+  footnote,
+  children,
+  ariaLabel,
+  bare = false
+}) {
+  const rows = React.Children.toArray(children).filter(Boolean);
+  return /*#__PURE__*/React.createElement("section", {
+    "aria-label": label ? undefined : ariaLabel,
+    style: {
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, label && /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: "0 0 8px",
+      padding: "0 var(--space-4)",
+      fontSize: "var(--text-title-small)",
+      lineHeight: "var(--text-title-small--line-height)",
+      fontWeight: "var(--text-title-small--font-weight)",
+      letterSpacing: "var(--text-title-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, label), /*#__PURE__*/React.createElement("div", {
+    style: bare ? {
+      display: "flex",
+      flexDirection: "column"
+    } : {
+      display: "flex",
+      flexDirection: "column",
+      borderRadius: "var(--radius-medium)",
+      background: "var(--surface-card)",
+      color: "var(--on-surface)",
+      overflow: "hidden"
+    }
+  }, rows.map((row, index) => /*#__PURE__*/React.createElement(React.Fragment, {
+    key: index
+  }, index > 0 && /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      height: 1,
+      marginLeft: "var(--space-4)",
+      background: "var(--border-hairline)"
+    }
+  }), row))), footnote && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "8px var(--space-4) 0"
+    }
+  }, /*#__PURE__*/React.createElement(QuietNote, null, footnote)));
+}
+__ds_scope.Switch = Switch;
+__ds_scope.SettingsRow = SettingsRow;
+__ds_scope.SettingsGroup = SettingsGroup;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/SettingsRow.jsx", error: String((e && e.message) || e) }); }
+
 // components/forms/Checkbox.jsx
 try { (() => {
 const { Icon } = __ds_scope;
@@ -6531,10 +9039,16 @@ const { BUTTON_CLASS, Icon } = __ds_scope;
    in this system never wears one. The state lives in the accessible name, which
    says what the tap will DO ("Show password"), not what is on screen.
 
-   `error` mirrors TextField's Material 3 error state, since this component
-   duplicates TextField's field markup rather than composing it: the outline
-   and label switch to `--error`, and a body-small supporting line in
-   `--error` renders below the field carrying the message verbatim. */
+   `hint` and `error` mirror TextField's supporting-text slot, since this
+   component duplicates TextField's field markup rather than composing it: one
+   body-small line under the field, `text-secondary` for what the field will
+   accept and `--error` for the message when it is refused — the error replacing
+   the hint, never joining it, and taking the outline and the label with it.
+
+   The line is wired to the input exactly as `TextField` wires its own —
+   `aria-describedby` always, `aria-invalid` and `role="alert"` in the error
+   state — because duplicating the markup must not mean duplicating it minus
+   the part that makes the message reach anyone. */
 
 function PasswordField({
   label,
@@ -6542,78 +9056,91 @@ function PasswordField({
   onChange,
   autoComplete = "current-password",
   id,
+  hint,
   error
 }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
+  const supportId = `${fieldId}-support`;
   const [visible, setVisible] = React.useState(false);
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "var(--space-1)"
-    }
-  }, /*#__PURE__*/React.createElement("label", {
-    htmlFor: fieldId,
-    style: {
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      letterSpacing: "var(--text-label-large--letter-spacing)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      color: error ? "var(--error)" : undefined
-    }
-  }, label), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: "var(--space-2)",
-      alignItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement("input", {
-    id: fieldId,
-    type: visible ? "text" : "password",
-    value: value,
-    autoComplete: autoComplete,
-    onChange: event => onChange && onChange(event.target.value),
-    style: {
-      flex: 1,
-      minWidth: 0,
-      borderRadius: "var(--radius-extra-small)",
-      border: error ? "1px solid var(--error)" : "1px solid var(--border-field)",
-      background: "transparent",
-      color: "var(--on-surface)",
-      padding: "8px 12px",
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-body-large)"
-    }
-  }), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": visible ? "Hide password" : "Show password",
-    "aria-pressed": visible,
-    onClick: () => setVisible(shown => !shown),
-    className: BUTTON_CLASS,
-    style: {
-      flex: "none",
-      width: "var(--touch-target-min)",
-      height: "var(--touch-target-min)",
-      display: "grid",
-      placeItems: "center",
-      border: "none",
-      background: "transparent",
-      borderRadius: "var(--radius-full)",
-      color: "var(--text-secondary)",
-      cursor: "pointer",
-      padding: 0
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: visible ? "visibility_off" : "visibility"
-  }))), error && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-small)",
-      lineHeight: "var(--text-body-small--line-height)",
-      letterSpacing: "var(--text-body-small--letter-spacing)",
-      color: "var(--error)"
-    }
-  }, error));
+  return (
+    /*#__PURE__*/
+    // Same reasoning as TextField's own `data-field`: a replaced element
+    // cannot host the flow badge's ::after, so the badge names the field as a
+    // whole (jakob's ruling A9, backlog item 40).
+    React.createElement("div", {
+      "data-field": label,
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--space-1)"
+      }
+    }, /*#__PURE__*/React.createElement("label", {
+      htmlFor: fieldId,
+      style: {
+        fontSize: "var(--text-label-large)",
+        lineHeight: "var(--text-label-large--line-height)",
+        letterSpacing: "var(--text-label-large--letter-spacing)",
+        fontWeight: "var(--text-label-large--font-weight)",
+        color: error ? "var(--error)" : undefined
+      }
+    }, label), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: "var(--space-2)",
+        alignItems: "center"
+      }
+    }, /*#__PURE__*/React.createElement("input", {
+      id: fieldId,
+      type: visible ? "text" : "password",
+      value: value,
+      autoComplete: autoComplete,
+      "aria-describedby": error || hint ? supportId : undefined,
+      "aria-invalid": error ? "true" : undefined,
+      onChange: event => onChange && onChange(event.target.value),
+      style: {
+        flex: 1,
+        minWidth: 0,
+        borderRadius: "var(--radius-extra-small)",
+        border: error ? "1px solid var(--error)" : "1px solid var(--border-field)",
+        background: "transparent",
+        color: "var(--on-surface)",
+        padding: "8px 12px",
+        fontFamily: "var(--font-sans)",
+        fontSize: "var(--text-body-large)"
+      }
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      "aria-label": visible ? "Hide password" : "Show password",
+      "aria-pressed": visible,
+      onClick: () => setVisible(shown => !shown),
+      className: BUTTON_CLASS,
+      style: {
+        flex: "none",
+        width: "var(--touch-target-min)",
+        height: "var(--touch-target-min)",
+        display: "grid",
+        placeItems: "center",
+        border: "none",
+        background: "transparent",
+        borderRadius: "var(--radius-full)",
+        color: "var(--text-secondary)",
+        cursor: "pointer",
+        padding: 0
+      }
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: visible ? "visibility_off" : "visibility"
+    }))), (error || hint) && /*#__PURE__*/React.createElement("span", {
+      id: supportId,
+      role: error ? "alert" : undefined,
+      style: {
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        letterSpacing: "var(--text-body-small--letter-spacing)",
+        color: error ? "var(--error)" : "var(--text-secondary)"
+      }
+    }, error || hint))
+  );
 }
 __ds_scope.PasswordField = PasswordField;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/PasswordField.jsx", error: String((e && e.message) || e) }); }
@@ -6637,19 +9164,34 @@ const { Button, TextField } = __ds_scope;
    It draws NO BOX of its own — it belongs inside a Card, and a bordered box on a
    filled card is a second surface saying the same thing twice.
 
-   `error` mirrors TextField's anatomy: this component draws its own confirm
-   field rather than composing TextField, so the M3 error state needed its
-   own way in. Forwarded verbatim to the confirm field. */
+   THE MISMATCH IS A DIVERGED PREFIX, and the two halves of it are owned apart:
+   the surface words the line through `error`, the master decides the moment it
+   appears. That moment is the first character the typed text no longer shares
+   with the code — read the way `matches` reads, whitespace stripped and folded
+   to upper case. An empty field says nothing and a correct partial says
+   nothing, because a partial is still on its way to being right; a wrong paste
+   or a mistyped character says so at once, because a prefix that has diverged
+   can never become the code. The recovery gate is where the readme's
+   on-submit timing gives way (§13, the input-error round): the confirm button
+   never enables on a diverged prefix, so a signal held until submit is a signal
+   that never comes. `error` reaches TextField's own M3 error state through the
+   confirm field the master owns; `defaultTypedBack` seeds that field, which is
+   how a board draws the diverged state at rest. */
 
 function RecoveryCode({
   code,
   explainer,
   onConfirmed,
-  error
+  error,
+  defaultTypedBack = ""
 }) {
-  const [typedBack, setTypedBack] = React.useState("");
+  const [typedBack, setTypedBack] = React.useState(defaultTypedBack);
   const [copyFailed, setCopyFailed] = React.useState(false);
-  const matches = typedBack.replace(/\s+/g, "").toUpperCase() === code.replace(/\s+/g, "").toUpperCase();
+  const read = text => text.replace(/\s+/g, "").toUpperCase();
+  const typed = read(typedBack);
+  const target = read(code);
+  const matches = typed === target;
+  const diverged = typed.length > 0 && !target.startsWith(typed);
   const onCopy = async () => {
     try {
       await navigator.clipboard.writeText(code);
@@ -6689,7 +9231,7 @@ function RecoveryCode({
     mono: true,
     value: typedBack,
     onChange: setTypedBack,
-    error: error
+    error: diverged ? error : undefined
   }), /*#__PURE__*/React.createElement(Button, {
     size: "sm",
     selfStart: true,
@@ -6890,12 +9432,15 @@ try { (() => {
    glyphs do: a panel behind the words would cover the frame they sit on.
 
    The author's face is NOT here — it is the rail's first item, because people
-   lead in this product and the rail is where the acts on a person begin. */
+   lead in this product and the rail is where the acts on a person begin.
+
+   THE WORDS ARE THE DESCRIPTION, never a body: a clip post's body is its media,
+   so the words beside it are the caption (post.md's words-XOR-media). */
 
 function ReelCaption({
   handle,
   title,
-  content,
+  description,
   bottom = 86,
   onMore
 }) {
@@ -6923,7 +9468,7 @@ function ReelCaption({
       lineHeight: "var(--text-title-small--line-height)",
       fontWeight: "var(--text-title-small--font-weight)"
     }
-  }, title), content && /*#__PURE__*/React.createElement("span", {
+  }, title), description && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-body-small)",
       display: "-webkit-box",
@@ -6931,7 +9476,7 @@ function ReelCaption({
       WebkitBoxOrient: "vertical",
       overflow: "hidden"
     }
-  }, content), content && /*#__PURE__*/React.createElement("button", {
+  }, description), description && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onMore ?? (() => {}),
     className: "cg-state cg-focus",
@@ -7073,18 +9618,24 @@ __ds_scope.ReelRail = ReelRail;
 // components/navigation/BorrowedViewBand.jsx
 try { (() => {
 const { MonogramAvatar, buttonStyle, BUTTON_CLASS } = __ds_scope;
-/* The borrowed-view band (readme §13). A guest or applicant feed is ranked
-   from a borrowed vantage point — the inviter's for an invite-link arrival,
-   the genesis moderator's for a bare one, and still the inviter's through the
-   applicant days — because a viewer with no outgoing stances has no view of
-   their own. The borrowed view is ALWAYS named, and this band is the naming:
-   it rides the collapsing top in place of the guest notice (which it
-   subsumes), says whose view this is, and carries the one sign-in-or-join
-   entry. The label is what makes borrowed ranking honest (§9); it exposes
-   nothing the public record does not already carry.
+/* The borrowed-view band (readme §13). A guest or applicant feed shows a
+   borrowed vantage point, because a viewer with no outgoing stances has no
+   view of their own. The vantage resolves to the most specific actor the
+   arrival carries — the inviter's for an invite-link visitor, their own
+   inviter's for an applicant, and the genesis moderator's for a bare arrival,
+   strictly as the fallback. The borrowed view is ALWAYS named, and this band
+   is the naming: it rides the collapsing top in place of the guest notice
+   (which it subsumes), says whose view this is, and carries the one
+   sign-in-or-join entry. The label is what makes the borrowed view honest
+   (§9); it exposes nothing the public record does not already carry.
 
    `action` drops away for the signed-in applicant, where the line changes
-   ("… while your application lands.") but the vantage point does not. */
+   ("… while your application lands.") but the vantage point does not.
+
+   Naming a vantage needs no ranker, so the band stands from the start and the
+   feed beneath it reads newest like every other until slice 3. The borrowed
+   *order*, the invite-link vantage and the contract field it needs, and the
+   band's own line about ranking are what wait for it. */
 
 function BorrowedViewBand({
   handle,
@@ -7146,6 +9697,17 @@ const { Icon } = __ds_scope;
    Every viewer gets the same shell: the bar shows for signed-in, applicant, and
    anonymous viewers alike, and a slot that needs an account asks on an anonymous
    tap rather than yanking the read away.
+
+   THE SLOTS ARE RE-ENTRY POINTS, NOT LINKS — one tap, four rungs (readme §13).
+   Another tab returns IN THE STATE IT WAS LEFT, whole stack and scroll; never
+   opened, it arrives at its root, fresh. The active tab pops to its own root
+   from anywhere deep in it, scrolls to the top once it is at that root, and at
+   the top does the one thing left — the feed refreshes, and Explore, Wallet and
+   Profile do nothing. A screen belongs to the stack it was opened FROM, whatever
+   its subject, so one screen may sit in two tabs at two positions. All of it is
+   session-only, and a transient — a sheet, a dialog — is never part of what
+   comes back. The centre slot has no ladder: it is an action, and the kept-draft
+   rules govern its re-entry.
 
    64px short navigation bar on `surfaceContainer`, hairline `outlineVariant` top
    border, safe-area padding at the bottom. Selection shows in COLOUR
@@ -7280,12 +9842,23 @@ const { Icon } = __ds_scope;
    space (ruled 2026-08-28), so `trailing` puts the tab's one working control —
    the feed's filter trigger — on the band's right edge. The whole band scrolls
    away with the top region and returns with it; the control rides along.
+   THE BAND RIDES THE BAR THE TOP REGION ALREADY COLLAPSES — it is not a
+   second collapsing block. Collapse band and bar as one taller block instead
+   and the list re-clamps under it: the leftover scroll reads back as "at the
+   top" and the region returns the instant it left (found by Android's
+   post-card lane, ruled 2026-09-09).
 
    CHATS RIDE THE BAND (jakob 2026-09-01): messaging must be reachable from any
    major screen, so every tab root's band carries the chats affordance built in.
    It sits LEFT of the screen's own trailing control, so the ruled corner
    occupants (the feed's filter trigger, the profile's gear) keep their edge.
-   `chats={false}` opts a band out where messaging cannot apply. */
+   `chats={false}` opts a band out where messaging cannot apply.
+
+   That line is the end state, not a shipping claim. The apps draw the
+   affordance the release a chat surface exists to receive the tap — until
+   then `graph.json` routes the tap to a gap and the button stays out, which
+   is the staging rule in readme §2: the canvas draws the whole app, each
+   release builds its slice, and nothing ships a control that leads nowhere. */
 
 function CograBand({
   trailing,
@@ -7460,20 +10033,27 @@ try { (() => {
    DRAWN AT 32PX, border-box — the chips' rung, because this control lives among
    chips (the filter sheets) and a taller pill beside 32px chips read as swollen
    twice over (first at 48, then again at 40). The 48px hit minimum is a target
-   rule, not a drawn height — the same drawn-vs-tapped split the chips keep. */
+   rule, not a drawn height — the same drawn-vs-tapped split the chips keep.
+
+   `block` SPANS THE CONTAINER, for the one place this control is not standing
+   among chips: a settings group, where it is the group's whole content and a
+   pill floating short of the card's right edge reads as unfinished. The
+   segments stay equal, so spanning divides the width rather than stretching
+   one of them. */
 
 function SegmentedFilter({
   options = [],
   value,
   onChange,
-  ariaLabel
+  ariaLabel,
+  block = false
 }) {
   if (options.length === 0) return null;
   return /*#__PURE__*/React.createElement("div", {
     role: "group",
     "aria-label": ariaLabel,
     style: {
-      display: "inline-flex",
+      display: block ? "flex" : "inline-flex",
       alignItems: "stretch",
       height: "32px",
       boxSizing: "border-box",
@@ -7481,7 +10061,7 @@ function SegmentedFilter({
       border: "1px solid var(--border-field)",
       overflow: "hidden",
       maxWidth: "100%",
-      width: "fit-content"
+      width: block ? "100%" : "fit-content"
     }
   }, options.map((option, index) => {
     const selected = option.value === value;
@@ -7606,6 +10186,7 @@ __ds_scope.OrderSection = OrderSection;
 // components/navigation/FeedFilter.jsx
 try { (() => {
 const { BottomSheet, Chip, Button, FilterSection, OrderSection, FILTER_ORDER, HelpDot } = __ds_scope;
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The feed filter (backlog item 4, second pass; grown by item 19).
 
    WHAT THIS REPLACED. A three-segment row — Posts / Comments / Stances — which was
@@ -7641,7 +10222,12 @@ const { BottomSheet, Chip, Button, FilterSection, OrderSection, FILTER_ORDER, He
    and offers to switch it back — it is not refused at the chip. */
 
 /* Every kind the network ranks — ONE list, shared by the feed and search
-   (ruled 2026-08-28: parity, and the word is "Profiles" everywhere). */
+   (ruled 2026-08-28: parity, and the word is "Profiles" everywhere).
+
+   THE VALUE IS THE RECORD'S WORD, THE LABEL IS THE SCREEN'S (the naming law,
+   readme §13, the tag round). `topics` keys the kind the graph carries and
+   `Tags` is what the reader is shown. The two never have to agree, and this
+   list is the one place the difference is assigned. */
 const FEED_KINDS = [{
   value: "posts",
   label: "Posts"
@@ -7662,7 +10248,7 @@ const FEED_KINDS = [{
   label: "Proposals"
 }, {
   value: "topics",
-  label: "Topics"
+  label: "Tags"
 }, {
   value: "items",
   label: "Items"
@@ -7761,14 +10347,42 @@ function FilterTrigger({
     }
   }, reading);
 }
-function FeedFilter({
+
+/* THE SHEET ALONE — for a surface that owns its trigger. `FilterTrigger` is
+   already the half search takes; this is the other half, and the settings
+   page is what asked for it: its Reading row IS the trigger, so the row opens
+   this sheet directly and the filter is one control rather than two drawings
+   of one.
+
+   `lead` IS WHAT A TITLED SHEET SAYS FIRST. The feed's sheet needs no heading
+   — the pill that opened it is a thumb away, still on screen — so its "?"
+   sits in the corner the trigger left it in. A sheet that covers the surface
+   it was opened from does need one, and `SheetTitle` already rules where the
+   "?" goes then: on the heading's own row. The slot carries both, so the two
+   readings differ where they must and nowhere else.
+
+   `foot` IS THE OTHER HALF OF THAT DIFFERENCE. Over a feed the filter applies
+   live and there is nothing to commit — the list behind it rearranges and the
+   reader watches it happen. Over settings nothing reacts, so the choice is
+   committed, and the sheet takes the Done row the license sheets take: a
+   hairline, the reading, the button, inside the sheet's own inset.
+
+   A SHEET WITH A FOOT OWNS ITS HEIGHT. Ten kinds and four sections already
+   outrun 88% of the screen, so a commitment appended after them would sit
+   below the fold — the one control that must always be reachable, reachable
+   only by scrolling. So the sections scroll inside the sheet and the foot is
+   pinned under them, which is the anatomy `BottomSheet`'s own `height` exists
+   for. A sheet with no foot is sized by its content, exactly as before. */
+function FeedFilterSheet({
   value = FEED_FILTER_DEFAULT,
   onChange,
   onHelp,
-  defaultOpen = false,
-  ariaLabel = "What your feed shows"
+  open = false,
+  onClose,
+  ariaLabel = "What your feed shows",
+  lead,
+  foot
 }) {
-  const [open, setOpen] = React.useState(defaultOpen);
   const set = patch => onChange && onChange({
     ...value,
     ...patch
@@ -7780,26 +10394,7 @@ function FeedFilter({
     });
   };
   const postsish = (value.kinds || []).some(kind => kind === "posts" || kind === "comments");
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(FilterTrigger, {
-    reading: feedFilterSummary(value),
-    onOpen: () => setOpen(true),
-    expanded: open,
-    ariaLabel: ariaLabel
-  }), /*#__PURE__*/React.createElement(BottomSheet, {
-    open: open,
-    onClose: () => setOpen(false),
-    ariaLabel: ariaLabel,
-    maxHeight: "88%"
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "absolute",
-      top: "var(--space-1)",
-      right: "var(--space-2)"
-    }
-  }, /*#__PURE__*/React.createElement(HelpDot, {
-    ariaLabel: "How the filter works",
-    onOpen: onHelp
-  })), /*#__PURE__*/React.createElement(FilterSection, {
+  const sections = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(FilterSection, {
     label: "What gets ranked",
     hint: "Everything that can reach your feed. Combine as many as you like."
   }, FEED_KINDS.map(kind => /*#__PURE__*/React.createElement(Chip, {
@@ -7842,7 +10437,61 @@ function FeedFilter({
     size: "sm",
     selfStart: true,
     onClick: () => onChange && onChange(FEED_FILTER_DEFAULT)
-  }, "Reset"))));
+  }, "Reset")));
+  return (
+    /*#__PURE__*/
+    /* Ten kinds plus four sections outgrow the sheet's 62% default — the
+       filter opens taller so the whole control is present; it still scrolls
+       on shorter screens. The sheet carries its own "?" (like the pads):
+       the dialog explains the filter and names the settings default. */
+    React.createElement(BottomSheet, _extends({
+      open: open,
+      onClose: onClose,
+      ariaLabel: ariaLabel
+    }, foot ? {
+      height: "88%"
+    } : {
+      maxHeight: "88%"
+    }), lead ?? /*#__PURE__*/React.createElement("div", {
+      style: {
+        position: "absolute",
+        top: "var(--space-1)",
+        right: "var(--space-2)"
+      }
+    }, /*#__PURE__*/React.createElement(HelpDot, {
+      ariaLabel: "How the filter works",
+      onOpen: onHelp
+    })), foot ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        minHeight: 0,
+        overflowY: "auto",
+        paddingBottom: "var(--space-4)"
+      }
+    }, sections), foot) : sections)
+  );
+}
+function FeedFilter({
+  value = FEED_FILTER_DEFAULT,
+  onChange,
+  onHelp,
+  defaultOpen = false,
+  ariaLabel = "What your feed shows"
+}) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(FilterTrigger, {
+    reading: feedFilterSummary(value),
+    onOpen: () => setOpen(true),
+    expanded: open,
+    ariaLabel: ariaLabel
+  }), /*#__PURE__*/React.createElement(FeedFilterSheet, {
+    value: value,
+    onChange: onChange,
+    onHelp: onHelp,
+    open: open,
+    onClose: () => setOpen(false),
+    ariaLabel: ariaLabel
+  }));
 }
 __ds_scope.FEED_KINDS = FEED_KINDS;
 __ds_scope.FEED_FORMS = FEED_FORMS;
@@ -7851,8 +10500,100 @@ __ds_scope.FEED_ALSO = FEED_ALSO;
 __ds_scope.FEED_FILTER_DEFAULT = FEED_FILTER_DEFAULT;
 __ds_scope.feedFilterSummary = feedFilterSummary;
 __ds_scope.FilterTrigger = FilterTrigger;
+__ds_scope.FeedFilterSheet = FeedFilterSheet;
 __ds_scope.FeedFilter = FeedFilter;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/FeedFilter.jsx", error: String((e && e.message) || e) }); }
+
+// components/navigation/TabBar.jsx
+try { (() => {
+const { Icon } = __ds_scope;
+/* The full-width tab row (item 17, the conformance round, jakob's ruling F):
+   equal cells across the surface with a hairline under them, the chosen one in
+   primary with a 2px underline. The profile's chronicle draws it with glyphs,
+   the stances page with words; they were two copies of one row.
+
+   THE UNDERLINE IS A DELIBERATE DEVIATION from "selection is colour only". An
+   icon's colour alone is too quiet to say which of three same-weight glyphs is
+   on, and the row is the only thing on the screen that changes what is below
+   it. It is drawn as an inset box shadow rather than a border so the cell's
+   height does not move when the selection does.
+
+   THE SEGMENTED PILL WAS RULED OUT AT THREE OPTIONS (jakob 2026-09-01): this
+   is the row every social profile draws, and a pill that wide stops reading as
+   a control.
+
+   A CELL'S KIND IS ITS CONTENT, not a setting. A tab with an `icon` is a glyph
+   cell and takes its accessible name from `label`, which is the only way an
+   icon-only control can have one. A tab without an icon shows `label` as its
+   own words, in `label-large` — and takes NO aria-label, because a button
+   whose visible text is its name must not be given a second one to disagree
+   with. Deriving this from the tab rather than from a `variant` prop means the
+   two can never contradict each other.
+
+   IT IS A GROUP OF TOGGLES, NOT AN ARIA TABLIST. Nothing here controls a
+   `tabpanel` — the row filters the list beneath it — so the cells are
+   `aria-pressed` buttons inside a labelled group, which is what that pattern
+   actually is. */
+
+const CELL = {
+  flex: 1,
+  display: "grid",
+  placeItems: "center",
+  minHeight: "var(--touch-target-min)",
+  border: 0,
+  background: "none",
+  padding: 0,
+  cursor: "pointer"
+};
+const WORDS = {
+  fontFamily: "var(--font-sans)",
+  fontSize: "var(--text-label-large)",
+  fontWeight: "var(--text-label-large--font-weight)",
+  letterSpacing: "var(--text-label-large--letter-spacing)"
+};
+function TabBar({
+  tabs = [],
+  value,
+  ariaLabel,
+  onSelect,
+  iconSize = 22
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    role: "group",
+    "aria-label": ariaLabel,
+    style: {
+      display: "flex",
+      borderBottom: "1px solid var(--border-hairline)"
+    }
+  }, tabs.map(tab => {
+    const selected = tab.id === value;
+    const chosen = {
+      color: selected ? "var(--primary)" : "var(--text-secondary)",
+      boxShadow: selected ? "inset 0 -2px 0 var(--primary)" : "none"
+    };
+    return /*#__PURE__*/React.createElement("button", {
+      key: tab.id,
+      type: "button",
+      "aria-pressed": selected,
+      "aria-label": tab.icon ? tab.label : undefined,
+      onClick: onSelect && (() => onSelect(tab.id)),
+      className: "cg-state cg-focus",
+      style: tab.icon ? {
+        ...CELL,
+        ...chosen
+      } : {
+        ...CELL,
+        ...WORDS,
+        ...chosen
+      }
+    }, tab.icon ? /*#__PURE__*/React.createElement(Icon, {
+      name: tab.icon,
+      size: iconSize
+    }) : tab.label);
+  }));
+}
+__ds_scope.TabBar = TabBar;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/TabBar.jsx", error: String((e && e.message) || e) }); }
 
 // components/people/ProfileHeader.jsx
 try { (() => {
@@ -8102,6 +10843,82 @@ function ProfileHeader({
 __ds_scope.ProfileHeader = ProfileHeader;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/people/ProfileHeader.jsx", error: String((e && e.message) || e) }); }
 
+// components/people/StanceRow.jsx
+try { (() => {
+const { MonogramAvatar, StanceValue } = __ds_scope;
+/* A person on a stances list (item 17, the conformance round): their face,
+   their name, and THE STANCE THE ROW IS ABOUT (jakob 2026-09-01) — the
+   record's own value, read-only.
+
+   THE VALUE IS THE ROW'S INFORMATION, which is what makes this row different
+   from every followers list it resembles. A follow is a fact you either have
+   or don't, so such a list shows only who. A stance has a sign and a
+   magnitude, so a list of stances that showed only who would be hiding the
+   part that says anything.
+
+   IT IS READ-ONLY, AND THE WHOLE ROW OPENS THE PERSON. There is no adjust
+   control here: acting on a stance means going to the profile it is about,
+   where the pad and its context live. A slider in a list row would let someone
+   change a public record while scrolling past it. */
+
+function StanceRow({
+  name,
+  handle,
+  src,
+  pDirected,
+  pInterest,
+  onOpen
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpen,
+    className: "cg-state cg-focus",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      width: "100%",
+      boxSizing: "border-box",
+      minHeight: 56,
+      border: 0,
+      background: "none",
+      padding: "6px 16px",
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      color: "var(--on-surface)",
+      textAlign: "left"
+    }
+  }, /*#__PURE__*/React.createElement(MonogramAvatar, {
+    name: name,
+    size: 40,
+    src: src
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, name), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      color: "var(--text-secondary)"
+    }
+  }, "@", handle)), /*#__PURE__*/React.createElement(StanceValue, {
+    pDirected: pDirected,
+    pInterest: pInterest
+  }));
+}
+__ds_scope.StanceRow = StanceRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/people/StanceRow.jsx", error: String((e && e.message) || e) }); }
+
 // components/states/EmptyState.jsx
 try { (() => {
 const { Button } = __ds_scope;
@@ -8227,7 +11044,7 @@ function EarnedChart({
     style: {
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
     }
   }, caption)));
@@ -8237,7 +11054,7 @@ __ds_scope.EarnedChart = EarnedChart;
 
 // components/wallet/LedgerRow.jsx
 try { (() => {
-const { Icon, MoneyFigure, MonogramAvatar, PendingMarker } = __ds_scope;
+const { ContentRow, MoneyFigure } = __ds_scope;
 /* One line of the wallet's history (item 12 round 2): an IDENTITY ROW, not a
    ledger line — the leading disc is who or what the money moved with (the
    tipper's face, the paying campaign's cover, a glyph for the rest), wearing
@@ -8247,47 +11064,14 @@ const { Icon, MoneyFigure, MonogramAvatar, PendingMarker } = __ds_scope;
    is an arrow, the amount is never coloured.
 
    One stream, newest first. A payout not yet landed is `pending`: the figure
-   goes quiet and the row wears the product's own Still settling. */
+   goes quiet and the row wears the product's own Still settling.
 
-function Disc({
-  image,
-  name,
-  glyph
-}) {
-  if (image) {
-    return /*#__PURE__*/React.createElement("img", {
-      src: image,
-      alt: "",
-      style: {
-        width: "40px",
-        height: "40px",
-        borderRadius: "var(--radius-full)",
-        objectFit: "cover",
-        display: "block"
-      }
-    });
-  }
-  if (name) {
-    return /*#__PURE__*/React.createElement(MonogramAvatar, {
-      name: name,
-      size: 40
-    });
-  }
-  return /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: "40px",
-      height: "40px",
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-container-high)",
-      color: "var(--text-secondary)",
-      display: "grid",
-      placeItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: glyph ?? "wallet",
-    size: 20
-  }));
-}
+   THE SHAPE IS `ContentRow`'s, and this file is what the wallet calls it. The
+   row itself — disc, two lines, trailing edge, chevron — is the master every
+   list in the product draws; what belongs here is the wallet's vocabulary:
+   `words` and `context`, an amount rather than a trailing node, and direction
+   read off the sign when nobody says otherwise. */
+
 function LedgerRow({
   words,
   context,
@@ -8302,117 +11086,28 @@ function LedgerRow({
   onOpen
 }) {
   const dir = direction ?? (amount < 0 ? "out" : "in");
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onOpen,
-    className: "cg-state cg-focus",
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-3)",
-      width: "100%",
-      border: 0,
-      borderRadius: "var(--radius-medium)",
-      background: "var(--surface-card)",
-      padding: "var(--space-3)",
-      cursor: onOpen ? "pointer" : "default",
-      fontFamily: "var(--font-sans)",
-      color: "var(--on-surface)",
-      textAlign: "left",
-      boxSizing: "border-box"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "relative",
-      flex: "none",
-      width: "40px",
-      height: "40px"
-    }
-  }, /*#__PURE__*/React.createElement(Disc, {
+  return /*#__PURE__*/React.createElement(ContentRow, {
+    variant: "ledger",
+    title: words,
+    second: context || when ? /*#__PURE__*/React.createElement(React.Fragment, null, context, context && when ? " · " : "", when) : undefined,
+    trailing: /*#__PURE__*/React.createElement(MoneyFigure, {
+      amount: amount,
+      signed: signed
+    }),
+    pending: pending,
     image: image,
     name: name,
-    glyph: glyph
-  }), /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      position: "absolute",
-      right: "-3px",
-      bottom: "-3px",
-      width: "18px",
-      height: "18px",
-      borderRadius: "var(--radius-full)",
-      background: "var(--primary)",
-      color: "var(--on-primary)",
-      display: "grid",
-      placeItems: "center",
-      border: "2px solid var(--surface)",
-      boxSizing: "content-box",
-      transform: dir === "in" ? "rotate(180deg)" : undefined
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "arrow_outward",
-    size: 11
-  }))), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      minWidth: 0,
-      display: "flex",
-      flexDirection: "column",
-      gap: "1px"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
-    }
-  }, words), (context || when) && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      color: "var(--text-secondary)",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
-    }
-  }, context, context && when ? " · " : "", when)), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: "none",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "flex-end",
-      gap: "2px"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-medium)",
-      lineHeight: "var(--text-body-medium--line-height)",
-      color: pending ? "var(--text-secondary)" : "var(--on-surface)"
-    }
-  }, /*#__PURE__*/React.createElement(MoneyFigure, {
-    amount: amount,
-    signed: signed
-  })), pending && /*#__PURE__*/React.createElement(PendingMarker, null)), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: "none",
-      display: "inline-flex",
-      color: "var(--text-secondary)"
-    },
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "chevron_right",
-    size: 18
-  })));
+    glyph: glyph,
+    direction: dir,
+    onOpen: onOpen
+  });
 }
 __ds_scope.LedgerRow = LedgerRow;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/wallet/LedgerRow.jsx", error: String((e && e.message) || e) }); }
 
 // components/wallet/PayoutAddress.jsx
 try { (() => {
-const { Icon } = __ds_scope;
+const { InlineAction, Icon } = __ds_scope;
 /* The at-rest form (round 3): ONE line near the top of the wallet — an entry
    point, not a checking surface, so this is the single place the address may
    shorten (head…tail). Tapping opens the full card, where the whole address,
@@ -8448,7 +11143,7 @@ function PayoutAddressRow({
       flex: "none",
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)",
       whiteSpace: "nowrap"
     }
@@ -8536,23 +11231,8 @@ function PayoutAddress({
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "content_copy",
     size: 18
-  })), onChange && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onChange,
-    className: "cg-state cg-focus cg-hit",
-    style: {
-      border: 0,
-      background: "none",
-      padding: 0,
-      cursor: "pointer",
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      letterSpacing: "var(--text-label-large--letter-spacing)",
-      color: "var(--primary)",
-      flex: "none"
-    }
+  })), onChange && /*#__PURE__*/React.createElement(InlineAction, {
+    onClick: onChange
   }, changeLabel)), /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: "var(--font-mono)",
@@ -8566,7 +11246,7 @@ function PayoutAddress({
     style: {
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
     }
   }, caption));
@@ -8629,8 +11309,10 @@ const { HelpDot, MoneyFigure, WashCard } = __ds_scope;
    one surface that spells CGT (readme §13, Money figures): mark and word
    adjacent at display size, the "?" (What is CGT?) beside them. The ≈ L-BTC
    line reads the public ladder market — an estimate, never a promise, hidden
-   at zero. `delta` is the recent-earnings chip ("+14.40 this week"): quiet
-   pride, real number, omitted when there is nothing new. */
+   at zero. `delta` is the recent-earnings chip: quiet pride, real number,
+   omitted when there is nothing new. It is an AMOUNT, not a string — money is
+   `MoneyFigure`'s and never formatted by hand (readme §13, Money figures), so
+   the chip renders the figure itself and adds "this week". */
 
 function WalletBalance({
   amount = 0,
@@ -8678,7 +11360,7 @@ function WalletBalance({
     style: {
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "0.4px",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
     }
   }, "\u2248 ", approx, " L-BTC right now"), delta && /*#__PURE__*/React.createElement("span", {
@@ -8693,18 +11375,33 @@ function WalletBalance({
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
       fontWeight: "var(--text-label-small--font-weight)",
-      letterSpacing: "0.5px"
+      letterSpacing: "var(--text-label-small--letter-spacing)"
     }
-  }, delta)));
+  }, /*#__PURE__*/React.createElement(MoneyFigure, {
+    amount: delta,
+    signed: true
+  }), "\xA0this week")));
 }
 __ds_scope.WalletBalance = WalletBalance;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/wallet/WalletBalance.jsx", error: String((e && e.message) || e) }); }
 
 __ds_ns.ActsCard = __ds_scope.ActsCard;
 
+__ds_ns.ActsFooter = __ds_scope.ActsFooter;
+
+__ds_ns.Caret = __ds_scope.Caret;
+
+__ds_ns.CoverRow = __ds_scope.CoverRow;
+
+__ds_ns.CropViewport = __ds_scope.CropViewport;
+
 __ds_ns.DescribeSheet = __ds_scope.DescribeSheet;
 
 __ds_ns.MediaThumb = __ds_scope.MediaThumb;
+
+__ds_ns.PickPrompt = __ds_scope.PickPrompt;
+
+__ds_ns.PickTray = __ds_scope.PickTray;
 
 __ds_ns.PickedRow = __ds_scope.PickedRow;
 
@@ -8712,9 +11409,19 @@ __ds_ns.DescribeCounter = __ds_scope.DescribeCounter;
 
 __ds_ns.PickedSheet = __ds_scope.PickedSheet;
 
+__ds_ns.RefusedFile = __ds_scope.RefusedFile;
+
+__ds_ns.SealFooter = __ds_scope.SealFooter;
+
+__ds_ns.StagedReference = __ds_scope.StagedReference;
+
+__ds_ns.TopicRemovable = __ds_scope.TopicRemovable;
+
 __ds_ns.UploadStatusLine = __ds_scope.UploadStatusLine;
 
 __ds_ns.UploadErrorLine = __ds_scope.UploadErrorLine;
+
+__ds_ns.WizardFooter = __ds_scope.WizardFooter;
 
 __ds_ns.WizardHeader = __ds_scope.WizardHeader;
 
@@ -8730,6 +11437,8 @@ __ds_ns.ReferenceRow = __ds_scope.ReferenceRow;
 
 __ds_ns.ShareButton = __ds_scope.ShareButton;
 
+__ds_ns.TaggedRow = __ds_scope.TaggedRow;
+
 __ds_ns.TopicsLine = __ds_scope.TopicsLine;
 
 __ds_ns.BottomSheet = __ds_scope.BottomSheet;
@@ -8740,6 +11449,8 @@ __ds_ns.SheetTitle = __ds_scope.SheetTitle;
 
 __ds_ns.BUTTON_CLASS = __ds_scope.BUTTON_CLASS;
 
+__ds_ns.InlineAction = __ds_scope.InlineAction;
+
 __ds_ns.Button = __ds_scope.Button;
 
 __ds_ns.Card = __ds_scope.Card;
@@ -8747,6 +11458,10 @@ __ds_ns.Card = __ds_scope.Card;
 __ds_ns.Chip = __ds_scope.Chip;
 
 __ds_ns.TopicChip = __ds_scope.TopicChip;
+
+__ds_ns.ContentRow = __ds_scope.ContentRow;
+
+__ds_ns.FactRow = __ds_scope.FactRow;
 
 __ds_ns.HelpDot = __ds_scope.HelpDot;
 
@@ -8757,6 +11472,18 @@ __ds_ns.JoinPrompt = __ds_scope.JoinPrompt;
 __ds_ns.CgtMark = __ds_scope.CgtMark;
 
 __ds_ns.MoneyFigure = __ds_scope.MoneyFigure;
+
+__ds_ns.QuietNote = __ds_scope.QuietNote;
+
+__ds_ns.QuotedRow = __ds_scope.QuotedRow;
+
+__ds_ns.SectionLabel = __ds_scope.SectionLabel;
+
+__ds_ns.Switch = __ds_scope.Switch;
+
+__ds_ns.SettingsRow = __ds_scope.SettingsRow;
+
+__ds_ns.SettingsGroup = __ds_scope.SettingsGroup;
 
 __ds_ns.Snackbar = __ds_scope.Snackbar;
 
@@ -8770,8 +11497,6 @@ __ds_ns.PUBLIC_DOMAIN = __ds_scope.PUBLIC_DOMAIN;
 
 __ds_ns.LICENSE_MENU_LABEL = __ds_scope.LICENSE_MENU_LABEL;
 
-__ds_ns.LICENSE_MENU_LABEL_SHOWN = __ds_scope.LICENSE_MENU_LABEL_SHOWN;
-
 __ds_ns.LicenseChooser = __ds_scope.LicenseChooser;
 
 __ds_ns.LicenseTerms = __ds_scope.LicenseTerms;
@@ -8781,6 +11506,8 @@ __ds_ns.PasswordField = __ds_scope.PasswordField;
 __ds_ns.RecoveryCode = __ds_scope.RecoveryCode;
 
 __ds_ns.SearchBar = __ds_scope.SearchBar;
+
+__ds_ns.FieldLabel = __ds_scope.FieldLabel;
 
 __ds_ns.TextField = __ds_scope.TextField;
 
@@ -8844,6 +11571,8 @@ __ds_ns.FEED_FILTER_DEFAULT = __ds_scope.FEED_FILTER_DEFAULT;
 
 __ds_ns.FilterTrigger = __ds_scope.FilterTrigger;
 
+__ds_ns.FeedFilterSheet = __ds_scope.FeedFilterSheet;
+
 __ds_ns.FeedFilter = __ds_scope.FeedFilter;
 
 __ds_ns.NODE_GLYPHS = __ds_scope.NODE_GLYPHS;
@@ -8860,11 +11589,15 @@ __ds_ns.PageHeader = __ds_scope.PageHeader;
 
 __ds_ns.SegmentedFilter = __ds_scope.SegmentedFilter;
 
+__ds_ns.TabBar = __ds_scope.TabBar;
+
 __ds_ns.MonogramAvatar = __ds_scope.MonogramAvatar;
 
 __ds_ns.ActorChip = __ds_scope.ActorChip;
 
 __ds_ns.ProfileHeader = __ds_scope.ProfileHeader;
+
+__ds_ns.StanceRow = __ds_scope.StanceRow;
 
 __ds_ns.ExplainableNumber = __ds_scope.ExplainableNumber;
 
@@ -8884,6 +11617,8 @@ __ds_ns.LONG_PRESS_MS = __ds_scope.LONG_PRESS_MS;
 
 __ds_ns.StanceControl = __ds_scope.StanceControl;
 
+__ds_ns.STANCE_AXES = __ds_scope.STANCE_AXES;
+
 __ds_ns.FIELD_CORNER_RADIUS_PX = __ds_scope.FIELD_CORNER_RADIUS_PX;
 
 __ds_ns.KNOB_DIAMETER_PX = __ds_scope.KNOB_DIAMETER_PX;
@@ -8897,6 +11632,12 @@ __ds_ns.DIMENSION_MIN = __ds_scope.DIMENSION_MIN;
 __ds_ns.DIMENSION_MAX = __ds_scope.DIMENSION_MAX;
 
 __ds_ns.ORIGIN = __ds_scope.ORIGIN;
+
+__ds_ns.STANCE_RANGES = __ds_scope.STANCE_RANGES;
+
+__ds_ns.TAG_RELEVANCE_FLOOR = __ds_scope.TAG_RELEVANCE_FLOOR;
+
+__ds_ns.TAG_RANGES = __ds_scope.TAG_RANGES;
 
 __ds_ns.TAP_DEFAULT = __ds_scope.TAP_DEFAULT;
 
@@ -8921,6 +11662,8 @@ __ds_ns.RESTING_FACE_EMOJI = __ds_scope.RESTING_FACE_EMOJI;
 __ds_ns.SR_ONLY = __ds_scope.SR_ONLY;
 
 __ds_ns.STANCE_ANCHORS = __ds_scope.STANCE_ANCHORS;
+
+__ds_ns.TAG_ANCHORS = __ds_scope.TAG_ANCHORS;
 
 __ds_ns.StanceValue = __ds_scope.StanceValue;
 

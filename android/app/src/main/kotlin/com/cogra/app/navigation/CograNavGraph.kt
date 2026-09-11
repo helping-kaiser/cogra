@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,6 +36,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -50,7 +50,9 @@ import com.cogra.app.BuildConfig
 import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
 import com.cogra.app.ui.SecurityNoticeHost
+import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.LocalSnackbarHostState
+import com.cogra.core.designsystem.v2.token.NavTransitions
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
@@ -63,6 +65,7 @@ import com.cogra.feature.content.reply.CommentEditRoute
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
 import com.cogra.feature.content.reply.ReplyWizardRoute
+import com.cogra.feature.home.BorrowedViewBandRoute
 import com.cogra.feature.home.KeyRestoreBannerRoute
 import com.cogra.feature.home.StatusBannersRoute
 import com.cogra.feature.invites.InvitesRoute
@@ -175,38 +178,93 @@ data object KeyExport
 enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
 
 /**
+ * A navigation result: the name it rides under, bound to the value that
+ * means "nothing to report".
+ *
+ * The two belong together. A key read with the wrong default, or cleared
+ * with a value of the wrong type, compiles perfectly well and fails at
+ * runtime — binding them into one thing is what makes that unsayable.
+ */
+private class NavResultKey<T>(val name: String, val absent: T)
+
+/**
  * The Restore result key. It rides the back-stack ENTRY's
  * savedStateHandle — a different object from the one injected into the
  * entry's ViewModels, so it must be read here, where the entry is in
  * hand (android/CLAUDE.md "Navigation").
  */
-private const val ACTOR_RESTORED_RESULT = "actor_restored"
+private val actorRestoredKey = NavResultKey("actor_restored", false)
 
 /** The Settings→Profile result key: the handle changed, re-read. */
-private const val HANDLE_CHANGED_RESULT = "handle_changed"
+private val handleChangedKey = NavResultKey("handle_changed", false)
 
 /** The Compose→(Feed|PostDetail) result key: a write signed, re-read. */
-private const val CONTENT_SIGNED_RESULT = "content_signed"
+private val contentSignedKey = NavResultKey("content_signed", false)
 
 /**
  * The (ReplyWizard|CommentEdit)→PostDetail result key: a comment or an
  * edit signed, so the thread re-reads and says so once.
  *
- * Distinct from [CONTENT_SIGNED_RESULT] because the thread answers them
+ * Distinct from [contentSignedKey] because the thread answers them
  * differently — a signed comment earns the snackbar, a returning post
  * edit only the refetch.
  */
-private const val COMMENT_SIGNED_RESULT = "comment_signed"
+private val commentSignedKey = NavResultKey("comment_signed", false)
 
 /**
  * The Wizard→Feed result key: a staged act was collected before it
  * landed. The value is the post's own label, so the feed's calm notice
  * can name what did not land (`ComposeExpired`).
  */
-private const val CONTENT_EXPIRED_RESULT = "content_expired"
+private val contentExpiredKey = NavResultKey<String?>("content_expired", null)
 
 /** The ProfileEdit→Profile result key: the update signed, re-read. */
-private const val PROFILE_SAVED_RESULT = "profile_saved"
+private val profileSavedKey = NavResultKey("profile_saved", false)
+
+/**
+ * A destination's own view of one result: what it says, and the lambda
+ * that marks it read.
+ *
+ * Consuming is half of the pattern — a result left in the handle re-fires
+ * on the next recomposition — so the read hands back the way to consume
+ * it rather than leaving each site to remember the key and its default a
+ * second time.
+ */
+@Composable
+private fun <T> NavBackStackEntry.navResult(key: NavResultKey<T>): Pair<T, () -> Unit> {
+    val value by savedStateHandle
+        .getStateFlow(key.name, key.absent)
+        .collectAsStateWithLifecycle()
+    return value to { savedStateHandle[key.name] = key.absent }
+}
+
+/** Reports [value] to the destination this one returns to. */
+private fun <T> NavController.report(key: NavResultKey<T>, value: T) {
+    previousBackStackEntry?.savedStateHandle?.set(key.name, value)
+}
+
+/**
+ * Reports [value] to the destination now on top — the shape a pop uses,
+ * where the destination being answered is the one popped back to rather
+ * than the one behind this.
+ */
+private fun <T> NavController.reportToCurrent(key: NavResultKey<T>, value: T) {
+    currentBackStackEntry?.savedStateHandle?.set(key.name, value)
+}
+
+/**
+ * Reports [value] to the named destination further down the stack.
+ *
+ * The avatar flow needs this: it is pushed from the edit screen, so
+ * [report] hands its result to that screen — which reads no results at
+ * all, so a signed picture was answered by nothing. The news belongs to
+ * the profile two entries down, whether the reader saves the rest of
+ * the edit afterwards or simply walks back.
+ */
+private inline fun <reified R : Any, T> NavController.reportTo(key: NavResultKey<T>, value: T) {
+    val entry = runCatching { getBackStackEntry<R>() }.getOrNull() ?: return
+    entry.savedStateHandle[key.name] = value
+}
 
 /** The activity-scoped auth-state holder: the token store decides. */
 @HiltViewModel
@@ -352,7 +410,7 @@ private fun CograNavGraphContent(
     // needs an account opens the join prompt on a signed-out tap —
     // ask, never bounce. A read drill-in keeps the frame but selects
     // no tab; the task flows drop it for their back arrow.
-    val onFeedTab =backStackEntry?.destination?.hasRoute(Feed::class) == true
+    val onFeedTab = backStackEntry?.destination?.hasRoute(Feed::class) == true
     val onProfile = backStackEntry?.destination?.hasRoute(Profile::class) == true
     val onOwnProfileTab = onProfile &&
         backStackEntry?.toRoute<Profile>()?.handle == null
@@ -369,11 +427,43 @@ private fun CograNavGraphContent(
         }
     }
 
+    // The two shell slots every destination that has them draws the same
+    // way. Written once here, where `signedIn`, the controller and the
+    // shell's snackbar are already in scope, rather than copied into each
+    // destination — the profile's extra condition is the only variation
+    // and it lives at that one call site.
+    val keyBanner: @Composable () -> Unit = {
+        if (signedIn == true) {
+            KeyRestoreBannerRoute(onRestoreActor = { navController.navigate(Restore) })
+        }
+    }
+    // The band rides both sides of the session — the guest reading carries
+    // the shell's one sign-in-or-join entry, which is why the slot and not
+    // the screen owns that navigation. Nothing is drawn while the auth
+    // state is still unknown: the two readings differ, and guessing puts
+    // the wrong sentence on screen for a frame.
+    val borrowedViewBand: @Composable () -> Unit = {
+        signedIn?.let { signed ->
+            BorrowedViewBandRoute(
+                signedIn = signed,
+                onSignInOrJoin = { navController.navigate(Login) },
+            )
+        }
+    }
+    val statusBanners: @Composable (Boolean, () -> Unit) -> Unit = { restored, onConsumed ->
+        if (signedIn == true) {
+            StatusBannersRoute(
+                actorRestoredResult = restored,
+                onActorRestoredResultConsumed = onConsumed,
+                onStartKeyCeremony = { navController.navigate(KeyCeremony) },
+                snackbarHostState = shellSnackbar,
+            )
+        }
+    }
+
     Scaffold(
         snackbarHost = {
-            SnackbarHost(shellSnackbar) { data ->
-                Snackbar(snackbarData = data, modifier = Modifier.testTag("shell_snackbar"))
-            }
+            CograSnackbarHost(shellSnackbar, testTag = "shell_snackbar")
         },
         bottomBar = {
             if (signedIn != null && onReadSurface) {
@@ -404,6 +494,14 @@ private fun CograNavGraphContent(
             // Login is the signed-out entry — signing in is the common
             // path; the invite entry hangs off it (design.md §6).
             startDestination = Login,
+            // The transition layer the design defines and the app had none
+            // of (`design/tokens/transitions.css`): a transition says where
+            // a screen came from, and nothing else. Stock Navigation Compose
+            // cross-fades, which makes back indistinguishable from forward.
+            enterTransition = { NavTransitions.forwardEnter },
+            exitTransition = { NavTransitions.forwardExit },
+            popEnterTransition = { NavTransitions.backEnter },
+            popExitTransition = { NavTransitions.backExit },
             // consumeWindowInsets rides with the padding (the documented
             // nested-scaffold pattern): without it every screen's own
             // scaffold re-applies the status inset the shell already
@@ -427,85 +525,82 @@ private fun CograNavGraphContent(
                     onUsableLink = { id -> navController.navigate(Apply(id)) },
                     onLogInInstead = { navController.navigate(Login) },
                     onBrowseFeed = { navController.navigate(Feed) },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable<Apply> { entry ->
                 // A successful register flips the token store; the phase
                 // holder navigates.
-                ApplyRoute(inviteId = entry.toRoute<Apply>().inviteId)
+                ApplyRoute(
+                    inviteId = entry.toRoute<Apply>().inviteId,
+                    onBack = { navController.popBackStack() },
+                )
             }
             composable<KeyCeremony> {
-                KeyCeremonyRoute(onDone = { navController.popBackStack() })
+                KeyCeremonyRoute(
+                    onDone = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() },
+                )
             }
             composable<Login> {
                 LoginRoute(
                     onForgotPassword = { navController.navigate(PasswordReset) },
                     onJoin = { navController.navigate(InviteEntry()) },
                     onBrowse = { navController.navigate(Feed) },
+                    // The signed-out root has nothing behind it; a visitor
+                    // who arrived from a read surface does.
+                    onBack = if (navController.previousBackStackEntry == null) {
+                        null
+                    } else {
+                        { navController.popBackStack() }
+                    },
                 )
             }
             composable<PasswordReset> {
-                PasswordResetRoute(onDone = { navController.popBackStack() })
+                PasswordResetRoute(
+                    onDone = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() },
+                )
             }
             composable<Restore> {
                 RestoreRoute(
                     onRestored = {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(ACTOR_RESTORED_RESULT, true)
+                        navController.report(actorRestoredKey, true)
                         navController.popBackStack()
                     },
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable<Feed> { entry ->
-                val signedResult by entry.savedStateHandle
-                    .getStateFlow(CONTENT_SIGNED_RESULT, false)
-                    .collectAsStateWithLifecycle()
-                val actorRestoredResult by entry.savedStateHandle
-                    .getStateFlow(ACTOR_RESTORED_RESULT, false)
-                    .collectAsStateWithLifecycle()
-                val expiredLabel by entry.savedStateHandle
-                    .getStateFlow<String?>(CONTENT_EXPIRED_RESULT, null)
-                    .collectAsStateWithLifecycle()
+                val (signedResult, consumeSigned) = entry.navResult(contentSignedKey)
+                val (actorRestored, consumeRestored) = entry.navResult(actorRestoredKey)
+                val (expiredLabel, consumeExpired) = entry.navResult(contentExpiredKey)
                 FeedRoute(
                     expiredLabel = expiredLabel,
-                    onExpiredDismissed = {
-                        entry.savedStateHandle[CONTENT_EXPIRED_RESULT] = null
-                    },
+                    onExpiredDismissed = consumeExpired,
                     onOpenDraft = {
-                        entry.savedStateHandle[CONTENT_EXPIRED_RESULT] = null
+                        consumeExpired()
                         navController.navigate(ComposePost())
                     },
-                    signedIn = signedIn,
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
                     onOpenTopic = { name -> navController.navigate(Topic(name)) },
-                    // Pushes the login screen (the web guest entries link
-                    // to /login), so back returns to the reading context.
-                    onSignInOrJoin = { navController.navigate(Login) },
+                    // The chats affordance the band carries (jakob
+                    // 2026-09-01). A signed-out tap opens the guest gate,
+                    // which is the edge the canvas draws; the signed-in
+                    // destination is a declared gap ("the chat surface (not
+                    // designed)"), so no control is drawn for a member
+                    // until it exists.
+                    onChats = if (signedIn == false) {
+                        { joinPrompt = true }
+                    } else {
+                        null
+                    },
                     refreshSignal = signedResult,
-                    onRefreshSignalConsumed = {
-                        entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
-                    },
-                    keyBanner = {
-                        if (signedIn == true) {
-                            KeyRestoreBannerRoute(
-                                onRestoreActor = { navController.navigate(Restore) },
-                            )
-                        }
-                    },
-                    banners = {
-                        if (signedIn == true) {
-                            StatusBannersRoute(
-                                actorRestoredResult = actorRestoredResult,
-                                onActorRestoredResultConsumed = {
-                                    entry.savedStateHandle[ACTOR_RESTORED_RESULT] = false
-                                },
-                                onStartKeyCeremony = { navController.navigate(KeyCeremony) },
-                                snackbarHostState = shellSnackbar,
-                            )
-                        }
-                    },
+                    onRefreshSignalConsumed = consumeSigned,
+                    keyBanner = keyBanner,
+                    borrowedViewBand = borrowedViewBand,
+                    banners = { statusBanners(actorRestored, consumeRestored) },
                 )
             }
             composable<ComposePost> { entry ->
@@ -526,9 +621,7 @@ private fun CograNavGraphContent(
                         // rather than the composer that made it.
                         onSigned = { nodeId ->
                             navController.popBackStack<Feed>(inclusive = false)
-                            navController.currentBackStackEntry
-                                ?.savedStateHandle
-                                ?.set(CONTENT_SIGNED_RESULT, true)
+                            navController.reportToCurrent(contentSignedKey, true)
                             navController.navigate(PostDetail(nodeId))
                         },
                         // "Nothing was spent — your draft is saved": the
@@ -536,65 +629,30 @@ private fun CograNavGraphContent(
                         // canonical `ComposeExpired` board draws it.
                         onExpired = { label ->
                             navController.popBackStack<Feed>(inclusive = false)
-                            navController.currentBackStackEntry
-                                ?.savedStateHandle
-                                ?.set(CONTENT_EXPIRED_RESULT, label)
+                            navController.reportToCurrent(contentExpiredKey, label)
                         },
                         onLeave = { navController.navigateUp() },
                         onRestoreKey = { navController.navigate(Restore) },
-                        keyBanner = {
-                            if (signedIn == true) {
-                                KeyRestoreBannerRoute(
-                                    onRestoreActor = { navController.navigate(Restore) },
-                                )
-                            }
-                        },
+                        keyBanner = keyBanner,
                     )
                     return@composable
                 }
                 ComposePostRoute(
                     postId = entry.toRoute<ComposePost>().postId,
                     referenceTargetId = entry.toRoute<ComposePost>().referenceTargetId,
-                    // A new post lands on the feed, where the author
-                    // finds it at the top marked as still settling —
-                    // content exists at authoring, not at landing
-                    // (substrate.md §6); the web twin lands on /feed
-                    // too. Popping to the feed tab — rather than
-                    // navigating to it — takes the composer and any
-                    // drill-in above the tab off the stack in one move,
-                    // leaving one feed entry whose result signal asks it
-                    // to re-read. An edit came from its post already and
-                    // simply returns to it, refreshed.
+                    // An edit came from its post already and simply
+                    // returns to it, refreshed.
                     onSaved = {
-                        if (editing) {
-                            navController.previousBackStackEntry
-                                ?.savedStateHandle
-                                ?.set(CONTENT_SIGNED_RESULT, true)
-                            navController.popBackStack()
-                        } else {
-                            navController.popBackStack<Feed>(inclusive = false)
-                            navController.currentBackStackEntry
-                                ?.savedStateHandle
-                                ?.set(CONTENT_SIGNED_RESULT, true)
-                        }
+                        navController.report(contentSignedKey, true)
+                        navController.popBackStack()
                     },
                     onBack = { navController.navigateUp() },
-                    keyBanner = {
-                        if (signedIn == true) {
-                            KeyRestoreBannerRoute(
-                                onRestoreActor = { navController.navigate(Restore) },
-                            )
-                        }
-                    },
+                    keyBanner = keyBanner,
                 )
             }
             composable<PostDetail> { entry ->
-                val signedResult by entry.savedStateHandle
-                    .getStateFlow(CONTENT_SIGNED_RESULT, false)
-                    .collectAsStateWithLifecycle()
-                val commentSignedResult by entry.savedStateHandle
-                    .getStateFlow(COMMENT_SIGNED_RESULT, false)
-                    .collectAsStateWithLifecycle()
+                val (signedResult, consumeSigned) = entry.navResult(contentSignedKey)
+                val (commentSigned, consumeCommentSigned) = entry.navResult(commentSignedKey)
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
                 PostDetailRoute(
                     postId = entry.toRoute<PostDetail>().postId,
@@ -621,20 +679,15 @@ private fun CograNavGraphContent(
                     },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
                     onOpenTopic = { name -> navController.navigate(Topic(name)) },
-                    onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onReference = { id ->
                         navController.navigate(ComposePost(referenceTargetId = id))
                     },
                     onSignInOrJoin = { navController.navigate(Login) },
                     onBack = { navController.navigateUp() },
                     refreshSignal = signedResult,
-                    onRefreshSignalConsumed = {
-                        entry.savedStateHandle[CONTENT_SIGNED_RESULT] = false
-                    },
-                    commentSignedSignal = commentSignedResult,
-                    onCommentSignedSignalConsumed = {
-                        entry.savedStateHandle[COMMENT_SIGNED_RESULT] = false
-                    },
+                    onRefreshSignalConsumed = consumeSigned,
+                    commentSignedSignal = commentSigned,
+                    onCommentSignedSignalConsumed = consumeCommentSigned,
                 )
             }
             composable<ReplyWizard> { entry ->
@@ -655,22 +708,14 @@ private fun CograNavGraphContent(
                     // Signed lands back on the thread it answers, which
                     // re-reads and shows the comment settling.
                     onSigned = {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(COMMENT_SIGNED_RESULT, true)
+                        navController.report(commentSignedKey, true)
                         navController.navigateUp()
                     },
                     // Leaving keeps nothing: comments have no drafts
                     // (jakob 2026-09-01).
                     onLeave = { navController.navigateUp() },
                     onRestoreKey = { navController.navigate(Restore) },
-                    keyBanner = {
-                        if (signedIn == true) {
-                            KeyRestoreBannerRoute(
-                                onRestoreActor = { navController.navigate(Restore) },
-                            )
-                        }
-                    },
+                    keyBanner = keyBanner,
                 )
             }
             composable<EditComment> { entry ->
@@ -679,9 +724,7 @@ private fun CograNavGraphContent(
                     commentId = route.commentId,
                     parentTitle = route.parentTitle,
                     onSaved = {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(COMMENT_SIGNED_RESULT, true)
+                        navController.report(commentSignedKey, true)
                         navController.navigateUp()
                     },
                     onLeave = { navController.navigateUp() },
@@ -697,25 +740,15 @@ private fun CograNavGraphContent(
             }
             composable<Profile> { entry ->
                 val route = entry.toRoute<Profile>()
-                val handleChangedResult by entry.savedStateHandle
-                    .getStateFlow(HANDLE_CHANGED_RESULT, false)
-                    .collectAsStateWithLifecycle()
-                val profileSavedResult by entry.savedStateHandle
-                    .getStateFlow(PROFILE_SAVED_RESULT, false)
-                    .collectAsStateWithLifecycle()
-                val actorRestoredResult by entry.savedStateHandle
-                    .getStateFlow(ACTOR_RESTORED_RESULT, false)
-                    .collectAsStateWithLifecycle()
+                val (handleChanged, consumeHandleChanged) = entry.navResult(handleChangedKey)
+                val (profileSaved, consumeProfileSaved) = entry.navResult(profileSavedKey)
+                val (actorRestored, consumeRestored) = entry.navResult(actorRestoredKey)
                 ProfileRoute(
                     handle = route.handle,
-                    handleChangedResult = handleChangedResult,
-                    onHandleChangedResultConsumed = {
-                        entry.savedStateHandle[HANDLE_CHANGED_RESULT] = false
-                    },
-                    profileSavedResult = profileSavedResult,
-                    onProfileSavedResultConsumed = {
-                        entry.savedStateHandle[PROFILE_SAVED_RESULT] = false
-                    },
+                    handleChangedResult = handleChanged,
+                    onHandleChangedResultConsumed = consumeHandleChanged,
+                    profileSavedResult = profileSaved,
+                    onProfileSavedResultConsumed = consumeProfileSaved,
                     onEdit = { navController.navigate(ProfileEdit) },
                     onOpenSettings = { navController.navigate(Settings) },
                     onOpenInvites = { navController.navigate(Invites) },
@@ -723,33 +756,18 @@ private fun CograNavGraphContent(
                     // The own-profile tab has no back arrow; another
                     // actor's profile is a drill-in.
                     onBack = if (route.handle == null) null else ({ navController.navigateUp() }),
-                    keyBanner = {
-                        if (route.handle == null && signedIn == true) {
-                            KeyRestoreBannerRoute(
-                                onRestoreActor = { navController.navigate(Restore) },
-                            )
-                        }
-                    },
+                    // Only the reader's own profile carries the shell
+                    // banners: another actor's is a drill-in.
+                    keyBanner = { if (route.handle == null) keyBanner() },
                     banners = {
-                        if (route.handle == null && signedIn == true) {
-                            StatusBannersRoute(
-                                actorRestoredResult = actorRestoredResult,
-                                onActorRestoredResultConsumed = {
-                                    entry.savedStateHandle[ACTOR_RESTORED_RESULT] = false
-                                },
-                                onStartKeyCeremony = { navController.navigate(KeyCeremony) },
-                                snackbarHostState = shellSnackbar,
-                            )
-                        }
+                        if (route.handle == null) statusBanners(actorRestored, consumeRestored)
                     },
                 )
             }
             composable<ProfileEdit> {
                 ProfileEditRoute(
                     onSaved = {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(PROFILE_SAVED_RESULT, true)
+                        navController.report(profileSavedKey, true)
                         navController.popBackStack()
                     },
                     onPicturePicked = { uri -> navController.navigate(AvatarFlow(uri)) },
@@ -760,9 +778,7 @@ private fun CograNavGraphContent(
                 AvatarFlowRoute(
                     uri = entry.toRoute<AvatarFlow>().uri,
                     onSigned = {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(PROFILE_SAVED_RESULT, true)
+                        navController.reportTo<Profile, _>(profileSavedKey, true)
                         navController.popBackStack()
                     },
                     onLeave = { navController.popBackStack() },
@@ -774,19 +790,9 @@ private fun CograNavGraphContent(
             composable<Settings> {
                 SettingsRoute(
                     onBack = { navController.navigateUp() },
-                    onHandleChanged = {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set(HANDLE_CHANGED_RESULT, true)
-                    },
+                    onHandleChanged = { navController.report(handleChangedKey, true) },
                     onExportKey = { navController.navigate(KeyExport) },
-                    keyBanner = {
-                        if (signedIn == true) {
-                            KeyRestoreBannerRoute(
-                                onRestoreActor = { navController.navigate(Restore) },
-                            )
-                        }
-                    },
+                    keyBanner = keyBanner,
                 )
             }
             composable<KeyExport> {

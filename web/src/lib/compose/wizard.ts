@@ -23,8 +23,38 @@ import { PUBLIC_DOMAIN } from "@/lib/license";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 
-/** The write side's cap; a whole-batch refusal, so the picker enforces it too. */
+/**
+ * The write side's cap; a whole-batch refusal, so the picker enforces it too.
+ * Pinned to `client-constants.json` in `lib/client-constants.test.ts`.
+ */
 export const POST_ATTACHMENT_CAP = 10;
+
+/**
+ * The write side's cap on a title, pinned to `client-constants.json` in
+ * `lib/client-constants.test.ts`.
+ */
+export const TITLE_MAX_CHARS = 100;
+
+/**
+ * A title's length as the SERVER measures it — Unicode scalar values, which
+ * is what Rust's `chars().count()` counts.
+ *
+ * `"".length` counts UTF-16 code units instead, so one emoji weighs two there
+ * and one here. That difference is why the field carries this check rather
+ * than an HTML `maxLength`, whose unit is the code unit: a native cap would
+ * stop a title the server would have taken, and a client stricter than the
+ * server is the one failure a mirrored cap must not have.
+ */
+export function titleLength(title: string): number {
+  return [...title.trim()].length;
+}
+
+/** The refusal an over-long title earns, or null. */
+export function titleProblem(title: string): string | null {
+  return titleLength(title) > TITLE_MAX_CHARS
+    ? `Too long — at most ${TITLE_MAX_CHARS} characters.`
+    : null;
+}
 
 export type BodyMode = "words" | "media";
 
@@ -217,12 +247,22 @@ export function bodyGate(state: WizardState): Gate {
   return ALLOWED;
 }
 
-/** The cover screen's own gate: a video may not leave it faceless. */
-export function coverGate(state: WizardState): Gate {
-  if (!isVideoPost(state)) return ALLOWED;
-  return state.cover === null
-    ? { ok: false, reason: "Choose a frame, or a picture of your own." }
-    : ALLOWED;
+/** The details are optional, but a title that is there answers to its cap. */
+export function detailsGate(state: WizardState): Gate {
+  const problem = titleProblem(state.title);
+  return problem === null ? ALLOWED : { ok: false, reason: problem };
+}
+
+/**
+ * The cover screen's own gate. A faceless video is not a wall: the contract,
+ * the database, and the backend all accept `coverMediaId: null`, so nothing
+ * here should refuse what the rest of the system already allows (jakob,
+ * 2026-09-10 — "going without a cover is always possible"). Capture still
+ * auto-fills the first frame the moment it succeeds; this gate just stops
+ * treating its absence as a reason to hold the reader on the screen.
+ */
+export function coverGate(): Gate {
+  return ALLOWED;
 }
 
 /** Every upload this draft is waiting on — the cover counts, though it is no attachment. */
@@ -249,8 +289,12 @@ export function uploadsFailed(state: WizardState): number {
 export function sealGate(state: WizardState): Gate {
   const body = bodyGate(state);
   if (!body.ok) return body;
+  // The details screen already refuses it, but the seal is the boundary the
+  // server sees — a draft that reached here over-titled would sign a refusal.
+  const details = detailsGate(state);
+  if (!details.ok) return details;
   if (state.mode === "words") return ALLOWED;
-  const cover = coverGate(state);
+  const cover = coverGate();
   if (!cover.ok) return cover;
   // A video post's two uploads are the clip and its cover, so the count is
   // never the plural "pictures" a gallery would report — it says "video"
@@ -289,12 +333,13 @@ export function advanceGate(state: WizardState): Gate {
     // A frame is selected the moment the clip is read, so this only ever
     // speaks when no frame could be taken and no picture was chosen.
     case "cover":
-      return coverGate(state);
-    // Every picture has a crop from the moment it is picked, and the details
-    // are all optional, so neither screen can be incomplete.
+      return coverGate();
+    // Every picture has a crop from the moment it is picked, so that screen
+    // cannot be incomplete.
     case "crop":
-    case "details":
       return ALLOWED;
+    case "details":
+      return detailsGate(state);
     case "seal":
       return sealGate(state);
   }

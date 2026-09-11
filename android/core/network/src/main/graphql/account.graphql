@@ -18,6 +18,19 @@ query Me {
   }
 }
 
+# Whose view this reader browses from (api-spec.md "Queries") — the one
+# read behind the borrowed-view band, and the only one a signed-out
+# reader makes about themselves. Null once their own view exists.
+query BorrowedView {
+  borrowedView {
+    id
+    handle
+    displayName {
+      value
+    }
+  }
+}
+
 query KeyBackup {
   me {
     id

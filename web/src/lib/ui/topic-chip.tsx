@@ -22,20 +22,18 @@ import Link from "next/link";
 export function TopicChip({
   name,
   href,
-  pending = false,
   onRemove,
   removeLabel,
   onSelect,
   selectLabel,
   expanded,
+  capped = false,
   testId,
 }: {
   /** The canonical name (hashtag.md §1) — displayed as `#name`. */
   name: string;
   /** Omit for a draft chip not yet backed by a route (composer). */
   href?: string;
-  /** The winning record is still in flight (`TopicClaim.pending`). */
-  pending?: boolean;
   /** Present only for a removable chip. */
   onRemove?: () => void;
   removeLabel?: string;
@@ -44,13 +42,24 @@ export function TopicChip({
   selectLabel?: string;
   /** Whether `onSelect`'s panel is open, for the label's `aria-expanded`. */
   expanded?: boolean;
+  /**
+   * The one-line form `TopicsLine` uses: the label on one line, the chip
+   * sized to it. It carries NO width ceiling — a chip that cannot fit its
+   * line is dropped from it rather than cut (jakob's ruling, 2026-09-09), so
+   * the only thing this shape adds is the promise never to wrap or shrink.
+   */
+  capped?: boolean;
   testId?: string;
 }) {
   const label = `#${name}`;
   return (
     <span
       data-testid={testId}
-      className="inline-flex items-center gap-1 rounded-full bg-secondary-container px-3 py-1 text-label-medium text-on-secondary-container"
+      className={
+        capped
+          ? "inline-block flex-none whitespace-nowrap rounded-full bg-secondary-container px-3 py-1 align-middle text-label-medium text-on-secondary-container"
+          : "inline-flex items-center gap-1 rounded-full bg-secondary-container px-3 py-1 text-label-medium text-on-secondary-container"
+      }
     >
       {href !== undefined ? (
         <Link href={href} data-testid={testId !== undefined ? `${testId}-link` : undefined}>
@@ -69,15 +78,6 @@ export function TopicChip({
         </button>
       ) : (
         <span>{label}</span>
-      )}
-      {pending && (
-        <span
-          aria-hidden="true"
-          data-testid={testId !== undefined ? `${testId}-pending` : undefined}
-          className="text-on-surface-variant"
-        >
-          …
-        </span>
       )}
       {onRemove !== undefined && (
         <button

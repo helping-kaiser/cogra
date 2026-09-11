@@ -18,6 +18,7 @@ import com.cogra.domain.SelfMarkView
 import com.cogra.domain.UserError
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
+import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
@@ -53,6 +54,7 @@ class PostDetailViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val landings = LandingSignal()
     private val reveals = SensitiveReveals()
+    private val seenPosts = SeenPosts()
     private val actor = ActorKey.generate()
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val sealer = SealingWriteRepository(actor)
@@ -150,6 +152,8 @@ class PostDetailViewModelTest {
             attachments: List<AttachmentClaim>,
             pDirected: Double?,
             pInterest: Double?,
+            sensitive: Boolean,
+            sensitiveReason: String?,
         ): Outcome<PreparedContentView> {
             replyTargets += target
             commentPrepared += 1
@@ -220,17 +224,7 @@ class PostDetailViewModelTest {
         }
     }
 
-    private fun viewModel() = PostDetailViewModel(content, landings, reveals)
-
-    /**
-     * Most tests exercise the staging, not the confirm (F4): the device
-     * has already said "don't ask", and the collector has read that
-     * before the first submit.
-     */
-    private fun viewModelWithoutConfirm(): PostDetailViewModel {
-        identity.confirmMultiAction.value = false
-        return viewModel().also { dispatcher.scheduler.advanceUntilIdle() }
-    }
+    private fun viewModel() = PostDetailViewModel(content, landings, reveals, seenPosts, WEB_ORIGIN)
 
     @Before
     fun setUp() {
@@ -251,6 +245,66 @@ class PostDetailViewModelTest {
         assertThat(state.post?.id).isEqualTo("post-1")
         assertThat(state.comments.map { it.id }).containsExactly("c1")
         assertThat(state.commentsHaveMore).isTrue()
+    }
+
+    @Test
+    fun aPostTheDeviceHasAlreadyReadPaintsBeforeItsOwnReadReturns() = runTest(dispatcher) {
+        // HT-10: opening from the feed used to show a spinner over
+        // nothing for a round trip, so the forward slide had nothing to
+        // carry. The held copy is the first frame, never the answer.
+        seenPosts.saw(testPost("post-1"))
+        val vm = viewModel()
+        vm.start("post-1")
+
+        // Before the read has had a chance to come back.
+        assertThat(vm.state.value.post?.id).isEqualTo("post-1")
+        assertThat(vm.state.value.loading).isFalse()
+        // The thread is only ever the fresh read's.
+        assertThat(vm.state.value.comments).isEmpty()
+        // And the read that catches up behind says NOTHING: an indicator
+        // over a post the reader can already see claims the screen is
+        // still arriving when it has arrived (F2-9).
+        assertThat(vm.state.value.refreshing).isFalse()
+
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.detailReads).isEqualTo(1)
+        assertThat(vm.state.value.comments.map { it.id }).containsExactly("c1")
+        assertThat(vm.state.value.refreshing).isFalse()
+    }
+
+    @Test
+    fun aPostTheDeviceHasNotSeenStillOpensEmptyAndLoading() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        assertThat(vm.state.value.post).isNull()
+        assertThat(vm.state.value.loading).isTrue()
+        // Empty is not the same as refreshing: the surface says what it
+        // is doing in its own loading state, and the pull indicator
+        // stays for the gesture that owns it.
+        assertThat(vm.state.value.refreshing).isFalse()
+    }
+
+    @Test
+    fun aReadersOwnPullIsTheOneReadThatReportsItself() = runTest(dispatcher) {
+        seenPosts.saw(testPost("post-1"))
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refreshing).isFalse()
+
+        vm.refresh()
+        assertThat(vm.state.value.refreshing).isTrue()
+
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.refreshing).isFalse()
+    }
+
+    @Test
+    fun eachReadHoldsThePostForTheNextOpen() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start("post-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(seenPosts.lastSeen("post-1")?.id).isEqualTo("post-1")
     }
 
     // Every read of the post is the device's freshest word on where it
@@ -436,47 +490,7 @@ class PostDetailViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.replyThreads["c1"]?.failed).isTrue()
     }
-
-    // -- The value reveal (F8) --
-
-    /** Nobody sees how strongly a topic is claimed unasked. */
-    @Test
-    fun noChipRowStartsRevealed() = runTest(dispatcher) {
-        val vm = viewModel()
-        vm.start("post-1")
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.revealedTagRows).isEmpty()
-    }
-
-    @Test
-    fun theRevealTogglesPerRowAndBackAgain() = runTest(dispatcher) {
-        val vm = viewModel()
-        vm.onToggleTagValues("post-1")
-        assertThat(vm.state.value.revealedTagRows).containsExactly("post-1")
-
-        vm.onToggleTagValues("c1")
-        assertThat(vm.state.value.revealedTagRows).containsExactly("post-1", "c1")
-
-        vm.onToggleTagValues("post-1")
-        assertThat(vm.state.value.revealedTagRows).containsExactly("c1")
-    }
-
-    // -- Comment compose gains tags (F9) --
-
-    private fun startedVm(): PostDetailViewModel = viewModelWithoutConfirm().also {
-        it.start("post-1")
-        dispatcher.scheduler.advanceUntilIdle()
-    }
-
-    /** The reference row's reveal is its own; the tag row's stays shut. */
-    @Test
-    fun theReferenceRevealTogglesApartFromTheTagReveal() = runTest(dispatcher) {
-        val vm = startedVm()
-        vm.onToggleReferenceValues("post-1")
-        assertThat(vm.state.value.revealedReferenceRows).containsExactly("post-1")
-        assertThat(vm.state.value.revealedTagRows).isEmpty()
-
-        vm.onToggleReferenceValues("post-1")
-        assertThat(vm.state.value.revealedReferenceRows).isEmpty()
-    }
 }
+
+/** The build's web origin, as the share link is built from it. */
+private const val WEB_ORIGIN = "https://cogra.example"

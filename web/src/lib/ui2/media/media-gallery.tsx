@@ -26,10 +26,17 @@ import { tileRatio } from "./aspect";
 import { MediaTile, type MediaTileProps } from "./media-tile";
 import type { PlayerSurface } from "./video-player";
 
+/**
+ * One entry in a gallery — always a real attachment, never the tile's
+ * asset-less placeholder, so `mimeType` is REQUIRED here even though
+ * `MediaTile` takes it optionally. That is what makes an omitted
+ * `mimeType` selection a compile error at the read that built the items
+ * rather than an image tile where a player belongs.
+ */
 export type GalleryItem = Pick<
   MediaTileProps,
-  "src" | "altText" | "sourceRatio" | "label" | "mimeType" | "poster" | "durationMs"
->;
+  "src" | "altText" | "sourceRatio" | "label" | "poster" | "durationMs"
+> & { mimeType: string };
 
 export type { PlayerSurface } from "./video-player";
 
@@ -58,6 +65,7 @@ function fitInFrame(sourceRatio: number | null | undefined, frameRatio: number):
 export function MediaGallery({
   items,
   ratio,
+  fit,
   radius = "var(--radius-medium)",
   maxHeight,
   preloadLead = false,
@@ -71,6 +79,14 @@ export function MediaGallery({
   // The one frame every picture renders at. Omitted, the first picture's shape
   // sets it — which is exactly right for a post, where the whole set shares one.
   ratio?: number;
+  /**
+   * Overrides the per-item fit the frame would otherwise compute
+   * (`fitFor`/`fitInFrame`, which fit a post's own crop whole). The comment
+   * scale is the one caller that needs this: design/readme.md states a
+   * comment's pictures and clips alike FILL their square frame, uncropped
+   * bytes included — never letterboxed, whatever their source shape.
+   */
+  fit?: "contain" | "cover";
   radius?: string;
   maxHeight?: string;
   preloadLead?: boolean;
@@ -125,6 +141,7 @@ export function MediaGallery({
       <MediaTile
         {...items[0]}
         ratio={ratio}
+        fit={fit}
         radius={radius}
         maxHeight={maxHeight}
         preload={preloadLead}
@@ -179,7 +196,7 @@ export function MediaGallery({
             <MediaTile
               {...item}
               ratio={frameRatio}
-              fit={fitInFrame(item.sourceRatio, frameRatio)}
+              fit={fit ?? fitInFrame(item.sourceRatio, frameRatio)}
               radius={radius}
               maxHeight={maxHeight}
               preload={index === 0 && preloadLead}

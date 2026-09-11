@@ -149,7 +149,7 @@ export function ReplyWizard({
       if (asset.upload.kind !== "waiting" || started.current.has(asset.id)) continue;
       started.current.add(asset.id);
       // No ratio: a comment's pictures keep their own shape.
-      void runUpload(client, asset, undefined, (upload) =>
+      void runUpload(client, guard, asset, undefined, (upload) =>
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
@@ -295,6 +295,8 @@ export function ReplyWizard({
         references: state.references,
         attachments: commentAttachmentClaims(state.media) ?? undefined,
         stance: state.stance,
+        sensitive: state.sensitive,
+        sensitiveReason: state.sensitiveReason,
       }),
     );
 
@@ -327,8 +329,7 @@ export function ReplyWizard({
   };
 
   const finish = async (node: string, writes: readonly StagedWriteView[]) => {
-    const results = [];
-    for (const staged of writes) results.push(await signer.signStaged(staged));
+    const results = await signer.sign(writes);
     setBusy(false);
 
     if (results.every((result) => result.kind === "done")) {
@@ -446,6 +447,9 @@ export function ReplyWizard({
           }}
           onTags={(tags) => dispatch({ type: "tags", tags })}
           onReferences={(references) => dispatch({ type: "references", references })}
+          onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
+          onSensitiveReason={(reason) => dispatch({ type: "sensitiveReason", reason })}
+          onSensitiveHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
           onSign={() => void submit()}
           onBack={() => dispatch({ type: "back" })}
           onRestoreKey={() => router.push("/restore")}

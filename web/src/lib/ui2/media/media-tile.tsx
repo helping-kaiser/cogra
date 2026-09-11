@@ -29,7 +29,17 @@ export function isVideoAsset(mimeType?: string | null): boolean {
 
 export type MediaTileProps = {
   src?: string | null;
-  /** What the asset IS. Absent on every surface that has no video to draw. */
+  /**
+   * What the asset IS.
+   *
+   * Optional HERE and required on `GalleryItem`, which is the deliberate
+   * split: a gallery entry is always a real attachment, and the contract
+   * types `MediaAttachment.mimeType` as `String!`, so an omitted
+   * selection has to be a compile error there. This component also draws
+   * the ASSET-LESS reserved region — a labelled frame with no `src` at
+   * all — and demanding a type for a file that does not exist would be
+   * demanding a fabrication.
+   */
   mimeType?: string | null;
   /**
    * The video's face. Null where the asset names none — and null where the
@@ -89,12 +99,24 @@ export function MediaTile({
   const objectFit = fit ?? fitFor(sourceRatio);
   const alt = altText ?? "";
 
-  // A VIDEO IS NOT A TILE WITH A PLAY BUTTON. It carries its own controls and
-  // its own aspect, so it is rendered whole rather than fitted into the frame
-  // an image reserves — and it is never wrapped in the `onOpen` button below,
-  // because a control surface inside a button steals every press the reader
-  // aims at the scrubber.
+  // A VIDEO IS NOT A TILE WITH A PLAY BUTTON: it carries its own controls, and
+  // it is never wrapped in the `onOpen` button below, because a control surface
+  // inside a button steals every press the reader aims at the scrubber.
+  //
+  // IT STILL TAKES A FRAME. A clip keeps its native ratio CLAMPED TO TALL (the
+  // reel round): 16:9 and 1:1 display true, anything taller than 4:5
+  // centre-crops to it, and letterboxing exists nowhere — which is a crop
+  // against a reserved shape, so the shape has to be reserved. A clip whose
+  // shape the server has not probed yet gets no frame to be cropped against and
+  // runs at its own, bounded by the height cap alone.
   if (isVideoAsset(mimeType) && src) {
+    const known =
+      // A COMMENT'S CLIP ALWAYS TAKES THE FRAME (ReplyMedia): one shape for
+      // every comment attachment, so a thread does not change rhythm when a
+      // clip lands in it — the square stands whether the shape is probed or not.
+      surface === "reading" ||
+      ratio !== undefined ||
+      (typeof sourceRatio === "number" && Number.isFinite(sourceRatio) && sourceRatio > 0);
     const player = (
       <VideoPlayer
         src={src}
@@ -103,14 +125,11 @@ export function MediaTile({
         durationMs={durationMs}
         autoplay={autoplay}
         surface={surface}
+        framed={known}
         testId={testId}
       />
     );
-    // A COMMENT'S CLIP KEEPS THE FRAME, a post's does not. ReplyMedia draws the
-    // thread's video in the same square the pictures use — one shape for every
-    // comment attachment, so a thread does not change rhythm when a clip lands
-    // in it. A post's video runs at its own shape under the card's width.
-    if (surface !== "reading") return player;
+    if (!known) return player;
     return (
       <span
         data-testid={testId ? `${testId}-frame` : undefined}

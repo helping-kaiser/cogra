@@ -198,6 +198,22 @@ const val DEFAULT_STANCE = 0.1
 // Content (slice 2 — api-spec.md "Content nodes", "Content authoring")
 // ---------------------------------------------------------------------
 
+/**
+ * A whole node's moderation state, as against [FieldStatus]'s per-field
+ * one. It is what tells a passed proposal's removal from an author's
+ * own, which the docs require to stay distinguishable — collapsing them
+ * lets a verdict hide behind an author's decision.
+ *
+ * UNKNOWN is the forward-compatible fallback: a state this build cannot
+ * name is never read as a verdict.
+ */
+enum class ModerationState {
+    NORMAL,
+    SENSITIVE,
+    ILLEGAL,
+    UNKNOWN,
+}
+
 /** Per-field moderation state; UNKNOWN renders like REDACTED (hide). */
 enum class FieldStatus {
     NORMAL,
@@ -294,8 +310,35 @@ data class MediaAssetView(
         /** What an absent or unparsable `options.aspectRatio` reads as. */
         const val FALLBACK_RATIO = 1f
 
-        fun ratioOf(raw: String?): Float =
-            raw?.toFloatOrNull()?.takeIf { it.isFinite() && it > 0f } ?: FALLBACK_RATIO
+        /**
+         * `MediaOptions.aspectRatio` as a number.
+         *
+         * THE CONTRACT STATES THE SHAPE AS `"W:H"` in lowest terms
+         * (api-spec.md `MediaOptions`) — "4:5", "1:1", "540:283" — so it
+         * is read as a ratio and never as a decimal. Read as a decimal
+         * every asset in the app fell back to square, which cropped
+         * pictures the author framed and stretched a clip's surface to a
+         * shape the clip does not have.
+         *
+         * Exactly two parts: taking the first two of three would accept
+         * "4:5:6" as a shape nobody stated. Anything else falls back to
+         * square rather than to zero — the field exists to reserve space
+         * before the load, and a zero would collapse the tile it is meant
+         * to hold open.
+         */
+        fun ratioOf(raw: String?): Float {
+            // A side a shape can be stated in: finite and positive.
+            val parts = raw?.split(':')
+                ?.map { part -> part.trim().toFloatOrNull()?.takeIf { it.isFinite() && it > 0f } }
+                .orEmpty()
+            val width = parts.getOrNull(0)
+            val height = parts.getOrNull(1)
+            return if (parts.size == 2 && width != null && height != null) {
+                width / height
+            } else {
+                FALLBACK_RATIO
+            }
+        }
     }
 }
 
@@ -363,6 +406,15 @@ data class PostView(
     val attachments: List<MediaAssetView> = emptyList(),
     /** The gallery's state — one for the whole set, never per asset (D12). */
     val attachmentsStatus: FieldStatus = FieldStatus.NORMAL,
+    /** This post's own moderation state — what names a removal's reason. */
+    val moderation: ModerationState = ModerationState.NORMAL,
+    /**
+     * How many comments this post holds, across every page — the number
+     * the card's comment affordance states, on the feed and the detail
+     * alike. Cursor-independent, so it is the thread's size and not the
+     * page's.
+     */
+    val commentCount: Int = 0,
 ) {
     /** The body is media rather than words (D16). */
     val isMediaPost: Boolean get() = attachments.isNotEmpty()
@@ -399,6 +451,24 @@ data class CommentView(
      */
     val attachments: List<MediaAssetView> = emptyList(),
     val attachmentsStatus: FieldStatus = FieldStatus.NORMAL,
+    /** This comment's own moderation state — what names a removal's reason. */
+    val moderation: ModerationState = ModerationState.NORMAL,
+    /**
+     * The author's **own** sensitive mark, alone — not the veil.
+     *
+     * The field statuses carry the veil, which is the OR of this mark
+     * and a moderator's verdict. It is what tells the veil whose mark it
+     * is: an author's warning and the platform's verdict read back as
+     * the same veil, so the face has to name which one a reader met.
+     */
+    val sensitiveSelfMark: Boolean = false,
+    /**
+     * The public reason the author gave for their own mark — shown on
+     * the veil, so a reader chooses whether to look knowing what they
+     * would be looking at. Null when unmarked, when the mark carries no
+     * reason, and when the payload is gone.
+     */
+    val sensitiveReason: String? = null,
 )
 
 /**
@@ -625,6 +695,13 @@ data class ProfileView(
     val websiteUrl: ModeratedField,
     /** Null for an account that has never set one — the monogram (D13). */
     val avatar: MediaAssetView? = null,
+    /**
+     * The newest profile version's authoring instant — what says *which*
+     * version this is. A profile edit lands asynchronously, and the read
+     * serves only what has landed, so this is how a screen tells the
+     * version it asked for from the one it already had.
+     */
+    val updatedAt: Instant = Instant.EPOCH,
 )
 
 /** A tappable link from a chronicle row into the content it touched. */

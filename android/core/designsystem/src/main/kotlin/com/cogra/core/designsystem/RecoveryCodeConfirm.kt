@@ -12,7 +12,7 @@
 //
 // The typed-back text is pure view state, so it lives here rather than
 // in a ViewModel; the rule for reading it belongs to the domain, which
-// is why [matches] arrives as a parameter.
+// is why [matches] and [diverged] both arrive as parameters.
 
 package com.cogra.core.designsystem
 
@@ -48,7 +48,9 @@ import kotlinx.coroutines.launch
 /**
  * Renders [code] with its [explainer] and the confirmation that
  * dismisses it, calling [onConfirmed] once the reader has answered with
- * the code itself. [matches] decides what counts as that code.
+ * the code itself. [matches] decides what counts as that code;
+ * [diverged] decides when a still-incomplete answer has already gone
+ * wrong.
  *
  * Test tags: `recovery_code`, `recovery_code_copy`,
  * `recovery_code_copied`, `recovery_code_typed_back`,
@@ -59,6 +61,7 @@ fun RecoveryCodeConfirm(
     code: String,
     explainer: String,
     matches: (String) -> Boolean,
+    diverged: (String) -> Boolean,
     onConfirmed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -100,14 +103,16 @@ fun RecoveryCodeConfirm(
                 )
             }
         }
-        OutlinedTextField(
-            value = typedBack,
-            onValueChange = { typedBack = it },
-            label = { Text(stringResource(R.string.recovery_code_type_back)) },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("recovery_code_typed_back"),
+        ConfirmField(
+            typedBack = typedBack,
+            onTypedBackChange = { typedBack = it },
+            // A diverged prefix is answered where it was typed: a
+            // disabled button with no reason reads as a broken screen,
+            // and this is the one screen a reader cannot come back to
+            // for the code. The line fires on divergence, not on every
+            // non-match — a correct-so-far partial is still on its way
+            // to being right (design/components/forms/RecoveryCode.jsx).
+            diverged = diverged(typedBack),
         )
         Button(
             onClick = onConfirmed,
@@ -119,6 +124,39 @@ fun RecoveryCodeConfirm(
             Text(stringResource(R.string.recovery_code_saved))
         }
     }
+}
+
+/**
+ * The field the code is typed back into, wearing the divergence as its
+ * own supporting line — Material's arrangement, which also puts the
+ * message inside the field's accessible name rather than beside it.
+ */
+@Composable
+private fun ConfirmField(
+    typedBack: String,
+    onTypedBackChange: (String) -> Unit,
+    diverged: Boolean,
+) {
+    OutlinedTextField(
+        value = typedBack,
+        onValueChange = onTypedBackChange,
+        label = { Text(stringResource(R.string.recovery_code_type_back)) },
+        singleLine = true,
+        isError = diverged,
+        supportingText = if (diverged) {
+            {
+                Text(
+                    text = stringResource(R.string.recovery_code_mismatch),
+                    modifier = Modifier.testTag("recovery_code_mismatch"),
+                )
+            }
+        } else {
+            null
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("recovery_code_typed_back"),
+    )
 }
 
 /**

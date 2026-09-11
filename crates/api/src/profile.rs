@@ -15,7 +15,7 @@ use common::envelope::CograProfile;
 use common::l1::census::Family;
 use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::LandingOrder;
-use postgres_store::{PgPool, auth as store, content as content_store, mirror, profile, staged};
+use postgres_store::{PgPool, content as content_store, mirror, profile, staged};
 use uuid::Uuid;
 
 use crate::ingest::PromotionFailure;
@@ -121,10 +121,9 @@ pub async fn prepare_profile_update<B: L1Boundary>(
             message: "the display name cannot be cleared".into(),
         });
     }
-    let address = store::actor_identity(pool, viewer)
-        .await?
-        .and_then(|identity| identity.l0_address)
-        .ok_or_else(|| ProfileError::Internal("viewer without an attached address".into()))?;
+    let address = crate::nodes::required_address(pool, viewer)
+        .await
+        .map_err(|e| ProfileError::Internal(e.to_string()))?;
     let prof = NodeId::Prof(address.clone());
     let prof_string = prof.to_string();
     if staged::has_pending_targeting(pool, viewer, Family::Registration, &prof_string).await? {
@@ -215,10 +214,20 @@ pub async fn land_promoted(
 /// present-but-empty field clears and an absent one keeps what stands. An
 /// empty display name never leaves prepare, and one arriving here is
 /// therefore a fault rather than a clear.
+///
+/// Not every landed `Family::Registration` is a profile update: the
+/// admission and genesis payloads share the family. A profile update
+/// always asserts its chain parent (substrate.md §9) and those are
+/// unchained, so that structural fact is the discriminator — the same one
+/// `onboarding::ensure_admission_staged` uses for the mirror-image
+/// decision. Sniffing the payload's leading bytes instead would
+/// re-assert `common::envelope`'s wire framing here, and a change to that
+/// framing would silently reclassify every profile update as an admission
+/// payload and return `Ok(())` for all of them.
 async fn land_one(pool: &PgPool, write: &staged::PromotedWrite) -> Result<(), ProfileError> {
     let staged_row = staged::load(pool, write.id).await?;
     let payload = &staged_row.proposal.payload;
-    if !payload.starts_with(&[0xD9, 0xD9, 0xF7]) {
+    if staged_row.proposal.body.asserted_parents.is_empty() {
         return Ok(());
     }
     let sealed = staged_row

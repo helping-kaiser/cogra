@@ -209,6 +209,42 @@
       "page": "entry"
     },
     {
+      "file": "ResetNew.dc.html",
+      "title": "Set a new password",
+      "x": 0,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "InviteEntryError.dc.html",
+      "title": "Enter your invite · that isn't a link",
+      "x": 480,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "VerifiedApp.dc.html",
+      "title": "Email verified · in the app",
+      "x": 960,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "VerifyExpired.dc.html",
+      "title": "Verification link · already used or expired",
+      "x": 1440,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "ComposePick.dc.html",
       "title": "Compose · pick the body",
       "x": 0,
@@ -416,6 +452,15 @@
       "page": "comments"
     },
     {
+      "file": "CommentLicense.dc.html",
+      "title": "Comment · the license sheet",
+      "x": 2400,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "CommentEditActs.dc.html",
       "title": "Edit comment · the acts",
       "x": 1440,
@@ -524,6 +569,15 @@
       "page": "comments"
     },
     {
+      "file": "ReplyPadHelp.dc.html",
+      "title": "Reply · the pad's \"?\"",
+      "x": 5280,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "EditCompose.dc.html",
       "title": "Edit post",
       "x": 0,
@@ -608,6 +662,15 @@
       "file": "RefsSheet.dc.html",
       "title": "Topics & references · the sheet",
       "x": 1920,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "TagPadCompose.dc.html",
+      "title": "A staged tag's pair · composing",
+      "x": 2400,
       "y": 4240,
       "w": 390,
       "h": 844,
@@ -821,6 +884,15 @@
       "page": "media"
     },
     {
+      "file": "ComposeCoverPlaying.dc.html",
+      "title": "Cover · the preview playing",
+      "x": 2880,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
       "file": "FeedCover.dc.html",
       "title": "Feed · the cover at rest",
       "x": 0,
@@ -858,7 +930,7 @@
     },
     {
       "file": "PostLicense.dc.html",
-      "title": "Post · the license unfolded",
+      "title": "Post · the license sheet",
       "x": 2400,
       "y": 2120,
       "w": 390,
@@ -899,6 +971,33 @@
       "y": 3180,
       "w": 844,
       "h": 390,
+      "page": "media"
+    },
+    {
+      "file": "FeedShapes.dc.html",
+      "title": "Feed · the clip's three shapes",
+      "x": 0,
+      "y": 4240,
+      "w": 390,
+      "h": 1934,
+      "page": "media"
+    },
+    {
+      "file": "ComposeDetailsVideo.dc.html",
+      "title": "Details · a clip, no cover",
+      "x": 480,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "ComposeCoverNoFrames.dc.html",
+      "title": "Cover · no frames came back",
+      "x": 960,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
       "page": "media"
     },
     {
@@ -1005,25 +1104,25 @@
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 3284,
+      "h": 3696,
       "page": "entry",
       "title": "Entry · flow map"
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -2450,
+      "x": -3030,
       "y": 0,
-      "w": 2030,
-      "h": 2346,
+      "w": 2610,
+      "h": 2553,
       "page": "compose",
       "title": "Compose · flow map"
     },
     {
       "file": "MapComments.dc.html",
-      "x": -3610,
+      "x": -3900,
       "y": 0,
-      "w": 3190,
-      "h": 1490,
+      "w": 3480,
+      "h": 1524,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -1032,7 +1131,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1285,
+      "h": 1984,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1041,7 +1140,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1249,
+      "h": 1275,
       "page": "money",
       "title": "Money & Wallet · flow map"
     },
@@ -1050,7 +1149,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 2425,
+      "h": 2996,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1083,10 +1182,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -2450,
+      "x": -3030,
       "y": 0,
-      "w": 2030,
-      "h": 1542,
+      "w": 2610,
+      "h": 2328,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1127,10 +1226,28 @@
       "page": "profile"
     },
     {
-      "file": "ProfileEditError.dc.html",
-      "title": "Edit profile · an empty name",
-      "x": 0,
-      "y": 1928,
+      "file": "ProfileMoreFailed.dc.html",
+      "title": "Profile · the chronicle can't load more",
+      "x": 960,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileNotFound.dc.html",
+      "title": "Profile · no such profile",
+      "x": 1440,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileUnreachable.dc.html",
+      "title": "Profile · can't reach the server",
+      "x": 1920,
+      "y": 964,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1161,6 +1278,177 @@
       "w": 390,
       "h": 844,
       "page": "profile"
+    },
+    {
+      "file": "Settings.dc.html",
+      "title": "Settings · the whole page",
+      "x": 0,
+      "y": 1928,
+      "w": 390,
+      "h": 1774,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsBackup.dc.html",
+      "title": "Settings · a new recovery code",
+      "x": 480,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "YourKey.dc.html",
+      "title": "Settings · your key",
+      "x": 960,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsLicense.dc.html",
+      "title": "Settings · the default license",
+      "x": 1440,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsReading.dc.html",
+      "title": "Settings · what your feed shows",
+      "x": 1920,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangePassword.dc.html",
+      "title": "Settings · change your password",
+      "x": 2400,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeHandle.dc.html",
+      "title": "Settings · change your handle",
+      "x": 2880,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeEmail.dc.html",
+      "title": "Settings · change your email",
+      "x": 3360,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeEmailConfirm.dc.html",
+      "title": "Settings · confirm the email change",
+      "x": 3840,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsBackupKeyAbsent.dc.html",
+      "title": "Settings · a new recovery code, key absent",
+      "x": 480,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "YourKeyAbsent.dc.html",
+      "title": "Settings · your key, key absent",
+      "x": 960,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "TagPage.dc.html",
+      "title": "A tag's page",
+      "x": 0,
+      "y": 2120,
+      "w": 390,
+      "h": 1280,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageEmpty.dc.html",
+      "title": "A tag nothing carries yet",
+      "x": 480,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "TagPicker.dc.html",
+      "title": "Add a tag",
+      "x": 3360,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "TagPickerTyping.dc.html",
+      "title": "Add a tag · naming one",
+      "x": 3840,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "TagPad.dc.html",
+      "title": "A staged tag's pair · editing",
+      "x": 2400,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "RefPair.dc.html",
+      "title": "A staged citation's pair",
+      "x": 2880,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "EditPicked.dc.html",
+      "title": "Edit post · show all",
+      "x": 3360,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "EditWords.dc.html",
+      "title": "Edit post · words body",
+      "x": 3840,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
     }
   ],
   "annotations": [
@@ -1330,6 +1618,14 @@
       "y": 3180,
       "w": 290,
       "text": "THE FULLSCREEN VIEWER (jakob 2026-09-03, backlog item 33 — the surface the roadmap gave the real controls to, drawn).\n\nIT IS THE WHOLE SURFACE, ON BLACK, WITH NOTHING BEHIND IT. Not a scrim over the post: a viewer you can still read a card through is not full screen, and the black ground is what makes the frame's own edges the only edges. Its stage is POSITIONED, never flex-sized — that is what keeps the frame, and the transport with it, inside the screen whatever shape the media is.\n\nENTRY IS THE SECOND TAP: media in a card opens the POST; media in the post opens the FRAME — or the transport's own fullscreen toggle, the same door. A reader scrolling is choosing between posts; a reader already on the post came to look.\n\nTHE FRAME IS NEVER CUT HERE. This is the surface every crop in the product exists against — the post's one crop shape, the 4:5 cap, a portrait clip's centre-crop — and here the frame is whole, as large as the screen allows. A clip whose shape is not the device's keeps its shape and takes the ground beside it; that is not a card letterboxing, it is the frame at its own size.\n\nA PICTURE PINCH-ZOOMS, and the gallery's SWIPE AND DOTS carry over — the set pages here exactly as it does in the card: DOTS ONLY, no arrows and no n-of-m (the pager ruling holds here too; the count rides the accessible name).\n\nA VIDEO TAKES THE FULL TRANSPORT — the centred play/pause and its skips, and the bar of elapsed · timeline · total · sound, INSET from the bottom edge and clear of the system gesture zone — the product's own, not the browser's default set, so one control vocabulary runs across the detail view, the stream and here. ROTATING THE DEVICE gives the clip the screen's whole height (Viewer · rotated, the one board in this canvas that is not a portrait phone). Rotation is the device's gesture, so nothing draws a rotate control.\n\nTHREE WAYS OUT: the X, a SWIPE DOWN, and the backdrop. An X rather than a back arrow — a layer is being dismissed, not a step of a journey walked.\n\nNO ACTS: no stance, no comment count, no share. Acting on a post happens where the post is, and a viewer that grows a toolbar is a viewer nobody trusts to close.\n\nTHE DESCRIPTION IS NOT SHOWN. Alt text is read aloud to people who cannot see the frame; printed under it, it becomes a caption its author never wrote.",
+      "page": "media"
+    },
+    {
+      "id": "note-video-cover",
+      "x": -340,
+      "y": 4240,
+      "w": 290,
+      "text": "THE VIDEO-COVER ROUND (jakob 2026-09-10, backlog item 49). Three rulings about the still a clip wears, and the wizard they rewrite.\n\nTHE COVER'S CROP IS IN THE WIZARD, BOTH PLATFORMS. Every GALLERY-sourced cover passes the locked crop at the clip's ratio before upload; a FRAME needs none, because it was cut from the clip and already carries its shape. Only the cropped export ever leaves the device — the same principle pictures follow, and the reason is the same: the original frame can hold what the author never meant to share. Web takes the cover step and its crop 1:1, the file dialog playing the picker's part — the avatar flow's blessing again, so no web board.\n\nTHE 4:5 CLAMP STANDS, CONFIRMED: 'taller than 4:5 is reserved for the reel scroller.' Feed · the clip's three shapes holds the three presentations against each other — 16:9 TRUE, 1:1 TRUE, 9:16 CENTRE-CROPPED to 4:5, filled and never letterboxed. It is a reference board for the reason the cover-at-rest board is not: three whole video cards do not fit a phone, and a feed shows one at a time.\n\nNO COVER IS FIRST-CLASS, AND THE DEFAULT IS SHAPE-KEYED. A VERTICAL clip defaults to NO cover: the cover step is skipped and what it would have been is one optional 'Add a cover' door on details. Horizontal and square clips keep the frame picker. SHAPE ALONE DECIDES, NEVER LENGTH. Why: an autoplaying video that has a cover LOOKS BROKEN — the cover flashes for an instant before playback takes it away — and a short-vertical author must not meet a step they were always going to skip. 'Videos are always moving, never at rest.'\n\nWHAT A COVERLESS CLIP WEARS is its FIRST FRAME, cropped exactly as the clip is: the suppressed-autoplay card shows it under the play disc, and quoted targets and history rows take it as their thumbnail. Nothing on a reading surface branches on it — a still is a still, and which one it is was settled while the post was written.\n\nWHEN EXTRACTION FAILS (Cover · no frames came back) the step shrinks to the one path that still works: the gallery tile alone, under a line saying why, over the NEUTRAL TILE — no frame is no picture, and the rule against inventing imagery is not suspended by an error. Next stays live: a post can always go without a cover.\n\nCOMMENT SCALE INHERITS at its scale. There is no step to skip in a one-screen composer, so the cover ROW is what gives way: a vertical clip's reply shows the door, and the row is what the door opens. The post edit does the same — a vertical clip's edit offers 'Add a cover' and never a cover row presuming one exists.",
       "page": "media"
     },
     {

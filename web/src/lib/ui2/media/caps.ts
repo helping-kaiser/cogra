@@ -10,9 +10,29 @@
 //
 // Every check in the codebase compares against the MiB constant. Only display
 // goes through `megabytes`.
+//
+// The four byte figures are the SERVER'S, not this app's: `client-constants.json`
+// exports them and `lib/client-constants.test.ts` pins every one of them to it,
+// so a cap that moves on the backend fails here rather than reaching a reader as
+// an upload the composer accepted and the server refused.
 
 /** One still, matching the server's `DEFAULT_MAX_UPLOAD_BYTES`. */
 export const PICTURE_MAX_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Whether an ENCODED still is over the cap — the only form of the question
+ * worth asking.
+ *
+ * The cap governs the bytes that are SENT, and every still is downscaled to
+ * 1080 and re-encoded to WebP first (`encode-image.ts`), so a phone camera's
+ * 12 MB original arrives at a few hundred kilobytes. Weighing the picked file
+ * instead refused the ordinary photo the product would have taken — so every
+ * path that uploads a still asks this about the encode's output, and the
+ * refusal is unreachable in practice rather than merely rare.
+ */
+export function pictureTooBig(encoded: Blob): boolean {
+  return encoded.size > PICTURE_MAX_BYTES;
+}
 
 /**
  * One video in a post, matching the server's `DEFAULT_MAX_VIDEO_UPLOAD_BYTES`.
@@ -44,6 +64,22 @@ export const COMMENT_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
  * upload paths a video takes.
  */
 export const RESUMABLE_THRESHOLD_BYTES = 8 * 1024 * 1024;
+
+/**
+ * One description, matching the server's `MAX_ALT_TEXT_CHARS`.
+ *
+ * The only cap here counted in characters rather than bytes, and the count is
+ * the server's: Unicode scalar values, which is what `[...text].length` gives
+ * and what `text.length` — UTF-16 code units — does not.
+ */
+export const ALT_TEXT_MAX_CHARS = 1000;
+
+/** The refusal an over-long description earns, or null. */
+export function altTextProblem(text: string): string | null {
+  return [...text.trim()].length > ALT_TEXT_MAX_CHARS
+    ? `Too long — at most ${ALT_TEXT_MAX_CHARS} characters.`
+    : null;
+}
 
 /**
  * The readable figure for a cap, as screens write it.

@@ -6,6 +6,7 @@ import com.cogra.domain.Page
 import com.cogra.domain.PostView
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.content.LandingSignal
+import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.content.isRevealed
@@ -29,6 +30,7 @@ class FeedViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val landings = LandingSignal()
     private val reveals = SensitiveReveals()
+    private val seen = SeenPosts()
 
     private val content = object : ThrowingContentRepository() {
         val pages = mutableMapOf<String?, Outcome<Page<PostView>>>()
@@ -61,13 +63,33 @@ class FeedViewModelTest {
     fun refreshLoadsTheFirstPage() = runTest(dispatcher) {
         content.pages[null] =
             Outcome.Success(Page(listOf(testPost("p1"), testPost("p2")), "c2", hasNextPage = true))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         val state = vm.state.value
         assertThat(state.loading).isFalse()
         assertThat(state.posts.map { it.id }).containsExactly("p1", "p2").inOrder()
         assertThat(state.hasNextPage).isTrue()
+    }
+
+    /**
+     * What the reader can see is what the detail may open from: a post
+     * on screen opens instantly instead of behind a spinner (HT-10).
+     * Both pages hand theirs over, not just the first.
+     */
+    @Test
+    fun everyPageTheFeedShowsIsHeldForTheDetailToOpenFrom() = runTest(dispatcher) {
+        content.pages[null] =
+            Outcome.Success(Page(listOf(testPost("p1")), "c1", hasNextPage = true))
+        content.pages["c1"] =
+            Outcome.Success(Page(listOf(testPost("p2")), null, hasNextPage = false))
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(seen.lastSeen("p1")?.id).isEqualTo("p1")
+
+        vm.loadMore()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(seen.lastSeen("p2")?.id).isEqualTo("p2")
     }
 
     /**
@@ -78,7 +100,7 @@ class FeedViewModelTest {
     @Test
     fun aRevealMadeElsewhereReachesTheFeedsState() = runTest(dispatcher) {
         content.pages[null] = Outcome.Success(Page(listOf(testPost("p1")), null, hasNextPage = false))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.reveals).isEmpty()
 
@@ -96,7 +118,7 @@ class FeedViewModelTest {
             Outcome.Success(Page(listOf(testPost("p1")), "c1", hasNextPage = true))
         content.pages["c1"] =
             Outcome.Success(Page(listOf(testPost("p2")), "c2", hasNextPage = false))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         vm.loadMore()
@@ -117,7 +139,7 @@ class FeedViewModelTest {
             Outcome.Success(Page(listOf(testPost("p1"), testPost("p2")), "c1", hasNextPage = true))
         content.pages["c1"] =
             Outcome.Success(Page(listOf(testPost("p1"), testPost("p3")), null, hasNextPage = false))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         vm.loadMore()
@@ -130,7 +152,7 @@ class FeedViewModelTest {
     fun theListingAsksForPendingEntriesByDefault() = runTest(dispatcher) {
         content.pages[null] =
             Outcome.Success(Page(listOf(testPost("p1")), null, hasNextPage = false))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.includePending).isTrue()
@@ -141,7 +163,7 @@ class FeedViewModelTest {
     fun theLandedOnlyOptOutRestartsTheWalk() = runTest(dispatcher) {
         content.pages[null] =
             Outcome.Success(Page(listOf(testPost("p1"), testPost("p2")), "c1", hasNextPage = true))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         // The cursor namespaces differ, so the opt-out refetches from
@@ -165,7 +187,7 @@ class FeedViewModelTest {
             Outcome.Success(Page(listOf(testPost("p1")), "c1", hasNextPage = true))
         content.pages["c1"] =
             Outcome.Success(Page(listOf(testPost("p2")), null, hasNextPage = false))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
         vm.setIncludePending(false)
         dispatcher.scheduler.advanceUntilIdle()
@@ -180,7 +202,7 @@ class FeedViewModelTest {
     fun loadMoreWithoutANextPageIsANoOp() = runTest(dispatcher) {
         content.pages[null] =
             Outcome.Success(Page(listOf(testPost("p1")), "c1", hasNextPage = false))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         vm.loadMore()
@@ -192,7 +214,7 @@ class FeedViewModelTest {
     @Test
     fun aTransportFaultRendersTheRetrySurface() = runTest(dispatcher) {
         content.pages[null] = Outcome.Failed(IOException("offline"))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.REFRESH)
@@ -211,7 +233,7 @@ class FeedViewModelTest {
         content.pages[null] =
             Outcome.Success(Page(listOf(testPost("p1")), "c1", hasNextPage = true))
         content.pages["c1"] = Outcome.Failed(IOException("offline"))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         vm.loadMore()
@@ -243,7 +265,7 @@ class FeedViewModelTest {
                 hasNextPage = false,
             ),
         )
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.posts.first().landing.isPending).isTrue()
 
@@ -263,7 +285,7 @@ class FeedViewModelTest {
     fun aLandingUpdateForAnAbsentNodeLeavesTheListAlone() = runTest(dispatcher) {
         content.pages[null] =
             Outcome.Success(Page(listOf(testPost("p1", landing = Landing.landed(4))), null, false))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         landings.observed("p9", Landing.Pending, includePending = true)
@@ -281,7 +303,7 @@ class FeedViewModelTest {
     fun aReadThatAskedTheOtherQuestionLeavesTheMarkerAlone() = runTest(dispatcher) {
         content.pages[null] =
             Outcome.Success(Page(listOf(testPost("p1", landing = Landing.Pending)), null, false))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         landings.observed("p1", Landing.landed(5), includePending = false)
@@ -294,7 +316,7 @@ class FeedViewModelTest {
     fun aFailedRetryHoldsTheFaultAndThePostsSteady() = runTest(dispatcher) {
         content.pages[null] =
             Outcome.Success(Page(listOf(testPost("p1")), null, hasNextPage = false))
-        val vm = FeedViewModel(content, landings, reveals)
+        val vm = FeedViewModel(content, landings, reveals, seen, WEB_ORIGIN)
         dispatcher.scheduler.advanceUntilIdle()
 
         content.pages[null] = Outcome.Failed(IOException("offline"))
@@ -314,3 +336,6 @@ class FeedViewModelTest {
         assertThat(vm.state.value.posts).hasSize(1)
     }
 }
+
+/** The build's web origin, as the share link is built from it. */
+private const val WEB_ORIGIN = "https://cogra.example"

@@ -18,8 +18,9 @@ export declare function ActorChip(props: ActorChipProps): JSX.Element;
  */
 export interface MonogramAvatarProps {
   name: string;
-  /** 24px in a row, 32px leading a reference row, 64px on a profile header. */
-  size?: "sm" | "md" | "lg";
+  /** 24px in a row, 32px leading a reference row, 64px on a profile header.
+   *  Also takes an exact pixel size (e.g. the profile header's 80). */
+  size?: "sm" | "md" | "lg" | number;
   src?: string;
 }
 

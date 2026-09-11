@@ -239,36 +239,6 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
-    // A mention chip reaches the profile it names, from the card it
-    // renders on — the hand test's "mention a person and land on their
-    // profile from the render" (D16).
-    @Test
-    fun aPostCardsMentionChipOpensTheProfileItNames() {
-        signIn()
-        identity.seed = ActorKey.generate().seed()
-        account.profile = member()
-        content.listing = listOf(
-            com.cogra.domain.testing.testPost("p1").copy(
-                references = listOf(
-                    com.cogra.domain.testing.testReferenceClaim(
-                        com.cogra.domain.testing.testMentionTarget("ada"),
-                    ),
-                ),
-            ),
-        )
-        profiles.others["ada"] = com.cogra.domain.testing.testProfile(
-            id = "user-ada",
-            handle = "ada",
-            displayName = "Ada",
-        )
-        render()
-        waitForTag("feed_post_p1_reference_l1-user-ada")
-
-        compose.onNodeWithTag("feed_post_p1_reference_l1-user-ada").performClick()
-        compose.waitForIdle()
-        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Profile>()).isTrue()
-    }
-
     // The Reference affordance opens the composer with the node staged,
     // so the author writes the citing post rather than hunting for an
     // id to paste (D20).
@@ -438,8 +408,8 @@ class CograNavGraphTest {
         profiles.others["author"] =
             com.cogra.domain.testing.testProfile(id = "author-1", handle = "author")
         render()
-        waitForTag("feed_author_p1")
-        compose.onNodeWithTag("feed_author_p1").performClick()
+        waitForTag("feed_p1_author")
+        compose.onNodeWithTag("feed_p1_author").performClick()
         waitForTag("profile_display_name")
         val entry = navController.currentBackStackEntry
         assertThat(entry?.destination?.hasRoute<Profile>()).isTrue()
@@ -478,6 +448,39 @@ class CograNavGraphTest {
             hasTestTag("profile_bio") and hasText("Hello", substring = true),
             timeoutMillis = 30_000,
         )
+        // The confirmation is the snackbar, and it is the profile's own
+        // host that shows it — not the shell's, which outlives the
+        // surface and would follow the reader onto another tab (HT-8).
+        compose.waitUntilAtLeastOneExists(hasTestTag("profile_snackbar"), timeoutMillis = 30_000)
+        assertThat(compose.onAllNodesWithTag("shell_snackbar").fetchSemanticsNodes()).isEmpty()
+    }
+
+    @Test
+    fun theAvatarFlowSitsTwoEntriesAboveTheProfileItAnswers() {
+        // The invariant the avatar fix rests on: the flow is pushed from
+        // the EDIT screen, so `previousBackStackEntry` is ProfileEdit —
+        // which reads no results at all, and reporting there dropped the
+        // signed picture entirely (HT-8). The result has to be aimed at
+        // the Profile entry by name. Re-parent this destination and this
+        // test is the thing that says the aim must move with it.
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+        waitForTag("bar_profile")
+        compose.onNodeWithTag("bar_profile").performClick()
+        waitForTag("profile_edit")
+        compose.onNodeWithTag("profile_edit").performScrollTo().performClick()
+        waitForTag("profile_edit_bio")
+
+        navController.navigate(AvatarFlow("content://picked"))
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<AvatarFlow>() == true
+        }
+        assertThat(navController.previousBackStackEntry?.destination?.hasRoute<ProfileEdit>())
+            .isTrue()
+        assertThat(navController.getBackStackEntry<Profile>().destination.hasRoute<Profile>())
+            .isTrue()
     }
 
     // The guest read shell: Feed and PostDetail live on the signed-out
@@ -494,7 +497,11 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
         // One shell for every viewer: the guest keeps the bar.
         assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
-        assertThat(compose.onAllNodesWithTag("feed_signin").fetchSemanticsNodes()).isNotEmpty()
+        // The band is the guest's one sign-in-or-join entry, and it says
+        // whose view they are reading from.
+        assertThat(
+            compose.onAllNodesWithTag("home_borrowed_view_action").fetchSemanticsNodes(),
+        ).isNotEmpty()
     }
 
     @Test
@@ -589,7 +596,7 @@ class CograNavGraphTest {
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
-        waitForTag("feed_signin")
+        waitForTag("home_borrowed_view_action")
 
         signIn()
         compose.waitUntil(timeoutMillis = 30_000) {

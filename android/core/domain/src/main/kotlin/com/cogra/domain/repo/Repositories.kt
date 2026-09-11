@@ -5,6 +5,7 @@
 package com.cogra.domain.repo
 
 import com.cogra.crypto.Family
+import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
@@ -104,6 +105,14 @@ interface WriteRepository {
 interface AccountRepository {
     /** Null when the session is gone. */
     suspend fun me(): Outcome<UserProfile?>
+
+    /**
+     * Whose view this reader browses from — their inviter through the
+     * applicant days, the Genesis Moderator for a signed-out reader,
+     * and null once their own view exists (api-spec.md "Queries").
+     * The one account read that answers without a session.
+     */
+    suspend fun borrowedView(): Outcome<ActorRef?>
 
     /** The uploaded backup blob (decoded from base64); null when none. */
     suspend fun keyBackup(): Outcome<ByteArray?>
@@ -227,6 +236,17 @@ interface ContentRepository {
      * all of them ride as present values; a null title/description
      * clears.
      *
+     * [content] is the words half of the body, under the same
+     * exclusive-or a creation carries: a media post sends null, because
+     * words beside media are refused on `["content"]` (api-spec.md "The
+     * body XOR").
+     *
+     * [attachments] is the gallery the edit leaves standing — complete,
+     * not a delta, and carries **no default** for the same reason the
+     * mark does not: an omitted gallery is an empty gallery on the wire,
+     * so an edit that forgot to re-state it would replace a media post's
+     * body with the words in the form and destroy the pictures.
+     *
      * [sensitive] and [sensitiveReason] are the author's own mark, and
      * they are not optional here: an edit record carries the complete
      * content state, so a mark the edit does not re-state is a mark the
@@ -237,7 +257,8 @@ interface ContentRepository {
         id: String,
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
+        attachments: List<AttachmentClaim>,
         sensitive: Boolean = false,
         sensitiveReason: String? = null,
     ): Outcome<PreparedContentView>
@@ -269,6 +290,15 @@ interface ContentRepository {
          */
         pDirected: Double? = null,
         pInterest: Double? = null,
+        /**
+         * The author's own sensitive mark, and the reason that rides the
+         * veil with it — the reply seal's Mark row (`ReplySeal`), the
+         * same switch a post's seal carries. Omitted means unmarked; a
+         * reason without the mark is refused on `["sensitiveReason"]`,
+         * and a blank one counts as none.
+         */
+        sensitive: Boolean = false,
+        sensitiveReason: String? = null,
     ): Outcome<PreparedContentView>
 
     /**

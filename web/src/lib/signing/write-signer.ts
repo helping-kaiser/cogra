@@ -6,6 +6,7 @@
 import type { ApolloClient } from "@apollo/client";
 
 import type { StagedWriteState } from "@/__generated__/graphql";
+import { fetchMe } from "@/lib/api/auth-api";
 import type { UserError } from "@/lib/api/outcome";
 import {
   approveAct,
@@ -21,6 +22,7 @@ import type { PreSignedProposal } from "@/lib/crypto/handshake";
 import { decodeProposal, decodeVerifiedAct, encodePreCommitmentOf, WireError } from "@/lib/crypto/wire";
 import type { AuthGuard } from "@/lib/session/guard";
 import type { IdentityStore } from "@/lib/identity/store";
+import { keyUsable } from "./key-usable";
 
 export type WriteResult =
   /** Approved and relaying (or already landed) — the device's part is done. */
@@ -41,19 +43,43 @@ export type WriteSigner = {
    * crash between any two legs heals here.
    */
   signStaged(staged: StagedWriteView): Promise<WriteResult>;
+  /**
+   * Signs a whole staged batch, in order, and answers one result per
+   * write.
+   *
+   * A prepare stages a batch — a post mints its record and one act per
+   * drafted topic and reference — and every one of them is this device's
+   * to sign. The loop belongs here rather than at each of the surfaces
+   * that submit one, because a loop copied per surface is a loop that
+   * drifts per surface. Android's `WriteSigner.sign(prepared)` is the
+   * same seam.
+   *
+   * Sequential by construction: the legs share one device key and one
+   * custody store, and the batch is small enough that concurrency would
+   * buy less than it risks.
+   */
+  sign(writes: readonly StagedWriteView[]): Promise<WriteResult[]>;
   /** Continues every persisted handshake — the parked-acts entry point. */
   resume(): Promise<WriteResult[]>;
 };
 
-const SEAL_POLL_ATTEMPTS = 5;
-const SEAL_POLL_DELAY_MS = 1_000;
+/**
+ * The seal-poll budget. Exported so `client-constants.test.ts` can pin
+ * both numbers to the repo-root `client-constants.json` — the backend's
+ * own export of what every client waits.
+ */
+export const SEAL_POLL_ATTEMPTS = 5;
+export const SEAL_POLL_DELAY_MS = 1_000;
 
 /**
  * Refusal codes that end a handshake for good — the material is spent.
  * Anything else (RATE_LIMITED backoff, INTERNAL fault, UNAUTHENTICATED,
  * a code this build does not know) keeps the material for resume().
+ *
+ * Exported for the same reason as the poll budget: the set is the
+ * contract's, and the test pins it member-for-member.
  */
-const TERMINAL_REFUSALS: ReadonlySet<UserError["code"]> = new Set([
+export const TERMINAL_REFUSALS: ReadonlySet<UserError["code"]> = new Set([
   "SIGNATURE_INVALID",
   "STAGED_WRITE_EXPIRED",
   "NOT_FOUND",
@@ -231,28 +257,88 @@ export function createWriteSigner(deps: {
     return signOne(key, read.value);
   }
 
+  /**
+   * The key this account may sign with, or why it may not.
+   *
+   * A CUSTODY SLOT HOLDING A KEY SAYS NOTHING ABOUT WHOSE IT IS
+   * (`key-usable.ts`). The registration path has always compared the
+   * slot against the account's attached public key before signing;
+   * post-membership writes pass through here, so they get the same
+   * check at the one place all of them cross.
+   *
+   * A `me` read that does not answer leaves the question OPEN, and an
+   * open question is not a verdict: `failed` keeps the material and
+   * resume() retries, where refusing would spend a write on a dropped
+   * connection.
+   *
+   * THE READ IS LIVE, AND COSTS A ROUND TRIP. `fetchMe` is
+   * `network-only`, so this adds one to a handshake that already spends
+   * prepare, submit, approve and the seal poll — proportionate for the
+   * check that decides whether this device may sign at all, and it is
+   * paid once per BATCH rather than once per write.
+   */
+  async function accountKey(): Promise<
+    | { kind: "key"; key: ActorKey }
+    | { kind: "absent" }
+    | { kind: "foreign" }
+    | { kind: "unknown"; cause: unknown }
+  > {
+    const key = await store.actorKey();
+    if (key === null) return { kind: "absent" };
+    const me = await guard.run(() => fetchMe(client));
+    if (me.kind === "refused") {
+      return { kind: "unknown", cause: new Error("the account could not be read") };
+    }
+    if (me.kind === "failed") return { kind: "unknown", cause: me.cause };
+    if (!keyUsable(toBase64(key.publicKeyBytes()), me.value.actorPubkey ?? null)) {
+      return { kind: "foreign" };
+    }
+    return { kind: "key", key };
+  }
+
+  /** What a non-key answer means for one write. */
+  function withoutKey(
+    id: string,
+    answer: { kind: "absent" } | { kind: "foreign" } | { kind: "unknown"; cause: unknown },
+  ): WriteResult {
+    switch (answer.kind) {
+      case "absent":
+        return { kind: "failed", id, cause: new Error("no actor key on this device") };
+      case "foreign":
+        // LOUD, AND NOT SPENT. The write is intact server-side and a
+        // restore of the account's own key finishes it, so this keeps
+        // the material exactly as a read-leg refusal does.
+        return refuseKeeping(id, [
+          synthesized("FORBIDDEN", "the key on this device is not this account's"),
+        ]);
+      case "unknown":
+        return { kind: "failed", id, cause: answer.cause };
+    }
+  }
+
   return {
     async signStaged(staged) {
-      const key = await store.actorKey();
-      if (key === null) {
-        return { kind: "failed", id: staged.id, cause: new Error("no actor key on this device") };
-      }
-      return signOne(key, staged);
+      const answer = await accountKey();
+      if (answer.kind !== "key") return withoutKey(staged.id, answer);
+      return signOne(answer.key, staged);
+    },
+
+    async sign(writes) {
+      if (writes.length === 0) return [];
+      const answer = await accountKey();
+      if (answer.kind !== "key") return writes.map((staged) => withoutKey(staged.id, answer));
+      const results: WriteResult[] = [];
+      for (const staged of writes) results.push(await signOne(answer.key, staged));
+      return results;
     },
 
     async resume() {
       const ids = await store.handshakeIds();
       if (ids.length === 0) return [];
-      const key = await store.actorKey();
-      if (key === null) {
-        return ids.map((id) => ({
-          kind: "failed" as const,
-          id,
-          cause: new Error("no actor key on this device"),
-        }));
-      }
+      const answer = await accountKey();
+      if (answer.kind !== "key") return ids.map((id) => withoutKey(id, answer));
       const results: WriteResult[] = [];
-      for (const id of ids) results.push(await resumeOne(key, id));
+      for (const id of ids) results.push(await resumeOne(answer.key, id));
       return results;
     },
   };

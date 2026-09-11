@@ -1,6 +1,7 @@
 import React from "react";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { MonogramAvatar } from "../people/ActorChip.jsx";
+import { PendingMarker } from "../honesty/PendingMarker.jsx";
 
 /* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
    result-row shape search reuses: EVERY row is leading mark · name · value, so
@@ -17,7 +18,19 @@ import { MonogramAvatar } from "../people/ActorChip.jsx";
 
    THE VALUE is the pair the author signed on this act — set at compose (a
    changeable default), shown here for any reader: a signed act is public
-   record. Right-aligned, `body-small`, never coloured. */
+   record. Right-aligned, `body-small`, never coloured.
+
+   AN ACT STILL SETTLING SAYS SO HERE, AND ONLY HERE (jakob's ruling,
+   2026-09-10). A chip on a card shows nothing pending — a tag's word is the tag's
+   word whether or not the record has been ordered yet — so this sheet is the one
+   surface that admits a staged-not-yet-landed tag or citation, in the same words
+   every other unsettled record wears (`PendingMarker`).
+
+   IT RIDES THE PAIR, NOT THE NAME. What has not landed is the ACT, not the node
+   it points at: the post is there, the citation of it is the thing still finding
+   its place in the order. So the marker stacks under the pair at the row's edge —
+   the attachment `TaggedRow` already makes, where the marker sits with the
+   claim's numbers and not with the content they describe. */
 
 /** A node kind's mark, on any surface: avatar, cover, T, #, or the kind's
  *  glyph from the ONE semantic assignment (`NODE_GLYPHS`, the glyph atoms). */
@@ -56,7 +69,7 @@ export function NodeMark({ kind, name, src }) {
    edge: the signed pair in the references sheet, the viewer-relative rank in
    ranked search results, the age past the seam. (`pair` remains as its old
    name.) */
-export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank, trailing, onOpen }) {
+export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank, trailing, pending = false, onOpen }) {
   const edge = value ?? pair;
   return (
     <button
@@ -131,10 +144,13 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank,
           {rank}
         </span>
       ) : (
-        edge && (
+        (edge || pending) && (
           <span
             style={{
               flex: "none",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
               fontSize: "var(--text-body-small)",
               lineHeight: "var(--text-body-small--line-height)",
               color: "var(--text-secondary)",
@@ -142,6 +158,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank,
             }}
           >
             {edge}
+            {pending && <PendingMarker inline />}
           </span>
         )
       )}

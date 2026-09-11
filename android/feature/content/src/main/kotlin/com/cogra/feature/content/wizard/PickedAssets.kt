@@ -13,6 +13,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.overPictureCap
 
 /** Records one asset's upload state without disturbing the others (D5). */
 fun List<PickedAsset>.withUpload(uri: String, upload: AssetUpload): List<PickedAsset> =
@@ -57,6 +58,12 @@ fun List<PickedAsset>.pickedPictures(
  * what does not decode (the client half of the decode gate, D11), then
  * the same three-branch `when` over the outcome. Only the copy for a
  * refusal differed, so that is the parameter.
+ *
+ * THE STILL CAP IS SPENT HERE, on the encode's own bytes rather than on
+ * the picked file: the pipeline downscales to 1080 and re-encodes to
+ * WebP first, so this is the only weighing that matches what the server
+ * measures — and it is what makes the refusal unreachable for an
+ * ordinary camera photo instead of routine (HT-17).
  */
 internal suspend fun uploadPicture(
     uri: String,
@@ -68,6 +75,8 @@ internal suspend fun uploadPicture(
 ): AssetUpload {
     val picture = processor.process(uri, crop)
         ?: return AssetUpload.Failed(unreadable)
+    // Not worth retrying: the same source encodes to the same bytes.
+    if (picture.overPictureCap()) return AssetUpload.Failed(UploadFailure.PICTURE_TOO_BIG)
     return when (val outcome = media.uploadMedia(picture)) {
         is Outcome.Success -> AssetUpload.Done(outcome.value.id)
         is Outcome.Refused -> AssetUpload.Failed(refused, outcome.errors.firstOrNull()?.message)

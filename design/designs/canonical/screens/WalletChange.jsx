@@ -4,15 +4,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader
-        title="What you sign"
-        action={
-          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>Last step</span>
-            <SystemHelpDot ariaLabel="Signed actions" />
-          </span>
-        }
-      />
+      <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 16px 24px", overflow: "hidden" }}>
         <PayoutAddress address={SOL_ADDRESS} label="Current" />
         <PayoutAddress
@@ -26,10 +18,7 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <Button style={{ width: "100%" }}>Sign the change</Button>
-          <Button variant="text" style={{ width: "100%" }}>Back</Button>
-        </div>
+        <SealFooter signLabel="Sign the change" />
       </div>
     </>
   );

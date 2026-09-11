@@ -57,6 +57,8 @@ fun StatusBannersRoute(
         onActorRestoredShown = viewModel::onActorRestoredShown,
         onApprovedShown = viewModel::onApprovedShown,
         onWelcomeShown = viewModel::onWelcomeShown,
+        onReciprocatedShown = viewModel::onReciprocatedShown,
+        onResentShown = viewModel::onResentShown,
     )
     StatusBanners(
         state = state,
@@ -77,8 +79,14 @@ fun StatusBannersRoute(
 }
 
 /**
- * The one-shot confirmations — restored, approved, landed — fired
- * once per event on the shell's snackbar host (design.md §6).
+ * The one-shot confirmations — restored, approved, landed, vouched
+ * back, token re-sent — fired once per event on the shell's snackbar
+ * host. Every one of them confirms a completed action, and
+ * `design/readme.md` §3 rules that such a confirmation is a snackbar:
+ * "The snackbar is the confirmation; a line of the layout turned green
+ * is not one." A line in the stack would also have no way to leave —
+ * the banner stack has no dismissal, so it stood until the app died.
+ *
  * Consumed only after the snackbar is done: clearing first would flip
  * the LaunchedEffect key and cancel the showing coroutine.
  */
@@ -89,6 +97,8 @@ fun StatusBannerOneShots(
     onActorRestoredShown: () -> Unit,
     onApprovedShown: () -> Unit,
     onWelcomeShown: () -> Unit,
+    onReciprocatedShown: () -> Unit,
+    onResentShown: () -> Unit,
 ) {
     val restoredMessage = stringResource(R.string.home_actor_restored)
     LaunchedEffect(state.actorRestored) {
@@ -109,6 +119,20 @@ fun StatusBannerOneShots(
         if (state.welcome) {
             snackbarHostState.showSnackbar(welcomeMessage)
             onWelcomeShown()
+        }
+    }
+    val reciprocatedMessage = stringResource(R.string.home_reciprocated)
+    LaunchedEffect(state.reciprocated) {
+        if (state.reciprocated) {
+            snackbarHostState.showSnackbar(reciprocatedMessage)
+            onReciprocatedShown()
+        }
+    }
+    val resentMessage = stringResource(R.string.home_verify_resent)
+    LaunchedEffect(state.resent) {
+        if (state.resent) {
+            snackbarHostState.showSnackbar(resentMessage)
+            onResentShown()
         }
     }
 }
@@ -227,12 +251,8 @@ fun StatusBanners(
                     }
                 }
             }
-            if (state.reciprocated) {
-                Text(
-                    text = stringResource(R.string.home_reciprocated),
-                    modifier = Modifier.testTag("home_reciprocated"),
-                )
-            }
+            // The vouch's confirmation is the shell's snackbar
+            // (StatusBannerOneShots), never a line in this stack.
             if (state.pendingHandshakes > 0) {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -500,12 +520,8 @@ private fun VerifyCard(
             ) {
                 Text(stringResource(R.string.home_verify_resend))
             }
-            if (state.resent) {
-                Text(
-                    text = stringResource(R.string.home_verify_resent),
-                    modifier = Modifier.testTag("verify_resent"),
-                )
-            }
+            // The re-send's confirmation is the shell's snackbar too; the
+            // refusal below it stays on the card, where it happened.
             state.resendError?.let {
                 ErrorLine(it.resendMessage(), testTag = "resend_error")
             }

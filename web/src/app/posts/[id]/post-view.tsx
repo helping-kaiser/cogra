@@ -37,13 +37,12 @@ import { prepareTag } from "@/lib/api/topics-api";
 import { prepareReference, prepareReferenceWithdrawal } from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
-import { referenceChipEntries, referenceDrafts } from "@/lib/references/claims";
+import { referenceDrafts } from "@/lib/references/claims";
 import {
   referenceActs,
   referenceChanges,
   type ReferenceDraft,
 } from "@/lib/references/draft";
-import { ReferenceChipRow } from "@/lib/ui/reference-chip-row";
 import { useActiveAccountId, useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
@@ -54,14 +53,20 @@ import { Card } from "@/lib/ui/card";
 import { LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
+import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
+import { useScrollHost } from "@/lib/ui/scroll-host";
 import {
   BodyRegion,
   PostMedia,
   bodyIsSensitive,
-  commentHasVideo,
   hasMedia,
+  payloadIsRedacted,
   sensitiveSignature,
 } from "@/lib/ui/post-media";
+import { PostCard } from "@/lib/ui/post-card";
+import { LINK_COPIED } from "@/lib/ui/share";
+import { shortTimestamp } from "@/lib/ui/timestamp";
+import { TopicsLine } from "@/lib/ui/topics-line";
 import type { ReplyTarget } from "@/lib/compose/reply-wizard";
 import {
   addTo,
@@ -81,34 +86,13 @@ import {
 import { runUpload } from "@/lib/compose/uploads";
 import { usePreviewUrls } from "@/lib/compose/previews";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
-import { HelpDialog, HELP_TOPICS } from "@/lib/ui2/help-dialog";
+import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { commentTarget, ReplyWizard } from "./reply/reply-wizard-view";
 import { CommentEditView } from "./edit/comment-edit-view";
 import { MultiActionConfirm } from "@/lib/ui/signed-actions";
 import { StanceControl } from "@/lib/ui/stance-control";
-import { TopicChipRow, type TopicChipEntry } from "@/lib/ui/topic-chip-row";
+import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
-
-/**
- * `TopicClaim[]` off any content node, projected down to the chip row's
- * shape. The detail view carries the values along (F8) — the row shows
- * them only once a reader asks.
- */
-function chipEntries(
-  topics: readonly {
-    hashtag: { name: { value?: string | null } };
-    pending: boolean;
-    relevance: number;
-    confidence: number;
-  }[],
-): readonly TopicChipEntry[] {
-  return topics.map((claim) => ({
-    name: claim.hashtag.name.value ?? "",
-    pending: claim.pending,
-    relevance: claim.relevance,
-    confidence: claim.confidence,
-  }));
-}
 
 /** Any node of the thread tree — a comment or a nested reply. */
 type ThreadComment = CommentView | ReplyView;
@@ -191,12 +175,18 @@ export function PostView({
   const signer = useWriteSigner();
   const viewerId = useActiveAccountId();
   const phase = useAuthPhase();
+  const host = useScrollHost();
 
   const [detail, setDetail] = useState<PostDetail | null>(null);
   const [comments, setComments] = useState<readonly CommentView[]>([]);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
+  // The read in flight while the post is already on screen — distinct
+  // from `loading`, which gates the nothing-loaded page. A pull-to-
+  // refresh must not fall back to that blank page over content the
+  // reader can already see (HT-10's shared rule).
+  const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
@@ -208,6 +198,11 @@ export function PostView({
   // the wizard's own machine, and nothing of a discarded comment survives here.
   const [replying, setReplying] = useState<ReplyTarget | null>(null);
   const [commentSigned, setCommentSigned] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
+  // Stable, so the snackbar's own timer is not restarted by every render of
+  // the thread underneath it.
+  const dismissCommentSigned = useCallback(() => setCommentSigned(false), []);
 
   // Reply threads expanded past their prefetched page, keyed by comment.
   const [replyThreads, setReplyThreads] = useState<Record<string, ReplyThread>>({});
@@ -228,12 +223,18 @@ export function PostView({
     gallery: EditGallery;
     /** What the comment is on, for the editor's lede. */
     targetLabel: string;
-    /** Carried forward so a complete-state edit cannot unveil the comment. */
+    /** The author's own mark as the editor found it, and as it holds it now. */
+    loadedSensitive: boolean;
+    loadedSensitiveReason: string;
     sensitive: boolean;
+    sensitiveReason: string;
   } | null>(null);
   const [editDescribing, setEditDescribing] = useState<string | null>(null);
   const [editActsOpen, setEditActsOpen] = useState(false);
-  const [editHelp, setEditHelp] = useState(false);
+  // The editor has two help doors — the header's "Editing" and the mark
+  // sheet's "?" — so the state is which topic is open, not whether one is.
+  const [editHelp, setEditHelp] = useState<HelpTopic | null>(null);
+  const [editSensitiveOpen, setEditSensitiveOpen] = useState(false);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editFailed, setEditFailed] = useState(false);
   const [editRefusedMessage, setEditRefusedMessage] = useState<string | null>(null);
@@ -266,19 +267,20 @@ export function PostView({
       startedEditUploads.current.add(asset.id);
       // No ratio: a comment's pictures keep their own shape, on an edit as on
       // a compose.
-      void runUpload(client, asset, undefined, (upload) =>
+      void runUpload(client, guard, asset, undefined, (upload) =>
         setEditing((current) =>
           current === null ? current : { ...current, gallery: withUpload(current.gallery, asset.id, upload) },
         ),
       );
     }
-  }, [editAdded, client]);
+  }, [editAdded, client, guard]);
 
   const refresh = useCallback(() => {
     let cancelled = false;
     void fetchPostDetail(client, postId).then((outcome) => {
       if (cancelled) return;
       setLoading(false);
+      setRefreshing(false);
       if (outcome.kind !== "success") {
         setTransportFault("refresh");
       } else if (outcome.value === null) {
@@ -300,6 +302,17 @@ export function PostView({
   }, [client, postId]);
 
   useEffect(() => refresh(), [refresh]);
+
+  // Pull-down at the top is one of the surfaces the pull-to-refresh
+  // ruling names (design/readme.md, "The pull-down lives on every
+  // full-screen scrolling root", ruled 2026-09-10). It goes through
+  // the same fetch the first arrival takes, so a fault it raises
+  // surfaces in the same place.
+  const onPull = useCallback(() => {
+    setRefreshing(true);
+    refresh();
+  }, [refresh]);
+  usePullToRefresh({ host, onPull });
 
   const onLoadMore = async () => {
     if (loadingMore || !hasMore) return;
@@ -355,10 +368,7 @@ export function PostView({
    * all of them are this device's to sign.
    */
   const signAll = async (writes: readonly StagedWriteView[]): Promise<boolean> => {
-    const results = [];
-    for (const staged of writes) {
-      results.push(await signer.signStaged(staged));
-    }
+    const results = await signer.sign(writes);
     return results.every((result) => result.kind === "done");
   };
 
@@ -374,8 +384,18 @@ export function PostView({
   // write one, or the removal never happens.
   const editGalleryMoved =
     editing !== null && galleryChanged(editing.loadedGallery, editing.gallery);
+  // The mark is a term of the same record, so moving it stages the edit the
+  // way the body and the gallery do — a comment whose only change is the
+  // author's own mark still has to write one, or the mark never moves. The
+  // reason counts only where it is shown: on an unmarked comment it is not
+  // sent at all.
+  const editMarkMoved =
+    editing !== null &&
+    (editing.sensitive !== editing.loadedSensitive ||
+      (editing.sensitive && editing.sensitiveReason !== editing.loadedSensitiveReason));
   const editTextChanged =
-    editing !== null && (editing.draft !== editing.loadedDraft || editGalleryMoved);
+    editing !== null &&
+    (editing.draft !== editing.loadedDraft || editGalleryMoved || editMarkMoved);
   // A withdrawal is a whole counter-record batch, and the claim quotes
   // it: `withdrawalCost` comes off the raw bundle sums the clipped pair
   // has already lost, so this count is exact and every edit asks before
@@ -411,6 +431,7 @@ export function PostView({
           // gallery for the same reason as the mark.
           attachments: editClaims(editing.gallery) ?? undefined,
           sensitive: editing.sensitive,
+          sensitiveReason: editing.sensitiveReason,
         }),
       );
       if (prepared.kind === "failed") {
@@ -533,6 +554,9 @@ export function PostView({
   const header = (isCreator: boolean) => (
     <PageHeader
       backHref="/feed"
+      // The feed restores the place the reader left it in; scrolling it to the
+      // top would land on top of that restore.
+      backScroll={false}
       backLabel="Back to feed"
       backTestId="post-back"
       action={
@@ -609,14 +633,28 @@ export function PostView({
         style={{ marginLeft: `${Math.min(depth, MAX_INDENT_DEPTH) * 12}px` }}
       >
         <Card>
-          {comment.author && (
-            <ActorChip
-              handle={comment.author.handle}
-              displayName={comment.author.displayName.value}
-              avatarUrl={comment.author.avatar?.url}
-              testId={`comment-author-${comment.id}`}
-            />
-          )}
+          {/* THE HEADER LINE: the author left, the age right — the same shape
+              the post card wears (`CommentCard.jsx:149-155`). Both apps read
+              `createdAt` for the Edited comparison and drew none of it. */}
+          <div className="flex items-center justify-between gap-2">
+            {comment.author && (
+              <ActorChip
+                handle={comment.author.handle}
+                displayName={comment.author.displayName.value}
+                avatarUrl={comment.author.avatar?.url}
+                testId={`comment-author-${comment.id}`}
+              />
+            )}
+            {shortTimestamp(comment.createdAt) !== "" && (
+              <time
+                dateTime={comment.createdAt}
+                data-testid={`comment-${comment.id}-timestamp`}
+                className="flex-none text-body-small text-on-surface-variant"
+              >
+                {shortTimestamp(comment.createdAt)}
+              </time>
+            )}
+          </div>
               {/* A comment is text PLUS optional media — the XOR is the post's
                   rule alone (D16) — so both render, and both are veiled as one
                   body when the comment is marked. */}
@@ -631,20 +669,25 @@ export function PostView({
                     the words, INSET at the card's medium rung rather than
                     full-bleed (they are an attachment, not the body), and
                     capped at comment scale so a comment never turns into a
-                    post. Comment pictures never crop, so multiples share a
-                    fixed square frame and each whole frame fits inside it. */}
+                    post. Comment pictures never crop, and every attachment —
+                    one or several, picture or clip alike — shares the one
+                    fixed square frame, filled rather than letterboxed
+                    (design/readme.md §"the media slice"). */}
                 {hasMedia(comment) && (
                   <PostMedia
                     node={comment}
                     bleed="none"
                     radius="var(--radius-medium)"
-                    // A VIDEO TAKES THE SQUARE TOO (ReplyMedia). The pager's
-                    // one frame is what keeps a thread's rhythm steady, and a
-                    // clip that set its own height would break it exactly where
-                    // the reader is scrolling past.
-                    ratio={
-                      comment.attachments.length > 1 || commentHasVideo(comment) ? 1 : undefined
-                    }
+                    // SQUARE IS THE COMMENT SCALE'S SHAPE (design/readme.md
+                    // §"the media slice"): every attachment, picture or clip,
+                    // alike — not only a video or a multi-picture set — takes
+                    // the one frame, so a thread's rhythm never changes per
+                    // comment.
+                    ratio={1}
+                    // ...AND FILLED, NEVER LETTERBOXED: an uncropped picture
+                    // display-crops to the frame rather than fitting whole
+                    // inside it, same as the video's own centre-crop.
+                    fit="cover"
                     maxHeight="220px"
                     // One control, the sound; no transport bar and no duration
                     // pill on a surface meant for reading.
@@ -671,20 +714,17 @@ export function PostView({
               {isPending(comment) && (
                 <PendingMarker testId={`comment-pending-${comment.id}`} />
               )}
-              {/* Read-only everywhere on a card or a detail view (F3):
-                  the plain, tappable chip row (design.md §6) — here on
-                  the detail surface, with the F8 values toggle. */}
-              <TopicChipRow
-                topics={chipEntries(comment.topics)}
+              {/* THE SAME ONE LINE A POST WEARS (`CommentCard.jsx:163-165`):
+                  two chips then the counts, never two wrapping rows. The full
+                  set — and the values a reader can ask for — live in the
+                  topics-and-references sheet, which is not drawn here yet. */}
+              <TopicsLine
+                topics={comment.topics.map((claim) => ({
+                  name: claim.hashtag.name.value ?? "",
+                  pending: claim.pending,
+                }))}
+                references={comment.references.length}
                 testIdPrefix={`comment-${comment.id}`}
-                revealable
-              />
-              {/* The reference row under the body (D16), with the
-                  values toggle this detail surface offers. */}
-              <ReferenceChipRow
-                references={referenceChipEntries(comment.references)}
-                testIdPrefix={`comment-${comment.id}`}
-                revealable
               />
               {/* The comment carries its own stance control (design.md §6). */}
               <StanceControl
@@ -753,22 +793,35 @@ export function PostView({
                         // show a moderator's verdict as the author's until it
                         // landed, so the switch starts unmarked and the read
                         // is what turns it on.
+                        loadedSensitive: false,
+                        loadedSensitiveReason: "",
                         sensitive: false,
+                        sensitiveReason: "",
                       });
                       void fetchCommentSelfMark(client, comment.id).then((outcome) => {
                         if (outcome.kind !== "success") return;
                         const mark = outcome.value;
                         if (mark === null) return;
+                        // The read lands as BOTH the switch and what it is
+                        // compared against, so arriving marked is not itself a
+                        // change the editor offers to sign.
                         setEditing((current) =>
                           current === null || current.id !== comment.id
                             ? current
-                            : { ...current, sensitive: mark },
+                            : {
+                                ...current,
+                                loadedSensitive: mark.sensitive,
+                                loadedSensitiveReason: mark.reason,
+                                sensitive: mark.sensitive,
+                                sensitiveReason: mark.reason,
+                              },
                         );
                       });
                       setEditTagErrors({});
                       setEditReferenceErrors({});
                       setEditRefusedMessage(null);
                       setEditFailed(false);
+                      setEditSensitiveOpen(false);
                       setReplying(null);
                     }}
                   >
@@ -827,63 +880,46 @@ export function PostView({
   };
 
   const isOwnPost = viewerId !== null && post.author?.id === viewerId;
+  // A REMOVED POST HAS NO MENU LEFT — back is the whole header (`Removed.jsx`),
+  // and the license rode the payload, so a redacted record has none to show.
+  // What survives is the skeleton the card draws: author, timestamp, thread
+  // position, and the stance a reader can still take.
+  const redacted = payloadIsRedacted(post);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-      {header(isOwnPost)}
-      {/* The title stands outside the veil and above the gallery; everything
-          else in the body region is veiled as one (D12). */}
-      {post.title.value && (
-        <h1 className="text-headline-small" data-testid="post-title">
-          {post.title.value}
-        </h1>
+      {header(isOwnPost && !redacted)}
+      {refreshing && (
+        <p role="status" aria-live="polite" data-testid="post-refreshing">
+          Loading…
+        </p>
       )}
-      <BodyRegion
-        veiled={bodyIsSensitive(post)}
-        testId="post"
-        nodeId={post.id}
-        signature={sensitiveSignature(post)}
-      >
-        {hasMedia(post) && (
-          <PostMedia node={post} testId="post-media" bleed="page" preloadLead />
-        )}
-        {post.description.value && (
-          <p className="text-body-medium text-on-surface-variant">{post.description.value}</p>
-        )}
-        {/* Null on a media post, whose body is its gallery. */}
-        {post.content.value && (
-          <p className="whitespace-pre-wrap" data-testid="post-body">
-            {post.content.value}
-          </p>
-        )}
-      </BodyRegion>
-      {post.author && (
-        <ActorChip
-          handle={post.author.handle}
-          displayName={post.author.displayName.value}
-          avatarUrl={post.author.avatar?.url}
-          testId="post-author"
+      {/* THE POST IS A CARD HERE TOO (`PostCard.jsx:363` — `<Card>` for every
+          variant, `detail` included). It was the page ground while its own
+          comments sat on cards, which is the inverse of the board's emphasis.
+          Edge to edge inside the page's gutter, so the card and the feed's
+          cards frame their media identically (design/backlog.md item 35). */}
+      <div className="-mx-6">
+        <PostCard
+          post={post}
+          variant="detail"
+          href={`/posts/${postId}`}
+          testId="post"
+          authorTestId="post-author"
+          stanceTestId="post-stance"
+          comments={post.comments.totalCount}
+          onOpenComments={() => {
+            // The ruled destination is the comments sheet, which is not drawn
+            // here yet — so the count takes the reader to the thread where it
+            // currently lives, at the foot of this page.
+            document.getElementById("post-comments")?.scrollIntoView?.({ block: "start" });
+          }}
+          onLinkCopied={() => setLinkCopied(true)}
         />
-      )}
-      <LicenseTerms license={post.license} testId="post-license-terms" />
-      {/* The post reads in full whether or not it has landed; the
-          marker carries the difference (design.md §9). An unlanded edit
-          marks the post too — the text on screen is that edit. */}
-      {isPending(post) && <PendingMarker testId="post-pending" />}
-      {/* Read-only here for everyone, the author included (F3): the
-          author changes their tags on the edit screen, where the rest of
-          the post is changed. */}
-      <TopicChipRow topics={chipEntries(post.topics)} testIdPrefix="post" revealable />
-      {/* Read-only here for everyone, the author included: references
-          are changed on the edit screen, where the rest of the post is
-          changed. The values toggle is this detail surface's (D16). */}
-      <ReferenceChipRow
-        references={referenceChipEntries(post.references)}
-        testIdPrefix="post"
-        revealable
-      />
+      </div>
+      {!redacted && <LicenseTerms license={post.license} testId="post-license-terms" />}
       {/* D20's Reference affordance on the post itself. */}
-      {phase === "signedIn" && (
+      {phase === "signedIn" && !redacted && (
         <Link
           href={`/compose?reference=${postId}`}
           data-testid="post-reference"
@@ -892,10 +928,10 @@ export function PostView({
           Reference
         </Link>
       )}
-      {/* The post card's stance control, on the detail surface (design.md §6). */}
-      <StanceControl target={{ id: postId, kind: "post", label: "this post" }} testIdPrefix="post-stance" />
       <hr className="border-outline-variant" />
-      <h2 className="text-title-medium">Comments</h2>
+      <h2 className="text-title-medium" id="post-comments">
+        Comments
+      </h2>
       {/* A failed whole-post refresh; a failed comments page surfaces
           at the load-more slot below instead (web.md "Design
           guidelines", the Android twin). */}
@@ -940,11 +976,23 @@ export function PostView({
           Sign in or join to comment
         </Link>
       )}
-      {commentSigned && (
-        <p data-testid="comment-signed" className="text-body-medium text-success">
-          Signed — it&apos;s in the thread now, still settling.
-        </p>
-      )}
+      {/* A completed action is confirmed by a SNACKBAR on both platforms
+          (design.md §6, and readme §13's audit answers name the coloured line
+          this replaced as the deviation). The region is mounted whether or not
+          it has anything to say, so assistive technology is already watching
+          it when the confirmation arrives. */}
+      <Snackbar
+        testId="comment-signed"
+        message={commentSigned ? "Signed — it's in the thread now, still settling." : null}
+        onDismiss={dismissCommentSigned}
+      />
+      {/* Where the browser has no platform share sheet the control copies the
+          link, and this is what says so (readme §13, the audit answers). */}
+      <Snackbar
+        testId="post-link-copied"
+        message={linkCopied ? LINK_COPIED : null}
+        onDismiss={dismissLinkCopied}
+      />
       {/* ReplyEntry's entry row, pinned at the foot of the thread: the door
           that pins the POST as what the comment answers. The board draws the
           viewer's own avatar beside it; drawing one here would mean a profile
@@ -992,6 +1040,9 @@ export function PostView({
             references={editing.references}
             tagErrors={editTagErrors}
             referenceErrors={editReferenceErrors}
+            sensitive={editing.sensitive}
+            sensitiveReason={editing.sensitiveReason}
+            sensitiveOpen={editSensitiveOpen}
             acts={editActions}
             actsOpen={editActsOpen}
             busy={editSubmitting}
@@ -999,6 +1050,10 @@ export function PostView({
             refusal={editRefusedMessage}
             failed={editFailed}
             onWords={(draft) => setEditing({ ...editing, draft })}
+            onSensitive={(sensitive) => setEditing({ ...editing, sensitive })}
+            onSensitiveReason={(sensitiveReason) => setEditing({ ...editing, sensitiveReason })}
+            onSensitiveOpen={setEditSensitiveOpen}
+            onSensitiveHelp={() => setEditHelp(HELP_TOPICS.markingAsSensitive)}
             onPick={(files) =>
               setEditing({
                 ...editing,
@@ -1015,7 +1070,7 @@ export function PostView({
             onTags={(tags) => setEditing({ ...editing, tags })}
             onReferences={(references) => setEditing({ ...editing, references })}
             onActs={setEditActsOpen}
-            onHelp={() => setEditHelp(true)}
+            onHelp={() => setEditHelp(HELP_TOPICS.editing)}
             onSign={() => void onSubmitEdit()}
             onLeave={() => setEditing(null)}
           />
@@ -1055,9 +1110,9 @@ export function PostView({
             testId="comment-edit-describe-sheet"
           />
           <HelpDialog
-            open={editHelp}
-            onClose={() => setEditHelp(false)}
-            topic={HELP_TOPICS.editing}
+            open={editHelp !== null}
+            onClose={() => setEditHelp(null)}
+            topic={editHelp ?? HELP_TOPICS.editing}
             testId="comment-edit-help-dialog"
           />
         </>

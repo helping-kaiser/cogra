@@ -1,8 +1,10 @@
 package com.cogra.feature.content.reply
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -63,8 +65,10 @@ class ReplyWizardScreenTest {
     private var restores = 0
     private val removals = mutableListOf<Int>()
     private val sheets = mutableListOf<ReplySealSheet>()
+    private var closedSheets = 0
     private val helps = mutableListOf<HelpTopic>()
     private val stances = mutableListOf<Pair<Double, Double>>()
+    private val marks = mutableListOf<Boolean>()
 
     @Composable
     private fun Wizard(state: ReplyWizardState) {
@@ -86,9 +90,11 @@ class ReplyWizardScreenTest {
             onLeave = { leaves += 1 },
             onSealBack = { sealBacks += 1 },
             onOpenSheet = { sheets += it },
-            onCloseSheet = {},
+            onCloseSheet = { closedSheets += 1 },
             onLicenseChange = {},
             onStanceChange = { d, i -> stances += d to i },
+            onSensitiveChange = { marks += it },
+            onSensitiveReasonChange = {},
             onOpenHelp = { helps += it },
             onCloseHelp = {},
             onSign = { signs += 1 },
@@ -203,21 +209,64 @@ class ReplyWizardScreenTest {
     // -- `ReplySeal` --
 
     /**
-     * The seal draws the acts, the two rows it still lets the author
-     * change, and the two pills — and **not** a Sensitive row: the
-     * approved deviation of 2026-09-01, kept honest by a test so it
-     * cannot creep back in unnoticed before the veiled comment exists.
+     * The seal draws the acts, the three rows it still lets the author
+     * change, and the two pills — `ReplySeal` 1:1, the Mark row
+     * included now that a veiled comment has a face (backlog 25.4).
      */
     @Test
-    fun theSealDrawsItsRowsAndNoSensitiveRow() {
+    fun theSealDrawsItsRows() {
         compose.setContent { Wizard(sealWithWords()) }
 
         compose.onNodeWithTag("reply_seal_acts").assertIsDisplayed()
         compose.onNodeWithTag("reply_seal_total").assertExists()
         compose.onNodeWithTag("reply_seal_stance").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("reply_seal_license").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("wizard_seal_sensitive").assertDoesNotExist()
-        compose.onNodeWithTag("reply_seal_sensitive").assertDoesNotExist()
+        compose.onNodeWithTag("reply_seal_sensitive").performScrollTo().assertIsDisplayed()
+    }
+
+    /** `ReplySeal` 8: Mark opens the one sensitive sheet. */
+    @Test
+    fun markOpensTheSensitiveSheet() {
+        compose.setContent { Wizard(sealWithWords()) }
+
+        compose.onNodeWithTag("reply_seal_sensitive_action").performScrollTo().performClick()
+
+        assertThat(sheets).containsExactly(ReplySealSheet.Sensitive)
+    }
+
+    /**
+     * The sheet is the post seal's own, at the reply's tags — and its
+     * reason field is dead until the switch is on, because a reason
+     * without the mark is refused on `["sensitiveReason"]`.
+     */
+    @Test
+    fun theSensitiveSheetsReasonIsDeadUntilTheSwitchIsOn() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(sheet = ReplySealSheet.Sensitive))
+        }
+
+        compose.onNodeWithTag("reply_sensitive_sheet").assertExists()
+        compose.onNodeWithTag("reply_sensitive_switch").assertExists()
+        compose.onNodeWithTag("reply_sensitive_reason").assertIsNotEnabled()
+    }
+
+    @Test
+    fun theSensitiveSheetsReasonLivesUnderItsOwnMark() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(sheet = ReplySealSheet.Sensitive, sensitive = true))
+        }
+
+        compose.onNodeWithTag("reply_sensitive_reason").assertIsEnabled()
+    }
+
+    /** The row reads its state both ways (`Not marked · Mark` / `Marked · Change`). */
+    @Test
+    fun theMarkRowReadsWhereTheMarkStands() {
+        compose.setContent { Wizard(sealWithWords().copy(sensitive = true)) }
+
+        // "Not marked" is a different string, so an exact match pins
+        // which reading the row is showing.
+        compose.onNodeWithText("Marked").assertExists()
     }
 
     /** `ReplySeal` 6: Adjust opens the pad. */
@@ -228,6 +277,89 @@ class ReplyWizardScreenTest {
         compose.onNodeWithTag("reply_seal_stance_action").performScrollTo().performClick()
 
         assertThat(sheets).containsExactly(ReplySealSheet.Stance)
+    }
+
+    /**
+     * HT-20. THE PAD CARRIES THE STANCE'S FACE. The boards draw the
+     * anchor's emoji in the readout above the field (`ReplyPad`), and it
+     * was missing here entirely — the pad showed a bare pair of numbers
+     * while every other stance surface in the app shows a face.
+     */
+    @Test
+    fun thePadReadsTheStanceAsAFaceBesideItsPair() {
+        compose.setContent {
+            Wizard(
+                sealWithWords().copy(
+                    sheet = ReplySealSheet.Stance,
+                    // The board's own example pick, which reads "Nice".
+                    pDirected = 0.1,
+                    pInterest = 0.1,
+                ),
+            )
+        }
+
+        // The face is a readout, not a label: it leaves the semantics
+        // tree, and the readout announces the anchor's words instead.
+        compose.onNodeWithTag("reply_pad_reading")
+            .assert(hasContentDescription("Nice", substring = true))
+    }
+
+    /**
+     * F2-10. THE PAD PARKS OVER THE PAGE, behind its own wash — it is not
+     * a drawer, and it used to draw a sheet chrome inside the sheet host's
+     * own, which read as two stacked sheets. What the wash covers is
+     * inert, not shortened (`ReplyPad.jsx`), so the seal underneath is
+     * still composed.
+     */
+    @Test
+    fun thePadParksOverTheSealBehindItsOwnWash() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(sheet = ReplySealSheet.Stance))
+        }
+
+        compose.onNodeWithTag("reply_pad").assertExists()
+        compose.onNodeWithTag("reply_pad_wash").assertExists()
+        // The seal is covered, not replaced.
+        compose.onNodeWithTag("reply_wizard").assertExists()
+    }
+
+    /** An outside press stages nothing — the wash is that press. */
+    @Test
+    fun pressingTheWashLeavesThePadWithoutStagingAnything() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(sheet = ReplySealSheet.Stance))
+        }
+
+        compose.onNodeWithTag("reply_pad_wash").performClick()
+
+        assertThat(closedSheets).isAtLeast(1)
+        assertThat(stances).isEmpty()
+    }
+
+    /**
+     * The pad's `?` opens the reply's own topic, not the post pad's:
+     * a reply's stance is toward somebody else's post, so both axes are
+     * the author's and "only for-or-against is yours to set" would be
+     * false here (`ReplyPadHelp.jsx`).
+     */
+    @Test
+    fun thePadsHelpOpensTheTopicWrittenForAReply() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(sheet = ReplySealSheet.Stance))
+        }
+
+        compose.onNodeWithTag("reply_pad_help").performClick()
+
+        assertThat(helps).containsExactly(HelpTopic.TowardWhatYouAnswer)
+    }
+
+    /** The seal's row reads the same face beside the same pair. */
+    @Test
+    fun theSealRowReadsTheStanceAsAFaceToo() {
+        compose.setContent { Wizard(sealWithWords().copy(pDirected = 0.1, pInterest = 0.1)) }
+
+        compose.onNodeWithTag("reply_seal_stance").performScrollTo().assertExists()
+        compose.onNodeWithText("🙂", substring = true).assertExists()
     }
 
     /** `ReplySeal` 7: Change opens the license sheet. */

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT ON (parameter)\n                  parameter AS \"parameter!\", value AS \"value!\"\n           FROM network_parameter_versions\n           ORDER BY parameter, created_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "parameter!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "value!",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "09167be9939ca196f3449ac5869326a51b2dcacc442a33226f6f458adf5a28b3"
+}

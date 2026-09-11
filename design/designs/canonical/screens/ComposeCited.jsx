@@ -22,38 +22,33 @@ export function Screen() {
     <>
       <WizardHeader title="Details" leaveLabel="Leave — your draft is kept" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <ComposeFieldLabel note="Optional">Title</ComposeFieldLabel>
-          <TextField label="" value="" />
-        </div>
+        <TextField label="Title" corner="Optional" value="" />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <ComposeFieldLabel note="Optional">Description</ComposeFieldLabel>
-          <TextField label="" rows={3} value="" />
-        </div>
+        <TextField label="Description" corner="Optional" rows={3} value="" />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <ComposeFieldLabel>Topics</ComposeFieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Button variant="outline" size="sm">Add a topic</Button>
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <ComposeFieldLabel>References</ComposeFieldLabel>
+          <FieldLabel>References</FieldLabel>
           <StagedReference
             kind="post"
             name="The long way home — @ada"
             sub="Post"
             src="post-photo.jpg"
             value="+0.10 / +0.10"
+            onEdit={() => {}}
           />
-          <Button variant="text" size="sm" selfStart>+ Cite something</Button>
+          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
         </div>
 
         <div style={{ flex: 1 }} />
 
-        <Button selfStart={false}>Next</Button>
+        <Button style={{ width: "100%" }}>Next</Button>
       </div>
     </>
   );

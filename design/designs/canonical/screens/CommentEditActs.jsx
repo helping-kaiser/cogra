@@ -5,22 +5,12 @@
    The sheet is the peek-from-a-composer pattern; ceremony screens keep the
    inline ActsCard — two patterns, one component. */
 
-function FieldLabel({ children }) {
-  return (
-    <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-      {children}
-    </span>
-  );
-}
-
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit comment" action={<SystemHelpDot ariaLabel="Editing" />} />
+      <WizardHeader title="Edit comment" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          Your comment on "The long way home".
-        </p>
+        <QuietNote>Your comment on "The long way home".</QuietNote>
 
         <TextField label="Words" rows={3} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." />
 
@@ -28,43 +18,38 @@ export function Screen() {
           <FieldLabel>Pictures</FieldLabel>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} />
-            <Button variant="text" size="sm">+ Add · 1 of 4</Button>
+            <InlineAction size="sm">+ Add pictures · 1 of 4</InlineAction>
           </div>
           <DescribeCounter described={1} total={1} onDescribe={() => {}} />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Topics</FieldLabel>
+          <FieldLabel>Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, minHeight: 32, padding: "4px 12px", borderRadius: "var(--radius-full)", background: "var(--secondary-container)", color: "var(--on-secondary-container)", fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", letterSpacing: "var(--text-label-large--letter-spacing)" }}>
-              #glovebox
-              <Icon name="close" size={16} />
-            </span>
-            <Button variant="outline" size="sm">Add a topic</Button>
+            <TopicRemovable topic="glovebox" onEdit={() => {}} />
           </div>
+          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>References</FieldLabel>
-          <Button variant="text" size="sm" selfStart>+ Cite something</Button>
+          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, borderTop: "1px solid var(--border-hairline)", borderBottom: "1px solid var(--border-hairline)" }}>
-          <span style={{ flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>License</span>
-          <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Public domain</span>
-          <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-            <Icon name="lock" size={16} />
-          </span>
-        </div>
+        <FactRow
+          label="License"
+          value="Public domain"
+          action={
+            <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
+              <Icon name="lock" size={16} />
+            </span>
+          }
+          last
+        />
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
-          This creates 2 signed actions
-          <span style={{ display: "inline-flex" }}>
-            <Icon name="expand_more" size={16} />
-          </span>
-        </div>
+        <ActsFooter count={2} />
         <Button style={{ width: "100%" }}>Sign the edit</Button>
       </div>
 
@@ -74,7 +59,7 @@ export function Screen() {
           <ActsCard
             rows={[
               { label: "Edit", value: "The glovebox camera earns its keep — this is the print…", count: "1 action" },
-              { label: "Topic added", value: "#glovebox", count: "1 action" },
+              { label: "Tag added", value: "#glovebox", count: "1 action" },
             ]}
             note="They land together, or none does."
           />

@@ -21,7 +21,12 @@
 export interface MediaAttachmentProps {
   /** Omit to render the reserved region with its label — the honest placeholder. */
   src?: string;
-  /** First frame for a video, shown before playback starts. */
+  /**
+   * The still a clip wears where it is not running. A cover where the author
+   * chose one; a vertical clip's default is none, and then it is the clip's
+   * FIRST FRAME, cropped exactly as the clip is. Absent where the clip yields
+   * no frame at all — the reserved region's `label` stands instead.
+   */
   poster?: string;
   /** Authored, optional, never invented. Without it the tile is aria-hidden. */
   alt?: string;
@@ -57,6 +62,11 @@ export interface MediaAttachmentProps {
   duration?: string;
   /** 0..1 along the timeline. */
   progress?: number;
+  /**
+   * Whether the transport offers the fullscreen toggle. False only where the
+   * surface has no fullscreen to open — the composer's cover preview.
+   */
+  fullscreen?: boolean;
 }
 
 export declare function MediaAttachment(props: MediaAttachmentProps): JSX.Element;
@@ -89,6 +99,8 @@ export interface MediaGalleryProps {
   items?: readonly MediaAttachmentProps[];
   ratio?: "tall" | "square" | "wide" | string;
   radius?: string;
+  /** Passed through to each frame; falls back to the item's own `maxHeight`. */
+  maxHeight?: string;
 }
 
 export declare function MediaGallery(props: MediaGalleryProps): JSX.Element | null;

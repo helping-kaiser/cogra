@@ -22,21 +22,63 @@ describe("RecoveryCode", () => {
     show();
     expect(screen.getByTestId("code")).toHaveTextContent(CODE);
     expect(screen.getByTestId("code_saved")).toBeDisabled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("leaves the confirmation closed on a wrong answer", () => {
-    const onConfirmed = show();
-    fireEvent.change(screen.getByTestId("code_typed_back"), { target: { value: "ABCDE" } });
+  it("says nothing on a correct partial", () => {
+    show();
+    fireEvent.change(screen.getByTestId("code_typed_back"), { target: { value: "ABCDE-FGHJK" } });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByTestId("code_saved")).toBeDisabled();
-    expect(onConfirmed).not.toHaveBeenCalled();
   });
 
-  it("opens on the code typed back, reading the confusable letters", () => {
+  it("names the mismatch the instant a keystroke diverges", () => {
+    show();
+    fireEvent.change(screen.getByTestId("code_typed_back"), { target: { value: "ABCDQ" } });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("That doesn't match the code above.");
+    expect(screen.getByTestId("code_typed_back")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("clears the mismatch on a backspace back to a valid prefix", () => {
+    show();
+    const field = screen.getByTestId("code_typed_back");
+    fireEvent.change(field, { target: { value: "ABCDQ" } });
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    fireEvent.change(field, { target: { value: "ABCD" } });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("never shows the mismatch on an empty field", () => {
+    show();
+    const field = screen.getByTestId("code_typed_back");
+    fireEvent.change(field, { target: { value: "ABCDQ" } });
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+
+    fireEvent.change(field, { target: { value: "" } });
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("keeps the confirm button disabled until the full code matches, even mid-diverge", () => {
+    show();
+    const field = screen.getByTestId("code_typed_back");
+    fireEvent.change(field, { target: { value: "ABCDE-FGHJK" } });
+    expect(screen.getByTestId("code_saved")).toBeDisabled();
+
+    fireEvent.change(field, { target: { value: "ABCDQ" } });
+    expect(screen.getByTestId("code_saved")).toBeDisabled();
+  });
+
+  it("enables the confirm button and calls onConfirmed on the exact code, reading confusable letters", () => {
     const onConfirmed = show();
     fireEvent.change(screen.getByTestId("code_typed_back"), {
       target: { value: "abcde fghjk mnpqr stvwx yzOI23" },
     });
-    fireEvent.click(screen.getByTestId("code_saved"));
+
+    const saveButton = screen.getByTestId("code_saved");
+    expect(saveButton).not.toBeDisabled();
+    fireEvent.click(saveButton);
     expect(onConfirmed).toHaveBeenCalledOnce();
   });
 

@@ -31,7 +31,7 @@ use std::io::Cursor;
 
 use mp4::{MediaType, Mp4Reader, TrackType};
 
-use super::MediaError;
+use super::{MAX_PIXEL_DIMENSION, MediaError, Probe};
 
 /// The single stored moving format. Clients re-encode to it on device.
 pub const MIME: &str = "video/mp4";
@@ -185,9 +185,15 @@ fn shift_before(removals: &[(usize, usize)], position: u64) -> u64 {
         .sum()
 }
 
-/// Whether the file carries anything the strip would remove — the check
-/// half of check-then-repair.
-pub fn carries_metadata(bytes: &[u8]) -> bool {
+/// Whether the file carries anything the strip would remove.
+///
+/// Test-only: the production path calls [`strip_metadata`]
+/// unconditionally, which makes the same check internally and returns
+/// the file unchanged when there is nothing to remove. Exposing a
+/// separate check half would invite a caller to ask twice and act on the
+/// answer between the two.
+#[cfg(test)]
+fn carries_metadata(bytes: &[u8]) -> bool {
     let mut found = Vec::new();
     metadata_ranges(bytes, 0, bytes.len(), &mut found).is_ok() && !found.is_empty()
 }
@@ -354,19 +360,6 @@ fn write_chunk_offsets(
     Ok(())
 }
 
-/// What the header probe learned. The pixels are never touched: the
-/// dimensions and the duration are facts the container states about
-/// itself, and a file that misstates them fails the codec check first.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Probe {
-    pub width: u32,
-    pub height: u32,
-    /// The movie duration in milliseconds — written to the asset's
-    /// options as `duration_ms`. A fact about the asset, never a limit
-    /// on it: there is deliberately no duration cap.
-    pub duration_ms: u64,
-}
-
 /// Whether the bytes are an MP4 container, read from the bytes alone.
 ///
 /// `ftyp` sits at offset 4, after its own box size, and the brand
@@ -393,6 +386,24 @@ pub fn sniff(bytes: &[u8]) -> bool {
         .any(|brand| BRANDS.contains(&brand))
 }
 
+/// Whether a tkhd matrix turns the track a quarter turn — 90° or 270° —
+/// the one orientation `Mp4Track::width()`/`height()` get wrong.
+///
+/// Those two read `stsd.avc1`'s coded dimensions and never look at
+/// `trak.tkhd.matrix`, but per ISO/IEC 14496-12 the matrix is applied on
+/// top of the coded dimensions, so a portrait phone clip — coded
+/// landscape, then rotated by the matrix — probes as landscape unless
+/// this is checked separately and the dimensions swapped.
+///
+/// A quarter turn is the identity matrix's diagonal (`a`, `d`) zeroed and
+/// its off-diagonal (`b`, `c`) populated; a half turn negates the
+/// diagonal instead and leaves the off-diagonal at zero, and a flip
+/// leaves one diagonal term as `0` and its partner nonzero. Only the
+/// quarter turn swaps which coded axis is width and which is height.
+fn is_quarter_turn(a: i32, b: i32, c: i32, d: i32) -> bool {
+    a == 0 && d == 0 && b != 0 && c != 0
+}
+
 /// The refusal gate for video: the container's tracks must be the codecs
 /// the policy admits, and nothing else may ride along.
 ///
@@ -415,7 +426,13 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
                     return Err(MediaError::Codec("the video track is not H.264"));
                 }
                 if video.is_none() {
-                    video = Some((u32::from(track.width()), u32::from(track.height())));
+                    let (width, height) = (u32::from(track.width()), u32::from(track.height()));
+                    let matrix = &track.trak.tkhd.matrix;
+                    video = Some(if is_quarter_turn(matrix.a, matrix.b, matrix.c, matrix.d) {
+                        (height, width)
+                    } else {
+                        (width, height)
+                    });
                 }
             }
             Ok(TrackType::Audio) => {
@@ -437,11 +454,16 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
     if width == 0 || height == 0 {
         return Err(MediaError::Undecodable);
     }
+    if width > MAX_PIXEL_DIMENSION || height > MAX_PIXEL_DIMENSION {
+        return Err(MediaError::Codec(
+            "the video canvas is wider than the pipeline admits",
+        ));
+    }
 
     Ok(Probe {
         width,
         height,
-        duration_ms: u64::try_from(mp4.duration().as_millis()).unwrap_or(u64::MAX),
+        duration_ms: Some(u64::try_from(mp4.duration().as_millis()).unwrap_or(u64::MAX)),
     })
 }
 
@@ -547,6 +569,61 @@ mod tests {
         })
     }
 
+    /// The byte offset from a version-0 tkhd box's start to its matrix
+    /// field.
+    ///
+    /// version/flags(4) + the version-0 creation, modification, track-ID,
+    /// reserved and duration fields (20) + reserved(8) + layer,
+    /// alternate_group, volume and reserved (8) together place the matrix
+    /// 40 bytes past the end of `tkhd.header` for a version-0 box — the
+    /// version this fixture is asserted to write, and checked against it
+    /// directly rather than assumed.
+    fn version0_tkhd_matrix_offset(tkhd: &BoxRef) -> usize {
+        tkhd.start + tkhd.header + 4 + 20 + 8 + 8
+    }
+
+    /// Overwrites the `a`, `b`, `c`, `d` terms of a fixture's tkhd matrix.
+    ///
+    /// The matrix box is located by walking `moov` → `trak` → `tkhd` with
+    /// the module's own [`boxes`] walker rather than trusting a fixed
+    /// offset: the writer's exact layout is the `mp4` crate's business,
+    /// not this crate's, so the offset is derived from what the writer
+    /// actually produced. The 36-byte matrix stores nine big-endian `i32`
+    /// terms in the ISO 14496-12 order `a b u c d v x y w`; only the four
+    /// terms a rotation test cares about are touched, `u v x y w` staying
+    /// at whatever the writer defaulted them to.
+    fn patch_matrix(bytes: &[u8], a: i32, b: i32, c: i32, d: i32) -> Vec<u8> {
+        let moov = boxes(bytes, 0, bytes.len())
+            .expect("a parseable box tree")
+            .into_iter()
+            .find(|item| &item.fourcc == b"moov")
+            .expect("a moov box");
+        let trak = boxes(bytes, moov.start + moov.header, moov.start + moov.len)
+            .expect("a parseable moov")
+            .into_iter()
+            .find(|item| &item.fourcc == b"trak")
+            .expect("a trak box");
+        let tkhd = boxes(bytes, trak.start + trak.header, trak.start + trak.len)
+            .expect("a parseable trak")
+            .into_iter()
+            .find(|item| &item.fourcc == b"tkhd")
+            .expect("a tkhd box");
+
+        let version = bytes[tkhd.start + tkhd.header];
+        assert_eq!(
+            version, 0,
+            "the fixture writer is assumed to emit a version-0 tkhd; \
+             a version bump changes the field widths ahead of the matrix"
+        );
+        let matrix_at = version0_tkhd_matrix_offset(&tkhd);
+
+        let mut out = bytes.to_vec();
+        for (offset, value) in [(0, a), (4, b), (12, c), (16, d)] {
+            out[matrix_at + offset..matrix_at + offset + 4].copy_from_slice(&value.to_be_bytes());
+        }
+        out
+    }
+
     /// An H.264 video is admitted and reports the size and the duration the container states.
     /// ´claim:media:an-h264-movie-is-admitted-with-its-duration´
     #[test]
@@ -555,9 +632,53 @@ mod tests {
         assert_eq!(probed.width, 1920);
         assert_eq!(probed.height, 1080);
         assert_eq!(
-            probed.duration_ms, 2_500,
+            probed.duration_ms,
+            Some(2_500),
             "the duration is read, never capped"
         );
+    }
+
+    /// A portrait phone clip — coded landscape, carried by a tkhd matrix that turns it a quarter — probes with its dimensions swapped to match what actually displays, whichever way the turn faces.
+    /// ´claim:media:a-quarter-turned-track-probes-by-its-displayed-axes´
+    #[test]
+    fn a_quarter_turn_swaps_the_probed_dimensions() {
+        let clockwise = patch_matrix(
+            &movie(h264(1920, 1080), 2_500),
+            0,
+            0x0001_0000,
+            -0x0001_0000,
+            0,
+        );
+        let probed = probe(&clockwise).expect("a 90-degree movie");
+        assert_eq!(probed.width, 1080);
+        assert_eq!(probed.height, 1920);
+
+        let counter_clockwise = patch_matrix(
+            &movie(h264(1920, 1080), 2_500),
+            0,
+            -0x0001_0000,
+            0x0001_0000,
+            0,
+        );
+        let probed = probe(&counter_clockwise).expect("a 270-degree movie");
+        assert_eq!(probed.width, 1080);
+        assert_eq!(probed.height, 1920);
+    }
+
+    /// A half-turned clip keeps its coded axes: the matrix flips the picture but never swaps which axis is width.
+    /// ´claim:media:a-half-turned-track-keeps-its-coded-axes´
+    #[test]
+    fn a_half_turn_does_not_swap_the_probed_dimensions() {
+        let flipped = patch_matrix(
+            &movie(h264(1920, 1080), 2_500),
+            -0x0001_0000,
+            0,
+            0,
+            -0x0001_0000,
+        );
+        let probed = probe(&flipped).expect("a 180-degree movie");
+        assert_eq!(probed.width, 1920);
+        assert_eq!(probed.height, 1080);
     }
 
     /// A box carrying the given payload.

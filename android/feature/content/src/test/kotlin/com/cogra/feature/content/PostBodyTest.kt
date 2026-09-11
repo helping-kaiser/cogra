@@ -1,21 +1,29 @@
 package com.cogra.feature.content
 
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
+import com.cogra.domain.ModerationState
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * The body region's two replacing states.
@@ -24,7 +32,12 @@ import org.robolectric.RobolectricTestRunner
  * placeholder rather than a gap, so both are decided here — once, for
  * the feed card and the detail alike.
  */
+// The clamp tests ask whether a paragraph overflowed, which needs real
+// glyph metrics: Robolectric's legacy graphics measure every string at
+// zero width, so nothing ever overflows. NATIVE draws through the real
+// Skia stack and measures for real.
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 class PostBodyTest {
 
     @get:Rule
@@ -32,6 +45,17 @@ class PostBodyTest {
 
     private val words = ModeratedField("Salt maps", FieldStatus.NORMAL)
     private val picture = MediaAssetView("m1", "https://media/m1", "A crust", FieldStatus.NORMAL, 1f)
+
+    /**
+     * A stage width inside the comment frame's height band (180dp–220dp,
+     * `MediaFrame.MinHeight`–`MediaFrame.CommentMaxHeight`), so the frame's
+     * own aspect ratio decides its height rather than the cap — a square
+     * frame reports back exactly this width and height.
+     */
+    private val commentScaleStage = 200.dp
+
+    /** Portrait, past the old 4:5 cap: what a lone comment picture used to keep. */
+    private val tallRatio = 0.5f
 
     // -- Removal (D15) --
 
@@ -99,11 +123,50 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.REDACTED,
+                moderation = ModerationState.NORMAL,
                 testTagPrefix = "t",
             )
         }
         compose.onNodeWithTag("t_removed").assertIsDisplayed()
         compose.onNodeWithTag("t_gallery").assertDoesNotExist()
+    }
+
+    // The two removals have to stay distinguishable, or a verdict hides
+    // behind an author's own decision. The wordings are asserted in full
+    // for the same reason `RemovedPlaceholder`'s own test does it.
+
+    @Test
+    fun aRemovalWithNoVerdictOnItReadsAsTheAuthorsOwn() {
+        showRemoved(ModerationState.NORMAL)
+
+        compose.onNodeWithText("Removed by its author").assertIsDisplayed()
+    }
+
+    @Test
+    fun aPlatformRemovalSaysSoRatherThanBorrowingTheAuthorsVoice() {
+        showRemoved(ModerationState.ILLEGAL)
+
+        compose.onNodeWithText("Removed under the platform's rules").assertIsDisplayed()
+    }
+
+    @Test
+    fun aStateThisBuildCannotNameIsNotReadAsAVerdict() {
+        showRemoved(ModerationState.UNKNOWN)
+
+        compose.onNodeWithText("Removed by its author").assertIsDisplayed()
+    }
+
+    private fun showRemoved(moderation: ModerationState) {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = null,
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.REDACTED,
+                moderation = moderation,
+                testTagPrefix = "t",
+            )
+        }
     }
 
     @Test
@@ -118,6 +181,7 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.SENSITIVE,
+                moderation = ModerationState.SENSITIVE,
                 testTagPrefix = "t",
                 revealed = revealed,
                 onReveal = { revealed = true },
@@ -126,6 +190,41 @@ class PostBodyTest {
         compose.onNodeWithTag("t_veil_reveal").assertIsDisplayed().performClick()
         compose.onNodeWithTag("t_veil_reveal").assertDoesNotExist()
         compose.onNodeWithTag("t_gallery").assertIsDisplayed()
+    }
+
+    /**
+     * A COMMENT WEARS THE OTHER FACE (F2-11). A post's body blurs in
+     * place; a comment's is two lines and an inset attachment, so the
+     * whole body is replaced by one block naming the veil and whose mark
+     * it is — the reveal is that block, not a button inside it.
+     */
+    @Test
+    fun aVeiledCommentWearsTheCompactFaceAndNamesItsSource() {
+        var revealed by mutableStateOf(false)
+        compose.setContent {
+            PostBody(
+                content = words.copy(status = FieldStatus.SENSITIVE),
+                description = null,
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.SENSITIVE,
+                moderation = ModerationState.SENSITIVE,
+                testTagPrefix = "c",
+                surface = BodySurface.Comment,
+                revealed = revealed,
+                onReveal = { revealed = true },
+                sensitiveSource = SensitiveSource.Author,
+                sensitiveReason = "Shows an injury",
+            )
+        }
+
+        // The compact face carries no reveal button of its own.
+        compose.onNodeWithTag("c_veil_reveal").assertDoesNotExist()
+        compose.onNodeWithText("Sensitive — tap to view").assertIsDisplayed()
+        compose.onNodeWithText("The author's warning — Shows an injury").assertIsDisplayed()
+
+        compose.onNodeWithTag("c_veil").performClick()
+
+        compose.onNodeWithTag("c_gallery").assertIsDisplayed()
     }
 
     /** A body already revealed elsewhere opens unveiled — no second ask. */
@@ -137,6 +236,7 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.SENSITIVE,
+                moderation = ModerationState.SENSITIVE,
                 testTagPrefix = "t",
                 revealed = true,
             )
@@ -153,6 +253,7 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
                 testTagPrefix = "t",
             )
         }
@@ -170,6 +271,7 @@ class PostBodyTest {
                 description = null,
                 attachments = listOf(picture, picture.copy(id = "m2")),
                 attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
                 testTagPrefix = "c",
                 surface = BodySurface.Comment,
             )
@@ -181,20 +283,194 @@ class PostBodyTest {
         assertThat(galleryTop).isGreaterThan(wordsTop)
     }
 
+    // -- Comment scale is square, single item included (CommentCard.prompt.md
+    // "display-crop to the pager's square frame ... nothing in this product
+    // letterboxes"; design/readme.md "Letterboxing exists nowhere in the
+    // product"). A lone comment picture used to keep its own (portrait)
+    // shape, fitted rather than filled — the regression this pins closed. --
+
     @Test
-    fun aPostsPicturesLeadItsWords() {
+    fun aLoneCommentPictureTakesTheSquareCommentFrame() {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = null,
+                attachments = listOf(picture.copy(aspectRatio = tallRatio)),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                testTagPrefix = "sq",
+                surface = BodySurface.Comment,
+                modifier = Modifier.width(commentScaleStage),
+            )
+        }
+
+        compose.onNodeWithTag("sq_gallery")
+            .assertWidthIsEqualTo(commentScaleStage)
+            .assertHeightIsEqualTo(commentScaleStage)
+    }
+
+    /** A comment's clip takes the same square frame — video is not a special case. */
+    @Test
+    fun aLoneCommentClipTakesTheSquareCommentFrameToo() {
+        val clip = picture.copy(
+            aspectRatio = tallRatio,
+            mimeType = "video/mp4",
+            cover = picture.copy(id = "m1_cover"),
+        )
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = null,
+                attachments = listOf(clip),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                testTagPrefix = "sqv",
+                surface = BodySurface.Comment,
+                modifier = Modifier.width(commentScaleStage),
+            )
+        }
+
+        compose.onNodeWithTag("sqv_gallery")
+            .assertWidthIsEqualTo(commentScaleStage)
+            .assertHeightIsEqualTo(commentScaleStage)
+    }
+
+    // -- Words XOR media (D16) --
+
+    /**
+     * A post's body is words or media and never both, so the picture IS
+     * the body: handed an impossible post carrying each, the card draws
+     * the documented media reading and the words never appear.
+     */
+    @Test
+    fun aPostsPictureReplacesItsWords() {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = ModeratedField("what it is", FieldStatus.NORMAL),
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                testTagPrefix = "p",
+            )
+        }
+
+        compose.onNodeWithTag("p_gallery").assertIsDisplayed()
+        compose.onNodeWithTag("p_words").assertDoesNotExist()
+        compose.onNodeWithTag("p_description").assertIsDisplayed()
+    }
+
+    /** A comment is words PLUS pictures, and its words still lead them. */
+    @Test
+    fun aCommentsWordsLeadItsPictures() {
         compose.setContent {
             PostBody(
                 content = words,
                 description = null,
                 attachments = listOf(picture),
                 attachmentsStatus = FieldStatus.NORMAL,
-                testTagPrefix = "p",
+                moderation = ModerationState.NORMAL,
+                surface = BodySurface.Comment,
+                testTagPrefix = "c",
             )
         }
 
-        val wordsTop = compose.onNodeWithText("Salt maps").fetchSemanticsNode().positionInRoot.y
-        val galleryTop = compose.onNodeWithTag("p_gallery").fetchSemanticsNode().positionInRoot.y
-        assertThat(galleryTop).isLessThan(wordsTop)
+        val wordsTop = compose.onNodeWithTag("c_words").fetchSemanticsNode().positionInRoot.y
+        val galleryTop = compose.onNodeWithTag("c_gallery").fetchSemanticsNode().positionInRoot.y
+        assertThat(wordsTop).isLessThan(galleryTop)
     }
+
+    /** A words post keeps both, body first and the caption under it. */
+    @Test
+    fun aWordsPostDrawsItsBodyThenItsCaption() {
+        compose.setContent {
+            PostBody(
+                content = words,
+                description = ModeratedField("the caption", FieldStatus.NORMAL),
+                attachments = emptyList(),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                testTagPrefix = "w",
+            )
+        }
+
+        val bodyTop = compose.onNodeWithTag("w_words").fetchSemanticsNode().positionInRoot.y
+        val captionTop = compose.onNodeWithTag("w_description").fetchSemanticsNode().positionInRoot.y
+        assertThat(bodyTop).isLessThan(captionTop)
+    }
+
+    // -- The clamps and the opener --
+
+    /** Nothing folded away, no opener — the rule is "only where there is". */
+    @Test
+    fun aShortBodyCarriesNoOpener() {
+        showCollapsed(words)
+
+        compose.onNodeWithTag("s_opener").assertDoesNotExist()
+    }
+
+    /** Past the ceiling the opener stands, and it unfolds in place. */
+    @Test
+    fun aFoldedBodyOpensAndClosesInPlace() {
+        showCollapsed(ModeratedField(longBody, FieldStatus.NORMAL))
+
+        compose.onNodeWithTag("s_opener").assertIsDisplayed()
+        compose.onNodeWithText("More").assertIsDisplayed()
+        compose.onNodeWithTag("s_opener").performClick()
+        compose.onNodeWithText("Less").assertIsDisplayed()
+        compose.onNodeWithTag("s_opener").performClick()
+        compose.onNodeWithText("More").assertIsDisplayed()
+    }
+
+    /** The detail is the read surface: it clamps nothing and never opens. */
+    @Test
+    fun anUncollapsedBodyNeverOffersTheOpener() {
+        compose.setContent {
+            PostBody(
+                content = ModeratedField(longBody, FieldStatus.NORMAL),
+                description = null,
+                attachments = emptyList(),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                testTagPrefix = "d",
+            )
+        }
+
+        compose.onNodeWithTag("d_opener").assertDoesNotExist()
+    }
+
+    /** A caption past two lines opens the card even on a media post. */
+    @Test
+    fun aLongCaptionOpensTheCardToo() {
+        compose.setContent {
+            PostBody(
+                content = ModeratedField(null, FieldStatus.NORMAL),
+                description = ModeratedField(longBody, FieldStatus.NORMAL),
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                collapsed = true,
+                testTagPrefix = "m",
+            )
+        }
+
+        compose.onNodeWithTag("m_opener").assertIsDisplayed()
+    }
+
+    private fun showCollapsed(content: ModeratedField) {
+        compose.setContent {
+            PostBody(
+                content = content,
+                description = null,
+                attachments = emptyList(),
+                attachmentsStatus = FieldStatus.NORMAL,
+                moderation = ModerationState.NORMAL,
+                collapsed = true,
+                testTagPrefix = "s",
+            )
+        }
+    }
+
+    /** Well past the 18-line ceiling at any plausible card width. */
+    private val longBody = "Salt maps of the coast road, walked at low tide. ".repeat(80)
 }

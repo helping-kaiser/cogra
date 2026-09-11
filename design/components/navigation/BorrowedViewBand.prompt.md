@@ -1,4 +1,4 @@
-Use `BorrowedViewBand` in the collapsing top of a read surface whose feed is ranked from a borrowed vantage point — a visitor from an invite link (the inviter's view), a bare arrival (the genesis moderator's), or a signed-in applicant who has not landed yet (still the inviter's). It subsumes the guest notice: the band names the borrowed view and carries the one sign-in-or-join entry.
+Use `BorrowedViewBand` in the collapsing top of a read surface whose feed shows a borrowed vantage point — a visitor from an invite link (the inviter's view), a signed-in applicant who has not landed yet (their own inviter's), or a bare arrival (the genesis moderator's, strictly as the fallback). It subsumes the guest notice: the band names the borrowed view and carries the one sign-in-or-join entry.
 
 ```jsx
 <BorrowedViewBand
@@ -15,4 +15,4 @@ Use `BorrowedViewBand` in the collapsing top of a read surface whose feed is ran
 />
 ```
 
-The default line invites ("— join to build your own."); pass `line` for the applicant readings, and drop `actionLabel` once the reader is signed in. The label is what makes borrowed ranking honest (§9): it always names whose view this is, and it exposes nothing the public record does not already carry. The band disappears the moment the reader's own view exists — their first stance, the vouch-back.
+The default line invites ("— join to build your own."); pass `line` for the applicant readings, and drop `actionLabel` once the reader is signed in. The label is what makes borrowed ranking honest (§9): it always names whose view this is, and it exposes nothing the public record does not already carry. The band disappears when the vouch-back is signed — the reader's first stance, and the first moment a view of their own exists. Until that signature lands the view is still borrowed, so the band stands through the whole approach to the pad.

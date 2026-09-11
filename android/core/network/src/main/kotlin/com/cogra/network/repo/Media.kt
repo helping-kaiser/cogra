@@ -21,6 +21,7 @@ import com.cogra.network.graphql.BeginMediaUploadMutation
 import com.cogra.network.graphql.CompleteMediaUploadMutation
 import com.cogra.network.graphql.UploadMediaMutation
 import com.cogra.network.graphql.type.MediaUploadKind
+import com.cogra.network.graphql.type.UploadMediaInput
 import com.cogra.network.payloadOutcome
 import com.cogra.network.toDomain
 import java.io.File
@@ -79,7 +80,7 @@ class MediaRepositoryImpl @Inject constructor(
             .build()
 
         client.mutation(
-            UploadMediaMutation(file = upload, coverMediaId = Optional.absent()),
+            UploadMediaMutation(UploadMediaInput(file = upload, coverMediaId = Optional.absent())),
         ).payloadOutcome({ it.uploadMedia.userErrors.map { e -> e.userErrorFields } }) { data ->
             // A null asset beside empty userErrors is a server fault,
             // which is what `payload` turns it into — never a success
@@ -131,7 +132,7 @@ class MediaRepositoryImpl @Inject constructor(
             .build()
 
         client.mutation(
-            UploadMediaMutation(file = upload, coverMediaId = Optional.present(coverMediaId)),
+            UploadMediaMutation(UploadMediaInput(file = upload, coverMediaId = Optional.present(coverMediaId))),
         ).payloadOutcome({ it.uploadMedia.userErrors.map { e -> e.userErrorFields } }) { data ->
             data.uploadMedia.media?.mediaFields?.toDomain()
         }

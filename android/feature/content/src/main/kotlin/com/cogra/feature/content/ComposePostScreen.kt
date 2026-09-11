@@ -51,7 +51,10 @@ import com.cogra.core.designsystem.TopicChip
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.media.MediaGallery
+import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.topics.TagNameProblem
 import com.cogra.domain.topics.canonicalTagName
 import com.cogra.domain.topics.isAddableTagName
@@ -146,6 +149,9 @@ fun ComposePostScreen(
         topBar = {
             Column {
                 TopAppBar(
+                    // The 48dp band every board draws; M3's small bar
+                    // defaults to 64dp (F-10).
+                    expandedHeight = Layout.TopBarHeight,
                     colors = surfaceTopAppBarColors(),
                     scrollBehavior = collapsingTop.scrollBehavior,
                     title = {
@@ -192,15 +198,7 @@ fun ComposePostScreen(
                 ErrorLine(R.string.content_error_not_found, "compose_not_found")
                 return@Column
             }
-            OutlinedTextField(
-                value = state.title,
-                onValueChange = onTitleChange,
-                label = { Text(stringResource(R.string.content_field_title)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("compose_title"),
-            )
+            TitleField(state.title, state.titleTooLong, onTitleChange)
             OutlinedTextField(
                 value = state.description,
                 onValueChange = onDescriptionChange,
@@ -209,18 +207,41 @@ fun ComposePostScreen(
                     .fillMaxWidth()
                     .testTag("compose_description"),
             )
-            OutlinedTextField(
-                value = state.body,
-                onValueChange = onBodyChange,
-                label = { Text(stringResource(R.string.content_field_body)) },
-                minLines = 6,
-                isError = state.emptyBody,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("compose_body"),
-            )
-            if (state.emptyBody) {
-                ErrorLine(R.string.content_error_empty_body, "compose_empty_body")
+            // WORDS XOR MEDIA (D16, api-spec.md "The body XOR"): a media
+            // post's body IS its gallery, so this surface shows it
+            // instead of a words field it could only refuse. It authors
+            // no pictures — that is the wizard-generation editor — but it
+            // has to draw what the edit is carrying through, or the
+            // author is asked to save a post they cannot see.
+            if (state.mediaBody) {
+                Text(
+                    stringResource(R.string.content_edit_media_heading),
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                MediaGallery(
+                    items = state.attachments.map { it.toItem() },
+                    testTag = "compose_media",
+                )
+                Text(
+                    stringResource(R.string.content_edit_media_body_xor),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag("compose_media_note"),
+                )
+            } else {
+                OutlinedTextField(
+                    value = state.body,
+                    onValueChange = onBodyChange,
+                    label = { Text(stringResource(R.string.content_field_body)) },
+                    minLines = 6,
+                    isError = state.emptyBody,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("compose_body"),
+                )
+                if (state.emptyBody) {
+                    ErrorLine(R.string.content_error_empty_body, "compose_empty_body")
+                }
             }
             // Tags are never fields of the post record (post.md §3) —
             // but this is where an author changes them (F3): the
@@ -290,7 +311,7 @@ fun ComposePostScreen(
                 )
                 Button(
                     onClick = onSubmit,
-                    enabled = !state.submitting && !state.nothingToSign,
+                    enabled = state.canSubmit,
                     modifier = Modifier.testTag("compose_submit"),
                 ) {
                     Text(
@@ -309,6 +330,30 @@ fun ComposePostScreen(
             onConfirm = onConfirmSubmit,
             onDismiss = onDismissConfirm,
             withdrawalCost = state.withdrawalCost,
+        )
+    }
+}
+
+/**
+ * The title and the one refusal it can earn — the field's own cap
+ * (post.md §1), said where the words are rather than at the submit.
+ */
+@Composable
+private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(stringResource(R.string.content_field_title)) },
+        singleLine = true,
+        isError = tooLong,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("compose_title"),
+    )
+    if (tooLong) {
+        ErrorLine(
+            text = stringResource(R.string.content_error_title_too_long, MAX_TITLE_CHARS),
+            testTag = "compose_title_too_long",
         )
     }
 }

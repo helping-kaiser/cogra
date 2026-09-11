@@ -29,16 +29,19 @@ class ProfileScreensTest {
         onFilterChange: (ChronicleFilter) -> Unit = {},
         onBack: (() -> Unit)? = null,
         onStance: (String, String) -> Unit = { _, _ -> },
+        profileSavedResult: Boolean = false,
+        onProfileSavedResultConsumed: () -> Unit = {},
+        onRetry: () -> Unit = {},
     ) {
         compose.setContent {
             ProfileScreen(
                 stanceControl = { target, tag -> onStance(target, tag) },
                 state = state,
-                profileSavedResult = false,
-                onProfileSavedResultConsumed = {},
+                profileSavedResult = profileSavedResult,
+                onProfileSavedResultConsumed = onProfileSavedResultConsumed,
                 onFilterChange = onFilterChange,
                 onLoadMore = {},
-                onRetry = {},
+                onRetry = onRetry,
                 onEdit = onEdit,
                 onOpenSettings = onOpenSettings,
                 onOpenInvites = onOpenInvites,
@@ -60,6 +63,42 @@ class ProfileScreensTest {
         own = own,
         applicant = applicant,
     )
+
+    @Test
+    fun aSavedEditConfirmsOnTheProfilesOwnHost() {
+        render(loaded(own = true), profileSavedResult = true)
+        compose.onNodeWithTag("profile_snackbar").assertExists()
+    }
+
+    @Test
+    fun theSavedResultIsConsumedOnlyAfterTheSnackbarHasRun() {
+        // Consuming first flips the effect's key and cancels the
+        // suspending show, so the confirmation died in the frame it was
+        // posted (HT-8). The whole bug is the ordering, and only a
+        // round-tripping consume can see it.
+        var consumed = false
+        render(
+            loaded(own = true),
+            profileSavedResult = true,
+            onProfileSavedResultConsumed = { consumed = true },
+        )
+        assertThat(consumed).isFalse()
+        compose.mainClock.advanceTimeBy(10_000)
+        assertThat(consumed).isTrue()
+    }
+
+    // design/readme.md, "The pull-down lives on every full-screen
+    // scrolling root" (ruled 2026-09-10): the profile is one of the
+    // named surfaces. The PullToRefreshBox wraps every branch of the
+    // Scaffold's content slot, so the loaded chronicle must still
+    // render — and carry its own onRetry — underneath it.
+    @Test
+    fun theLoadedChronicleRendersUnderThePullToRefreshWrapper() {
+        var retried = false
+        render(loaded(), onRetry = { retried = true })
+        compose.onNodeWithTag("profile_list").assertExists()
+        assertThat(retried).isFalse()
+    }
 
     @Test
     fun theHeaderRendersTheProfileFields() {

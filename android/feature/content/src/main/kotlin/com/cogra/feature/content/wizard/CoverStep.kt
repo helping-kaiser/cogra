@@ -39,9 +39,9 @@ import com.cogra.feature.content.R
  * the author settles on is uploaded as its own still and named on the
  * clip's upload, because an asset row is immutable once written.
  *
- * There is no crop here and no board that draws one: a video is not
- * cropped, and the cover is framed to the clip's own shape by the
- * pipeline rather than by the author.
+ * A frame needs no crop: it was cut from the clip and already carries
+ * the clip's shape. Only a cover picked from the gallery can disagree
+ * with the video's shape.
  */
 @Composable
 internal fun CoverStepBody(

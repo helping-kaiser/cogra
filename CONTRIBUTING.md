@@ -130,6 +130,12 @@ them:
 - **Explain why.** This is a learning project as much as a building
   project. Explain the reasoning behind choices, not just the
   implementation.
+- **Touched functionality ships design-conform.** Whenever a change
+  touches a user-facing surface, that surface ships 100% conform to
+  the drawn boards in `design/` — matching the designs is part of
+  the change, not a separate task. A problem discovered in the
+  designs is a prompt to the design backlog (`design/backlog.md`),
+  never license to build something different.
 - **Move slowly and correctly.** Quality over speed. No rushing, no
   shortcuts.
 - **Build from official sources.** Implement the way the language,

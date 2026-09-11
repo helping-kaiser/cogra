@@ -249,6 +249,7 @@ fun testProposalBytes(author: ActorKey, seq: ULong = 1u): ByteArray {
 /** Every method throws; tests override what they script. */
 open class ThrowingAccountRepository : AccountRepository {
     override suspend fun me(): Outcome<UserProfile?> = throw UnsupportedOperationException()
+    override suspend fun borrowedView(): Outcome<ActorRef?> = throw UnsupportedOperationException()
     override suspend fun keyBackup(): Outcome<ByteArray?> = throw UnsupportedOperationException()
     override suspend fun keyBackupChallenge(): Outcome<ByteArray> = throw UnsupportedOperationException()
     override suspend fun uploadKeyBackup(
@@ -458,7 +459,8 @@ open class ThrowingContentRepository : ContentRepository {
         id: String,
         title: String?,
         description: String?,
-        content: String,
+        content: String?,
+        attachments: List<AttachmentClaim>,
         sensitive: Boolean,
         sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
@@ -471,6 +473,8 @@ open class ThrowingContentRepository : ContentRepository {
         attachments: List<AttachmentClaim>,
         pDirected: Double?,
         pInterest: Double?,
+        sensitive: Boolean,
+        sensitiveReason: String?,
     ): Outcome<PreparedContentView> = throw UnsupportedOperationException()
     override suspend fun commentForEdit(id: String): Outcome<CommentForEdit?> =
         throw UnsupportedOperationException()
@@ -535,8 +539,6 @@ open class ThrowingMediaProcessor : MediaProcessor {
         throw UnsupportedOperationException()
 
     override suspend fun aspectRatio(uri: String): Float? = throw UnsupportedOperationException()
-
-    override suspend fun sizeBytes(uri: String): Long? = null
 }
 
 /** Video-pipeline base: every call throws until a test scripts it. */
@@ -592,12 +594,15 @@ fun testProfile(
     displayName: String? = "Author",
     bio: String? = null,
     websiteUrl: String? = null,
+    /** Which profile version this is — what a landing wait compares. */
+    updatedAt: Instant = Instant.EPOCH,
 ): ProfileView = ProfileView(
     id = id,
     handle = handle,
     displayName = testModeratedField(displayName),
     bio = testModeratedField(bio),
     websiteUrl = testModeratedField(websiteUrl),
+    updatedAt = updatedAt,
 )
 
 fun testModeratedField(value: String?) = ModeratedField(value, FieldStatus.NORMAL)

@@ -1,5 +1,4 @@
 <resources>
-    <string name="content_feed_title">Feed</string>
     <string name="content_feed_empty">Nothing here yet — write the first post.</string>
     <string name="content_feed_compose">Write a post</string>
     <string name="content_feed_load_more">Load more</string>
@@ -8,6 +7,11 @@
     <string name="content_field_title">Title</string>
     <string name="content_field_description">Description</string>
     <string name="content_field_body">What do you want to publish?</string>
+    <!-- A media post's body is its gallery, so its edit shows the
+         pictures where a words post has its field (api-spec.md "The
+         body XOR"). -->
+    <string name="content_edit_media_heading">Pictures</string>
+    <string name="content_edit_media_body_xor">A post\'s body is words or media, never both.</string>
 
     <!-- The tags section, on the composer and the edit screen
          (hashtag.md; D15: no autocomplete). -->
@@ -17,10 +21,32 @@
     <string name="content_topics_preview">Will be added as #%1$s</string>
     <string name="content_topics_cap_reached">Up to %1$d topics per post</string>
     <string name="content_topics_params_done">Done</string>
-    <!-- The detail view\'s on-demand reveal of how strongly each topic
-         is claimed (F8) — never on by default. -->
-    <string name="content_topics_show_values">Show how strongly these topics are claimed</string>
-    <string name="content_topics_hide_values">Hide how strongly these topics are claimed</string>
+    <!-- The topics line on a card: two chips whole, then everything
+         else in words (TopicsLine.jsx). The two counts join with the
+         same "·" that opens the string. -->
+    <plurals name="content_topics_line_topics">
+        <item quantity="one">%d topic</item>
+        <item quantity="other">%d topics</item>
+    </plurals>
+    <plurals name="content_topics_line_references">
+        <item quantity="one">%d reference</item>
+        <item quantity="other">%d references</item>
+    </plurals>
+    <!-- The affordance row. The comment count is spoken rather than
+         drawn as a word — the row is glyph-plus-number, and the label
+         lives in the accessibility tree instead. -->
+    <plurals name="content_comment_count">
+        <item quantity="one">%d comment</item>
+        <item quantity="other">%d comments</item>
+    </plurals>
+    <!-- The completed name, never a bare "Share": a glyph with one word
+         beside it tells a listener the verb but not the object
+         (guidelines/copy-voice.md). -->
+    <string name="content_share_post">Share this post</string>
+    <!-- The caption's in-place opener. A text control, not a link: it
+         opens the words where they stand and never navigates. -->
+    <string name="content_more">More</string>
+    <string name="content_less">Less</string>
     <!-- What a topic name may be — L1\'s identifier atom (D3). -->
     <!-- The references section (D18, D20). The word is always
          Reference — a reference to a profile is a mention — and never
@@ -46,8 +72,6 @@
     <string name="content_references_finder_empty">Nothing matched that yet.</string>
     <string name="content_references_finder_failed">Couldn\'t look that up. Check your connection.</string>
     <string name="content_references_finder_cancel">Cancel</string>
-    <string name="content_references_show_values">Show how strongly these references are made</string>
-    <string name="content_references_hide_values">Hide how strongly these references are made</string>
     <!-- A withdrawal nets the citation bundle to zero, which may take
          more than one counter-record (D11). -->
     <plurals name="content_references_withdrawal_cost">
@@ -93,8 +117,6 @@
     <string name="content_submit">Sign and publish</string>
     <string name="content_save_edit">Sign the edit</string>
     <string name="content_post_saved">Signed — landing on the graph</string>
-    <string name="content_feed_signin">Sign in or join</string>
-    <string name="content_guest_body">You\'re browsing as a guest — sign in or join to post and vouch.</string>
     <string name="content_comment_signin">Sign in or join to comment</string>
     <string name="content_comment_hint">Add a comment</string>
     <string name="content_comment_submit">Sign comment</string>
@@ -102,6 +124,7 @@
     <string name="content_comments_empty">No comments yet.</string>
     <string name="content_edit">Edit</string>
     <string name="content_error_empty_body">The post needs a body.</string>
+    <string name="content_error_title_too_long">Too long — at most %1$d characters.</string>
     <string name="content_error_refused">The server refused this write.</string>
     <string name="content_error_signing">Signing did not finish — the write stays pending.</string>
     <string name="content_error_signing_no_key">Signing needs your key, which isn\'t on this device — the write waits as pending. Restore your key to finish it.</string>

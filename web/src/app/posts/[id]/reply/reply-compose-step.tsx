@@ -17,6 +17,7 @@
 
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
 import { PillButton } from "@/lib/ui2/pill-button";
+import { FIELD_BOX } from "@/lib/ui2/text-field";
 import {
   CommentAttachments,
   commentDropHandlers,
@@ -77,6 +78,9 @@ export function ReplyComposeStep({
 }) {
   const video = isVideoReply(state);
   const hasPictures = !video && state.media.length > 0;
+  // Android's own `wordsFill` (`ReplyComposeStep.kt:84`): the words take the
+  // column while they are the only thing in it.
+  const wordsFill = !video && refusals.length === 0;
 
   return (
     <div
@@ -86,16 +90,26 @@ export function ReplyComposeStep({
     >
       <ReplyTargetChip target={state.target} />
 
-      {/* The words carry no label box: the screen is titled "Reply" and the
-          target sits directly above, so a second naming would be noise. The
-          accessible name says it instead. */}
+      {/* The words carry no label ABOVE them: the screen is titled "Reply" and
+          the target sits directly on top, so a second naming would be noise —
+          the accessible name says it instead. They do carry the field's own
+          BOX: `TextField.prompt.md` puts every composer textarea on the
+          extra-small rung with a 1px outline at rest, and a field with no
+          edge until it is focused does not read as somewhere to write.
+
+          WHERE THE SLACK GOES, exactly as Android decides it
+          (`ReplyComposeStep.kt:79-95`): the words fill the column while they
+          are the only thing in it, and take a tall natural height once a clip
+          or a refusal needs the room below them. */}
       <textarea
         data-testid="reply-words"
         aria-label={`Your reply to ${state.target.label}`}
         value={state.words}
         rows={4}
         onChange={(event) => onWords(event.target.value)}
-        className="cg-focus w-full resize-none border-0 bg-transparent p-0 text-body-large text-on-surface outline-none placeholder:text-on-surface-variant"
+        className={`${FIELD_BOX} resize-none ${
+          wordsFill ? "min-h-11 flex-1" : "min-h-32"
+        }`}
         placeholder="Your reply"
       />
 
@@ -117,7 +131,11 @@ export function ReplyComposeStep({
         testIdPrefix="reply"
       />
 
-      <div className="flex-1" />
+      {/* The board's own `flex: 1` — the gap that pushes the hint and the pill
+          down once the words have stopped doing it. The words' ALTERNATIVE,
+          never their neighbour: two growing children would split the column
+          between them and the box would take half the height it is drawn at. */}
+      {!wordsFill && <div className="flex-1" />}
 
       {/* The foot line names what CAN still join, so it changes with the body:
           a video says so in the singular, and once one is in there is nothing

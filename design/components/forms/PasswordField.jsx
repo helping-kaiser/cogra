@@ -9,17 +9,27 @@ import { Icon } from "../navigation/Icon.jsx";
    in this system never wears one. The state lives in the accessible name, which
    says what the tap will DO ("Show password"), not what is on screen.
 
-   `error` mirrors TextField's Material 3 error state, since this component
-   duplicates TextField's field markup rather than composing it: the outline
-   and label switch to `--error`, and a body-small supporting line in
-   `--error` renders below the field carrying the message verbatim. */
+   `hint` and `error` mirror TextField's supporting-text slot, since this
+   component duplicates TextField's field markup rather than composing it: one
+   body-small line under the field, `text-secondary` for what the field will
+   accept and `--error` for the message when it is refused — the error replacing
+   the hint, never joining it, and taking the outline and the label with it.
 
-export function PasswordField({ label, value, onChange, autoComplete = "current-password", id, error }) {
+   The line is wired to the input exactly as `TextField` wires its own —
+   `aria-describedby` always, `aria-invalid` and `role="alert"` in the error
+   state — because duplicating the markup must not mean duplicating it minus
+   the part that makes the message reach anyone. */
+
+export function PasswordField({ label, value, onChange, autoComplete = "current-password", id, hint, error }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
+  const supportId = `${fieldId}-support`;
   const [visible, setVisible] = React.useState(false);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
+    // Same reasoning as TextField's own `data-field`: a replaced element
+    // cannot host the flow badge's ::after, so the badge names the field as a
+    // whole (jakob's ruling A9, backlog item 40).
+    <div data-field={label} style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
       <label
         htmlFor={fieldId}
         style={{
@@ -38,6 +48,8 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
           type={visible ? "text" : "password"}
           value={value}
           autoComplete={autoComplete}
+          aria-describedby={error || hint ? supportId : undefined}
+          aria-invalid={error ? "true" : undefined}
           onChange={(event) => onChange && onChange(event.target.value)}
           style={{
             flex: 1,
@@ -74,16 +86,18 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
           <Icon name={visible ? "visibility_off" : "visibility"} />
         </button>
       </div>
-      {error && (
+      {(error || hint) && (
         <span
+          id={supportId}
+          role={error ? "alert" : undefined}
           style={{
             fontSize: "var(--text-body-small)",
             lineHeight: "var(--text-body-small--line-height)",
             letterSpacing: "var(--text-body-small--letter-spacing)",
-            color: "var(--error)",
+            color: error ? "var(--error)" : "var(--text-secondary)",
           }}
         >
-          {error}
+          {error || hint}
         </span>
       )}
     </div>

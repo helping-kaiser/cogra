@@ -148,6 +148,71 @@ stand-in is replaced behind the seam and no slice reopens. The swap
 is event-driven — it happens when L1 ships, wherever the slice plan
 stands.
 
+## The MVP milestone
+
+The first public release (ruled 2026-09-11): a friends cohort on the
+Play closed-testing track plus the hosted web app. The MVP names the
+subset of the plan that ships first; everything else follows after
+the release. It ships on the L1 stand-in — the swap stays
+event-driven and is not an MVP dependency.
+
+**In the MVP:**
+
+- **Slice 2.5.3's remainder** — the fullscreen viewers, edit as one
+  batch, the default-license setting, and the comment-video edit
+  surface (share already shipped).
+- **Slice 2.6 — private viewer state.** Design first: bookmarks,
+  hidden actors, and view history have no boards yet.
+- **Slice 2.7 — search**, with the Explore surface that waits on it
+  (the Explore boards are drawn).
+- **Slice 3 — the ranked feed, backend-direct only**, the Reel
+  stream included. The miner-container and on-device stages stay on
+  the contract and ship after the MVP; so do the feed's L1-view /
+  L2-view toggle and the quick-pad variant.
+- **Slice 3.1 — notifications, the minimal cut**: the design doc and
+  an in-app notifications list; no push channel.
+- **Slice 8's erasure half** — self-deletion of content and account
+  ([erasure.md](../instances/erasure.md)). Play's account-deletion
+  policy mandates it; the moderation half waits.
+- **The conformance workstreams W3–W8** of the 2026-09-08 UI audit,
+  plus the settings-surface conformance and the audit's open
+  decision tables — touched surfaces ship 100% conform to the
+  canonical boards.
+- **Slice 9 — production deployment** and **slice 10 — release
+  engineering** below, both minted for the MVP.
+
+**Out until after the MVP:** slice 4 (governance), slice 5
+(collectives), slice 6 (the rail), slice 7 (tipping and the
+marketplace), slice 8's moderation half, and every staged
+workstream.
+
+**The would-like-to-have list** — picked up inside the MVP window
+only if the core lands early, in this order:
+
+1. Chats — slice 5's chat half, pulled forward alone.
+2. Push notifications — 3.1's second channel.
+3. Change histories — the staged workstream.
+4. The walk-the-graph frontend (unlikely; large).
+
+**Order** (dependency-driven, as always):
+
+0. The audit-salvage wave: merge the held 2026-09-04 audit lanes
+   r1-store, r2-api and d1-docs; cherry-pick w1-web's bug fixes.
+   The other audit branches are discarded as superseded by the
+   conformance overhaul.
+1. W3 and W4 (slice 2.5.3's remainder rides them), then W5–W7.
+2. Slice 2.6 (design first), then slice 2.7.
+3. Slice 3 (feed + Reel), then slice 3.1 (design first).
+4. Slice 8's erasure half.
+5. W8, the copy sweep, once the structure settles.
+6. Slice 9, then the closed test through slice 10.
+
+Slice 10's lead times run in parallel from the start rather than at
+step 6: the Play Console account, the privacy policy, and the closed
+test's own clock (a personal developer account needs twelve or more
+testers for fourteen days before production unlocks) all begin long
+before the code is done.
+
 ## Slices
 
 Each slice is one logical step. Order is dependency-driven: the seam
@@ -394,7 +459,9 @@ the start — and delivery splits by content kind.
   someone is scrolling past. The **post detail** carries real
   transport — play/pause and a seekable timeline, uniform for every
   clip, its chrome auto-hiding — and so does the fullscreen viewer
-  (2.5.3); the stream (2.7) carries sound and a drag-to-seek line.
+  (2.5.3); the stream (slice 3) carries sound and a drag-to-seek line.
+  A portrait clip's tap opens the post detail here, like every other
+  media tap; the stream takes that tap when it ships in slice 3.
 - **A clip keeps its own ratio, clamped to tall**: 16:9 and 1:1
   display true, anything taller than 4:5 centre-crops to 4:5, and
   the cover crops identically. Nothing is letterboxed. Where the
@@ -409,9 +476,8 @@ the start — and delivery splits by content kind.
 The non-media rulings the compose session produced, separable
 from the media path and carrying their own doc write-back:
 
-- The **default-license account setting** and the sensitive
-  self-mark's contract field, which the wizard needs and the
-  contract does not yet carry.
+- The **default-license account setting**, which the wizard
+  promises and the contract does not yet carry.
 - **Edit as one batch**: an edit carrying its topic and citation
   acts together.
 - Media in the **comment composer**, and the full feed-card
@@ -424,9 +490,11 @@ from the media path and carrying their own doc write-back:
   measured against. It carries **no acts** and does not show the
   description, and it is dismissed by the X, a swipe down, or the
   backdrop.
-- **Share**, on the post detail: one tap to the platform's own share
-  sheet, a glyph with no count of ours. Whether a feed card carries
-  one is still open, so the row there is unchanged.
+- **Share**, on the post detail and on the feed card alike: one tap
+  to the platform's own share sheet, a glyph with no count of ours.
+  The action row has a stated order — stance, score, comment, share
+  — which is also its queue: on a phone too narrow for all four,
+  share is the first to move into the ⋮ menu.
 - **Surfaces:** backend, API, Android, web.
 
 ### Slice 2.6 — Private viewer state
@@ -526,6 +594,12 @@ from the media path and carrying their own doc write-back:
   no-ops), and an optional **quick-pad variant** — hold, drag,
   commit on release, no Set step — as a second mode beside the
   full pad (jakob, 2026-08-25; the full pad stays the default).
+- **The borrowed view starts ranking here.** The guest and applicant
+  bands already name whose view a feed shows over a chronological
+  one; this slice makes the order borrowed too, and adds the
+  invite-link vantage with the contract field it needs and the band's
+  line about ranking
+  ([design/readme.md §13](../../design/readme.md#13-decided-in-design-sessions)).
 - **The L1-view / L2-view toggle on the feed.** The stance bundle
   already lets a reader choose which view they read — landed only,
   or landed plus what is still in flight (slice 2.2). The ranked
@@ -633,6 +707,41 @@ from the media path and carrying their own doc write-back:
 - **Hand test:** remove your own post; watch the tombstone appear and
   the archive row land.
 - **Surfaces:** backend, API, Android, web.
+
+### Slice 9 — Production deployment
+
+The app leaves the dev machine. Minted for the MVP; the friends
+cohort onboards against this server.
+
+- A production host running the API, the web app, Postgres with
+  backups, and the media store — the `BlobStore` trait's S3 seam
+  gets its real remote store
+  ([architecture.md](architecture.md)).
+- A domain with TLS; invite links, the web origin, and the APK's
+  baked origin all move off the LAN IP.
+- Real outbound email — verification and reset mails reach
+  strangers' inboxes, not the dev mailer's log.
+- Secrets handling, migrations-on-deploy, and enough monitoring to
+  notice the server is down.
+- **Hand test:** onboard from an invite link on a phone that has
+  never seen the dev LAN.
+- **Surfaces:** ops, backend, web.
+
+### Slice 10 — Release engineering and the Play Store
+
+- The release signing keystore (only the debug keystore exists
+  today), release applicationId and versioning, target-API
+  compliance.
+- The Play Console: the listing, the privacy policy, the data-safety
+  form, and the account-deletion link (slice 8's erasure half
+  behind it).
+- The closed-testing track as the friends channel — also the
+  mandated path: a personal developer account needs a closed test
+  with twelve or more testers running fourteen days before
+  production is unlockable.
+- **Hand test:** a friend installs from the Play testing link and
+  lands in the app.
+- **Surfaces:** ops, Android.
 
 ## Staged workstreams
 

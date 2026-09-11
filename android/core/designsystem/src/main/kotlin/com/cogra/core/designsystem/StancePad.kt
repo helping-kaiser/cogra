@@ -200,8 +200,14 @@ private val TARGET_MIN = 48.dp
  */
 private const val RESTING_FACE = "😐"
 
-/** Muted and translucent: M3's own disabled-content opacity. */
-private const val RESTING_FACE_ALPHA = 0.38f
+/**
+ * Muted and translucent (`--opacity-resting-face`, design/readme.md §4 —
+ * "the resting stance face at 40% opacity"). Deliberately NOT the 0.38
+ * disabled opacity it looks like: the resting face is not a disabled
+ * control, and the 2026-09-09 ruling that retired the second disabled
+ * token kept this one for exactly that reason.
+ */
+private const val RESTING_FACE_ALPHA = 0.4f
 
 /** How far an overlay stands off the target it belongs to. */
 private val PAD_GAP = 8.dp
@@ -210,11 +216,11 @@ private val PAD_GAP = 8.dp
 private val PAD_MARGIN = 12.dp
 
 /**
- * The pad's standoff from the viewport's lower edge — enough that the
- * card clears the gesture-navigation strip and sits in the thumb's
- * comfortable arc rather than at the very bottom of the reach.
+ * The pad's standoff from the viewport's lower edge — the bar where
+ * one exists, the viewport edge otherwise; one number everywhere
+ * (design/readme.md "Fixed elements", ruled 2026-09-10).
  */
-private val PAD_BOTTOM = 24.dp
+private val PAD_BOTTOM = 16.dp
 
 /** The pad's card, wide enough for the field and its lines of text. */
 private val PAD_WIDTH = 288.dp
@@ -614,25 +620,32 @@ private fun StancePadOverlay(
                     Text("?", style = MaterialTheme.typography.titleMedium)
                 }
             }
+            // The help REPLACES the readouts and the input rather than
+            // growing below them (StanceControl.jsx, StanceCoachMark.prompt.md):
+            // the pad is parked and operated by muscle memory, and a panel
+            // that pushes Set further from the thumb defeats the parking.
+            // Appending it also grew the card past the window on a phone,
+            // where PadAtLowerCentre's clamp gives up on the lower anchor
+            // and snaps the whole pad to the top — the jump jakob saw.
             if (explaining) {
-                Text(
-                    text = stringResource(R.string.stance_explain_body),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.testTag("${testTagPrefix}_stance_explanation"),
+                StancePadHelp(
+                    onBack = { explaining = false },
+                    testTagPrefix = testTagPrefix,
                 )
+            } else {
+                StanceReadout(state.pick, testTagPrefix)
+                // The chosen surface replaces the pad, it does not sit beside
+                // it: an alternate is the input, not a second opinion
+                // (design.md §8.6).
+                if (state.inputMode == StanceInputSurface.PAD) {
+                    StancePadField(state.pick, onPick = onPick, enabled = !state.busy)
+                }
+                StanceLandingLine(state.landing, testTagPrefix)
             }
-            StanceReadout(state.pick, testTagPrefix)
-            // The chosen surface replaces the pad, it does not sit beside
-            // it: an alternate is the input, not a second opinion
-            // (design.md §8.6).
-            if (state.inputMode == StanceInputSurface.PAD) {
-                StancePadField(state.pick, onPick = onPick, enabled = !state.busy)
-            }
-            StanceLandingLine(state.landing, testTagPrefix)
             if (sticky) {
                 // The alternates are the accessible path, so the way into
                 // them is present whatever the stored preference is.
-                if (state.exactValues || state.inputMode != StanceInputSurface.PAD) {
+                if (!explaining && (state.exactValues || state.inputMode != StanceInputSurface.PAD)) {
                     StanceExactValues(state.inputMode, state.pick, onPick, testTagPrefix)
                 }
                 if (state.failed) {
@@ -640,8 +653,10 @@ private fun StancePadOverlay(
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
+                        // Help can never be signed through: the field it
+                        // explains is not on screen to check against.
                         onClick = onCommit,
-                        enabled = !state.busy,
+                        enabled = !state.busy && !explaining,
                         modifier = Modifier.testTag("${testTagPrefix}_stance_set"),
                     ) {
                         Text(stringResource(R.string.stance_set))
@@ -678,6 +693,45 @@ private fun StancePadOverlay(
                     Text(stringResource(R.string.stance_severance_open))
                 }
             }
+        }
+    }
+}
+
+/**
+ * The pad's own help, standing in the field's place while it is up.
+ *
+ * Four lines, in the order a reader needs them
+ * (`design/components/stance/StanceCoachMark.jsx`): what the field
+ * means, what commits, why the three readouts differ, and what the way
+ * out costs. The third is the one nobody can guess — that a pick ADDS
+ * to what was said before — and it is why "Your pick" and the resulting
+ * stance are two different numbers.
+ */
+@Composable
+private fun StancePadHelp(onBack: () -> Unit, testTagPrefix: String) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("${testTagPrefix}_stance_explanation"),
+    ) {
+        listOf(
+            R.string.stance_explain_field,
+            R.string.stance_explain_commit,
+            R.string.stance_explain_adds,
+            R.string.stance_explain_sever,
+        ).forEach { line ->
+            Text(
+                text = stringResource(line),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        TextButton(
+            onClick = onBack,
+            modifier = Modifier.testTag("${testTagPrefix}_stance_explain_back"),
+        ) {
+            Text(stringResource(R.string.stance_explain_back))
         }
     }
 }
@@ -1080,9 +1134,14 @@ private fun StanceLandingLine(landing: StanceLanding?, testTagPrefix: String) {
 /**
  * A pair in the reader's own words plus its values. Numbers are in
  * scope, and every one shown is explainable (design.md §7).
+ *
+ * Public because every surface that shows a pair owes the reader this
+ * announcement, and the reply seal is outside this module — a second
+ * copy of the wording there is exactly the drift a design system exists
+ * to prevent.
  */
 @Composable
-internal fun StancePoint.reading(): String = stringResource(
+fun StancePoint.reading(): String = stringResource(
     R.string.stance_reading,
     stringResource(R.string.stance_axis_directed),
     twoPlaces(directed),
@@ -1094,9 +1153,12 @@ internal fun StancePoint.reading(): String = stringResource(
  * The bare pair, `+0.40 / +0.20`-style (design.md §8.3). Compact because
  * it sits under a face and a field that already say which axis is which;
  * every place it is shown names the axes in its accessibility text.
+ *
+ * Public for the same reason [reading] is: the reply seal writes the
+ * same pair, and one wording is what keeps two surfaces one language.
  */
 @Composable
-internal fun StancePoint.pair(): String =
+fun StancePoint.pair(): String =
     stringResource(R.string.stance_pair, twoPlaces(directed), twoPlaces(interest))
 
 /**

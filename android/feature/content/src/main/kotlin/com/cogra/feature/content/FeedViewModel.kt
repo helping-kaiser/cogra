@@ -7,7 +7,9 @@ import com.cogra.domain.PostView
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
 import com.cogra.domain.content.SensitiveMark
+import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveReveals
+import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.repo.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -59,10 +61,15 @@ class FeedViewModel @Inject constructor(
     private val content: ContentRepository,
     landings: LandingSignal,
     private val reveals: SensitiveReveals,
+    private val seen: SeenPosts,
+    @WebOrigin private val webOrigin: String,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedUiState())
     val state = _state.asStateFlow()
+
+    /** What the share control hands to the platform's own sheet. */
+    fun shareUrl(postId: String): String = postShareUrl(webOrigin, postId)
 
     /** A reader chose to look at a veiled body, as it stands right now. */
     fun onReveal(nodeId: String, mark: SensitiveMark) = reveals.reveal(nodeId, mark)
@@ -117,6 +124,9 @@ class FeedViewModel @Inject constructor(
         viewModelScope.launch {
             when (val outcome = content.posts(FEED_PAGE_SIZE, after = null, includePending = includePending)) {
                 is Outcome.Success -> _state.update {
+                    // What the reader can see is what the detail may
+                    // open from (HT-10).
+                    seen.saw(outcome.value.items)
                     it.copy(
                         loading = false,
                         transportFault = null,
@@ -144,6 +154,7 @@ class FeedViewModel @Inject constructor(
                     content.posts(FEED_PAGE_SIZE, after = s.endCursor, includePending = s.includePending)
             ) {
                 is Outcome.Success -> _state.update {
+                    seen.saw(outcome.value.items)
                     it.copy(
                         loadingMore = false,
                         transportFault = null,

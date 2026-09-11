@@ -30,7 +30,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.PasswordTextField
+import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.MIN_PASSWORD_LENGTH
 import com.cogra.domain.Outcome
 import com.cogra.domain.has
 import com.cogra.domain.repo.AccountRepository
@@ -109,6 +111,7 @@ class PasswordResetViewModel @Inject constructor(
 @Composable
 fun PasswordResetRoute(
     onDone: () -> Unit,
+    onBack: () -> Unit,
     viewModel: PasswordResetViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -122,6 +125,7 @@ fun PasswordResetRoute(
         onNewPasswordChange = viewModel::onNewPasswordChange,
         onRequest = viewModel::onRequest,
         onConfirm = viewModel::onConfirm,
+        onBack = onBack,
     )
 }
 
@@ -133,8 +137,9 @@ fun PasswordResetScreen(
     onNewPasswordChange: (String) -> Unit,
     onRequest: () -> Unit,
     onConfirm: () -> Unit,
+    onBack: () -> Unit = {},
 ) {
-    Scaffold { padding ->
+    Scaffold(topBar = { PageHeader(onBack = onBack, testTag = "reset_header") }) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -145,7 +150,7 @@ fun PasswordResetScreen(
         ) {
             Text(
                 text = stringResource(R.string.reset_title),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.semantics { heading() },
             )
             OutlinedTextField(
@@ -187,6 +192,7 @@ fun PasswordResetScreen(
                 onValueChange = onNewPasswordChange,
                 label = stringResource(R.string.reset_new_password),
                 testTag = "reset_password",
+                supportingText = stringResource(R.string.reset_password_rules),
                 modifier = Modifier.fillMaxWidth(),
             )
             state.error?.let {
@@ -205,7 +211,12 @@ fun PasswordResetScreen(
             }
             Button(
                 onClick = onConfirm,
-                enabled = state.token.isNotBlank() && state.newPassword.isNotEmpty() && !state.inProgress,
+                // The floor the server states (auth.md "Password
+                // requirements"), not merely "not empty" — the reset form
+                // answers to the same rule the join form does.
+                enabled = state.token.isNotBlank() &&
+                    state.newPassword.length >= MIN_PASSWORD_LENGTH &&
+                    !state.inProgress,
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("reset_confirm"),

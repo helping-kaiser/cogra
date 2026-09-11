@@ -3,12 +3,17 @@ package com.cogra.core.designsystem.v2.atom
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertTouchHeightIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -170,6 +175,110 @@ class AtomsTest {
     }
 
     @Test
+    fun thePageHeadersBackTargetIsReachableAtTheMinimumSize() {
+        var back = false
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(390.dp)) {
+                    PageHeader(
+                        title = "Join",
+                        onBack = { back = true },
+                        testTag = "header",
+                    )
+                }
+            }
+        }
+
+        // 12dp of padding plus a centred glyph in a 48dp target — the
+        // master's arithmetic, so the arrow lands on the 24dp screen
+        // gutter without depending on the caller for anything.
+        compose.onNodeWithTag("header_back").assertTouchHeightIsEqualTo(48.dp).performClick()
+
+        assertThat(back).isTrue()
+    }
+
+    @Test
+    fun aPageHeaderWithNoWayBackDrawsNoArrow() {
+        // Every entry board draws the arrow, but the signed-out root has
+        // nothing behind it — and an arrow that pops nothing exits the app.
+        compose.setContent {
+            Cogra2PreviewTheme {
+                PageHeader(title = "Sign in", onBack = null, testTag = "header")
+            }
+        }
+
+        compose.onNodeWithTag("header_back").assertDoesNotExist()
+    }
+
+    @Test
+    fun theBandCarriesTheWordmarkAndNoScreenTitle() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(390.dp)) {
+                    CograBand(onChats = {}, testTag = "band")
+                }
+            }
+        }
+
+        compose.onNodeWithTag("band_wordmark").assertTextEquals("cogra")
+        compose.onNodeWithTag("band_chats").assertTouchHeightIsEqualTo(48.dp)
+    }
+
+    @Test
+    fun aBandWithoutMessagingDrawsNoChatsControl() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                CograBand(onChats = null, testTag = "band")
+            }
+        }
+
+        compose.onNodeWithTag("band_chats").assertDoesNotExist()
+    }
+
+    @Test
+    fun theBorrowedViewBandNamesTheVantagePoint() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(390.dp)) {
+                    BorrowedViewBand(
+                        handle = "mira",
+                        displayName = "Mira Voss",
+                        line = "Browsing from @mira's view — join to build your own.",
+                        actionLabel = "Sign in or join",
+                        onAction = {},
+                        testTag = "borrowed",
+                    )
+                }
+            }
+        }
+
+        // The label is what makes borrowed ranking honest (§9): the band
+        // always says whose view this is.
+        compose.onNodeWithTag("borrowed_line")
+            .assertTextEquals("Browsing from @mira's view — join to build your own.")
+        compose.onNodeWithTag("borrowed_action").assertExists()
+    }
+
+    @Test
+    fun theSignedInApplicantsBandOffersNoWayIn() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Column(Modifier.width(390.dp)) {
+                    BorrowedViewBand(
+                        handle = "mira",
+                        line = "Browsing from @mira's view while your application lands.",
+                        testTag = "borrowed",
+                    )
+                }
+            }
+        }
+
+        // The line changes but the vantage point does not; the reader is
+        // already in, so the entry drops away.
+        compose.onNodeWithTag("borrowed_action").assertDoesNotExist()
+    }
+
+    @Test
     fun anOptionalFieldSaysSoInItsAccessibleName() {
         compose.setContent {
             Cogra2PreviewTheme {
@@ -220,6 +329,30 @@ class AtomsTest {
         compose.onNodeWithTag("words").assertTouchHeightIsEqualTo(48.dp).performClick()
 
         assertThat(clicked).isTrue()
+    }
+
+    @Test
+    fun theWayBackTakesTheDialogsEmphasisRatherThanTheDiscard() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                DiscardConfirm(
+                    subject = DiscardSubject.Reply,
+                    onKeepWriting = {},
+                    onDiscard = {},
+                    testTag = "discard",
+                )
+            }
+        }
+
+        // Material composes `dismissButton` before `confirmButton`, and the
+        // confirm slot is the filled, last-drawn one. The board puts the way
+        // back there, so the answer this dialog exists to slow down cannot
+        // hold the heaviest control on the screen.
+        val buttons = compose.onAllNodes(
+            hasClickAction() and hasAnyAncestor(hasTestTag("discard")),
+        )
+        buttons[0].assert(hasTestTag("discard_discard"))
+        buttons[1].assert(hasTestTag("discard_keep"))
     }
 }
 

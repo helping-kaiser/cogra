@@ -71,6 +71,18 @@ fragment CommentFields on Comment {
     value
     status
   }
+  # WHOSE MARK THE VEIL IS. A veiled comment names its source
+  # unconditionally — "The author's warning" or "The platform's verdict"
+  # — because the two read back as the same veil and an unnamed source
+  # would read as the other (design/components/honesty/SensitiveVeil.jsx).
+  # The statuses above carry the veil, which is the OR of this mark and a
+  # moderator's verdict, so this is the field that tells the two apart.
+  #
+  # Two scalars against the reader requirement they serve: unlike the
+  # edit form's `PostSelfMark`, this one is read on every veiled card,
+  # so it cannot be a second query per comment.
+  sensitiveSelfMark
+  sensitiveReason
   # A comment is text **plus** optional media — deliberately not the
   # post's exclusive-or (D16) — capped at four.
   attachments {
@@ -177,6 +189,14 @@ query Posts($first: Int!, $after: String, $includePending: Boolean! = true) {
     edges {
       node {
         ...PostFields
+        # The count the card's comment affordance reads. An aliased
+        # empty page rather than a field on `PostFields`: that fragment
+        # is spread again per comment in the detail read, and the count
+        # is a post's fact alone. `totalCount` costs one aggregate per
+        # connection and is priced at zero complexity.
+        commentCount: comments(first: 0, includePending: $includePending) {
+          totalCount
+        }
       }
     }
     pageInfo {
@@ -218,12 +238,12 @@ query PostSelfMark($id: UUID!) {
 #
 # It is safe to spread `CommentFields` here for the reason `PostSelfMark`
 # is safe: an edit opens one comment, once, so the corpus's most
-# multiplied fragment is spread exactly once in this document.
+# multiplied fragment is spread exactly once in this document. The
+# author's own mark rides that fragment, because every veiled comment
+# card names whose mark it is.
 query CommentForEdit($id: UUID!) {
   comment(id: $id) {
     ...CommentFields
-    sensitiveSelfMark
-    sensitiveReason
   }
 }
 
@@ -239,6 +259,9 @@ query PostDetail($id: UUID!, $commentsFirst: Int!, $commentsAfter: String, $incl
   post(id: $id) {
     ...PostFields
     comments(first: $commentsFirst, after: $commentsAfter, includePending: $includePending) {
+      # The whole thread's size, cursor-independent — what the card's
+      # comment affordance states on the detail too.
+      totalCount
       edges {
         node {
           ...CommentFields

@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,6 +8,7 @@ import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
+import { SNACKBAR_MS } from "@/lib/ui/snackbar";
 import { MemberStatus } from "./member-status";
 
 const server = startMswServer();
@@ -15,6 +16,10 @@ const server = startMswServer();
 const invited: MeUser = {
   id: "u1",
   handle: "ada",
+  // The account's attached key. Null here because this fixture never
+  // signs — the guard that reads it refuses before any leg runs, which
+  // is a path this file's own tests do not walk.
+  actorPubkey: null,
   displayName: { value: null },
   accountState: "MEMBER",
   hasReciprocated: false,
@@ -130,6 +135,10 @@ describe("MemberStatus", () => {
     });
 
     fireEvent.click(await screen.findByTestId("home_reciprocate"));
+    // The confirmation is a SNACKBAR (design/readme.md §3), so it rides a live
+    // region that was already mounted — a region announced together with its
+    // own text is routinely missed.
+    expect(screen.getByTestId("home_reciprocated-region")).toBeInTheDocument();
     expect(await screen.findByTestId("home_reciprocated")).toBeInTheDocument();
     expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument();
     expect(writeSigner.signStaged).toHaveBeenCalledWith(
@@ -141,6 +150,35 @@ describe("MemberStatus", () => {
     // The graph knows (the staged write is in flight); the device bit
     // is dismissal memory only.
     await expect(store.reciprocationDismissed()).resolves.toBe(false);
+  });
+
+  // HT-4. The line this replaces never left — it outlived the act it
+  // confirmed by the whole session. The FACT (the prompt is gone) stays; the
+  // sentence goes with the snackbar's own timer.
+  it("lets the vouch confirmation go, and does not bring the prompt back", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      server.use(prepareStanceHandler());
+      renderWithProviders(
+        <MemberStatus me={invited} store={fakeIdentityStore({ keyOnDevice: true })} />,
+        { store: signedInStore(), writeSigner: fakeWriteSigner() },
+      );
+      fireEvent.click(await screen.findByTestId("home_reciprocate"));
+      expect(await screen.findByTestId("home_reciprocated")).toBeInTheDocument();
+
+      await act(async () => {
+        vi.advanceTimersByTime(SNACKBAR_MS + 1);
+      });
+      // With shouldAdvanceTime the dismissal timer can fire a beat after
+      // the manual advance on a slow runner — poll instead of asserting
+      // the very next tick.
+      await waitFor(() =>
+        expect(screen.queryByTestId("home_reciprocated")).not.toBeInTheDocument(),
+      );
+      expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("keeps the prompt and surfaces the failure when signing does not finish", async () => {

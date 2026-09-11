@@ -50,11 +50,15 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
         ),
     ),
 
-    /** The sensitive self-mark sheet. */
+    /**
+     * The sensitive self-mark sheet — the post's, the reply's, and both
+     * edit surfaces'. One wording for both scales (ruling 42): a comment
+     * has no description to name, and a post's description is words.
+     */
     MarkingAsSensitive(
         title = "Marking as sensitive",
         paragraphs = listOf(
-            "The mark veils the pictures and the description until a reader chooses " +
+            "The mark veils the pictures and the words until a reader chooses " +
                 "to look. The title stays readable, so choosing is informed.",
             "Your reason, if you give one, is shown on the veil. The mark is public " +
                 "and travels with the post.",
@@ -103,6 +107,25 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
             "Your own post always reaches you in full, so only for-or-against is " +
                 "yours to set. Nothing is signed until Set. Prefer sliders or exact " +
                 "numbers? Swap the input in settings.",
+        ),
+    ),
+
+    /**
+     * The reply's two-axis pad — its own topic, not [WhereYouStand].
+     *
+     * A reply's stance is toward somebody else's post, so both axes are
+     * the author's to pick; the post pad's text says the opposite
+     * ("only for-or-against is yours to set") and would be false here
+     * (`design/designs/canonical/screens/ReplyPadHelp.jsx`).
+     */
+    TowardWhatYouAnswer(
+        title = "Toward what you answer",
+        paragraphs = listOf(
+            "Replying also signs where you stand on the post you answer — for or " +
+                "against, and how much of it reaches you. It starts at a gentle " +
+                "+0.10 / +0.10 and rides the same signature as your reply.",
+            "Nothing is signed until Set. Swap the input in settings if you prefer " +
+                "sliders or numbers.",
         ),
     ),
 }

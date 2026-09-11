@@ -6,6 +6,18 @@ export interface License {
   provenance: number;
 }
 
+/** One radio option on a license axis. */
+export interface LicenseTier {
+  value: 0 | 0.5 | 1;
+  label: string;
+  hint: string;
+}
+
+/** The Credit axis's three named readings, offered by `LicenseChooser`. */
+export declare const ATTRIBUTION_TIERS: readonly LicenseTier[];
+/** The Public record of use axis's three named readings. */
+export declare const PROVENANCE_TIERS: readonly LicenseTier[];
+
 export interface LicenseChooserProps {
   value?: License;
   onChange?: (license: License) => void;
@@ -32,7 +44,6 @@ export interface LicenseReading {
 
 export declare function licenseReadings(license: License): readonly LicenseReading[];
 
-/** The words of the menu row that unfolds the terms, and of the one that folds
- *  them away again — assigned once, spelled by every surface that offers it. */
+/** The words of the menu row that opens the terms — assigned once, spelled by
+ *  every surface that offers it. */
 export declare const LICENSE_MENU_LABEL: string;
-export declare const LICENSE_MENU_LABEL_SHOWN: string;
