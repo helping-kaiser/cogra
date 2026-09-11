@@ -470,6 +470,7 @@ enum ErrorCode {
   # Transport faults — carried in errors[].extensions.code
   UNAUTHENTICATED              # no / invalid access token where one is required
   FORBIDDEN                    # authenticated but not eligible (actAs, field-auth)
+  EMAIL_NOT_VERIFIED           # acting before the address is proven
   NOT_FOUND                    # an id resolved to nothing
   BAD_INPUT                    # malformed args, or a constraint not modeled as data
   RATE_LIMITED                 # an auth endpoint's per-IP / per-account backoff
@@ -2406,10 +2407,13 @@ These bind every mutation below.
   `confirmPasswordReset`, and the token-bearing
   `confirmAccountDeletion`. Acting mutations further require the
   `MEMBER` account state — an acting call from a guest or
-  applicant account is a `FORBIDDEN` transport fault, not a
-  userError: the client already gates acting on
-  `User.accountState`, so such a request is a client bug, never a
-  state to render.
+  applicant account is a transport fault, not a userError: the
+  client already gates acting on `User.accountState` and
+  `User.emailVerified`, so such a request is a client bug, never a
+  state to render. The code says which proof is missing —
+  `EMAIL_NOT_VERIFIED` while the address is unproven, `FORBIDDEN`
+  otherwise — so a client that reaches the refusal anyway can name
+  the one thing the person can do about it.
 - **Errors follow the tiered model** (governing principles). A
   `userErrors: [UserError!]!` field is **implied on every payload type
   below and omitted from its body**, exactly as the interface fields

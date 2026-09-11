@@ -237,6 +237,9 @@ pub enum ErrorCode {
     Unauthenticated,
     /// The viewer is not eligible for the field or gesture.
     Forbidden,
+    /// The viewer's email is not yet verified; acting is gated until it
+    /// is.
+    EmailNotVerified,
     /// The referenced object does not exist.
     NotFound,
     /// Malformed input; `field` names the offender.
