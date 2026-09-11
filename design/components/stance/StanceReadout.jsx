@@ -77,7 +77,7 @@ export const INTEREST_POLES = ["Less", "More"];
 /** What the middle pair is: the edge being authored, not the standing. */
 export const PICK_LABEL = "Your pick";
 
-export const SEVERED_LABEL = "Severed";
+export const SEVERED_LABEL = "Walked back";
 export const NO_STANDING_LABEL = "No opinion yet";
 /** What a bundle standing at exactly (0, 0) reads as. */
 export const ZERO_BUNDLE_EMOJI = "🤷";
@@ -294,7 +294,7 @@ export function localLanding(rawSum, pick) {
 export function standingLine(bundle, targetLabel) {
   if (bundle === undefined) return "Checking your current opinion…";
   if (bundle === null || bundle.records === 0) return `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.`;
-  if (bundle.severed) return `${ZERO_BUNDLE_EMOJI} You've severed ${targetLabel}.`;
+  if (bundle.severed) return `${ZERO_BUNDLE_EMOJI} You've walked ${targetLabel} back to nothing.`;
   // Face and pair; the words ride the spoken line beside it.
   return `Current opinion ${bundleReadout(bundle.current).emoji} ${formatStancePair(bundle.current)}`;
 }
@@ -357,7 +357,7 @@ export function landingLine(landing) {
    The severed line has no pair to show and stays a plain string. */
 export function signedLine(standing, records, severed, targetLabel) {
   const acts = records === 1 ? "Signed" : `Signed ${records} things`;
-  if (severed) return `${acts}, still settling. You've severed ${targetLabel}.`;
+  if (severed) return `${acts}, still settling. You've walked ${targetLabel} back to nothing.`;
   const readout = bundleReadout(standing);
   return (
     <>
@@ -396,7 +396,7 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
 export function standingParts(bundle, targetLabel) {
   if (bundle === undefined) return { sentence: "Checking your current opinion…" };
   if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
-  if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} You've severed ${targetLabel}.` };
+  if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} You've walked ${targetLabel} back to nothing.` };
   const readout = bundleReadout(bundle.current);
   return {
     label: "Current opinion",

@@ -1950,22 +1950,19 @@ canvas slot un-clipped. What is left:
    twenty faces beside the hidden pair; the anchor's WORD stays off a
    citation, so the spoken reading is the pair exactly (`RefPair`'s
    rule).
-4. **The staged-act snackbars were left alone deliberately.**
-   `Your post is staged — it lands with you.` and `Your stance is
-   staged — it lands with you.` are blessed copy and outside the review
-   round's scope (jakob: flag, don't change) — but `ProfileApplicant`'s
-   neighbouring lines now say *arrive with you*, and the second one
-   still says *stance* where the naming law says *opinion*. Both need
-   jakob's word before either is touched.
-5. **Two vocabularies still split where the ruling stopped.** The
-   wording table renamed the sever control and the acts counts; the
-   sentences around them were ruled to stay, so the product now says
-   `Walk it back` on a button and *severing* / `Severed` /
-   *You've severed @ada* in the prose beside it, and *things* on the
-   acts card while the `Signed actions` dialog, the Writing group's
-   footnote (`Every signed action is paid for separately.`) and the two
-   wallet lines (`…is one signed action.`) keep *signed action*. Each
-   remaining string is blessed copy; one ruling closes both splits.
+4. ~~The staged-act snackbars were left alone deliberately.~~
+   **Closed same day** (jakob: "update the flags"): both lines follow
+   the applicant vocabulary — `Your post waits with your application —
+   it arrives with you.`, and the opinion variant with it.
+5. ~~Two vocabularies still split where the ruling stopped.~~
+   **Closed same day** (jakob: "update the flags"): the severance
+   prose walks back (`Walked back`, `You've walked @ada back to
+   nothing.`, "…that is what this walks back"); the `Signed actions`
+   dialog is `How signing works` ("…is signed on its own, in your
+   name"); the Writing footnote opens `Everything you sign is paid
+   for separately.`; the two wallet lines end `— one signature.` The
+   filter's first section, whose ruled name duplicated the reading
+   sheet's own title, is `Kinds`.
 
 ### 54 · What the numbers census left standing · *design*
 

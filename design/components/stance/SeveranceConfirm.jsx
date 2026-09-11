@@ -85,7 +85,7 @@ export function SeveranceConfirm({
       ) : (
         <>
           <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
-            Everything you&apos;ve said about {targetLabel} adds up to {read.raw}, and that is what severing walks back.
+            Everything you&apos;ve said about {targetLabel} adds up to {read.raw}, and that is what this walks back.
           </p>
           {read.capped && (
             <p style={{ margin: "4px 0 0", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>

@@ -31,7 +31,7 @@ export function Screen() {
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
         stageLabel="Last step"
-        help="Signed actions"
+        help="How signing works"
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
