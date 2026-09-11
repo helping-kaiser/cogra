@@ -1453,6 +1453,20 @@ impl Mutation {
         let Ok(email) = auth::normalize_email(&input.email) else {
             return refused();
         };
+        let device_label = match auth::checked_device_label(input.device_label.as_deref()) {
+            Ok(label) => label,
+            Err(m) => {
+                return Ok(LogInPayload {
+                    auth: None,
+                    reuse_detected_at: None,
+                    user_errors: vec![UserError::at(
+                        ErrorCode::BadInput,
+                        m,
+                        vec!["deviceLabel".to_string()],
+                    )],
+                });
+            }
+        };
         if ratelimit::login_blocked(pool, &email).await?.is_some() {
             return Err(rate_limited());
         }
@@ -1474,7 +1488,7 @@ impl Mutation {
             pool,
             auth_cfg,
             credentials.actor_id,
-            input.device_label.as_deref(),
+            device_label.as_deref(),
         )
         .await
         .map_err(|e| async_graphql::Error::new(e.to_string()))?;

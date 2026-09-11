@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
+import com.cogra.domain.content.isBioTooLong
+import com.cogra.domain.content.isDisplayNameTooLong
+import com.cogra.domain.content.isWebsiteUrlTooLong
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
@@ -79,6 +82,10 @@ data class ProfileEditUiState(
     /** A picture is still on its way; saving would name nothing. */
     val imagesPending: Boolean
         get() = avatar is ProfileImageState.Picked
+
+    val displayNameTooLong: Boolean get() = isDisplayNameTooLong(displayName)
+    val bioTooLong: Boolean get() = isBioTooLong(bio)
+    val websiteUrlTooLong: Boolean get() = isWebsiteUrlTooLong(websiteUrl)
 }
 
 /**
@@ -186,6 +193,7 @@ class ProfileEditViewModel @Inject constructor(
             _state.update { it.copy(emptyName = true) }
             return
         }
+        if (s.displayNameTooLong || s.bioTooLong || s.websiteUrlTooLong) return
         _state.update { it.copy(submitting = true, refused = false, signingFailed = false) }
         viewModelScope.launch {
             val prepared = when (

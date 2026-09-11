@@ -2753,6 +2753,24 @@ counts in. The number leaves through `client-constants.json`
 (`content.titleChars`), so a composer refuses the title the
 server would refuse rather than spending the round trip.
 
+A Post's description runs the same trim-and-blank-fold rule as
+the title, at its own cap: **at most 500 characters**
+(`content.descriptionChars`), refused at `["description"]` on a
+create and an edit alike. A Post's words-body — `content`, when
+the body is words and not media — is capped separately, wider
+than the description since it is the artifact's whole text: **at
+most 5000 characters** (`content.postBodyChars`), refused at
+`["content"]`. A Comment's body is mandatory and never XOR'd with
+media the way a Post's is, so only its length is bounded: **at
+most 2000 characters** (`content.commentBodyChars`), refused at
+`["content"]` on a create and an edit alike.
+
+The self-mark's public reason is short by design — a content
+warning read before the veil lifts, not a second body: **at most
+140 characters** (`content.sensitiveReasonChars`), refused at
+`["sensitiveReason"]`. All four caps count Unicode scalar values
+and are checked before a single act is staged.
+
 A tag batch is checked whole before a single act is staged, each
 refusal a field-level `userError` naming the offender: at most
 **ten** tags per batch, a named constant; names compared after
@@ -3055,6 +3073,16 @@ input PrepareReferenceWithdrawalInput {
   "The cited node whose bundle is netted away."
   target: UUID!
 }
+
+Each profile text field answers to its own cap, Unicode scalar
+values like every character cap on this surface, checked wherever
+a field is present and non-empty — an omitted field or an
+explicit clear runs no length check at all: **displayName** at
+most 50 characters (`profile.displayNameChars`), **bio** at most
+500 (`profile.bioChars`), **websiteUrl** at most 2048
+(`profile.websiteUrlChars`) — wide enough for the URLs the field
+actually carries. Each is refused field-level at its own path
+(`["displayName"]`, `["bio"]`, `["websiteUrl"]`).
 
 "Update the acting identity's profile — stages a parallel
  Registration: L1's own profile-update idiom, payload only, never

@@ -21,6 +21,7 @@ import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.PickedRow
 import com.cogra.core.designsystem.v2.compose.UploadErrorLine
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.feature.content.R
 
@@ -72,15 +73,7 @@ internal fun ColumnScope.DetailsStepBody(
         }
 
         TitleField(state.title, state.titleTooLong, onTitleChange)
-        CograTextField(
-            value = state.description,
-            onValueChange = onDescriptionChange,
-            label = "Description",
-            optional = true,
-            singleLine = false,
-            minLines = 3,
-            testTag = "wizard_description",
-        )
+        DescriptionField(state.description, state.descriptionTooLong, onDescriptionChange)
 
         topics()
         references()
@@ -121,6 +114,30 @@ private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) 
         ErrorLine(
             text = stringResource(R.string.content_error_title_too_long, MAX_TITLE_CHARS),
             testTag = "wizard_title_too_long",
+        )
+    }
+}
+
+/**
+ * The description and the one refusal it can earn — the same house error
+ * line the title wears, for the same reason: the 2.0 field atom draws no
+ * error state of its own.
+ */
+@Composable
+private fun DescriptionField(value: String, tooLong: Boolean, onValueChange: (String) -> Unit) {
+    CograTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = "Description",
+        optional = true,
+        singleLine = false,
+        minLines = 3,
+        testTag = "wizard_description",
+    )
+    if (tooLong) {
+        ErrorLine(
+            text = stringResource(R.string.content_error_description_too_long, MAX_DESCRIPTION_CHARS),
+            testTag = "wizard_description_too_long",
         )
     }
 }

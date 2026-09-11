@@ -43,6 +43,7 @@ import { commentAttachmentClaims } from "@/lib/compose/comment-media";
 import { COMMENT_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
 import {
+  commentBodyProblem,
   emptyReply,
   isVideoReply,
   replyHasContent,
@@ -407,6 +408,7 @@ export function ReplyWizard({
           capturing={capturing}
           durationMs={durationMs}
           refusals={refusals}
+          bodyError={commentBodyProblem(state.words)}
           onWords={(words) => dispatch({ type: "words", words })}
           onPick={(files) => void pick(files)}
           onRemove={(id) => dispatch({ type: "unpick", id })}

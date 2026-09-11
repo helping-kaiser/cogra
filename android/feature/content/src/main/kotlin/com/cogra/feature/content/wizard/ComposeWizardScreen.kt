@@ -408,7 +408,7 @@ internal fun ComposeWizardScreen(
                     CograButton(
                         text = "Next",
                         onClick = onNext,
-                        enabled = !state.titleTooLong,
+                        enabled = !state.titleTooLong && !state.descriptionTooLong,
                         modifier = Modifier.fillMaxWidth(),
                         testTag = "wizard_details_next",
                     )
@@ -618,7 +618,7 @@ internal fun ComposeWizardState.headerTitle(): String = when (step) {
  */
 internal fun ComposeWizardState.forwardEnabled(): Boolean = when (step) {
     WizardStep.Body -> bodyReady
-    WizardStep.Details -> !titleTooLong
+    WizardStep.Details -> !titleTooLong && !descriptionTooLong
     else -> true
 }
 

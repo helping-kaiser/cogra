@@ -85,6 +85,7 @@ import {
 } from "@/lib/compose/comment-edit";
 import { runUpload } from "@/lib/compose/uploads";
 import { usePreviewUrls } from "@/lib/compose/previews";
+import { sensitiveReasonProblem } from "@/lib/compose/wizard";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { commentTarget, ReplyWizard } from "./reply/reply-wizard-view";
@@ -402,7 +403,15 @@ export function PostView({
   // it prepares.
   const editActions =
     (editTextChanged ? 1 : 0) + editChanges.length + referenceActs(editReferenceChanges);
-  const editGateReason = editing === null ? null : editBlocked(editing.gallery);
+  // The reason answers to its cap only while the mark is on: an unmarked
+  // edit's reason is never sent (`sensitiveInput`), so a leftover over-length
+  // reason from a mark switched back off must not hold up an edit that no
+  // longer carries it.
+  const editGateReason =
+    editing === null
+      ? null
+      : (editBlocked(editing.gallery, editing.draft) ??
+        (editing.sensitive ? sensitiveReasonProblem(editing.sensitiveReason) : null));
 
   /**
    * F10: prepares EVERYTHING before signing anything — a refusal on the
