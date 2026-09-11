@@ -8,6 +8,12 @@
    the product may say where the row is — in words, never as a picture of a
    glyph.
 
+   IT IS ALSO WHAT THE LAST UNSAVE LEAVES, and then this screen wears
+   `SavedUndo`'s snackbar — `Removed from Saved.` with `Undo` — over the line
+   below it (jakob 2026-09-12). One state and not two: the snackbar belongs to
+   the act, the line to the list, and for four seconds both are simply true.
+   `SavedUndo` is where that pairing is drawn.
+
    NO ACTION BUTTON. `EmptyState` takes the one action that fills the list where
    there is one, and here that action is "save something", which cannot be done
    from this screen — it is done on a post, three surfaces away. A button that

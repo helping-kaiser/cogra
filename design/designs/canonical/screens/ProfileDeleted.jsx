@@ -43,13 +43,22 @@
    other reading of this same page — every act still listed, each one's words
    gone instead.
 
-   THE ACTIONS ROW KEEPS THE OPINION AND LOSES THE MESSAGE. An opinion targets
-   the ACTOR, and the actor is there — its content still ranks in other
-   people's feeds, so a reader who wants it out of theirs needs the control
-   that does that, severance included. A message targets a PERSON, and the
-   person is gone: the identity association is deleted, so a composer here
-   would address nobody. The ⋮ goes with it — every row it holds names the
-   person (mention, share, hide @handle) and there is no name to put in them.
+   THE ACTIONS ROW KEEPS THE OPINION AND THE ⋮, AND LOSES THE MESSAGE. An
+   opinion targets the ACTOR, and the actor is there — its content still ranks
+   in other people's feeds, so a reader who wants it out of theirs needs the
+   control that does that, severance included. A message targets a PERSON, and
+   the person is gone: the identity association is deleted, so a composer here
+   would address nobody.
+
+   THE ⋮ HOLDS THE THREE ROWS THAT WORK ON A NAMELESS ACTOR (jakob 2026-09-12):
+   `Save`, `Share this profile`, `Hide this account`. Saving keeps a pointer,
+   sharing sends a page, and hiding acts on the actor — not one of them needs a
+   name. Mention is the row that does, and it is the only one dropped: it
+   stages a Reference at a PERSON and spells their handle in the composer.
+   The hide row's wording is `ActorChip`'s own (`HIDE_ACTOR_LABEL`), so this
+   page and every card this actor authored say the same thing. The dot stands
+   in the row rather than the bar — the band law, and the row Message vacated
+   is where the page's rare acts belong.
 
    HOW A READER GETS HERE. Not from a shared @handle link: the handle is
    redacted at execution, so that route is `ProfileNotFound`'s case and its
@@ -71,6 +80,7 @@ export function Screen() {
             stancesTaken={19}
             onCounts={() => {}}
             onCommit={() => {}}
+            menu={deletedProfileMenu()}
             showHandle={false}
           />
         </div>

@@ -2954,6 +2954,7 @@
     "Profile/7: the invites screen (not designed)",
     "ProfileApplicant/1: the chat surface (not designed)",
     "ProfileComments/5: the chat surface (not designed)",
+    "ProfileDeleted/11: the deleted account's sheet (not boarded — `ProfileMenu` without Mention, the hide row on its redacted wording)",
     "ProfileOther/5: the chat surface (not designed)",
     "ProfileOtherHeld/5: the chat surface (not designed)",
     "ProfilePosts/5: the chat surface (not designed)",
