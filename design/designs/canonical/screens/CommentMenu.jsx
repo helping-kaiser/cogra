@@ -5,8 +5,7 @@
 
    A COMMENT IS SAVEABLE LIKE ANYTHING ELSE (jakob, the private-viewer-state
    round), and it lands in the one mixed Saved list beside posts and people.
-   The row carries the state, as it does on a post: `Remove from saved` once it
-   is kept.
+   The row carries the state, as it does on a post: `Unsave` once it is kept.
 
    NO HIDE ROW HERE. Hiding is about a person, and the two places a reader meets
    one are their profile and the post that brought them — a thread of many

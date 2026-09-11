@@ -89,7 +89,7 @@ export function DescribeSheet({ open = false, onClose, src, alt = "", value, onC
             </span>
           )}
         </div>
-        <TextField label={`What's in the ${subject}`} corner="Optional" rows={2} value={value} onChange={onChange} />
+        <TextField label={`What's in the ${subject}`} corner="Optional" rows={2} cap={1000} value={value} onChange={onChange} />
         <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 0 var(--space-2)" }}>
           <Button variant="text" onClick={onDone ?? onClose}>
             Done

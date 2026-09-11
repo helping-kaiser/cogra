@@ -2,7 +2,9 @@
    person's posts as the real cards, not chronicle entries. The header block
    rides above every tab view unchanged; only the list below the tab row
    changes. Drawn on @ada's profile — the master instance every profile's
-   posts tab follows. */
+   posts tab follows. The ⋮ rides the actions row and holds the whole profile
+   menu, exactly as the profile's own board draws it (the band law): a tab of a
+   page is not a smaller page. */
 const ADA_SECOND_POST = {
   author: ADA,
   content: "Tunnel closed again this morning. The coast road does not mind.",
@@ -16,20 +18,7 @@ const ADA_SECOND_POST = {
 export function Screen() {
   return (
     <>
-      <PageHeader
-        title="@ada"
-        backHref="#"
-        backLabel="Back"
-        action={
-          <OverflowMenu
-            ariaLabel="More about @ada"
-            items={[
-              { label: "Mention in a new post", onSelect: () => {} },
-              { label: "Share this profile", onSelect: () => {} },
-            ]}
-          />
-        }
-      />
+      <PageHeader title="@ada" backHref="#" backLabel="Back" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
@@ -43,6 +32,7 @@ export function Screen() {
             onCounts={() => {}}
             onCommit={() => {}}
             onMessage={() => {}}
+            menu={otherProfileMenu()}
             showHandle={false}
           />
         </div>

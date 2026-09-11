@@ -13,8 +13,9 @@
    SAVE CARRIES THE STATE NOTHING ELSE SHOWS (jakob). The affordance row stays
    opinion · score · comments · share — no saved mark anywhere on the card — so
    this row is where a reader learns whether the post is kept. Saved, it reads
-   `Remove from saved`: a control says what will happen (§3), which is why the
-   saved form is a verb rather than the word Saved.
+   `Unsave` — one word (jakob 2026-09-11): a control says what will happen (§3),
+   which is why the saved form is a verb rather than the word Saved, and one
+   verb is what the Saved list's own icon-only control is already labelled.
 
    HIDING IS CONFIRM-FREE AND NAMES ITS PERSON. `Hide @ada`, never "Hide this
    author" — the handle is the thing a reader recognises, and the word they will

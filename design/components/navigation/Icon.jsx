@@ -91,6 +91,10 @@ const PATHS = {
   ],
   /* A chat MESSAGE, distinct from the chat that holds it (`forum`). */
   send: ["M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"],
+  /* The band's bell — the notifications surface (notifications.md). */
+  notifications: [
+    "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z",
+  ],
   /* The compose media surfaces' glyphs (media slice, 2026-08-31). */
   close: ["M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"],
   /* The transport pair. Where a clip is the thing the reader came for — the
@@ -109,7 +113,7 @@ const PATHS = {
   fullscreen: ["M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"],
   /* THE STANCE FACE AS A GLYPH (review round 2). On the stream the anchor sits
      on photography beside the rail's other glyphs, and an emoji — muted and
-     translucent for "no standing yet" — is unreadable there and off-family
+     translucent for "no opinion yet" — is unreadable there and off-family
      besides. `sentiment_neutral` is the same idea drawn as a line face, so the
      rail reads as one set. The official cut draws its eyes as <circle>s; PATHS
      holds paths only, so each is carried as an exact arc path — same geometry,
@@ -145,6 +149,11 @@ const PATHS = {
     "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z",
   ],
   expand_more: ["M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"],
+  /* The Saved list's own control (the review-fix round). A filled bookmark is
+     the one glyph a reader already reads as "kept", so the row's unsave needs
+     no word beside it — which is what lets the row carry the act and keep its
+     age on the same edge. Classic filled 24px, verbatim. */
+  bookmark: ["M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"],
   /* The wallet's glyphs (item 12). `arrow_outward` is the direction badge —
      outgoing as drawn, incoming rotated 180° by the badge that wears it. */
   chevron_right: ["M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"],
@@ -152,7 +161,7 @@ const PATHS = {
   content_copy: [
     "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z",
   ],
-  /* The Post Score's glyph. A branching graph: the score comes out of the graph,
+  /* The Post score's glyph. A branching graph: the score comes out of the graph,
      and the branches hint at the paths folded up behind the number. Material
      Symbols only, and the FILL-1 cut is derived (see the top of this file) —
      hence the other viewBox. */

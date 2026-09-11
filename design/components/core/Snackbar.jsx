@@ -14,7 +14,20 @@ import React from "react";
    The live region is mounted whether or not it has anything to say — assistive
    technology only announces changes to a region it was already watching. */
 
-export function Snackbar({ message, onDismiss, durationMs = 4000, inline = false, offset = 80 }) {
+/* ONE ACTION, AND ONLY WHERE THE ACT IS WORTH REVERSING (`action`, the
+   review-fix round). Material's snackbar takes a single action and this one
+   takes the same: `Undo` on hiding someone, a read-side comfort a reader may
+   have meant for one post rather than for a person. It is a WORD, not a button
+   body — a pill's ground inside a surface that is itself a lift off the page
+   would be a second surface arguing with the first — and it takes
+   `--action-on-snackbar`, since `primary` on the inverse ground is the one
+   place the brand colour stops being legible. It rides the message's own line:
+   a snackbar that grows a second row is a dialog nobody asked for.
+
+   NOT EVERY SNACKBAR GETS ONE, and the absence is a decision each time. The
+   canceled-deletion board records the case where a way back is worse than
+   none. */
+export function Snackbar({ message, action, onAction, onDismiss, durationMs = 4000, inline = false, offset = 80 }) {
   React.useEffect(() => {
     if (message === null || message === undefined) return undefined;
     const timer = setTimeout(() => onDismiss && onDismiss(), durationMs);
@@ -52,9 +65,36 @@ export function Snackbar({ message, onDismiss, durationMs = 4000, inline = false
             fontWeight: "var(--text-body-medium--font-weight)",
             textAlign: "left",
             textWrap: "pretty",
+            display: "flex",
+            alignItems: "center",
+            gap: "var(--space-4)",
           }}
         >
-          {message}
+          <span style={{ minWidth: 0 }}>{message}</span>
+          {action && (
+            <button
+              type="button"
+              onClick={onAction}
+              className="cg-state cg-focus cg-hit"
+              style={{
+                flex: "none",
+                border: 0,
+                background: "none",
+                padding: 0,
+                cursor: "pointer",
+                color: "var(--action-on-snackbar)",
+                fontFamily: "var(--font-sans)",
+                fontSize: "var(--text-label-large)",
+                lineHeight: "var(--text-label-large--line-height)",
+                letterSpacing: "var(--text-label-large--letter-spacing)",
+                fontWeight: "var(--text-label-large--font-weight)",
+                whiteSpace: "nowrap",
+                borderRadius: "var(--radius-extra-small)",
+              }}
+            >
+              {action}
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@
 export function Screen() {
   return (
     <>
-      <CograBand />
+      <CograBand bell={false} />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 0 0" }}>
         <WashCard>
           <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>

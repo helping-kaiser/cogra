@@ -7,12 +7,15 @@ const {
   OverflowMenu,
   ReferenceRow,
   CograBand,
+  BandIcon,
   BottomNav,
   ALL_SLOTS,
   PageHeader,
   BorrowedViewBand,
+  DeletionBand,
   MonogramAvatar,
   ActorChip,
+  HIDE_ACTOR_LABEL,
   ProfileHeader,
   EmptyState,
   LoadingState,
@@ -34,6 +37,7 @@ const {
   SheetTitle,
   TextField,
   FieldLabel,
+  FieldSupport,
   PasswordField,
   RecoveryCode,
   SearchBar,
@@ -69,6 +73,7 @@ const {
   WashCard,
   StancePad,
   StanceReadout,
+  StanceValue,
   StanceSlider,
   TAG_RANGES,
   TaggedRow,
@@ -140,7 +145,7 @@ function ExactTail({ exact, spoken }) {
   );
 }
 
-/* A standing of one gentle record — the vouch-back default made a bundle. */
+/* An opinion of one gentle record — the vouch-back default made a bundle. */
 function mkBundle(pDirected, pInterest) {
   const pair = { pDirected, pInterest };
   return { current: pair, rawSum: pair, records: 1 };
@@ -182,6 +187,7 @@ const ADA_POST = {
   references: 1,
   score: "15.20",
   comments: 3,
+  opinions: 9,
   license: { attribution: 1, provenance: 0 },
   menuItems: CARD_MENU,
 };
@@ -192,6 +198,7 @@ const TOBIAS_POST = {
   timestamp: "1h",
   score: "3.10",
   comments: 1,
+  opinions: 2,
   license: { attribution: 0, provenance: 0 },
   menuItems: CARD_MENU,
 };
@@ -209,6 +216,7 @@ const SOL_POST = {
   topics: ["fieldnotes", "saltmaps"],
   score: "9.10",
   comments: 2,
+  opinions: 4,
   license: { attribution: 0.5, provenance: 0.5 },
   menuItems: CARD_MENU,
 };
@@ -230,6 +238,7 @@ const MIRA_GALLERY_POST = {
   topics: ["tidemarket", "coastroad"],
   score: "6.40",
   comments: 2,
+  opinions: 8,
   license: { attribution: 0, provenance: 0 },
   menuItems: CARD_MENU,
 };
@@ -345,17 +354,42 @@ function DetailHeader({ items }) {
    SAVE IS THE ROW THAT CARRIES ITS OWN STATE (readme §13, the private-viewer-
    state round). Nothing outside this menu says a thing is saved — the action
    row stays opinion · score · comments · share — so the row reads `Save` while
-   it is not and `Remove from saved` while it is. A control says what will
-   happen (§3), which is why the saved form is a verb and not the word Saved. */
+   it is not and `Unsave` while it is: one word (jakob 2026-09-11). A control
+   says what will happen (§3), which is why the saved form is a verb and not
+   the word Saved.
+
+   SAVE IS ON YOUR OWN POSTS TOO (jakob 2026-09-11), and it LEADS. Saving is
+   private, so whose post it is has nothing to do with whether a reader may
+   keep it — and the Saved list is a shelf, which is exactly what a person
+   reaches for on their own work. It takes the first row on every menu that
+   has it, post, comment and profile alike: the thumb learns one position, and
+   the one menu that also holds Remove is the last place to move the rows
+   around. The license closes this menu as it closes the others. */
 const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
 const OWN_POST_MENU = [
+  SAVE_ROW,
   { label: "Edit", onSelect: () => {} },
   { label: "Mark as sensitive", onSelect: () => {} },
   { label: "Remove", onSelect: () => {} },
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [...CARD_MENU, { label: "Hide @ada", onSelect: () => {} }, LICENSE_ROW];
-const COMMENT_MENU = [...CARD_MENU, LICENSE_ROW];
+const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} }, LICENSE_ROW];
+/* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
+   both doors, and this is the comment's). A post's door is a count row on its
+   detail surface; a comment has no detail surface of its own — it lives inside a
+   sheet — so its door is the ⋮ that every other act on it already uses.
+
+   IT STANDS WHATEVER THE COUNT IS, which is the difference between a menu row
+   and a count line: the line drops away at zero because a tap that can only open
+   an empty list is a tap spent on nothing, while a menu row that came and went
+   with a number would make the menu a different menu every time. That is also
+   why the empty sheet is reachable only from here.
+
+   IT SITS AFTER THE ACTS AND BEFORE THE LICENSE. A menu leads with the acts it
+   was opened for and closes on the license (`CARD_MENU`'s order); reading who
+   holds an opinion is not an act, so it falls between them. */
+const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {} };
+const COMMENT_MENU = [...CARD_MENU, OPINIONS_ROW, LICENSE_ROW];
 /* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
    from the bottom edge over the surface the reader asked from, and go back to
    it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
@@ -394,7 +428,7 @@ const PROFILE_MENU = [
   SAVE_ROW,
   { label: "Mention in a new post", onSelect: () => {} },
   { label: "Share this profile", onSelect: () => {} },
-  { label: "Hide @ada", onSelect: () => {} },
+  { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} },
 ];
 
 /* Your own profile's menu (the private-viewer-state round): the two private
@@ -496,45 +530,31 @@ function HelpDot({ ariaLabel = "How searching works", ...rest }) {
   return <SystemHelpDot ariaLabel={ariaLabel} {...rest} />;
 }
 
-/* The own-profile band cluster (profile round): the overflow and the gear on
-   the band's edge — chats arrives built into the band itself. Shared by the
-   member and applicant own-profile boards.
+/* The own-profile band cluster (profile round): the gear as the profile's own
+   trailing control — chats and the bell arrive built into the band itself.
+   Shared by the member and applicant own-profile boards.
 
-   THE ⋮ IS WHERE YOUR PRIVATE STATE LIVES (readme §13, the private-viewer-state
-   round). Saved and History are lists only you can see, and a profile page has
-   no row to hang them off — its one wide control is the person. So they sit in
-   the band's menu with Share your profile, and the dot opens a sheet rather
-   than acting on its own.
-
-   The dot keeps the slot left of the gear. Material's app bar would put an
-   overflow last; the gear has been the band's right edge since the profile
-   round, and moving it would move the thing every reader already aims at. */
-function ProfileBandIcon({ name, label }) {
+   THE GEAR IS ALL THE BAND CARRIES (the band law, jakob 2026-09-11). Settings
+   is this tab's own screen-level control, so it is what `trailing` holds, and
+   the ⋮ went down to the actions row beside the other things the page does.
+   What the dot holds did not change — Saved, History, Share your profile, the
+   private state's one door (readme §13, the private-viewer-state round) — only
+   where the reader reaches for it. */
+function ProfileBand({ unread = false, children }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      className="cg-state cg-focus"
-      style={{ display: "grid", placeItems: "center", height: "var(--touch-target-min)", width: "var(--touch-target-min)", border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
-    >
-      <Icon name={name} />
-    </button>
-  );
-}
-function ProfileBand({ children }) {
-  return (
-    <CograBand
-      trailing={
-        <span style={{ display: "flex", alignItems: "center" }}>
-          <ProfileBandIcon name="more_vert" label="More on your profile" />
-          <ProfileBandIcon name="settings" label="Settings" />
-        </span>
-      }
-    >
+    <CograBand unread={unread} trailing={<BandIcon name="settings" label="Settings" />}>
       {children}
     </CograBand>
   );
 }
+
+/* Your own profile's ⋮, in the one place it now stands: closing the actions
+   row, after Edit profile and Invites. Written once, so the three boards that
+   draw your own header cannot disagree about what the dot holds. */
+const ownProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More on your profile" items={OWN_PROFILE_MENU} />;
+
+/* Another person's ⋮, likewise: closing their actions row after Message. */
+const otherProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More about @ada" items={PROFILE_MENU} />;
 
 /* The chronicle's tab row (profile round, 2026-09-01): the `TabBar` master
    holding the chronicle's own three glyphs. What lives here is the tab data —
@@ -566,6 +586,47 @@ function ChronicleList({ children }) {
     </div>
   );
 }
+
+/* THE SAVED ROW'S OWN UNSAVE (jakob 2026-09-11). Sending a reader back to the
+   thing's own ⋮ to undo what is in front of them is the long way round, and the
+   Saved list is the one place where every row offers the same act. It is
+   ICON-ONLY — the filled bookmark, `Unsave` in the accessibility tree, no word
+   on screen (jakob: with the icon "we dont even need any word there") — because
+   the same word repeated down a list is four copies of one sentence, and this
+   glyph is one every reader already reads as "kept".
+
+   IT TAKES THE CHEVRON'S SLOT, NEVER THE AGE'S. The age is when YOU saved the
+   thing, which is this list's whole order and what a reader is retracing, so it
+   keeps its place and the control stands outboard of it. The chevron was never
+   drawn here — a row that opens says so by being a row — so the edge was already
+   free. The glyph takes `text-secondary`, the colour every icon-only control in
+   this system rests in: it is the row's control, not a badge saying the row is
+   saved. Every row in this list is.
+
+   It lives here because the list is drawn on more than one board — at rest and
+   in the moment after a row goes — and a control spelled twice is a control
+   that drifts. */
+const Unsave = () => (
+  <button
+    type="button"
+    aria-label="Unsave"
+    className="cg-state cg-focus cg-hit"
+    style={{
+      display: "grid",
+      placeItems: "center",
+      height: "40px",
+      width: "40px",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      color: "var(--text-secondary)",
+      cursor: "pointer",
+      padding: 0,
+    }}
+  >
+    <Icon name="bookmark" size={22} />
+  </button>
+);
 
 /* The post-detail column: the read surface a card opens into. */
 function DetailColumn({ children }) {
@@ -620,6 +681,7 @@ function ProfileOwnBody({ tail = null }) {
             onInvites={() => {}}
             onAvatarChange={() => {}}
             onCounts={() => {}}
+            menu={ownProfileMenu()}
           />
         </div>
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
@@ -638,16 +700,16 @@ function ProfileOwnBody({ tail = null }) {
 }
 
 /* Someone else's profile, whole — shared the moment its own overflow menu
-   needed the same page with a sheet over it (readme §13, the menus round). */
+   needed the same page with a sheet over it (readme §13, the menus round).
+
+   THE HEADER BAR CARRIES ONLY THE WAY BACK (the band law, jakob 2026-09-11).
+   The ⋮ came down into the actions row, where Message gave up the half of the
+   row it did not need; a detail surface's top bar is where a reader looks for
+   the way out, and this page's rare acts belong beside its common ones. */
 function ProfileOtherBody({ bundle } = {}) {
   return (
     <>
-      <PageHeader
-        title="@ada"
-        backHref="#"
-        backLabel="Back"
-        action={<OverflowMenu ariaLabel="More about @ada" items={PROFILE_MENU} />}
-      />
+      <PageHeader title="@ada" backHref="#" backLabel="Back" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
@@ -662,6 +724,7 @@ function ProfileOtherBody({ bundle } = {}) {
             onCounts={() => {}}
             onCommit={() => {}}
             onMessage={() => {}}
+            menu={otherProfileMenu()}
             showHandle={false}
           />
         </div>
@@ -810,7 +873,7 @@ function ReplyPadBody() {
       <ReplySealBody />
 
       {/* The wash over the shell; the parked pad above it stays sharp. */}
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-wash, rgba(0, 0, 0, 0.5))" }} />
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-dialog)" }} />
 
       <div
         style={{
@@ -843,7 +906,7 @@ function ReplyPadBody() {
             <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
             <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
           </span>
-          <span style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 }}>
+          <span style={SR_ONLY}>
             Nice, For or against +0.10, How much reaches you +0.10
           </span>
         </div>
@@ -915,40 +978,98 @@ function ReplySealBody() {
 
    It lives here because the words STAGE and the words EDIT both draw it, and
    a body on a second board stops being board-local (`ReplyDraft`'s reason).
-   The caret rides the last paragraph wherever the box is drawn. */
-function WordsBody({ paragraphs }) {
+   The caret rides the last paragraph wherever the box is drawn.
+
+   IT CARRIES THE LATE COUNTER LIKE ANY OTHER CAPPED FIELD. The box is not a
+   `TextField`, so it renders the atom's own `FieldSupport` row rather than
+   inheriting it — one reading, one threshold, one formatter, one geometry under
+   the field, whatever the field is made of.
+   `used` is what the counter counts here: a body near 5,000 characters is far
+   longer than the box shows, and the paragraphs drawn are the visible tail of
+   it, so a count taken from them would be a lie about what is written. Over the
+   cap the box takes the `--error` outline and the surface's own refusal renders
+   under it, which is `TextField`'s arrangement exactly. */
+function WordsBody({ paragraphs, cap, used, error }) {
+  const spent = used ?? [...paragraphs.join("\n\n")].length;
+  const over = cap != null && spent > cap;
   return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        gap: 16,
-        padding: 12,
-        borderRadius: "var(--radius-extra-small)",
-        border: "1px solid var(--border-field)",
-        overflow: "hidden",
-        boxSizing: "border-box",
-      }}
-    >
-      {paragraphs.map((text, index) => (
-        <p
-          key={text}
-          style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)", letterSpacing: "var(--text-body-large--letter-spacing)" }}
-        >
-          {text}
-          {index === paragraphs.length - 1 && <Caret />}
-        </p>
-      ))}
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-1)", minHeight: 0 }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+          padding: 12,
+          borderRadius: "var(--radius-extra-small)",
+          border: over ? "1px solid var(--error)" : "1px solid var(--border-field)",
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
+        {paragraphs.map((text, index) => (
+          <p
+            key={text}
+            style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)", letterSpacing: "var(--text-body-large--letter-spacing)" }}
+          >
+            {text}
+            {index === paragraphs.length - 1 && <Caret />}
+          </p>
+        ))}
+      </div>
+      <FieldSupport error={error} cap={cap} used={spent} />
     </div>
+  );
+}
+
+/* THE WORDS PATH'S FIRST STAGE, whole — `ComposeWords` itself, and the same
+   stage drawn against its cap (`ComposeWordsCaps`). One markup for both, the
+   `ReplyDraft` reason again: the stage is not a different stage because the
+   body has grown long, and two copies of it would drift about the prompt, the
+   escape and the foot.
+
+   `used` IS THE WHOLE BODY, THE PARAGRAPHS ARE WHAT IS ON SCREEN. A body near
+   five thousand characters does not fit the box it is written in — a writer
+   that far in sees the last few lines and nothing above them — so the caps
+   board draws the tail and states the length. */
+const WORDS_STAGE_BODY = [
+  "Three weekends of walking the same stretch at low tide, tracing where the salt crust draws its lines.",
+  "The rubbings pick up what the light misses. Paper against the crust, the side of a wax stick, and whatever the wind allows — none of them took longer than the walk out to make.",
+  "If you ever drive it, stop at the third headland and look down for once.",
+];
+
+function ComposeWordsBody({ paragraphs = WORDS_STAGE_BODY, used, error, nextDisabled = false }) {
+  return (
+    <>
+      <WizardHeader title="New post" />
+      <PickPrompt caption="The body is your words." escapeLabel="Add pictures instead" />
+
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, padding: "8px 24px 24px", overflow: "hidden" }}>
+        <FieldLabel>What do you want to publish?</FieldLabel>
+        <WordsBody cap={5000} paragraphs={paragraphs} used={used} error={error} />
+        <Button style={{ width: "100%", marginTop: 12 }} disabled={nextDisabled}>Next</Button>
+      </div>
+    </>
   );
 }
 
 /* THE PICTURE PATH'S DETAILS STAGE, whole — `ComposeDetails` itself, and what
    the reference pair sheet stands on. Factored for `ReplySealBody`'s reason: a
    sheet covers the surface the reader came from, and that surface has to be the
-   real one, so the two boards share one markup. */
-function ComposeDetailsBody() {
+   real one, so the two boards share one markup.
+
+   THE TWO CAPPED FIELDS TAKE THEIR CONTENT FROM THE BOARD (the caps-affordance
+   round), so the stage near its caps is this stage and not a copy of it. The
+   defaults are the canonical fixtures; `ComposeDetailsCaps` passes longer ones
+   and the refusal that belongs to the surface, and `nextDisabled` is what a
+   field over its cap does to the step. Nothing else about the stage moves. */
+function ComposeDetailsBody({
+  title = "Salt maps of the coast road",
+  titleError,
+  description = "Rubbings from three weekends at low tide — paper against the salt crust.",
+  descriptionError,
+  nextDisabled = false,
+}) {
   return (
     <>
       <WizardHeader title="Details" />
@@ -960,9 +1081,9 @@ function ComposeDetailsBody() {
         />
         <DescribeCounter described={0} total={2} onDescribe={() => {}} />
 
-        <TextField label="Title" corner="Optional" value="Salt maps of the coast road" />
+        <TextField label="Title" corner="Optional" cap={100} value={title} error={titleError} />
 
-        <TextField label="Description" corner="Optional" rows={3} value="Rubbings from three weekends at low tide — paper against the salt crust." />
+        <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} error={descriptionError} />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Tags</FieldLabel>
@@ -988,7 +1109,7 @@ function ComposeDetailsBody() {
 
         <div style={{ flex: 1 }} />
 
-        <Button style={{ width: "100%" }}>Next</Button>
+        <Button style={{ width: "100%" }} disabled={nextDisabled}>Next</Button>
       </div>
     </>
   );
@@ -1023,12 +1144,13 @@ function EditComposeBody() {
           <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
         </div>
 
-        <TextField label="Title" corner="Optional" value="Salt maps of the coast road" />
+        <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" />
 
         <TextField
           label="Description"
           corner="Optional"
           rows={2}
+          cap={500}
           value="Rubbings from three weekends at low tide — paper against the salt crust."
         />
 
@@ -1088,7 +1210,7 @@ function CommentComposerFoot() {
     <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
       <MonogramAvatar name="Sol Ferreira" />
       <div style={{ flex: 1 }}>
-        <TextField label="Add a comment" value="" />
+        <TextField label="Add a comment" cap={2000} value="" />
       </div>
     </div>
   );
@@ -1203,6 +1325,7 @@ const MIRA_CLIP_POST = {
   topics: ["stillwater", "coastroad"],
   score: "7.40",
   comments: 2,
+  opinions: 6,
   license: { attribution: 0, provenance: 0 },
   menuItems: CARD_MENU,
 };
@@ -1232,7 +1355,10 @@ const CLIP_CANOE = {
 const CLIP_GRAPES = {
   kind: "video",
   src: "clip-grapes.mp4",
-  poster: "clip-grapes.jpg",
+  /* gallery-grapes.jpg doubles as this clip's poster: the published
+     canvas editor holds at most 200 files and the tree sits at that
+     ceiling, so no image may serve a single board (backlog 62). */
+  poster: "gallery-grapes.jpg",
   ratio: "square",
   alt: "Two hands turning a bunch of grapes in the light.",
 };
@@ -1452,7 +1578,7 @@ function SettingsBody() {
           label="Key backup"
           footnote="Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
         >
-          <SettingsRow label="Recovery code" status="Last created 12 August" onOpen={() => {}} />
+          <SettingsRow label="Recovery code" status="Last created 12.08.2026" onOpen={() => {}} />
           <SettingsRow label="Your key" onOpen={() => {}} />
         </SettingsGroup>
 
@@ -1463,13 +1589,13 @@ function SettingsBody() {
           <SettingsRow label="Firefox on Ubuntu" status="This browser" inert />
           <SettingsRow
             label="Pixel 8"
-            status="Last used 2 days ago"
+            status="Last used 2d"
             inert
             trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
           />
           <SettingsRow
             label="Unnamed device"
-            status="Last used 12 August"
+            status="Last used 12.08.2026"
             inert
             trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
           />
@@ -1480,7 +1606,7 @@ function SettingsBody() {
           label="Credentials"
           footnote="Changing your password signs out every other device."
         >
-          <SettingsRow label="Password" status="Changed 3 weeks ago" onOpen={() => {}} />
+          <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} />
           <SettingsRow label="Handle" value="@sol" onOpen={() => {}} />
           <SettingsRow label="Email" value="sol@solferreira.art" onOpen={() => {}} />
         </SettingsGroup>
@@ -1494,8 +1620,352 @@ function SettingsBody() {
           />
           <SettingsRow action label="Sign out" onOpen={() => {}} />
         </SettingsGroup>
+
+        {/* DELETING THE ACCOUNT IS THE LAST ROW, IN ITS OWN GROUP, QUIET AT REST
+            (jakob's ruling, the account-deletion round). The weight of this act
+            lives in the flow it opens, not in a red row on a page a reader came
+            to for the theme: a row shouting at eight neighbours is a row that
+            makes the whole page feel dangerous, and a reader who has decided
+            does not need to be argued with.
+
+            IT IS A NAVIGATING ROW, NOT AN ACTION ROW. Sign out happens on the
+            press; this opens a surface, and the chevron is the system's one
+            promise that it does. That is also why the label is a verb phrase
+            where `SettingsRow`'s own note asks for a noun: the row names a task
+            rather than a setting, and `Account deletion` would be the page's
+            only piece of bureaucratic English. The chevron keeps the promise the
+            verb might otherwise break.
+
+            THE FOOTNOTE IS THE GROUP'S ONE DEBT — that nothing happens from the
+            tap. It is the fact a reader needs exactly once, which is what a
+            footnote is for, and saying it here is what lets the row stay one
+            quiet line. */}
+        <SettingsGroup
+          ariaLabel="Delete account"
+          footnote="Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."
+        >
+          <SettingsRow label="Delete account" onOpen={() => {}} />
+        </SettingsGroup>
       </div>
     </>
   );
 }
+
+/* ── THE POST SCORE'S DRILL-DOWN (readme §13, the score-and-opinions round) ──
+   Backlog item 13, whole: FeedEntry → RankPath → RankHop → the records behind
+   one step, each carrying a small cover of the post it came from.
+
+   ITS FIVE PARTS LIVE HERE, NOT IN `components/` — the item's own instruction,
+   and the bundle-exposure law agrees with it. A master is a shape reused across
+   PRODUCTS; `_shared.jsx` is the shape reused across BOARDS of one surface
+   (`CommentsSheet`'s rule). `ScoreOrigin`, `PathTrace`, `PathSummary`,
+   `StepSummary` and `ActionLog` are drawn on five boards of one flow and
+   nowhere else in the product, so they are glue. Nothing here formats a
+   value the system already formats: every pair goes through `StanceValue`,
+   which is where the geek mode's `cg-exact` span and its screen-reader twin
+   are assigned, and every row that a master already draws — a step, a
+   step's facts — IS that master.
+
+   THE REGISTER IS GRAPH, PATHS, CONNECTIONS — never statistics, never a chart
+   (jakob). So: faces and rows, a trace of avatars for a path's shape, ages on
+   the ladder, and the reader's word throughout is OPINION. There is no bar, no
+   meter, no percentage and no trend anywhere in these five parts, and the one
+   place a magnitude appears it appears as the product's own number format.
+
+   THE NUMBERS HERE ARE NOT PAIRS, SO THEY PAINT IN BOTH READING MODES. Geek
+   mode governs the two-parameter readings a face stands in for; a score and a
+   path's contribution have no glyph that could carry their magnitude, exactly
+   as the Post score itself has none (readme §13, geek mode). The pairs on these
+   boards — a step's opinion, a record's own — are `StanceValue`s and follow the
+   mode like every other pair in the product.
+
+   NO PER-STEP MAGNITUDE IS DRAWN, and that is a truth claim rather than a gap.
+   A path's contribution is not the product of the opinions a reader can see
+   along it (feed-ranking.md §3.1, §5.1: the per-step weight is damped and
+   tier-bound, and the last step alone decays) — so a surface that put a number
+   on every step would invite an arithmetic that does not hold. The path states
+   what it adds; the steps state what carries them and when. */
+
+/* The cast this flow adds to the canvas's four — the people at the far end of
+   the weaker paths, and the holders on the opinions sheet. They live beside the
+   drill-down rather than up with ADA/TOBIAS/SOL/MIRA because these five boards
+   and the opinions sheet are everywhere they appear. */
+const KEL = { handle: "kel", displayName: "Kel Moreau" };
+const WREN = { handle: "wren", displayName: "Wren Aliyev" };
+const NADIA = { handle: "nadia", displayName: "Nadia Rask" };
+const JUNO = { handle: "juno", displayName: "Juno Baptiste" };
+
+/* THE POST THE DRILL-DOWN IS ABOUT, and the viewer it reached. `ADA_POST` is
+   the canvas's canonical post and @sol is its canonical reader (`ProfileOwnBody`
+   is Sol's own profile), so the whole flow is one honest question: why did
+   @ada's post reach @sol at 15.20? */
+const SCORE_VIEWER = SOL;
+
+/* THE PATH SET, and it ADDS UP (feed-ranking.md §6.1: the score is the sum of
+   the signed, decayed terms of up to `k` internally disjoint paths, strongest
+   first, and `k` is governed at order 4–8). Six paths here, disjoint by person:
+   6.80 + 4.20 + 2.60 + 1.10 + 0.50 = 15.20, which is `ADA_POST`'s own score.
+   The two weakest ride the "more paths" row rather than being spelled out, so
+   the arithmetic still closes on the drawn surface. */
+const ADA_FACED = { ...ADA, src: "ava1.jpg" };
+const MIRA_FACED = { ...MIRA, src: "inviter.jpg" };
+const SCORE_PATHS = [
+  { through: "@ada", people: [SCORE_VIEWER, ADA_FACED], value: "+6.80" },
+  { through: "@tobias", people: [SCORE_VIEWER, TOBIAS], value: "+4.20" },
+  { through: "@mira", people: [SCORE_VIEWER, MIRA_FACED], value: "+2.60" },
+  { through: "@kel and @wren", people: [SCORE_VIEWER, KEL, WREN], value: "+1.10" },
+];
+const SCORE_MORE_PATHS = { count: 2, value: "+0.50" };
+
+/* ScoreOrigin — THE POST THE SCORE BELONGS TO, carried on all four levels so a
+   reader four taps deep never loses what they are reading about.
+
+   IT IS `QuotedRow`, which is the master for exactly this: the thing a surface
+   is about, held above it, contained and inert. Inert is right here for the
+   master's own reason — the reader came from that post and the back arrow is
+   the way to it, so a second door would be a second answer to one question.
+
+   THE SCORE UNDER IT IS PLAIN TEXT, NEVER `ExplainableNumber`. That master is
+   the affordance and never the explanation; here the reader is standing inside
+   the explanation, so a control that opened it again would open nothing. It
+   keeps the master's own register — the label quiet, the value on-surface at
+   500 — because it is the same figure, read rather than pressed. */
+function ScoreOrigin({ score = "15.20" }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <QuotedRow
+        title="The long way home — @ada"
+        snippet="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
+        name={ADA.displayName}
+        src="ava1.jpg"
+      />
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "baseline",
+          gap: 6,
+          fontSize: "var(--text-body-small)",
+          lineHeight: "var(--text-body-small--line-height)",
+          color: "var(--text-secondary)",
+        }}
+      >
+        Post score
+        <span style={{ color: "var(--on-surface)", fontWeight: 500 }}>{score}</span>
+      </span>
+    </div>
+  );
+}
+
+/* PathTrace — A PATH'S SHAPE, drawn as the thing it is: the people it runs
+   through, in order, from you to the post. This is the round's one new drawing
+   and the reason it exists: a path is a connection between people, and every
+   other way of showing one — a bar, a share of a total, a percentage — turns it
+   into a statistic about the post instead of a fact about the reader's own
+   network.
+
+   IT ENDS ON THE POST, as a tile rather than a circle: people are circles
+   everywhere in this system (`NodeMark`), and a post is a thing with a face.
+
+   THE AVATARS ARE `aria-hidden` BY THE MASTER, so the trace carries its own
+   screen-reader line — the same discipline every stance readout takes. */
+function PathTrace({ people, size = 24 }) {
+  const spoken = `You, then ${people.slice(1).map((p) => `@${p.handle}`).join(", then ")}, then the post`;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center" }}>
+      {people.map((person, index) => (
+        <React.Fragment key={person.handle}>
+          {index > 0 && (
+            <span aria-hidden="true" style={{ width: 14, height: 1, background: "var(--border-hairline)", flex: "none" }} />
+          )}
+          <MonogramAvatar name={person.displayName} size={size} src={person.src} />
+        </React.Fragment>
+      ))}
+      <span aria-hidden="true" style={{ width: 14, height: 1, background: "var(--border-hairline)", flex: "none" }} />
+      <img
+        src="post-photo.jpg"
+        alt=""
+        style={{ width: size, height: size, flex: "none", borderRadius: "var(--radius-extra-small)", objectFit: "cover", display: "block" }}
+      />
+      <span style={SR_ONLY}>{spoken}</span>
+    </span>
+  );
+}
+
+/* One path on the list — `ContentRow`'s geometry, with the trace where the disc
+   would be. It is not `ContentRow` itself: that master's leading slot holds ONE
+   40px disc, and a path is a chain. Everything else about the row is the
+   master's — the card ground, the medium corner, the 12px padding, the chevron
+   that says this opens another surface. */
+function PathRow({ people, through, value, onOpen }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="cg-state cg-focus"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-3)",
+        width: "100%",
+        border: 0,
+        borderRadius: "var(--radius-medium)",
+        background: "var(--surface-card)",
+        padding: "var(--space-3)",
+        cursor: "pointer",
+        fontFamily: "var(--font-sans)",
+        color: "var(--on-surface)",
+        textAlign: "left",
+        boxSizing: "border-box",
+      }}
+    >
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+        <PathTrace people={people} />
+        <span
+          style={{
+            fontSize: "var(--text-label-small)",
+            lineHeight: "var(--text-label-small--line-height)",
+            color: "var(--text-secondary)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Through {through}
+        </span>
+      </span>
+      <span style={{ flex: "none", fontSize: "var(--text-body-small)", fontWeight: 500 }}>{value}</span>
+      <span style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true">
+        <Icon name="chevron_right" size={18} />
+      </span>
+    </button>
+  );
+}
+
+/* PathSummary — what one path does, in the two facts that are true of it:
+   what it adds to the score, and how fresh the last opinion on it is. Both are
+   `FactRow`s, the product's one fact block.
+
+   TWO ROWS AND NOT THREE. The sign of a path — whether it carries the post
+   toward the reader or away (feed-ranking.md §5.2) — is already the sign on the
+   figure, and a row repeating it in words would be the same fact twice.
+
+   THE AGE IS THE LAST STEP'S, because only the last step decays (§5.3): silence
+   on a relationship is not a partial revocation, so an old path with a fresh
+   opinion at its end competes at full weight. That is the sentence this row
+   exists to make checkable. */
+function PathSummary({ adds, newest }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <FactRow label="What it adds" value={adds} />
+      <FactRow label="Newest opinion on it" value={newest} last />
+    </div>
+  );
+}
+
+/* StepSummary — one step's facts. The opinion that carries it goes through
+   `StanceValue`, so the face leads and the pair rides the mode; the records
+   behind it are a count with the way to them on the row's own action, which is
+   `FactRow`'s slot for exactly that. */
+function StepSummary({ pair, behind, newest, onOpenRecords }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <FactRow label="What carries it" value={<StanceValue pDirected={pair.pDirected} pInterest={pair.pInterest} />} />
+      <FactRow label="Behind it" value={behind} action="Show them" onAction={onOpenRecords} />
+      <FactRow label="Newest of them" value={newest} last />
+    </div>
+  );
+}
+
+/* ActionLog — the signed records behind one step, which is the floor of this
+   whole surface: below it there is nothing but what the network published.
+
+   THE ROWS ARE INERT (`ContentRow`'s rule: a record with no destination is the
+   same row with nothing to press). What a reader would want from one of these
+   is its identity, and the row states it rather than hiding it behind a tap.
+
+   THE KEY IS DRAWN IN MONO AND NAMED EXACTLY, the copy rule for a format that
+   IS the content: a record nobody can look up is not a record. It is the only
+   place on these four boards where the system's own vocabulary reaches the
+   screen, and it earns it.
+
+   THE PAIR GOES THROUGH `StanceValue`, whole — face and `cg-exact` digits in one
+   master, which is also where the accessible name that speaks the whole fact in
+   both reading modes is assigned. It rides the row's second line rather than a
+   leading disc: at the card's 334px of content a face, a pair, a name, a key and
+   an age do not share one line, and the name is what a reader scans. */
+function ActionLog({ records }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {records.map((record) => (
+        <div
+          key={record.key}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            borderRadius: "var(--radius-medium)",
+            background: "var(--surface-card)",
+            padding: "var(--space-3)",
+            boxSizing: "border-box",
+          }}
+        >
+          <span style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {record.what}
+            </span>
+            <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
+              {record.when}
+            </span>
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+            <span style={{ flex: "none" }}>
+              <StanceValue pDirected={record.pair.pDirected} pInterest={record.pair.pInterest} />
+            </span>
+            <span style={{ flex: 1, minWidth: 0, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {record.key}
+            </span>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* The drill-down's column — the read surface's own gutter, matching the
+   chronicle's and the post detail's. */
+function ScoreColumn({ children }) {
+  return (
+    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, padding: "8px 16px 0" }}>
+      {children}
+    </div>
+  );
+}
+
+/* ── WHO HOLDS AN OPINION ON THIS (backlog item 55) ────────────────────────
+   The profile's "opinions on you", mirrored onto content and UNGATED (jakob):
+   everyone can check every post and every comment, the way everyone can read a
+   profile's counts.
+
+   THE SHEET IS `RefsSheet`'s PATTERN, which is what jakob's ruling names: a row
+   on the detail opens a bottom sheet holding the full set, and the count on the
+   row IS the list's length — the sheet is the only place that number can be
+   checked, so a count that quietly dropped a holder would tell a reader the
+   sheet holds less than it does.
+
+   THE ROWS ARE `StanceRow`, the master the profile's own opinions page uses.
+   The order MIRRORS `ProfileStances`: strongest first, by the opinion's own
+   for-or-against value. That order is the precedent's, read off the board
+   rather than found written down — it is what a reader of the profile page has
+   already learned to expect, and a second surface sorting the same rows a
+   different way would teach them it means nothing. */
+const POST_OPINION_HOLDERS = [
+  { name: MIRA.displayName, handle: MIRA.handle, src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
+  { name: ADA.displayName, handle: ADA.handle, src: "ava1.jpg", pDirected: 0.7, pInterest: 0.4 },
+  { name: TOBIAS.displayName, handle: TOBIAS.handle, pDirected: 0.6, pInterest: 0.65 },
+  { name: SOL.displayName, handle: SOL.handle, pDirected: 0.55, pInterest: 0.2 },
+  { name: KEL.displayName, handle: KEL.handle, pDirected: 0.25, pInterest: 0.95 },
+  { name: NADIA.displayName, handle: NADIA.handle, pDirected: 0.15, pInterest: 0.15 },
+  { name: WREN.displayName, handle: WREN.handle, pDirected: -0.2, pInterest: 0.1 },
+  { name: JUNO.displayName, handle: JUNO.handle, pDirected: -0.55, pInterest: 0.25 },
+];
 

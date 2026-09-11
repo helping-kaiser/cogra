@@ -77,7 +77,7 @@ drag, release, or the open pad itself — may also trigger the surface
 underneath. Opening the pad must never also open the post; dismissing it
 must never navigate. One gesture, one meaning.
 
-**At rest the target shows the standing:** the face and the folded pair.
+**At rest the target shows the opinion:** the face and the folded pair.
 A viewer without a bundle sees a muted, translucent 🫥 — the same control
 at rest, visibly waiting to be given a value, never a bare word.
 
@@ -162,6 +162,6 @@ the same button, held, signs the gentle default outright.
 ## Confirmation
 
 **The hold answers immediately.** The resting target updates to the new
-standing at once, and a snackbar confirms the signature. A gesture that
+opinion at once, and a snackbar confirms the signature. A gesture that
 stages a priced act must never be silent: silence reads as failure and
 invites the same act again.

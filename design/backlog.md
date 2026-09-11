@@ -1876,14 +1876,15 @@ Three things the boards do not carry, each named where the lane hit it.
    text (1000) and for whatever the description and the sensitive reason
    are eventually capped at. The lane shipped the refusal alone: the
    message where the words are, and the step's Next disabled.
-2. **The 2.0 field atom draws no error state at all.** The web
-   `TextField` carries an `error` slot its own note calls "the one place
-   the failure role is spent"; `CograTextField` carries nothing of the
-   kind, so the two clients say one refusal in two shapes — under the
-   label on web, a house `ErrorLine` below the field on Android. One
-   drawn field-error state would close that, and would give the alt-text
-   cap a home on Android, which this lane left unmirrored rather than
-   invent one inside the drawn `DescribeSheet`.
+2. **The field-error state is drawn on one client only.** The design's
+   `TextField` has carried `error` — outline, label and message — since
+   the input-error round; the implementation's `CograTextField` carries
+   nothing of the kind, so the two clients say one refusal in two
+   shapes — under the label on web, a house `ErrorLine` below the field
+   on Android. The design-side gap is narrower: no capped field's
+   refusal was drawn until this round, and the alt-text cap had no home
+   on Android, which the caps lane left unmirrored rather than invent
+   one inside the drawn `DescribeSheet`.
 3. **A cap and its refusal are one component's problem, drawn once.**
    Item 46.3 filed the same gap from the tag side — "the picker's
    refused-name state is undrawn" — and this is its other half: the
@@ -2051,3 +2052,69 @@ advisories on the vendored readmes (6 in the round's run — all from
 `design/_build/node_modules/*/README.md`, zero from authored content).
 The linter should skip gitignored trees; until it does, every lane
 reading the advisory count must check where the advisories come from.
+
+### 57 · The masters' prose still says "standing" off-screen · *design*
+
+The sweep (2026-09-11) conformed every reader-visible string and every
+self-contradicting doc, but ~151 sites of `standing`/`stance` prose
+remain in `*.jsx` docblocks, `*.d.ts` and `*.prompt.md` (top files:
+`StanceReadout.jsx` 15, `StanceReadout.d.ts` 11, `TagPad.jsx` 6,
+`StancePad.jsx` 6, `StanceControl.jsx` 6). Many are legitimately the
+model's own word for the record and the fold; separating those from
+reader-facing prose is a judgment pass of its own. Related smalls from
+the same sweep: `Post Score` in prose and in the graph's gap names
+(renaming has graph-artefact consequences); `sheet.card.html`'s
+specimen `SheetTitle` the live `OverflowMenu` doesn't render;
+`feed-filter.card.html:46`'s history sentence naming the replaced
+segmented row; the frozen search-ideation canvases' `3w` ages.
+
+### 58 · The vouch-back ceremony · *design*
+
+jakob, 2026-09-11 (the second ruling round): once a landed member
+vouches back, the moment deserves a ceremonial ending — "some
+indicator that you are now part of the network… you becoming part of
+the sky or sth", an animation welcome. Not a notification (the
+approved kind already notifies the vouch-in); this is the crown of
+the entry flow, a dedicated surface after reciprocation. Runs as its
+own standalone mini-round after round 4 of the MVP queue.
+
+### 59 · The minus sign disagrees with its own guideline · *system*
+
+Found by the score-and-opinions round: readme §3 writes negative pairs
+with U+2212 MINUS (`−0.90 / +0.30`), but `formatDimension`'s
+`Intl.NumberFormat` emits ASCII U+002D, so every board in the canvas
+paints `-0.20 / +0.10`. System-wide and pre-existing; changing the
+formatter moves every board with a negative pair, so it is its own
+pass — rule which character wins, then conform formatter or guideline
+and re-render.
+
+### 60 · The gate should catch a truncating filter summary · *tooling*
+
+Ruled 2026-09-11: the filter trigger fits its longest summaries at
+exactly 0px of slack (the 40px band icons), and the guard belongs in
+the GATE, not in a character budget — a check that warns when any
+feed-filter summary renders with an ellipsis, so vocabulary growth is
+caught at build time instead of on a phone. Sibling of 54.2's
+pair-format guard.
+
+### 61 · The sky's dark points read backwards · *design*
+
+Found by the ceremony round: dark `secondaryContainer` is `#743918`,
+which sinks into the near-black ground — on the Explore hero's
+`SkyField` the LARGEST points (the most-weighted accounts) come out
+the DIMMEST, so the weight reading runs backwards in the dark theme.
+`VouchedIn` avoided it by dropping to two rungs (`outline` /
+`primaryContainer`); the hero needs the same treatment or a dark-side
+token fix. Moves the Explore board — its own pass.
+
+### 62 · The canvas sits at the editor's file ceiling · *tooling*
+
+The published canvas editor loads at most 200 files; the tree now
+holds exactly 200 (188 artboards + 10 images + canvas.json + Theme).
+Every new board breaks the publish until something yields. Tonight's
+stopgap: gallery-grapes.jpg doubles as the square clip's poster
+(clip-grapes.jpg removed). A strategy is owed before the next boards:
+consolidate fixture images further, retire a generated map from the
+canvas (needs gen-maps + graph.json to learn exclusion — check-flows
+requires every generated map on the canvas today), or split the
+canvas. Related: 61's Explore pass will want new imagery — budget it.

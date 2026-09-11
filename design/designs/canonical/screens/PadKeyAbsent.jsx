@@ -15,8 +15,16 @@
    `inverse`, the filled button that takes the panel's pair turned over.
 
    THE FEED BENEATH IS `KeyElsewhere`'s, the same shell with the same task card:
-   this is that screen, one tap in. Its post carries no standing, because the
-   pad above it says in so many words that there is none yet. */
+   this is that screen, one tap in. Its post carries no opinion, because the
+   pad above it says in so many words that there is none yet.
+
+   THE SHELL IS DRAWN HERE, around the real `StancePad`, and the reason is the
+   thing the board exists to say. `StanceControl`'s open state always ends in
+   Cancel and Set; Set is the only thing on the pad that signs, and a board about
+   a signature that cannot be given must not draw it. No prop takes that row
+   away, and adding one would be deciding what the pad looks like when signing is
+   impossible. So the notice stands where the landing line and the actions
+   would. */
 export function Screen() {
   return (
     <>
@@ -35,7 +43,7 @@ export function Screen() {
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 
       {/* The wash over the shell; the parked pad above it stays sharp. */}
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-wash, rgba(0, 0, 0, 0.5))" }} />
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-dialog)" }} />
 
       <div
         style={{
@@ -69,7 +77,7 @@ export function Screen() {
               <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
               <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
             </span>
-            <span style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 }}>
+            <span style={SR_ONLY}>
               Nice, For or against +0.10, How much reaches you +0.10
             </span>
           </div>

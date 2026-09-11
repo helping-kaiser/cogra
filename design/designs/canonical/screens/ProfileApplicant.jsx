@@ -25,13 +25,14 @@ export function Screen() {
             onInvites={() => {}}
             onAvatarChange={() => {}}
             onCounts={() => {}}
+            menu={ownProfileMenu()}
           />
         </div>
         <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
         <ChronicleList>
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="1h" second="First light over the flats — brought the wrong lens, kept the picture anyway." pending onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.1, pInterest: 0.1 }} title="Gave an opinion" titleAside="on @mira" trailing="2h" pending inert />
-          <p style={{ margin: 0, padding: "4px 0", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+          <p style={{ margin: 0, padding: "4px 0", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             These wait with your application and arrive with you.
           </p>
         </ChronicleList>

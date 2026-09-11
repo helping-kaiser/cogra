@@ -12,7 +12,7 @@ export function Screen() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <QuietNote>Your comment on "The long way home".</QuietNote>
 
-        <TextField label="Words" rows={3} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." />
+        <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Pictures</FieldLabel>

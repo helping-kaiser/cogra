@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"60be373be4f6","components/compose/ActsFooter.jsx":"4d474d1463db","components/compose/Caret.jsx":"7c8616dba407","components/compose/CoverRow.jsx":"c52618a34fe5","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"d8ac1f091ba5","components/compose/MediaThumb.jsx":"7a4e260a43ac","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"947836ad201f","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"570f672e033c","components/compose/TopicRemovable.jsx":"e36e24c12cfb","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f1ad3e7f28e4","components/content/CommentCard.jsx":"22cd54aabc3a","components/content/OverflowMenu.jsx":"fa89204ca7b5","components/content/PostCard.jsx":"c64c8f49715a","components/content/ReferenceRow.jsx":"64219e74ca21","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6b9e07b63f21","components/core/BottomSheet.jsx":"7887a3ccf45b","components/core/Button.jsx":"49115256e31e","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"c0fe5f63cbb7","components/core/ContentRow.jsx":"cde9cf105af1","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"510c23803cc7","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"0c3ff52ac00f","components/honesty/PendingMarker.jsx":"7428662f343f","components/honesty/SensitiveVeil.jsx":"6b693d3c9af2","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"46b9010c8478","components/media/MediaViewer.jsx":"8de3eaa8144c","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"e1407898f8fb","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"1eb54848dfa9","components/navigation/BottomNav.jsx":"97b7b37b3100","components/navigation/CograBand.jsx":"6350fa5e6832","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"4e54abd8cbc0","components/navigation/Icon.jsx":"5a982b28005b","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"8f609947a202","components/navigation/TabBar.jsx":"2d2f44c5a698","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"b7bc38353db1","components/people/StanceRow.jsx":"6296d2136f98","components/proposed/ExplainableNumber.jsx":"860fac62e041","components/stance/SeveranceConfirm.jsx":"22409f34d548","components/stance/StanceAlternates.jsx":"5fd873421d0d","components/stance/StanceCoachMark.jsx":"66ebe4394049","components/stance/StanceControl.jsx":"a2789a0d588b","components/stance/StancePad.jsx":"be49bf0f663c","components/stance/StanceReadout.jsx":"606ea4f770dd","components/stance/StanceSlider.jsx":"57078ae91304","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"b41a5971e24e","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"ca4324cab20a","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"60be373be4f6","components/compose/ActsFooter.jsx":"4d474d1463db","components/compose/Caret.jsx":"7c8616dba407","components/compose/CoverRow.jsx":"c52618a34fe5","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"7a4e260a43ac","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"947836ad201f","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"570f672e033c","components/compose/TopicRemovable.jsx":"e36e24c12cfb","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f1ad3e7f28e4","components/content/CommentCard.jsx":"22cd54aabc3a","components/content/OverflowMenu.jsx":"47a53e5d0285","components/content/PostCard.jsx":"1ab2c898a870","components/content/ReferenceRow.jsx":"64219e74ca21","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6b9e07b63f21","components/core/BottomSheet.jsx":"7887a3ccf45b","components/core/Button.jsx":"49115256e31e","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"c0fe5f63cbb7","components/core/ContentRow.jsx":"7712c0cd74b3","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"8815966734db","components/honesty/PendingMarker.jsx":"7428662f343f","components/honesty/SensitiveVeil.jsx":"a5deb1a3edb7","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"4c4de225c963","components/media/MediaViewer.jsx":"8de3eaa8144c","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"e1407898f8fb","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"1eb54848dfa9","components/navigation/BottomNav.jsx":"97b7b37b3100","components/navigation/CograBand.jsx":"d778d3e37122","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"4e54abd8cbc0","components/navigation/Icon.jsx":"53861f55d66a","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"8f609947a202","components/navigation/TabBar.jsx":"2d2f44c5a698","components/people/ActorChip.jsx":"ea02237eb500","components/people/ProfileHeader.jsx":"b3ff7024cbb5","components/people/StanceRow.jsx":"6296d2136f98","components/proposed/ExplainableNumber.jsx":"cd6488b3817c","components/stance/SeveranceConfirm.jsx":"22409f34d548","components/stance/StanceAlternates.jsx":"5fd873421d0d","components/stance/StanceCoachMark.jsx":"66ebe4394049","components/stance/StanceControl.jsx":"fb6372a11e64","components/stance/StancePad.jsx":"be49bf0f663c","components/stance/StanceReadout.jsx":"f17a19d8a3f4","components/stance/StanceSlider.jsx":"57078ae91304","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"b41a5971e24e","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"87ec0347bfe3","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -393,6 +393,8 @@ const PATHS = {
   forum: ["M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"],
   /* A chat MESSAGE, distinct from the chat that holds it (`forum`). */
   send: ["M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"],
+  /* The band's bell — the notifications surface (notifications.md). */
+  notifications: ["M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"],
   /* The compose media surfaces' glyphs (media slice, 2026-08-31). */
   close: ["M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"],
   /* The transport pair. Where a clip is the thing the reader came for — the
@@ -411,7 +413,7 @@ const PATHS = {
   fullscreen: ["M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"],
   /* THE STANCE FACE AS A GLYPH (review round 2). On the stream the anchor sits
      on photography beside the rail's other glyphs, and an emoji — muted and
-     translucent for "no standing yet" — is unreadable there and off-family
+     translucent for "no opinion yet" — is unreadable there and off-family
      besides. `sentiment_neutral` is the same idea drawn as a line face, so the
      rail reads as one set. The official cut draws its eyes as <circle>s; PATHS
      holds paths only, so each is carried as an exact arc path — same geometry,
@@ -431,12 +433,17 @@ const PATHS = {
   drag_indicator: ["M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"],
   lock: ["M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"],
   expand_more: ["M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"],
+  /* The Saved list's own control (the review-fix round). A filled bookmark is
+     the one glyph a reader already reads as "kept", so the row's unsave needs
+     no word beside it — which is what lets the row carry the act and keep its
+     age on the same edge. Classic filled 24px, verbatim. */
+  bookmark: ["M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"],
   /* The wallet's glyphs (item 12). `arrow_outward` is the direction badge —
      outgoing as drawn, incoming rotated 180° by the badge that wears it. */
   chevron_right: ["M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"],
   arrow_outward: ["M6 6v2h8.59L5 17.59 6.41 19 16 9.41V18h2V6z"],
   content_copy: ["M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"],
-  /* The Post Score's glyph. A branching graph: the score comes out of the graph,
+  /* The Post score's glyph. A branching graph: the score comes out of the graph,
      and the branches hint at the paths folded up behind the number. Material
      Symbols only, and the FILL-1 cut is derived (see the top of this file) —
      hence the other viewBox. */
@@ -1143,6 +1150,138 @@ try { (() => {
    field error, not a judgement per field about which ones would be noticed
    anyway. None of it draws a pixel. */
 
+/* THE LATE COUNTER (jakob's ruling, the caps-affordance round). A capped field
+   says NOTHING about its cap while the writer is nowhere near it, and then a
+   quiet remaining count appears at the end of the supporting row. It is not a
+   persistent counter and it is never a meter: a number that sits under an empty
+   field all day turns the act of writing into a budget, and a bar turns a
+   sentence into a progress indicator. What the writer needs is a warning in
+   time to finish the thought — nothing before that is information, it is
+   pressure.
+
+   THE THRESHOLD IS THE LAST TENTH, NEVER FEWER THAN THE LAST 20. The count
+   appears once `remaining <= max(20, round(cap / 10))`. The tenth is what makes
+   the warning proportional — 500 characters of description warn at 450, 5,000
+   of a body at 4,500 — and the floor of 20 is what keeps a short cap from
+   warning too late to act on: a tenth of the 50-character display name is five,
+   which arrives after the writer has already written the word that will be cut.
+   Both halves are drawn in the round: the title (100 → window 20) and the
+   display name (50 → window 20) are floor-driven, the description (500 → 50)
+   and the body (5,000 → 500) are tenth-driven.
+
+   THE UNIT IS THE UNICODE SCALAR VALUE, which is what every one of the ruled
+   caps counts in, and what `[...string]` iterates — never `.length`, which
+   counts UTF-16 code units and would tell a writer of emoji or of anything
+   outside the BMP that they had spent twice what they had.
+
+   IT IS A THIRD ELEMENT IN THE SUPPORTING ROW, NOT A THIRD STATE OF THE
+   SUPPORTING SLOT. Material 3's text field puts supporting text at the start of
+   the row under the field and the character count at its end; the slot's own
+   two states (hint, error) are untouched by this, and the count sits beside
+   whichever one is live. The count is the only thing in the product allowed to
+   share that row.
+
+   OVER THE CAP THE COUNT TAKES `--error`, AND THE MESSAGE IS THE SURFACE'S.
+   `FieldCount` colours itself from the arithmetic, because the arithmetic is
+   the atom's; the words under the field are the board's own `error`, because a
+   field error is worded per field and per surface (copy-voice, *Field errors*)
+   and an atom that wrote them would flatten "A title is at most 100 characters."
+   into one house sentence for every field in the product.
+
+   A SCREEN READER IS TOLD POLITELY, ONCE IT MATTERS. The count carries
+   `aria-live="polite"` and joins the field's `aria-describedby`: it appears in
+   answer to typing, so a reader who has moved on would otherwise never learn it
+   exists, and polite is the right register because the count is never the whole
+   message — the error line above it is what takes `role="alert"`. The
+   implementation debounces the live region (a count read out on every keystroke
+   is unusable); the drawing cannot show a debounce, so it is stated here.
+
+   `used` OVERRIDES THE ARITHMETIC FOR A FIELD DRAWN AS A TAIL. A board showing
+   the last fifteen lines of a 5,000-character body cannot carry the other four
+   thousand in its fixture, and a count computed from what is drawn would then
+   be a lie about what is written. Such a board passes `used` — the whole
+   length — and the drawn paragraphs stay the visible tail. Every field whose
+   fixture IS its whole content passes nothing and is counted. */
+
+const COUNT_WINDOW_MINIMUM = 20;
+function countReading(value, cap, used) {
+  if (!cap) return null;
+  const spent = used ?? [...String(value ?? "")].length;
+  const remaining = cap - spent;
+  if (remaining > Math.max(COUNT_WINDOW_MINIMUM, Math.round(cap / 10))) return null;
+  return remaining < 0 ? {
+    text: `${-remaining} over`,
+    over: true
+  } : {
+    text: `${remaining} left`,
+    over: false
+  };
+}
+function FieldCount({
+  value,
+  cap,
+  used,
+  id
+}) {
+  const reading = countReading(value, cap, used);
+  if (!reading) return null;
+  return /*#__PURE__*/React.createElement("span", {
+    id: id,
+    "aria-live": "polite",
+    style: {
+      marginInlineStart: "auto",
+      flex: "none",
+      whiteSpace: "nowrap",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      letterSpacing: "var(--text-body-small--letter-spacing)",
+      color: reading.over ? "var(--error)" : "var(--text-secondary)"
+    }
+  }, reading.text);
+}
+
+/* THE SUPPORTING ROW, ASSIGNED ONCE — `FieldLabel`'s counterpart under the
+   field. `TextField` renders it for its own field, and a capped field that is
+   NOT a `TextField` (the composer's growing body box) renders it directly, so
+   the two cannot drift about where the message sits or where the count sits
+   beside it. It renders nothing at all when there is nothing to say, which is
+   the state every field in the product is in at rest. */
+
+function FieldSupport({
+  id,
+  countId,
+  hint,
+  error,
+  value,
+  cap,
+  used
+}) {
+  const reading = countReading(value, cap, used);
+  if (!error && !hint && !reading) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: "var(--space-2)",
+      flex: "none"
+    }
+  }, (error || hint) && /*#__PURE__*/React.createElement("span", {
+    id: id,
+    role: error ? "alert" : undefined,
+    style: {
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      letterSpacing: "var(--text-body-small--letter-spacing)",
+      color: error ? "var(--error)" : "var(--text-secondary)"
+    }
+  }, error || hint), /*#__PURE__*/React.createElement(FieldCount, {
+    id: countId,
+    value: value,
+    cap: cap,
+    used: used
+  }));
+}
+
 /* THE LABEL ROW, ASSIGNED ONCE. `TextField` renders it over its own field, and
    the composer's captions over sections that are NOT fields — Pictures, Video,
    Cover, Topics, References — render it over a tray or a list. Those captions
@@ -1199,12 +1338,16 @@ function TextField({
   rows,
   id,
   hint,
-  error
+  error,
+  cap,
+  used
 }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
   const supportId = `${fieldId}-support`;
-  const described = error || hint ? supportId : undefined;
+  const countId = `${fieldId}-count`;
+  const reading = countReading(value, cap, used);
+  const described = [error || hint ? supportId : null, reading ? countId : null].filter(Boolean).join(" ") || undefined;
   const shared = {
     borderRadius: "var(--radius-extra-small)",
     border: error ? "1px solid var(--error)" : "1px solid var(--border-field)",
@@ -1256,18 +1399,19 @@ function TextField({
       "aria-invalid": error ? "true" : undefined,
       onChange: event => onChange && onChange(event.target.value),
       style: shared
-    }), (error || hint) && /*#__PURE__*/React.createElement("span", {
+    }), /*#__PURE__*/React.createElement(FieldSupport, {
       id: supportId,
-      role: error ? "alert" : undefined,
-      style: {
-        fontSize: "var(--text-body-small)",
-        lineHeight: "var(--text-body-small--line-height)",
-        letterSpacing: "var(--text-body-small--letter-spacing)",
-        color: error ? "var(--error)" : "var(--text-secondary)"
-      }
-    }, error || hint))
+      countId: countId,
+      hint: hint,
+      error: error,
+      value: value,
+      cap: cap,
+      used: used
+    }))
   );
 }
+__ds_scope.FieldCount = FieldCount;
+__ds_scope.FieldSupport = FieldSupport;
 __ds_scope.FieldLabel = FieldLabel;
 __ds_scope.TextField = TextField;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/TextField.jsx", error: String((e && e.message) || e) }); }
@@ -1391,6 +1535,7 @@ function DescribeSheet({
     label: `What's in the ${subject}`,
     corner: "Optional",
     rows: 2,
+    cap: 1000,
     value: value,
     onChange: onChange
   }), /*#__PURE__*/React.createElement("div", {
@@ -2255,15 +2400,65 @@ try { (() => {
 
    The avatar is decorative either way: the adjacent text names the actor, so the
    photo carries no alt text and never becomes the only way to tell two people
-   apart. */
+   apart.
 
+   THE REDACTED ACTOR (`redacted`, the review-fix round; `erasure.md` §2–3).
+   When an account is deleted the ACTOR STAYS — it is still the author of
+   everything it signed, still carries the standing others vouched into it,
+   still routes — and only the identity payloads go: display name, handle,
+   avatar. So every place that draws an actor keeps drawing one; it draws it
+   WITHOUT A NAME. That is what `redacted` is, and it is assigned here because
+   the treatment has to follow the actor everywhere it appears — a chip on a
+   post, a row in a list, the header of their own page — and a treatment spelled
+   per surface is a treatment that drifts.
+
+   THE DISC KEEPS ITS SPACE AND FILLS WITH NOTHING. A monogram is the first
+   letter of a name and there is no name to take one from; inventing a glyph
+   would be inventing imagery where there is no source (readme §4). So the disc
+   is the reserved surface — the same one a redaction mark and an unloaded tile
+   use — which says a space was kept rather than lost.
+
+   THE NAME SLOT SPEAKS IN THE SYSTEM'S VOICE, NOT THE PERSON'S. `Deleted
+   account` in `text-secondary`, because it is the product saying what happened
+   and not somebody's chosen name; drawn at full strength it would read as an
+   account actually called that. The handle goes altogether: it was redacted at
+   execution and the stored form is a uniqueness device, so printing anything
+   there would be inventing a handle the reader could try to reach. */
+
+/* The word in the name's place, assigned once. The moderation variant is
+   proposed and unblessed (guidelines/copy-voice.md, awaiting blessing) — the
+   two must stay distinguishable, because collapsing them lets a verdict hide
+   behind a person's own decision (`erasure.md` §7, and `RedactedContent`'s two
+   reasons). */
+const REDACTED_ACTOR_NAME = "Deleted account";
+
+/* THE HIDE ROW NAMES ITS PERSON, AND A REDACTED ONE HAS NO NAME TO PUT THERE
+   (jakob 2026-09-11). Every menu that offers hiding spells the handle —
+   `Hide @ada`, the word a reader scans for — and on a deleted author's post,
+   comment or profile there is no handle left to spell; the stored form is a
+   uniqueness device, so printing anything there would invent a handle the
+   reader could try to reach.
+
+   THE ROW ITSELF STAYS. Hiding is a read-side comfort about an ACTOR, and the
+   actor is still there, still signing, still ranking into the reader's feed —
+   so the act is exactly as useful as it was and only its wording gives way:
+   `Hide this account`, the system saying what the tap does when it cannot say
+   whose.
+
+   IT IS COMPOSED HERE, beside the name it stands in for, because every menu
+   that carries the row builds its label from an actor and a fallback spelled
+   per menu is a fallback that drifts — the same reason `redacted` itself is
+   assigned on this master. Menus take their label from here; no board and no
+   client writes the words twice. */
+const HIDE_ACTOR_LABEL = (handle, redacted = false) => redacted || !handle ? "Hide this account" : `Hide ${handle}`;
 function MonogramAvatar({
   name,
   size = "sm",
-  src
+  src,
+  redacted = false
 }) {
   const [failed, setFailed] = React.useState(false);
-  const initial = (name ?? "").trim().charAt(0).toUpperCase() || "?";
+  const initial = redacted ? null : (name ?? "").trim().charAt(0).toUpperCase() || "?";
   const box = typeof size === "number" ? {
     height: `${size}px`,
     width: `${size}px`,
@@ -2291,11 +2486,11 @@ function MonogramAvatar({
       justifyContent: "center",
       overflow: "hidden",
       borderRadius: "var(--radius-full)",
-      background: "var(--secondary-container)",
+      background: redacted ? "var(--surface-container-high)" : "var(--secondary-container)",
       color: "var(--on-secondary-container)",
       fontWeight: 500
     }
-  }, src && !failed ? /*#__PURE__*/React.createElement("img", {
+  }, src && !failed && !redacted ? /*#__PURE__*/React.createElement("img", {
     src: src,
     alt: "",
     onError: () => setFailed(true),
@@ -2312,9 +2507,10 @@ function ActorChip({
   displayName,
   href,
   onClick,
-  avatarSrc
+  avatarSrc,
+  redacted = false
 }) {
-  const name = displayName && displayName.trim() ? displayName : handle;
+  const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
   return /*#__PURE__*/React.createElement("a", {
     href: href ?? `/u/${handle}`,
     onClick: onClick,
@@ -2330,19 +2526,23 @@ function ActorChip({
     }
   }, /*#__PURE__*/React.createElement(MonogramAvatar, {
     name: name,
-    src: avatarSrc
+    src: avatarSrc,
+    redacted: redacted
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-label-large)",
-      fontWeight: "var(--text-label-large--font-weight)"
+      fontWeight: "var(--text-label-large--font-weight)",
+      color: redacted ? "var(--text-secondary)" : undefined
     }
-  }, name), /*#__PURE__*/React.createElement("span", {
+  }, name), !redacted && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-label-medium)",
       color: "var(--text-secondary)"
     }
   }, "@", handle));
 }
+__ds_scope.REDACTED_ACTOR_NAME = REDACTED_ACTOR_NAME;
+__ds_scope.HIDE_ACTOR_LABEL = HIDE_ACTOR_LABEL;
 __ds_scope.MonogramAvatar = MonogramAvatar;
 __ds_scope.ActorChip = ActorChip;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/people/ActorChip.jsx", error: String((e && e.message) || e) }); }
@@ -2422,14 +2622,14 @@ try { (() => {
 /* The stance readout — the numbers and the faces (design.md §8.2, §8.3, §8.4).
 
    TWO DIFFERENT NUMBERS, NEVER MERGED INTO ONE LINE:
-     · "Current stance" sits ABOVE the readout — the bundle as it stands.
+     · "Current opinion" sits ABOVE the readout — the bundle as it stands.
      · The FACE is the lossy readout of the EDGE BEING AUTHORED — this pick, not
        the bundle it joins. Conflating the two would make the face mean something
        different depending on history, which is exactly what a readout must not do.
        The EXACT PAIR rides the same line in a `cg-exact` span: the face carries
        the feel by default and the numbers paint only in geek mode (readme §13,
        the geek-mode rule). Both are always drawn, so the markup is one markup.
-     · "Resulting stance" sits BELOW the field — the bundle after the pick.
+     · "Resulting opinion" sits BELOW the field — the bundle after the pick.
 
    DIVERGENCE FROM THE SOURCE: the anchor's WORDS ARE NO LONGER DRAWN. The source
    renders face + words + pair — three encodings of one value, which is two too
@@ -4216,8 +4416,23 @@ try { (() => {
    The live region is mounted whether or not it has anything to say — assistive
    technology only announces changes to a region it was already watching. */
 
+/* ONE ACTION, AND ONLY WHERE THE ACT IS WORTH REVERSING (`action`, the
+   review-fix round). Material's snackbar takes a single action and this one
+   takes the same: `Undo` on hiding someone, a read-side comfort a reader may
+   have meant for one post rather than for a person. It is a WORD, not a button
+   body — a pill's ground inside a surface that is itself a lift off the page
+   would be a second surface arguing with the first — and it takes
+   `--action-on-snackbar`, since `primary` on the inverse ground is the one
+   place the brand colour stops being legible. It rides the message's own line:
+   a snackbar that grows a second row is a dialog nobody asked for.
+
+   NOT EVERY SNACKBAR GETS ONE, and the absence is a decision each time. The
+   canceled-deletion board records the case where a way back is worse than
+   none. */
 function Snackbar({
   message,
+  action,
+  onAction,
   onDismiss,
   durationMs = 4000,
   inline = false,
@@ -4266,9 +4481,35 @@ function Snackbar({
       letterSpacing: "var(--text-body-medium--letter-spacing)",
       fontWeight: "var(--text-body-medium--font-weight)",
       textAlign: "left",
-      textWrap: "pretty"
+      textWrap: "pretty",
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-4)"
     }
-  }, message));
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      minWidth: 0
+    }
+  }, message), action && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onAction,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      flex: "none",
+      border: 0,
+      background: "none",
+      padding: 0,
+      cursor: "pointer",
+      color: "var(--action-on-snackbar)",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      whiteSpace: "nowrap",
+      borderRadius: "var(--radius-extra-small)"
+    }
+  }, action)));
 }
 __ds_scope.Snackbar = Snackbar;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/Snackbar.jsx", error: String((e && e.message) || e) }); }
@@ -5795,6 +6036,13 @@ const { Icon, BottomSheet, SheetItem } = __ds_scope;
    · The trigger is `more_vert` at 24px on `onSurfaceVariant`, in the card's
      header beside the timestamp \u2014 never in the affordance row, which is for the
      things a reader actually reaches for.
+   \u00b7 TWO PLACEMENTS, AND THE DIFFERENCE IS THE GUTTER. `placement="header"` is
+     the default: a 48px box pulled back by -12px so it keeps the 24px line it
+     rides on \u2014 which is what a card header and a `PageHeader` action are.
+     `placement="row"` is the dot standing in a ROW OF CONTROLS, where the band
+     law sent every profile's \u22ee: there is no gutter to pull into, so it draws
+     40px of ink beside the row's buttons and keeps the 48px target through
+     `cg-hit` \u2014 the same trade `BandIcon` and the small button make.
    · The sheet is `surfaceContainerHigh` at the medium rung. On Android this is a
      bottom sheet (design.md \u00a76 lists them in the scaffolding); on web it is an
      anchored menu, which is the same inventory in the platform's own idiom.
@@ -5808,13 +6056,19 @@ const { Icon, BottomSheet, SheetItem } = __ds_scope;
    · Escape closes it, a press outside closes it, and nothing behind it is inert \u2014
      an overflow menu is not a decision the reader has to resolve.
    · Nothing in here takes `error` colouring. A destructive item is drawn like the
-     rest; the confirmation it opens is where the weight belongs. */
+     rest; the confirmation it opens is where the weight belongs.
+   · A ROW THAT NAMES AN ACTOR TAKES ITS WORDS FROM THE ACTOR'S MASTER. The hide
+     row spells a handle — `Hide @ada` — and a redacted author has none, so its
+     label comes from `ActorChip`'s `HIDE_ACTOR_LABEL` and reads `Hide this
+     account` there. The row stands either way: hiding is about an actor, and a
+     redacted actor still ranks into the reader's feed. */
 
 function OverflowMenu({
   items = [],
   ariaLabel = "More",
   align = "right",
-  presentation = "sheet"
+  presentation = "sheet",
+  placement = "header"
 }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
@@ -5839,12 +6093,12 @@ function OverflowMenu({
     "aria-expanded": open,
     "aria-haspopup": "menu",
     onClick: () => setOpen(shown => !shown),
-    className: "cg-state cg-focus",
+    className: placement === "row" ? "cg-state cg-focus cg-hit" : "cg-state cg-focus",
     style: {
       display: "flex",
-      height: "var(--touch-target-min)",
-      width: "var(--touch-target-min)",
-      margin: "-12px",
+      height: placement === "row" ? "40px" : "var(--touch-target-min)",
+      width: placement === "row" ? "40px" : "var(--touch-target-min)",
+      margin: placement === "row" ? 0 : "-12px",
       alignItems: "center",
       justifyContent: "center",
       border: 0,
@@ -6548,13 +6802,16 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
      multiples. SPACE IS RESERVED BEFORE LOAD SO CONTENT NEVER JUMPS." That is the
      load-bearing rule and the reason this exists ahead of the feature: a layout
      designed without reserved space is a layout that will jump.
-   · A POST FITS THE SCREEN. The card — author row, media, text, affordances —
-     must sit inside the phone's height minus the top safe area and the bottom
-     bar, or the reader never sees a post whole and has to scroll to reach the
-     affordances. Media is the only part that can flex, so the cap lands here:
-     `--media-max-height`, which budgets for the WORST-CASE chrome rather than the
-     average — see tokens/spacing.css. A capped tile is not cropped: the frame is
-     fitted inside whatever height is left.
+   · A TILE STANDS AT ITS TRUE SHAPE, FULL WIDTH (jakob 2026-09-11). Nothing
+     bounds its height but the crop vocabulary's 4:5, and that is a SHAPE, not a
+     ceiling: a wide tile is 219px on a 390px phone, a square one 390, a tall one
+     487. A tile shrunk to fit a card inside the screen shows every reader less
+     of the picture than its author shaped — on every phone, forever — which is
+     the more expensive loss.
+   · WHICH SCOPES "A POST FITS THE SCREEN" TO WIDE AND SQUARE. A card at those
+     shapes sits inside the phone whole, affordance row included, and the feed
+     scrolls past it. A VERTICAL post runs past the fold and the reader scrolls
+     to reach the affordances; that is ruled acceptable.
    · The tile sits at the medium (12px) rung inside a card, on
      `surfaceContainerHigh` — a step above the card's own fill, so an unloaded
      tile reads as a reserved region rather than a hole.
@@ -6563,7 +6820,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
      machine-guessed description.
    · THE RATIO VOCABULARY IS THE CROP RULING'S (readme §13, compose): tall 4:5,
      square 1:1, wide 1.91:1 — one shape for the whole post, chosen at the crop
-     step. `tall` is also the CAP: uncropped media (a comment's pictures never
+     step. `tall` is also the CLAMP: uncropped media (a comment's pictures never
      crop — jakob 2026-08-31) is not shown taller than 4:5; a 9:16 tile eats a
      phone screen whole, which is the opposite of a scrollable feed.
    · NOTHING IS LETTERBOXED (jakob 2026-09-03). A tile is filled, never fitted:
@@ -6710,7 +6967,10 @@ function MediaAttachment({
   label = "Media",
   radius = "var(--radius-medium)",
   fit = "cover",
-  maxHeight = "var(--media-max-height)",
+  /* No default: a card tile is its own shape at full width. A surface that
+     deliberately holds media to a smaller scale than the shape gives — a
+     comment's inset pictures — passes its own bound here. */
+  maxHeight,
   controls = "sound",
   resting = false,
   playing = true,
@@ -6823,8 +7083,8 @@ function MediaAttachment({
 
    Every frame renders at the ONE frame ratio: the explicit `ratio` prop, else
    the first item's, so uncropped sets (a comment's pictures) pass a fixed frame
-   (square) and fit each whole frame inside it — a pager whose height changed
-   per swipe would bounce the card under the reader's thumb. */
+   (square) and each display-crops to it — a pager whose height changed per
+   swipe would bounce the card under the reader's thumb. */
 function MediaGallery({
   items = [],
   ratio,
@@ -6922,7 +7182,7 @@ const { Icon } = __ds_scope;
    So `RedactedContent` replaces a node's ENTIRE content region, and it is the
    only shape it has. What remains is the skeleton: the structural record, its
    witness, and everything it does on L1 — author, timestamp, thread position,
-   standing, the stance you can still take on it. That is not a courtesy, it is
+   the opinion, the opinion you can still give on it. That is not a courtesy, it is
    the invariant: no record ever leaves the graph, and every redaction leaves a
    visible mark, so that no reader is left wondering whether something was quietly
    deleted.
@@ -7177,6 +7437,18 @@ const REASONS = {
   author: {
     line: "Removed by its author",
     detail: "The post's place in the thread, and every response, remain."
+  },
+  /* A WHOLE ACCOUNT, deleted by the person who had it (erasure §2, the
+     account-deletion round). The third mark, and it is the same mechanism at a
+     different scale: identity-level redaction empties the Registration
+     bundle's payloads, so a profile carries exactly the mark a post carries
+     when its payload goes. Naming the person's own choice is the ruling —
+     nothing that was here is pretended never to have existed, and a deleted
+     account must not read as a moderation verdict or as a dead link. Pass
+     `note` for the reading where the content sweep was opted into as well. */
+  account: {
+    line: "Deleted by the person whose account it was",
+    detail: "Their name and profile are gone. What they signed stays on the graph and still credits them."
   }
 };
 
@@ -7186,8 +7458,8 @@ const REASONS = {
  * record-granular — one illegal attachment takes the whole payload with it.
  *
  * What is left around it is the skeleton, and the skeleton is the point: the
- * author, the timestamp, the thread position, the standing, the stance a reader
- * can still take. No record leaves the graph, and no removal is silent.
+ * author, the timestamp, the thread position, the opinion, the opinion a reader
+ * can still give. No record leaves the graph, and no removal is silent.
  *
  * `when` is the redaction's own moment (the contract's `redactedAt`), never
  * the content's age, and it speaks the one age vocabulary every timestamp
@@ -7504,7 +7776,7 @@ const SR_ONLY = {
 /* THE FIGURE IS DRAWN WHATEVER THE READING MODE SAYS (jakob's ruling, the geek
    round's review). Geek mode governs the number PAIRS — the two-parameter
    readings the faces and the tag objects already stand in for — and nothing
-   else. A Post Score has no glyph that carries its magnitude, so hiding the
+   else. A Post score has no glyph that carries its magnitude, so hiding the
    digits would leave the `graph` mark saying only "there is a score", which is
    the black box §7 exists to refuse. */
 function ExplainableNumber({
@@ -7843,15 +8115,12 @@ const CLAMP = lines => ({
    become the reading. */
 const DESCRIPTION_CLAMP_LINES = 2;
 
-/* THE TEXT BODY'S CEILING — a text post stands about as tall as a media post,
-   never taller, so a feed of both keeps one rhythm. Derived from the tokens
-   rather than chosen, and against the picture the reader actually sees: a 4:5
-   crop wants 447.5px at the card's 358px content width, but `--media-max-height`
-   caps it first — on the 390×844 board, 844 less the 44px safe area, the 64px
-   bottom bar and the 360px worst-case chrome leaves 376px.
-   `--text-body-medium--line-height` is 1.25rem = 20px, so floor(376 / 20) = 18
-   lines. Past that the body folds and `More` opens it. The detail view is the
-   read surface and clamps nothing. */
+/* THE TEXT BODY'S CEILING IS THE SQUARE TILE. Eighteen lines at
+   `--text-body-medium--line-height` (1.25rem = 20px) is 360px of words, and at
+   the card's 358px content width a square crop stands 358 — so a text post
+   comes to rest at the neutral media shape, and never rises into the 4:5 wall
+   (447.5) the same card would allow a picture. Past it the body folds and
+   `More` opens it. The detail view is the read surface and clamps nothing. */
 const TEXT_BODY_CLAMP_LINES = 18;
 
 /* A static render cannot measure a paragraph, so the opener is offered on an
@@ -7893,6 +8162,8 @@ function PostCard({
   sensitive,
   topics = [],
   references = 0,
+  opinions = 0,
+  onOpenOpinions,
   menuItems = []
 }) {
   const detail = variant === "detail";
@@ -8087,7 +8358,28 @@ function PostCard({
     references: references,
     onOpen: detail ? onOpenReferences ?? (() => {}) : undefined,
     onOpenReferences: onOpenReferences
-  }), edited && /*#__PURE__*/React.createElement(EditedMarker, null), pending && /*#__PURE__*/React.createElement(PendingMarker, null), (showStance || score !== undefined || comments !== undefined || actions) && /*#__PURE__*/React.createElement("div", {
+  }), !redacted && detail && opinions > 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpenOpinions ?? (() => {}),
+    "aria-label": "Opinions on this post",
+    className: "cg-state cg-focus",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      width: "100%",
+      border: 0,
+      background: "none",
+      padding: 0,
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      color: "var(--text-secondary)",
+      textAlign: "left"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`)), edited && /*#__PURE__*/React.createElement(EditedMarker, null), pending && /*#__PURE__*/React.createElement(PendingMarker, null), (showStance || score !== undefined || comments !== undefined || actions) && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexWrap: "nowrap",
@@ -8269,7 +8561,20 @@ const { Icon, MonogramAvatar, PendingMarker, StanceValue } = __ds_scope;
    THE SECOND LINE IS ONE LINE, in every variant, ellipsized. A row in a list is
    scanned, not read: the moment one row can be two lines tall, the reader loses
    the vertical rhythm that lets them skim past nine of them to find the tenth.
-   Where the whole snippet matters, the row's destination is where it belongs. */
+   Where the whole snippet matters, the row's destination is where it belongs.
+
+   A ROW MAY CARRY ONE CONTROL OF ITS OWN (`action`, the review-fix round), and
+   it takes the TRAILING-MOST slot — the chevron's, free by definition, since a
+   chevron means "this opens another surface" and a row with its own control is
+   not spending its edge on saying so. It does not displace the trailing edge:
+   on the Saved list the age is when YOU saved the thing, which is the list's
+   whole order and what a reader is retracing, so the age keeps its place and
+   the control stands outboard of it. `SettingsRow` assigns the same slot the
+   same way — "a control of the row's own" is one of its four trailing variants.
+
+   A control inside a control is not markup, so with `action` the row splits
+   into the pressable part and the control beside it. Without one it stays the
+   single element every existing list already draws. */
 
 const VARIANTS = {
   /* The wallet's history. Its trailing edge is money, which is body-sized
@@ -8386,6 +8691,8 @@ function ContentRow({
   direction,
   chevron = true,
   inert = false,
+  unread = false,
+  action,
   onOpen
 }) {
   const shape = VARIANTS[variant] ?? VARIANTS.ledger;
@@ -8406,25 +8713,38 @@ function ContentRow({
       ...ellipsis
     }
   }, title);
-  return /*#__PURE__*/React.createElement(Tag, {
+  /* The row's own box, and the part of it that presses. With no `action` they
+     are the same element, exactly as every list has always drawn it; with one,
+     the box is a plain div and the press is the button inside it — the card's
+     padding moves onto the press so the state layer still covers what the
+     reader aimed at. */
+  const box = {
+    display: "flex",
+    alignItems: "center",
+    gap: "var(--space-3)",
+    width: "100%",
+    border: 0,
+    borderRadius: "var(--radius-medium)",
+    background: "var(--surface-card)",
+    padding: "var(--space-3)",
+    cursor: onOpen ? "pointer" : "default",
+    fontFamily: "var(--font-sans)",
+    color: "var(--on-surface)",
+    textAlign: "left",
+    boxSizing: "border-box"
+  };
+  const body = /*#__PURE__*/React.createElement(Tag, {
     type: inert ? undefined : "button",
     onClick: inert ? undefined : onOpen,
     className: inert ? undefined : "cg-state cg-focus",
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-3)",
-      width: "100%",
-      border: 0,
-      borderRadius: "var(--radius-medium)",
-      background: "var(--surface-card)",
-      padding: "var(--space-3)",
-      cursor: onOpen ? "pointer" : "default",
-      fontFamily: "var(--font-sans)",
-      color: "var(--on-surface)",
-      textAlign: "left",
-      boxSizing: "border-box"
-    }
+    style: action ? {
+      ...box,
+      width: "auto",
+      flex: 1,
+      minWidth: 0,
+      background: "none",
+      paddingRight: 0
+    } : box
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       position: "relative",
@@ -8486,7 +8806,7 @@ function ContentRow({
       color: "var(--text-secondary)",
       ...ellipsis
     }
-  }, second)), (trailing || pending) && /*#__PURE__*/React.createElement("span", {
+  }, second)), (trailing || pending || unread) && /*#__PURE__*/React.createElement("span", {
     style: {
       flex: "none",
       display: "flex",
@@ -8499,7 +8819,16 @@ function ContentRow({
       ...TYPE[shape.trailing],
       color: pending || !shape.loud ? "var(--text-secondary)" : "var(--on-surface)"
     }
-  }, trailing), pending && /*#__PURE__*/React.createElement(PendingMarker, null)), chevron && /*#__PURE__*/React.createElement("span", {
+  }, trailing), pending && /*#__PURE__*/React.createElement(PendingMarker, null), unread && /*#__PURE__*/React.createElement("span", {
+    role: "img",
+    "aria-label": "New",
+    style: {
+      width: "8px",
+      height: "8px",
+      borderRadius: "var(--radius-full)",
+      background: "var(--primary)"
+    }
+  })), chevron && !action && /*#__PURE__*/React.createElement("span", {
     style: {
       flex: "none",
       display: "inline-flex",
@@ -8510,6 +8839,21 @@ function ContentRow({
     name: "chevron_right",
     size: 18
   })));
+  if (!action) return body;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...box,
+      padding: 0,
+      paddingRight: "var(--space-3)",
+      cursor: "default",
+      background: "var(--surface-card)"
+    }
+  }, body, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: "none",
+      display: "inline-flex"
+    }
+  }, action));
 }
 __ds_scope.ContentRow = ContentRow;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/ContentRow.jsx", error: String((e && e.message) || e) }); }
@@ -8908,7 +9252,7 @@ const { Icon, QuietNote } = __ds_scope;
    sheet and a settings choice are visibly the same question asked twice.
 
    THE SECOND LINE SHOWS STATUS, NOT DESCRIPTION. "Last used 2 days ago" earns
-   its line; "lets you choose how you take a stance" restates the label. The
+   its line; "lets you choose how you give an opinion" restates the label. The
    exception is a switch, where the line has to say what turning it on does,
    because the label alone cannot.
 
@@ -9495,12 +9839,29 @@ const { Icon } = __ds_scope;
 
    This is a STATIC-RENDER-FRIENDLY control: `query` is the shown text and a
    caret bar stands in for focus on prototype boards; the product binds a real
-   input in its place. */
+   input in its place.
+
+   `error` IS THE FIELD-ERROR STATE IN THE PILL'S IDIOM (the caps-affordance
+   round). The one drawn field error is an `--error` outline with the refusal in
+   words below, and the tag picker's name field is the one place in the product
+   where that field is a search bar rather than a `TextField`: a name outside
+   the identifier atom denotes no Type and is refused where it is typed. The
+   pill has no border of its own at rest, so the state adds the 1px ring inside
+   its own box and nothing moves; there is no label to recolour, and the words
+   belong to the surface — the picker draws them in the line that otherwise
+   carries the naming rule. The bound input takes `aria-invalid` and names the
+   refusal in `aria-describedby`, the way every other errored field does; the
+   static board draws the ring and the words and nothing else, which is the same
+   bargain the caret already makes here. The ring is an inset `outline` rather than a border,
+   because a border on a control whose height is fixed would push its own content
+   over by a pixel the moment the state arrived. */
 
 function SearchBar({
   query = "",
   placeholder = "Search",
-  onChange
+  onChange,
+  error = false,
+  describedBy
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -9515,6 +9876,8 @@ function SearchBar({
       padding: "0 16px",
       borderRadius: "var(--radius-full)",
       background: "var(--surface-container-high)",
+      outline: error ? "1px solid var(--error)" : undefined,
+      outlineOffset: error ? "-1px" : undefined,
       color: query ? "var(--on-surface)" : "var(--text-secondary)",
       boxSizing: "border-box"
     }
@@ -9532,6 +9895,8 @@ function SearchBar({
     value: query,
     placeholder: placeholder,
     onChange: event => onChange(event.target.value),
+    "aria-invalid": error ? "true" : undefined,
+    "aria-describedby": describedBy,
     className: "cg-focus",
     style: {
       flex: 1,
@@ -10081,9 +10446,10 @@ const { Icon } = __ds_scope;
    non-shrinking block: the borrowed-view band, the APK line, a search field.
 
    THE RIGHT SIDE WORKS. A full-width band spent on identity alone is wasted
-   space (ruled 2026-08-28), so `trailing` puts the tab's one working control —
-   the feed's filter trigger — on the band's right edge. The whole band scrolls
-   away with the top region and returns with it; the control rides along.
+   space (ruled 2026-08-28), so the right edge carries controls: the screen's
+   own one through `trailing` — the feed's filter trigger, the profile's gear —
+   between the two the shell owns on every root. The whole band scrolls away
+   with the top region and returns with it; the controls ride along.
    THE BAND RIDES THE BAR THE TOP REGION ALREADY COLLAPSES — it is not a
    second collapsing block. Collapse band and bar as one taller block instead
    and the list re-clamps under it: the leftover scroll reads back as "at the
@@ -10092,19 +10458,93 @@ const { Icon } = __ds_scope;
 
    CHATS RIDE THE BAND (jakob 2026-09-01): messaging must be reachable from any
    major screen, so every tab root's band carries the chats affordance built in.
-   It sits LEFT of the screen's own trailing control, so the ruled corner
-   occupants (the feed's filter trigger, the profile's gear) keep their edge.
    `chats={false}` opts a band out where messaging cannot apply.
 
-   That line is the end state, not a shipping claim. The apps draw the
-   affordance the release a chat surface exists to receive the tap — until
-   then `graph.json` routes the tap to a gap and the button stays out, which
-   is the staging rule in readme §2: the canvas draws the whole app, each
-   release builds its slice, and nothing ships a control that leads nowhere. */
+   THE TRAILING CLUSTER IS [the screen's own control] · chats · bell (the band
+   law, jakob 2026-09-11). The screen's own control sits INBOARD: the two the
+   shell owns are the same two icons in the same two places on every root, so a
+   reader aiming at chats or the bell aims at the same corner whatever tab they
+   are on — and the one control that changes per screen is the one that moves
+   in from the edge. No band carries a ⋮ any more: a profile's overflow belongs
+   in the row of controls that page already has, not in the shell's corner.
 
+   THE BELL IS THE BAND'S RIGHT EDGE (jakob 2026-09-11): notifications are the
+   product's second surfacing channel, so the bell is reachable from every
+   bottom-bar root and sits right-most on all of them — outboard of the
+   screen's own control, which is what makes it the same corner everywhere
+   instead of a different corner per tab. `unread` lights its quiet dot: a dot
+   and never a count, because the honest thing the shell knows is that
+   something arrived, and a number is an errand. It clears when the list opens
+   (`docs/implementation/notifications.md`). `bell={false}` opts out where
+   nothing can be addressed to the reader — a guest has no account, so a guest
+   has no list.
+
+   Those two lines are the end state, not a shipping claim. The apps draw an
+   affordance the release a surface exists to receive the tap — until then
+   `graph.json` routes the tap to a gap and the control stays out, which is
+   the staging rule in readme §2: the canvas draws the whole app, each release
+   builds its slice, and nothing ships a control that leads nowhere. */
+
+/* The band's one icon-control shape, assigned once: 40px of ink, no
+   background, the secondary text colour — and the full 48px target through
+   `cg-hit`, the way every dense control in this system keeps the promise
+   (Button's `sm`, Chip, the card's affordances). 48px of DRAWN box is what
+   crowded the band: three of them plus the mark and the wordmark left the
+   screen's own control too little room, and the feed's filter trigger — the
+   one control whose width carries words — ellipsised on the boards that
+   narrow the feed. The target never shrank; only the box did. */
+function BandIcon({
+  name,
+  label,
+  size = 24,
+  dot = false
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": label,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      display: "grid",
+      placeItems: "center",
+      height: "40px",
+      width: "40px",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      color: "var(--text-secondary)",
+      cursor: "pointer",
+      padding: 0,
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "relative",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: name,
+    size: size
+  }), dot && /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      top: "-1px",
+      right: "-2px",
+      width: "8px",
+      height: "8px",
+      borderRadius: "var(--radius-full)",
+      background: "var(--primary)",
+      border: "2px solid var(--surface)",
+      boxSizing: "content-box"
+    }
+  })));
+}
 function CograBand({
   trailing,
   chats = true,
+  bell = true,
+  unread = false,
   children
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -10142,28 +10582,18 @@ function CograBand({
       alignItems: "center",
       minWidth: 0
     }
-  }, chats && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": "Chats",
-    className: "cg-state cg-focus",
-    style: {
-      display: "grid",
-      placeItems: "center",
-      height: "var(--touch-target-min)",
-      width: "var(--touch-target-min)",
-      border: 0,
-      background: "none",
-      borderRadius: "var(--radius-full)",
-      color: "var(--text-secondary)",
-      cursor: "pointer",
-      padding: 0,
-      flex: "none"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
+  }, trailing, chats && /*#__PURE__*/React.createElement(BandIcon, {
     name: "forum",
+    label: "Chats",
     size: 22
-  })), trailing)), children);
+  }), bell && /*#__PURE__*/React.createElement(BandIcon, {
+    name: "notifications",
+    label: unread ? "Notifications — something new" : "Notifications",
+    size: 22,
+    dot: unread
+  }))), children);
 }
+__ds_scope.BandIcon = BandIcon;
 __ds_scope.CograBand = CograBand;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/CograBand.jsx", error: String((e && e.message) || e) }); }
 
@@ -10244,6 +10674,86 @@ function CollapsingTop({
 }
 __ds_scope.CollapsingTop = CollapsingTop;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/CollapsingTop.jsx", error: String((e && e.message) || e) }); }
+
+// components/navigation/DeletionBand.jsx
+try { (() => {
+const { InlineAction } = __ds_scope;
+/* THE DELETION BAND (readme §13, the account-deletion round; jakob's ruling
+   2026-09-11). A confirmed account deletion runs at a deadline seven days out
+   and is reversible until then (`docs/instances/erasure.md` §5), and the band
+   is how the product carries that fact around: it says when, and it carries the
+   way back, on every logged-in surface for the whole window.
+
+   EVERY SURFACE, WHICH IS WHY IT IS A BAND AND NOT A SCREEN. The reader may
+   have confirmed from a mail client on another device, days ago; a state that
+   only a settings page confesses is a state most readers would meet at the
+   deadline. The band rides the non-shrinking top block directly under whatever
+   header the surface has — inside `CograBand`'s children on a tab root, under
+   `PageHeader` on an inner one — so no surface can be without it.
+
+   A SIBLING OF `BorrowedViewBand`, NOT THE SAME BAND. The two share a slot and
+   a shape, and nothing else: the borrowed view names a vantage point and the
+   reader may ignore it forever, while this one is a countdown on the reader's
+   own account with an act at its end. So this one is filled and its line is
+   `on-surface` where that one is transparent and secondary — the two dials the
+   system has for presence, turned once, without reaching for a colour.
+
+   IT IS NOT `--error`, AND THAT IS §4 RATHER THAN RESTRAINT. `error` is for
+   failure; this is a thing the reader ASKED FOR, proceeding exactly as asked.
+   Colouring a chosen act like a fault would be the surface arguing with the
+   decision — the same reason `SettingsRow`'s Sign out takes no error colour,
+   and the same reason `EmptyState` refuses it for an absence. The band wears
+   `surface-bar`, the shell's own chrome fill, because that is what it is:
+   shell, saying what state the account is in.
+
+   THE COUNT IS SPELLED OUT — `in 6 days`, not the ages ladder's `6d`. The
+   ladder is a vocabulary for how long ago something happened, read beside
+   content in a list where many ages compete for room; this is one sentence in
+   a band with room to spare, and `6d` in a forward-looking sentence is the one
+   place the ladder's compression can genuinely mislead. AWAITING BLESSING:
+   future moments have no ruled vocabulary yet (backlog 54.1).
+
+   `content` SWITCHES THE LINE, not the band. Content-level redaction is the
+   request's opt-in, and a reader who chose it is waiting on something larger
+   than a reader who did not — so the line names what is going. Nothing else
+   about the band changes: two states of one sentence, never two bands. */
+
+function DeletionBand({
+  days = 7,
+  content = false,
+  line,
+  actionLabel = "Cancel",
+  onCancel
+}) {
+  const unit = days === 1 ? "day" : "days";
+  const text = line ?? (content ? `Your account and everything you posted are deleted in ${days} ${unit}.` : `Your account is deleted in ${days} ${unit}.`);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      padding: "var(--space-2) var(--screen-gutter)",
+      background: "var(--surface-bar)",
+      borderBottom: "1px solid var(--border-hairline)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      letterSpacing: "var(--text-body-small--letter-spacing)",
+      color: "var(--on-surface)"
+    }
+  }, text), /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    onClick: onCancel,
+    style: {
+      flex: "none"
+    }
+  }, actionLabel));
+}
+__ds_scope.DeletionBand = DeletionBand;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/navigation/DeletionBand.jsx", error: String((e && e.message) || e) }); }
 
 // components/navigation/SegmentedFilter.jsx
 try { (() => {
@@ -10839,7 +11349,7 @@ __ds_scope.TabBar = TabBar;
 
 // components/people/ProfileHeader.jsx
 try { (() => {
-const { MonogramAvatar, Button, Icon, StanceControl } = __ds_scope;
+const { MonogramAvatar, REDACTED_ACTOR_NAME, Button, Icon, StanceControl } = __ds_scope;
 /* The profile header (backlog item 5) — specified in design.md §6, never built.
 
    PEOPLE FIRST, AND A PERSON IS A TARGET. A profile is the one surface whose
@@ -10847,8 +11357,24 @@ const { MonogramAvatar, Button, Icon, StanceControl } = __ds_scope;
    product is stances on things, and a person is the most consequential thing to
    have one on. On a profile it wears the wide anchor — the row's one action,
    stretched to the row (jakob 2026-09-01, "the stance icon looks lost" at
-   anchor size). Everything rarer — mention, share — lives in the screen's
-   top-bar overflow, never down here.
+   anchor size).
+
+   THE ⋮ CLOSES THE ROW (the band law, jakob 2026-09-11). No band carries an
+   overflow any more and a detail surface's header gives one back to the page
+   it belongs to, so this row ends with the page's own dot: on your own profile
+   after Edit profile and Invites, on someone else's after Message. A profile's
+   rarer acts — mention, share, save, hide — are the page's, not the shell's,
+   and they now sit a thumb's width from the things they act beside.
+
+   MESSAGE IS SIZED BY ITS WORD, NOT BY THE ROW (jakob: "the message button
+   already is so wide.. with quite a lot of padding"). Splitting the row in
+   half gave one word a button the length of a paragraph; the room it gives
+   back is what the ⋮ costs. THE ROW IS STILL MODE-INVARIANT — the rule
+   `ProfileOtherHeld` was drawn to record. Message takes its content width in
+   both reading modes and the anchor takes the remainder, so the exact pair a
+   geek reader turns on paints INSIDE the anchor's own space and nothing in the
+   row moves. Sizing Message by content makes that stronger than `flex: 1`
+   did: a width derived from one word cannot depend on what the anchor says.
 
    THE SHAPE IS THE COMPACT ONE (jakob 2026-09-01): avatar left, the name and
    the figures in the column beside it — the layout every social profile has
@@ -10875,7 +11401,19 @@ const { MonogramAvatar, Button, Icon, StanceControl } = __ds_scope;
    person's record.
 
    It is not a card. It is the top of a screen, on the page ground — a card would
-   imply a second card beside it. */
+   imply a second card beside it.
+
+   A DELETED ACCOUNT KEEPS THIS WHOLE HEADER (`redacted`, the redacted-actor
+   law, jakob 2026-09-11). The shells never go: an actor whose identity payloads
+   were removed is still an actor, still the author of everything it signed,
+   still carrying the standing others vouched into it (`erasure.md` §2–3) — so
+   the header it gets is this one, with the counts it really has, and only the
+   personal data placeholdered. The avatar becomes the reserved disc, the name
+   slot takes `ActorChip`'s one word in the system's own voice, the handle is
+   dropped rather than invented, and `bio` takes the redaction mark in the place
+   the bio's words were. Drawing a stripped-down page instead would be the
+   product pretending less was there than there was, which is the one thing the
+   erasure ethic forbids. */
 
 function Figure({
   value,
@@ -10922,9 +11460,11 @@ function ProfileHeader({
   onInvites,
   onAvatarChange,
   onCounts,
+  menu,
+  redacted = false,
   showHandle = true
 }) {
-  const name = displayName && displayName.trim() ? displayName : handle;
+  const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
   const hasFigures = posts !== undefined || stancesOn !== undefined || stancesTaken !== undefined;
   const figures = /*#__PURE__*/React.createElement(React.Fragment, null, posts !== undefined && /*#__PURE__*/React.createElement(Figure, {
     value: posts,
@@ -10957,7 +11497,8 @@ function ProfileHeader({
   }, /*#__PURE__*/React.createElement(MonogramAvatar, {
     name: name,
     size: 80,
-    src: avatarSrc
+    src: avatarSrc,
+    redacted: redacted
   }), own && onAvatarChange && /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-label": "Change your picture",
@@ -10995,9 +11536,10 @@ function ProfileHeader({
       fontSize: "var(--text-title-large)",
       lineHeight: "var(--text-title-large--line-height)",
       fontWeight: "var(--text-title-large--font-weight)",
-      overflowWrap: "anywhere"
+      overflowWrap: "anywhere",
+      color: redacted ? "var(--text-secondary)" : undefined
     }
-  }, name), showHandle && /*#__PURE__*/React.createElement("span", {
+  }, name), showHandle && !redacted && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-body-small)",
       lineHeight: "var(--text-body-small--line-height)",
@@ -11005,7 +11547,7 @@ function ProfileHeader({
     }
   }, "@", handle), hasFigures && (onCounts ? /*#__PURE__*/React.createElement("button", {
     type: "button",
-    "aria-label": own ? "Your opinions, both directions" : "Opinions on and by @" + handle,
+    "aria-label": own ? "Your opinions, both directions" : redacted ? "Opinions on and by this account" : "Opinions on and by @" + handle,
     onClick: onCounts,
     className: "cg-state cg-focus",
     style: {
@@ -11029,13 +11571,13 @@ function ProfileHeader({
       gap: "var(--space-5)",
       marginTop: 4
     }
-  }, figures)))), bio && /*#__PURE__*/React.createElement("p", {
+  }, figures)))), bio && (typeof bio === "string" ? /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
       fontSize: "var(--text-body-medium)",
       lineHeight: "var(--text-body-medium--line-height)"
     }
-  }, bio), website && /*#__PURE__*/React.createElement("span", {
+  }, bio) : bio), website && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-body-medium)",
       lineHeight: "var(--text-body-medium--line-height)",
@@ -11069,7 +11611,7 @@ function ProfileHeader({
     }
   }, /*#__PURE__*/React.createElement(StanceControl, {
     wide: true,
-    targetLabel: "@" + handle,
+    targetLabel: redacted ? "this account" : "@" + handle,
     bundle: bundle ?? undefined,
     signedIn: signedIn,
     taught: taught,
@@ -11078,9 +11620,9 @@ function ProfileHeader({
     variant: "outline",
     onClick: onMessage,
     style: {
-      flex: 1
+      flex: "none"
     }
-  }, "Message"))));
+  }, "Message")), menu));
 }
 __ds_scope.ProfileHeader = ProfileHeader;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/people/ProfileHeader.jsx", error: String((e && e.message) || e) }); }
@@ -11749,6 +12291,10 @@ __ds_ns.RecoveryCode = __ds_scope.RecoveryCode;
 
 __ds_ns.SearchBar = __ds_scope.SearchBar;
 
+__ds_ns.FieldCount = __ds_scope.FieldCount;
+
+__ds_ns.FieldSupport = __ds_scope.FieldSupport;
+
 __ds_ns.FieldLabel = __ds_scope.FieldLabel;
 
 __ds_ns.TextField = __ds_scope.TextField;
@@ -11797,9 +12343,13 @@ __ds_ns.ALL_SLOTS = __ds_scope.ALL_SLOTS;
 
 __ds_ns.BottomNav = __ds_scope.BottomNav;
 
+__ds_ns.BandIcon = __ds_scope.BandIcon;
+
 __ds_ns.CograBand = __ds_scope.CograBand;
 
 __ds_ns.CollapsingTop = __ds_scope.CollapsingTop;
+
+__ds_ns.DeletionBand = __ds_scope.DeletionBand;
 
 __ds_ns.FEED_KINDS = __ds_scope.FEED_KINDS;
 
@@ -11832,6 +12382,10 @@ __ds_ns.PageHeader = __ds_scope.PageHeader;
 __ds_ns.SegmentedFilter = __ds_scope.SegmentedFilter;
 
 __ds_ns.TabBar = __ds_scope.TabBar;
+
+__ds_ns.REDACTED_ACTOR_NAME = __ds_scope.REDACTED_ACTOR_NAME;
+
+__ds_ns.HIDE_ACTOR_LABEL = __ds_scope.HIDE_ACTOR_LABEL;
 
 __ds_ns.MonogramAvatar = __ds_scope.MonogramAvatar;
 

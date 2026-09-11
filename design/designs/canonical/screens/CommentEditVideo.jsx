@@ -36,7 +36,7 @@ export function Screen() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <QuietNote>Your comment on "The long way home".</QuietNote>
 
-        <TextField label="Words" rows={2} value="Eighteen seconds of the same headland, if the light comes through at all." />
+        <TextField label="Words" rows={2} cap={2000} value="Eighteen seconds of the same headland, if the light comes through at all." />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Video</FieldLabel>

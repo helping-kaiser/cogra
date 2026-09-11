@@ -44,7 +44,7 @@ export const flowBadgeCss = `[data-flow] { position: relative; }
 [data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }`;
 
 // GEEK MODE, the second chip (readme §13, backlog item 53): the exact values of
-// the signal numbers — stance, tag and citation pairs, the Post Score, the
+// the signal numbers — stance, tag and citation pairs, the Post score, the
 // viewer-relative rank — are off by default and the glyph carries the reading.
 // Every board draws BOTH; only this rule decides which one is painted, so the
 // markup a flow pin anchors on never moves with the mode.

@@ -52,7 +52,7 @@ export function Screen() {
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 
       {/* The wash sits over the shell; the parked pad (fixed, above it) stays sharp. */}
-      <div style={{ position: "absolute", inset: 0, background: "var(--scrim-wash, rgba(0, 0, 0, 0.5))" }} />
+      <div style={{ position: "absolute", inset: 0, background: "var(--scrim-dialog)" }} />
     </>
   );
 }

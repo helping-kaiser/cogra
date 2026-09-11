@@ -15,7 +15,7 @@ function Demo(){return (
     <span className="lbl">FactRow · seal — strong label, quiet value, rules enclosing the block</span>
     <div className="rows">
       <FactRow label="License" value="Public domain — your default" action="Change"/>
-      <FactRow label="Where you stand on it" value={<StanceReadout pair={{pDirected:0.1,pInterest:0.1}}/>} action="Adjust"/>
+      <FactRow label="Your opinion" value={<StanceReadout pair={{pDirected:0.1,pInterest:0.1}}/>} action="Adjust"/>
       <FactRow label="Sensitive" value="Not marked" action="Mark" last/>
     </div>
 
@@ -50,11 +50,10 @@ function Demo(){return (
       <ContentRow variant="door" title="Campaigns" second="1 open · start a new one" glyph="campaign" onOpen={()=>{}}/>
     </div>
 
-    <span className="lbl">ContentRow · chronicle — body-sized second line, a time, no chevron, inert</span>
+    <span className="lbl">ContentRow · chronicle — a face or a glyph, body-sized second line, a time, no chevron, inert</span>
     <div className="list">
-      <ContentRow variant="chronicle" title="Signed a post" titleAside="3 acts"
-        second="Sunday at the tide market — four pictures, two topics, one stance."
-        glyph="history" trailing="4d" chevron={false} inert/>
+      <ContentRow variant="chronicle" title="Gave an opinion" titleAside="on @mira"
+        face={{pDirected:0.4,pInterest:0.5}} trailing="5d" chevron={false} inert/>
       <ContentRow variant="chronicle" title="Changed the payout address"
         second="Waiting on the rail." glyph="wallet" trailing="2d" pending chevron={false} inert/>
     </div>
