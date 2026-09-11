@@ -21,7 +21,12 @@
 export interface MediaAttachmentProps {
   /** Omit to render the reserved region with its label — the honest placeholder. */
   src?: string;
-  /** First frame for a video, shown before playback starts. */
+  /**
+   * The still a clip wears where it is not running. A cover where the author
+   * chose one; a vertical clip's default is none, and then it is the clip's
+   * FIRST FRAME, cropped exactly as the clip is. Absent where the clip yields
+   * no frame at all — the reserved region's `label` stands instead.
+   */
   poster?: string;
   /** Authored, optional, never invented. Without it the tile is aria-hidden. */
   alt?: string;

@@ -673,7 +673,7 @@
     },
     {
       "name": "publish-a-video",
-      "description": "A video takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
+      "description": "A horizontal or square clip takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
       "status": "resolved",
       "startsOn": [
         "ComposeLanded",
@@ -706,15 +706,15 @@
       ],
       "steps": [
         "start · «nav · New post» on 27 boards → ComposePick",
-        "ComposePick · 3 «Next» → ComposeCover — a video — its face",
-        "ComposeCover · 6 «Next» → ComposeDetails",
-        "ComposeDetails · 10 «Next» → ComposeSeal",
+        "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
+        "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
+        "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
       ],
       "boards": [
         "ComposePick",
         "ComposeCover",
-        "ComposeDetails",
+        "ComposeDetailsVideo",
         "ComposeSeal",
         "ComposeLanded",
         "Explore",
@@ -746,6 +746,95 @@
       ]
     },
     {
+      "name": "publish-a-vertical-video",
+      "description": "A vertical clip meets no cover step at all: it plays the moment it is on screen, so its face is its first frame and the wizard runs pick to details, where an optional door offers a cover to anyone who wants one.",
+      "status": "resolved",
+      "startsOn": [
+        "ComposeLanded",
+        "Explore",
+        "ExploreNone",
+        "ExploreSearch",
+        "Feed",
+        "FeedCover",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "FeedNothing",
+        "KeyElsewhere",
+        "PostDetail",
+        "PostDetailVideo",
+        "Profile",
+        "ProfileComments",
+        "ProfileNotFound",
+        "ProfileOther",
+        "ProfilePosts",
+        "ProfileStances",
+        "ProfileUnreachable",
+        "Reel",
+        "Removed",
+        "VouchBack",
+        "Wallet",
+        "WalletEmpty",
+        "WalletKeyAbsent",
+        "WalletSetup"
+      ],
+      "steps": [
+        "start · «nav · New post» on 27 boards → ComposePick",
+        "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
+        "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
+        "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
+      ],
+      "boards": [
+        "ComposePick",
+        "ComposeDetailsVideo",
+        "ComposeSeal",
+        "ComposeLanded",
+        "Explore",
+        "ExploreNone",
+        "ExploreSearch",
+        "Feed",
+        "FeedCover",
+        "FeedFar",
+        "FeedGallery",
+        "FeedNarrowed",
+        "FeedNothing",
+        "KeyElsewhere",
+        "PostDetail",
+        "PostDetailVideo",
+        "Profile",
+        "ProfileComments",
+        "ProfileNotFound",
+        "ProfileOther",
+        "ProfilePosts",
+        "ProfileStances",
+        "ProfileUnreachable",
+        "Reel",
+        "Removed",
+        "VouchBack",
+        "Wallet",
+        "WalletEmpty",
+        "WalletKeyAbsent",
+        "WalletSetup"
+      ]
+    },
+    {
+      "name": "give-a-vertical-clip-a-cover",
+      "description": "The door on details opens the step the clip skipped; the face chosen there comes back to the stage that asked, and the post signs from it.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDetailsVideo · 4 «Add a cover» → ComposeCover — the step a vertical clip skipped, opened on purpose — Next comes back here",
+        "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
+        "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
+        "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
+      ],
+      "boards": [
+        "ComposeDetailsVideo",
+        "ComposeCover",
+        "ComposeSeal",
+        "ComposeLanded"
+      ]
+    },
+    {
       "name": "cite-something",
       "description": "+ Cite something, wherever a composer offers it, opens the picker over everything citable; a result row lands the citation in the composer's references.",
       "status": "resolved",
@@ -754,12 +843,13 @@
         "CommentEditVideo",
         "ComposeCited",
         "ComposeDetails",
+        "ComposeDetailsVideo",
         "EditCompose",
         "ReplyCited",
         "ReplySeal"
       ],
       "steps": [
-        "start · «+ Cite something» on 7 boards → ReferencePicker",
+        "start · «+ Cite something» on 8 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → back — the pick lands in the composer's references"
       ],
       "boards": [
@@ -768,6 +858,7 @@
         "CommentEditVideo",
         "ComposeCited",
         "ComposeDetails",
+        "ComposeDetailsVideo",
         "EditCompose",
         "ReplyCited",
         "ReplySeal"
@@ -1347,6 +1438,7 @@
     },
     "ComposeCover": {
       "flows": [
+        "give-a-vertical-clip-a-cover",
         "publish-a-video"
       ],
       "endpoint": []
@@ -1373,7 +1465,6 @@
         "describe-your-pictures",
         "pick-a-kept-draft-back-up",
         "publish-a-post",
-        "publish-a-video",
         "publish-from-the-browser",
         "publish-while-the-uploads-run",
         "publish-words"
@@ -1381,6 +1472,17 @@
       "endpoint": [
         "add-a-topic",
         "publish-while-the-uploads-run"
+      ]
+    },
+    "ComposeDetailsVideo": {
+      "flows": [
+        "cite-something",
+        "give-a-vertical-clip-a-cover",
+        "publish-a-vertical-video",
+        "publish-a-video"
+      ],
+      "endpoint": [
+        "give-a-vertical-clip-a-cover"
       ]
     },
     "ComposeDraft": {
@@ -1412,8 +1514,10 @@
     "ComposeLanded": {
       "flows": [
         "edit-your-post",
+        "give-a-vertical-clip-a-cover",
         "pick-a-kept-draft-back-up",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-from-the-browser",
         "publish-while-the-uploads-run",
@@ -1425,8 +1529,10 @@
       ],
       "endpoint": [
         "edit-your-post",
+        "give-a-vertical-clip-a-cover",
         "pick-a-kept-draft-back-up",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-from-the-browser",
         "publish-while-the-uploads-run",
@@ -1445,6 +1551,7 @@
         "cite-a-post",
         "mention-someone",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "set-the-cover-and-order"
@@ -1453,6 +1560,7 @@
         "cite-a-post",
         "mention-someone",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "set-the-cover-and-order"
@@ -1476,8 +1584,10 @@
     },
     "ComposeSeal": {
       "flows": [
+        "give-a-vertical-clip-a-cover",
         "pick-a-kept-draft-back-up",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-from-the-browser",
         "publish-words",
@@ -1521,6 +1631,7 @@
     "Explore": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "search-and-open-a-post",
@@ -1540,6 +1651,7 @@
     "ExploreNone": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
@@ -1549,6 +1661,7 @@
       "flows": [
         "narrow-a-search",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "search-and-open-a-post",
@@ -1568,6 +1681,7 @@
         "open-a-posts-pictures",
         "open-a-topic",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
@@ -1606,6 +1720,7 @@
       "flows": [
         "open-a-posts-pictures",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
@@ -1621,6 +1736,7 @@
         "follow-a-citation",
         "open-a-posts-pictures",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
@@ -1635,6 +1751,7 @@
     "FeedGallery": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
@@ -1649,6 +1766,7 @@
         "narrow-the-feed",
         "open-a-posts-pictures",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
@@ -1664,6 +1782,7 @@
       "flows": [
         "filter-the-feed-to-nothing",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "undo-the-narrowing"
@@ -1721,6 +1840,7 @@
         "follow-a-citation",
         "open-a-posts-pictures",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
@@ -1755,6 +1875,7 @@
         "open-a-posts-pictures",
         "open-the-viewer",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
@@ -1771,6 +1892,7 @@
     "PostDetailVideo": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reel-to-detail",
@@ -1788,6 +1910,7 @@
         "edit-avatar-via-edit-screen",
         "edit-your-profile",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "see-who-stands-with-someone"
@@ -1808,6 +1931,7 @@
       "flows": [
         "find-the-thread-a-comment-answers",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "see-who-stands-with-someone",
@@ -1841,6 +1965,7 @@
     "ProfileNotFound": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
@@ -1851,6 +1976,7 @@
         "find-the-thread-a-comment-answers",
         "message-someone",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "see-who-stands-with-someone",
@@ -1868,6 +1994,7 @@
         "follow-a-citation",
         "open-a-posts-pictures",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
@@ -1881,6 +2008,7 @@
     "ProfileStances": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "see-who-stands-with-someone"
@@ -1892,6 +2020,7 @@
     "ProfileUnreachable": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
@@ -1914,6 +2043,7 @@
     "Reel": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reel-to-detail",
@@ -1959,6 +2089,7 @@
     "Removed": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "remove-your-post",
@@ -2125,6 +2256,7 @@
         "follow-a-citation",
         "open-a-posts-pictures",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
@@ -2152,6 +2284,7 @@
       "flows": [
         "change-your-payout-address",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "see-a-campaigns-money",
@@ -2193,6 +2326,7 @@
       "flows": [
         "change-your-payout-address",
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "publish-your-payout-address"
@@ -2211,6 +2345,7 @@
     "WalletKeyAbsent": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "restore-your-key"
@@ -2220,6 +2355,7 @@
     "WalletSetup": {
       "flows": [
         "publish-a-post",
+        "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "publish-your-payout-address"
