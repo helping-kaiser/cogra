@@ -706,7 +706,7 @@ function ComposeSealBody() {
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value="Public domain — your default" action="Change" />
           <FactRow
-            label="Where you stand on it"
+            label="Your opinion"
             value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
             action="Adjust"
           />
@@ -821,7 +821,7 @@ function ReplySealBody() {
         {/* The stance the reply carries is a fact about replying, not about
             this row — so it stands under the ruled block rather than inside
             it, where `FactRow` has no slot for it. */}
-        <QuietNote>Replying also signs where you stand on the post it answers.</QuietNote>
+        <QuietNote>Replying also signs your opinion on the post it answers.</QuietNote>
 
         <div style={{ flex: 1 }} />
 
@@ -1308,7 +1308,7 @@ function SettingsBody() {
             name="settings-stance-input"
             selected
             label="The pad"
-            status="A tap opens it; drift to where you stand."
+            status="A tap opens it; drift to where it feels right."
           />
           <SettingsRow
             name="settings-stance-input"

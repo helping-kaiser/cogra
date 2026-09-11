@@ -91,7 +91,7 @@ glyph used as punctuation.
 - `A signing key can only ever back one account, so this account needs
   its own.`
 - `This is the only way to restore your key.`
-- `Replying also signs where you stand on the post it answers.` — the
+- `Replying also signs your opinion on the post it answers.` — the
   reply seal's note, under the ruled block on both its states.
 
 ## Naming
@@ -189,13 +189,13 @@ title, at most two short paragraphs, Close. The texts, verbatim
   draft stays on this device. / Restore the key with your recovery
   code to finish. Restoring here is the only way to complete this
   write.
-- **Where you stand on it** (the post's one-axis pad): Publishing also
-  signs where you stand on your own post — for or against, from a
+- **Your opinion on your post** (the post's one-axis pad): Publishing
+  also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
   full, so only for-or-against is yours to set. Nothing is signed until
   Set. Prefer sliders or exact numbers? Swap the input in settings.
 - **Toward what you answer** (the reply's two-axis pad): Replying also
-  signs where you stand on the post you answer — for or against, and
+  signs your opinion on the post you answer — for or against, and
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
   and rides the same signature as your reply. / Nothing is signed until
   Set. Swap the input in settings if you prefer sliders or numbers.
@@ -253,7 +253,7 @@ title, at most two short paragraphs, Close. The texts, verbatim
 dialog's own subject, so a listener hears which explanation the tap
 brings: `Your key`, `License`, `Sensitive`, `How the filter works`,
 `What is CGT?`. The three stance pads take theirs the same way —
-`Where you stand on it`, `Toward what you answer`, `Your first opinion`
+`Your opinion on your post`, `Toward what you answer`, `Your first opinion`
 — because one name across three surfaces says only that a dialog
 exists. `How opinions work` is the opinion control's own help, where the
 control itself is the subject.
@@ -533,7 +533,7 @@ nor the app's.
 
 **Giving an opinion** keeps the shipped readings and gives them the
 hints the inverted gesture needs — `The pad` / `A tap opens it; drift to
-where you stand.`, `Sliders` / `One slider per side of the opinion.`,
+where it feels right.`, `Sliders` / `One slider per side of the opinion.`,
 `Typed values` / `Type both numbers exactly.` — over a footnote read
 once for the group: `A tap opens this, everywhere. Press and hold
 instead, and a small positive one is signed on the spot.`
@@ -790,7 +790,7 @@ The naming law above is part of the same ruling and is written where it
 belongs; these are the new strings.
 
 **The gesture, said in the settings group.** `Giving an opinion` is the
-group, `A tap opens it; drift to where you stand.` the pad's hint, and
+group, `A tap opens it; drift to where it feels right.` the pad's hint, and
 `A tap opens this, everywhere. Press and hold instead, and a small
 positive one is signed on the spot.` the footnote — the one place the
 shortcut and the price are said together.
@@ -802,7 +802,7 @@ A tap opens this pad. Press and hold the same button and a gentle 🙂
 first line stays: a reader who has just tapped and seen a pad still
 needs to be told nothing was spent.
 
-**The pad's four help lines.** `Drag the knob to where you stand. Left
+**The pad's four help lines.** `Drag the knob. Left
 to right is against to for; bottom to top is how much more of it you
 want reaching you.` / `Letting go changes nothing. Set signs it, Cancel
 leaves without signing.` / `Your pick adds to what you've said before —

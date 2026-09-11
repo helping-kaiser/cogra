@@ -69,7 +69,7 @@ export const STANCE_EXPLANATION = {
    reader who has never turned the digits on, and "the two faces can differ" is
    the same fact said in what they can see. */
 export const STANCE_PAD_HELP = [
-  "Drag the knob to where you stand. Left to right is against to for; bottom to top is how much more of it you want reaching you.",
+  "Drag the knob. Left to right is against to for; bottom to top is how much more of it you want reaching you.",
   "Letting go changes nothing. Set signs it, Cancel leaves without signing.",
   "Your pick adds to what you've said before — that's why the two faces can differ.",
   "Walk it back takes everything you've said to nothing. It has its own confirmation, and each thing you've said is walked back by its own signature.",

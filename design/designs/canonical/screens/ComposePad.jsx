@@ -47,7 +47,7 @@ export function Screen() {
         }}
       >
         <span style={{ position: "absolute", top: 4, right: 4 }}>
-          <HelpDot ariaLabel="Where you stand on it" />
+          <HelpDot ariaLabel="Your opinion on your post" />
         </span>
 
         {/* The pick's readout, in the pad's own block shape: the name of the
