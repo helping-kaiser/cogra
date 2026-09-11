@@ -402,10 +402,11 @@ fills is the most common way an icon set starts to look accidental.
 | `visibility` / `visibility_off` | password field toggle |
 | `settings` | profile top bar |
 | `arrow_back` | every page header |
-| `more_vert` | every overflow menu — a post's, a comment's, a profile's, and your own profile's band |
+| `more_vert` | every overflow menu — a post's, a comment's, and either profile's actions row |
 | `chat_bubble` | the comments affordance on a card |
 | `volume_up` / `volume_off` | a video's sound toggle |
-| `graph_3` | the Post Score |
+| `graph_3` | the Post score |
+| `bookmark` | the unsave control on a Saved row — the system's own addition (the review-fix round), not yet in the product's set |
 | `check` | the checkbox's mark — the system's own addition (§13's entry screens), not yet in the product's set |
 | `photo_camera` | the avatar's change badge on one's own profile — the system's own addition (profile round), not yet in the product's set |
 | `history` | the chronicle's Everything tab — the system's own addition (profile round), not yet in the product's set |
@@ -4095,6 +4096,127 @@ mechanics were already specified — `docs/instances/erasure.md` §2 and §5
   `Settings`' frame and its canvas slot grow 2027 → **2163** for the
   delete group, measured rather than guessed — the harness reproduced the
   recorded 2027 on the pre-change board before it was trusted for 2163.
+
+### The review-fix round — 2026-09-11
+
+jakob's second pass over the canvas, and the round where three standing
+rulings were replaced rather than extended. Everything below is his,
+from the rulings sheet; what the round decided for itself is named as
+such.
+
+- **THE BAND LAW (supersedes the 2026-09-01 corner ruling AND the
+  notifications round's order).** No band carries a ⋮ any more, and the
+  trailing cluster on every root is **[the screen's own control] · chats
+  · bell** — the feed's is filter · chats · bell. The two the shell owns
+  keep the same two corners on every tab, so a thumb aiming at chats or
+  at the bell aims at one place whatever screen it is on; the control
+  that changes per screen is the one that moves inboard. The old order
+  put chats first and the screen's own control between the two the shell
+  owns, which made the middle slot mean something different per tab.
+- **Band icons draw at 40px and answer at 48** (`cg-hit`, the trade
+  `Button`'s small rung and `Chip` already make). 48px of DRAWN box was
+  what crowded the band: three of them beside the mark and the wordmark
+  left the one control whose width carries WORDS too little room, and
+  the feed's filter trigger ellipsised on the boards that narrow the
+  feed. Measured: at 48px boxes `FeedNarrowed`'s trigger had 160px of
+  room for 170px of words; at 40px it has 170 and the ellipsis is gone,
+  with `FeedNothing` (172/172) and `FeedFar` (144/144) clear as well.
+- **Your own profile's ⋮ joins the Edit profile · Invites row**, and the
+  band keeps gear · chats · bell. **Another's joins its actions row**,
+  where **Message gives up the half of the row it never needed** (jakob:
+  "the message button already is so wide.. with quite a lot of
+  padding"): Message is sized by its own word now and the anchor takes
+  the remainder. That makes `ProfileOtherHeld`'s mode-invariance rule
+  stronger rather than weaker — a width derived from one word cannot
+  depend on what the anchor says — so the row is identical in both
+  reading modes (measured: anchor 196px, Message 106px at x=220, the dot
+  40px at x=334, the same in geek mode, and the exact pair paints inside
+  the anchor's own space). `OverflowMenu` gains `placement="row"` for
+  it: the header placement's -12px pull is right on a 24px line and
+  wrong in a row of controls, which has no gutter to pull into.
+  `ProfilePosts` and `ProfileComments` follow the page — and their ⋮ now
+  holds the whole profile menu rather than two of its four rows, because
+  a tab of a page is not a smaller page.
+- **The Saved row carries its own unsave**, icon-only: the filled
+  bookmark, `Unsave` in the accessibility tree, no word on screen
+  (jakob: with the icon "we dont even need any word there"). It takes
+  the CHEVRON's slot and never the trailing edge's — the age there is
+  when YOU saved the thing, which is the list's whole order and what a
+  reader is retracing — so `ContentRow` gains `action`, splits into a
+  pressable part and the control beside it, and nests no button in a
+  button. `SettingsRow` had already assigned that slot the same way.
+- **The saved state is one word, `Unsave`**, replacing
+  `Remove from saved` on every menu and in copy-voice. **Save joins your
+  own post's menu too**, and LEADS it — saving is private, so whose post
+  it is has nothing to do with whether a reader may keep it, and one
+  position for the row on every menu that has it is worth more than
+  ordering each menu by its own use. The license still closes.
+  (`RemoveMenu` also stopped hand-writing its four rows and draws
+  `OWN_POST_MENU`, which is what makes the Save row appear in the sheet
+  and in the header's menu at once.)
+- **Hiding gets its board**: `FeedHidden` — the feed with @ada's card
+  gone, the ranker's next posts moved up, and
+  `@ada is hidden — their posts stay out of your feed.` with `Undo`.
+  Nothing marks the space her card was in: a "hidden post" rail would
+  keep her on the screen the reader just asked to be rid of her on.
+  `Snackbar` gains its one Material action for it — a WORD, never a
+  pill, in the new `--action-on-snackbar`, `primary` being the one
+  colour that stops being legible on the inverse ground.
+- **Settings prose ages join the ladder**: `Changed 21d`, `Last used 2d`,
+  `Last created 12.08.2026`. copy-voice's own examples were the source of
+  the contradiction — a guideline spelling `Changed 3 weeks ago` a few
+  sections under the rule that forbids weeks — so they conform too.
+- **THE REDACTED-ACTOR LAW (supersedes the account-deletion round's
+  `ProfileDeleted`).** The shells never go. A deleted account's profile
+  keeps its exact structure — header, real counts, tabs, chronicle, the
+  acts with their real words — and ONLY the personal data is
+  placeholdered: the avatar becomes the reserved disc (no monogram,
+  there being no name to take a letter from; no glyph, that being
+  imagery with no source), the name slot reads `Deleted account` in
+  `text-secondary`, and the handle is dropped rather than replaced. The
+  removal mark moves into the BIO's place, which is a profile's one
+  authored, personal region and exactly the payload that went; as a band
+  under the header it would have read as a fault with the page. A page
+  stripped to a notice is the erasure ethic's other failure mode — it
+  hides a record still on the graph, still credited, still ranked.
+- **The treatment follows the actor, so it lives on the masters.**
+  `MonogramAvatar` and `ActorChip` take `redacted`, and `ProfileHeader`
+  is that same chip at page scale — one drawing for the header, for the
+  author chip on a post they wrote, and for every row that names them.
+  `REDACTED_ACTOR_NAME` is the word, assigned once.
+- **The actions row keeps the opinion and loses the message** (the
+  round's own call, read off `erasure.md` §3). An opinion targets the
+  ACTOR and the actor is there — its content still ranks in other
+  people's feeds, so a reader who wants it out of theirs needs the
+  control that does that, severance included. A message targets a
+  PERSON, and the identity association is deleted, so a composer there
+  would address nobody. The ⋮ goes with Message: every row it holds
+  names the person, and there is no name to put in them.
+- **The empty hidden row stays `None`** (jakob, final). Nothing else was
+  ever drawn.
+- **Notification rows are kept** (`docs/implementation/notifications.md`):
+  no age bound, no cap, no pruning job for the test phase, and the bound
+  belongs to the era in which a reader owns their own storage — how long
+  someone's operational rows live is a question about whose disk they sit
+  on. The rows are rebuildable either way, so adopting a bound later is
+  maintenance and never a loss.
+- **The score reads `Post score` in prose too** — `PostCard`'s docblock
+  and its `.d.ts`, the icons README, the numbers card, the iconography
+  guideline. Graph gap names keep the old spelling by ruling.
+- **The gate**: 170 → **171 boards**, 1263 → **1287 edges**, gaps 63 →
+  **65**, flows hold at **61/58/3**. The 24 new edges are `FeedHidden`'s
+  eighteen (the feed's own anatomy, plus Undo), `ProfileDeleted`'s four
+  (its counts, its anchor, its tabs, its rows — the page it got back),
+  the Saved row's unsave, and Save on the own-post menu. The two new gaps
+  are `FeedHidden` inheriting the feed's Post Score and chats. The
+  witness moved in origin lists and their start counts only —
+  `FeedHidden` joining nine feed-rooted flows, `ProfileDeleted` joining
+  the two profile ones its new controls open — plus `RemoveMenu`'s two
+  steps renumbering behind the Save row. No step rerouted and no flow
+  changed status. No frame grew: `ProfileDeleted` measures 752px of
+  content inside the phone's 844, and `FeedHidden`'s 1005 is a list that
+  scrolls, the way `FeedNarrowed` (1337) and `FeedGallery` (1102)
+  already do.
 
 ## 14. Index
 
