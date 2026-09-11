@@ -105,6 +105,8 @@ export function PostCard({
   sensitive,
   topics = [],
   references = 0,
+  opinions = 0,
+  onOpenOpinions,
   menuItems = [],
 }) {
   const detail = variant === "detail";
@@ -297,6 +299,55 @@ export function PostCard({
           onOpen={detail ? (onOpenReferences ?? (() => {})) : undefined}
           onOpenReferences={onOpenReferences}
         />
+      )}
+      {/* WHO HOLDS AN OPINION ON THIS, on the detail surface only (backlog item
+          55; jakob's ruling, 2026-09-11). The profile's "Opinions on" mirrored
+          onto content, and ungated: everyone can check every post, the way
+          everyone can read a profile's counts.
+
+          IT IS A ROW, NOT AN AFFORDANCE. The affordance row is closed — opinion,
+          score, comments, share — and nothing joins it (readme §13, the
+          private-viewer-state round said the same about saving). So this takes
+          `TopicsLine`'s register instead: the quiet count line that states a
+          fact and is also the way into the list holding it. Same type, same
+          colour, same "the count IS the list's length" discipline as the
+          tags-and-references sheet.
+
+          IT CARRIES NO FACE. A face on a post card already means "your opinion",
+          and a second one meaning "somebody else's" would make both unreadable
+          (`ExplainableNumber`'s rule about a second emoji). The count is the
+          whole line.
+
+          AT ZERO THERE IS NO ROW, exactly as the counts line drops a kind it has
+          none of — and for `SettingsHidden`'s reason: a tap that can only open an
+          empty list is a tap spent on nothing. A post nobody has answered says so
+          by having nothing to open. The comment's door is its ⋮ menu, where the
+          row stands whatever the count is, and the empty sheet lives there. */}
+      {!redacted && detail && opinions > 0 && (
+        <button
+          type="button"
+          onClick={onOpenOpinions ?? (() => {})}
+          aria-label="Opinions on this post"
+          className="cg-state cg-focus"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            border: 0,
+            background: "none",
+            padding: 0,
+            cursor: "pointer",
+            fontFamily: "var(--font-sans)",
+            fontSize: "var(--text-body-small)",
+            lineHeight: "var(--text-body-small--line-height)",
+            color: "var(--text-secondary)",
+            textAlign: "left",
+          }}
+        >
+          <span aria-hidden="true">
+            {opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`}
+          </span>
+        </button>
       )}
       {edited && <EditedMarker />}
       {pending && <PendingMarker />}

@@ -103,6 +103,16 @@ export interface PostCardProps {
   references?: number;
   /** Opens the topics-and-references sheet. On detail, the whole line opens it. */
   onOpenReferences?: () => void;
+  /**
+   * How many people hold an opinion on this post (backlog item 55). DETAIL
+   * VARIANT ONLY, and only above zero: a quiet count line in the topics line's
+   * register, opening the sheet that lists the holders. At zero there is no row
+   * — a tap that can only open an empty list is a tap spent on nothing; a
+   * comment's door is its ⋮ menu instead, where the row always stands.
+   */
+  opinions?: number;
+  /** Opens the opinions-on-this-post sheet. */
+  onOpenOpinions?: () => void;
   /** The post's media items, rendered full-bleed via `MediaGallery`. */
   media?: readonly import("../media/MediaAttachment").MediaAttachmentProps[];
   /**
