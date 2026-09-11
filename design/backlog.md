@@ -2128,3 +2128,12 @@ consolidation to ~6 fixtures (the grapes precedent) buys the visible
 horizon; canvas-splitting stays the escape hatch. Also ruled: the
 drill-down's record key stays inert until the spot-check tooling
 exists; the graph's 23 "Post Score" edge labels stay (matched keys).
+
+### 63 · The pair formatter floats with the runtime locale · *system*
+
+Found by the close-out round: `formatDimension` and `formatUnsigned`
+call `Intl.NumberFormat(undefined, …)`, so a German runtime would
+render `+0,40` where §3's fixed `+0.40 / +0.20` allows only the dot.
+Pin the locale (`en-US` or an explicit numbering contract) in both
+formatters and re-render; the U+2212 substitution (item 59, ruled)
+is unaffected.
