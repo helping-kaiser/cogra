@@ -111,6 +111,35 @@ const {
   CropViewport,
 } = components;
 
+/* Visually hidden, still read aloud — `StanceReadout`'s own constant, spelled
+   here because a board reaches the bundle's components and not its helpers. */
+const SR_ONLY = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
+/* THE NUMBERS IN A SENTENCE (readme §13, the geek round). A help or coaching
+   line that speaks a pair leads with the face and carries the digits in a
+   trailing `cg-exact` span, so the sentence follows the reading mode the way
+   every readout does. The painted tail is `aria-hidden` and `spoken` says the
+   same fact to a screen reader in both modes — the mode draws, it never
+   redacts. */
+function ExactTail({ exact, spoken }) {
+  return (
+    <>
+      <span className="cg-exact" aria-hidden="true">{exact}</span>
+      <span style={SR_ONLY}>{spoken}</span>
+    </>
+  );
+}
+
 /* A standing of one gentle record — the vouch-back default made a bundle. */
 function mkBundle(pDirected, pInterest) {
   const pair = { pDirected, pInterest };
@@ -1273,13 +1302,13 @@ function SettingsBody() {
 
         <SettingsGroup
           label="Taking a stance"
-          footnote="A tap always adds a small positive one. This is what a longer press opens, everywhere."
+          footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot."
         >
           <SettingsRow
             name="settings-stance-input"
             selected
             label="The pad"
-            status="Press and hold, then drift to where you stand."
+            status="A tap opens it; drift to where you stand."
           />
           <SettingsRow
             name="settings-stance-input"

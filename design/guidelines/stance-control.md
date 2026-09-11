@@ -54,9 +54,8 @@ looking like a bug.
 
 | Input | What happens |
 |---|---|
-| Tap (first ever) | opens the coach mark and **stages nothing** |
-| Tap (after that) | commits `(+0.1, +0.1)` — the low default |
-| Press and hold 500ms | the pad blooms at the lower centre of the viewport |
+| Tap | the pad blooms at the lower centre of the viewport, and **stages nothing** |
+| Press and hold 500ms | commits `(+0.1, +0.1)` — the low default |
 | Drag | moves the knob by **accumulated travel**, not absolute position |
 | Release | parks the pick; the pad stays open; **nothing is signed** |
 | Set | signs the pick |
@@ -64,8 +63,14 @@ looking like a bug.
 | `?` | replaces the pad's body with four lines of help, and disables Set while it shows |
 | Sever | the explicit route to `(0, 0)` |
 
+**The light gesture costs nothing and the held one spends.** A tap is
+what a thumb gives by accident, so it opens the surface where a reader
+chooses; the shortcut that signs without opening anything takes a held
+finger. The price is accepted deliberately: nobody holds a control for
+half a second by mistake.
+
 The pad opens **at the origin**, untilted — the low default belongs to
-the tap, not to the considered gesture.
+the shortcut, not to the considered gesture.
 
 **The control owns its touches.** No interaction with it — tap, hold,
 drag, release, or the open pad itself — may also trigger the surface
@@ -148,18 +153,16 @@ sliders cannot teach by themselves: *two values, not one*.
 
 ## Teaching it
 
-A held gesture is invisible until taught, and a tap that stages a priced
-act must not be the teaching moment's casualty. The **first tap ever** on
-a stance target teaches before it acts: it opens the coach mark —
-anchored to the target, overlapping nothing, staying until dismissed or
-until the first successful hold — and stages nothing. Its first line is
-`Nothing was signed just now.`, because a reader who thinks their tap was
-swallowed taps again, which is the exact spend the teaching moment exists
-to prevent.
+A held gesture is invisible until taught — and the pad is the teacher.
+The tap that opens it costs nothing, so a reader finds the considered
+route on their own; what is left to teach is the shortcut. The **first
+open ever** carries the coach mark inside the pad, above the field,
+staying until dismissed or until the pad closes, and it says one thing:
+the same button, held, signs the gentle default outright.
 
 ## Confirmation
 
-**A tap answers immediately.** The resting target updates to the new
+**The hold answers immediately.** The resting target updates to the new
 standing at once, and a snackbar confirms the signature. A gesture that
 stages a priced act must never be silent: silence reads as failure and
 invites the same act again.

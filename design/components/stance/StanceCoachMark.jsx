@@ -2,16 +2,16 @@ import React from "react";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 
 /* The coach mark of design.md §8.7.
-   "A held gesture is invisible until taught, and a tap that stages a priced act
-   must not be the teaching moment's casualty." The FIRST TAP EVER on a stance
-   target opens this and stages NOTHING; every tap after it acts. So the mark's
-   first job is to say that nothing was signed — a reader who thinks their tap was
-   swallowed taps again, which is the exact spend the teaching moment exists to
-   prevent.
+
+   A HELD GESTURE IS INVISIBLE UNTIL TAUGHT. The tap opens the pad, so the pad
+   is where a reader arrives on their own and the teaching moment costs nothing;
+   what is left to say is that the same button, HELD, signs the gentle default
+   without opening anything. This rides the FIRST OPEN EVER and never again.
 
    NON-MODAL: discoverable but never blocking. Nothing behind it is inert and
-   nothing is trapped. It stays until dismissed or until the first successful hold   — never on a timer, because a hint that disappears while it is being read has
-   not taught anything. */
+   nothing is trapped. It stays until dismissed or until the pad closes — never
+   on a timer, because a hint that disappears while it is being read has not
+   taught anything. */
 
 export const STANCE_EXPLANATION =
   "A tap signs a small positive, +0.10 / +0.10. Press and hold the same button to open the pad and " +

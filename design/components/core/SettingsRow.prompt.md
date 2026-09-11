@@ -7,7 +7,7 @@ Use `SettingsGroup` and `SettingsRow` for every setting in the product. The grou
 </SettingsGroup>
 
 <SettingsGroup label="Taking a stance" footnote="A tap always adds a small positive one.">
-  <SettingsRow name="stance-input" selected label="The pad" status="Press and hold, then drift to where you stand." />
+  <SettingsRow name="stance-input" selected label="The pad" status="A tap opens it; drift to where you stand." />
   <SettingsRow name="stance-input" selected={false} label="Sliders" status="One slider per side of the stance." />
 </SettingsGroup>
 ```

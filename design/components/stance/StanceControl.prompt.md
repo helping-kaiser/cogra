@@ -8,8 +8,8 @@
 Never redesign this control. The rules it encodes:
 
 - **At rest it shows the standing** — the face, with the exact pair beside it in a `cg-exact` span that paints only in geek mode (readme §13). No standing yet is a muted, translucent 🫥, never a bare word and never 🤷 (that means severed). The anchor's words are not drawn beside it; they ride the button's `aria-label`, in both modes.
-- **Tap = (+0.1, +0.1).** The first tap ever teaches instead, and signs nothing.
-- **Hold 500ms** blooms the pad at the **lower centre of the viewport** — always the same place, never anchored to the target.
+- **Tap blooms the pad** at the **lower centre of the viewport** — always the same place, never anchored to the target — and signs nothing. The first open ever also carries the coach mark.
+- **Hold 500ms = (+0.1, +0.1)**, signed outright. The light gesture opens, the held one spends.
 - **Release never commits.** `Set` commits, `Cancel` or an outside press stages nothing.
 - The pad shows the pick's face and pair live, the standing above, the landing below, a `?`, and a route to `Sever` — which appears only once there is a stance to walk away from.
 - **The `?` names its own pad** (jakob's ruling A7) — `helpLabel`, defaulting to `"How stances work"` for the ordinary feed-card control. A board drawing a named pad passes that pad's own title instead (`ComposePad`'s `"Where you stand on it"`, `ReplyPad`'s `"Toward what you answer"`, `VouchBackPad`'s `"Your first stance"`).
