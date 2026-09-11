@@ -152,6 +152,29 @@ describe("priming a token before a body goes up", () => {
     await expect(guard.prime()).resolves.toBeUndefined();
   });
 
+  // The chain primes for EVERY request now, the replay inside `run` included.
+  // A prime that rotated behind a refresh already under way would spend a
+  // second refresh token on the same expiry — so it stands down for as long
+  // as this tab holds any token at all, and lets `run` own the expiry.
+  it("stands down while a run is already handling the expiry", async () => {
+    const store = createTokenStore();
+    store.save({ accessToken: "stale", refreshToken: "r", accountId: "acct-1" });
+    const { refresher, refresh } = refresherReturning(true);
+    const guard = createGuard(store, refresher);
+    const block = vi
+      .fn<() => Promise<Outcome<string>>>()
+      .mockResolvedValueOnce(unauthenticated())
+      .mockResolvedValueOnce(success("replayed"));
+
+    const outcome = await guard.run(async () => {
+      await guard.prime();
+      return block();
+    });
+
+    expect(outcome).toEqual(success("replayed"));
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
   it("primes again on a later upload once the first attempt is done", async () => {
     const store = createTokenStore();
     const { refresher, refresh } = refresherReturning(false);
