@@ -642,7 +642,7 @@ paper over:
   on the sensitive sheet and stayed a control while there was one of it; a
   second surface is what makes it a component.
 - `BorrowedViewBand` — §13's borrowed vantage point, as a component: names
-  whose view a guest or applicant feed is ranked from, carries the one
+  whose view a guest or applicant feed shows, carries the one
   sign-in-or-join entry, and subsumes the guest notice on those surfaces.
 
 ---
@@ -1037,6 +1037,15 @@ may serve any actor's view of the shared record to any reader. So:
   over to the member's own view the moment their first stance exists —
   the vouch-back — which the inviter seeded anyway, so the feed barely
   moves at the handover.
+- **The vantage resolves to the most specific actor available**, and
+  the band names whichever one it lands on. An invite-link visitor
+  borrows the inviter. An applicant borrows their own inviter — the
+  person who already chose them, and whose stances their first
+  vouch-back will echo. A bare visitor borrows genesis, strictly as the
+  fallback when nobody more particular is known. The order matters more
+  than any single rung: a reader should be shown the nearest real
+  perspective the arrival carries, and genesis is what is left when the
+  arrival carries none.
 
 To port to the product docs as an open-questions resolution.
 
@@ -2915,10 +2924,14 @@ whole canvas rather than a fix to one board.
   messaging belongs on every tab root; the apps draw it the release a
   chat surface exists to receive the tap. Nothing is redrawn — the edges
   stay as they are, and the docblock says which half is the end state.
-- **The borrowed-view band rides the ranker.** It names a borrowed
-  *ranking* vantage and the feed is chronological until slice 3, so the
-  band and the borrowed-vantage field the contract owes land with the
-  ranker; the guest notice stands until then. Drawn ahead of built is
+- **The guest and applicant bands ship now; the rank waits.** A band
+  that names whose view this is tells the truth the moment it is drawn,
+  and the vantage it names — the genesis moderator for a bare arrival,
+  the inviter for an applicant — is knowable without a ranker. So both
+  bands stand from the start, reading newest like every other feed until
+  slice 3. What waits for the ranker is the borrowed *order*, the
+  invite-link vantage and the contract field it needs, and the band's
+  line about ranking. Naming a vantage a feed does not yet rank from is
   the staging rule, not the label-versus-behaviour divergence the Newest
   ruling refuses — that one is about what a shipped control claims.
 - **The gate**: **128 screens**, **958 edges**, **81 gaps** and **flows
