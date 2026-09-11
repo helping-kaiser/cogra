@@ -438,6 +438,12 @@
         { "board": "ComposePick", "via": 4 },
         { "board": "ComposeCited" }
       ]
+    },
+    {
+      "name": "request-account-deletion",
+      "description": "Settings' last row explains what goes and what stays, takes the content sweep as an opt-in, and ends where the flow leaves the app: a link mailed to the account's own address. Everything after that — the seven days, the band, the cancel — begins at the confirmation, which is not a tap of ours.",
+      "start": { "board": "Settings", "via": 18 },
+      "end": { "board": "DeleteAccount", "via": 3, "case": "the request is recorded with its opt-in and the link is on its way — nothing is scheduled until the link is opened" }
     }
   ]
 }

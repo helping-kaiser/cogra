@@ -1056,6 +1056,9 @@ Object.assign(FLOW_MARKERS, {
     // mid-page would renumber nine edges to say nothing new: the badge is an
     // identity, not a position.
     { n: 17, find: ">Hidden accounts</span>", tag: "button" },
+    // Deleting the account is the page's last row and its next free number —
+    // the same rule the People group followed, for the same reason.
+    { n: 18, find: ">Delete account</span>", tag: "button" },
   ],
   // The hidden-accounts sheet over the settings page (the private-viewer-state
   // round). scanExempt like its two siblings, so only the sheet is numbered —
@@ -1464,6 +1467,44 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* The account-deletion round (jakob 2026-09-11). The request screen and its
+   mail state are task-flow columns and number like the credential screens; the
+   grace state and its cancel are `Feed`'s numbering exactly, for `FeedUnread`'s
+   reason — they draw the same root under a band and a snackbar, so a different
+   numbering would say the surface changed when only the shell did. The band's
+   Cancel takes the board's next free number after the three sweeps below. */
+Object.assign(FLOW_MARKERS, {
+  DeleteAccount: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">Also remove what I posted</span>", tag: "label" },
+    { n: 3, find: ">Send the confirmation link</button>", tag: "button" },
+  ],
+  DeleteAccountMail: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">Resend the link</button>", tag: "button" },
+  ],
+  FeedDeleting: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(11),
+    { n: 19, find: ">Cancel</button>", tag: "button" },
+  ],
+  DeleteAccountCanceled: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(11),
+  ],
+  ProfileDeleted: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
@@ -1471,7 +1512,8 @@ Object.assign(FLOW_MARKERS, {
 const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 9,
-  Feed: 16, FeedUnread: 16, FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16,
+  Feed: 16, FeedUnread: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
+  FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16,
   FeedGallery: 15, FeedCover: 17,
   Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
   WalletGuest: 8, WalletApplicant: 6,
@@ -1489,7 +1531,8 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
 const BAND_BELL = {
   ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
   ComposeExpired: 20, Explore: 10,
-  Feed: 18, FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17,
+  Feed: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
+  FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17,
   FeedCover: 19,
   Wallet: 15, WalletEmpty: 10, WalletSetup: 9, WalletKeyAbsent: 11,
   WalletApplicant: 7,
@@ -1505,7 +1548,8 @@ for (const [board, n] of Object.entries(BAND_BELL)) {
    the platform's own sheet. */
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
-  KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16,
+  KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
+  FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
 };
 for (const [board, n] of Object.entries(CARD_SHARE)) {

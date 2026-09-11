@@ -7,11 +7,13 @@
       "status": "resolved",
       "startsOn": [
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
         "ExploreSearch",
         "Feed",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -26,6 +28,7 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
@@ -43,7 +46,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 35 boards → ComposePick",
+        "start · «nav · New post» on 38 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -55,11 +58,13 @@
         "ComposeDetails",
         "ComposeSeal",
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
         "ExploreSearch",
         "Feed",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -74,6 +79,7 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
@@ -160,9 +166,11 @@
         "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedBare",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -178,7 +186,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 20 boards → ReplyEntry",
+        "start · «comment count» on 22 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
@@ -191,9 +199,11 @@
         "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedBare",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -423,8 +433,10 @@
       "startsOn": [
         "ComposeExpired",
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -438,15 +450,17 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 15 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 17 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
         "VouchBackPad",
         "ComposeExpired",
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -623,11 +637,13 @@
       "status": "resolved",
       "startsOn": [
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
         "ExploreSearch",
         "Feed",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -642,6 +658,7 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
@@ -659,7 +676,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 35 boards → ComposePick",
+        "start · «nav · New post» on 38 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -671,11 +688,13 @@
         "ComposeDetails",
         "ComposeSeal",
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
         "ExploreSearch",
         "Feed",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -690,6 +709,7 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
@@ -713,11 +733,13 @@
       "status": "resolved",
       "startsOn": [
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
         "ExploreSearch",
         "Feed",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -732,6 +754,7 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
@@ -749,7 +772,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 35 boards → ComposePick",
+        "start · «nav · New post» on 38 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -761,11 +784,13 @@
         "ComposeDetailsVideo",
         "ComposeSeal",
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
         "ExploreSearch",
         "Feed",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -780,6 +805,7 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
@@ -803,11 +829,13 @@
       "status": "resolved",
       "startsOn": [
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
         "ExploreSearch",
         "Feed",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -822,6 +850,7 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
@@ -839,7 +868,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 35 boards → ComposePick",
+        "start · «nav · New post» on 38 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -849,11 +878,13 @@
         "ComposeDetailsVideo",
         "ComposeSeal",
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
         "ExploreSearch",
         "Feed",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -868,6 +899,7 @@
         "PostDetailVideo",
         "Profile",
         "ProfileComments",
+        "ProfileDeleted",
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
@@ -1186,9 +1218,11 @@
         "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedBare",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -1203,7 +1237,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 19 boards → ProfileOther",
+        "start · «author chip» on 21 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1212,9 +1246,11 @@
         "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedBare",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedGallery",
         "FeedNarrowed",
@@ -1237,9 +1273,11 @@
         "ApplicantFeed",
         "ApplicantWaiting",
         "ComposeExpired",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedBare",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedNarrowed",
         "FeedUnread",
@@ -1249,7 +1287,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — pictures — the post opens on 13 boards → PostDetail",
+        "start · «post media» — pictures — the post opens on 15 boards → PostDetail",
         "end · arrival at PostDetail"
       ],
       "boards": [
@@ -1257,9 +1295,11 @@
         "ApplicantFeed",
         "ApplicantWaiting",
         "ComposeExpired",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedBare",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedNarrowed",
         "FeedUnread",
@@ -1277,9 +1317,11 @@
         "ApplicantFeed",
         "ApplicantWaiting",
         "ComposeExpired",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedBare",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedNarrowed",
         "FeedUnread",
@@ -1289,7 +1331,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 13 boards → Reel",
+        "start · «post media» — a portrait clip — the stream opens on 15 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
@@ -1297,9 +1339,11 @@
         "ApplicantFeed",
         "ApplicantWaiting",
         "ComposeExpired",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedBare",
         "FeedCover",
+        "FeedDeleting",
         "FeedFar",
         "FeedNarrowed",
         "FeedUnread",
@@ -1344,8 +1388,10 @@
         "ApplicantFeed",
         "ApplicantWaiting",
         "ComposeExpired",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedBare",
+        "FeedDeleting",
         "FeedFar",
         "FeedNarrowed",
         "FeedUnread",
@@ -1355,7 +1401,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 12 boards → RefsSheet",
+        "start · «reference count» on 14 boards → RefsSheet",
         "end · RefsSheet · 2 «reference rows» → gap: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)"
       ],
       "boards": [
@@ -1363,8 +1409,10 @@
         "ApplicantFeed",
         "ApplicantWaiting",
         "ComposeExpired",
+        "DeleteAccountCanceled",
         "Feed",
         "FeedBare",
+        "FeedDeleting",
         "FeedFar",
         "FeedNarrowed",
         "FeedUnread",
@@ -1441,6 +1489,20 @@
         "ComposeWords",
         "ComposeCited",
         "ProfileMenu"
+      ]
+    },
+    {
+      "name": "request-account-deletion",
+      "description": "Settings' last row explains what goes and what stays, takes the content sweep as an opt-in, and ends where the flow leaves the app: a link mailed to the account's own address. Everything after that — the seven days, the band, the cancel — begins at the confirmation, which is not a tap of ours.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 18 «Delete account» → DeleteAccount — what goes, what stays, and the content sweep as a choice — nothing is deleted from the row",
+        "end · DeleteAccount · 3 «Send the confirmation link» → DeleteAccountMail — the request is recorded with its opt-in and the link is on its way — nothing is scheduled until the link is opened"
+      ],
+      "boards": [
+        "Settings",
+        "DeleteAccount",
+        "DeleteAccountMail"
       ]
     }
   ],
@@ -1710,6 +1772,35 @@
       ],
       "endpoint": []
     },
+    "DeleteAccount": {
+      "flows": [
+        "request-account-deletion"
+      ],
+      "endpoint": []
+    },
+    "DeleteAccountCanceled": {
+      "flows": [
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": []
+    },
+    "DeleteAccountMail": {
+      "flows": [
+        "request-account-deletion"
+      ],
+      "endpoint": [
+        "request-account-deletion"
+      ]
+    },
     "EditCompose": {
       "flows": [
         "cite-something",
@@ -1809,6 +1900,21 @@
     },
     "FeedCover": {
       "flows": [
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": []
+    },
+    "FeedDeleting": {
+      "flows": [
+        "follow-a-citation",
         "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
@@ -2078,6 +2184,15 @@
         "publish-words",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person"
+      ],
+      "endpoint": []
+    },
+    "ProfileDeleted": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
       ],
       "endpoint": []
     },
@@ -2367,6 +2482,14 @@
       ],
       "endpoint": []
     },
+    "Settings": {
+      "flows": [
+        "request-account-deletion"
+      ],
+      "endpoint": [
+        "request-account-deletion"
+      ]
+    },
     "SettingsBackupKeyAbsent": {
       "flows": [
         "restore-your-key"
@@ -2550,6 +2673,8 @@
     "ComposeExpired/11: Post Score drill-down (backlog item 13)",
     "ComposeExpired/18: the chat surface (not designed)",
     "ComposeLanded/7: Post Score drill-down (backlog item 13)",
+    "DeleteAccountCanceled/16: the chat surface (not designed)",
+    "DeleteAccountCanceled/9: Post Score drill-down (backlog item 13)",
     "Explore/2: the Sky (backlog item 16 — last on purpose)",
     "Explore/9: the chat surface (not designed)",
     "ExploreSearch/5: the item's surface (not designed)",
@@ -2560,6 +2685,8 @@
     "FeedBare/11: Post Score drill-down (backlog item 13)",
     "FeedCover/17: the chat surface (not designed)",
     "FeedCover/8: Post Score drill-down (backlog item 13)",
+    "FeedDeleting/16: the chat surface (not designed)",
+    "FeedDeleting/9: Post Score drill-down (backlog item 13)",
     "FeedFar/16: the chat surface (not designed)",
     "FeedFar/9: Post Score drill-down (backlog item 13)",
     "FeedGallery/15: the chat surface (not designed)",

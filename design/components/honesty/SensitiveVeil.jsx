@@ -253,6 +253,18 @@ const REASONS = {
     line: "Removed by its author",
     detail: "The post's place in the thread, and every response, remain.",
   },
+  /* A WHOLE ACCOUNT, deleted by the person who had it (erasure §2, the
+     account-deletion round). The third mark, and it is the same mechanism at a
+     different scale: identity-level redaction empties the Registration
+     bundle's payloads, so a profile carries exactly the mark a post carries
+     when its payload goes. Naming the person's own choice is the ruling —
+     nothing that was here is pretended never to have existed, and a deleted
+     account must not read as a moderation verdict or as a dead link. Pass
+     `note` for the reading where the content sweep was opted into as well. */
+  account: {
+    line: "Deleted by the person whose account it was",
+    detail: "Their name and profile are gone. What they signed stays on the graph and still credits them.",
+  },
 };
 
 /**
