@@ -66,6 +66,22 @@ export const COMMENT_VIDEO_MAX_BYTES = 50 * 1024 * 1024;
 export const RESUMABLE_THRESHOLD_BYTES = 8 * 1024 * 1024;
 
 /**
+ * One description, matching the server's `MAX_ALT_TEXT_CHARS`.
+ *
+ * The only cap here counted in characters rather than bytes, and the count is
+ * the server's: Unicode scalar values, which is what `[...text].length` gives
+ * and what `text.length` — UTF-16 code units — does not.
+ */
+export const ALT_TEXT_MAX_CHARS = 1000;
+
+/** The refusal an over-long description earns, or null. */
+export function altTextProblem(text: string): string | null {
+  return [...text.trim()].length > ALT_TEXT_MAX_CHARS
+    ? `Too long — at most ${ALT_TEXT_MAX_CHARS} characters.`
+    : null;
+}
+
+/**
  * The readable figure for a cap, as screens write it.
  *
  * The mebibyte count is rendered with an MB label rather than converted — that

@@ -126,6 +126,7 @@
     <string name="content_comments_empty">No comments yet.</string>
     <string name="content_edit">Edit</string>
     <string name="content_error_empty_body">The post needs a body.</string>
+    <string name="content_error_title_too_long">Too long — at most %1$d characters.</string>
     <string name="content_error_refused">The server refused this write.</string>
     <string name="content_error_signing">Signing did not finish — the write stays pending.</string>
     <string name="content_error_signing_no_key">Signing needs your key, which isn\'t on this device — the write waits as pending. Restore your key to finish it.</string>

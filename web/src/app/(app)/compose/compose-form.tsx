@@ -77,6 +77,7 @@ import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-acti
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { TextField } from "@/lib/ui/text-field";
+import { titleProblem } from "@/lib/compose/wizard";
 import { TransportError } from "@/lib/ui/transport-error";
 
 export function ComposeForm({
@@ -438,6 +439,11 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     else await submitEdit(editingId);
   };
 
+  // The one field on this surface with a cap the server refuses past. It gates
+  // the button rather than firing at submit: the message is beside the field
+  // that earned it, which is where the fix is made.
+  const titleTooLong = titleProblem(title);
+
   const onSubmit = async () => {
     if (submitting) return;
     if (body.trim() === "" && editingId === null) {
@@ -494,7 +500,13 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       {header}
-      <TextField label="Title" value={title} onChange={setTitle} testId="compose-title" />
+      <TextField
+        label="Title"
+        value={title}
+        onChange={setTitle}
+        testId="compose-title"
+        error={titleTooLong ?? undefined}
+      />
       <TextField
         label="Description"
         value={description}
@@ -571,7 +583,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       <Button
         testId="compose-submit"
         onClick={() => void onSubmit()}
-        disabled={submitting || signedActions === 0}
+        disabled={submitting || signedActions === 0 || titleTooLong !== null}
       >
         {editingId === null ? "Sign and publish" : "Sign the edit"}
       </Button>

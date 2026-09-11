@@ -1767,3 +1767,31 @@ lane's filing: the post veil face's remaining divergences, `HelpDot`'s
 geometry drifting from its board while its KDoc claims conformance,
 item 30, and four surfaces still using spinners as loading states —
 each named in PR #667's body.
+### 51 · The length caps have no affordance · *design*
+
+Filed by the caps lane 2026-09-10 (renumbered from 47 at integration), which enforced the title cap (100
+characters, jakob's ruling) end to end and found no drawn way to say so.
+Three things the boards do not carry, each named where the lane hit it.
+
+1. **No field states its cap before the field refuses.** `ComposeDetails`
+   draws a Title field with an "Optional" note and nothing else, so the
+   author learns about the hundredth character at the hundred and first.
+   A counter, a remaining count, a meter — which of those CoGra draws is
+   undrawn, and it is the same question for the describe sheet's alt
+   text (1000) and for whatever the description and the sensitive reason
+   are eventually capped at. The lane shipped the refusal alone: the
+   message where the words are, and the step's Next disabled.
+2. **The 2.0 field atom draws no error state at all.** The web
+   `TextField` carries an `error` slot its own note calls "the one place
+   the failure role is spent"; `CograTextField` carries nothing of the
+   kind, so the two clients say one refusal in two shapes — under the
+   label on web, a house `ErrorLine` below the field on Android. One
+   drawn field-error state would close that, and would give the alt-text
+   cap a home on Android, which this lane left unmirrored rather than
+   invent one inside the drawn `DescribeSheet`.
+3. **A cap and its refusal are one component's problem, drawn once.**
+   Item 46.3 filed the same gap from the tag side — "the picker's
+   refused-name state is undrawn" — and this is its other half: the
+   topic name, the title and the description are three fields with three
+   caps and no shared drawn answer for what a field does when the words
+   are too many. Worth one round rather than three.
