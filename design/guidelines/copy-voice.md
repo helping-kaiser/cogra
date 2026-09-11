@@ -156,12 +156,12 @@ behind a small "?" (at most one per screen) opening a plain dialog:
 title, at most two short paragraphs, Close. The texts, verbatim
 (browser wording shown; the app variant swaps the platform noun):
 
-- **Signed actions** (the seal, post and reply): Each piece of a post —
-  the post itself, every tag, every citation — is its own signed
-  action, written in your name. They sign together: all of them land,
-  or none does. / You don't pay for these — a shared community pool
-  covers members' signings. The pool is real and finite, so each
-  action still counts.
+- **How signing works** (the seal, post and reply): Each piece of a
+  post — the post itself, every tag, every citation — is signed on
+  its own, in your name. They sign together: all of them land, or
+  none does. / You don't pay for these — a shared community pool
+  covers members' signings. The pool is real and finite, so each one
+  still counts.
 - **The license**: Terms for anyone who reuses what you publish —
   credit, and a public record of use. They are not a statement about
   how you made it. / The license is set when the post is first signed
@@ -372,8 +372,8 @@ DO, the way the sound toggle already does:
 An applicant's second tap of a kind already staged answers here instead
 of opening the real surface again; one line per kind, same shape:
 
-- `Your post is staged — it lands with you.`
-- `Your stance is staged — it lands with you.`
+- `Your post waits with your application — it arrives with you.`
+- `Your opinion waits with your application — it arrives with you.`
 
 ## Field errors
 
@@ -822,8 +822,8 @@ on, and the faces are what they see.
 **The signed-opinion snackbar.** `Signed, still settling. Current
 opinion 🙂 *(+0.55 / +0.20)*` — built from spans so its numbers ride
 the reading mode, with the spoken twin naming the anchor's word and
-both axes. A severing signature keeps its sentence:
-`Signed 3 things, still settling. You've severed @ada.`
+both axes. A walk-back signature keeps its sentence:
+`Signed 3 things, still settling. You've walked @ada back to nothing.`
 
 **The walk-back.** Button `Walk it back`, dialog `Walk it all back?`,
 cost `It signs 3 things, each paid separately.` (`It signs 1 thing,

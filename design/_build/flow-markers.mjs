@@ -121,7 +121,7 @@ Object.assign(FLOW_MARKERS, {
   WalletAddressSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave"', tag: "button" },
-    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: 'aria-label="Copy the address"', tag: "button" },
     { n: 5, find: ">Sign and publish</button>", tag: "button" },
     { n: 6, find: ">Back</button>", tag: "button" },
@@ -129,7 +129,7 @@ Object.assign(FLOW_MARKERS, {
   WalletChange: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: 'aria-label="Copy the address"', tag: "button" },
     { n: 5, find: ">Sign the change</button>", tag: "button" },
     { n: 6, find: ">Back</button>", tag: "button" },
@@ -547,7 +547,7 @@ Object.assign(FLOW_MARKERS, {
   ComposeSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: ">Change</button>", tag: "button" },
     { n: 5, find: ">Adjust</button>", tag: "button" },
     { n: 6, find: ">Mark</button>", tag: "button" },
@@ -721,7 +721,7 @@ Object.assign(FLOW_MARKERS, {
   ReplyCited: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
-    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: "+ Add a tag", tag: "button" },
     { n: 5, find: "+ Cite something", tag: "button" },
     { n: 6, find: ">Adjust</button>", tag: "button" },
@@ -735,7 +735,7 @@ Object.assign(FLOW_MARKERS, {
   ComposeSealUploading: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: ">Change</button>", tag: "button" },
     { n: 5, find: ">Adjust</button>", tag: "button" },
     { n: 6, find: ">Mark</button>", tag: "button" },
@@ -1275,7 +1275,7 @@ Object.assign(FLOW_MARKERS, {
   ReplySeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
-    { n: 3, find: 'aria-label="Signed actions"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: "+ Add a tag", tag: "button" },
     { n: 5, find: "+ Cite something", tag: "button" },
     { n: 6, find: ">Adjust</button>", tag: "button" },

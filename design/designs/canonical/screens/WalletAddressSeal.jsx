@@ -4,7 +4,7 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" leaveLabel="Leave" stageLabel="Last step" help="Signed actions" />
+      <WizardHeader title="What you sign" leaveLabel="Leave" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 16px 24px", overflow: "hidden" }}>
         <PayoutAddress
           address={SOL_ADDRESS}

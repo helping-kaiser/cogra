@@ -668,7 +668,7 @@ const ADD_ROWS = [
 function ComposeSealBody() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions" />
+      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
 
@@ -793,7 +793,7 @@ function ReplySealBody() {
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
         stageLabel="Last step"
-        help="Signed actions"
+        help="How signing works"
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
@@ -1326,7 +1326,7 @@ function SettingsBody() {
 
         <SettingsGroup
           label="Writing"
-          footnote="Every signed action is paid for separately. A post's license is settled when it is first signed and never changes."
+          footnote="Everything you sign is paid for separately. A post's license is settled when it is first signed and never changes."
         >
           <SettingsRow
             checked
