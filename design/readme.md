@@ -3245,10 +3245,10 @@ one sitting.
   clears it exactly as on a person's profile, and a Collective with none
   written is presented by its handle. The handle is the only name the
   product requires, of anyone.
-- **Each "?" names its own dialog.** The three stance pads read `Where
-  you stand on it`, `Toward what you answer` and `Your first stance` —
-  their own dialogs' titles, the way every other "?" in the system
-  already takes its subject. One name across three surfaces says only
+- **Each "?" names its own dialog.** The three opinion pads read `Your
+  opinion on your post`, `Toward what you answer` and `Your first
+  opinion` — their own dialogs' titles, the way every other "?" in
+  the system already takes its subject. One name across three surfaces says only
   that a dialog exists; `How opinions work` stays where the control
   itself is the subject.
 - **An @-scope hit on a tag is indirect, and the drawing stands.** The

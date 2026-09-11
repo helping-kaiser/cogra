@@ -410,7 +410,7 @@ export function StanceControl({
                 own title, not a generic one, wherever a board draws a named
                 pad (`ComposePad`'s "Your opinion on your post", `ReplyPad`'s
                 "Toward what you answer", `VouchBackPad`'s "Your first
-                stance"); the ordinary feed-card control keeps the default. */}
+                opinion"); the ordinary feed-card control keeps the default. */}
             <button
               type="button"
               aria-expanded={explaining}
