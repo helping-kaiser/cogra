@@ -58,7 +58,7 @@ target is the viewer's own content, profile, or application.
 | **Citation** | a **Reference** whose target is a Post or Comment the viewer authored | the citing author | the citing post or comment |
 | **Opinion on your profile** | an **Opinion** whose target is the viewer's Profile — the gesture that makes one person follow another | the opinion's author | that actor's profile |
 | **Invite landed** | a **Registration** landing an account that applied through one of the viewer's invite links ([invitations.md](../primitive/invitations.md)) | the account that landed | the new member's profile |
-| **Application approved** | the inviter's priced approval of the viewer's own application ([auth.md "Approval and landing"](auth.md#approval-and-landing)) | the inviter | the viewer's own application state |
+| **Application approved** | the inviter's priced approval of the viewer's own application ([auth.md "Approval and landing"](auth.md#approval-and-landing)) | the inviter | the inviter's profile — who vouched, and where the reciprocation the landing prompts is made |
 
 Two properties hold across all seven and are what make the set a
 set rather than a list of features:
