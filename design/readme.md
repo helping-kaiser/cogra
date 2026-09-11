@@ -3593,16 +3593,19 @@ a control of its own.
   tag on a post that already carries it stands, so taking it off is a
   record — the body's `Withdrawn:` line names it and the acts card
   counts it — and an act of that weight is asked for by a control that
-  says what it does. `Withdraw` takes `Sever`'s place in the foot and
-  `Sever`'s restraint with it: the walk-away pushed left of the
-  decisions, a text button, no colour of its own.
+  says what it does. `Un-tag` — the reader's word, api-spec's own noun
+  for the r-0 record — takes `Sever`'s place in the foot and `Sever`'s
+  restraint with it: the walk-away pushed left of the decisions, a text
+  button, no colour of its own. The chip's × at an edit asks for the
+  same staged withdrawal without the pad roundtrip (jakob 2026-09-11) —
+  two doors, one act.
 - **It stages, and the seal signs.** The sheet closes, the chip leaves
   the row for the withdrawn line already drawn beneath it, and the acts
   card counts one more action, which the edit seals together with
   everything else (item 37). Nothing asks twice: the seal is the
   willing act, and a second layer over a staged, reversible change
   guards nothing.
-- **A composer's pad carries no `Withdraw`** (`TagPadCompose`). Nothing
+- **A composer's pad carries no un-tag control** (`TagPadCompose`). Nothing
   on that path is signed yet, so there is no tag to withdraw — the
   chip's × unstages on the spot, and the same control here would name
   an act that does not exist. Two boards because two contexts reach the
