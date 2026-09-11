@@ -7,9 +7,9 @@ import React from "react";
      · The FACE is the lossy readout of the EDGE BEING AUTHORED — this pick, not
        the bundle it joins. Conflating the two would make the face mean something
        different depending on history, which is exactly what a readout must not do.
-       The EXACT PAIR sits with it and is equally default: the face carries the
-       feel and the pair carries the fact, and hiding either makes the other harder
-       to trust.
+       The EXACT PAIR rides the same line in a `cg-exact` span: the face carries
+       the feel by default and the numbers paint only in geek mode (readme §13,
+       the geek-mode rule). Both are always drawn, so the markup is one markup.
      · "Resulting stance" sits BELOW the field — the bundle after the pick.
 
    DIVERGENCE FROM THE SOURCE: the anchor's WORDS ARE NO LONGER DRAWN. The source
@@ -189,6 +189,25 @@ export function nearestAnchor(pair) {
   return best;
 }
 
+/** The nearest TAG anchor, over the thirteen objects rather than the twenty
+ *  faces. Exported because the rows that draw a tag's pair without the pad —
+ *  `TaggedRow`, `ReferenceRow`'s topic edge — need the same glyph the pad
+ *  shows, and a second walk of the table would be a second table. */
+export function nearestTagAnchor(pair) {
+  let best = TAG_ANCHORS[0];
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const anchor of TAG_ANCHORS) {
+    const dd = anchor.pDirected - pair.pDirected;
+    const di = anchor.pInterest - pair.pInterest;
+    const distance = dd * dd + di * di;
+    if (distance < bestDistance) {
+      best = anchor;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
 /** The readout a STANDING wears. The table never speaks for zero. */
 export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
   if (pair.pDirected === 0 && pair.pInterest === 0) return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
@@ -211,7 +230,7 @@ export function StanceValue({ pDirected, pInterest, showPair = true }) {
     >
       <span aria-hidden="true" style={{ fontSize: "var(--text-title-medium)" }}>{readout.emoji}</span>
       {showPair && (
-        <span aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+        <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
           {formatStancePair(pair)}
         </span>
       )}
@@ -294,6 +313,13 @@ export function standingLine(bundle, targetLabel) {
  *
  * `capped` is false when the sum never reached the clip, and then there is only
  * one number to show and no aside to make.
+ *
+ * THE ONE EXEMPTION FROM GEEK MODE (jakob's ruling, backlog item 53). These two
+ * numbers carry no `cg-exact` marker and paint in both modes: the sheet exists to
+ * show the DIFFERENCE between the raw sum and the fold, and the faces are a
+ * lossy readout — the two would wear the same glyph, which is the whole content
+ * of the sheet erased. A reader about to walk back everything they have said is
+ * owed the arithmetic, whatever their reading setting says.
  */
 export function severanceParts(bundle, targetLabel) {
   if (bundle === undefined) return { sentence: "Checking your current stance…" };
@@ -339,9 +365,11 @@ export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, 
       {/* NEVER WRAPS. This sits in the post card's affordance row, which is one
           line by rule — a pair broken across two text lines reads as a two-line
           block even when the row height has not changed. */}
-      <span aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+      <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
         {formatStancePair(pair)}
       </span>
+      {/* The spoken reading is the same in both modes: geek mode is a drawing
+          setting, and a reader on a screen reader is owed the values either way. */}
       <span style={SR_ONLY}>{`${readout.label}, ${formatStanceWords(pair)}`}</span>
     </span>
   );
@@ -399,7 +427,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
       </span>
       <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
         <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", lineHeight: 1.2 }}>{emoji}</span>
-        <span style={{ fontSize: "var(--text-body-small)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }}>{pair}</span>
+        <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }}>{pair}</span>
       </span>
       <span style={SR_ONLY}>{spoken}</span>
     </div>

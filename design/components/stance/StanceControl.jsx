@@ -314,8 +314,14 @@ export function StanceControl({
           {restingPair !== null && (
             /* NEVER WRAPS. This is the post card's affordance row, which is one
                line by rule — a pair broken across two text lines reads as a
-               two-line block even when the row height has not changed. */
+               two-line block even when the row height has not changed.
+
+               The face is the default reading and these numbers are the geek
+               one (`cg-exact`, readme §13): at rest the affordance row carries
+               the face alone, and the button's accessible name carries the
+               values in both modes. */
             <span
+              className="cg-exact"
               aria-hidden="true"
               style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
             >
