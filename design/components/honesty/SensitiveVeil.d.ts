@@ -46,10 +46,11 @@ export declare function SensitiveVeil(props: SensitiveVeilProps): JSX.Element;
 export interface RedactedContentProps {
   /**
    * "illegal" — removed for cause by a passing proposal. "author" — removed by
-   * choice (erasure §1). These must read differently: collapsing them would let a
-   * moderation verdict hide behind an author's decision, or the reverse.
+   * choice (erasure §1). "account" — a whole account deleted by the person who
+   * had it (erasure §2). These must read differently: collapsing them would let
+   * a moderation verdict hide behind an author's decision, or the reverse.
    */
-  reason?: "illegal" | "author";
+  reason?: "illegal" | "author" | "account";
   /** When it was removed, in the reader's words. */
   when?: string;
   /** Replaces the second line where a case needs its own wording. */

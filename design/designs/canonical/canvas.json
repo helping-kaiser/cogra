@@ -785,6 +785,24 @@
       "page": "feed"
     },
     {
+      "file": "FeedDeleting.dc.html",
+      "title": "Feed · the deletion band",
+      "x": 2880,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "DeleteAccountCanceled.dc.html",
+      "title": "Feed · the deletion canceled",
+      "x": 3360,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "Money.dc.html",
       "title": "Money · the CGT figure",
       "x": 0,
@@ -1155,10 +1173,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -2160,
+      "x": -2740,
       "y": 0,
-      "w": 1740,
-      "h": 2053,
+      "w": 2320,
+      "h": 2109,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1221,7 +1239,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 3291,
+      "h": 3412,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1289,6 +1307,15 @@
       "page": "profile"
     },
     {
+      "file": "ProfileDeleted.dc.html",
+      "title": "Profile · deleted by the person whose account it was",
+      "x": 2400,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ProfilePosts.dc.html",
       "title": "Profile · the posts view",
       "x": 1920,
@@ -1321,7 +1348,7 @@
       "x": 0,
       "y": 1928,
       "w": 390,
-      "h": 2027,
+      "h": 2163,
       "page": "profile"
     },
     {
@@ -1409,6 +1436,24 @@
       "file": "YourKeyAbsent.dc.html",
       "title": "Settings · your key, key absent",
       "x": 960,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "DeleteAccount.dc.html",
+      "title": "Delete account · what goes and what stays",
+      "x": 1440,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "DeleteAccountMail.dc.html",
+      "title": "Delete account · check your mail",
+      "x": 1920,
       "y": 2988,
       "w": 390,
       "h": 844,
@@ -1508,7 +1553,7 @@
       "file": "Saved.dc.html",
       "title": "Saved · what you kept",
       "x": 0,
-      "y": 4058,
+      "y": 4194,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1517,7 +1562,7 @@
       "file": "SavedEmpty.dc.html",
       "title": "Saved · nothing kept yet",
       "x": 480,
-      "y": 4058,
+      "y": 4194,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1526,7 +1571,7 @@
       "file": "History.dc.html",
       "title": "History · what you have read",
       "x": 960,
-      "y": 4058,
+      "y": 4194,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1535,7 +1580,7 @@
       "file": "HistoryEmpty.dc.html",
       "title": "History · nothing seen yet",
       "x": 1440,
-      "y": 4058,
+      "y": 4194,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1544,7 +1589,7 @@
       "file": "SettingsHidden.dc.html",
       "title": "Settings · hidden accounts",
       "x": 1920,
-      "y": 4058,
+      "y": 4194,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1553,7 +1598,7 @@
       "file": "Notifications.dc.html",
       "title": "Notifications · what happened",
       "x": 0,
-      "y": 5128,
+      "y": 5264,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1562,7 +1607,7 @@
       "file": "NotificationsEmpty.dc.html",
       "title": "Notifications · nothing yet",
       "x": 480,
-      "y": 5128,
+      "y": 5264,
       "w": 390,
       "h": 844,
       "page": "profile"
