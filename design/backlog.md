@@ -1891,7 +1891,7 @@ Three things the boards do not carry, each named where the lane hit it.
    caps and no shared drawn answer for what a field does when the words
    are too many. Worth one round rather than three.
 
-### 53 · Geek mode — glyph-first signal numbers · *design* · **ruled 2026-09-11, undrawn**
+### 53 · Geek mode — glyph-first signal numbers · *design* · **drawn 2026-09-11**
 
 A friend's proposal, jakob adopted it scoped (the full record:
 dev-state `cogra/tmp_dev/2026-09-11-geek-mode-rulings.md`). Runs as
@@ -1917,10 +1917,34 @@ reshaped.
 
 Canvas mechanism (answered from shell.mjs, jakob agreed to the
 toggle): a `geek` data-props chip beside the theme chip, landing as
-`data-geek` on the screen root with the same broadcast; masters
-always render glyph AND number, the number span carries a marker
-class hidden by base CSS unless geek is on. No board forks; SR text
-already carries the values.
+`data-geek` on the screen root with its own `cograGeek` broadcast;
+masters always render glyph AND number, the number span carries
+`cg-exact` and one base rule hides it unless geek is on. No board
+forks; every hidden number keeps a screen-reader twin, so nothing
+spoken moves with the mode.
+
+Drawn 2026-09-11 (readme §13, *Geek mode*). What the round did not
+finish, as its own items:
+
+1. **The snackbar a signed stance leaves still reads its numbers.**
+   `signedLine` builds one sentence — "Current stance: Like this, For
+   or against +0.55, How much reaches you +0.20" — and a sentence
+   cannot carry a marker span. It is a Group A reading in prose, and
+   whether it follows the mode or stays as it is needs jakob's word;
+   splitting it into parts the way `standingParts` already is would be
+   the mechanical answer.
+2. **The wide stance anchor loses its words in non-geek mode.** The
+   profile header's `wide` variant draws the words beside the face
+   "because a lone face at full width reads as lost" — and with a
+   standing held, those words ARE the pair, so the geek-off drawing is
+   the lone face the variant was written against. Either the anchor
+   draws its label there, or the variant accepts the face alone.
+3. **A citation row's pair has no glyph to fall back to.** A topic row
+   in the references sheet gains the tag glyph and a rank keeps the
+   score's mark, but a person, post or comment row — and a staged
+   citation in a composer — simply loses its right edge in non-geek
+   mode. The symmetric answer is the stance face, which the ruling
+   granted to cards and did not mention here.
 
 ### 54 · What the numbers census left standing · *design*
 
@@ -1931,9 +1955,15 @@ batch could not settle:
    past ("recency is a feeling, history is a date"); a campaign's
    "Runs 6 more days · ends 8 Sep" (WalletCampaign, WalletCampaigns)
    is unruled — needs jakob's word on how a future moment is spelled.
-2. **Pair-string format has no drift guard.** Screens hand-write
-   pair strings by design (the bundle exposes leading-capital names
-   only; `formatTagPair`/`formatStancePair` stay master-side), so
-   nothing catches a screen typing `+0.4 / 0.9` one-decimal. A check
-   in the design gate that validates `pair=`/`value=` literals
-   against the format contract would close it.
+2. **Pair-string format has no drift guard where a pair is still
+   hand-written.** The list masters no longer take one: `TaggedRow`,
+   `ReferenceRow` and `StagedReference` take `{ pDirected, pInterest }`
+   and format it themselves (item 53), which closed the drift on every
+   list surface and is what surfaced the `+0.4 · 0.1` in
+   `StagedReference`'s own prompt sidecar. What is left is the
+   hand-drawn pad readouts — `RefPair`, `ComposePad`, `TagPad`,
+   `TagPadCompose`, `PadKeyAbsent` and the shared pad body — which
+   spell their face and their pair because the lookups and the
+   formatters are master-side helpers the bundle does not expose to
+   screens. A check in the design gate that validates those literals
+   against the format contract would close the rest.
