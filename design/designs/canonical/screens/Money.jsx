@@ -1,7 +1,11 @@
 /* Money — the CGT figure's spec board (item 11). A system board like Theme:
    the mark (the brand mark on the coin — decided 2026-08-31, after a lone C
    read as any game's coin), the figure's states, and the balance headline —
-   the one surface that spells the word. */
+   the one surface that spells the word.
+
+   `SpecLabel` IS NOT `SectionLabel`, deliberately: the system's caption carries
+   the screen gutter itself, for a scroll column of full-bleed rows, and this
+   board already pads its own. The ruling is recorded in `SectionLabel.jsx`. */
 
 function SpecLabel({ children }) {
   return (
@@ -18,15 +22,6 @@ function SpecLabel({ children }) {
     >
       {children}
     </span>
-  );
-}
-
-function FigureRow({ words, children }) {
-  return (
-    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-      <span style={{ color: "var(--text-secondary)" }}>{words}</span>
-      {children}
-    </div>
   );
 }
 
@@ -51,36 +46,24 @@ export function Screen() {
       </div>
 
       <SpecLabel>The figure — rest, large, dust, zero</SpecLabel>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <FigureRow words="A score-sized amount"><MoneyFigure amount={15.2} /></FigureRow>
-        <FigureRow words="A campaign deposit"><MoneyFigure amount={12500} /></FigureRow>
-        <FigureRow words="A dust share — never 0.00"><MoneyFigure amount={0.0003} /></FigureRow>
-        <FigureRow words="A new member's true state"><MoneyFigure amount={0} /></FigureRow>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <FactRow emphasis="ledger" label="A score-sized amount" value={<MoneyFigure amount={15.2} />} />
+        <FactRow emphasis="ledger" label="A campaign deposit" value={<MoneyFigure amount={12500} />} />
+        <FactRow emphasis="ledger" label="A dust share — never 0.00" value={<MoneyFigure amount={0.0003} />} />
+        <FactRow emphasis="ledger" label="A new member's true state" value={<MoneyFigure amount={0} />} last />
       </div>
 
       <SpecLabel>History lines — the sign and the words carry direction, never a colour</SpecLabel>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <FigureRow words="Payout · campaign settled"><MoneyFigure amount={12.4} signed /></FigureRow>
-        <FigureRow words="Tip to @ada"><MoneyFigure amount={-2} signed /></FigureRow>
-        <FigureRow words="Payout · campaign settled"><MoneyFigure amount={0.0003} signed /></FigureRow>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <FactRow emphasis="ledger" label="Payout · campaign settled" value={<MoneyFigure amount={12.4} signed />} />
+        <FactRow emphasis="ledger" label="Tip to @ada" value={<MoneyFigure amount={-2} signed />} />
+        <FactRow emphasis="ledger" label="Payout · campaign settled" value={<MoneyFigure amount={0.0003} signed />} last />
       </div>
 
       <SpecLabel>The balance headline — the one surface that spells the word</SpecLabel>
-      <Card style={{ flex: "none" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span style={{ fontSize: "var(--text-label-medium)", lineHeight: "var(--text-label-medium--line-height)", fontWeight: "var(--text-label-medium--font-weight)", color: "var(--text-secondary)" }}>
-              Your balance
-            </span>
-            <span style={{ fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-              <MoneyFigure amount={128.4} unit />
-            </span>
-          </div>
-          <SystemHelpDot ariaLabel="What is CGT?" />
-        </div>
-      </Card>
+      <WalletBalance amount={128.4} approx="0.00087" onHelp={() => {}} />
       <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
-        The "?" says it plainly: CGT is CoGra's own money, and the small coin always means CGT. The wallet itself is item 12.
+        The "?" says it plainly: CGT is CoGra's own money, and the small coin always means CGT.
       </p>
     </div>
   );

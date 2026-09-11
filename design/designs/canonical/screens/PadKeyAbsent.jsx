@@ -15,8 +15,16 @@
    `inverse`, the filled button that takes the panel's pair turned over.
 
    THE FEED BENEATH IS `KeyElsewhere`'s, the same shell with the same task card:
-   this is that screen, one tap in. Its post carries no standing, because the
-   pad above it says in so many words that there is none yet. */
+   this is that screen, one tap in. Its post carries no opinion, because the
+   pad above it says in so many words that there is none yet.
+
+   THE SHELL IS DRAWN HERE, around the real `StancePad`, and the reason is the
+   thing the board exists to say. `StanceControl`'s open state always ends in
+   Cancel and Set; Set is the only thing on the pad that signs, and a board about
+   a signature that cannot be given must not draw it. No prop takes that row
+   away, and adding one would be deciding what the pad looks like when signing is
+   impossible. So the notice stands where the landing line and the actions
+   would. */
 export function Screen() {
   return (
     <>
