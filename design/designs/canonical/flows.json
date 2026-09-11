@@ -236,12 +236,32 @@
     },
     {
       "name": "publish-a-video",
-      "description": "A video takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
+      "description": "A horizontal or square clip takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
       "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "WalletGuest", "ApplicantFeed", "ApplicantWaiting", "WalletApplicant", "ProfileApplicant"] },
       "waypoints": [
-        { "board": "ComposePick", "via": 3, "case": "a video — its face" },
+        { "board": "ComposePick", "via": 3, "case": "a horizontal or square video — its face" },
         { "board": "ComposeCover", "via": 6 },
-        { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
+        { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
+    },
+    {
+      "name": "publish-a-vertical-video",
+      "description": "A vertical clip meets no cover step at all: it plays the moment it is on screen, so its face is its first frame and the wizard runs pick to details, where an optional door offers a cover to anyone who wants one.",
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "WalletGuest", "ApplicantFeed", "ApplicantWaiting", "WalletApplicant", "ProfileApplicant"] },
+      "waypoints": [
+        { "board": "ComposePick", "via": 3, "case": "a vertical video — no cover step, the door waits on details" },
+        { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
+    },
+    {
+      "name": "give-a-vertical-clip-a-cover",
+      "description": "The door on details opens the step the clip skipped; the face chosen there comes back to the stage that asked, and the post signs from it.",
+      "start": { "board": "ComposeDetailsVideo", "via": 4, "to": "ComposeCover" },
+      "waypoints": [
+        { "board": "ComposeCover", "via": 6 },
+        { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }
       ],
       "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
     },

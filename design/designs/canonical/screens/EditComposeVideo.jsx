@@ -9,6 +9,15 @@
    device may no longer hold; the gallery is the one way in, through the
    cover's crop (CoverCrop).
 
+   THIS CLIP IS VERTICAL, SO IT HAS NO COVER (jakob 2026-09-10), and the row
+   says so by being a door rather than a picture: "Add a cover", where a clip
+   that has one wears its face and "Change the cover" (CommentEditVideo draws
+   that half, the same contract at the other scale). An edit must never present
+   a cover row presuming one exists — the field would then show a picture the
+   post does not have, and every path out of it would be a change to something
+   unset. The door is the empty state of the same field, and what it opens is
+   the same gallery, through the same crop.
+
    The clip's own move is to leave whole. A post that loses its clip is a post
    with words, the same way a post that loses its pictures is — the body
    changes, the post does not become another one. That sentence used to end at
@@ -25,7 +34,7 @@ export function Screen() {
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Video</FieldLabel>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MediaThumb src="post-photo.jpg" alt="" width={96} height={54} fit="cover" video onRemove={() => {}} removeLabel="Remove this video" />
+            <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} fit="cover" video onRemove={() => {}} removeLabel="Remove this video" />
           </div>
           <DescribeCounter subject="video" described={1} total={1} onDescribe={() => {}} />
           {/* Where the picture edit's "+ Add" stands, a clip gets the quiet
@@ -38,10 +47,10 @@ export function Screen() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Cover</FieldLabel>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MediaThumb src="post-photo.jpg" alt="" width={96} height={54} fit="cover" />
-            <Button variant="text" size="sm">Change the cover</Button>
-          </div>
+          <InlineAction size="sm" selfStart>
+            Add a cover
+          </InlineAction>
+          <QuietNote>It plays the moment it is on screen, so it starts on its own first frame.</QuietNote>
         </div>
 
         <TextField label="Title" corner="Optional" value="The long way home" />

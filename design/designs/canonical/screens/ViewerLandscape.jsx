@@ -14,14 +14,6 @@
    gesture zone along a long edge the thumb rests on. */
 export const FRAME = { width: 844, height: 390 };
 
-const CLIP_CANOE = {
-  kind: "video",
-  src: "clip-canoe.mp4",
-  poster: "clip-canoe.jpg",
-  ratio: "landscape",
-  alt: "Two canoes crossing a mountain lake.",
-};
-
 export function Screen() {
   return <MediaViewer items={[CLIP_CANOE]} index={0} onClose={() => {}} elapsed="0:26" duration="1:12" progress={0.36} />;
 }
