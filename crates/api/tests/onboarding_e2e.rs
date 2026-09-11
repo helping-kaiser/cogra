@@ -223,8 +223,8 @@ async fn new_invite_link(rig: &Rig, inviter_token: &str) -> String {
 ///
 /// The fresh account reads its own state — applicant, unverified,
 /// application pending both proofs — and acting is member-gated, so an
-/// applicant preparing a stance is a FORBIDDEN transport fault rather
-/// than a userError. The two proofs then land: email verification with
+/// applicant preparing a stance is an EMAIL_NOT_VERIFIED transport fault
+/// rather than a userError. The two proofs then land: email verification with
 /// the token read "from the inbox", and the key ceremony as a logged-in
 /// step where the device mints the key and attaches the public halves.
 ///
@@ -367,7 +367,11 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
             }}),
         )
         .await;
-    assert_eq!(refused["errors"][0]["extensions"]["code"], "FORBIDDEN");
+    assert_eq!(
+        refused["errors"][0]["extensions"]["code"], "EMAIL_NOT_VERIFIED",
+        "the account is unverified at this point in the arc, and the \
+         refusal names the proof that is missing: {refused}"
+    );
 
     let verification = rig.mailer.latest_token_for("joiner@example.com");
     let verified = rig

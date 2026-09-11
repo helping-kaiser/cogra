@@ -9,6 +9,7 @@ package com.cogra.domain
 enum class ErrorCode {
     UNAUTHENTICATED,
     FORBIDDEN,
+    EMAIL_NOT_VERIFIED,
     NOT_FOUND,
     BAD_INPUT,
     RATE_LIMITED,
