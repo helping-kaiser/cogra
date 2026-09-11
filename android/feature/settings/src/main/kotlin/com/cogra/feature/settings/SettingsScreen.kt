@@ -54,7 +54,7 @@ import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.rememberKeyGate
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.ErrorCode
-import com.cogra.domain.MIN_HANDLE_LENGTH
+import com.cogra.domain.handleValid
 import com.cogra.domain.identity.recoveryCodePrefixDiverged
 import com.cogra.domain.identity.recoveryCodeTypedBack
 import com.cogra.domain.stance.StanceInputMode
@@ -466,6 +466,10 @@ private fun CredentialsSection(
                 value = state.newHandle,
                 onValueChange = onNewHandleChange,
                 label = { Text(stringResource(R.string.settings_new_handle)) },
+                // The join form's own line: a screen that gates on the handle
+                // grammar and does not state it disables its button for a
+                // reason the reader cannot see.
+                supportingText = { Text(stringResource(R.string.settings_handle_rules)) },
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -473,7 +477,7 @@ private fun CredentialsSection(
             )
             Button(
                 onClick = onChangeHandle,
-                enabled = state.newHandle.length >= MIN_HANDLE_LENGTH && !state.busy,
+                enabled = handleValid(state.newHandle) && !state.busy,
                 modifier = Modifier.testTag("settings_change_handle"),
             ) {
                 Text(stringResource(R.string.settings_change_handle))

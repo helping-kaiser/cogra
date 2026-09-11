@@ -7,6 +7,7 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.compose.DraftShape
+import com.cogra.domain.content.isTitleTooLong
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.VideoFrame
@@ -432,10 +433,20 @@ data class ComposeWizardState(
     val canSign: Boolean
         get() = !submitting &&
             !keyAbsent &&
+            !titleTooLong &&
             when (mode) {
                 BodyMode.Words -> body.isNotBlank()
                 BodyMode.Media -> uploadsComplete
             }
+
+    /**
+     * The one details field with a cap the write side refuses past
+     * (post.md §1). It blocks the seal as well as the details screen: the
+     * seal is the boundary the server sees, and a draft that reached it
+     * over-titled would sign a refusal.
+     */
+    val titleTooLong: Boolean
+        get() = isTitleTooLong(title)
 
     /** The draft this state would be kept as. */
     fun toDraft(): ComposeDraft = ComposeDraft(
