@@ -1923,28 +1923,49 @@ masters always render glyph AND number, the number span carries
 forks; every hidden number keeps a screen-reader twin, so nothing
 spoken moves with the mode.
 
-Drawn 2026-09-11 (readme §13, *Geek mode*). What the round did not
-finish, as its own items:
+Drawn 2026-09-11 (readme §13, *Geek mode*), and reviewed the same
+evening — nine further rulings, all drawn in the round's own PR: the
+gesture inverted (a tap opens the pad, a held finger signs the gentle
+default), the affordance rows spread across the card, help and coach
+sentences made emoji-first, the reference rows given the stance face,
+the Post score and the rank taken back out of the mode, the wording
+table applied, `opinion` made the reader's word, and the `Settings`
+canvas slot un-clipped. What is left:
 
-1. **The snackbar a signed stance leaves still reads its numbers.**
-   `signedLine` builds one sentence — "Current stance: Like this, For
-   or against +0.55, How much reaches you +0.20" — and a sentence
-   cannot carry a marker span. It is a Group A reading in prose, and
-   whether it follows the mode or stays as it is needs jakob's word;
-   splitting it into parts the way `standingParts` already is would be
-   the mechanical answer.
-2. **The wide stance anchor loses its words in non-geek mode.** The
-   profile header's `wide` variant draws the words beside the face
-   "because a lone face at full width reads as lost" — and with a
-   standing held, those words ARE the pair, so the geek-off drawing is
-   the lone face the variant was written against. Either the anchor
-   draws its label there, or the variant accepts the face alone.
-3. **A citation row's pair has no glyph to fall back to.** A topic row
-   in the references sheet gains the tag glyph and a rank keeps the
-   score's mark, but a person, post or comment row — and a staged
-   citation in a composer — simply loses its right edge in non-geek
-   mode. The symmetric answer is the stance face, which the ruling
-   granted to cards and did not mention here.
+1. ~~The snackbar a signed stance leaves still reads its numbers.~~
+   **Closed by the review round.** `signedLine` is built from spans:
+   the face is drawn, the pair rides a `cg-exact` tail, and a
+   screen-reader twin carries the anchor's word and both axes in either
+   mode.
+2. **The wide anchor's words in non-geek mode.** The profile header's
+   `wide` variant draws the words beside the face "because a lone face
+   at full width reads as lost" — and with an opinion held, those words
+   ARE the pair, so the geek-off drawing is the lone face the variant
+   was written against. Either the anchor draws its label there, or the
+   variant accepts the face alone. (The unset case now reads `Give your
+   opinion`; the held case is the open one.)
+3. ~~A citation row's pair has no glyph to fall back to.~~
+   **Closed by the review round.** `ReferenceRow`'s non-topic rows and
+   `StagedReference` read `nearestAnchor` and draw the nearest of the
+   twenty faces beside the hidden pair; the anchor's WORD stays off a
+   citation, so the spoken reading is the pair exactly (`RefPair`'s
+   rule).
+4. **The staged-act snackbars were left alone deliberately.**
+   `Your post is staged — it lands with you.` and `Your stance is
+   staged — it lands with you.` are blessed copy and outside the review
+   round's scope (jakob: flag, don't change) — but `ProfileApplicant`'s
+   neighbouring lines now say *arrive with you*, and the second one
+   still says *stance* where the naming law says *opinion*. Both need
+   jakob's word before either is touched.
+5. **Two vocabularies still split where the ruling stopped.** The
+   wording table renamed the sever control and the acts counts; the
+   sentences around them were ruled to stay, so the product now says
+   `Walk it back` on a button and *severing* / `Severed` /
+   *You've severed @ada* in the prose beside it, and *things* on the
+   acts card while the `Signed actions` dialog, the Writing group's
+   footnote (`Every signed action is paid for separately.`) and the two
+   wallet lines (`…is one signed action.`) keep *signed action*. Each
+   remaining string is blessed copy; one ruling closes both splits.
 
 ### 54 · What the numbers census left standing · *design*
 

@@ -61,7 +61,7 @@ looking like a bug.
 | Set | signs the pick |
 | Cancel, outside press, Esc | dismisses and stages nothing |
 | `?` | replaces the pad's body with four lines of help, and disables Set while it shows |
-| Sever | the explicit route to `(0, 0)` |
+| Walk it back | the explicit route to `(0, 0)` |
 
 **The light gesture costs nothing and the held one spends.** A tap is
 what a thumb gives by accident, so it opens the surface where a reader
@@ -110,8 +110,7 @@ instead is explain, and confirm when it matters:
   ask whether that was the intent.
 
 The cost is legible: each counter-record is its own priced act, so the
-dialog states the count — `It takes 3 signed actions, each paid for
-separately.`
+dialog states the count — `It signs 3 things, each paid separately.`
 
 ## The emoji readout
 
@@ -145,7 +144,7 @@ screen-reader and switch users the full range through ordinary,
 well-supported controls rather than a degraded version of the gesture.
 Selecting an alternate replaces the pad **everywhere**, not per-screen.
 The entry into them is present on every stance control regardless of the
-stored preference — as `Choose your stance`, visually hidden until
+stored preference — as `Choose your opinion`, visually hidden until
 focused (readme §11.3), so it is one tab away without being printed
 beside every stance in a feed. Both surfaces carry the same circled `?`
 as the pad, and on the alternates its first line is the one thing two
