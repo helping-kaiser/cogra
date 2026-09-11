@@ -2087,3 +2087,12 @@ paints `-0.20 / +0.10`. System-wide and pre-existing; changing the
 formatter moves every board with a negative pair, so it is its own
 pass — rule which character wins, then conform formatter or guideline
 and re-render.
+
+### 60 · The gate should catch a truncating filter summary · *tooling*
+
+Ruled 2026-09-11: the filter trigger fits its longest summaries at
+exactly 0px of slack (the 40px band icons), and the guard belongs in
+the GATE, not in a character budget — a check that warns when any
+feed-filter summary renders with an ellipsis, so vocabulary growth is
+caught at build time instead of on a phone. Sibling of 54.2's
+pair-format guard.
