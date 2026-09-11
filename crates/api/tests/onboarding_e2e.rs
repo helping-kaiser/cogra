@@ -744,7 +744,6 @@ async fn registration_enforces_the_password_and_device_label_caps(pool: PgPool) 
         .expect("session")
         .to_string();
 
-    // A password at the cap registers.
     let link_id = new_invite_link(&rig, &inviter_token).await;
     let at_cap = "x".repeat(api::auth::PASSWORD_MAX_CHARS);
     let registered = rig
@@ -766,7 +765,6 @@ async fn registration_enforces_the_password_and_device_label_caps(pool: PgPool) 
         "a password at the cap registers: {registered}"
     );
 
-    // One character past the cap is refused as WEAK_PASSWORD, not silently truncated or accepted.
     let link_id = new_invite_link(&rig, &inviter_token).await;
     let over = "x".repeat(api::auth::PASSWORD_MAX_CHARS + 1);
     let refused = rig
@@ -790,7 +788,6 @@ async fn registration_enforces_the_password_and_device_label_caps(pool: PgPool) 
     );
     assert_eq!(refused["register"]["userErrors"][0]["field"][0], "password");
 
-    // A device label past its own cap is refused as BAD_INPUT at deviceLabel.
     let link_id = new_invite_link(&rig, &inviter_token).await;
     let refused = rig
         .gql(

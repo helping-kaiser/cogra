@@ -318,6 +318,10 @@ async fn refuses_the_display_name_clear(pool: PgPool) {
 /// pass through unchecked — the cap bounds what an author writes, not
 /// the absence of a write.
 ///
+/// The at-cap case lands (rather than just prepares) between fields:
+/// only one update may be in flight per profile, so a landed success is
+/// what frees the chain for the next field's own cap check.
+///
 /// A profile's display name, bio, and website URL are each capped at their own length, in Unicode scalar values.
 /// ´claim:profile:the-text-fields-answer-to-their-own-caps´
 #[sqlx::test(migrations = "../../migrations")]
@@ -325,9 +329,6 @@ async fn the_text_fields_are_capped_at_their_own_lengths(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let (actor, key) = rig.registered_actor("ada").await;
 
-    // The at-cap case lands (rather than just prepares) between fields:
-    // only one update may be in flight per profile, so a landed success
-    // is what frees the chain for the next field's own cap check.
     let at_cap = "é".repeat(profile::MAX_DISPLAY_NAME_CHARS);
     rig.land_update(actor, &key, draft(Some(&at_cap), None, None))
         .await;
