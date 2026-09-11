@@ -344,6 +344,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeDetailsCaps.dc.html",
+      "title": "Compose · details against the caps",
+      "x": 1920,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "HelpDialog.dc.html",
       "title": "The ? dialog",
       "x": 0,
@@ -410,6 +419,15 @@
       "file": "ComposeExpired.dc.html",
       "title": "Didn't land · the notice",
       "x": 1440,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "ComposeWordsCaps.dc.html",
+      "title": "Compose · words past the cap",
+      "x": 1920,
       "y": 2120,
       "w": 390,
       "h": 844,
@@ -1110,10 +1128,10 @@
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -3030,
+      "x": -3320,
       "y": 0,
-      "w": 2610,
-      "h": 2553,
+      "w": 2900,
+      "h": 2766,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1418,6 +1436,15 @@
       "file": "TagPickerTyping.dc.html",
       "title": "Add a tag · naming one",
       "x": 3840,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "TagPickerRefused.dc.html",
+      "title": "Add a tag · a name it can't take",
+      "x": 4320,
       "y": 0,
       "w": 390,
       "h": 844,

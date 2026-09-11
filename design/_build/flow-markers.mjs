@@ -39,6 +39,36 @@ const guestBand = [
 ];
 const secondComments = (n) => ({ n, find: 'aria-label="1 comment"', tag: "button" });
 
+// The details stage's controls, shared by the stage and by the stage drawn
+// against its caps — one anatomy, so one marker list.
+const composeDetails = [
+  { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+  { n: 12, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
+  { n: 13, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+  { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+  { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+  { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
+  { n: 4, find: 'data-field="Title"', tag: "div" },
+  { n: 5, find: 'data-field="Description"', tag: "div" },
+  { n: 6, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+  { n: 6, find: 'aria-label="Remove #coastroad"', tag: "button" },
+  { n: 7, find: "+ Add a tag", tag: "button" },
+  { n: 8, find: 'aria-label="Remove The long way home', tag: "button" },
+  { n: 9, find: "+ Cite something", tag: "button" },
+  { n: 10, find: ">Next</button>", tag: "button" },
+  { n: 11, find: ">Describe the pictures</button>", tag: "button" },
+];
+
+// The words stage, likewise — the body box is found by its own outline, which
+// is the one thing the cap state changes about it.
+const composeWords = (bodyOutline) => [
+  { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+  { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+  { n: 3, find: ">Next</button>", tag: "button" },
+  { n: 4, find: ">Add pictures instead</button>", tag: "button" },
+  { n: 5, find: bodyOutline, tag: "div" },
+];
+
 export const FLOW_MARKERS = {
   Main: [
     filter,
@@ -434,23 +464,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Next</button>", tag: "button" },
     { n: 9, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
   ],
-  ComposeDetails: [
-    { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
-    { n: 12, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
-    { n: 13, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
-    { n: 4, find: 'data-field="Title"', tag: "div" },
-    { n: 5, find: 'data-field="Description"', tag: "div" },
-    { n: 6, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
-    { n: 6, find: 'aria-label="Remove #coastroad"', tag: "button" },
-    { n: 7, find: "+ Add a tag", tag: "button" },
-    { n: 8, find: 'aria-label="Remove The long way home', tag: "button" },
-    { n: 9, find: "+ Cite something", tag: "button" },
-    { n: 10, find: ">Next</button>", tag: "button" },
-    { n: 11, find: ">Describe the pictures</button>", tag: "button" },
-  ],
+  ComposeDetails: composeDetails,
+  ComposeDetailsCaps: composeDetails,
   RemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
@@ -502,13 +517,8 @@ Object.assign(FLOW_MARKERS, {
 // The seal's three sheet boards are scanExempt; only the sheet layer and its
 // scrim are stamped, and the seal beneath them is inert in those states.
 Object.assign(FLOW_MARKERS, {
-  ComposeWords: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: ">Next</button>", tag: "button" },
-    { n: 4, find: ">Add pictures instead</button>", tag: "button" },
-    { n: 5, find: "1px solid var(--border-field)", tag: "div" },
-  ],
+  ComposeWords: composeWords("1px solid var(--border-field)"),
+  ComposeWordsCaps: composeWords("1px solid var(--error)"),
   ComposePick: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
@@ -1501,6 +1511,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="How searching works"', tag: "button" },
     { n: 3, find: ">#SaltMaps<", tag: "div" },
     { n: 4, find: ">saltmaps<", tag: "button" },
+  ],
+  TagPickerRefused: [
+    { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
+    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 3, find: ">#salt maps<", tag: "div" },
   ],
   TagPad: [
     { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
