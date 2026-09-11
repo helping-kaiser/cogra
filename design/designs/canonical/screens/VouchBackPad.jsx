@@ -36,7 +36,12 @@ export function Screen() {
               padNote={
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <PadLine>Your first stance. The pad is how you shape what reaches you — for or against, and how much.</PadLine>
-                  <PadLine>Later, press and hold the small face under a post to open this — a quick tap on it signs a gentle +0.10 / +0.10.</PadLine>
+                  <PadLine>
+                    Later, tap the small face under a post to open this — press and hold it instead and a gentle{" "}
+                    <span aria-hidden="true">🙂</span>
+                    <ExactTail exact=" (+0.10 / +0.10)" spoken="Nice, For or against +0.10, How much reaches you +0.10" />{" "}
+                    is signed on the spot.
+                  </PadLine>
                   <PadLine>Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.</PadLine>
                 </div>
               }

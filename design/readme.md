@@ -311,8 +311,7 @@ on both platforms. The two motions that exist in the product:
 - the collapsing top's 200ms `translateY(-110%)` exit — it hides only
   once half its own slot has scrolled past, and returns only after about
   a third of a screen of accumulated upward scroll;
-- the pad's bloom on a 500ms hold (Android's platform long-press
-  timeout).
+- the pad's bloom when the stance face is tapped.
 
 **Screen transitions are defined here** (`tokens/transitions.css`, and the
 Motion card *Screen transitions*), because the product defines none and
@@ -659,11 +658,13 @@ four quadrants are legitimate.
 - **At rest** the target shows the standing: the face and the exact
   pair. A viewer with no standing sees a **muted, translucent 🫥** —
   never a bare word.
-- **A plain tap** commits a modest positive `(+0.1, +0.1)`. The **first
-  tap ever teaches and stages nothing** — it opens the coach mark, whose
-  first line is `Nothing was signed just now.`
-- **Press and hold 500ms** and the pad blooms at the lower centre of the
-  viewport. The drawn field *is* the value space: its corners are
+- **A plain tap** blooms the pad at the lower centre of the viewport and
+  stages nothing. The **first open ever teaches** — the coach mark rides
+  inside the pad and names the shortcut.
+- **Press and hold 500ms** commits a modest positive `(+0.1, +0.1)`
+  outright. The light gesture opens, the held one spends: nobody holds a
+  control for half a second by mistake.
+- The pad's drawn field *is* the value space: its corners are
   `(±1, ±1)` and the knob never leaves it. Horizontal runs Against → For,
   vertical runs Less → More, and those four words are drawn on the field.
 - **Releasing the finger never commits.** Release parks the pick, an
