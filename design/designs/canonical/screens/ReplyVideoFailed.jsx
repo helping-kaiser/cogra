@@ -15,17 +15,18 @@
    write" is gone with the upload it described: the error line is the state
    now, and a second sentence about uploading would contradict it.
 
-   THE COVER ROW STAYS. Frames are cut from the file on the device, so they
-   exist whether or not the bytes ever reached CoGra; the cover is a separate
-   upload of a separate asset. Choosing one while the clip retries is not
-   wasted work. */
+   THE WAY TO A COVER STAYS, and here it is the DOOR (jakob 2026-09-10). This
+   clip is vertical, and a vertical clip's default is no cover at any scale —
+   there is no step to skip in a one-screen composer, so what gives way is the
+   row: "Add a cover" stands where the strip would, and the strip is what it
+   opens (`ReplyVideo` draws that state, the same clip with its row showing).
 
-const CLIP_FRAMES = [
-  { src: "comment-camera.jpg" },
-  { src: "comment-camera.jpg", transform: "scale(1.25) translateX(-4%)" },
-  { src: "comment-camera.jpg", transform: "scale(1.5)" },
-  { src: "comment-camera.jpg", transform: "scale(1.8) translateY(6%)" },
-];
+   The failure changes nothing about that. Frames are cut from the file on the
+   device, so they exist whether or not the bytes ever reached CoGra, and the
+   cover is a separate upload of a separate asset — choosing one while the clip
+   retries is not wasted work. What the door protects against is the opposite
+   mistake: a strip demanding a decision from someone whose upload just failed,
+   about a picture their clip does not need. */
 
 export function Screen() {
   return (
@@ -58,7 +59,13 @@ export function Screen() {
 
         <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
 
-        <CoverRow frames={CLIP_FRAMES} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <FieldLabel>Cover</FieldLabel>
+          <InlineAction size="sm" selfStart>
+            Add a cover
+          </InlineAction>
+          <QuietNote>It plays the moment it is on screen, so it starts on its own first frame.</QuietNote>
+        </div>
 
         <div style={{ flex: 1 }} />
 

@@ -3616,6 +3616,83 @@ a control of its own.
   at **56** and flows at **58/55/3**. The witness did not move: no
   declared flow crosses either sheet.
 
+### The video-cover round — 2026-09-10
+
+Three rulings about the still a clip wears, and the wizard they rewrite
+(backlog item 49, jakob's rulings the same day).
+
+- **`CoverCrop` is wired into the wizard on both platforms.** Every
+  **gallery**-sourced cover passes the locked crop at the clip's ratio
+  before upload; a **frame** needs none, because it was cut from the clip
+  and already carries its shape. Only the cropped export ever leaves the
+  device — the original frame can hold what the author never meant to
+  share. **Web takes the cover step and its crop 1:1**, the file dialog
+  playing the picker's part, which is the avatar flow's blessing again and
+  why there is no web board. The cover shares the clip's ratio and crops
+  identically; that rule stands unrevised.
+- **The 4:5 feed clamp stands, confirmed explicitly** — jakob's reason, in
+  his words: *"taller than 4:5 is reserved for the reel scroller."* The
+  three shapes now stand on one board (*Feed · the clip's three shapes*)
+  so the presentation can be checked rather than recited: 16:9 and 1:1
+  display true, anything taller than 4:5 centre-crops to it, and nothing
+  is ever letterboxed. **What the board also shows is the height cap.**
+  A post fits the screen, so `--media-max-height` bounds every tile, and
+  at a phone's 390×844 it lands at 376px: the 16:9 clip is 219px and never
+  reaches it, while the square and the vertical clip both stand at 376,
+  filled. The crop vocabulary is not what reshapes them — it never governs
+  a clip — the cap is. The board pins that cap to a phone's value, because
+  its own frame is taller than a phone and `--media-max-height` is measured
+  against the viewport.
+- **No-cover is first-class, and the default is shape-keyed.** A
+  **vertical** clip defaults to **no cover**: the cover step is skipped and
+  what it would have been is one optional **"Add a cover"** door on
+  details. Horizontal and square clips keep the frame picker. **Shape
+  alone decides, never length.** jakob's reasons, recorded: an autoplaying
+  video that has a cover **looks broken** — the cover flashes for an
+  instant before playback takes it away — and a short-vertical author must
+  not be marched through a step they were always going to skip. *"Videos
+  are always moving, never at rest."*
+- **The coverless clip's face is its first frame**, cropped exactly as the
+  clip is. The suppressed-autoplay card wears it under the play disc;
+  quoted targets and history rows take it as their thumbnail. Nothing on a
+  reading surface branches on it — `MediaAttachment` is handed a still and
+  shows it, and whether that still was chosen or taken was settled while
+  the post was written.
+- **The door is a field's empty state, not a second entrance.** The
+  picture path refuses a second way into the crop, and this does not break
+  that rule: for a vertical clip the door is the *only* entrance, because
+  the step it opens was never walked. A clip that came through the cover
+  step therefore shows no door — its face is chosen and the step is one
+  Back away. At **edit** the door opens the gallery directly, since frames
+  are not re-offered there.
+- **When extraction fails, the step shrinks rather than lying** (*Cover ·
+  no frames came back*): `CoverRow` given no frames keeps only its way out
+  to the gallery, under a line saying why, over the **neutral tile** — a
+  clip that yields no still reserves its space and says what belongs
+  there, because the rule against inventing imagery is not suspended by an
+  error. The duration stays; the play disc does not. Next stays live: a
+  post can always go without a cover.
+- **Comment scale inherits at its scale.** There is no step to skip in a
+  one-screen composer, so the cover **row** is what gives way: a vertical
+  clip's reply opens with the door (*Reply · the clip didn't upload*), and
+  the row is what the door opens (*Reply · a video and its cover*) — one
+  drawing, because there is one row; what differs is whether anyone had to
+  ask for it. The two edit surfaces hold the field's two states, one each:
+  `EditComposeVideo` the door, `CommentEditVideo` the face and its
+  Change.
+- **Three wizard edges were wrong and are fixed.** `ComposeCover`'s back
+  arrow reached `ComposePick` when the stage behind it is
+  `ComposePickVideo`; `ComposeCrop`'s Next still offered the cover step,
+  a path no post can walk, since a body is pictures or one clip; and the
+  video path landed on the picture path's details board. The last of those
+  is why the round drew `ComposeDetailsVideo` at all.
+- **The gate**: 147 → **150 screens**, 1070 → **1082 edges**, gaps hold at
+  **56**, flows 58/55/3 → **60/57/3**. The witness was re-blessed for the
+  path's new middle: `publish-a-video` ends through `ComposeDetailsVideo`,
+  and `publish-a-vertical-video` and `give-a-vertical-clip-a-cover` are
+  newly declared. `CLIP_CANOE` moved into `_shared.jsx` — a third screen
+  wanted it — and every board that already drew it renders byte-identically.
+
 ## 14. Index
 
 **Root**

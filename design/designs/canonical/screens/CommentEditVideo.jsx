@@ -14,6 +14,14 @@
    change affordance is the gallery alone, and the picture it brings back goes
    through the cover's crop (CoverCrop) before it lands here again.
 
+   THIS COMMENT HAS A COVER, so the row shows the face and the way to change it.
+   That is a choice its author made — a vertical clip's default is no cover
+   (jakob 2026-09-10), and one that has one had the door opened. The other half
+   of the same field is `EditComposeVideo`'s: a clip without a cover shows "Add
+   a cover" and no picture, because an edit must never present a row presuming
+   something the post does not have. One contract, one field, two states, drawn
+   once each across the two scales.
+
    NO "a video is the whole comment" LINE HERE. That line exists to explain an
    add control that went missing; the edit surface has labelled fields instead,
    and Video sitting above Cover says the shape of the body without a sentence.

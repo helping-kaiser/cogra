@@ -1103,6 +1103,62 @@ const MIRA_CLIP_POST = {
   menuItems: CITE_MENU,
 };
 
+/* ── The other two clip shapes (video-cover round, 2026-09-10) ─────────────
+   A clip keeps its own shape, clamped to tall, so three shapes reach a card
+   three ways and all three are drawn on `FeedShapes`. The wide one is the
+   cover-at-rest board's clip, shared rather than spelled twice; the square one
+   stands on a downsampled square from the photo corpus (assets/photos/README).
+
+   BOTH CARRY A COVER, and the vertical one does not: a horizontal or square
+   clip meets the frame picker, a vertical clip's default is no cover and its
+   face is the first frame. The fixtures say that by what they hold.
+
+   The wide clip is also the rotated viewer's — it was spelled twice before a
+   third screen wanted it, which is exactly when a screen-local fixture stops
+   being one. */
+
+const CLIP_CANOE = {
+  kind: "video",
+  src: "clip-canoe.mp4",
+  poster: "clip-canoe.jpg",
+  ratio: "landscape",
+  alt: "Two canoes crossing a mountain lake.",
+};
+
+const CLIP_GRAPES = {
+  kind: "video",
+  src: "clip-grapes.mp4",
+  poster: "clip-grapes.jpg",
+  ratio: "square",
+  alt: "Two hands turning a bunch of grapes in the light.",
+};
+
+const TOBIAS_CANOE_POST = {
+  author: TOBIAS,
+  title: "Crossing at the narrows before the wind got up",
+  description:
+    "Four of us out, one camera wedged in the bow. The far bank is closer than it looks from the road.",
+  timestamp: "2h",
+  media: [{ ...CLIP_CANOE, resting: true }],
+  topics: ["stillwater"],
+  score: "4.80",
+  comments: 1,
+  license: { attribution: 0, provenance: 0 },
+  menuItems: CITE_MENU,
+};
+
+const ADA_GRAPES_POST = {
+  author: ADA,
+  title: "Nine seconds of the last of the crop",
+  timestamp: "5h",
+  media: [{ ...CLIP_GRAPES, resting: true }],
+  topics: ["tidemarket"],
+  score: "3.60",
+  comments: 4,
+  license: { attribution: 0, provenance: 0 },
+  menuItems: CITE_MENU,
+};
+
 /* The bottom bar's height — what the stream's own chrome has to clear. */
 const BAND_HEIGHT = 64;
 

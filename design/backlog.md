@@ -1729,7 +1729,7 @@ descriptions when the pictures it described are replaced, and whether a
 words body that flips to media keeps its text anywhere recoverable. The
 boards say only that the field goes; neither question is a drawing.
 
-### 49 · The video-cover round · *design* · **ruled 2026-09-10, undrawn**
+### 49 · The video-cover round · *design* · **built**
 
 Filed from the implementation session's media handoff; jakob ruled all
 three questions in the design session the same day (the full record:
@@ -1757,6 +1757,37 @@ Runs as its own round after the small-rulings review lands.
 The edit surface reconciles with ruling 3 in this round: a vertical
 clip's edit shows the same optional door, never a cover row presuming
 one exists.
+
+**Built 2026-09-10.** Rulings in readme §13, *The video-cover round*.
+Three boards: *Feed · the clip's three shapes* (a reference board, tall
+by export, with the media cap pinned to a phone's — its own frame is not
+a viewport), *Details · a clip, no cover* (the video path's own details
+stage, which it had never had, carrying the door), and *Cover · no
+frames came back*. Four boards re-dressed: `EditComposeVideo` takes the
+door, `ReplyVideoFailed` takes it at comment scale, `ReplyVideo` and
+`CommentEditVideo` record which half of the field they draw, and
+`FeedCover` records that the still under its play disc is a first frame,
+not a cover. `MediaThumb` gained the neutral tile, `CoverRow` an empty
+strip, `MediaAttachment` the note that a still may be a first frame.
+
+**Three wizard edges were wrong and are fixed** (found in the round, not
+ruled): `ComposeCover`'s back arrow reached `ComposePick` rather than
+`ComposePickVideo`; `ComposeCrop`'s Next offered the cover step, a path
+no post can walk; and the video path's Next landed on the picture path's
+details board.
+
+**Left for the apps** (conform, not design): the web wizard wires
+`CoverCrop` into the video path and stops uploading covers uncropped;
+both apps key the cover step on the clip's shape and ship the door on
+details and at edit; both draw the no-frames state. The five
+mis-measured dev rows were backfilled 2026-09-10, before the round.
+
+**Candidate copy awaiting blessing** — the door's label *"Add a
+cover"*; the line under it, on all four surfaces that draw the door,
+*"It plays the moment it is on screen, so it starts on its own first
+frame."*; the no-frames caption *"This clip gave no frames — choose a
+picture of your own, or leave it without one."*; and the neutral tile's
+*"No frame."*
 
 ### 50 · The tag pad · *design + implementation* · **drawn 2026-09-10**
 
