@@ -3,7 +3,7 @@
  * before load, with optional authored alt text.
  *
  * A PICTURE's ratio vocabulary is the compose crop ruling's — `tall` 4:5,
- * `square` 1:1, `wide` 1.91:1. `tall` is also the CAP. Nothing is letterboxed:
+ * `square` 1:1, `wide` 1.91:1. `tall` is also the CLAMP. Nothing is letterboxed:
  * a tile is filled (`fit="cover"`, the default), so an uncropped picture — a
  * comment's — display-crops to its frame, centred, and the whole frame is one
  * tap away in the viewer. The crop is display-only; the bytes stay uncropped.
@@ -31,7 +31,7 @@ export interface MediaAttachmentProps {
   /** Authored, optional, never invented. Without it the tile is aria-hidden. */
   alt?: string;
   /**
-   * A named ratio or any CSS aspect-ratio value. `tall` is 4:5, the cap;
+   * A named ratio or any CSS aspect-ratio value. `tall` is 4:5, the clamp;
    * `portrait` (9:16) and `landscape` (16:9) are a clip's native shapes.
    */
   ratio?: "tall" | "square" | "wide" | "portrait" | "landscape" | string;
@@ -42,9 +42,9 @@ export interface MediaAttachmentProps {
   /** "cover" (default) fills the tile; "contain" fits the frame inside it. */
   fit?: "contain" | "cover";
   /**
-   * Defaults to `var(--media-max-height)` — the height that leaves the rest of
-   * the post on screen above the bottom bar. A capped tile fits its frame; it
-   * never crops to obey the cap.
+   * No default — a card tile stands at its true shape, full width. Only a
+   * surface that holds media below the shape's own scale passes a bound here;
+   * a comment's inset pictures are the one that does.
    */
   maxHeight?: string;
   /**
@@ -92,8 +92,8 @@ export declare function MediaDisc(props: MediaDiscProps): JSX.Element;
  * A swipeable pager: one frame at the post's one crop shape, dots below —
  * dots only, never a "1/n" count. Every frame renders at the shared ratio
  * (the `ratio` prop, else the first item's), so uncropped sets pass a fixed
- * frame and fit whole frames inside it. The cap is authoring-side: at most
- * ten pictures, or one video.
+ * frame and display-crop to it. The cap is authoring-side: at most ten
+ * pictures, or one video.
  */
 export interface MediaGalleryProps {
   items?: readonly MediaAttachmentProps[];

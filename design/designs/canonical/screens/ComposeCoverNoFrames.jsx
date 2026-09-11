@@ -14,21 +14,27 @@
    tile reserves its space and says what belongs there. The duration stays,
    because the clip's length is known either way; the play disc does not,
    because a control drawn on an empty tile is chrome, and the preview here is
-   a still-chooser, not a player.
+   a still-chooser, not a player. It reserves the clip's OWN output format —
+   square for this clip, as on `ComposeCover` — because the shape is known even
+   when no frame is, and a tile at any other shape would reserve space the post
+   will not take.
 
    NOTHING ELSE MOVES. Next still reaches details, the gallery picture still
    comes back through the cover's crop at the clip's shape, and Back still
    reaches the pick — a failure of the device is not a change to the flow. And
    a post can always go without a cover, so this step never traps anyone: Next
    is live with nothing chosen. */
+const PREVIEW_WIDTH = 342; // the wizard's 390 less its two 24px gutters
+const CLIP_RATIO = 1; // square — the shape this clip posts at
+
 export function Screen() {
   return (
     <>
       <WizardHeader title="The video's face" stageLabel="Video only" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "16px 24px", overflow: "hidden" }}>
         <MediaThumb
-          width={342}
-          height={342}
+          width={PREVIEW_WIDTH}
+          height={PREVIEW_WIDTH / CLIP_RATIO}
           radius="var(--radius-medium)"
           video
           duration="0:42"
