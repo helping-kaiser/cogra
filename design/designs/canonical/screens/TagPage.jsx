@@ -48,9 +48,10 @@
    through the tagger at a weight slice 3 computes, so third-party claims join
    this page with the ranker, not before.
 
-   THE PAIR IS ON EVERY ROW, PLAINLY (`TaggedRow`) — a signed act is public
-   record. Relevance is signed, confidence is not, because the census bounds
-   them differently.
+   THE CLAIM IS ON EVERY ROW, PLAINLY (`TaggedRow`) — a signed act is public
+   record. The tag table's glyph carries the reading; the exact pair sits with
+   it and paints in geek mode, relevance signed and confidence not, because the
+   census bounds them differently.
 
    AND IT IS DRAWN WHOLE, for `Settings`' reason. What this board records is a
    LIST — its order, its two kinds, the claim above each row — and a list cut
@@ -79,15 +80,15 @@ export function Screen() {
     <>
       <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
-        <TaggedRow pair="+0.10 / 1.00" pending>
+        <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
           <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
         </TaggedRow>
 
-        <TaggedRow pair="+0.55 / 1.00">
+        <TaggedRow pair={{ pDirected: 0.55, pInterest: 1 }}>
           <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
         </TaggedRow>
 
-        <TaggedRow pair="+0.40 / 0.90">
+        <TaggedRow pair={{ pDirected: 0.4, pInterest: 0.9 }}>
           <CommentCard
             attach
             author={ADA}
