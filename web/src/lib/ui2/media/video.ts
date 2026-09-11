@@ -196,6 +196,41 @@ export const FRAME_POINTS = [0.1, 0.5, 0.9] as const;
  * encoder afterwards, so the cover that is uploaded is downscaled, re-encoded
  * to WebP and stripped exactly like any other picture — one path, not two.
  */
+/**
+ * The whole capture's budget — the load, and every seek it goes on to make.
+ * Past it the offers already taken are kept rather than traded for one more
+ * that stalled: a decode that goes wrong on the third frame should not cost
+ * the author the two that already worked. Generous for a local file with no
+ * network to wait on; short enough that a genuine stall reads as "no frames"
+ * rather than a screen stuck on "Reading the video…" indefinitely.
+ */
+const CAPTURE_DEADLINE_MS = 8_000;
+
+/**
+ * Attach the video off the visible page rather than leaving it detached.
+ *
+ * `requestVideoFrameCallback` carries no documented guarantee either way for
+ * an element that was never part of the document
+ * (https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestVideoFrameCallback),
+ * and a callback that silently never fires is exactly the failure mode
+ * `seekTo`'s timeout below exists to survive — so the element is given the
+ * best chance to behave normally, off-screen and out of the way rather than
+ * absent.
+ */
+function attachOffscreen(video: HTMLVideoElement): () => void {
+  video.style.position = "fixed";
+  video.style.width = "1px";
+  video.style.height = "1px";
+  video.style.opacity = "0";
+  video.style.pointerEvents = "none";
+  video.style.left = "-9999px";
+  video.style.top = "-9999px";
+  document.body.appendChild(video);
+  return () => {
+    video.parentNode?.removeChild(video);
+  };
+}
+
 export async function captureFrames(
   file: Blob,
   points: readonly number[] = FRAME_POINTS,
@@ -207,12 +242,30 @@ export async function captureFrames(
   // Required for the element to decode frames without being in the document on
   // mobile Safari, which otherwise hands back a blank canvas.
   video.playsInline = true;
+  const detach = attachOffscreen(video);
+  const deadline = Date.now() + CAPTURE_DEADLINE_MS;
   try {
     await new Promise<void>((resolve, reject) => {
-      video.addEventListener("loadeddata", () => resolve(), { once: true });
+      let settled = false;
+      const finish = (error?: Error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (error) reject(error);
+        else resolve();
+      };
+      // NO EVENT IS GUARANTEED HERE EITHER: a clip this browser cannot read
+      // fires `error`, but a browser that simply never schedules either event
+      // for a Blob URL previously hung this promise forever — the same class
+      // of bug `seekTo` fixes below, one step earlier in the pipeline.
+      const timer = setTimeout(
+        () => finish(new Error("this browser couldn't read that video")),
+        Math.max(0, deadline - Date.now()),
+      );
+      video.addEventListener("loadeddata", () => finish(), { once: true });
       video.addEventListener(
         "error",
-        () => reject(new Error("this browser couldn't read that video")),
+        () => finish(new Error("this browser couldn't read that video")),
         { once: true },
       );
       video.src = url;
@@ -221,11 +274,13 @@ export async function captureFrames(
     const length = Number.isFinite(duration) && duration > 0 ? duration : 0;
     const frames: Blob[] = [];
     for (const point of points) {
+      if (Date.now() >= deadline) break;
       const frame = await frameAt(video, length * point);
       if (frame) frames.push(frame);
     }
     return frames;
   } finally {
+    detach();
     video.removeAttribute("src");
     video.load();
     URL.revokeObjectURL(url);
@@ -244,6 +299,15 @@ export async function captureFrames(
  * — Baseline since October 2024, and a WICG proposal rather than a W3C
  * standard, so it is used where present and `seeked` remains the fallback).
  */
+/**
+ * How long one seek may wait for the exact compositor frame before the
+ * seeked-only fallback takes over instead. `seeked` firing at all is not
+ * guaranteed on every input, and `requestVideoFrameCallback` firing after it
+ * is a second, independent gap — either one stalling used to hang this
+ * promise, and with it the whole cover screen, forever.
+ */
+const SEEK_TIMEOUT_MS = 2_000;
+
 function seekTo(video: HTMLVideoElement, time: number): Promise<void> {
   return new Promise<void>((resolve) => {
     // A seek to where the head already is fires no event, so the wait would
@@ -252,12 +316,24 @@ function seekTo(video: HTMLVideoElement, time: number): Promise<void> {
       resolve();
       return;
     }
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve();
+    };
+    // THE FALLBACK THAT KEEPS THIS FROM HANGING FOREVER. Past the deadline,
+    // whatever frame the element currently shows is drawn — a `seeked`-only
+    // read, precise or not — rather than waiting indefinitely on a compositor
+    // callback that this browser or this element may simply never fire.
+    const timer = setTimeout(finish, SEEK_TIMEOUT_MS);
     const rvfc = video.requestVideoFrameCallback?.bind(video);
     video.addEventListener(
       "seeked",
       () => {
-        if (rvfc) rvfc(() => resolve());
-        else resolve();
+        if (rvfc) rvfc(finish);
+        else finish();
       },
       { once: true },
     );

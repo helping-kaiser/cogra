@@ -505,10 +505,29 @@ describe("a video post", () => {
     expect(two.assets[0]!.id).toBe("v0");
   });
 
-  it("holds the cover screen shut until a face is chosen", () => {
-    const state = run(emptyWizard(), picksVideo(), { type: "advance" });
-    expect(advanceGate(state).ok).toBe(false);
-    expect(advanceGate(run(state, chosen())).ok).toBe(true);
+  it("lets a video post advance to the seal, and seal, with no cover chosen", () => {
+    // The cover screen no longer walls off a faceless video (jakob,
+    // 2026-09-10, "going without a cover is always possible"): the contract,
+    // the database, and the backend all accept a null `coverMediaId`, so
+    // both the advance past this screen and the seal at the end succeed
+    // with `cover` still null. Auto-default on a successful capture is a
+    // separate path, exercised elsewhere — this asserts the wall is gone
+    // when nothing filled it.
+    const atCover = run(emptyWizard(), picksVideo(), { type: "advance" });
+    expect(atCover.step).toBe("cover");
+    expect(atCover.cover).toBeNull();
+    expect(advanceGate(atCover).ok).toBe(true);
+
+    const atSeal = run(atCover, { type: "advance" }, { type: "advance" });
+    expect(atSeal.step).toBe("seal");
+    expect(atSeal.cover).toBeNull();
+
+    const uploaded = run(atSeal, {
+      type: "upload",
+      id: "v0",
+      upload: { kind: "done", mediaId: "m-v0" },
+    });
+    expect(sealGate(uploaded).ok).toBe(true);
   });
 
   it("counts the cover among the uploads the seal waits for", () => {

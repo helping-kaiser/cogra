@@ -146,6 +146,27 @@ describe("the gate", () => {
     const gate = sealGate(state);
     expect(gate.ok === false && gate.reason).toBe("One picture didn't upload.");
   });
+
+  it("advances and seals a video reply with no cover chosen", () => {
+    // jakob, 2026-09-10, "nothing blocks you to go without a cover" — the
+    // post wizard's ruling was unqualified, so it reaches this comment-scale
+    // gate too. advanceGate never checked the cover to begin with (a reply
+    // has no separate cover screen); this asserts sealGate — the one place
+    // that used to wall on a null cover — no longer does either.
+    const withVideo = reduce(withWords(), {
+      type: "pick",
+      assets: [{ id: "v0", file: new Blob(["v"], { type: "video/mp4" }), kind: "video" }],
+    });
+    expect(withVideo.cover).toBeNull();
+    expect(advanceGate(withVideo).ok).toBe(true);
+
+    const uploaded = replyReducer(withVideo, {
+      type: "upload",
+      id: "v0",
+      upload: { kind: "done", mediaId: "m-v0" },
+    });
+    expect(sealGate(uploaded).ok).toBe(true);
+  });
 });
 
 describe("advancing", () => {

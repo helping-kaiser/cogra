@@ -1653,5 +1653,31 @@ describe("PostView — references", () => {
       expect(screen.getByTestId("comment-media-c1")).toBeInTheDocument();
       expect(screen.getByAltText("a salt flat")).toBeInTheDocument();
     });
+
+    // B4: design/readme.md states the rule for every comment attachment, not
+    // only a video or a multi-picture set — "Square is the comment scale's
+    // shape, and a comment's pictures and clips alike fill it". A single
+    // picture used to keep its own (here, tall) shape and letterbox instead.
+    it("fills a lone comment picture into the square frame, whatever its own shape", async () => {
+      const tallPicture = {
+        ...picture("mc", "a salt flat"),
+        options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: null },
+      };
+      server.use(
+        graphql.query("PostDetail", () =>
+          HttpResponse.json({
+            data: detail("u1", [{ id: "c1", body: "Look at this", attachments: [tallPicture] }]),
+          }),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+      await screen.findByTestId("post-comment-c1");
+      const frame = screen.getByTestId("media-gallery-lead");
+      expect(frame.style.aspectRatio).toBe("1 / 1");
+      // Filled (`cover`), not letterboxed (`contain`) — a 9:16 source would
+      // otherwise fit whole inside the square with bars at the sides.
+      expect(within(frame).getByAltText("a salt flat")).toHaveStyle({ objectFit: "cover" });
+    });
   });
 });

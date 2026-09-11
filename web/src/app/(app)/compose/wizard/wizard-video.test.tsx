@@ -11,6 +11,7 @@ import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { captureFrames } from "@/lib/ui2/media/video";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
@@ -66,6 +67,29 @@ beforeEach(() => {
   });
   Object.defineProperty(URL, "revokeObjectURL", { value: () => {}, configurable: true });
 });
+
+/**
+ * A `createObjectURL` that tells blobs apart, for the one test below that
+ * needs to prove two different blobs produced two different URLs. The
+ * shared mock above deliberately does not: every other test only cares that
+ * SOME preview exists, and a constant string is the simplest thing that can
+ * work for that.
+ */
+function distinctObjectUrls() {
+  let next = 0;
+  const known = new WeakMap<Blob, string>();
+  Object.defineProperty(URL, "createObjectURL", {
+    value: (blob: Blob) => {
+      const existing = known.get(blob);
+      if (existing !== undefined) return existing;
+      const minted = `blob:${next}`;
+      next += 1;
+      known.set(blob, minted);
+      return minted;
+    },
+    configurable: true,
+  });
+}
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -212,5 +236,49 @@ describe("picking a video", () => {
     expect(counter).toHaveTextContent("Describe the video");
     // One, not two: the cover is the video's face, never a second attachment.
     expect(counter.parentElement).toHaveTextContent("0 of 1 described");
+  });
+
+  // W1: the details thumbnail used to render the VIDEO's own object URL in an
+  // `<img>` — which cannot decode a video, so it drew a broken-image icon
+  // badged "Cover". The cover's own frame is what belongs there.
+  it("shows the cover's own face on the details thumbnail, never the video's bytes", async () => {
+    distinctObjectUrls();
+    const clip = aVideo();
+    render();
+    await pickFiles([clip]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId("wizard-cover-frame-0"));
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    const thumb = await screen.findByTestId("wizard-picked-row-thumb-0-image");
+    // The same clip, run through the same (now-idempotent) mock, resolves to
+    // the URL the video's own preview holds — which is exactly what the
+    // thumbnail must NOT be showing.
+    const videoUrl = URL.createObjectURL(clip);
+    expect(thumb).toHaveAttribute("src");
+    expect(thumb.getAttribute("src")).not.toBe(videoUrl);
+  });
+
+  // W3: this suite's own mock had `captureFrames` succeed every time, so the
+  // screen a real decode failure lands on was never exercised — exactly the
+  // path that used to leave an author stuck with no offers and no way past
+  // the cover screen. The escape hatch is what has to survive this, not a
+  // particular frame.
+  it("still lets the author choose a picture of their own when frame capture fails entirely", async () => {
+    vi.mocked(captureFrames).mockRejectedValueOnce(new Error("this browser couldn't read that video"));
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+
+    // No offers to select from once the capture failed, and no stall either —
+    // the escape hatch is what the screen falls back to.
+    await screen.findByTestId("wizard-cover-picture");
+    expect(screen.queryByTestId("wizard-cover-frame-0")).toBeNull();
+    expect(screen.queryByTestId("wizard-cover-capturing")).toBeNull();
+    // Next stays open even with no face chosen — a faceless video is no
+    // longer a wall (jakob, 2026-09-10, "going without a cover is always
+    // possible"), so a capture failure that leaves no offers still has to
+    // let the author move on rather than trap them on this screen.
+    expect(screen.getByTestId("wizard-next")).not.toBeDisabled();
   });
 });

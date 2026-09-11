@@ -29,6 +29,8 @@ export function DetailsStep({
   mode,
   assets,
   previews,
+  coverPreview,
+  durationMs,
   title,
   description,
   tags,
@@ -48,6 +50,10 @@ export function DetailsStep({
   mode: "words" | "media";
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
+  /** A video's chosen face — its own object URL, outside `previews`. */
+  coverPreview: string | null;
+  /** The video's length, badged on its own thumbnail. Meaningless off a video post. */
+  durationMs: number;
   title: string;
   description: string;
   tags: readonly TagDraft[];
@@ -70,6 +76,8 @@ export function DetailsStep({
         <BodyStrip
           assets={assets}
           previews={previews}
+          coverPreview={coverPreview}
+          durationMs={durationMs}
           onManage={onManage}
           onDescribe={onDescribe}
           onRetry={onRetry}
@@ -146,6 +154,8 @@ export function thumbState(asset: PickedAsset): Pick<PickedThumb, "progress" | "
 function BodyStrip({
   assets,
   previews,
+  coverPreview,
+  durationMs,
   onManage,
   onDescribe,
   onRetry,
@@ -153,6 +163,8 @@ function BodyStrip({
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
+  coverPreview: string | null;
+  durationMs: number;
   onManage: () => void;
   onDescribe: () => void;
   onRetry: (id: string) => void;
@@ -168,10 +180,16 @@ function BodyStrip({
       <PickedRow
         items={assets.map((asset) => ({
           id: asset.id,
-          src: previews[asset.id] ?? null,
+          // A VIDEO'S TILE SHOWS ITS COVER, NOT THE CLIP'S OWN BYTES: the
+          // source preview is the video's blob URL, which an `<img>` cannot
+          // decode — the cover frame is the video's face and what the badge
+          // is for.
+          src: isVideo ? coverPreview : (previews[asset.id] ?? null),
           // The row draws the framing the author left the crop step with —
-          // the source here would read as the crop having been discarded.
-          crop: asset.crop,
+          // the source here would read as the crop having been discarded. A
+          // video post never reaches the crop screen, so it has none to draw.
+          crop: isVideo ? null : asset.crop,
+          durationMs: isVideo ? durationMs : undefined,
           ...thumbState(asset),
         }))}
         caption={
