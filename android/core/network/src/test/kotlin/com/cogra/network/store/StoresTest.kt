@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.decodeProposal
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.store.SessionRead
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
@@ -333,7 +334,41 @@ class StoresTest {
         val tokens = TokenStoreImpl(encrypted)
         assertThat(tokens.current()).isNull()
         assertThat(tokens.tokens.first()).isNull()
+        // A record nobody can decode is a fault to whoever must decide
+        // whether this reader is signed in.
+        assertThat(tokens.read()).isEqualTo(SessionRead.Unreadable)
         assertThat(StorageHealthImpl(dataStore).storageLost.first()).isTrue()
+    }
+
+    @Test
+    fun theSessionReadTellsAFaultApartFromAnAbsence() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        // Nothing stored: signed out, and every caller may act on it.
+        assertThat(TokenStoreImpl(EncryptedStore(dataStore, FakeCipher())).read())
+            .isEqualTo(SessionRead.None)
+
+        EncryptedStore(dataStore, FakeCipher()).put(
+            "session_tokens",
+            """{"access":"a1","refresh":"r1","account":"u1"}""".encodeToByteArray(),
+        )
+        assertThat(TokenStoreImpl(EncryptedStore(dataStore, FakeCipher())).read())
+            .isEqualTo(SessionRead.Present(AuthTokens("a1", "r1", "u1")))
+
+        // The same record through a cipher that cannot open it.
+        assertThat(TokenStoreImpl(EncryptedStore(dataStore, BrokenCipher())).read())
+            .isEqualTo(SessionRead.Unreadable)
+    }
+
+    @Test
+    fun aPreMultiAccountRecordIsNoSessionRatherThanAFault() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val dataStore = PreferenceDataStoreFactory.create(scope = scope) { file }
+        val encrypted = EncryptedStore(dataStore, FakeCipher())
+        // No account id: the accepted one-time re-login, not a fault —
+        // failing every request on it would strand the reader.
+        encrypted.put("session_tokens", """{"access":"a1","refresh":"r1"}""".encodeToByteArray())
+        assertThat(TokenStoreImpl(encrypted).read()).isEqualTo(SessionRead.None)
     }
 
     @Test
