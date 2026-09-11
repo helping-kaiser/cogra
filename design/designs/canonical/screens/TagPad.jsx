@@ -8,13 +8,13 @@
    two slots take the contract's own: relevance in `pDirected`, the horizontal,
    and confidence in `pInterest`, the vertical (`TagInput`, api-spec.md).
 
-   BOTH AXES RUN 0 TO 1, AND THE FIELD IS DRAWN THAT WAY. Confidence is
-   census-bounded to `c ∈ [0, 1]` (hashtag.md §4), and the composer authors only
-   the positive half of relevance — an author saying what their own post is
-   about says how much, never how much it is not. So the square is the reachable
-   square, corner to corner, and `StancePad` takes the bound as `ranges` the way
-   it already takes the poles as `axes`: the control owns the geometry, the
-   census owns how far each slot reaches.
+   CONFIDENCE RUNS 0 TO 1, AND RELEVANCE STARTS JUST ABOVE NOTHING. Confidence
+   is census-bounded to `c ∈ [0, 1]` (hashtag.md §4), and the composer authors
+   only the positive half of relevance — an author saying what their own post
+   is about says how much, never how much it is not. The square is the
+   reachable square, corner to corner, and `StancePad` takes the bound as
+   `ranges` the way it already takes the poles as `axes`: the control owns the
+   geometry, the census owns how far each slot reaches.
 
    THE POLES ARE NAMED ON THE FIELD, in the reader's words. Aboutness runs
    `Barely` to `Entirely` — the two words a citation's relevance uses for the
@@ -55,10 +55,14 @@
    signed here: the pair rides the tag's own record and the tag rides the
    composer's batch, so this sheet stages and the seal signs.
 
-   THE × ON THE CHIP IS STILL THE UN-TAG. Withdrawal has a value of its own on
-   this field — relevance 0 — and `TagPadWithdraw` draws what the pad says when
-   a pick lands there, but the willing gesture stays the one the reader already
-   has.
+   THE WITHDRAWAL IS NOT ON THE FIELD (jakob's ruling, 2026-09-11). Un-tagging
+   is re-tagging at relevance 0 — an ordinary priced, visible record and never
+   an erasure (hashtag.md §4) — which is a different act from weakening a
+   claim, not the far end of one. So the field floors just above nothing and
+   carries claims alone: no drag can turn into an un-tagging, and there is no
+   edge to warn about. The floor makes the left pole true as well — `Barely` is
+   a fair reading of the lowest value the field offers, and never was one of
+   zero.
 
    THE SURFACE BENEATH IS DRAWN WHOLE (`EditComposeBody`), the overlay rule from
    2026-09-08: a sheet covers the surface the reader came from, and that surface

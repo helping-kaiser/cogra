@@ -8,7 +8,6 @@
   },
   "scanExempt": {
     "TagPad": "the pair sheet covers the composer — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
-    "TagPadWithdraw": "the same sheet with the pick at the withdrawal — the composer beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "RefPair": "the citation's pair sheet covers the details stage — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "GuestGate": "the join prompt covers the borrowed view — the band, the post card, and nav beneath the scrim are inactive in this state; only the ask (and its scrim) is live",
     "KeyConfirm": "the record-your-code dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
@@ -818,12 +817,9 @@
     { "from": "TagPickerTyping", "via": 3, "kind": "advance", "label": "the name field", "to": [{ "terminal": "self", "case": "still typing — the preview follows the name" }] },
     { "from": "TagPickerTyping", "via": 4, "kind": "advance", "label": "candidate rows", "to": [{ "terminal": "back", "case": "the pick lands in the composer's tags" }] },
 
-    { "from": "TagPad", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — nothing signs until the seal" }, { "board": "TagPadWithdraw", "case": "dragged all the way to Barely — the sheet says what signing there would do" }] },
+    { "from": "TagPad", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — the drag stops at the floor, and nothing signs until the seal" }] },
     { "from": "TagPad", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the chip carries the pair it was given" }] },
     { "from": "TagPad", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
-    { "from": "TagPadWithdraw", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "still at nothing — the warning stands" }, { "board": "TagPad", "case": "dragged back off nothing — the pair reads as a claim again" }] },
-    { "from": "TagPadWithdraw", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the chip carries a withdrawal the seal will sign" }] },
-    { "from": "TagPadWithdraw", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
 
     { "from": "RefPair", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — nothing signs until the seal" }] },
     { "from": "RefPair", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the staged row carries the pair it was given" }] },

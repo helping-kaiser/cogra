@@ -1426,13 +1426,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  // The same sheet with the pick at the withdrawal. The warning is prose, not a
-  // control, so the three live things are the ones `TagPad` already has.
-  TagPadWithdraw: [
-    { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
-    { n: 2, find: ">Done</button>", tag: "button" },
-    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
-  ],
   // The citation's twin of TagPad — the same pad over two signed axes, because
   // both of a citation's parameters are signed. Same three controls.
   RefPair: [
