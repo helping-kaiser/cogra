@@ -6,9 +6,10 @@
 //! write-path relay legs. Conventions: one `input` argument, a dedicated
 //! payload, `userErrors` empty exactly on success — except the three
 //! deliberately-silent verbs, which carry no `userErrors` at all.
-//! Acting mutations require the MEMBER account state — a `FORBIDDEN`
-//! transport fault otherwise, never a userError (api-spec
-//! "Authentication").
+//! Acting mutations require the MEMBER account state — a transport
+//! fault otherwise, never a userError: `EMAIL_NOT_VERIFIED` while the
+//! address is unproven, `FORBIDDEN` for every other non-member
+//! (api-spec "Authentication").
 
 use std::sync::Arc;
 
@@ -124,9 +125,29 @@ fn forbidden() -> async_graphql::Error {
     )
 }
 
+/// The transport-tier refusal for an acting request whose account has
+/// not proven its email yet — the one non-member reason a client can
+/// render, because the account is a person waiting on a link rather than
+/// a build asking for something it knows it may not have (api-spec
+/// "Authentication").
+fn email_not_verified() -> async_graphql::Error {
+    use async_graphql::ErrorExtensions;
+    async_graphql::Error::new("email verification required before acting").extend_with(
+        |_, e: &mut async_graphql::ErrorExtensionValues| {
+            e.set("code", "EMAIL_NOT_VERIFIED");
+        },
+    )
+}
+
 /// The member gate on acting mutations: the account state is read live
 /// at the action site, never from a token claim (auth.md "Account
 /// states").
+///
+/// The refusal names the unverified email where that is what stands in
+/// the way. Membership implies a verified address — approval demands the
+/// proof — so this only refines an existing refusal: what an account may
+/// do is unchanged, and only the code on the refusal it already received
+/// becomes specific enough to read.
 async fn member_viewer(ctx: &Context<'_>) -> async_graphql::Result<Viewer> {
     let v = viewer(ctx)?;
     let pool = ctx.data::<PgPool>()?;
@@ -134,7 +155,11 @@ async fn member_viewer(ctx: &Context<'_>) -> async_graphql::Result<Viewer> {
         .await?
         .ok_or_else(unauthenticated)?;
     if credentials.account_state != store::AccountState::Member {
-        return Err(forbidden());
+        return Err(if credentials.email_verified_at.is_none() {
+            email_not_verified()
+        } else {
+            forbidden()
+        });
     }
     Ok(v)
 }

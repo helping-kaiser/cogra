@@ -21,6 +21,13 @@ const forbiddenError = () =>
     errors: [{ message: "forbidden", extensions: { code: "FORBIDDEN" } }],
   });
 
+const emailNotVerifiedError = () =>
+  new CombinedGraphQLErrors({
+    errors: [
+      { message: "email verification required before acting", extensions: { code: "EMAIL_NOT_VERIFIED" } },
+    ],
+  });
+
 const rateLimitedError = () =>
   new CombinedGraphQLErrors({
     errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
@@ -77,6 +84,16 @@ describe("fetchOutcome", () => {
       throw forbiddenError();
     });
     expect(hasCode(outcome, "FORBIDDEN")).toBe(true);
+  });
+
+  // The unverified applicant's own code, carried through so the surface can
+  // word it separately once the copy is ruled.
+  it("lifts an EMAIL_NOT_VERIFIED under its own code", async () => {
+    const outcome = await fetchOutcome(async () => ({
+      data: undefined,
+      error: emailNotVerifiedError(),
+    }));
+    expect(hasCode(outcome, "EMAIL_NOT_VERIFIED")).toBe(true);
   });
 
   it("keeps a GraphQL error with no code it knows in the transport tier", async () => {
