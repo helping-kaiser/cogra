@@ -35,13 +35,13 @@ function Demo(){return (
     <span className="lbl">A row with its own control — inert, because the word at its end is the target</span>
     <SettingsGroup label="Sessions" footnote="A device you sign out can stay signed in for up to 15 minutes.">
       <SettingsRow label="Firefox on Ubuntu" status="This browser" inert/>
-      <SettingsRow label="Pixel 8" status="Last used 2 days ago" inert trailing={<InlineAction>Revoke</InlineAction>}/>
+      <SettingsRow label="Pixel 8" status="Last used 2d" inert trailing={<InlineAction>Revoke</InlineAction>}/>
       <SettingsRow action label="Sign out everywhere else"/>
     </SettingsGroup>
 
     <span className="lbl">Chevron alone, and a value beside it — both mean "this opens another surface"</span>
     <SettingsGroup label="Key backup">
-      <SettingsRow label="Recovery code" status="Last created 12 August"/>
+      <SettingsRow label="Recovery code" status="Last created 12.08.2026"/>
       <SettingsRow label="Your key"/>
     </SettingsGroup>
 

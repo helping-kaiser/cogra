@@ -522,8 +522,10 @@ Writing, web said Signing, and the setting is about what a submit does,
 not about the key.
 
 **A row's second line is status, not description.** `Last created
-12 August` · `Last used 2 days ago` · `This browser` · `Changed 3 weeks
-ago`. A switch is the exception, because its label alone cannot say what
+12.08.2026` · `Last used 2d` · `This browser` · `Changed 21d`. Every
+age on the page speaks the one ladder above — a settings row is not a
+place the product changes vocabulary. A switch is the exception to
+"status, not description", because its label alone cannot say what
 turning it on does.
 
 **Theme**: `Light` · `Dark` · `Auto`, and under them
@@ -584,7 +586,7 @@ you sign out.`
 
 **A new recovery code** (`SettingsBackup`): the heading, then
 `A new code re-encrypts your key and replaces the old backup — recovery
-always uses the newest one. Your current code was made on 12 August.`,
+always uses the newest one. Your current code was made on 12.08.2026.`,
 the field `Current recovery code`, the commitment `Create a new recovery
 code`, and last: `The new code is shown once and never stored. Have
 somewhere to write it down before you go on — the old code stops working
