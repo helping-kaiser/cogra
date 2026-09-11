@@ -1,5 +1,9 @@
 {
   "content": {
+    "commentBodyChars": 2000,
+    "descriptionChars": 500,
+    "postBodyChars": 5000,
+    "sensitiveReasonChars": 140,
     "titleChars": 100
   },
   "media": {
@@ -17,10 +21,17 @@
     "defaultPageSize": 20,
     "maxPageSize": 100
   },
+  "profile": {
+    "bioChars": 500,
+    "displayNameChars": 50,
+    "websiteUrlChars": 2048
+  },
   "registration": {
+    "deviceLabelChars": 100,
     "handleCharsetPattern": "^[a-z0-9_]+$",
     "handleMaxChars": 30,
     "handleMinChars": 3,
+    "passwordMaxChars": 128,
     "passwordMinChars": 12
   },
   "stance": {

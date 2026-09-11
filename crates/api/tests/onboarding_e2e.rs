@@ -191,6 +191,30 @@ impl Rig {
     }
 }
 
+/// A fresh, immediately usable invite link from an already-authenticated
+/// inviter — the precondition every registration test in this file needs,
+/// and pulled out because a link is single-use: one register attempt
+/// spends it, so a test exercising several attempts needs one link each.
+async fn new_invite_link(rig: &Rig, inviter_token: &str) -> String {
+    let link = rig
+        .gql(
+            Some(inviter_token),
+            r#"mutation($input: CreateInviteLinkInput!) {
+                 createInviteLink(input: $input) { inviteLink { id } userErrors { code } }
+               }"#,
+            json!({ "input": {
+                "expiresAt": "2027-01-01T00:00:00Z",
+                "prefillPDirected": 0.1,
+                "prefillPInterest": 0.1,
+            }}),
+        )
+        .await;
+    link["createInviteLink"]["inviteLink"]["id"]
+        .as_str()
+        .expect("link")
+        .to_string()
+}
+
 /// The whole admission arc, through the real HTTP surface: the inviter
 /// logs in and issues a link; the applicant's device checks the
 /// capability anonymously before the form; registration creates the
@@ -691,4 +715,158 @@ async fn the_attached_key_reads_for_its_viewer_only(pool: PgPool) {
     assert!(me["me"]["l0Address"].is_null());
     assert!(me["me"]["invitedBy"]["actorPubkey"].is_null());
     assert!(me["me"]["invitedBy"]["l0Address"].is_null());
+}
+
+/// Registration's two caps through the real GraphQL surface: a password
+/// at the 128-character ceiling registers, one past it is refused as
+/// WEAK_PASSWORD at the password field (the same code the floor earns —
+/// strength is length alone, both ends), and a device label past its own
+/// hundred-character cap is refused as BAD_INPUT at deviceLabel.
+///
+/// Registration refuses a password past a hundred twenty-eight characters and a device label past a hundred, each at its own field.
+/// ´claim:onboarding:registration-enforces-the-password-and-device-label-caps´
+#[sqlx::test(migrations = "../../migrations")]
+async fn registration_enforces_the_password_and_device_label_caps(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    rig.seed_member("inviter", "inviter@example.com", "inviter password")
+        .await;
+    let login = rig
+        .gql(
+            None,
+            "mutation($input: LogInInput!) {
+                logIn(input: $input) { auth { accessToken } userErrors { code } }
+            }",
+            json!({ "input": { "email": "inviter@example.com", "password": "inviter password" } }),
+        )
+        .await;
+    let inviter_token = login["logIn"]["auth"]["accessToken"]
+        .as_str()
+        .expect("session")
+        .to_string();
+
+    let link_id = new_invite_link(&rig, &inviter_token).await;
+    let at_cap = "x".repeat(api::auth::PASSWORD_MAX_CHARS);
+    let registered = rig
+        .gql(
+            None,
+            r#"mutation($input: RegisterInput!) {
+                 register(input: $input) { auth { accessToken } userErrors { code message } }
+               }"#,
+            json!({ "input": {
+                "inviteLink": link_id,
+                "handle": "at_cap_pw",
+                "email": "atcap@example.com",
+                "password": at_cap,
+            }}),
+        )
+        .await;
+    assert!(
+        registered["register"]["auth"]["accessToken"].is_string(),
+        "a password at the cap registers: {registered}"
+    );
+
+    let link_id = new_invite_link(&rig, &inviter_token).await;
+    let over = "x".repeat(api::auth::PASSWORD_MAX_CHARS + 1);
+    let refused = rig
+        .gql(
+            None,
+            r#"mutation($input: RegisterInput!) {
+                 register(input: $input) { auth { accessToken } userErrors { code field } }
+               }"#,
+            json!({ "input": {
+                "inviteLink": link_id,
+                "handle": "over_cap_pw",
+                "email": "overcap@example.com",
+                "password": over,
+            }}),
+        )
+        .await;
+    assert!(refused["register"]["auth"].is_null());
+    assert_eq!(
+        refused["register"]["userErrors"][0]["code"],
+        "WEAK_PASSWORD"
+    );
+    assert_eq!(refused["register"]["userErrors"][0]["field"][0], "password");
+
+    let link_id = new_invite_link(&rig, &inviter_token).await;
+    let refused = rig
+        .gql(
+            None,
+            r#"mutation($input: RegisterInput!) {
+                 register(input: $input) { auth { accessToken } userErrors { code field } }
+               }"#,
+            json!({ "input": {
+                "inviteLink": link_id,
+                "handle": "over_cap_label",
+                "email": "overcaplabel@example.com",
+                "password": "a perfectly fine password",
+                "deviceLabel": "x".repeat(api::auth::MAX_DEVICE_LABEL_CHARS + 1),
+            }}),
+        )
+        .await;
+    assert!(refused["register"]["auth"].is_null());
+    assert_eq!(refused["register"]["userErrors"][0]["code"], "BAD_INPUT");
+    assert_eq!(
+        refused["register"]["userErrors"][0]["field"][0],
+        "deviceLabel"
+    );
+}
+
+/// The login caveat: an account whose password predates the 128-character
+/// ceiling (seeded directly with `hash_password`, bypassing
+/// `check_password` the way a pre-cap account would have) must go on
+/// logging in with it. Login never runs `check_password` — it verifies
+/// against the stored hash — so the over-long password still reaches
+/// verification: the right one signs in, and a wrong one of the same
+/// over-long shape is refused as INVALID_CREDENTIALS, never BAD_INPUT.
+///
+/// A login whose password is longer than the registration ceiling still reaches verification rather than being refused as invalid input.
+/// ´claim:auth:an-over-long-password-still-reaches-verification-at-login´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_over_long_password_still_reaches_verification_at_login(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let over_long_password = "p".repeat(api::auth::PASSWORD_MAX_CHARS + 50);
+    rig.seed_member(
+        "grandfathered",
+        "grandfathered@example.com",
+        &over_long_password,
+    )
+    .await;
+
+    let right = rig
+        .gql(
+            None,
+            "mutation($input: LogInInput!) {
+                logIn(input: $input) { auth { accessToken } userErrors { code } }
+            }",
+            json!({ "input": {
+                "email": "grandfathered@example.com",
+                "password": over_long_password,
+            }}),
+        )
+        .await;
+    assert!(
+        right["logIn"]["auth"]["accessToken"].is_string(),
+        "the account's own over-long password still logs in: {right}"
+    );
+
+    let wrong_but_also_over_long = "q".repeat(api::auth::PASSWORD_MAX_CHARS + 50);
+    let wrong = rig
+        .gql(
+            None,
+            "mutation($input: LogInInput!) {
+                logIn(input: $input) { auth { accessToken } userErrors { code } }
+            }",
+            json!({ "input": {
+                "email": "grandfathered@example.com",
+                "password": wrong_but_also_over_long,
+            }}),
+        )
+        .await;
+    assert!(wrong["logIn"]["auth"].is_null());
+    assert_eq!(
+        wrong["logIn"]["userErrors"][0]["code"], "INVALID_CREDENTIALS",
+        "a wrong over-long password is refused as a credentials mismatch, not as bad input — \
+         proof that verification, not a length gate, is what refused it"
+    );
 }

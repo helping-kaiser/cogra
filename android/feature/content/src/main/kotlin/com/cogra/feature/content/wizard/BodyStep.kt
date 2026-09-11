@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
@@ -50,6 +51,7 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
+import com.cogra.domain.content.MAX_POST_BODY_CHARS
 import com.cogra.feature.content.R
 
 /**
@@ -77,6 +79,12 @@ internal fun ColumnScope.WordsStepBody(
         fillHeight = true,
         testTag = "wizard_body",
     )
+    if (state.bodyTooLong) {
+        ErrorLine(
+            text = stringResource(R.string.content_error_body_too_long, MAX_POST_BODY_CHARS),
+            testTag = "wizard_body_too_long",
+        )
+    }
 }
 
 /**
