@@ -89,6 +89,8 @@ export async function runUpload(
   }
 
   step({ kind: "uploading" });
+  // A token in hand before the bytes go, or they go twice — see `prime`.
+  await guard.prime();
   const uploaded = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
 
   if (uploaded.kind === "success") {
@@ -141,15 +143,26 @@ export function waitingAssets(assets: readonly PickedAsset[]): readonly PickedAs
  * anything at or above eight mebibytes as a resumable session whose parts are
  * retried individually, and anything smaller in one request — the same
  * boundary, on the same reasoning, as android's.
+ *
+ * A FACELESS CLIP STILL GOES UP. `cover` is null when the author left the face
+ * unset — which the cover screen has allowed since the pick became optional
+ * (jakob 2026-09-10) — and when the frame capture found nothing to offer. The
+ * sequence then has no first leg: the video is uploaded naming no cover, which
+ * the contract accepts. Treating null as "not ready yet" is what left a clip
+ * waiting forever with nothing to report.
  */
 export async function runVideoUpload(
   client: ApolloClient,
   guard: AuthGuard,
   video: PickedAsset,
-  cover: CoverAsset,
+  cover: CoverAsset | null,
   onVideo: UploadStep,
   onCover: UploadStep,
 ): Promise<void> {
+  if (cover === null) {
+    await sendVideo(client, guard, video, null, onVideo);
+    return;
+  }
   let encoded;
   try {
     onCover({ kind: "encoding" });
@@ -170,6 +183,7 @@ export async function runVideoUpload(
   }
 
   onCover({ kind: "uploading" });
+  await guard.prime();
   const poster = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
   if (poster.kind !== "success") {
     const message =
@@ -182,6 +196,23 @@ export async function runVideoUpload(
   }
   onCover({ kind: "done", mediaId: poster.value.id });
 
+  await sendVideo(client, guard, video, poster.value.id, onVideo);
+}
+
+/**
+ * The clip's own leg: strip, then upload naming whatever face it has.
+ *
+ * Shared by both entries so a faceless clip takes exactly the path a covered
+ * one does, minus the cover — the alternative was a second copy of the strip
+ * and its refusal wording, which is how the two drift apart.
+ */
+async function sendVideo(
+  client: ApolloClient,
+  guard: AuthGuard,
+  video: PickedAsset,
+  coverMediaId: string | null,
+  onVideo: UploadStep,
+): Promise<void> {
   // The strip is reported as `encoding`: it is the same stage in the same
   // story — bytes being made ready — and inventing a fourth state for it would
   // put a word on screen that means nothing to the person reading it.
@@ -199,10 +230,10 @@ export async function runVideoUpload(
   }
 
   onVideo({ kind: "uploading" });
-  const uploaded = await uploadVideo(client, guard, {
-    blob: stripped.blob,
-    coverMediaId: poster.value.id,
-  });
+  // THE CLIP IS THE BODY WORTH PROTECTING. A picture sent twice costs a
+  // moment; a video sent twice is the whole wait, twice.
+  await guard.prime();
+  const uploaded = await uploadVideo(client, guard, { blob: stripped.blob, coverMediaId });
 
   if (uploaded.kind === "success") {
     onVideo({ kind: "done", mediaId: uploaded.value.id });
