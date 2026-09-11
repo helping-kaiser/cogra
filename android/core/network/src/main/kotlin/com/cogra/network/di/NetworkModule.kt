@@ -24,6 +24,7 @@ import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import com.cogra.network.auth.BearerInterceptor
+import com.cogra.network.auth.SessionGate
 import com.cogra.network.repo.AccountRepositoryImpl
 import com.cogra.network.repo.ContentRepositoryImpl
 import com.cogra.network.repo.MediaRepositoryImpl
@@ -63,10 +64,10 @@ internal object NetworkProvidesModule {
 
     @Provides
     @Singleton
-    fun apolloClient(@GraphqlEndpoint endpoint: String, tokens: TokenStore): ApolloClient =
+    fun apolloClient(@GraphqlEndpoint endpoint: String, gate: SessionGate): ApolloClient =
         ApolloClient.Builder()
             .serverUrl(endpoint)
-            .addHttpInterceptor(BearerInterceptor(tokens))
+            .addHttpInterceptor(BearerInterceptor(gate))
             .build()
 
     /**

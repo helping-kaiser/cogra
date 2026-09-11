@@ -56,6 +56,20 @@ class TinkStoreCipher(private val context: Context) : StoreCipher {
     }
 }
 
+/**
+ * What one named value reads as. Absent and unopenable are the same
+ * thing to most callers — [EncryptedStore.get] collapses them — and a
+ * different thing to a caller whose fallback is acting as somebody
+ * else: the session read tells them apart.
+ */
+sealed interface StoredValue {
+    class Present(val bytes: ByteArray) : StoredValue
+
+    data object Absent : StoredValue
+
+    data object Unreadable : StoredValue
+}
+
 /** Named encrypted values over one Preferences DataStore. */
 class EncryptedStore(
     private val dataStore: DataStore<Preferences>,
@@ -66,33 +80,47 @@ class EncryptedStore(
         dataStore.edit { it[stringPreferencesKey(name)] = sealed }
     }
 
-    suspend fun get(name: String): ByteArray? = openOrMark(dataStore.data.first(), name)
+    /**
+     * The value, or null for either "not there" and "could not be
+     * opened" — the read for callers who treat the two alike.
+     *
+     * Like every read here it suspends until the DataStore has finished
+     * its first load: the store answers what it holds, never "nothing
+     * yet".
+     */
+    suspend fun get(name: String): ByteArray? = (read(name) as? StoredValue.Present)?.bytes
+
+    /** The same read, keeping absent and unopenable apart. */
+    suspend fun read(name: String): StoredValue = openOrMark(dataStore.data.first(), name)
 
     suspend fun remove(name: String) {
         dataStore.edit { it.remove(stringPreferencesKey(name)) }
     }
 
-    fun watch(name: String): Flow<ByteArray?> = dataStore.data.map { prefs -> openOrMark(prefs, name) }
+    fun watch(name: String): Flow<ByteArray?> = dataStore.data.map { prefs ->
+        (openOrMark(prefs, name) as? StoredValue.Present)?.bytes
+    }
 
     /**
-     * A value that cannot be opened (master-key loss, tampering) reads
-     * as absent, never fatal: the ciphertext stays in place in case the
+     * A value that cannot be opened (master-key loss, tampering) is
+     * never fatal here: the ciphertext stays in place in case the
      * failure is transient, and the loss is marked for the shell to
-     * surface ([markStorageLost]).
+     * surface ([markStorageLost]). What the caller does with the
+     * failure is the caller's own call.
      */
-    private suspend fun openOrMark(prefs: Preferences, name: String): ByteArray? {
-        val sealed = prefs[stringPreferencesKey(name)] ?: return null
+    private suspend fun openOrMark(prefs: Preferences, name: String): StoredValue {
+        val sealed = prefs[stringPreferencesKey(name)] ?: return StoredValue.Absent
         return try {
-            cipher.open(Base64.getDecoder().decode(sealed))
+            StoredValue.Present(cipher.open(Base64.getDecoder().decode(sealed)))
         } catch (_: GeneralSecurityException) {
             markStorageLost()
-            null
+            StoredValue.Unreadable
         } catch (_: IOException) {
             markStorageLost()
-            null
+            StoredValue.Unreadable
         } catch (_: IllegalArgumentException) {
             markStorageLost()
-            null
+            StoredValue.Unreadable
         }
     }
 

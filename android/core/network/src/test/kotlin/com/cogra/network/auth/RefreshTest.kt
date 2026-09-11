@@ -40,7 +40,10 @@ class RefreshTest {
         server.start()
         client = ApolloClient.Builder()
             .serverUrl(server.url("/graphql").toString())
-            .addHttpInterceptor(BearerInterceptor(tokenStore))
+            // The suite's tokens are opaque, so the readiness gate reads
+            // no expiry off them and leaves the refresh-on-refusal path
+            // exactly as it was — which is what these cases are about.
+            .addHttpInterceptor(BearerInterceptor(SessionGate(tokenStore, Provider { refresher() })))
             .build()
     }
 
