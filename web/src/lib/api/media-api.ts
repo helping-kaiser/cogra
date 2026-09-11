@@ -133,12 +133,21 @@ function defaultUploader(): PartUploader {
 export async function uploadVideo(
   client: ApolloClient,
   guard: AuthGuard,
-  asset: { blob: Blob; coverMediaId: string },
+  /**
+   * `coverMediaId` is NULL FOR A FACELESS CLIP, which the contract, the
+   * database and the backend all accept — a cover is optional (jakob
+   * 2026-09-10, "going without a cover is always possible"), so the id the
+   * video names is optional with it.
+   */
+  asset: { blob: Blob; coverMediaId: string | null },
   deps: ResumableDeps = {},
 ): Promise<Outcome<MediaAsset>> {
   const threshold = deps.thresholdBytes ?? RESUMABLE_THRESHOLD_BYTES;
   if (asset.blob.size < threshold) {
-    return guard.run(() => uploadMedia(client, asset));
+    const { blob, coverMediaId } = asset;
+    return guard.run(() =>
+      uploadMedia(client, coverMediaId === null ? { blob } : { blob, coverMediaId }),
+    );
   }
 
   // `kind` is VIDEO at every call site: `MediaUploadKind.STILL` is reserved
