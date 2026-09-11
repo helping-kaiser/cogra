@@ -2096,3 +2096,13 @@ the GATE, not in a character budget — a check that warns when any
 feed-filter summary renders with an ellipsis, so vocabulary growth is
 caught at build time instead of on a phone. Sibling of 54.2's
 pair-format guard.
+
+### 61 · The sky's dark points read backwards · *design*
+
+Found by the ceremony round: dark `secondaryContainer` is `#743918`,
+which sinks into the near-black ground — on the Explore hero's
+`SkyField` the LARGEST points (the most-weighted accounts) come out
+the DIMMEST, so the weight reading runs backwards in the dark theme.
+`VouchedIn` avoided it by dropping to two rungs (`outline` /
+`primaryContainer`); the hero needs the same treatment or a dark-side
+token fix. Moves the Explore board — its own pass.
