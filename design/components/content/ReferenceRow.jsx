@@ -173,7 +173,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank,
             }}
           >
             <Icon name="graph" size={14} />
-            <span className="cg-exact">{rank}</span>
+            <span>{rank}</span>
           </span>
           <span style={SR_ONLY}>{rank}</span>
         </>

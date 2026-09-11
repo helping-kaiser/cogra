@@ -324,7 +324,7 @@ export function PostCard({
               cannot know it. Default true so a lone card teaches nothing. */}
           {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />}
           {score !== undefined && (
-            <ExplainableNumber exact glyph="graph" label="Post Score" value={score} onOpenDetail={onOpenScore ?? (() => {})} />
+            <ExplainableNumber glyph="graph" label="Post score" value={score} onOpenDetail={onOpenScore ?? (() => {})} />
           )}
           {/* COMMENTS get their own affordance rather than living behind a tap on
               the card, because "read the replies" is a different intent from

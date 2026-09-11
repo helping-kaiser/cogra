@@ -964,7 +964,7 @@ its post.
 
 ### Design-ready, not yet built
 
-**The score is "Post Score" to readers**, and its drill-down is
+**The score is "Post score" to readers**, and its drill-down is
 **four full screens, not nested containers**: FeedEntry → RankPath →
 RankHop → the raw records. The reason for screens is that a container
 would get confusing at four levels; the risk is the reader feeling shot
