@@ -566,7 +566,7 @@ function ProfileOtherBody() {
           <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Took a stance" titleAside="on @tobias" trailing="2d" inert />
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="1w" inert />
+          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert />
         </ChronicleList>
       </div>
       <BottomNav active={null} slots={ALL_SLOTS} inline />
