@@ -382,25 +382,39 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">License terms</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  // The menus round: three sheet boards, one per surface the ⋮ opens on. Each
-  // is scanExempt, so only the sheet's own rows and its scrim carry numbers.
+  // The menus round: four sheet boards, one per surface a ⋮ opens on. Each is
+  // scanExempt, so only the sheet's own rows and its scrim carry numbers, and
+  // the numbers run in the order the rows are read.
   ReaderPostMenu: [
-    { n: 1, find: ">License terms</button>", tag: "button" },
+    { n: 1, find: ">Save</button>", tag: "button" },
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
-    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 3, find: ">Hide @ada</button>", tag: "button" },
+    { n: 4, find: ">License terms</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // TWO WASHES on this board — the thread's, and the menu's stacked over the
   // thread it dims — and both take the same number: the edge is "tap outside",
   // and outside the menu is the whole screen.
   CommentMenu: [
-    { n: 1, find: ">License terms</button>", tag: "button" },
+    { n: 1, find: ">Save</button>", tag: "button" },
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
-    { n: 3, find: 'class="cg-scrim-in"', tag: "div", all: true },
+    { n: 3, find: ">License terms</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
   ],
   ProfileMenu: [
-    { n: 1, find: ">Mention in a new post</button>", tag: "button" },
-    { n: 2, find: ">Share this profile</button>", tag: "button" },
-    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Mention in a new post</button>", tag: "button" },
+    { n: 3, find: ">Share this profile</button>", tag: "button" },
+    { n: 4, find: ">Hide @ada</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // Your own profile's menu (the private-viewer-state round): the two private
+  // lists and the share row, over the page they belong to.
+  ProfileOwnMenu: [
+    { n: 1, find: ">Saved</button>", tag: "button" },
+    { n: 2, find: ">History</button>", tag: "button" },
+    { n: 3, find: ">Share your profile</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // The license sheet, over the post and over the thread. Both are scanExempt:
   // the terms are a block to read, not a set of controls, so the only thing
@@ -866,7 +880,7 @@ Object.assign(FLOW_MARKERS, {
 // boards lives here (not in BAND_CHATS below) so each list reads complete.
 const ownProfile = () => [
   { n: 1, find: 'aria-label="Chats"', tag: "button" },
-  { n: 2, find: 'aria-label="Share your profile"', tag: "button" },
+  { n: 2, find: 'aria-label="More on your profile"', tag: "button" },
   { n: 3, find: 'aria-label="Settings"', tag: "button" },
   { n: 4, find: 'aria-label="Change your picture"', tag: "button" },
   { n: 5, find: 'aria-label="Your opinions, both directions"', tag: "button" },
@@ -1028,7 +1042,39 @@ Object.assign(FLOW_MARKERS, {
     { n: 14, find: ">Email</span>", tag: "button" },
     { n: 15, find: ">Don&#x27;t remember this account on this device</span>", tag: "button" },
     { n: 16, find: ">Sign out</span>", tag: "button" },
+    // The People group arrived after the page was numbered, and a row inserted
+    // mid-page would renumber nine edges to say nothing new: the badge is an
+    // identity, not a position.
+    { n: 17, find: ">Hidden accounts</span>", tag: "button" },
   ],
+  // The hidden-accounts sheet over the settings page (the private-viewer-state
+  // round). scanExempt like its two siblings, so only the sheet is numbered —
+  // and every Unhide is one control drawn three times, so they share a number.
+  SettingsHidden: [
+    { n: 1, find: ">Unhide</button>", tag: "button", all: true },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // Saved and History: the back arrow, the rows (one control, one number, drawn
+  // once per row) and the bar.
+  Saved: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">The long way home<", tag: "button" },
+    { n: 2, find: ">The third headland light is real<", tag: "button" },
+    { n: 2, find: ">Mira Voss<", tag: "button" },
+    { n: 2, find: ">Sunday at the tide market<", tag: "button" },
+    ...nav(3),
+  ],
+  SavedEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
+  History: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">Sunday at the tide market<", tag: "button" },
+    { n: 2, find: ">The long way home<", tag: "button" },
+    { n: 2, find: ">Low tide at six tomorrow", tag: "button" },
+    { n: 2, find: ">Crossing at the narrows before the wind got up<", tag: "button" },
+    { n: 2, find: ">The lake, doing nothing, for forty seconds<", tag: "button" },
+    ...nav(3),
+  ],
+  HistoryEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
   SettingsBackup: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: 'data-field="Current recovery code"', tag: "div" },
