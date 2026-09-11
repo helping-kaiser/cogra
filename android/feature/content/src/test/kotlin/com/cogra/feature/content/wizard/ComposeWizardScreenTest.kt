@@ -15,6 +15,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.unit.height
+import androidx.compose.ui.unit.width
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.crypto.ActorKey
 import com.cogra.domain.compose.ComposeDraft
