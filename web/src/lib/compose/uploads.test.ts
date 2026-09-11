@@ -3,9 +3,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ApolloClient } from "@apollo/client";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { PICTURE_MAX_BYTES } from "@/lib/ui2/media/caps";
-import type { AuthGuard } from "@/lib/session/guard";
+import { createGuard, type AuthGuard } from "@/lib/session/guard";
+import { createTokenStore } from "@/lib/session/token-store";
+import type { Refresher } from "@/lib/session/refresher";
 import { TOO_BIG_PICTURE } from "./pick";
 import { runUpload, runVideoUpload, waitingAssets } from "./uploads";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
@@ -42,6 +45,33 @@ function clientAnswering(data: unknown): ApolloClient {
  * is `guard.test.ts`'s subject; here it would only hide which call was made.
  */
 const guard: AuthGuard = { run: (block) => block() };
+
+/**
+ * The server's answer to a request that carried no access token, exactly as
+ * the transport hands it up: a top-level UNAUTHENTICATED, not a userError.
+ */
+const unauthenticatedError = () =>
+  new CombinedGraphQLErrors({
+    errors: [{ message: "authentication required", extensions: { code: "UNAUTHENTICATED" } }],
+  });
+
+/** A real guard over a refresher that always succeeds — the tab that heals. */
+function guardThatRefreshes() {
+  const refresh = vi.fn<Refresher["refresh"]>().mockResolvedValue(true);
+  return { guard: createGuard(createTokenStore(), { refresh }), refresh };
+}
+
+/** Refuses the first call the way an anonymous request is refused, then answers. */
+function clientUnauthenticatedOnce(id: string): ApolloClient {
+  let call = 0;
+  return {
+    mutate: vi.fn(async () => {
+      call += 1;
+      if (call === 1) throw unauthenticatedError();
+      return { data: { uploadMedia: { media: { id }, userErrors: [] } } };
+    }),
+  } as unknown as ApolloClient;
+}
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -82,13 +112,31 @@ describe("runUpload", () => {
       uploadMedia: { media: { id: "media-1" }, userErrors: [] },
     });
 
-    await runUpload(client, asset, 4 / 5, step);
+    await runUpload(client, guard, asset, 4 / 5, step);
 
     expect(seen).toEqual([
       { kind: "encoding" },
       { kind: "uploading" },
       { kind: "done", mediaId: "media-1" },
     ]);
+  });
+
+  // F2-3: the access token lives in this tab's memory alone, so a tab that
+  // LOADED rather than signed in holds none — and in a composer the picture is
+  // the first authenticated call the page makes, with no earlier refusal to
+  // have woken the refresh. Unguarded, it went out anonymous, the refusal
+  // stood, and the retry button re-sent the same anonymous request forever.
+  it("refreshes and replays a picture the server refused as unauthenticated", async () => {
+    encodable();
+    const { guard: healing, refresh } = guardThatRefreshes();
+    const client = clientUnauthenticatedOnce("media-2");
+    const { seen, step } = steps();
+
+    await runUpload(client, healing, asset, 1, step);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(2);
+    expect(seen.at(-1)).toEqual({ kind: "done", mediaId: "media-2" });
   });
 
   it("carries the crop and the shape into the encode", async () => {
@@ -112,6 +160,7 @@ describe("runUpload", () => {
 
     await runUpload(
       clientAnswering({ uploadMedia: { media: { id: "m" }, userErrors: [] } }),
+      guard,
       {
         ...asset,
         crop: {
@@ -137,7 +186,7 @@ describe("runUpload", () => {
       uploadMedia: { media: { id: "m" }, userErrors: [] },
     });
 
-    await runUpload(client, asset, 1, steps().step);
+    await runUpload(client, guard, asset, 1, steps().step);
 
     // The description belongs to the placement, not to the asset: it
     // rides `AttachmentInput` at prepare, which is what lets the upload
@@ -161,7 +210,7 @@ describe("runUpload", () => {
     });
     const { seen, step } = steps();
 
-    await runUpload(client, asset, 1, step);
+    await runUpload(client, guard, asset, 1, step);
 
     expect(seen.at(-1)).toEqual({
       kind: "failed",
@@ -178,7 +227,7 @@ describe("runUpload", () => {
       }),
     } as unknown as ApolloClient;
     const network = steps();
-    await runUpload(unreachable, asset, 1, network.step);
+    await runUpload(unreachable, guard, asset, 1, network.step);
     expect(network.seen.at(-1)).toEqual({
       kind: "failed",
       message: "Couldn't reach the server.",
@@ -193,7 +242,7 @@ describe("runUpload", () => {
       }),
     );
     const broken = steps();
-    await runUpload(clientAnswering({}), asset, 1, broken.step);
+    await runUpload(clientAnswering({}), guard, asset, 1, broken.step);
     expect(broken.seen).toEqual([
       { kind: "encoding" },
       { kind: "failed", message: "This browser couldn't read that picture.", retryable: false },
@@ -207,7 +256,7 @@ describe("runUpload", () => {
         throw new Error("boom");
       }),
     );
-    await expect(runUpload(clientAnswering({}), asset, 1, () => {})).resolves.toBeUndefined();
+    await expect(runUpload(clientAnswering({}), guard, asset, 1, () => {})).resolves.toBeUndefined();
   });
 
   // HT-17: the cap lives HERE, on the encoded bytes, so a camera original three
@@ -222,7 +271,7 @@ describe("runUpload", () => {
     };
     const { seen, step } = steps();
 
-    await runUpload(client, huge, 1, step);
+    await runUpload(client, guard, huge, 1, step);
 
     expect(seen.at(-1)).toEqual({ kind: "done", mediaId: "m" });
   });
@@ -250,7 +299,7 @@ describe("runUpload", () => {
     const client = clientAnswering({ uploadMedia: { media: { id: "m" }, userErrors: [] } });
     const { seen, step } = steps();
 
-    await runUpload(client, asset, 1, step);
+    await runUpload(client, guard, asset, 1, step);
 
     // Not retryable: the same source encodes to the same bytes next time.
     expect(seen.at(-1)).toEqual({ kind: "failed", message: TOO_BIG_PICTURE, retryable: false });
@@ -305,6 +354,20 @@ describe("runVideoUpload", () => {
     });
     expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
+  });
+
+  // The cover is a still like any other and takes the same guard: it is the
+  // FIRST call of the video sequence, so an unguarded one fails the video too.
+  it("refreshes and replays a cover the server refused as unauthenticated", async () => {
+    encodable();
+    const { guard: healing, refresh } = guardThatRefreshes();
+    const client = clientUnauthenticatedOnce("media-cover");
+    const poster = steps();
+
+    await runVideoUpload(client, healing, clip, cover, steps().step, poster.step);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
   });
 
   it("sends the STRIPPED bytes, not the ones that were picked", async () => {

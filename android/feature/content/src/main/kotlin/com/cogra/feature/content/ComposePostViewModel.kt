@@ -9,6 +9,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
 import com.cogra.domain.valueOrNull
+import com.cogra.domain.content.isTitleTooLong
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.repo.TopicRepository
@@ -120,6 +121,12 @@ data class ComposePostUiState(
 
     /** Nothing to sign: an edit opened and left alone stages no record. */
     val nothingToSign: Boolean get() = signedActionCount == 0
+
+    /** The title is the one field here the write side refuses past. */
+    val titleTooLong: Boolean get() = isTitleTooLong(title)
+
+    /** Whether the submit may be taken at all. */
+    val canSubmit: Boolean get() = !submitting && !nothingToSign && !titleTooLong
 
     /**
      * What the withdrawals in this submit cost, or null when it

@@ -103,6 +103,32 @@ class ReplyWizardStateTest {
         assertThat(back?.describingIndex).isNull()
     }
 
+    /**
+     * THE PAD IS NOT A DRAWER (F2-10). It parks over the page, so it
+     * never rides the sheet host — which is what drew a second sheet
+     * chrome around it and made the pad read as a sheet on a sheet.
+     */
+    @Test
+    fun theStancePadIsNotADrawer() {
+        val state = composerWithWords()
+            .copy(step = ReplyStep.Seal, sheet = ReplySealSheet.Stance)
+
+        assertThat(state.padOpen).isTrue()
+        assertThat(state.anySheetOpen).isFalse()
+    }
+
+    /** Backing out of the pad stages nothing, exactly as Cancel does. */
+    @Test
+    fun theParkedPadClosesBeforeTheStageMoves() {
+        val state = composerWithWords()
+            .copy(step = ReplyStep.Seal, sheet = ReplySealSheet.Stance)
+
+        val back = state.retreated()
+
+        assertThat(back?.step).isEqualTo(ReplyStep.Seal)
+        assertThat(back?.sheet).isEqualTo(ReplySealSheet.None)
+    }
+
     // -- The tray ------------------------------------------------------
 
     /**

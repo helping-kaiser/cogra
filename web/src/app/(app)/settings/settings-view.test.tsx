@@ -3,6 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { BackupManager } from "@/lib/identity/backup";
+import { HANDLE_MAX_CHARS, PASSWORD_MIN_CHARS } from "@/lib/onboarding/registration-rules";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
@@ -331,7 +332,9 @@ describe("SettingsView credentials", () => {
     fireEvent.change(await screen.findByTestId("settings_current_password"), {
       target: { value: "old" },
     });
-    fireEvent.change(screen.getByTestId("settings_new_password"), { target: { value: "new" } });
+    fireEvent.change(screen.getByTestId("settings_new_password"), {
+      target: { value: "a".repeat(PASSWORD_MIN_CHARS) },
+    });
     fireEvent.click(screen.getByTestId("settings_change_password"));
     expect(await screen.findByTestId("settings_feedback")).toHaveTextContent(expected);
   });
@@ -347,6 +350,24 @@ describe("SettingsView credentials", () => {
     expect(await screen.findByTestId("settings_feedback")).toHaveTextContent(
       "That handle is taken.",
     );
+  });
+
+  // The whole documented grammar, not half of it: a gate that checks only
+  // the floor opens for a handle the server refuses on its ceiling or its
+  // charset, and the reader waits out a round trip to learn it.
+  it("gates the handle change on the contract's whole grammar", async () => {
+    renderSettings();
+
+    const input = await screen.findByTestId("settings_new_handle");
+    const button = screen.getByTestId("settings_change_handle");
+    fireEvent.change(input, { target: { value: "ad" } });
+    expect(button).toBeDisabled();
+    fireEvent.change(input, { target: { value: "a".repeat(HANDLE_MAX_CHARS + 1) } });
+    expect(button).toBeDisabled();
+    fireEvent.change(input, { target: { value: "ada-lovelace" } });
+    expect(button).toBeDisabled();
+    fireEvent.change(input, { target: { value: "ada_lovelace" } });
+    expect(button).toBeEnabled();
   });
 
   it("runs the two-sided email change", async () => {

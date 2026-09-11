@@ -12,11 +12,11 @@ import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.repo.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * One comment's reply thread as expanded past the prefetched first
@@ -46,7 +46,12 @@ data class PostDetailUiState(
      * out, so the screen is busy without being empty (HT-10).
      */
     val loading: Boolean = true,
-    /** A read is in flight — what the pull-to-refresh indicator says. */
+    /**
+     * A read the reader ASKED for is in flight — what the
+     * pull-to-refresh indicator says. The screen's own opening read
+     * never sets it: an indicator answers the gesture that started it,
+     * and nothing else.
+     */
     val refreshing: Boolean = false,
     val post: PostView? = null,
     val comments: List<CommentView> = emptyList(),
@@ -71,7 +76,6 @@ data class PostDetailUiState(
     /** Reply threads a reader has opened (Q49). */
     val replyThreads: Map<String, ReplyThread> = emptyMap(),
 )
-
 
 /**
  * One post and its direct thread (comment.md §2), with the comment box
@@ -123,13 +127,19 @@ class PostDetailViewModel @Inject constructor(
         // the post: the thread is always the fresh read's, so a comment
         // never shows from a page nobody asked for.
         seen.lastSeen(id)?.let { held -> _state.update { it.copy(loading = false, post = held) } }
-        refresh()
+        // The opening read is the screen's own, not a gesture the reader
+        // made, so it says nothing while it runs: the held post is
+        // already painted and an indicator over content the reader can
+        // see claims the screen is still arriving when it has arrived
+        // (F2-9). Only a reader's own pull reports itself.
+        read(indicate = false)
     }
 
     // As in FeedViewModel: the fault reflects the last COMPLETED
     // fetch — so a failed retry never flashes the error surface —
     // and carries which fetch failed, so it surfaces where that
     // fetch was requested.
+
     /**
      * The landed-only opt-out. The cursor namespaces differ, so a
      * change restarts the walk rather than continuing the held one.
@@ -140,9 +150,12 @@ class PostDetailViewModel @Inject constructor(
         refresh()
     }
 
-    fun refresh() {
+    /** The reader's own re-pull — the one read that reports itself. */
+    fun refresh() = read(indicate = true)
+
+    private fun read(indicate: Boolean) {
         val id = postId ?: return
-        _state.update { it.copy(loading = it.post == null, refreshing = true) }
+        _state.update { it.copy(loading = it.post == null, refreshing = indicate) }
         val includePending = _state.value.includePending
         viewModelScope.launch {
             when (

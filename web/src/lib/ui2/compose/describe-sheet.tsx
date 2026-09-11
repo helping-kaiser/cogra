@@ -13,6 +13,7 @@ import { BottomSheet } from "../bottom-sheet";
 import { HelpDialog, HELP_TOPICS } from "../help-dialog";
 import { PillButton } from "../pill-button";
 import { TextField } from "../text-field";
+import { altTextProblem } from "../media/caps";
 import { cropAspect, cropPreviewStyle } from "../media/crop-preview";
 import type { Crop } from "../media/crop";
 
@@ -99,6 +100,7 @@ export function DescribeSheet({
           value={value}
           onChange={onChange}
           testId={`${testId}-field`}
+          error={altTextProblem(value) ?? undefined}
         />
         <p className="m-0 text-label-small text-on-surface-variant">
           Read aloud to people who can&apos;t see it, and shown if the picture can&apos;t load.

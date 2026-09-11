@@ -56,6 +56,7 @@
     <string name="settings_password_changed">Password changed. Other sessions were signed out.</string>
     <string name="settings_wrong_password">Your current password didn\'t match.</string>
     <string name="settings_new_handle">New handle</string>
+    <string name="settings_handle_rules">3–30 characters: a–z, 0–9, _</string>
     <string name="settings_change_handle">Change handle</string>
     <string name="settings_handle_changed">Handle changed.</string>
     <string name="settings_handle_taken">That handle is taken.</string>

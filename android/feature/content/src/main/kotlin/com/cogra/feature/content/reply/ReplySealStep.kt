@@ -2,6 +2,7 @@ package com.cogra.feature.content.reply
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,10 +34,12 @@ import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.Hairline
+import com.cogra.core.designsystem.v2.atom.HelpDot
 import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.SummaryRow
+import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.wizard.sealLabel
@@ -321,34 +325,62 @@ private fun ReplyKeyAbsentCard(onRestoreKey: () -> Unit, onLeave: () -> Unit) {
  * the board draws the real two-axis field and this draws the same one
  * the stance control does — the edges carrying the board's own words,
  * because the seal has no anchors row to learn the axes from.
+ *
+ * **It parks over the page; it is not a drawer.** `ReplyPadBody`
+ * (`design/designs/canonical/screens/_shared.jsx`) draws a rounded card
+ * inset from both edges and sitting off the bottom, over a wash that
+ * covers the seal — and design/readme.md §"Fixed elements" gives the
+ * rule the whole product's pads obey: the same place every time,
+ * because muscle memory is part of the control. The caller owns the
+ * wash and the parking; this draws the card.
  */
 @Composable
-internal fun ReplyPadSheet(
+internal fun ReplyPad(
     target: ReplyTarget?,
     pDirected: Double,
     pInterest: Double,
     onChange: (Double, Double) -> Unit,
     onSet: () -> Unit,
     onCancel: () -> Unit,
+    onHelp: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    CograSheetSurface(testTag = "reply_pad_sheet") {
-        // The board's `?` ("how stances work", graph.json `ReplyPad` 1)
-        // is deliberately absent: copy-voice.md carries no stances text,
-        // and the nearest topic — the post pad's "Where you stand on it"
-        // — says the opposite of what is true here ("only for-or-against
-        // is yours to set"), because a reply's pick is a stance toward
-        // someone else's content and both axes are the author's. A dot
-        // that opens wrong words is worse than no dot.
-        SheetTitle(text = "Toward \"${target?.title.orEmpty()}\"")
-        StanceReading(StancePoint(pDirected, pInterest))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            StancePadField(
-                pick = StancePoint(pDirected, pInterest),
-                onPick = { onChange(it.directed, it.interest) },
-                labels = PAD_LABELS,
-                testTag = "reply_pad_field",
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(PAD_CORNER))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(Space.x4)
+            .testTag("reply_pad"),
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            // The readout clears the corner the `?` sits in, so the two
+            // never collide on a long title.
+            Column(modifier = Modifier.padding(end = PAD_HELP_GUTTER)) {
+                Text(
+                    text = "Toward \"${target?.title.orEmpty()}\"",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag("reply_pad_target"),
+                )
+                StanceReading(StancePoint(pDirected, pInterest))
+            }
+            HelpDot(
+                onHelp = onHelp,
+                contentDescription = HelpTopic.TowardWhatYouAnswer.title,
+                modifier = Modifier.align(Alignment.TopEnd),
+                testTag = "reply_pad_help",
             )
         }
+        StancePadField(
+            pick = StancePoint(pDirected, pInterest),
+            onPick = { onChange(it.directed, it.interest) },
+            labels = PAD_LABELS,
+            testTag = "reply_pad_field",
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .width(PAD_FIELD_SIZE),
+        )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Space.x2, Alignment.End),
@@ -416,6 +448,19 @@ private val PAD_LABELS = StanceFieldLabels(
     top = "More",
     bottom = "Less",
 )
+
+/** `--radius-extra-large`, the rung every parked pad and sheet wears. */
+private val PAD_CORNER = 28.dp
+
+/**
+ * The field keeps the hand board's 240px square, centred, rather than
+ * filling the panel: the pad is a thumb-sized instrument and the drawing
+ * is the one the round inherited (`ReplyPad.jsx`).
+ */
+private val PAD_FIELD_SIZE = 240.dp
+
+/** What the readout leaves clear of the `?` in the corner (`_shared.jsx`). */
+private val PAD_HELP_GUTTER = 40.dp
 
 /** The act block's label column, read off `ReplySeal`. */
 private val ACT_LABEL_WIDTH = 76.dp

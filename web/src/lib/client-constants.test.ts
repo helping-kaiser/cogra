@@ -18,7 +18,7 @@ import { describe, expect, it } from "vitest";
 import { CONTENT_PAGE_SIZE } from "@/lib/api/content-api";
 import { PROFILE_PAGE_SIZE } from "@/lib/api/profile-api";
 import { COMMENT_ATTACHMENT_CAP } from "@/lib/compose/comment-media";
-import { POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
+import { POST_ATTACHMENT_CAP, TITLE_MAX_CHARS } from "@/lib/compose/wizard";
 import {
   HANDLE_MAX_CHARS,
   HANDLE_MIN_CHARS,
@@ -32,6 +32,7 @@ import {
   TERMINAL_REFUSALS,
 } from "@/lib/signing/write-signer";
 import {
+  ALT_TEXT_MAX_CHARS,
   COMMENT_VIDEO_MAX_BYTES,
   PICTURE_MAX_BYTES,
   POST_VIDEO_MAX_BYTES,
@@ -40,6 +41,7 @@ import {
 
 type Constants = {
   version: number;
+  content: { titleChars: number };
   media: {
     altTextChars: number;
     commentAttachments: number;
@@ -90,6 +92,16 @@ describe("media caps", () => {
   it("cap the attachment counts the write side refuses past", () => {
     expect(POST_ATTACHMENT_CAP).toBe(constants.media.postAttachments);
     expect(COMMENT_ATTACHMENT_CAP).toBe(constants.media.commentAttachments);
+  });
+
+  it("cap a description at the length the write side refuses past", () => {
+    expect(ALT_TEXT_MAX_CHARS).toBe(constants.media.altTextChars);
+  });
+});
+
+describe("the authored text caps", () => {
+  it("cap a title at the length the write side refuses past", () => {
+    expect(TITLE_MAX_CHARS).toBe(constants.content.titleChars);
   });
 });
 

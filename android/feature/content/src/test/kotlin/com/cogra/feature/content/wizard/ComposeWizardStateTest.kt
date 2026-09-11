@@ -5,6 +5,7 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.compose.DraftShape
+import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.CropWindow
 import com.cogra.feature.content.TagRow
@@ -227,6 +228,22 @@ class ComposeWizardStateTest {
     @Test
     fun anAbsentKeyBlocksSigningWhateverElseIsReady() {
         assertThat(words.copy(step = WizardStep.Seal, keyAbsent = true).canSign).isFalse()
+    }
+
+    // The details screen refuses it and so does the seal: the seal is the
+    // boundary the server sees, and an over-titled draft that reached it
+    // would sign a refusal.
+    @Test
+    fun anOverLongTitleBlocksTheDetailsStepAndTheSeal() {
+        val atCap = words.copy(title = "x".repeat(MAX_TITLE_CHARS))
+        assertThat(atCap.titleTooLong).isFalse()
+        assertThat(atCap.copy(step = WizardStep.Details).forwardEnabled()).isTrue()
+        assertThat(atCap.copy(step = WizardStep.Seal).canSign).isTrue()
+
+        val over = words.copy(title = "x".repeat(MAX_TITLE_CHARS + 1))
+        assertThat(over.titleTooLong).isTrue()
+        assertThat(over.copy(step = WizardStep.Details).forwardEnabled()).isFalse()
+        assertThat(over.copy(step = WizardStep.Seal).canSign).isFalse()
     }
 
     // -- The seal's arithmetic --

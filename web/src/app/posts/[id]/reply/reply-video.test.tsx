@@ -179,6 +179,24 @@ describe("a comment's video", () => {
     expect(screen.getByTestId("reply-cover-picture")).toBeInTheDocument();
   });
 
+  // The other half of the words' height rule: with a 220dp frame, its cover
+  // row and the pill below them, the words take their natural height and the
+  // spacer takes the slack instead (`ReplyComposeStep.kt:79-95`).
+  it("hands the column's slack to the spacer once the clip needs the room", async () => {
+    draw();
+    await pickFiles([aVideo()]);
+    await screen.findByTestId("reply-cover-frame-0");
+
+    const words = screen.getByTestId("reply-words");
+    expect(words.className).not.toContain("flex-1");
+    const column = screen.getByTestId("reply-compose");
+    const growing = Array.from(column.children).filter((child) =>
+      child.className.split(/\s+/).includes("flex-1"),
+    );
+    expect(growing).toHaveLength(1);
+    expect(growing[0]).not.toBe(words);
+  });
+
   it("asks for one description of the clip, and none of its cover", async () => {
     draw();
     await pickFiles([aVideo()]);

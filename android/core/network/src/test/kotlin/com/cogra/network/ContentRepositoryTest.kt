@@ -233,6 +233,7 @@ class ContentRepositoryTest {
                    "updatedAt":"2026-08-12T10:05:00+00:00",
                    "landing":${landingJson("PENDING", null)},
                    "moderationStatus":"NORMAL",
+                   "sensitiveSelfMark":false,"sensitiveReason":null,
                    "license":{"__typename":"License","attribution":1.0,"provenance":0.0},
                    "topics":[],
                    "references":[],

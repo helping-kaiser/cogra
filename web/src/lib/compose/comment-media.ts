@@ -125,11 +125,18 @@ const ALLOWED: Gate = { ok: true };
  * picture is still on its way — and saying so plainly beats a button that
  * refuses for a reason the reader cannot see. Words alone are always fine: the
  * pictures are the optional half.
+ *
+ * A FACELESS VIDEO IS NOT A WALL HERE EITHER: jakob's 2026-09-10 ruling on the
+ * post wizard's cover screen ("nothing blocks you to go without a cover") was
+ * unqualified, so it reaches this comment-scale gate too — the contract, the
+ * database, and the backend accept a null `coverMediaId` on a comment's video
+ * exactly as they do on a post's. Auto-default to the first captured frame is
+ * untouched; this only removes the refusal for the case nothing filled it.
  */
 export function commentGate(
   words: string,
   media: CommentMedia,
-  /** The video's face, which must land before the video can name it. */
+  /** The video's face, auto-filled by capture when it succeeds. */
   cover: CoverAsset | null = null,
 ): Gate {
   if (words.trim() === "") return { ok: false, reason: "A comment needs words." };
@@ -137,9 +144,6 @@ export function commentGate(
     return { ok: false, reason: `A comment carries at most ${COMMENT_ATTACHMENT_CAP} pictures.` };
   }
   const video = isVideoComment(media);
-  if (video && cover === null) {
-    return { ok: false, reason: "Choose a frame, or a picture of your own." };
-  }
   // The cover counts among what the seal waits for, though it is no
   // attachment: the video cannot be created without it.
   const uploads = cover === null ? media.map((a) => a.upload) : [...media.map((a) => a.upload), cover.upload];
