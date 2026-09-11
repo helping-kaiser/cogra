@@ -1754,3 +1754,50 @@ Runs as its own round after the small-rulings review lands.
 The edit surface reconciles with ruling 3 in this round: a vertical
 clip's edit shows the same optional door, never a cover row presuming
 one exists.
+
+### 50 · Geek mode — glyph-first signal numbers · *design* · **ruled 2026-09-11, undrawn**
+
+A friend's proposal, jakob adopted it scoped (the full record:
+dev-state `cogra/tmp_dev/2026-09-11-geek-mode-rulings.md`). Runs as
+its own round AFTER the tag-pad and video-cover rounds land — it
+rewrites the same stance masters the tag pad is touching.
+
+1. **Group A only — the signal numbers**: stance pairs, tag pairs,
+   citation pairs, the Post Score, the viewer-relative rank. Money,
+   ages, counts, media mechanics, field constraints and codes are
+   untouched — hiding money or progress trades honesty for
+   aesthetics.
+2. **Non-geek is the default**: cards show the stance face alone, the
+   score shows the `graph` glyph alone (the number lives in the
+   item-13 drill-down — consider bundling item 13 into this round),
+   tag rows gain the nearest 13-anchor tag glyph. This REVERSES the
+   tag round's "no face on tag rows" ruling; the readme and
+   copy-voice records move with this round's PR.
+3. **Profile figures stay out** — bare integers, not signal geekery.
+4. **One client-local setting** ("Show exact values" — copy candidate,
+   unblessed) makes the numbers ambient; never an L2 preference. The
+   severance confirm's raw-vs-fold stays numeric in both modes — the
+   difference is the sheet's point and glyphs cannot carry it.
+
+Canvas mechanism (answered from shell.mjs, jakob agreed to the
+toggle): a `geek` data-props chip beside the theme chip, landing as
+`data-geek` on the screen root with the same broadcast; masters
+always render glyph AND number, the number span carries a marker
+class hidden by base CSS unless geek is on. No board forks; SR text
+already carries the values.
+
+### 51 · What the numbers census left standing · *design*
+
+Side findings of the 2026-09-11 numbers census that the small-fix
+batch could not settle:
+
+1. **Future dates have no vocabulary.** The ages ladder rules the
+   past ("recency is a feeling, history is a date"); a campaign's
+   "Runs 6 more days · ends 8 Sep" (WalletCampaign, WalletCampaigns)
+   is unruled — needs jakob's word on how a future moment is spelled.
+2. **Pair-string format has no drift guard.** Screens hand-write
+   pair strings by design (the bundle exposes leading-capital names
+   only; `formatTagPair`/`formatStancePair` stay master-side), so
+   nothing catches a screen typing `+0.4 / 0.9` one-decimal. A check
+   in the design gate that validates `pair=`/`value=` literals
+   against the format contract would close it.
