@@ -159,9 +159,15 @@ const SOL_ADDRESS_NEW = "lq1qqw7t3xk0zfvljmv2u49h5tld6mfj7z2vhnn0mjcz2q0edgp5yh3
 
 /* Genesis content always declares a license, so every card has at least that
    menu entry — without one the dot vanishes, and it must not. Citing rides the
-   same menu on every content (readme §13). */
+   same menu on every content (readme §13), and so does saving (the private-
+   viewer-state round): both act on the thing itself, whoever wrote it.
+
+   THE HIDE ROW IS NOT HERE, and that is the difference between a card's menu
+   and a menu board: hiding names the author, so it is spelled where the author
+   is known rather than handed to every card as one string. */
 const CITE_ROW = { label: "Cite in a new post", onSelect: () => {} };
-const CITE_MENU = [CITE_ROW];
+const SAVE_ROW = { label: "Save", onSelect: () => {} };
+const CARD_MENU = [SAVE_ROW, CITE_ROW];
 
 /* A POST'S BODY IS WORDS XOR MEDIA (post.md). Every fixture with a picture
    carries its words as the DESCRIPTION — the caption beside the body — and no
@@ -177,7 +183,7 @@ const ADA_POST = {
   score: "15.20",
   comments: 3,
   license: { attribution: 1, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 const TOBIAS_POST = {
@@ -187,7 +193,7 @@ const TOBIAS_POST = {
   score: "3.10",
   comments: 1,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 const SOL_POST = {
@@ -204,7 +210,7 @@ const SOL_POST = {
   score: "9.10",
   comments: 2,
   license: { attribution: 0.5, provenance: 0.5 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 /* The gallery post (media slice, 2026-08-31): four pictures at one crop shape,
@@ -225,7 +231,7 @@ const MIRA_GALLERY_POST = {
   score: "6.40",
   comments: 2,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 /* CograBand moved into the system (components/navigation/CograBand.jsx) the
@@ -342,14 +348,14 @@ function DetailHeader({ items }) {
    it is not and `Remove from saved` while it is. A control says what will
    happen (§3), which is why the saved form is a verb and not the word Saved. */
 const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
-const SAVE_ROW = { label: "Save", onSelect: () => {} };
 const OWN_POST_MENU = [
   { label: "Edit", onSelect: () => {} },
   { label: "Mark as sensitive", onSelect: () => {} },
   { label: "Remove", onSelect: () => {} },
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [SAVE_ROW, CITE_ROW, { label: "Hide @ada", onSelect: () => {} }, LICENSE_ROW];
+const READER_POST_MENU = [...CARD_MENU, { label: "Hide @ada", onSelect: () => {} }, LICENSE_ROW];
+const COMMENT_MENU = [...CARD_MENU, LICENSE_ROW];
 /* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
    from the bottom edge over the surface the reader asked from, and go back to
    it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
@@ -1120,7 +1126,7 @@ function CommentsThreadSheet() {
         topics={["glovebox", "coastroad"]}
         references={1}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CITE_MENU}
+        menuItems={CARD_MENU}
       />
       {/* The veiled comment sits SECOND, where the frame still shows it
           whole: the thread is taller than the sheet, and a state drawn
@@ -1139,7 +1145,7 @@ function CommentsThreadSheet() {
         sensitive={{ reason: "A dead seabird in the second frame." }}
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CITE_MENU}
+        menuItems={CARD_MENU}
       />
       <CommentCard
         author={SOL}
@@ -1147,7 +1153,7 @@ function CommentsThreadSheet() {
         timestamp="45m"
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CITE_MENU}
+        menuItems={CARD_MENU}
         replies={[
           {
             id: "r1",
@@ -1156,7 +1162,7 @@ function CommentsThreadSheet() {
             timestamp: "40m",
             onReply: () => {},
             license: { attribution: 0, provenance: 0 },
-            menuItems: CITE_MENU,
+            menuItems: CARD_MENU,
           },
           {
             id: "r2",
@@ -1165,7 +1171,7 @@ function CommentsThreadSheet() {
             timestamp: "22m",
             onReply: () => {},
             license: { attribution: 0, provenance: 0 },
-            menuItems: CITE_MENU,
+            menuItems: CARD_MENU,
           },
         ]}
       />
@@ -1198,7 +1204,7 @@ const MIRA_CLIP_POST = {
   score: "7.40",
   comments: 2,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 /* ── The other two clip shapes (video-cover round, 2026-09-10) ─────────────
@@ -1242,7 +1248,7 @@ const TOBIAS_CANOE_POST = {
   score: "4.80",
   comments: 1,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 const ADA_GRAPES_POST = {
@@ -1254,7 +1260,7 @@ const ADA_GRAPES_POST = {
   score: "3.60",
   comments: 4,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 /* The bottom bar's height — what the stream's own chrome has to clear. */
@@ -1423,6 +1429,23 @@ function SettingsBody() {
             status="The number pairs behind the faces."
             onOpen={() => {}}
           />
+        </SettingsGroup>
+
+        {/* HIDING IS A READING SETTING THAT IS NOT THIS DEVICE'S (the private-
+            viewer-state round). It sits beside Reading because that is the
+            activity it belongs to — a reader who wants their feed quieter looks
+            where the feed's own default lives — and in a group of its own
+            because the Reading footnote's promise, that both its choices stay
+            on this device, is not true of a hidden account: that list follows
+            the account everywhere. Its count is bare, the row's label having
+            already said what is counted (§3); with nobody hidden the row goes
+            inert and reads `None`, since a tap that can only open an empty
+            sheet is a tap spent on nothing. */}
+        <SettingsGroup
+          label="People"
+          footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
+        >
+          <SettingsRow label="Hidden accounts" value="3" onOpen={() => {}} />
         </SettingsGroup>
 
         <SettingsGroup

@@ -15,12 +15,12 @@ export function Screen() {
           comments={2}
           bundle={null}
           license={{ attribution: 0.5, provenance: 0.5 }}
-          menuItems={CITE_MENU}
+          menuItems={CARD_MENU}
         />
         {/* A redacted record keeps its menu — the license rode the payload and is
             gone, but the record can still be cited: it never left the graph. */}
-        <PostCard author={ADA} timestamp="7d" redacted={{ reason: "author" }} score="15.20" comments={3} menuItems={CITE_MENU} />
-        <PostCard author={TOBIAS} timestamp="14d" redacted={{ reason: "illegal" }} score="4.70" comments={1} menuItems={CITE_MENU} />
+        <PostCard author={ADA} timestamp="7d" redacted={{ reason: "author" }} score="15.20" comments={3} menuItems={CARD_MENU} />
+        <PostCard author={TOBIAS} timestamp="14d" redacted={{ reason: "illegal" }} score="4.70" comments={1} menuItems={CARD_MENU} />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
