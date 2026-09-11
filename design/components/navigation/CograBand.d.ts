@@ -3,12 +3,13 @@
  * roots wear it; inner surfaces wear `PageHeader` instead.
  */
 export interface CograBandProps {
-  /** The screen's own working control, between chats and the bell (the feed's
-   *  filter trigger, the profile's gear). The band never spends its full width
-   *  on identity alone. */
+  /** The screen's own working control, inboard of chats and the bell (the
+   *  feed's filter trigger, the profile's gear). Never a ⋮ — a page's overflow
+   *  lives in that page's own row. The band never spends its full width on
+   *  identity alone. */
   trailing?: React.ReactNode;
   /**
-   * The chats affordance, left of `trailing`. Every tab root's band carries it
+   * The chats affordance, right of `trailing`. Every tab root's band carries it
    * by default; pass false to opt a band out where messaging cannot apply.
    */
   chats?: boolean;
@@ -27,8 +28,9 @@ export interface CograBandProps {
 
 export declare function CograBand(props: CograBandProps): JSX.Element;
 
-/** The band's one icon-control shape: a 48px target, no background, the
- *  secondary text colour, with the shell's unread dot as an option. */
+/** The band's one icon-control shape: 40px of ink and a full 48px target
+ *  through `cg-hit`, no background, the secondary text colour, with the
+ *  shell's unread dot as an option. */
 export interface BandIconProps {
   name: import("./Icon.jsx").IconProps["name"];
   /** The accessible name — a glyph control's only wording. */

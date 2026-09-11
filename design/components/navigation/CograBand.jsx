@@ -19,8 +19,15 @@ import { Icon } from "./Icon.jsx";
 
    CHATS RIDE THE BAND (jakob 2026-09-01): messaging must be reachable from any
    major screen, so every tab root's band carries the chats affordance built in.
-   It sits LEFT of the screen's own trailing control. `chats={false}` opts a
-   band out where messaging cannot apply.
+   `chats={false}` opts a band out where messaging cannot apply.
+
+   THE TRAILING CLUSTER IS [the screen's own control] · chats · bell (the band
+   law, jakob 2026-09-11). The screen's own control sits INBOARD: the two the
+   shell owns are the same two icons in the same two places on every root, so a
+   reader aiming at chats or the bell aims at the same corner whatever tab they
+   are on — and the one control that changes per screen is the one that moves
+   in from the edge. No band carries a ⋮ any more: a profile's overflow belongs
+   in the row of controls that page already has, not in the shell's corner.
 
    THE BELL IS THE BAND'S RIGHT EDGE (jakob 2026-09-11): notifications are the
    product's second surfacing channel, so the bell is reachable from every
@@ -39,18 +46,21 @@ import { Icon } from "./Icon.jsx";
    the staging rule in readme §2: the canvas draws the whole app, each release
    builds its slice, and nothing ships a control that leads nowhere. */
 
-/* The band's one icon-control shape, assigned once: a 48px target, no
-   background, the secondary text colour. `dot` pins the shell's quiet unread
-   marker to the glyph's top-right, in the badge geometry ContentRow already
-   uses — an 8px disc ringed in the surface so it stays legible over the
-   glyph's own silhouette. */
+/* The band's one icon-control shape, assigned once: 40px of ink, no
+   background, the secondary text colour — and the full 48px target through
+   `cg-hit`, the way every dense control in this system keeps the promise
+   (Button's `sm`, Chip, the card's affordances). 48px of DRAWN box is what
+   crowded the band: three of them plus the mark and the wordmark left the
+   screen's own control too little room, and the feed's filter trigger — the
+   one control whose width carries words — ellipsised on the boards that
+   narrow the feed. The target never shrank; only the box did. */
 export function BandIcon({ name, label, size = 24, dot = false }) {
   return (
     <button
       type="button"
       aria-label={label}
-      className="cg-state cg-focus"
-      style={{ display: "grid", placeItems: "center", height: "var(--touch-target-min)", width: "var(--touch-target-min)", border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0, flex: "none" }}
+      className="cg-state cg-focus cg-hit"
+      style={{ display: "grid", placeItems: "center", height: "40px", width: "40px", border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0, flex: "none" }}
     >
       <span style={{ position: "relative", display: "grid", placeItems: "center" }}>
         <Icon name={name} size={size} />
@@ -74,8 +84,8 @@ export function CograBand({ trailing, chats = true, bell = true, unread = false,
         </span>
         <span style={{ fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: 600 }}>cogra</span>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", minWidth: 0 }}>
-          {chats && <BandIcon name="forum" label="Chats" size={22} />}
           {trailing}
+          {chats && <BandIcon name="forum" label="Chats" size={22} />}
           {bell && <BandIcon name="notifications" label={unread ? "Notifications — something new" : "Notifications"} size={22} dot={unread} />}
         </div>
       </div>
