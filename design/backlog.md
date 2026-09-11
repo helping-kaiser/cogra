@@ -2078,7 +2078,7 @@ approved kind already notifies the vouch-in); this is the crown of
 the entry flow, a dedicated surface after reciprocation. Runs as its
 own standalone mini-round after round 4 of the MVP queue.
 
-### 59 · The minus sign disagrees with its own guideline · *system*
+### 59 · The minus sign disagrees with its own guideline · *system* · **ruled**
 
 Found by the score-and-opinions round: readme §3 writes negative pairs
 with U+2212 MINUS (`−0.90 / +0.30`), but `formatDimension`'s
@@ -2097,7 +2097,7 @@ feed-filter summary renders with an ellipsis, so vocabulary growth is
 caught at build time instead of on a phone. Sibling of 54.2's
 pair-format guard.
 
-### 61 · The sky's dark points read backwards · *design*
+### 61 · The sky's dark points read backwards · *design* · **ruled: its own pass**
 
 Found by the ceremony round: dark `secondaryContainer` is `#743918`,
 which sinks into the near-black ground — on the Explore hero's
@@ -2107,7 +2107,7 @@ the DIMMEST, so the weight reading runs backwards in the dark theme.
 `primaryContainer`); the hero needs the same treatment or a dark-side
 token fix. Moves the Explore board — its own pass.
 
-### 62 · The canvas sits at the editor's file ceiling · *tooling*
+### 62 · The canvas sits at the editor's file ceiling · *tooling* · **strategy ruled**
 
 The published canvas editor loads at most 200 files; the tree now
 holds exactly 200 (188 artboards + 10 images + canvas.json + Theme).
@@ -2118,3 +2118,13 @@ consolidate fixture images further, retire a generated map from the
 canvas (needs gen-maps + graph.json to learn exclusion — check-flows
 requires every generated map on the canvas today), or split the
 canvas. Related: 61's Explore pass will want new imagery — budget it.
+
+**Item 59 ruled 2026-09-12:** U+2212 wins — `formatDimension` conforms
+to the guideline; every negative-pair board re-renders in the close-out
+round. **Item 61 ruled:** its own small pass post-compaction — the
+ceremony's two-rung fix (outline / primaryContainer) applied to the
+Explore hero's SkyField. **Item 62 strategy ruled:** image
+consolidation to ~6 fixtures (the grapes precedent) buys the visible
+horizon; canvas-splitting stays the escape hatch. Also ruled: the
+drill-down's record key stays inert until the spot-check tooling
+exists; the graph's 23 "Post Score" edge labels stay (matched keys).
