@@ -1577,8 +1577,9 @@ Object.assign(FLOW_MARKERS, {
     ...nav(11),
   ],
   // The husk's page is the other-profile page with its identity placeholdered
-  // (the redacted-actor law), so it wires like one — minus Message and the ⋮,
-  // which each need a name there is none of.
+  // (the redacted-actor law), so it wires like one — minus Message, which needs
+  // a person there is none of. The ⋮ is appended last (jakob 2026-09-12), so no
+  // via on this board renumbers behind it.
   ProfileDeleted: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Opinions on and by this account"', tag: "button" },
@@ -1591,6 +1592,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: "The tunnel is faster", tag: "button" },
     { n: 5, find: "Low sun on the salt crust", tag: "button" },
     ...nav(6),
+    { n: 11, find: 'aria-label="More about this account"', tag: "button" },
   ],
 });
 

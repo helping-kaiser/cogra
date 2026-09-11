@@ -238,13 +238,29 @@ export function StanceValue({ pDirected, pInterest, showPair = true }) {
   );
 }
 
+/* THE MINUS IS U+2212, NOT A HYPHEN (readme §3, *Numbers*). The guideline
+   writes a negative pair `−0.90 / +0.30`, and MINUS SIGN is the character that
+   pairs with `+` — it carries the plus's width and sits on the plus's optical
+   axis, where U+002D HYPHEN-MINUS is a narrow dash set for word-joining. A
+   signed pair written with a hyphen has one arm shorter than the other, which
+   is the one asymmetry a value drawn as `x / y` cannot afford.
+
+   It is SUBSTITUTED BY PART, not by string surgery: `Intl.NumberFormat` names
+   the sign `minusSign` in `formatToParts`, so the swap touches the sign and
+   can never reach a digit or a separator. */
+const MINUS_SIGN = "−";
+
+const DIMENSION_FORMAT = new Intl.NumberFormat(undefined, {
+  signDisplay: "always",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
 /** Always signed, two decimals. The sign carries the direction, so it shows at zero. */
 export function formatDimension(value) {
-  return new Intl.NumberFormat(undefined, {
-    signDisplay: "always",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+  return DIMENSION_FORMAT.formatToParts(value)
+    .map((part) => (part.type === "minusSign" ? MINUS_SIGN : part.value))
+    .join("");
 }
 
 /** Unsigned, two decimals — for a value whose range has no negative half. */

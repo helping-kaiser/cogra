@@ -19,8 +19,12 @@
 
    THE OLDER RECORD WEARS A DATE, not a rung of the ladder: past thirty days
    recency stops being a feeling and history takes over (copy-voice, *Ages*).
-   Whether a key needs a control that copies it is the one question this board
-   leaves open. */
+
+   THE KEY IS DISPLAY-ONLY (jakob 2026-09-12). It is drawn in mono because a
+   reader checking a claim has to be able to see it, and the control that copies
+   it arrives with the spot-check tooling that would give a copied key somewhere
+   to go — a control that fills a clipboard nothing can yet read promises a
+   workflow the product does not have. */
 const STEP_RECORDS = [
   {
     what: "Your opinion of @ada",
