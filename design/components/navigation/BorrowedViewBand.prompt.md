@@ -1,4 +1,4 @@
-Use `BorrowedViewBand` in the collapsing top of a read surface whose feed is ranked from a borrowed vantage point — a visitor from an invite link (the inviter's view), a bare arrival (the genesis moderator's), or a signed-in applicant who has not landed yet (still the inviter's). It subsumes the guest notice: the band names the borrowed view and carries the one sign-in-or-join entry.
+Use `BorrowedViewBand` in the collapsing top of a read surface whose feed shows a borrowed vantage point — a visitor from an invite link (the inviter's view), a signed-in applicant who has not landed yet (their own inviter's), or a bare arrival (the genesis moderator's, strictly as the fallback). It subsumes the guest notice: the band names the borrowed view and carries the one sign-in-or-join entry.
 
 ```jsx
 <BorrowedViewBand

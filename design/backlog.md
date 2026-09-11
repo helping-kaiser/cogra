@@ -1525,14 +1525,12 @@ question the boards leave open; none blocked the rest of the shell.
    acted on at once — the apps currently follow the graph (no dead
    button; the band draws the affordance only once a surface exists).
    Bless that reading or redraw the edge.
-3. **`BorrowedViewBand` cannot yet be true.** The band names a
-   borrowed *ranking* vantage ("the label is what makes borrowed
-   ranking honest"), but the feed is chronological until slice 3's
-   ranker — the same label-vs-behaviour divergence §13 forbids for
-   the feed filter — and the contract exposes no borrowed-vantage
-   actor for an anonymous or applicant reader anyway.
-   Implementation's input: the band lands with the ranker (and the
-   schema field it needs), and the guest card stands until then.
+3. **How much of `BorrowedViewBand` can be true before the ranker.**
+   The band names a vantage, and the feed beneath it is chronological
+   until slice 3's ranker — so the question is whether naming whose
+   view this is says anything the feed does not yet do, and which
+   vantages are knowable without a contract field the schema has not
+   grown.
 
 **Ruled by jakob 2026-09-09**, all three stops:
 
@@ -1555,10 +1553,14 @@ question the boards leave open; none blocked the rest of the shell.
    chats because messaging belongs on every tab root, and the apps
    draw it the release a chat surface exists. The edges stay as they
    are; the docblock says which half is end state.
-3. **The borrowed-view band rides the ranker.** Implementation's
-   proposal stands: the band and the borrowed-vantage field it needs
-   land with slice 3's ranker, and the guest notice stands until then.
-   Roadmap slice 3 carries it.
+3. **The guest and applicant bands ship now; the rank waits.**
+   Naming a vantage needs no ranker, and both of those vantages are
+   knowable without a new contract field — genesis for a bare
+   arrival, the applicant's own inviter for an applicant — so both
+   bands stand from the start over a feed that reads newest. What
+   waits for slice 3 is the borrowed *order*, the invite-link vantage
+   and the field it needs, and the band's line about ranking. The
+   vantage ladder is recorded in readme §13 beside the band's rules.
 
 **`KeyElsewhere` is confirmed** (jakob, same day): `Main` is the
 signed-out invite-link feed — every act on it guest-gates — so the
