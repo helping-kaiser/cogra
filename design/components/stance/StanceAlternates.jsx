@@ -27,7 +27,11 @@ import { clampDimension, DIRECTED_LABEL, DIRECTED_POLES, INTEREST_LABEL, INTERES
    Severance is findable from the open pad; for anyone whose input is an alternate
    the pad never opens, so it is findable here instead. */
 
-function DirectEntry({ label, value, onChange }) {
+/* THE BOUND IS A PROP HERE TOO, for `StanceSlider`'s reason: the typed route and
+   the dragged one must not disagree about what a value may be. A field that
+   refuses −1 on one axis and accepts it on another is the census speaking, and
+   the census travels with the record family. */
+function DirectEntry({ label, value, onChange, min = -1, max = 1 }) {
   const id = React.useId();
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)" }}>
@@ -38,11 +42,11 @@ function DirectEntry({ label, value, onChange }) {
         id={id}
         type="number"
         inputMode="decimal"
-        min={-1}
-        max={1}
+        min={min}
+        max={max}
         step={0.01}
         value={value}
-        onChange={(event) => onChange && onChange(clampDimension(Number(event.target.value)))}
+        onChange={(event) => onChange && onChange(clampDimension(Number(event.target.value), min, max))}
         style={{
           width: "6rem",
           borderRadius: "var(--radius-extra-small)",

@@ -1,11 +1,12 @@
 import React from "react";
-import { clampDimension, clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES } from "./StanceReadout.jsx";
+import { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_RANGES } from "./StanceReadout.jsx";
 
 /* The pad's field: a SOFT ROUNDED SQUARE, and THE DRAWN FIELD IS THE VALUE SPACE
-   (design.md §8.3). The knob travels exactly the field, the corners are (±1, ±1),
-   and the knob never leaves the drawn shape — what the finger sees is what the
-   value does. Horizontal runs Against → For, vertical runs Less → More, and those
-   four words are drawn on the field; screen y grows downward and connection grows
+   (design.md §8.3). The knob travels exactly the field, the corners are the two
+   axes' own ends — (±1, ±1) for a stance, (0, 0) to (1, 1) for a tag — and the
+   knob never leaves the drawn shape, so what the finger sees is what the value
+   does. Horizontal runs Against → For, vertical runs Less → More, and those four
+   words are drawn on the field; screen y grows downward and connection grows
    upward, so the vertical mapping inverts.
 
    Containment is STRUCTURAL, not arithmetic: the knob's centre travels a box inset
@@ -45,26 +46,65 @@ export function padTravelHalfExtent(rect, inset = KNOB_TRAVEL_INSET_PX) {
   return Math.max(0, Math.min(rect.width, rect.height) / 2 - inset);
 }
 
+/** How much one pixel of travel is worth on an axis that spans `range`. */
+function perPixel(range, halfExtent) {
+  return (range.max - range.min) / (2 * halfExtent);
+}
+
+/** Where a value sits on its axis, 0 at the range's low end and 1 at its high end. */
+function fractionOf(value, range) {
+  return (value - range.min) / (range.max - range.min);
+}
+
+/* A PERCENTAGE IS ROUNDED BEFORE IT REACHES A STYLE. Binary floating point makes
+   the same position come out as 55 or as 55.00000000000001 depending on the order
+   the multiply and the add happen in, and a rendered board is compared byte for
+   byte by the design gate. Six decimals is far below a device pixel on any field
+   this pad is drawn at, so nothing moves and the output stops depending on
+   arithmetic order. */
+function percent(fraction) {
+  return Math.round(fraction * 1e8) / 1e6;
+}
+
 /** The pair this much travel picks, starting from `base`. Clamped once, on the sum. */
-export function padPairFrom(base, rect, travel, inset = KNOB_TRAVEL_INSET_PX) {
+export function padPairFrom(base, rect, travel, inset = KNOB_TRAVEL_INSET_PX, ranges = STANCE_RANGES) {
   const halfExtent = padTravelHalfExtent(rect, inset);
-  if (halfExtent === 0) return clampPair(base);
-  return clampPair({
-    pDirected: base.pDirected + travel.dx / halfExtent,
-    pInterest: base.pInterest - travel.dy / halfExtent,
-  });
+  if (halfExtent === 0) return clampPair(base, ranges);
+  return clampPair(
+    {
+      pDirected: base.pDirected + travel.dx * perPixel(ranges.pDirected, halfExtent),
+      pInterest: base.pInterest - travel.dy * perPixel(ranges.pInterest, halfExtent),
+    },
+    ranges,
+  );
 }
 
 /** Where the knob sits, as a percentage of the travel box. */
-export function padPercentOf(pair) {
-  return { x: 50 + clampDimension(pair.pDirected) * 50, y: 50 - clampDimension(pair.pInterest) * 50 };
+export function padPercentOf(pair, ranges = STANCE_RANGES) {
+  const bounded = clampPair(pair, ranges);
+  return {
+    x: percent(fractionOf(bounded.pDirected, ranges.pDirected)),
+    y: 100 - percent(fractionOf(bounded.pInterest, ranges.pInterest)),
+  };
 }
 
-export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true, axes = STANCE_AXES }) {
+/* THE DEAD-GROUND LINE MARKS THE AXIS'S ZERO, so an axis that never reaches
+   zero has none to draw. On a stance's signed square both lines cross the
+   middle and the inert cross is legible dead ground (§8.3). The tag pad's
+   confidence starts at zero and its relevance above it, so neither line falls
+   anywhere but the field's own edge, where a hairline would read as a border
+   rather than as a meaning. */
+function zeroPercentOf(range) {
+  return range.min < 0 && range.max > 0 ? percent(fractionOf(0, range)) : null;
+}
+
+export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true, axes = STANCE_AXES, ranges = STANCE_RANGES }) {
   const localRef = React.useRef(null);
   const ref = fieldRef ?? localRef;
   const drag = React.useRef(null);
-  const knob = padPercentOf(value);
+  const knob = padPercentOf(value, ranges);
+  const zeroAcross = zeroPercentOf(ranges.pInterest);
+  const zeroDown = zeroPercentOf(ranges.pDirected);
 
   const onPointerDown = (event) => {
     if (!onChange) return;
@@ -75,7 +115,15 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
     const from = drag.current;
     const field = ref.current;
     if (!from || !field || !onChange) return;
-    onChange(padPairFrom(from.base, field.getBoundingClientRect(), { dx: event.clientX - from.x, dy: event.clientY - from.y }));
+    onChange(
+      padPairFrom(
+        from.base,
+        field.getBoundingClientRect(),
+        { dx: event.clientX - from.x, dy: event.clientY - from.y },
+        KNOB_TRAVEL_INSET_PX,
+        ranges,
+      ),
+    );
   };
   const endDrag = () => {
     drag.current = null;
@@ -97,8 +145,12 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
         background: "var(--surface-container-highest)",
       }}
     >
-      <div aria-hidden="true" style={{ position: "absolute", left: 0, top: "50%", height: "1px", width: "100%", background: "var(--border-hairline)" }} />
-      <div aria-hidden="true" style={{ position: "absolute", left: "50%", top: 0, width: "1px", height: "100%", background: "var(--border-hairline)" }} />
+      {zeroAcross !== null && (
+        <div aria-hidden="true" style={{ position: "absolute", left: 0, top: `${zeroAcross}%`, height: "1px", width: "100%", background: "var(--border-hairline)" }} />
+      )}
+      {zeroDown !== null && (
+        <div aria-hidden="true" style={{ position: "absolute", left: `${zeroDown}%`, top: 0, width: "1px", height: "100%", background: "var(--border-hairline)" }} />
+      )}
       {/* THE AXES ARE NAMED ON THE FIELD. A blank square says nothing about which
          direction means what, and for a stance the words are the same four the
          sliders use, so the two surfaces teach each other. `label-small` on

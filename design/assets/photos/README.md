@@ -31,4 +31,7 @@ picture is fitted inside the cap, a clip centre-crops to it, and the
 9:16 frame is whole again only on the stream and in the viewer, where
 downsampled copies of this file and of `03-landscape-16x9.jpg` stand in
 for the clips (`designs/canonical/img/clip-lakeside.jpg`,
-`clip-canoe.jpg`).
+`clip-canoe.jpg`). `10-square-1x1.jpg` stands in the same way for the
+square clip (`clip-grapes.jpg`) the three-shapes board needs: the
+corpus holds no square clip still of its own, and a clip's face is a
+frame of the clip, so it takes a clip's name.

@@ -16,5 +16,5 @@ export interface BorrowedViewBandProps {
 }
 
 /** The borrowed-view band: names the vantage point a guest or applicant feed
-    is ranked from, riding the collapsing top in place of the guest notice. */
+    shows, riding the collapsing top in place of the guest notice. */
 export function BorrowedViewBand(props: BorrowedViewBandProps): React.JSX.Element;

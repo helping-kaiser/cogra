@@ -7,12 +7,11 @@ import { formatDimension, formatUnsigned } from "./StanceReadout.jsx";
    For a STANCE this is the ACCESSIBLE path (design.md §8.6, §10) — the pad is a
    drag gesture, and a drag gesture always has a non-drag equivalent.
 
-   FOR A TAG'S PAIR IT IS THE CONTROL ITSELF (jakob's ruling, the tag round).
-   Confidence is census-bounded to [0, 1] and the pad is a square over two
-   signed axes: half of it would be unreachable, and a control drawn with a
-   dead half is a control that lies about its range. Two labelled tracks fit
-   two differently-bounded axes exactly, which is also what both apps have
-   shipped for tags since slice 2.3.
+   FOR A TAG'S PAIR IT IS THE NON-DRAG EQUIVALENT (jakob's ruling, the tag pad
+   round). A tag's pair is set on the pad, and the pad is a drag gesture, so
+   §10's standing demand applies there exactly as it does to a stance: the
+   equivalent has to exist and be reachable. Two labelled tracks are it, with
+   the tag's own poles and its own bound.
 
    THE RANGE IS A PROP, AND THE FORMAT FOLLOWS IT. `min`/`max` default to the
    stance range; an axis with no negative half drops the sign from its readout
