@@ -37,6 +37,9 @@ import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.media.CograAvatar
+import com.cogra.domain.content.MAX_BIO_CHARS
+import com.cogra.domain.content.MAX_DISPLAY_NAME_CHARS
+import com.cogra.domain.content.MAX_WEBSITE_URL_CHARS
 
 @Composable
 fun ProfileEditRoute(
@@ -168,11 +171,22 @@ fun ProfileEditScreen(
                         onValueChange = onDisplayNameChange,
                         label = { Text(stringResource(R.string.profile_edit_display_name)) },
                         singleLine = true,
-                        isError = state.emptyName,
-                        supportingText = if (state.emptyName) {
-                            { Text(stringResource(R.string.profile_edit_empty_name)) }
-                        } else {
-                            null
+                        isError = state.emptyName || state.displayNameTooLong,
+                        supportingText = when {
+                            state.emptyName -> {
+                                { Text(stringResource(R.string.profile_edit_empty_name)) }
+                            }
+                            state.displayNameTooLong -> {
+                                {
+                                    Text(
+                                        stringResource(
+                                            R.string.profile_edit_display_name_too_long,
+                                            MAX_DISPLAY_NAME_CHARS,
+                                        ),
+                                    )
+                                }
+                            }
+                            else -> null
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -183,6 +197,12 @@ fun ProfileEditScreen(
                         onValueChange = onBioChange,
                         label = { Text(stringResource(R.string.profile_edit_bio)) },
                         minLines = 3,
+                        isError = state.bioTooLong,
+                        supportingText = if (state.bioTooLong) {
+                            { Text(stringResource(R.string.profile_edit_bio_too_long, MAX_BIO_CHARS)) }
+                        } else {
+                            null
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("profile_edit_bio"),
@@ -192,6 +212,12 @@ fun ProfileEditScreen(
                         onValueChange = onWebsiteChange,
                         label = { Text(stringResource(R.string.profile_edit_website)) },
                         singleLine = true,
+                        isError = state.websiteUrlTooLong,
+                        supportingText = if (state.websiteUrlTooLong) {
+                            { Text(stringResource(R.string.profile_edit_website_too_long, MAX_WEBSITE_URL_CHARS)) }
+                        } else {
+                            null
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("profile_edit_website"),

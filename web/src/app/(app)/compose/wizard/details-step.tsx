@@ -23,7 +23,7 @@ import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
-import { kindOf, titleProblem, type PickedAsset } from "@/lib/compose/wizard";
+import { descriptionProblem, kindOf, titleProblem, type PickedAsset } from "@/lib/compose/wizard";
 
 export function DetailsStep({
   mode,
@@ -101,6 +101,7 @@ export function DetailsStep({
         value={description}
         onChange={onDescription}
         testId="wizard-description"
+        error={descriptionProblem(description) ?? undefined}
       />
 
       <TagEntryField

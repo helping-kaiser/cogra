@@ -1891,6 +1891,26 @@ Three things the boards do not carry, each named where the lane hit it.
    caps and no shared drawn answer for what a field does when the words
    are too many. Worth one round rather than three.
 
+**2026-09-11.** The caps-2 lane settled every number the affordance
+round must design for — jakob's ruling, enforced end to end the same
+way the title was. In Unicode scalar values, the unit every one of
+these counts in:
+
+- Title — 100
+- Alt text — 1000
+- Description — 500
+- Words-body (a Post's `content`) — 5000
+- Comment body — 2000
+- Sensitive reason — 140
+- Display name — 50
+- Bio — 500
+- Website URL — 2048
+- Device label — 100
+
+Password maximum (128) is implementation-side only — Argon2 cost
+bounding, never drawn as a counter or meter — and sits outside this
+affordance round's scope.
+
 ### 53 · Geek mode — glyph-first signal numbers · *design* · **drawn 2026-09-11**
 
 A friend's proposal, jakob adopted it scoped (the full record:

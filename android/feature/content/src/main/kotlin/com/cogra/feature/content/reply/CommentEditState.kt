@@ -3,6 +3,8 @@ package com.cogra.feature.content.reply
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.media.MediaItem
+import com.cogra.domain.content.isCommentBodyTooLong
+import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
@@ -87,6 +89,13 @@ data class CommentEditState(
 
     val canAddPicture: Boolean get() = picked.size < ReplyWizardState.MAX_PICTURES
 
+    /** The comment body's own cap. */
+    val bodyTooLong: Boolean get() = isCommentBodyTooLong(body)
+
+    /** The sensitive mark's reason, capped the same way every authored field is. */
+    val sensitiveReasonTooLong: Boolean
+        get() = sensitive && isSensitiveReasonTooLong(sensitiveReason.orEmpty())
+
     /**
      * Whether leaving would lose something, and so has to ask first.
      *
@@ -146,6 +155,8 @@ data class CommentEditState(
             !loading &&
             !keyAbsent &&
             body.isNotBlank() &&
+            !bodyTooLong &&
+            !sensitiveReasonTooLong &&
             uploadsComplete &&
             signedActionCount > 0
 

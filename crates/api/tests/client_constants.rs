@@ -25,13 +25,20 @@
 
 use std::path::Path;
 
-use api::auth::{HANDLE_CHARSET_PATTERN, HANDLE_MAX_CHARS, HANDLE_MIN_CHARS, PASSWORD_MIN_CHARS};
-use api::content::{DEFAULT_STANCE, MAX_TITLE_CHARS};
+use api::auth::{
+    HANDLE_CHARSET_PATTERN, HANDLE_MAX_CHARS, HANDLE_MIN_CHARS, MAX_DEVICE_LABEL_CHARS,
+    PASSWORD_MAX_CHARS, PASSWORD_MIN_CHARS,
+};
+use api::content::{
+    DEFAULT_STANCE, MAX_COMMENT_BODY_CHARS, MAX_DESCRIPTION_CHARS, MAX_POST_BODY_CHARS,
+    MAX_SENSITIVE_REASON_CHARS, MAX_TITLE_CHARS,
+};
 use api::media::{
     MAX_ALT_TEXT_CHARS, MAX_COMMENT_ATTACHMENTS, MAX_COMMENT_VIDEO_BYTES, MAX_PIXEL_DIMENSION,
     MAX_POST_ATTACHMENTS, MAX_POST_VIDEO_BYTES, MIN_MULTIPART_PART_BYTES, MediaConfig,
     RESUMABLE_THRESHOLD_BYTES,
 };
+use api::profile::{MAX_BIO_CHARS, MAX_DISPLAY_NAME_CHARS, MAX_WEBSITE_URL_CHARS};
 use api::schema::types::{
     DEFAULT_PAGE_SIZE, ErrorCode, MAX_PAGE_SIZE, SEAL_POLL_ATTEMPTS, SEAL_POLL_INTERVAL_MS,
     TERMINAL_WRITE_REFUSALS,
@@ -70,19 +77,30 @@ fn build_constants() -> Value {
         },
         "content": {
             "titleChars": MAX_TITLE_CHARS,
+            "descriptionChars": MAX_DESCRIPTION_CHARS,
+            "postBodyChars": MAX_POST_BODY_CHARS,
+            "commentBodyChars": MAX_COMMENT_BODY_CHARS,
+            "sensitiveReasonChars": MAX_SENSITIVE_REASON_CHARS,
         },
         "paging": {
             "defaultPageSize": DEFAULT_PAGE_SIZE,
             "maxPageSize": MAX_PAGE_SIZE,
+        },
+        "profile": {
+            "displayNameChars": MAX_DISPLAY_NAME_CHARS,
+            "bioChars": MAX_BIO_CHARS,
+            "websiteUrlChars": MAX_WEBSITE_URL_CHARS,
         },
         "stance": {
             "tapDefault": DEFAULT_STANCE,
         },
         "registration": {
             "passwordMinChars": PASSWORD_MIN_CHARS,
+            "passwordMaxChars": PASSWORD_MAX_CHARS,
             "handleMinChars": HANDLE_MIN_CHARS,
             "handleMaxChars": HANDLE_MAX_CHARS,
             "handleCharsetPattern": HANDLE_CHARSET_PATTERN,
+            "deviceLabelChars": MAX_DEVICE_LABEL_CHARS,
         },
         "writeSigner": {
             "terminalRefusals": TERMINAL_WRITE_REFUSALS

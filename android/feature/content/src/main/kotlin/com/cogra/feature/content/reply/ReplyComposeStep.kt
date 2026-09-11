@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.compose.CommentPictureTray
@@ -33,6 +34,7 @@ import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.ThumbBadge
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.content.MAX_COMMENT_BODY_CHARS
 import com.cogra.feature.content.R
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.UploadFailure
@@ -93,6 +95,12 @@ internal fun ColumnScope.ReplyComposeStepBody(
             .then(if (wordsFill) Modifier.weight(1f) else Modifier),
         testTag = "reply_body",
     )
+    if (state.bodyTooLong) {
+        ErrorLine(
+            text = stringResource(R.string.content_error_comment_body_too_long, MAX_COMMENT_BODY_CHARS),
+            testTag = "reply_body_too_long",
+        )
+    }
 
     if (state.hasPictures) {
         CommentPictureTray(

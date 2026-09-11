@@ -77,7 +77,7 @@ import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-acti
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { TextField } from "@/lib/ui/text-field";
-import { titleProblem } from "@/lib/compose/wizard";
+import { bodyProblem, descriptionProblem, titleProblem } from "@/lib/compose/wizard";
 import { TransportError } from "@/lib/ui/transport-error";
 
 export function ComposeForm({
@@ -439,10 +439,12 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
     else await submitEdit(editingId);
   };
 
-  // The one field on this surface with a cap the server refuses past. It gates
+  // The fields on this surface with a cap the server refuses past. They gate
   // the button rather than firing at submit: the message is beside the field
   // that earned it, which is where the fix is made.
   const titleTooLong = titleProblem(title);
+  const descriptionTooLong = descriptionProblem(description);
+  const bodyTooLong = mediaBody ? null : bodyProblem(body);
 
   const onSubmit = async () => {
     if (submitting) return;
@@ -512,6 +514,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         value={description}
         onChange={setDescription}
         testId="compose-description"
+        error={descriptionTooLong ?? undefined}
       />
       {mediaBody && loadedPost !== null ? (
         // The body this post already has, shown rather than described — and
@@ -542,6 +545,11 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
           {emptyBody && (
             <p role="alert" data-testid="compose-empty-body" className="text-body-medium text-error">
               The post needs a body.
+            </p>
+          )}
+          {bodyTooLong && (
+            <p role="alert" data-testid="compose-body-too-long" className="text-body-medium text-error">
+              {bodyTooLong}
             </p>
           )}
         </div>
@@ -583,7 +591,13 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
       <Button
         testId="compose-submit"
         onClick={() => void onSubmit()}
-        disabled={submitting || signedActions === 0 || titleTooLong !== null}
+        disabled={
+          submitting ||
+          signedActions === 0 ||
+          titleTooLong !== null ||
+          descriptionTooLong !== null ||
+          bodyTooLong !== null
+        }
       >
         {editingId === null ? "Sign and publish" : "Sign the edit"}
       </Button>
