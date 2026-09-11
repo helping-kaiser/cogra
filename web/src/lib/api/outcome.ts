@@ -55,20 +55,22 @@ export function hasCode(outcome: Outcome<unknown>, code: ErrorCode): boolean {
   return outcome.kind === "refused" && outcome.errors.some((e) => e.code === code);
 }
 
-// Three deliberate lifts out of the transport tier: UNAUTHENTICATED, so
+// Four deliberate lifts out of the transport tier: UNAUTHENTICATED, so
 // the auth guard can refresh-and-replay on it; RATE_LIMITED, because a
 // deliberate backoff rendered as "can't reach the server" misleads; and
-// FORBIDDEN, for the same reason as RATE_LIMITED and with more at stake.
-// The guard replays only on UNAUTHENTICATED.
+// FORBIDDEN and EMAIL_NOT_VERIFIED, for the same reason as RATE_LIMITED
+// and with more at stake. The guard replays only on UNAUTHENTICATED.
 //
-// FORBIDDEN IS AN ANSWER, NOT A FAULT. Acting mutations read the account
-// state live and refuse a non-member at the transport tier
-// (`crates/api/src/schema/mutation.rs`: "a FORBIDDEN transport fault
-// otherwise, never a userError"), so an account that cannot act yet — an
-// applicant whose email is not verified, say — was told the server could not
-// be reached. It can; it said no. Lifted, it reaches the same
-// `writeRefusalMessage` vocabulary every other refusal does, and the reader
-// is answered rather than sent to check their connection.
+// A MEMBERSHIP REFUSAL IS AN ANSWER, NOT A FAULT. Acting mutations read
+// the account state live and refuse a non-member at the transport tier
+// (`crates/api/src/schema/mutation.rs`: "a transport fault otherwise,
+// never a userError: `EMAIL_NOT_VERIFIED` while the address is unproven,
+// `FORBIDDEN` for every other non-member"), so an account that cannot act
+// yet — an applicant whose email is not verified — was told the server
+// could not be reached. It can; it said no. Lifted, either code reaches
+// the same `writeRefusalMessage`
+// vocabulary every other refusal does, and the reader is answered rather
+// than sent to check their connection.
 function classify(error: unknown): Outcome<never> {
   if (CombinedGraphQLErrors.is(error)) {
     if (error.errors.some((e) => e.extensions?.code === "UNAUTHENTICATED")) {
@@ -79,10 +81,10 @@ function classify(error: unknown): Outcome<never> {
         { code: "RATE_LIMITED", message: "too many attempts, wait before retrying", field: null },
       ]);
     }
-    if (error.errors.some((e) => e.extensions?.code === "FORBIDDEN")) {
-      return refused([
-        { code: "FORBIDDEN", message: "this account may not act yet", field: null },
-      ]);
+    for (const code of ["FORBIDDEN", "EMAIL_NOT_VERIFIED"] as const) {
+      if (error.errors.some((e) => e.extensions?.code === code)) {
+        return refused([{ code, message: "this account may not act yet", field: null }]);
+      }
     }
   }
   return failed(error);
