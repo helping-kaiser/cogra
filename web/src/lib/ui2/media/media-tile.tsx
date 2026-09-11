@@ -98,29 +98,36 @@ export function MediaTile({
   const reserved = ratio ?? tileRatio(sourceRatio);
   const objectFit = fit ?? fitFor(sourceRatio);
   const alt = altText ?? "";
-  // THE HEIGHT CAP SHRINKS THE TILE; IT NEVER RESHAPES IT.
+  // AN EXPLICIT `ratio` NAMES A FIXED FRAME — the comment scale's 220px
+  // square, the gallery's secondary squares — and that frame is capped in
+  // both axes at once: `aspect-ratio` with a definite `width: 100%` lets a
+  // `max-height` take its bite out of the height alone, so bounding the
+  // WIDTH by what the cap allows at this ratio (`max-width: calc(<cap> *
+  // <ratio>)`) is what keeps the box the shape it was told to be, at the
+  // cost of narrowing on a short viewport.
   //
-  // `aspect-ratio` with `width: 100%` and a `max-height` is a trap: the width
-  // is already definite, so the cap can only take it out of the HEIGHT, and the
-  // box silently becomes a shape nobody asked for. On the 390x844 board the cap
-  // is 376px, and a 4:5 tile wants 390x487 — clamped, it renders 390x376, which
-  // is 1.04:1. That is why a vertical picture and a vertical clip both came out
-  // SQUARE while wide (390x204) and square (390x390, barely touched) looked
-  // right: vertical is the only shape tall enough to meet the cap.
-  //
-  // Bounding the WIDTH by what the cap allows at this ratio is what makes the
-  // cap take a bite out of both sides at once. The tile gets narrower on a
-  // short viewport and keeps the shape the author chose — the frame is never
-  // padded out with bars, so "letterboxing exists nowhere" still holds.
-  const frameStyle = {
-    aspectRatio: cssRatio(reserved),
-    maxHeight,
-    maxWidth: `calc(${maxHeight} * ${reserved})`,
-    // The tile no longer always fills its column, so it has to say where it
-    // sits: centred, like every other capped surface in the app.
-    marginInline: "auto",
-    borderRadius: radius,
-  };
+  // THE DEFAULT FRAME CARRIES NO SUCH CAP. Its ratio comes from `tileRatio`,
+  // already clamped at the 4:5 portrait bound, so nothing it reserves is
+  // ever taller than that by construction. A second, viewport-tied height
+  // cap stacked on an already-bounded ratio only fights the ratio instead of
+  // settling anything — reshaping the frame where width stays definite, or
+  // narrowing it for no reason where width is compensated. The default frame
+  // stays full-width and lets the clamped ratio alone say its shape.
+  const explicitShape = ratio !== undefined;
+  const frameStyle = explicitShape
+    ? {
+        aspectRatio: cssRatio(reserved),
+        maxHeight,
+        maxWidth: `calc(${maxHeight} * ${reserved})`,
+        // The tile no longer always fills its column, so it has to say where
+        // it sits: centred, like every other capped surface in the app.
+        marginInline: "auto",
+        borderRadius: radius,
+      }
+    : {
+        aspectRatio: cssRatio(reserved),
+        borderRadius: radius,
+      };
 
   // A VIDEO IS NOT A TILE WITH A PLAY BUTTON: it carries its own controls, and
   // it is never wrapped in the `onOpen` button below, because a control surface
