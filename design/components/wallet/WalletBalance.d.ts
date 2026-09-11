@@ -8,8 +8,8 @@ export interface WalletBalanceProps {
   amount?: number;
   /** The market estimate as an L-BTC figure string (e.g. "0.00087"). Omit when there is no reading; hidden at zero. */
   approx?: string;
-  /** The recent-earnings chip, e.g. "+14.40 this week". Omit when nothing is new. */
-  delta?: string;
+  /** The recent-earnings amount — rendered by `MoneyFigure` (signed) with "this week" trailing. Omit when nothing is new. */
+  delta?: number;
   onHelp?: () => void;
 }
 
