@@ -50,6 +50,7 @@ export function ReplyComposeStep({
   capturing,
   durationMs,
   refusals,
+  bodyError,
   onWords,
   onPick,
   onRemove,
@@ -66,6 +67,8 @@ export function ReplyComposeStep({
   capturing: boolean;
   durationMs: number;
   refusals: readonly PickRefusal[];
+  /** The one cap the composer's own field answers to — length, not emptiness. */
+  bodyError?: string | null;
   onWords: (words: string) => void;
   onPick: (files: readonly File[]) => void;
   onRemove: (id: string) => void;
@@ -112,6 +115,11 @@ export function ReplyComposeStep({
         }`}
         placeholder="Your reply"
       />
+      {bodyError && (
+        <p role="alert" data-testid="reply-body-error" className="m-0 text-body-medium text-error">
+          {bodyError}
+        </p>
+      )}
 
       <CommentAttachments
         media={state.media}

@@ -45,7 +45,7 @@ import {
   type CommentMedia,
   type Gate,
 } from "./comment-media";
-import type { AssetUpload, CoverAsset, MediaKind } from "./wizard";
+import { sensitiveReasonProblem, type AssetUpload, type CoverAsset, type MediaKind } from "./wizard";
 
 export type ReplyStep = "compose" | "seal";
 
@@ -96,6 +96,22 @@ export type ReplyState = {
 /** The policy default the seal shows before anyone opens the pad (+0.10 / +0.10). */
 export const DEFAULT_REPLY_STANCE: StancePair = TAP_DEFAULT;
 
+/**
+ * The write side's cap on a comment's words, pinned to `client-constants.json`
+ * in `lib/client-constants.test.ts`.
+ */
+export const COMMENT_BODY_MAX_CHARS = 2000;
+
+/**
+ * The refusal an over-long comment earns, or null — scalar values, matching
+ * the server's `chars().count()` rather than `.length`'s UTF-16 code units.
+ */
+export function commentBodyProblem(words: string): string | null {
+  return [...words.trim()].length > COMMENT_BODY_MAX_CHARS
+    ? `Too long — at most ${COMMENT_BODY_MAX_CHARS} characters.`
+    : null;
+}
+
 export function emptyReply(target: ReplyTarget): ReplyState {
   return {
     step: "compose",
@@ -145,6 +161,8 @@ export function previousStep(state: ReplyState): ReplyStep | null {
  */
 export function advanceGate(state: ReplyState): Gate {
   if (state.words.trim() === "") return { ok: false, reason: "A comment needs words." };
+  const bodyIssue = commentBodyProblem(state.words);
+  if (bodyIssue !== null) return { ok: false, reason: bodyIssue };
   if (state.media.length > COMMENT_ATTACHMENT_CAP) {
     return {
       ok: false,
@@ -162,6 +180,17 @@ export function advanceGate(state: ReplyState): Gate {
  * rather than bouncing the reader back a stage (ComposeSealUploading).
  */
 export function sealGate(state: ReplyState): Gate {
+  // The composer already refuses it, but the seal is the boundary the server
+  // sees — a state that reached here over-length would sign a refusal.
+  const bodyIssue = commentBodyProblem(state.words);
+  if (bodyIssue !== null) return { ok: false, reason: bodyIssue };
+  // The reason is entered on the seal itself, and only while the mark is on:
+  // an unmarked reply's reason is never sent, so an over-length leftover from
+  // a mark switched back off would refuse a write the server never sees.
+  if (state.sensitive) {
+    const reasonIssue = sensitiveReasonProblem(state.sensitiveReason);
+    if (reasonIssue !== null) return { ok: false, reason: reasonIssue };
+  }
   return commentGate(state.words, state.media, state.cover);
 }
 

@@ -2,6 +2,8 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { COMMENT_BODY_MAX_CHARS } from "@/lib/compose/reply-wizard";
+import { SENSITIVE_REASON_MAX_CHARS } from "@/lib/compose/wizard";
 import { createTokenStore } from "@/lib/session/token-store";
 import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
@@ -1167,6 +1169,56 @@ describe("PostView", () => {
 
       await waitFor(() => expect(sent).not.toBeNull());
       expect(sent!.sensitiveReason).toBe("One rubbing includes a dead seabird.");
+    });
+
+    // The words answer to the same cap a fresh comment does — mirrored so an
+    // over-length edit never reaches the seal a refusal would otherwise waste.
+    it("holds the save shut on words past the cap", async () => {
+      server.use(graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })));
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "x".repeat(COMMENT_BODY_MAX_CHARS + 1) },
+      });
+
+      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
+    });
+
+    // The reason is entered on the editor's own sheet, so this is the one
+    // place that cap is checked — and only while the mark is on, exactly as
+    // the compose surfaces' own seal.
+    it("holds the save shut on a sensitive reason past the cap, only while marked", async () => {
+      server.use(graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })));
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+
+      fireEvent.click(await screen.findByTestId("comment-edit-c1"));
+      fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
+      fireEvent.click(screen.getByTestId("comment-edit-sensitive-switch"));
+      fireEvent.change(screen.getByTestId("comment-edit-sensitive-reason"), {
+        target: { value: "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1) },
+      });
+      fireEvent.click(screen.getByTestId("comment-edit-sensitive-done"));
+
+      expect(screen.getByTestId("comment-edit-save")).toBeDisabled();
+
+      // Unmarking again leaves the save free of THIS refusal: the leftover
+      // text is never sent. A words change keeps something staged to sign,
+      // so the assertion is not vacuously true against an empty batch.
+      fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
+      fireEvent.click(screen.getByTestId("comment-edit-sensitive-switch"));
+      fireEvent.click(screen.getByTestId("comment-edit-sensitive-done"));
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "new words" },
+      });
+
+      expect(screen.getByTestId("comment-edit-save")).not.toBeDisabled();
     });
 
     it("stages the edit record and one Tag act per change, in one signing pass", async () => {
