@@ -37,7 +37,8 @@ product already inlines, so web and Android match.
 | `chat_bubble` | the comments affordance on a card | `<Icon name="chat_bubble" />` |
 | `volume_up` / `volume_off` | a video's sound toggle | `<Icon name="volume_up" />` |
 | `check` | the checkbox's mark, and only that | `<Icon name="check" />` |
-| `graph_3` | the Post Score | `<Icon name="graph" />` |
+| `graph_3` | the Post score | `<Icon name="graph" />` |
+| `bookmark` | the unsave control on a Saved row | `<Icon name="bookmark" />` |
 | `how_to_vote` | a proposal's node-type mark (reference rows, search results) | `<Icon name="how_to_vote" />` |
 | `inventory_2` | an item's node-type mark | `<Icon name="inventory_2" />` |
 | `campaign` | a campaign's node-type mark | `<Icon name="campaign" />` |

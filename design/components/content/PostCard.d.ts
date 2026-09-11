@@ -58,9 +58,9 @@ export interface PostCardProps {
   /** Off only where a surface deliberately carries no stance affordance. */
   showStance?: boolean;
   /**
-   * The Post Score, already formatted. Uncapped and possibly negative: render a
+   * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
-   * explanation is item 13's Post Score drill-down, still undesigned.
+   * explanation is item 13's Post score drill-down, still undesigned.
    */
   score?: string;
   /** Opens the score's detail surface (readme §7.1). */
