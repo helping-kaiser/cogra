@@ -1,8 +1,9 @@
-import type { StancePair } from "./StanceReadout";
+import type { PadRanges, StancePair } from "./StanceReadout";
 
 /**
  * The pad's field, knob, and dead-ground centre-lines. The drawn field IS the
- * value space: its corners are (±1, ±1) and the knob never leaves it.
+ * value space: its corners are the two axes' own ends — (±1, ±1) for a stance,
+ * (0, 0) to (1, 1) for a tag — and the knob never leaves it.
  */
 export interface StancePadProps {
   value?: StancePair;
@@ -21,6 +22,12 @@ export interface StancePadProps {
    * words.
    */
   axes?: PadAxes;
+  /**
+   * How far each axis reaches. Defaults to `STANCE_RANGES` — both slots signed.
+   * A tag's pair passes `TAG_RANGES`, both slots running 0 to 1; the field, the
+   * knob's travel, and the dead-ground lines all follow it.
+   */
+  ranges?: PadRanges;
 }
 
 /** The pad's four poles, named: horizontal is `pDirected`, vertical `pInterest`. */
@@ -43,10 +50,11 @@ export declare function knobTravelInset(cornerRadius?: number, knobDiameter?: nu
 export declare const KNOB_TRAVEL_INSET_PX: number;
 /** Half the travel box's extent — the shorter of the field's sides, inset. */
 export declare function padTravelHalfExtent(rect: { width: number; height: number }, inset?: number): number;
-export declare function padPercentOf(pair: StancePair): { x: number; y: number };
+export declare function padPercentOf(pair: StancePair, ranges?: PadRanges): { x: number; y: number };
 export declare function padPairFrom(
   base: StancePair,
   rect: { left: number; top: number; width: number; height: number },
   travel: { dx: number; dy: number },
   inset?: number,
+  ranges?: PadRanges,
 ): StancePair;

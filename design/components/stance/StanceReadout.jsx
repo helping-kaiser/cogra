@@ -35,6 +35,23 @@ import React from "react";
 export const DIMENSION_MIN = -1;
 export const DIMENSION_MAX = 1;
 export const ORIGIN = { pDirected: 0, pInterest: 0 };
+
+/* THE BOUNDS TRAVEL WITH THE RECORD FAMILY, exactly as the axis words do. The
+   pad's two slots are `pDirected` and `pInterest`; what fills them, and how far
+   each one reaches, is the census's business and not the control's. A stance
+   fills both slots with signed Dimensions; a Tag's confidence is
+   census-bounded to `c ∈ [0, 1]` (hashtag.md §4, `TagInput` in api-spec.md),
+   and the tag pad authors only the positive half of relevance — so both of its
+   axes run `0 → 1`. Naming the range as data keeps one pad honest about two
+   families instead of a second pad drifting from the first. */
+export const STANCE_RANGES = {
+  pDirected: { min: DIMENSION_MIN, max: DIMENSION_MAX },
+  pInterest: { min: DIMENSION_MIN, max: DIMENSION_MAX },
+};
+export const TAG_RANGES = {
+  pDirected: { min: 0, max: DIMENSION_MAX },
+  pInterest: { min: 0, max: DIMENSION_MAX },
+};
 /** What a plain tap commits — the repo-wide low-defaults policy. */
 export const TAP_DEFAULT = { pDirected: 0.1, pInterest: 0.1 };
 
@@ -92,14 +109,56 @@ export const STANCE_ANCHORS = [
   { pDirected: -0.9, pInterest: -0.9, emoji: "💀", label: "Absolutely not" },
 ];
 
-export function clampDimension(value) {
+/* THE TAG TABLE IS ITS OWN, AND IT IS DISJOINT FROM THE STANCE FACES (jakob's
+   ruling, the tag pad round). Not one glyph appears in both tables, and that is
+   the point rather than an accident of picking: a face that means "Like this"
+   on a post must never also mean "locked on" about a topic, or the one lossy
+   readout the system has starts lying about which family a reader is looking
+   at. The stance table is twenty faces; this one is thirteen objects.
+
+   IT READS AS A SENTENCE ABOUT AN OBJECT, NOT A FEELING. A tag is a claim
+   about what a post is about — it has no mood to wear — so each row names a
+   thing that stands in for a degree of aboutness held at a degree of
+   certainty: a key, a magnet, a die, a fishhook.
+
+   THE GRID IS FOUR BY THREE. Aboutness runs Barely → Entirely across four
+   columns, certainty runs Guessing → Certain up three rows, and the twelve
+   sit at the band centres. `💯` is the thirteenth and floats: it sits just
+   left of `🎯` and higher, so the very top of the field — all of it, said
+   flat out — is reachable without stealing the Entirely corner from the row
+   that owns it.
+
+   LIKE `STANCE_ANCHORS`, THIS TABLE IS THE CONTRACT — both clients read these
+   thirteen rows, and a change here changes both apps. The words are the
+   spoken reading, never drawn beside the face: §8.3's rule that the face
+   carries the feel and the pair carries the fact holds for a tag too. */
+export const TAG_ANCHORS = [
+  { pDirected: 0.15, pInterest: 0.9, emoji: "🔍", label: "had to look, but it's in there" },
+  { pDirected: 0.45, pInterest: 0.9, emoji: "🔗", label: "definitely linked" },
+  { pDirected: 0.72, pInterest: 0.9, emoji: "🔒", label: "locked on" },
+  { pDirected: 0.95, pInterest: 0.9, emoji: "🎯", label: "exactly this" },
+  { pDirected: 0.15, pInterest: 0.55, emoji: "💧", label: "a drop of it, I think" },
+  { pDirected: 0.45, pInterest: 0.55, emoji: "🧩", label: "a piece of the picture" },
+  { pDirected: 0.72, pInterest: 0.55, emoji: "🧲", label: "pulled toward it" },
+  { pDirected: 0.95, pInterest: 0.55, emoji: "🗝️", label: "likely the key to it" },
+  { pDirected: 0.15, pInterest: 0.15, emoji: "❔", label: "faint maybe" },
+  { pDirected: 0.45, pInterest: 0.15, emoji: "🎲", label: "could go either way" },
+  { pDirected: 0.72, pInterest: 0.15, emoji: "🎣", label: "fishing for it" },
+  { pDirected: 0.95, pInterest: 0.15, emoji: "🔮", label: "big claim, divined" },
+  { pDirected: 0.86, pInterest: 0.95, emoji: "💯", label: "all of it, full stop" },
+];
+
+export function clampDimension(value, min = DIMENSION_MIN, max = DIMENSION_MAX) {
   if (Number.isNaN(value)) return 0;
-  const bounded = Math.min(DIMENSION_MAX, Math.max(DIMENSION_MIN, value));
+  const bounded = Math.min(max, Math.max(min, value));
   return bounded === 0 ? 0 : bounded;
 }
 
-export function clampPair(pair) {
-  return { pDirected: clampDimension(pair.pDirected), pInterest: clampDimension(pair.pInterest) };
+export function clampPair(pair, ranges = STANCE_RANGES) {
+  return {
+    pDirected: clampDimension(pair.pDirected, ranges.pDirected.min, ranges.pDirected.max),
+    pInterest: clampDimension(pair.pInterest, ranges.pInterest.min, ranges.pInterest.max),
+  };
 }
 
 /** The nearest anchor by Euclidean distance; the first of an exact tie wins. */
