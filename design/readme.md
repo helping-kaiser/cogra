@@ -402,7 +402,7 @@ fills is the most common way an icon set starts to look accidental.
 | `visibility` / `visibility_off` | password field toggle |
 | `settings` | profile top bar |
 | `arrow_back` | every page header |
-| `more_vert` | the post overflow menu |
+| `more_vert` | every overflow menu — a post's, a comment's, a profile's, and your own profile's band |
 | `chat_bubble` | the comments affordance on a card |
 | `volume_up` / `volume_off` | a video's sound toggle |
 | `graph_3` | the Post Score |
@@ -2377,22 +2377,14 @@ menus nobody had drawn (item 23, jakob's rulings the same day).
   inherits it. It is a declared **entry**: the picker hands its pick
   back to the composer it was opened from, so no tap reaches this
   state.
-- **Only what exists gets a row.** The post and comment menus hold
-  License terms and Cite in a new post; another's profile holds Mention
-  in a new post and Share this profile. Report, hide and bookmark are
-  **not** drawn: each belongs to a slice the product has not built, and
-  a row for a function nothing answers is a promise the sheet cannot
-  keep. They wait in the backlog against their slices. Copy link stays
-  out for a different reason — the platform's share sheet already
-  carries it. **The slice order bends where design does not**: functions
-  closely connected in design and flow may be built ahead of their
-  slice when they surface together, rather than splitting one surface
-  across two rounds.
-- **Your own profile has no menu.** With mentioning yourself
-  meaningless and share the only row left, a ⋮ opening a sheet of one
-  row is a tap spent on nothing — so the band's dot **becomes** the
-  share control, wearing the same glyph the action rows use, one tap to
-  the platform's own sheet.
+- **Only what exists gets a row.** Report is **not** drawn: it belongs
+  to a slice the product has not built, and a row for a function nothing
+  answers is a promise the sheet cannot keep. It waits in the backlog
+  against its slice. Copy link stays out for a different reason — the
+  platform's share sheet already carries it. **The slice order bends
+  where design does not**: functions closely connected in design and
+  flow may be built ahead of their slice when they surface together,
+  rather than splitting one surface across two rounds.
 - **License, not licence.** One spelling across the masters, the
   fixtures and the prose, and the menu row's words became an **atom**
   in `LicenseChooser` — assigned once, spelled by the cards that mount
@@ -3780,6 +3772,79 @@ row's geometry is identical in both modes.
   rewrites what the boards say and how their numbers paint, and the
   witness did not move. `Settings`' canvas slot grows 1774 → **1845**
   to match the artboard it holds; every other slot audits clean.
+
+### The private-viewer-state round — 2026-09-11
+
+Slice 2.6, and the first round of the MVP design queue: the three
+lists a reader keeps for themselves — saved, seen, hidden — which the
+contract has carried since slice 2 and no board had ever shown.
+Ruled by jakob the same day.
+
+- **Your own profile's ⋮ is the door to what only you can see.** Saved
+  and History are lists no other reader ever sees, so they belong on
+  the one page that is yours; and a page whose single wide control is
+  the person has no row to hang them off. The band's dot opens a sheet
+  — `ProfileOwnMenu`, holding Saved, History and Share your profile,
+  which is a row there rather than a glyph on the band.
+  The dot keeps the slot left of the gear: Material's app bar would put
+  an overflow last, and the gear has been the band's right edge since
+  the profile round, where every reader already aims at it.
+- **Saved is ONE MIXED LIST** (jakob). Posts, comments and people in
+  one column, newest first by when they were saved, because a reader
+  looking for the thing they kept on Tuesday is looking for a moment
+  and not a category — three tabs would ask them to remember the kind
+  before they may look. `ContentRow`'s own disc precedence carries the
+  difference: a person brings their picture, a post and a comment bring
+  the glyph for their kind. **A post's cover is never the disc** — a
+  picture in that circle reads as a person, which is the one thing a
+  round disc means here. The chat message is the fourth saveable kind
+  and waits for the chat round: it joins this list rather than starting
+  a second one.
+- **History is posts only, ordered by the LATEST time you saw one**
+  (jakob). Saving is a deliberate act on anything; being seen is
+  something posts do in a feed, and a history that collected every
+  profile a thumb passed would be a log. A post read twice sits where
+  the second reading put it, so the list the apps read is ordered by
+  the most recent seen event — `ViewHistoryEdge` carries `firstSeenAt`
+  alone today, and the contract follows the drawing.
+- **Both lists are drawn empty too**, and each empty state says why it
+  is empty rather than that it is. Saving leaves no mark on a card —
+  jakob's ruling that nothing outside the ⋮ shows a saved state — so
+  `SavedEmpty` is the one place the product may name the gesture;
+  `HistoryEmpty` says the opposite, that this list fills without being
+  asked.
+- **The menu rows say what the next tap does.** `Save` while a thing is
+  not kept, `Remove from saved` while it is: the row carries the state
+  because nothing else does, and §3 asks a control to say what will
+  happen rather than to report a status. The license row moves to the
+  END of both content menus with it — the rarest read in the product
+  had been leading them only because the card prepended it, and the
+  author's own menu has always closed with it.
+- **Hiding names its person and asks nothing.** `Hide @ada` on the
+  reader's post menu and on another's profile menu; no confirm, the
+  rows go, and a snackbar offers Undo. The post being read and the
+  profile being looked at both stay: hiding is a read-side comfort that
+  clears the viewer's own feed, never a thing done to the record or to
+  the person.
+- **Hidden accounts live in Settings, in a group of their own.**
+  `SettingsHidden` is the sheet the row opens — one row per person with
+  `Unhide` on its trailing edge, the sessions group's own shape. The
+  group is **People**, placed beside Reading because hiding is a
+  reading comfort, and kept out of Reading because that group's
+  footnote promises both its choices stay on this device, which a
+  hidden account does not. With nobody hidden the row goes inert and
+  reads `None`: a tap that can only open an empty sheet is the tap the
+  menus round already refused to spend.
+- **One drawing of your own profile.** `ProfileOwnBody` moves to
+  `_shared.jsx` the moment a sheet covers the page, and the chronicle's
+  page-failure board takes it too — three boards, one page, no chance
+  of disagreeing about what your own profile holds.
+- **The gate**: 146 → **152 boards**, 1099 → **1137 edges**, gaps hold
+  at **57** and flows at **60/57/3**. The six new boards carry 38
+  edges and open no gap; the four list boards join the publish flows'
+  origin set, which is the whole of the witness diff. `Settings`' frame
+  and its canvas slot grow 1845 → **2027** for the People group,
+  measured rather than guessed.
 
 ## 14. Index
 
