@@ -98,6 +98,36 @@ export function MediaTile({
   const reserved = ratio ?? tileRatio(sourceRatio);
   const objectFit = fit ?? fitFor(sourceRatio);
   const alt = altText ?? "";
+  // AN EXPLICIT `ratio` NAMES A FIXED FRAME — the comment scale's 220px
+  // square, the gallery's secondary squares — and that frame is capped in
+  // both axes at once: `aspect-ratio` with a definite `width: 100%` lets a
+  // `max-height` take its bite out of the height alone, so bounding the
+  // WIDTH by what the cap allows at this ratio (`max-width: calc(<cap> *
+  // <ratio>)`) is what keeps the box the shape it was told to be, at the
+  // cost of narrowing on a short viewport.
+  //
+  // THE DEFAULT FRAME CARRIES NO SUCH CAP. Its ratio comes from `tileRatio`,
+  // already clamped at the 4:5 portrait bound, so nothing it reserves is
+  // ever taller than that by construction. A second, viewport-tied height
+  // cap stacked on an already-bounded ratio only fights the ratio instead of
+  // settling anything — reshaping the frame where width stays definite, or
+  // narrowing it for no reason where width is compensated. The default frame
+  // stays full-width and lets the clamped ratio alone say its shape.
+  const explicitShape = ratio !== undefined;
+  const frameStyle = explicitShape
+    ? {
+        aspectRatio: cssRatio(reserved),
+        maxHeight,
+        maxWidth: `calc(${maxHeight} * ${reserved})`,
+        // The tile no longer always fills its column, so it has to say where
+        // it sits: centred, like every other capped surface in the app.
+        marginInline: "auto",
+        borderRadius: radius,
+      }
+    : {
+        aspectRatio: cssRatio(reserved),
+        borderRadius: radius,
+      };
 
   // A VIDEO IS NOT A TILE WITH A PLAY BUTTON: it carries its own controls, and
   // it is never wrapped in the `onOpen` button below, because a control surface
@@ -133,7 +163,7 @@ export function MediaTile({
     return (
       <span
         data-testid={testId ? `${testId}-frame` : undefined}
-        style={{ aspectRatio: cssRatio(reserved), maxHeight, borderRadius: radius }}
+        style={frameStyle}
         className="relative block w-full min-h-0 overflow-hidden bg-surface-container-high"
       >
         {player}
@@ -144,11 +174,7 @@ export function MediaTile({
   const frame = (
     <span
       data-testid={testId}
-      style={{
-        aspectRatio: cssRatio(reserved),
-        maxHeight,
-        borderRadius: radius,
-      }}
+      style={frameStyle}
       className="relative block w-full min-h-0 overflow-hidden bg-surface-container-high"
     >
       {src ? (

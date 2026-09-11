@@ -143,6 +143,19 @@ each refresh ([auth.md §Tokens](../docs/implementation/auth.md#tokens)).
 The access token rides as a `Bearer` header; an `UNAUTHENTICATED`
 response triggers a single-flight refresh-and-replay.
 
+**Readiness gates every possibly-authenticated request**
+(`core:network`'s `SessionGate`). A request leaves only once the token
+store has answered, and each of the three answers has its own
+behaviour: no session goes out anonymous at once — guest browsing,
+onboarding and login are anonymous by design and must never wait on a
+session; a session whose access token has expired rotates FIRST, so
+the request carries a token the API can resolve a viewer from; a store
+that cannot read its own record fails the call rather than sending it
+anonymous. The last two matter because the API resolves the viewer as
+an `Option` — an unusable token is served as a guest, not refused, so
+a request that guesses wrong looks like a working app showing somebody
+else's view.
+
 The **actor key** and onboarding state ride the same encrypted
 DataStore through `core:network`'s identity store: the actor seed
 (exportable by design — it goes into the backup blob, so a

@@ -242,7 +242,13 @@ export function FeedView({
     // The band is chrome and full-bleed, so the gutter belongs to the content
     // below it rather than to the column that holds both.
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 pb-6">
-      <CollapsingTop>
+      <CollapsingTop
+        // Mirrors `scroll-pin.ts`'s own "nothing is anchored at the origin":
+        // a restored offset of 0 is a top arrival, so the header stays. Read
+        // from the same lazy-state source the restore itself reads, so this
+        // and the actual landing offset can never disagree.
+        initiallyHidden={rememberedPlace !== null && rememberedPlace.offset > 0}
+      >
         {/* A tab root wears the mark, not a page title: the reader knows which
             tab they are on from the bar, and the band's other half works. */}
         <CograBand>

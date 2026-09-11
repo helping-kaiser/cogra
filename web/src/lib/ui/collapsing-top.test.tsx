@@ -78,6 +78,30 @@ describe("CollapsingTop", () => {
     expectShown(true);
   });
 
+  // A caller restoring a scrolled place (`feed-view.tsx`) knows the landing
+  // offset synchronously, before this ever mounts — so it must be able to
+  // start hidden on the very first render, with no scroll event needed to
+  // get there. Asserted with no `scrollTo`/`await`: a real fix has this true
+  // from the first synchronous check, matching the restore's own pre-paint
+  // landing (`scroll-pin.ts`).
+  it("starts hidden when the caller already knows the reader lands scrolled", () => {
+    render(
+      <CollapsingTop initiallyHidden>
+        <p>header</p>
+      </CollapsingTop>,
+    );
+    expectShown(false);
+  });
+
+  it("starts shown by default, and when the caller says the landing is the top", () => {
+    render(
+      <CollapsingTop initiallyHidden={false}>
+        <p>header</p>
+      </CollapsingTop>,
+    );
+    expectShown(true);
+  });
+
   // The travel is only honest about reduced motion if the duration is the
   // token: `tokens-2.css` zeroes `--duration-collapsing-top` under
   // `prefers-reduced-motion`, and a literal `duration-200` cannot be zeroed.

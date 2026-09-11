@@ -16,7 +16,7 @@ import { startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
-const passthroughGuard: AuthGuard = { run: (block) => block() };
+const passthroughGuard: AuthGuard = { run: (block) => block(), prime: async () => {} };
 
 function deps(store: IdentityStore) {
   return {
