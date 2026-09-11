@@ -7,16 +7,16 @@ import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.api.Optional
 import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
+import com.cogra.domain.ActorRef
 import com.cogra.domain.ApplicationStatus
+import com.cogra.domain.AttachmentClaim
+import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentForEdit
 import com.cogra.domain.CommentView
-import com.cogra.domain.AuthTokens
-import com.cogra.domain.LoginGrant
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
-import com.cogra.domain.ActorRef
-import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.LoginGrant
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
@@ -34,30 +34,27 @@ import com.cogra.domain.UserProfile
 import com.cogra.domain.WriteState
 import com.cogra.domain.flatMap
 import com.cogra.domain.map
+import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.ProfileRepository
 import com.cogra.domain.repo.SessionRepository
 import com.cogra.domain.repo.WriteRepository
-import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.topics.TagClaim
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
 import com.cogra.network.graphql.ApplicationStatusQuery
-import com.cogra.network.graphql.AuthorRecordsQuery
-import com.cogra.network.graphql.CommentRepliesQuery
-import com.cogra.network.graphql.CommentForEditQuery
-import com.cogra.network.graphql.MyProfileQuery
-import com.cogra.network.graphql.PrepareProfileUpdateMutation
-import com.cogra.network.graphql.UserByHandleQuery
 import com.cogra.network.graphql.ApplyWithInviteMutation
 import com.cogra.network.graphql.ApproveActsMutation
 import com.cogra.network.graphql.ApproveApplicantsMutation
 import com.cogra.network.graphql.AttachActorKeyMutation
+import com.cogra.network.graphql.AuthorRecordsQuery
 import com.cogra.network.graphql.BorrowedViewQuery
 import com.cogra.network.graphql.ChangeHandleMutation
 import com.cogra.network.graphql.ChangePasswordMutation
+import com.cogra.network.graphql.CommentForEditQuery
+import com.cogra.network.graphql.CommentRepliesQuery
 import com.cogra.network.graphql.ConfirmEmailChangeMutation
 import com.cogra.network.graphql.ConfirmPasswordResetMutation
 import com.cogra.network.graphql.CreateInviteLinkMutation
@@ -68,6 +65,7 @@ import com.cogra.network.graphql.InviteLinksQuery
 import com.cogra.network.graphql.KeyBackupQuery
 import com.cogra.network.graphql.LogInMutation
 import com.cogra.network.graphql.MeQuery
+import com.cogra.network.graphql.MyProfileQuery
 import com.cogra.network.graphql.PostDetailQuery
 import com.cogra.network.graphql.PostSelfMarkQuery
 import com.cogra.network.graphql.PostsQuery
@@ -75,6 +73,7 @@ import com.cogra.network.graphql.PrepareCommentEditMutation
 import com.cogra.network.graphql.PrepareCommentMutation
 import com.cogra.network.graphql.PreparePostEditMutation
 import com.cogra.network.graphql.PreparePostMutation
+import com.cogra.network.graphql.PrepareProfileUpdateMutation
 import com.cogra.network.graphql.PrepareStanceMutation
 import com.cogra.network.graphql.RegisterMutation
 import com.cogra.network.graphql.RequestEmailChangeMutation
@@ -87,27 +86,29 @@ import com.cogra.network.graphql.SessionsQuery
 import com.cogra.network.graphql.StagedWriteQuery
 import com.cogra.network.graphql.SubmitProposalsMutation
 import com.cogra.network.graphql.UploadKeyBackupMutation
+import com.cogra.network.graphql.UserByHandleQuery
 import com.cogra.network.graphql.VerifyEmailMutation
 import com.cogra.network.graphql.type.ApplicationApprovalInput
 import com.cogra.network.graphql.type.ApplyWithInviteInput
-import com.cogra.network.graphql.type.AttachmentInput
-import com.cogra.network.graphql.type.PrepareCommentEditInput
-import com.cogra.network.graphql.type.PrepareCommentInput
-import com.cogra.network.graphql.type.PreparePostEditInput
-import com.cogra.network.graphql.type.PreparePostInput
-import com.cogra.network.graphql.type.PrepareProfileUpdateInput
 import com.cogra.network.graphql.type.ApprovalSignatureInput
 import com.cogra.network.graphql.type.ApproveActsInput
 import com.cogra.network.graphql.type.ApproveApplicantsInput
 import com.cogra.network.graphql.type.AttachActorKeyInput
+import com.cogra.network.graphql.type.AttachmentInput
 import com.cogra.network.graphql.type.ChangeHandleInput
 import com.cogra.network.graphql.type.ChangePasswordInput
 import com.cogra.network.graphql.type.ConfirmEmailChangeInput
 import com.cogra.network.graphql.type.ConfirmPasswordResetInput
 import com.cogra.network.graphql.type.CreateInviteLinkInput
 import com.cogra.network.graphql.type.LogInInput
+import com.cogra.network.graphql.type.PrepareCommentEditInput
+import com.cogra.network.graphql.type.PrepareCommentInput
+import com.cogra.network.graphql.type.PreparePostEditInput
+import com.cogra.network.graphql.type.PreparePostInput
+import com.cogra.network.graphql.type.PrepareProfileUpdateInput
 import com.cogra.network.graphql.type.PrepareStanceInput
 import com.cogra.network.graphql.type.ProposalSignatureInput
+import com.cogra.network.graphql.type.ReferenceInput
 import com.cogra.network.graphql.type.RegisterInput
 import com.cogra.network.graphql.type.RequestEmailChangeInput
 import com.cogra.network.graphql.type.RequestPasswordResetInput
@@ -115,7 +116,6 @@ import com.cogra.network.graphql.type.ResendVerificationEmailInput
 import com.cogra.network.graphql.type.RevokeInviteLinkInput
 import com.cogra.network.graphql.type.RevokeSessionInput
 import com.cogra.network.graphql.type.SubmitProposalsInput
-import com.cogra.network.graphql.type.ReferenceInput
 import com.cogra.network.graphql.type.TagInput
 import com.cogra.network.graphql.type.UploadKeyBackupInput
 import com.cogra.network.graphql.type.VerifyEmailInput
@@ -137,10 +137,8 @@ private fun authOf(fields: com.cogra.network.graphql.fragment.AuthSessionFields)
     fields.user?.let { AuthTokens(fields.accessToken, fields.refreshToken, it.id) }
 
 @Singleton
-class OnboardingRepositoryImpl @Inject constructor(
-    private val client: ApolloClient,
-    private val guard: AuthGuard,
-) : OnboardingRepository {
+class OnboardingRepositoryImpl @Inject constructor(private val client: ApolloClient, private val guard: AuthGuard) :
+    OnboardingRepository {
 
     override suspend fun checkInviteLink(id: String): Outcome<InviteCheck?> =
         client.query(InviteLinkCheckQuery(id)).fetch().map { data ->
@@ -218,10 +216,8 @@ class OnboardingRepositoryImpl @Inject constructor(
 }
 
 @Singleton
-class SessionRepositoryImpl @Inject constructor(
-    private val client: ApolloClient,
-    private val guard: AuthGuard,
-) : SessionRepository {
+class SessionRepositoryImpl @Inject constructor(private val client: ApolloClient, private val guard: AuthGuard) :
+    SessionRepository {
 
     override suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<LoginGrant> =
         client.mutation(
@@ -268,10 +264,8 @@ class SessionRepositoryImpl @Inject constructor(
 }
 
 @Singleton
-class WriteRepositoryImpl @Inject constructor(
-    private val client: ApolloClient,
-    private val guard: AuthGuard,
-) : WriteRepository {
+class WriteRepositoryImpl @Inject constructor(private val client: ApolloClient, private val guard: AuthGuard) :
+    WriteRepository {
 
     @Volatile
     private var cachedHostKey: ByteArray? = null
@@ -325,10 +319,8 @@ class WriteRepositoryImpl @Inject constructor(
 }
 
 @Singleton
-class AccountRepositoryImpl @Inject constructor(
-    private val client: ApolloClient,
-    private val guard: AuthGuard,
-) : AccountRepository {
+class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient, private val guard: AuthGuard) :
+    AccountRepository {
 
     override suspend fun me(): Outcome<UserProfile?> = guard.run {
         client.query(MeQuery()).fetch().flatMap { data ->
@@ -501,10 +493,8 @@ class AccountRepositoryImpl @Inject constructor(
 }
 
 @Singleton
-class ContentRepositoryImpl @Inject constructor(
-    private val client: ApolloClient,
-    private val guard: AuthGuard,
-) : ContentRepository {
+class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient, private val guard: AuthGuard) :
+    ContentRepository {
 
     // Reads are public-graph queries; they still ride the guard so a
     // signed-in viewer's stale token refreshes rather than erroring.
@@ -791,7 +781,6 @@ class ContentRepositoryImpl @Inject constructor(
                 }
             }
         }
-
 }
 
 /**
@@ -909,10 +898,8 @@ private fun MediaFieldUpdate.toOptional(): Optional<String?> = when (this) {
 }
 
 @Singleton
-class ProfileRepositoryImpl @Inject constructor(
-    private val client: ApolloClient,
-    private val guard: AuthGuard,
-) : ProfileRepository {
+class ProfileRepositoryImpl @Inject constructor(private val client: ApolloClient, private val guard: AuthGuard) :
+    ProfileRepository {
 
     override suspend fun profileByHandle(handle: String): Outcome<ProfileView?> = guard.run {
         client.query(UserByHandleQuery(handle)).fetch().map { data ->

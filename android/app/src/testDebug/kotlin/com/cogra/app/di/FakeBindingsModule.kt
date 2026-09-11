@@ -309,9 +309,7 @@ class ScriptedTopicRepository(private val writes: WriteRepository) : ThrowingTop
  * scriptable, since quoting that count is the gesture's whole point
  * (D11).
  */
-class ScriptedReferenceRepository(
-    private val writes: WriteRepository,
-) : ThrowingReferenceRepository() {
+class ScriptedReferenceRepository(private val writes: WriteRepository) : ThrowingReferenceRepository() {
     var candidates: MutableMap<String, List<ReferenceCandidateView>> = mutableMapOf()
     var withdrawalRecords = 1
 
