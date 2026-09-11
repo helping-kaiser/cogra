@@ -111,6 +111,8 @@ export const FLOW_MARKERS = {
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
   ],
+  /* The ceremony has exactly one control, which is the whole point of it. */
+  VouchedIn: [{ n: 1, find: ">Go to your feed</button>", tag: "button" }],
   KeyElsewhere: [
     filter,
     { n: 2, find: ">Restore the key</button>", tag: "button" },

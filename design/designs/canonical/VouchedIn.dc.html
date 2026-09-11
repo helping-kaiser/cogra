@@ -1130,51 +1130,41 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 .screen:not([data-geek="on"]) .cg-exact { display: none !important; }
   </style>
 </helmet>
-<div class="screen" data-theme="{{theme}}" data-geek="{{geek}}" style="width: 1320px; height: 520px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
-<div style="padding:16px 20px 0 20px;">
-<div style="font-size:16px;font-weight:700;">CoGra · flow overview</div>
-<div style="margin-top:2px;font-size:10px;color:var(--on-surface-variant);">Generated from graph.json — do not edit. Each page's own map sits left of its boards; wired pages enforce completeness in the build.</div>
-</div>
-<div style="position:relative;flex:1;"><div style="position:absolute;left:20px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
-<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Entry<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">27 boards · 200 edges · <span style="color:var(--error);">4 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 29</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 18</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 24</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 10</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 18</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 6</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 7</div>
-</div>
-<div style="position:absolute;left:340px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
-<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Compose<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">35 boards · 217 edges · <span style="color:var(--error);">2 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 27</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 14</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 4</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 14</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 8</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 3</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 3</div>
-</div>
-<div style="position:absolute;left:660px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
-<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Comments<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">19 boards · 129 edges · <span style="color:inherit;">0 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 2</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 1</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 2</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 8</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 14</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 22</div>
-</div>
-<div style="position:absolute;left:980px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
-<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Feed &amp; Search<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">20 boards · 228 edges · <span style="color:var(--error);">13 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 22</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 16</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 42</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 4</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 32</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 11</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 10</div>
-</div>
-<div style="position:absolute;left:20px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
-<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Money &amp; Wallet<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">11 boards · 80 edges · <span style="color:var(--error);">15 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 11</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 9</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 5</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 15</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 7</div>
-</div>
-<div style="position:absolute;left:340px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
-<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Media<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">27 boards · 211 edges · <span style="color:var(--error);">2 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 36</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 9</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 16</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 5</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 6</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 5</div>
-</div>
-<div style="position:absolute;left:660px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
-<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Profile<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">36 boards · 264 edges · <span style="color:var(--error);">7 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 20</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 36</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 9</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 13</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 6</div>
-</div>
-<div style="position:absolute;left:980px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
-<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Patterns &amp; reference<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">4 boards · 8 edges · <span style="color:inherit;">0 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 2</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 1</div>
-</div></div>
+<div class="screen" data-theme="{{theme}}" data-geek="{{geek}}" style="width: 390px; height: 844px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
+<div style="flex:1;display:flex;flex-direction:column;overflow:hidden"><div style="position:relative;width:390px;height:560px;flex:none;margin:0 auto"><div style="display:block;line-height:0"><svg viewBox="0 0 390 560" width="390" height="560" aria-hidden="true" style="display:block">
+          <g stroke="var(--border-hairline)" stroke-width="1" fill="none">
+            <line x1="52" y1="136" x2="110" y2="78"/>
+            <line x1="110" y1="78" x2="206" y2="142"/>
+            <line x1="206" y1="142" x2="300" y2="132"/>
+            <line x1="300" y1="132" x2="348" y2="222"/>
+            <line x1="150" y1="212" x2="206" y2="142"/>
+            <line x1="84" y1="286" x2="150" y2="212"/>
+            <line x1="330" y1="344" x2="348" y2="222"/>
+            <line x1="150" y1="212" x2="176" y2="330"/>
+            <line x1="120" y1="378" x2="84" y2="286"/>
+            <line x1="206" y1="142" x2="236.1" y2="271.4"/>
+            <line x1="254.4" y1="297.0" x2="330" y2="344"/>
+            <line x1="225.8" y1="297.3" x2="176" y2="330"/>
+          </g>
+          <circle cx="110" cy="78" r="3" fill="var(--outline)"/>
+          <circle cx="262" cy="64" r="3" fill="var(--outline)"/>
+          <circle cx="52" cy="136" r="4" fill="var(--outline)"/>
+          <circle cx="300" cy="132" r="7" fill="var(--primary-container)"/>
+          <circle cx="206" cy="142" r="5" fill="var(--outline)"/>
+          <circle cx="150" cy="212" r="6" fill="var(--primary-container)"/>
+          <circle cx="62" cy="216" r="3" fill="var(--outline)"/>
+          <circle cx="348" cy="222" r="4" fill="var(--outline)"/>
+          <circle cx="84" cy="286" r="5" fill="var(--outline)"/>
+          <circle cx="176" cy="330" r="3" fill="var(--outline)"/>
+          <circle cx="330" cy="344" r="5" fill="var(--outline)"/>
+          <circle cx="120" cy="378" r="4" fill="var(--outline)"/>
+          <circle cx="38" cy="392" r="3" fill="var(--outline)"/>
+          <circle cx="286" cy="430" r="3" fill="var(--outline)"/>
+
+          <line x1="196.9" y1="506.2" x2="236.5" y2="305.7" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="195" cy="516" r="16" fill="none" stroke="color-mix(in srgb, var(--primary) 40%, transparent)" stroke-width="1"/>
+          <circle cx="195" cy="516" r="8" fill="var(--primary)"/>
+        </svg></div><div style="position:absolute;left:224px;top:272px"><span aria-hidden="true" style="height:32px;width:32px;font-size:var(--text-label-large);display:flex;flex-shrink:0;align-items:center;justify-content:center;overflow:hidden;border-radius:var(--radius-full);background:var(--secondary-container);color:var(--on-secondary-container);font-weight:500"><img src="inviter.jpg" alt="" style="height:100%;width:100%;object-fit:cover;display:block"/></span></div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px 32px"><h1 style="margin:0;font-size:var(--text-headline-small);line-height:var(--text-headline-small--line-height);font-weight:var(--text-headline-small--font-weight);text-align:center">You&#x27;re part of the sky now.</h1><p style="margin:8px 0 0;max-width:300px;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);letter-spacing:var(--text-body-medium--letter-spacing);color:var(--text-secondary);text-align:center">Your opinion on @mira is signed, and the way is open both ways. The feed you see from here is your own.</p><div style="margin-top:32px"><button data-flow="1" type="button" class="cg-state cg-focus cg-hit" style="background:var(--primary);color:var(--on-primary);border:1px solid transparent;padding:10px 24px;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box">Go to your feed</button></div></div></div>
 </div>
 </x-dc>
 <script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"},"geek":{"editor":"enum","options":["off","on"],"default":"off"}}'>
