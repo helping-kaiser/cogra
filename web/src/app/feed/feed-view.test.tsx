@@ -589,6 +589,43 @@ describe("FeedView", () => {
       scroller.remove();
     });
 
+    // F3-1: the restored offset landing before paint is not enough on its
+    // own — the collapsing header is `position: sticky`, so at any offset
+    // above 0 it paints pinned at the top regardless, until its own scroll
+    // listener catches up and hides it. That listener only runs after a real
+    // scroll event, which is a frame too late for the first paint — so the
+    // header itself must already be told to start gone, synchronously, the
+    // same way the offset itself is (`collapsing-top.tsx`'s `initiallyHidden`).
+    it("starts the collapsing header already gone when landing away from the top", async () => {
+      const afters: (string | null)[] = [];
+      server.use(pagedPosts(afters));
+      const scroller = document.createElement("div");
+      document.body.append(scroller);
+      const host = { current: scroller };
+
+      const first = renderWithProviders(
+        <ScrollHostProvider value={host}>
+          <FeedView />
+        </ScrollHostProvider>,
+      );
+      await screen.findByTestId("feed-post-p1");
+      scroller.scrollTop = 1240;
+      fireEvent.scroll(scroller);
+      await waitFor(() => expect(recallFeed()?.place.offset).toBe(1240));
+      first.unmount();
+
+      scroller.scrollTop = 0;
+      renderWithProviders(
+        <ScrollHostProvider value={host}>
+          <FeedView />
+        </ScrollHostProvider>,
+      );
+      // Synchronously, on the first render: no `find`, no await — a header
+      // that is still shown at this point already flashed.
+      expect(screen.getByTestId("collapsing-top").className).toContain("-translate-y-");
+      scroller.remove();
+    });
+
     it("starts over for a reader who has not been here this load", async () => {
       const afters: (string | null)[] = [];
       server.use(pagedPosts(afters));
