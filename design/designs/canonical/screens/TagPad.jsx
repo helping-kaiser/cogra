@@ -1,6 +1,8 @@
-/* THE STAGED TAG'S PAIR EDITOR (jakob's rulings 2026-09-10). What a staged tag
-   chip opens in a composer — the sheet that closes item 18's compose-side pair
-   setting for tags.
+/* THE STAGED TAG'S PAIR EDITOR, ON AN EDIT (jakob's rulings 2026-09-10 and
+   2026-09-11). What a staged tag chip opens on a post being edited — the sheet
+   that closes item 18's compose-side pair setting for tags. `TagPadCompose` is
+   the same sheet on the composers, where nothing has been signed yet and so
+   there is nothing to withdraw.
 
    IT IS THE PAD. A tag's two user parameters are aboutness and certainty, and
    the author sets both at once, so the instrument is one field rather than two
@@ -54,6 +56,22 @@
    `Done` CLOSES IT, and the scrim is the way out that keeps nothing. Nothing is
    signed here: the pair rides the tag's own record and the tag rides the
    composer's batch, so this sheet stages and the seal signs.
+
+   `Withdraw` IS THE UN-TAG, AND IT IS ITS OWN GESTURE (jakob's ruling,
+   2026-09-11). Taking a tag off a post that carries it is a record like adding
+   one, which is why the body's `Withdrawn:` line names it and the acts sheet
+   counts it. An act of that weight is asked for by a control that says what it
+   does, never by dragging a claim down to nothing. It takes `Sever`'s place on
+   the stance pad — the walk-away pushed left, the decisions kept right — and
+   `Sever`'s restraint with it: a text button and no colour of its own, because
+   a withdrawal is a deliberate act and not a failure (§2.4).
+
+   IT STAGES, AND THE SEAL SIGNS. The sheet closes, the chip leaves the row, and
+   what stands in its place is the `Withdrawn:` line the edit body already
+   carries — one more action for the acts card, which the edit seals together
+   with everything else (item 37). Nothing asks twice. The seal is the willing
+   act, and a confirmation over a change that is staged and reversible would be
+   a second layer guarding nothing.
 
    THE WITHDRAWAL IS NOT ON THE FIELD (jakob's ruling, 2026-09-11). Un-tagging
    is re-tagging at relevance 0 — an ordinary priced, visible record and never
@@ -118,11 +136,18 @@ export function Screen() {
             <StancePad value={{ pDirected: 0.1, pInterest: 1 }} axes={TAG_AXES} ranges={TAG_RANGES} />
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
-            <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+          {/* The line carries both outcomes — a pair set and a tag withdrawn
+              are each signed with the post, as their own action — so it stands
+              over the row rather than beside `Done`, leaving the left slot for
+              the walk-away the stance pad's action row puts there. */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
               Signed with the post, as its own action.
             </span>
-            <Button>Done</Button>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
+              <Button variant="text" style={{ marginRight: "auto" }}>Withdraw</Button>
+              <Button>Done</Button>
+            </div>
           </div>
         </div>
       </BottomSheet>
