@@ -18,11 +18,6 @@ import com.cogra.network.store.EncryptedStore
 import com.cogra.network.store.StoreCipher
 import com.cogra.network.store.TokenStoreImpl
 import com.google.common.truth.Truth.assertThat
-import java.io.File
-import java.security.GeneralSecurityException
-import java.util.Base64
-import java.util.concurrent.TimeUnit
-import javax.inject.Provider
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,6 +36,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
+import java.security.GeneralSecurityException
+import java.util.Base64
+import java.util.concurrent.TimeUnit
+import javax.inject.Provider
 
 /** A store whose load can be held open, the way a cold start holds it. */
 private class HeldTokenStore : TokenStore {
