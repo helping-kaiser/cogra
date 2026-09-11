@@ -7,10 +7,13 @@
    round), and it lands in the one mixed Saved list beside posts and people.
    The row carries the state, as it does on a post: `Unsave` once it is kept.
 
-   NO HIDE ROW HERE. Hiding is about a person, and the two places a reader meets
-   one are their profile and the post that brought them — a thread of many
-   voices is not where that decision belongs. The comment's author is a tap away
-   on their chip, and the row waits there.
+   NO HIDE ROW HERE, AND THE ABSENCE IS RULED (jakob 2026-09-12: "he clicks the
+   profile of the commenter and hides from there"). Hiding is an act on an
+   ACTOR, and the route to it is the commenter's own profile — their chip is one
+   tap away and its ⋮ carries the row. A thread of many voices is not where that
+   decision belongs. The post menu keeps its own for the opposite reason: a post
+   IS its author's act, and a feed of them is what a reader asking to be rid of
+   someone is looking at.
 
    IT IS DRAWN STACKED ON PURPOSE. The thread already lives in a sheet, so this
    menu is a sheet on a sheet, and that is the state the reader is actually in:

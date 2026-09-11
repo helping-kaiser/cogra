@@ -697,6 +697,47 @@ feedback the surface draws:
   profile answers with. It says both halves: the change is visible
   already, and the act is still finding its place in the order.
 
+## The vouch-back ceremony
+
+Blessed with the close-out round. `VouchedIn` is the one board that
+marks a moment rather than reporting one, and its three strings are the
+whole screen:
+
+- `You're part of the sky now.` — the headline. *Graph* is off the
+  screen (§ *The vocabulary that stays off the screen*), and *sky* is
+  the word the product already uses for the same picture, which the
+  board draws behind the words. It is the one place a metaphor leads,
+  and it can afford to: the line under it carries the content.
+- `Your opinion on @mira is signed, and the way is open both ways. The
+  feed you see from here is your own.` — the subline, and the honest
+  half. It claims three things that are all certainly true the instant
+  the reader sees it, and nothing about weight, reach or standing that
+  a later Sky would have to honour.
+- `Go to your feed` — the single control. The opinion is signed and on
+  the record, so there is no way back to offer and no second choice to
+  make.
+
+## Unsaving, and the actor with no name left
+
+Blessed with the close-out round.
+
+**Unsaving's snackbar.** `Removed from Saved.` with `Undo`, the second
+snackbar in the product to carry an action. It names the LIST and not
+the row: the thing that went is the one the reader just pressed, and
+the fact they may want reversed is that it is no longer kept. The pair
+is deliberately lopsided against saving's bare `Saved.` — saving costs
+a reader nothing to repeat, and a mis-pressed unsave costs them finding
+the thing again. The same line rides the empty list when the row that
+went was the last one.
+
+**The hide row with no name to say.** `Hide this account`, where the
+actor is a deleted account and there is no handle to spell. It stands
+beside `Hide @ada`, never instead of it, and the row never drops: the
+act is about an ACTOR, the actor is still there, and its content still
+ranks into the reader's feed. The system's voice for the same reason
+`Deleted account` is — it is the product saying what the tap does when
+it cannot say whose.
+
 ## Awaiting blessing — the parked-rulings round
 
 Drawn, and up for review in the same pass. Kept apart from the blessed
@@ -1233,22 +1274,3 @@ having already said what was counted.
 one thing that would fill it. It never scolds and it carries no `error`
 colour; a comment nobody has answered is not a fault.
 
-## Awaiting blessing — the follow-up bundle
-
-Two strings, drawn on `SavedUndo` and owed by the redacted-actor law.
-
-**Unsaving's snackbar.** `Removed from Saved.` with `Undo`, the second
-snackbar in the product to carry an action. It names the LIST and not
-the row: the thing that went is the one the reader just pressed, and
-the fact they may want reversed is that it is no longer kept. The pair
-is deliberately lopsided against saving's bare `Saved.` — saving costs
-a reader nothing to repeat, and a mis-pressed unsave costs them finding
-the thing again.
-
-**The hide row with no name to say.** `Hide this account`, where the
-author is a deleted account and there is no handle to spell. It stands
-beside `Hide @ada`, never instead of it, and the row never drops: the
-act is about an ACTOR, the actor is still there, and its content still
-ranks into the reader's feed. The system's voice for the same reason
-`Deleted account` is — it is the product saying what the tap does when
-it cannot say whose.

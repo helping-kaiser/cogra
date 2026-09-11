@@ -329,6 +329,14 @@ stagger — and one transition is on screen at a time. Under
 `prefers-reduced-motion` the swap still happens; it just does not travel
 or fade.
 
+**`VouchedIn` is the one accepted exception** (jakob, the close-out
+round), and it stays inside the rules it breaks: every duration and
+easing it spends is a token already defined here, its phase offsets are
+sums of those durations, and the motion is still deictic — it shows
+where the reader's own point came from and which way their edge runs.
+Under `prefers-reduced-motion` the phases collapse to nothing and the
+board arrives at the state it ends in.
+
 No bounce, no spring, no parallax, no entrance animation on lists.
 
 ### Interaction states
@@ -4252,8 +4260,8 @@ such.
   people's feeds, so a reader who wants it out of theirs needs the
   control that does that, severance included. A message targets a
   PERSON, and the identity association is deleted, so a composer there
-  would address nobody. The ⋮ goes with Message: every row it holds
-  names the person, and there is no name to put in them.
+  would address nobody. What the row's ⋮ holds is the close-out round's
+  ruling below.
 - **The empty hidden row stays `None`** (jakob, final). Nothing else was
   ever drawn.
 - **Notification rows are kept** (`docs/implementation/notifications.md`):
@@ -4458,11 +4466,10 @@ needs.
   back arrow would be a lie; a bottom bar would make a ceremony into
   a tab. `Go to your feed` is the single control, which is why the
   board carries exactly one flow number.
-- **The motion is a DECLARED EXCEPTION to §4.** "Nothing inside an
+- **The motion is §4's one ACCEPTED EXCEPTION.** "Nothing inside an
   arriving screen animates" and "motion never performs" are the
-  standing rules; this is the one board that asks to break them, and
-  it is recorded as an exception to accept or reject rather than
-  taken quietly. Two things keep it inside the system's spirit: every
+  standing rules, and this is the single board that breaks them.
+  Two things keep it inside the system's spirit: every
   duration and easing is an EXISTING token — no new motion value is
   introduced, and the phase offsets are sums of those same durations
   — and the motion is still deictic, showing where the reader's point
@@ -4488,17 +4495,14 @@ needs.
   tokens already do this) and the screen arrives whole — edge drawn,
   halo full, words in place. A reader who asked for stillness loses
   the choreography and none of the content.
-- **Copy awaiting blessing.** Drawn: *"You're part of the sky now."*
-  over *"Your opinion on @mira is signed, and the way is open both
-  ways. The feed you see from here is your own."* **jakob's own
-  phrase "part of the graph" cannot be used**: §3 bans *graph* in
-  user-facing copy. *Sky* is legal and already product-facing, and
-  the picture glosses it. Alternates, both legal and both drop-in:
-  *"You're part of the network now."* (closest to the ruling's
-  words, and free of any dependency on the Sky shipping) and
-  *"You're in."* (the quietest). The subline carries the whole honest
-  content either way, so the headline can be swapped without touching
-  the substance.
+- **The copy is blessed** (jakob, the close-out round): *"You're part
+  of the sky now."* over *"Your opinion on @mira is signed, and the
+  way is open both ways. The feed you see from here is your own."*
+  **jakob's own phrase "part of the graph" cannot be used**: §3 bans
+  *graph* in user-facing copy. *Sky* is legal, already
+  product-facing, and glossed by the picture the board draws behind
+  the words — the one place a metaphor leads, which it can afford to
+  because the subline under it carries the content.
 - **Wiring.** `VouchBackPad/4`'s vouch-back outcome lands on
   `VouchedIn` instead of `Feed`, and `VouchedIn/1` carries on to the
   feed. `vouch-back-for-your-inviter` gains the pad as a pinned
@@ -4563,6 +4567,77 @@ pass: one board, one law, and two sweeps.
   grows 44 → 45 boards. No `.dc.html` but the new one changed — the
   sweeps are comments and prose, and the shared `Unsave` renders the
   markup it rendered inside `Saved`.
+
+### The close-out round — 2026-09-12
+
+jakob's rulings on the canvas he had just checked, taken as one pass:
+one board reworked, one formatter conformed, and four laws that are
+recorded rather than drawn.
+
+- **A DELETED ACCOUNT'S PROFILE CARRIES A ⋮, AND IT HOLDS THE THREE ROWS
+  THAT WORK ON A NAMELESS ACTOR** (jakob): `Save`, `Share this profile`,
+  `Hide this account`. Saving keeps a pointer, sharing sends a page, and
+  hiding acts on an ACTOR — the actor is still there, still authoring,
+  still ranking into the reader's feed — so not one of the three needs a
+  name. Mention is the row that does and the only one dropped: it stages
+  a Reference at a PERSON and spells their handle in the composer. The
+  hide row takes `ActorChip`'s own wording (`HIDE_ACTOR_LABEL`), so this
+  page and every card the actor authored say the same thing, and the dot
+  stands in the actions row at `placement="row"` — the band law, and the
+  room Message vacated is exactly where the page's rare acts belong.
+- **The sheet it opens is recorded, not boarded.** It is `ProfileMenu`
+  without Mention, its hide row on the redacted wording — three rows of
+  four already on the canvas, which is the follow-up bundle's own test
+  for a board that teaches nothing. The canvas is also at the editor's
+  200-file ceiling (item 62), so the entry it would cost is not there to
+  spend. `ProfileDeleted`/11 carries the gap that says so.
+- **The comment menu carries no hide row, and that is deliberate**
+  (jakob: "he clicks the profile of the commenter and hides from
+  there"). Hiding is an act on an ACTOR, and a comment is the one
+  surface where the actor is a chip rather than the subject — the
+  reader's route is the commenter's profile, whose ⋮ is where the row
+  lives. The post menu keeps its own: a post IS its author's act, and a
+  feed full of them is what a reader is asking to be rid of.
+- **The unsave snackbar rides `SavedEmpty` too, when the row that went
+  was the last one.** One law, one drawn demonstration: `SavedUndo` is
+  the list a row shorter with `Removed from Saved.` and `Undo` over it,
+  and the empty board takes the same line over the same seconds. Drawing
+  it twice would spend a canvas entry on a reader learning nothing —
+  `FeedHidden`'s snackbar already taught the whole grammar.
+- **The record key is inert for MVP** (the drill-down's floor,
+  `RankRecords`). The keys are drawn in mono because a reader checking a
+  claim needs to see them, and the copy control arrives with the
+  spot-check tooling that would give a copied key somewhere to go. A
+  control that fills a clipboard nothing can yet read is an affordance
+  that promises a workflow the product does not have.
+- **The negative arm of a pair is U+2212 MINUS** (item 59, §3
+  *Numbers*). `formatDimension` swaps the sign through
+  `Intl.NumberFormat`'s `formatToParts`, so the substitution touches the
+  part the formatter itself names `minusSign` and can never reach a
+  digit or a separator. MINUS carries the plus's width and sits on its
+  optical axis; U+002D is a narrow word-joining dash, and a pair written
+  `x / y` cannot afford one arm shorter than the other. `MoneyFigure`
+  already spelled its outflows this way.
+- **The ceremony's copy and its motion exception are accepted** (jakob:
+  "i really like what you have done"). The headline is *"You're part of
+  the sky now."* over *"Your opinion on @mira is signed, and the way is
+  open both ways. The feed you see from here is your own."*, with `Go to
+  your feed` the one control. §4's *"nothing inside an arriving screen
+  animates"* and *"motion never performs"* hold everywhere else; this
+  board is their one declared exception, and it stays inside the
+  system's spirit by spending only existing duration and easing tokens
+  and by staying deictic — the phases show where the reader's point came
+  from and which way their edge runs.
+- **The gate**: boards hold at **179**, 1337 → **1338 edges**, gaps 43 →
+  **44**, flows hold at **63/60/3**. The one new edge is the deleted
+  profile's ⋮, appended last so no via on that board renumbers, and it
+  is the one new gap. The witness moved by a single line — the gap
+  index gaining `ProfileDeleted/11`; no step rerouted, no flow changed
+  status, and the three journey-stopping gaps are the three that were
+  already there. Two boards re-rendered behind the formatter —
+  `ProfileStances` and `PostOpinions`, the only two that draw a negative
+  pair — and the profile flow map grew 3653 → **3709** to hold the new
+  edge's line.
 
 ## 14. Index
 

@@ -22,6 +22,13 @@
    row, a mis-press is the cheapest mistake in the product, and the way back
    should cost what the mistake cost.
 
+   THE SAME LINE RIDES `SavedEmpty`, when the row that went was the last one
+   (jakob 2026-09-12). The snackbar belongs to the ACT, not to how many rows are
+   left behind it, so the empty board takes the same words over the same seconds
+   and the empty line reads underneath them. Recorded rather than drawn: this
+   board is the demonstration, and a second one differing only in what sits
+   under the snackbar would spend a canvas entry on a reader learning nothing.
+
    IT IS `Saved` WITH ONE ROW REMOVED, not a second kind of Saved board. The
    header, the rows, the controls and the bar are that board's, drawn once;
    `FeedHidden` is the same shape one surface over, a read surface with the
