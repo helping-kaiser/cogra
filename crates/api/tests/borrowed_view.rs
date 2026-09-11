@@ -253,7 +253,6 @@ async fn the_vouch_back_ends_the_borrowing(pool: PgPool) {
             .expect("latch")
     );
 
-    // The provenance outlives the handover: the band leaves, the trace stays.
     assert!(
         store::inviter_of(&pool, account)
             .await
