@@ -3519,7 +3519,7 @@ Ruled by jakob the same day.
   gesture. The contract's slots are untouched — relevance in
   `pDirected`, confidence in `pInterest` (`TagInput`, api-spec.md) — so
   what the reader drags is what the record carries.
-- **Both axes run 0 to 1, and the field is drawn that way.** Confidence
+- **The field is drawn over the reach the census gives.** Confidence
   is census-bounded to `c ∈ [0, 1]` (hashtag.md §4), and the composer
   authors only the positive half of relevance: an author saying what
   their own post is about says how much, never how much it is not. So
@@ -3560,23 +3560,6 @@ Ruled by jakob the same day.
   here, unlike a citation's: these words were written for this table
   and say what the pair claims, so the spoken reading carries the word
   and both axes.
-- **Relevance 0 is the withdrawal, and the pad informs**
-  (`TagPadWithdraw`). Un-tagging is re-tagging at relevance nothing —
-  an ordinary priced, visible record and never an erasure
-  (hashtag.md §4) — and the value sits at the axis's own end, so a drag
-  can land there. The pad does not clamp short of the edge, which would
-  refuse a value the record accepts; it does not withdraw on the spot
-  either, which would change a gesture's meaning silently at one end of
-  a track. It says "Nothing about it — signing this disconnects the
-  tag." beside the readout and lets the reader decide, and the foot's
-  line is unchanged and still true: a withdrawal is signed with the
-  post like any other act. The table does not speak for it — a
-  withdrawn tag claims no aboutness, so the face drops and the exact
-  pair stays, the rule a stance bundle standing at the origin already
-  follows.
-- **The × on the chip is still the un-tag.** Withdrawal having a value
-  on the field does not make the field the place to ask for one; the
-  willing gesture stays the one the reader already has.
 - **The non-drag equivalent is the two labelled tracks.** The pad is a
   drag gesture, so §10's standing demand reaches it as it reaches the
   stance pad: `StanceSlider` carries the tag's own bound and poles, and
@@ -3586,6 +3569,49 @@ Ruled by jakob the same day.
   at **56** and flows at **58/55/3** — the round adds a state, not a
   journey. The witness did not move: no declared flow crosses this
   sheet.
+
+### The tag field's floor, and the untag — 2026-09-11
+
+jakob's review of the tag pad round. The field let a drag reach
+relevance 0, which is not the faintest claim a tag can make but the
+withdrawal; this round takes that value off the field and gives the act
+a control of its own.
+
+- **The field starts just above nothing.** Relevance runs from
+  `TAG_RELEVANCE_FLOOR` — 0.01 — up to 1, so no drag can land on a
+  withdrawal and there is no edge left to warn about. Withdrawing is a
+  different act from weakening a claim, not the far end of one, and an
+  axis carrying both put the heaviest act exactly where the lightest
+  drag lands. The floor makes the left pole true as well: `Barely` is a
+  fair reading of 0.01 and never was one of 0. The value is the
+  contract's, like the anchors — both clients read it. (Supersedes the
+  tag pad round's informing withdrawal state, which is deleted.)
+- **The readout needs no special case.** `formatTagPair`'s two decimals
+  render the floor as `+0.01`, which is the truth of it, so the system
+  keeps its one number format.
+- **Untagging is its own gesture, drawn only at an edit** (`TagPad`). A
+  tag on a post that already carries it stands, so taking it off is a
+  record — the body's `Withdrawn:` line names it and the acts card
+  counts it — and an act of that weight is asked for by a control that
+  says what it does. `Withdraw` takes `Sever`'s place in the foot and
+  `Sever`'s restraint with it: the walk-away pushed left of the
+  decisions, a text button, no colour of its own.
+- **It stages, and the seal signs.** The sheet closes, the chip leaves
+  the row for the withdrawn line already drawn beneath it, and the acts
+  card counts one more action, which the edit seals together with
+  everything else (item 37). Nothing asks twice: the seal is the
+  willing act, and a second layer over a staged, reversible change
+  guards nothing.
+- **A composer's pad carries no `Withdraw`** (`TagPadCompose`). Nothing
+  on that path is signed yet, so there is no tag to withdraw — the
+  chip's × unstages on the spot, and the same control here would name
+  an act that does not exist. Two boards because two contexts reach the
+  sheet holding different controls; everything else about them is one
+  drawing.
+- **The gate**: **148 screens** hold — the withdrawal state out, the
+  composer's pad into its freed slot — 1073 → **1074 edges**, gaps hold
+  at **56** and flows at **58/55/3**. The witness did not move: no
+  declared flow crosses either sheet.
 
 ## 14. Index
 

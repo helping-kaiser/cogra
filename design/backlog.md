@@ -144,11 +144,12 @@ post and comment cards. Drawn on the "Tags & references · the
 sheet" board.
 
 **The tag half is closed** (the tag round, 2026-09-09; the editor
-settled by the tag pad round, 2026-09-10): a staged tag chip is a
-button, it opens `TagPad`, and the pair it sets is drawn back on the
-chip whenever it deviates from the contract's +0.1 / 1. The editor is
-the pad over a field both of whose axes run 0 to 1, which is the reach
-a Tag's census gives it.
+settled by the tag pad round, 2026-09-10 and its review 2026-09-11): a
+staged tag chip is a button, it opens the pad — `TagPad` at an edit,
+`TagPadCompose` on a composer — and the pair it sets is drawn back on
+the chip whenever it deviates from the contract's +0.1 / 1. The field
+is the reach a Tag's census gives it, floored just above nothing so no
+drag reaches a withdrawal.
 
 **The reference half is closed** (jakob's ruling 2026-09-10, readme §13
 *The citation's pair, and the settling row*): a staged reference row is
@@ -1759,28 +1760,32 @@ one exists.
 
 ### 50 · The tag pad · *design + implementation* · **drawn 2026-09-10**
 
-Ruled by jakob 2026-09-10 and drawn the same day: a staged tag's pair
-is set on the pad over a field both of whose axes run 0 to 1, the
-readout is one glyph from a thirteen-anchor table of the tag's own, and
-relevance 0 — the withdrawal — makes the pad say what signing there
-would do. `TagPad` and `TagPadWithdraw` carry it; readme §13 (*The tag
-pad*) holds the ruling and the anchors' coordinates. The design work is
-done; what is left is below.
+Ruled by jakob 2026-09-10, drawn the same day, and revised by his
+review 2026-09-11: a staged tag's pair is set on the pad over a field
+whose confidence runs 0 to 1 and whose relevance runs from the floor —
+0.01 — up to 1, the readout is one glyph from a thirteen-anchor table of
+the tag's own, and untagging is a control in the edit's foot rather than
+a value a drag can reach. `TagPad` and `TagPadCompose` carry it; readme
+§13 (*The tag pad*, *The tag field's floor, and the untag*) holds the
+rulings and the anchors' coordinates. The design work is done; what is
+left is below.
 
 **Both apps ship the two sliders.** Slice 2.3 built the tag pair as
 relevance and confidence tracks on Android and web alike, and the pad
 is now the drawn editor, so both owe the change. `StancePad` already
-takes `ranges`, so what the clients need is the same bound, the tag's
-four poles, and the thirteen-anchor lookup — none of which the stance
-pad can supply, the two tables being deliberately disjoint.
+takes `ranges`, so what the clients need is the same bound — the floor
+included, it being the contract's — the tag's four poles, and the
+thirteen-anchor lookup, none of which the stance pad can supply, the two
+tables being deliberately disjoint. Both owe the two contexts as well:
+the composer's pad carries no `Withdraw`, the edit's does.
 
 **The anchors have not been through `copy-voice.md`.** The table's
-thirteen glosses and the withdrawal's line — "Nothing about it —
-signing this disconnects the tag." — are the words the boards draw and
-speak, and they are ruled, but a copy pass has not read them as a set
-against the guide's register. Whoever takes that pass takes the
-withdrawal line first: it is the only one written to be read at a
-moment of consequence.
+thirteen glosses are the words the boards draw and speak, and they are
+ruled, but a copy pass has not read them as a set against the guide's
+register. `Withdraw`, the edit pad's foot control, goes with them — it
+is the one word here read at a moment of consequence, and it was picked
+to match the `Withdrawn:` line and the acts card's "Tags withdrawn"
+rather than give one act a second name.
 
 **The contract's default reads oddly through the table.** A tag opens
 at relevance +0.1, whose nearest anchor is 🔍 "had to look, but it's in
@@ -1789,7 +1794,12 @@ to say about their own post's tag. Either the low-defaults value is
 wrong for a self-declaration or the lowest aboutness band is, and
 nothing here settles which.
 
-**A pad-side untag affordance is permitted and undrawn.** The × on the
-chip is the un-tag; the ruling allows the pad a second door and does
-not ask for one. Nothing is owed unless a hand test finds the drag to
-the edge is how readers actually reach for it.
+**The chip's × at an edit is undecided.** `TopicRemovable` draws its ×
+unconditionally and no board passes `onRemove`, so on an edit surface
+the glyph stands with nothing ruled behind it. A composer's × unstages
+on the spot; an edit's `Withdraw` stages a record the seal signs. One
+glyph carrying both meanings is the confusion the field's floor was put
+in to end, so either the edit's chips drop the × and `Withdraw` is the
+single door, or the × at an edit is ruled to ask for that same staged
+withdrawal. Dropping it reaches `TopicRemovable`, `EditComposeBody`,
+`EditWords` and the comment edits, which is why this round left it.
