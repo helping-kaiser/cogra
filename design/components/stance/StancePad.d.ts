@@ -24,8 +24,9 @@ export interface StancePadProps {
   axes?: PadAxes;
   /**
    * How far each axis reaches. Defaults to `STANCE_RANGES` — both slots signed.
-   * A tag's pair passes `TAG_RANGES`, both slots running 0 to 1; the field, the
-   * knob's travel, and the dead-ground lines all follow it.
+   * A tag's pair passes `TAG_RANGES`, whose relevance starts at the floor
+   * rather than at nothing; the field, the knob's travel, and the dead-ground
+   * lines all follow it.
    */
   ranges?: PadRanges;
 }

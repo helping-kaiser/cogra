@@ -21,9 +21,9 @@ body{margin:0;padding:16px;background:var(--surface);color:var(--on-surface)}
 .mark{position:absolute;transform:translateX(-50%);margin-top:-11px;display:flex;flex-direction:column;align-items:center;line-height:1}
 .face{font-size:20px;height:22px;line-height:22px;opacity:var(--opacity-resting-face);filter:grayscale(1)}
 .num{font-size:9px;letter-spacing:0.2px;color:var(--text-secondary);white-space:nowrap}
-/* The withdrawal edge. Relevance 0 is the axis's own end rather than ground the
-   knob passes over, so it is marked at the field's border and named, never drawn
-   as one of the interior dead-ground lines a signed axis carries. */
+/* The floor. The field starts just above nothing, so its left border is the
+   lowest claim a tag can make rather than an interior dead-ground line a signed
+   axis carries. Relevance 0 — the withdrawal — is off this field entirely. */
 .edge{position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--text-secondary);opacity:0.45}
 .edgelbl{position:absolute;left:0;top:-20px;font-size:9px;letter-spacing:0.2px;color:var(--text-secondary);white-space:nowrap}
 .words{border-collapse:collapse;font-size:var(--text-body-small)}
@@ -35,13 +35,15 @@ body{margin:0;padding:16px;background:var(--surface);color:var(--on-surface)}
 </head><body><div id="root"></div>
 <script type="text/babel">
 const NS = window.CoGraDesignSystem_9084ba;
-const { TAG_ANCHORS } = NS;
+const { TAG_ANCHORS, TAG_RANGES } = NS;
 
 const FIELD = 560;
 /* The pad's own mapping, over the reach a Tag's census gives it: the drawn field
-   IS the value space, and both axes run 0 to 1, so a coordinate is a plain
-   percentage of the square with no centre to offset from. */
-const xOf = (pDirected) => pDirected * 100;
+   IS the value space, so a coordinate is its place along the range with no
+   centre to offset from. Relevance takes its span from the floor, which is why
+   it is read off `TAG_RANGES` here rather than assumed. */
+const REL = TAG_RANGES.pDirected;
+const xOf = (pDirected) => ((pDirected - REL.min) / (REL.max - REL.min)) * 100;
 const yOf = (pInterest) => 100 - pInterest * 100;
 const rel = (v) => new Intl.NumberFormat(undefined, { signDisplay: "always", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
 const con = (v) => new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
@@ -58,7 +60,7 @@ function Field() {
     <div className="bleed">
       <div className="field" style={{ width: FIELD, height: FIELD }}>
         <div className="edge" />
-        <span className="edgelbl">relevance 0 — the withdrawal</span>
+        <span className="edgelbl">relevance {rel(REL.min)} — the floor</span>
         <div className="axes">
           <span style={{ left: 0, top: "50%", transform: "translateY(-50%)" }}>Barely</span>
           <span style={{ right: 0, top: "50%", transform: "translateY(-50%)" }}>Entirely</span>

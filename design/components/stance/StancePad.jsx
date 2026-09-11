@@ -88,12 +88,12 @@ export function padPercentOf(pair, ranges = STANCE_RANGES) {
   };
 }
 
-/* THE DEAD-GROUND LINE MARKS THE AXIS'S ZERO, so an axis whose zero is its own
-   end has none to draw. On a stance's signed square both lines cross the middle
-   and the inert cross is legible dead ground (§8.3). The tag pad's axes both
-   start at zero, and zero relevance there is not inert ground a knob passes
-   over — it is the withdrawal, which the sheet says in words. A hairline
-   painted along the field's own edge would read as a border, not a meaning. */
+/* THE DEAD-GROUND LINE MARKS THE AXIS'S ZERO, so an axis that never reaches
+   zero has none to draw. On a stance's signed square both lines cross the
+   middle and the inert cross is legible dead ground (§8.3). The tag pad's
+   confidence starts at zero and its relevance above it, so neither line falls
+   anywhere but the field's own edge, where a hairline would read as a border
+   rather than as a meaning. */
 function zeroPercentOf(range) {
   return range.min < 0 && range.max > 0 ? percent(fractionOf(0, range)) : null;
 }

@@ -41,15 +41,27 @@ export const ORIGIN = { pDirected: 0, pInterest: 0 };
    each one reaches, is the census's business and not the control's. A stance
    fills both slots with signed Dimensions; a Tag's confidence is
    census-bounded to `c ∈ [0, 1]` (hashtag.md §4, `TagInput` in api-spec.md),
-   and the tag pad authors only the positive half of relevance — so both of its
-   axes run `0 → 1`. Naming the range as data keeps one pad honest about two
-   families instead of a second pad drifting from the first. */
+   and the tag pad authors only the positive half of relevance. Naming the
+   range as data keeps one pad honest about two families instead of a second
+   pad drifting from the first. */
 export const STANCE_RANGES = {
   pDirected: { min: DIMENSION_MIN, max: DIMENSION_MAX },
   pInterest: { min: DIMENSION_MIN, max: DIMENSION_MAX },
 };
+
+/* THE TAG FIELD STARTS JUST ABOVE NOTHING (jakob's ruling, 2026-09-11).
+   Relevance 0 is the withdrawal — re-tagging at `r = 0`, an ordinary priced,
+   visible record (hashtag.md §4) — and that is not a degree of aboutness the
+   way every other point on this axis is. Ending the axis there put the
+   heaviest act on the field where the lightest drag lands, so the field
+   carries claims only and the floor is where a claim stops being one. It also
+   makes the left pole true: `Barely` is a fair reading of 0.01 and never was
+   one of 0. Withdrawing is asked for by its own control instead.
+
+   The floor is the contract's, like the anchors — both clients read it. */
+export const TAG_RELEVANCE_FLOOR = 0.01;
 export const TAG_RANGES = {
-  pDirected: { min: 0, max: DIMENSION_MAX },
+  pDirected: { min: TAG_RELEVANCE_FLOOR, max: DIMENSION_MAX },
   pInterest: { min: 0, max: DIMENSION_MAX },
 };
 /** What a plain tap commits — the repo-wide low-defaults policy. */

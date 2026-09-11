@@ -132,5 +132,7 @@ export interface PadRanges {
 
 /** Both slots signed — what a stance and a citation fill. */
 export declare const STANCE_RANGES: PadRanges;
-/** Both slots running 0 to 1 — what a tag's pair fills. */
+/** The lowest relevance the tag field offers — below it lies the withdrawal, which the field does not carry. */
+export declare const TAG_RELEVANCE_FLOOR: number;
+/** What a tag's pair fills: confidence 0 to 1, relevance from the floor to 1. */
 export declare const TAG_RANGES: PadRanges;
