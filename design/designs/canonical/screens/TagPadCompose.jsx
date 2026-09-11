@@ -29,18 +29,6 @@
 /* The four poles, named for the record family that fills the slots. */
 const TAG_AXES = { left: "Barely", right: "Entirely", bottom: "Guessing", top: "Certain" };
 
-const SR_ONLY = {
-  position: "absolute",
-  width: "1px",
-  height: "1px",
-  padding: 0,
-  margin: "-1px",
-  overflow: "hidden",
-  clip: "rect(0 0 0 0)",
-  whiteSpace: "nowrap",
-  border: 0,
-};
-
 export function Screen() {
   return (
     <>
@@ -58,7 +46,7 @@ export function Screen() {
             </span>
             <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
               <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🔍</span>
-              <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
+              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
                 +0.10 / 1.00
               </span>
             </span>

@@ -15,7 +15,10 @@
    EVERYTHING AROUND THE FIELD IS THE PAD'S OWN GRAMMAR, kept: the "?" in the
    top-right corner out of the readouts' reading order (`HelpDot`, at the
    master's geometry), the pick's readout ABOVE the field where a thumb cannot
-   cover it, the note, and Cancel · Set — release never commits, Set does.
+   cover it, the note, and Cancel · Set — release never commits, Set does. The
+   readout's number carries `cg-exact` exactly as the master's does, so a
+   hand-drawn readout follows the reading mode instead of diverging from it
+   (readme §13).
 
    THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
    `ComposeSeal` draws. What a wash covers is inert, not shortened. */
@@ -44,7 +47,7 @@ export function Screen() {
         }}
       >
         <span style={{ position: "absolute", top: 4, right: 4 }}>
-          <HelpDot ariaLabel="Where you stand on it" />
+          <HelpDot ariaLabel="Your opinion on your post" />
         </span>
 
         {/* The pick's readout, in the pad's own block shape: the name of the
@@ -63,7 +66,7 @@ export function Screen() {
               has no row for. */}
           <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
             <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
-            <span style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.30</span>
+            <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.30</span>
           </span>
           <span style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 }}>
             Nice, For or against +0.30
@@ -72,7 +75,7 @@ export function Screen() {
 
         <div
           role="group"
-          aria-label="Stance pad for your own post"
+          aria-label="Opinion pad for your own post"
           style={{ alignSelf: "center", position: "relative", width: 260, height: 72, borderRadius: "var(--radius-large)", background: "var(--surface-container-highest)", touchAction: "none" }}
         >
           <span aria-hidden="true" style={{ position: "absolute", left: 8, right: 8, top: "50%", height: 1, background: "var(--border-hairline)" }} />

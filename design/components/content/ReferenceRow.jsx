@@ -2,6 +2,7 @@ import React from "react";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { MonogramAvatar } from "../people/ActorChip.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
+import { formatStancePair, formatTagPair, nearestAnchor, nearestTagAnchor, SR_ONLY } from "../stance/StanceReadout.jsx";
 
 /* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
    result-row shape search reuses: EVERY row is leading mark · name · value, so
@@ -19,6 +20,23 @@ import { PendingMarker } from "../honesty/PendingMarker.jsx";
    THE VALUE is the pair the author signed on this act — set at compose (a
    changeable default), shown here for any reader: a signed act is public
    record. Right-aligned, `body-small`, never coloured.
+
+   THE PAIR ARRIVES AS NUMBERS AND THE ROW FORMATS IT (backlog item 53). Which
+   family it belongs to is the row's own `kind`: a topic's pair is a tag's —
+   `formatTagPair`, and the nearest of the thirteen `TAG_ANCHORS` beside it —
+   and every other kind's is a citation's, both axes signed. One value in, so a
+   glyph and its numbers cannot disagree. `value` is the other edge entirely:
+   a plain string the row prints as given — an age, a date — and geek mode
+   never touches it, because an age is not a signal number.
+
+   THE PAIRS ARE THE GEEK READING (readme §13). Every pair is drawn as its
+   nearest anchor's glyph — the thirteen objects for a topic, the twenty faces
+   for a citation — with the digits in a `cg-exact` span that paints only when
+   the screen root says `data-geek="on"`. The rank keeps its number in both
+   modes: geek governs the pairs, not every figure. The button's accessible
+   name is the same in both modes — every hidden number has a screen-reader-only
+   twin, because the mode is a drawing setting and nothing spoken may depend
+   on it.
 
    AN ACT STILL SETTLING SAYS SO HERE, AND ONLY HERE (jakob's ruling,
    2026-09-10). A chip on a card shows nothing pending — a tag's word is the tag's
@@ -65,12 +83,24 @@ export function NodeMark({ kind, name, src }) {
 /* `sub` is the INDIRECT-HIT line (readme §13, the search rulings): a scoped
    query that matched through an act's target says both halves — the comment
    row reads "on <post title>", the offer row "on <item name>". Without it an
-   indirect hit is indistinguishable from a mishit. `value` is the row's right
-   edge: the signed pair in the references sheet, the viewer-relative rank in
-   ranked search results, the age past the seam. (`pair` remains as its old
-   name.) */
+   indirect hit is indistinguishable from a mishit. The row's right edge is one
+   of three: `pair` (the signed pair, as numbers), `rank` (the viewer-relative
+   rank), or `value` (a plain string — the age past the seam). */
 export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank, trailing, pending = false, onOpen }) {
-  const edge = value ?? pair;
+  const tagFamily = kind === "topic";
+  const exact = pair ? (tagFamily ? formatTagPair(pair) : formatStancePair(pair)) : null;
+  /* EVERY PAIR HAS A FACE TO FALL BACK TO (jakob's ruling, the geek round —
+     backlog item 53.3). A topic reads the thirteen objects; a person, post or
+     comment row is a CITATION, whose two axes fill the slots `STANCE_ANCHORS`
+     is drawn over, so it reads the twenty faces — the same lookup `RefPair`'s
+     own readout uses. Without it the row simply lost its right edge with the
+     digits off, which is the one thing the mode must never do.
+
+     THE WORD COMES WITH THE TAG AND NOT WITH THE CITATION (`RefPair`'s rule).
+     A tag anchor's word names a degree of aboutness and is true of the row; a
+     stance anchor's names a feeling about a stance, and a citation is not one
+     — so the spoken reading there is the pair itself, exactly. */
+  const anchor = pair ? (tagFamily ? nearestTagAnchor(pair) : nearestAnchor(pair)) : null;
   return (
     <button
       type="button"
@@ -128,23 +158,27 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank,
       {trailing ? (
         <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }}>{trailing}</span>
       ) : rank ? (
-        <span
-          style={{
-            flex: "none",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "4px",
-            fontSize: "var(--text-body-small)",
-            lineHeight: "var(--text-body-small--line-height)",
-            color: "var(--text-secondary)",
-            whiteSpace: "nowrap",
-          }}
-        >
-          <Icon name="graph" size={14} />
-          {rank}
-        </span>
+        <>
+          <span
+            aria-hidden="true"
+            style={{
+              flex: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              fontSize: "var(--text-body-small)",
+              lineHeight: "var(--text-body-small--line-height)",
+              color: "var(--text-secondary)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Icon name="graph" size={14} />
+            <span>{rank}</span>
+          </span>
+          <span style={SR_ONLY}>{rank}</span>
+        </>
       ) : (
-        (edge || pending) && (
+        (value || exact || pending) && (
           <span
             style={{
               flex: "none",
@@ -157,7 +191,16 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank,
               whiteSpace: "nowrap",
             }}
           >
-            {edge}
+            {value}
+            {!value && exact && (
+              <>
+                <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  {anchor && <span style={{ fontSize: "var(--text-body-medium)", lineHeight: 1 }}>{anchor.emoji}</span>}
+                  <span className="cg-exact">{exact}</span>
+                </span>
+                <span style={SR_ONLY}>{tagFamily && anchor ? `${anchor.label}, ${exact}` : exact}</span>
+              </>
+            )}
             {pending && <PendingMarker inline />}
           </span>
         )

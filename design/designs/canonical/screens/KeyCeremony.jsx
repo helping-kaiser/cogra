@@ -26,7 +26,7 @@ export function Screen() {
             letterSpacing: "var(--text-body-large--letter-spacing)",
           }}
         >
-          Everything you publish is signed with a key that is created on this device and stays in your hands — CoGra never
+          Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never
           holds it and can never reissue it.
         </p>
         <p

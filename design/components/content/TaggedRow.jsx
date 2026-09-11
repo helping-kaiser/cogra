@@ -1,5 +1,6 @@
 import React from "react";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
+import { formatTagPair, nearestTagAnchor, SR_ONLY } from "../stance/StanceReadout.jsx";
 
 /* One row of a tag's page (readme §13, the tag round): the claim that put this
    content here, and then the content itself.
@@ -19,9 +20,24 @@ import { PendingMarker } from "../honesty/PendingMarker.jsx";
    `formatTagPair`'s shape says which family this is — relevance signed over
    [-1, +1], confidence unsigned over [0, 1].
 
+   THE ROW WEARS THE TAG TABLE'S GLYPH (jakob's ruling, backlog item 53). The
+   claim's nearest of the thirteen objects leads the flag and carries the
+   reading; the exact pair rides a `cg-exact` span beside it and paints only in
+   geek mode. The glyph is the lossy readout the row always needed — a reader
+   who does not read numbers was being told nothing by this flag at all.
+
+   THE PAIR ARRIVES AS NUMBERS, NOT AS A STRING. The row picks the glyph and
+   the row formats the pair, from one value, so the two can never disagree and
+   no screen can hand-type a format the contract does not use.
+
    "TAGGED" NEEDS NO NAME BESIDE IT. The page is titled by the tag, so
-   repeating it on every row is noise; the word says which act the numbers
-   belong to, and the numbers say what it claimed.
+   repeating it on every row is noise; the word says which act the glyph and
+   the numbers belong to, and they say what it claimed.
+
+   THE SPOKEN READING IS ONE SPAN, and it is the same in both modes: an emoji's
+   own accessible name is "magnifying glass tilted left", never "had to look,
+   but it's in there", so the visible parts are `aria-hidden` and a
+   screen-reader-only span names the claim and its values (§10).
 
    A CLAIM STILL IN FLIGHT SAYS SO, with the same marker every other
    unsettled record wears.
@@ -35,6 +51,8 @@ import { PendingMarker } from "../honesty/PendingMarker.jsx";
    neighbour. */
 
 export function TaggedRow({ pair, pending = false, children }) {
+  const anchor = nearestTagAnchor(pair);
+  const exact = formatTagPair(pair);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
       <div
@@ -51,8 +69,10 @@ export function TaggedRow({ pair, pending = false, children }) {
           color: "var(--text-secondary)",
         }}
       >
-        <span>Tagged</span>
-        <span style={{ whiteSpace: "nowrap" }}>{pair}</span>
+        <span aria-hidden="true" style={{ fontSize: "var(--text-body-medium)", lineHeight: 1 }}>{anchor.emoji}</span>
+        <span aria-hidden="true">Tagged</span>
+        <span className="cg-exact" aria-hidden="true" style={{ whiteSpace: "nowrap" }}>{exact}</span>
+        <span style={SR_ONLY}>{`Tagged: ${anchor.label}, ${exact}`}</span>
         {pending && <PendingMarker />}
       </div>
       {children}

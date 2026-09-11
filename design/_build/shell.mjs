@@ -43,12 +43,26 @@ const fontTokens = `:root { --font-figtree: "Figtree"; --font-sans: var(--font-f
 export const flowBadgeCss = `[data-flow] { position: relative; }
 [data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }`;
 
+// GEEK MODE, the second chip (readme §13, backlog item 53): the exact values of
+// the signal numbers — stance, tag and citation pairs, the Post Score, the
+// viewer-relative rank — are off by default and the glyph carries the reading.
+// Every board draws BOTH; only this rule decides which one is painted, so the
+// markup a flow pin anchors on never moves with the mode.
+//
+// The hide is scoped `:not([data-geek="on"])` rather than written as a pair of
+// show/hide rules, because the marked spans carry their own display (several are
+// `inline-flex`). A rule that had to un-hide them would have to name a display
+// to restore, and would name the wrong one; with nothing matching in geek mode
+// each span simply keeps the display it was drawn with.
+export const exactCss = `.screen:not([data-geek="on"]) .cg-exact { display: none !important; }`;
+
 // A screen may export PROPS (extra data-props descriptors) and VALS (extra
 // `renderVals` entries, one code string like `keyTitle: this.props.wording ===
 // "app" ? "…" : "…"`); its markup then carries `{{name}}` holes the canvas
 // substitutes live — how a generated board keeps a tweak chip beyond the theme.
 const THEME_PROP = { theme: { editor: "enum", options: ["auto", "light", "dark"], default: "auto" } };
-const logicFor = (extraProps, extraVals) => `<script data-dc-script data-props='${JSON.stringify({ ...THEME_PROP, ...(extraProps ?? {}) })}'>
+const GEEK_PROP = { geek: { editor: "enum", options: ["off", "on"], default: "off" } };
+const logicFor = (extraProps, extraVals) => `<script data-dc-script data-props='${JSON.stringify({ ...THEME_PROP, ...GEEK_PROP, ...(extraProps ?? {}) })}'>
 class Component extends DCLogic {
   componentDidMount() {
     this.media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -61,28 +75,41 @@ class Component extends DCLogic {
       } else if (d && d.cograThemeQuery && this.state && this.state.remote && event.source) {
         try { event.source.postMessage({ cograTheme: this.state.remote }, "*"); } catch (e) {}
       }
+      if (d && (d.cograGeek === "off" || d.cograGeek === "on")) {
+        if (!this.state || this.state.remoteGeek !== d.cograGeek) this.setState({ remoteGeek: d.cograGeek });
+      } else if (d && d.cograGeekQuery && this.state && this.state.remoteGeek && event.source) {
+        try { event.source.postMessage({ cograGeek: this.state.remoteGeek }, "*"); } catch (e) {}
+      }
     };
     window.addEventListener("message", this.onMsg);
-    try {
-      const askWalk = (w, depth) => {
-        if (depth > 5) return;
-        let n = 0;
-        try { n = w.length; } catch (e) { n = 0; }
-        for (let i = 0; i < n; i++) {
-          let c = null;
-          try { c = w[i]; } catch (e) { c = null; }
-          if (c) {
-            try { c.postMessage({ cograThemeQuery: true }, "*"); } catch (e) {}
-            askWalk(c, depth + 1);
+    this.tell = (payload) => {
+      try {
+        const walk = (w, depth) => {
+          if (depth > 5) return;
+          let n = 0;
+          try { n = w.length; } catch (e) { n = 0; }
+          for (let i = 0; i < n; i++) {
+            let c = null;
+            try { c = w[i]; } catch (e) { c = null; }
+            if (c) {
+              try { c.postMessage(payload, "*"); } catch (e) {}
+              walk(c, depth + 1);
+            }
           }
-        }
-      };
-      askWalk(window.top, 0);
-    } catch (e) {}
+        };
+        walk(window.top, 0);
+      } catch (e) {}
+    };
+    this.tell({ cograThemeQuery: true });
+    this.tell({ cograGeekQuery: true });
   }
   componentDidUpdate(prevProps) {
     if (prevProps.theme !== this.props.theme && this.state && this.state.remote) {
       this.setState({ remote: null });
+    }
+    if (prevProps.geek !== this.props.geek) {
+      if (this.state && this.state.remoteGeek) this.setState({ remoteGeek: null });
+      if (this.tell) this.tell({ cograGeek: this.props.geek === "on" ? "on" : "off" });
     }
   }
   componentWillUnmount() {
@@ -95,7 +122,9 @@ class Component extends DCLogic {
     const dark = mode === "auto"
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
       : mode === "dark";
-    return { theme: dark ? "dark" : "light"${extraVals ? `, ${extraVals}` : ""} };
+    const remoteGeek = this.state ? this.state.remoteGeek : null;
+    const geek = remoteGeek ?? this.props.geek ?? "off";
+    return { theme: dark ? "dark" : "light", geek${extraVals ? `, ${extraVals}` : ""} };
   }
 }
 </${"script"}>`;
@@ -122,9 +151,10 @@ ${fontTokens}
 ${tokenCss}
 ${darkCss}
 ${flowBadgeCss}
+${exactCss}
   </style>
 </helmet>
-<div class="screen" data-theme="{{theme}}" style="width: ${width}px; height: ${height}px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; ${style}">
+<div class="screen" data-theme="{{theme}}" data-geek="{{geek}}" style="width: ${width}px; height: ${height}px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; ${style}">
 ${markup}
 </div>
 </x-dc>

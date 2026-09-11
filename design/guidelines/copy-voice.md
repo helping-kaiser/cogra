@@ -59,7 +59,7 @@ happen; the confirmation says what happened.**
 | `That didn't send. Try again.` | `Error: request failed (500)` |
 | `Nothing here yet — write the first post.` | `No results` |
 | `You're browsing as a guest — sign in or join to post and vouch.` | `Sign up now to unlock CoGra!` |
-| `It takes 3 signed actions, each paid for separately.` | `This may incur charges.` |
+| `It signs 3 things, each paid separately.` | `This may incur charges.` |
 | `Inviting unlocks once your application is approved.` | `Feature locked` |
 
 Sentence case everywhere. No title case, no all-caps, no exclamation
@@ -68,12 +68,15 @@ landing`). Em dashes carry asides; `…` marks work in progress.
 
 ## Emoji
 
-Used in exactly one place: the stance readout (twenty anchors, plus 🤷 for
-a zero standing and 🫥 for a control at rest). These are system emoji
-rendering a value, not decoration. **Never** in headings, buttons,
-marketing copy, empty states, or documentation of features. The `→` in
-`Just looking? Browse the feed →` is the only other glyph used as
-punctuation.
+Used for one thing: rendering a value. The stance readout is where that
+happens — twenty anchors, plus 🤷 for a zero opinion and 🫥 for a control
+at rest — and a help, coach or snackbar line that speaks a pair leads
+with the same face, because the sentence is a readout too and has to
+hold for a reader who never turns the digits on. The tag table's
+thirteen objects are the same thing for the other family. **Never** in
+headings, buttons, marketing copy, empty states, or documentation of
+features. The `→` in `Just looking? Browse the feed →` is the only other
+glyph used as punctuation.
 
 ## Honesty phrasings to reuse verbatim
 
@@ -82,13 +85,13 @@ punctuation.
 - `Nothing was signed just now.` — the coach mark's first line.
 - `Signing needs your key, which isn't in this browser — the write waits
   as pending.`
-- `Your standing toward this post drops to nothing. It stops reaching
+- `Your opinion of this post drops to nothing. It stops reaching
   your feed, you stop earning from it, and nothing passes on through
   you.`
 - `A signing key can only ever back one account, so this account needs
   its own.`
 - `This is the only way to restore your key.`
-- `Replying also signs where you stand on the post it answers.` — the
+- `Replying also signs your opinion on the post it answers.` — the
   reply seal's note, under the ruled block on both its states.
 
 ## Naming
@@ -117,6 +120,27 @@ nothing. `FEED_KINDS` is where the two meet — value `topics`, label
 One word keeps its ordinary sense throughout: a help dialog's *topic*
 is its subject, not a `#name`.
 
+**What a reader gives is an OPINION; the record is a stance** (jakob's
+ruling, 2026-09-11). *Opinion* is the word people already have for
+saying what they think of something; *stance* is the repo's and the
+contract's word for the two-parameter record, and it belongs to
+`docs/`, the graph and the code. So the reader is shown `Give your
+opinion`, `Your opinion on this post`, `Current opinion`, `Resulting
+opinion`, `How opinions work`, `Opinion pad`, `Opinions on you`,
+`Opinions by you`, `No opinion yet`, and the chronicle's `Gave an
+opinion`. The verb is *give*, never *take*.
+
+**"Standing" leaves the screen entirely.** `Current opinion` and
+`Resulting opinion` say what it said, in the word a reader owns.
+
+The law stops at the code's own names, exactly as the tag/topic law
+does. `StanceControl`, `StancePad`, `StanceReadout`, `StanceRow`,
+`StanceValue`, `STANCE_ANCHORS`, the `stance` prop, the stance record
+and its `api-spec` shape, the flow-graph's `stance face` labels and the
+`ProfileStances` board name all stay: they name the record, no one
+using the product reads them, and churning them would cost every
+cross-reference to the contract for nothing.
+
 ## Platform nouns
 
 The key lives on a device, and the device is named as the reader sees
@@ -132,12 +156,12 @@ behind a small "?" (at most one per screen) opening a plain dialog:
 title, at most two short paragraphs, Close. The texts, verbatim
 (browser wording shown; the app variant swaps the platform noun):
 
-- **Signed actions** (the seal, post and reply): Each piece of a post —
-  the post itself, every tag, every citation — is its own signed
-  action, written in your name. They sign together: all of them land,
-  or none does. / You don't pay for these — a shared community pool
-  covers members' signings. The pool is real and finite, so each
-  action still counts.
+- **How signing works** (the seal, post and reply): Each piece of a
+  post — the post itself, every tag, every citation — is signed on
+  its own, in your name. They sign together: all of them land, or
+  none does. / You don't pay for these — a shared community pool
+  covers members' signings. The pool is real and finite, so each one
+  still counts.
 - **The license**: Terms for anyone who reuses what you publish —
   credit, and a public record of use. They are not a statement about
   how you made it. / The license is set when the post is first signed
@@ -165,20 +189,24 @@ title, at most two short paragraphs, Close. The texts, verbatim
   draft stays on this device. / Restore the key with your recovery
   code to finish. Restoring here is the only way to complete this
   write.
-- **Where you stand on it** (the post's one-axis pad): Publishing also
-  signs where you stand on your own post — for or against, from a
-  gentle +0.10 by default. / Your own post always reaches you in full,
-  so only for-or-against is yours to set. Nothing is signed until Set.
-  Prefer sliders or exact numbers? Swap the input in settings.
+- **Your opinion on your post** (the post's one-axis pad): Publishing
+  also signs your opinion on your own post — for or against, from a
+  gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
+  full, so only for-or-against is yours to set. Nothing is signed until
+  Set. Prefer sliders or exact numbers? Swap the input in settings.
 - **Toward what you answer** (the reply's two-axis pad): Replying also
-  signs where you stand on the post you answer — for or against, and
-  how much of it reaches you. It starts at a gentle +0.10 / +0.10 and
-  rides the same signature as your reply. / Nothing is signed until
+  signs your opinion on the post you answer — for or against, and
+  how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
+  and rides the same signature as your reply. / Nothing is signed until
   Set. Swap the input in settings if you prefer sliders or numbers.
-- **Your first stance** (the vouch-back pad): Vouching back signs where
-  you stand on the person who vouched you in — your first stance, and
+- **Your first opinion** (the vouch-back pad): Vouching back signs where
+  you stand on the person who vouched you in — your first opinion, and
   your feed grows from it. / The pad is how you shape what reaches you —
   for or against, and how much. Nothing is signed until Set.
+
+  *The italicised tails are the `cg-exact` spans: the face is drawn in
+  both reading modes, the digits only when the reader has asked for
+  them (readme §13), and a screen-reader twin says both either way.*
 - **Editing**: An edit replaces the whole post; earlier versions stay
   public under "Edited" unless you remove them. An edit never bumps
   the post as new. / Tag and citation changes ride the same signing,
@@ -225,9 +253,9 @@ title, at most two short paragraphs, Close. The texts, verbatim
 dialog's own subject, so a listener hears which explanation the tap
 brings: `Your key`, `License`, `Sensitive`, `How the filter works`,
 `What is CGT?`. The three stance pads take theirs the same way —
-`Where you stand on it`, `Toward what you answer`, `Your first stance`
+`Your opinion on your post`, `Toward what you answer`, `Your first opinion`
 — because one name across three surfaces says only that a dialog
-exists. `How stances work` is the stance control's own help, where the
+exists. `How opinions work` is the opinion control's own help, where the
 control itself is the subject.
 
 The stream and the viewer earn no "?". The stream is the feed the
@@ -344,8 +372,8 @@ DO, the way the sound toggle already does:
 An applicant's second tap of a kind already staged answers here instead
 of opening the real surface again; one line per kind, same shape:
 
-- `Your post is staged — it lands with you.`
-- `Your stance is staged — it lands with you.`
+- `Your post waits with your application — it arrives with you.`
+- `Your opinion waits with your application — it arrives with you.`
 
 ## Field errors
 
@@ -402,6 +430,15 @@ reuser instead. One per axis value:
 - Public record of use — `Not logged` ·
   `Commercial uses logged publicly` · `Every use logged publicly`
 
+**The author's own tier names**, in the chooser. Credit reads
+`No credit` · `Credit commercially` · `Credit always`. The public
+record of use reads `Not logged` · `Log commercial use` · `Log every
+use` — verbs, because what the author is choosing is whether the
+platform logs, not what kind of record exists. *Record* went because
+it is the graph's own word for the thing every act already is, and a
+tier called `No record` on a system where nothing is ever unrecorded
+said the opposite of the truth.
+
 **The block's own furniture**:
 
 - `License terms` — the caption, the same words as the row that
@@ -424,8 +461,8 @@ because a row of citations wants each × to say which one it drops.
 among the acts one signature commits:
 
 - `Reference` — the act row's label, singular, naming the edge staged
-  rather than the block it sits in. The count beside it reads
-  `1 action`, because that is what it is.
+  rather than the block it sits in. The count beside it is bare — `1` —
+  because the label has already said what was counted.
 - `+ Cite something` — the affordance row, the same words the post
   wizard's details stage uses. It drops the gloss listing what can be
   cited: the staged row above it now shows a citation, and an example
@@ -477,7 +514,7 @@ and both take it.
 
 **Group headings** — short noun phrases, sentence case, naming what a
 reader came for rather than what the system calls it: `Theme` ·
-`Taking a stance` · `Writing` · `Reading` · `Key backup` · `Sessions` ·
+`Giving an opinion` · `Writing` · `Reading` · `Key backup` · `Sessions` ·
 `Credentials`. The sign-out group carries no heading; it is the end of
 the page, not a subject. `Writing` is the settled title — Android said
 Writing, web said Signing, and the setting is about what a submit does,
@@ -494,12 +531,12 @@ device.` It is the one place a bare "device" is right: what Auto follows
 is the device's own light-or-dark setting, which is neither the browser's
 nor the app's.
 
-**Taking a stance** keeps the shipped readings and their hints —
-`The pad` / `Press and hold, then drift to where you stand.`,
-`Sliders` / `One slider per side of the stance.`, `Typed values` /
-`Type both numbers exactly.` — and moves the shipped body line under the
-group, where it is read once: `A tap always adds a small positive one.
-This is what a longer press opens, everywhere.`
+**Giving an opinion** keeps the shipped readings and gives them the
+hints the inverted gesture needs — `The pad` / `A tap opens it; drift to
+where it feels right.`, `Sliders` / `One slider per side of the opinion.`,
+`Typed values` / `Type both numbers exactly.` — over a footnote read
+once for the group: `A tap opens this, everywhere. Press and hold
+instead, and a small positive one is signed on the spot.`
 
 **The multi-action switch**, merged from the two apps:
 `Confirm multi-action submits` with
@@ -673,10 +710,10 @@ title (jakob's review removed the explanatory line): the rows say what
 they are, and a sentence restating the contract was noise where the
 title and the claims already carry it.
 
-**A row says which act put it there.** `Tagged` and then the pair, on
-a flag attached to every card's top edge — the word names the act, the
-numbers say what it claimed, and the tag itself is not repeated because
-the page is titled by it.
+**A row says which act put it there.** The claim's glyph, `Tagged`, and
+then the pair, on a flag attached to every card's top edge — the word
+names the act, the glyph and the numbers say what it claimed, and the
+tag itself is not repeated because the page is titled by it.
 
 **An unused tag is not a miss.** `Nothing carries this tag yet. The name
 is still a place — anyone can be the first to use it.` No "not found",
@@ -722,3 +759,96 @@ before takes no extra step. Tagging is its own signed action, and it
 carries how much the post is about that tag. / Names are lowercased,
 and a name can hold letters, digits, dot, dash and underscore. Tap a
 tag you have added to set how it relates.`
+
+## Awaiting blessing — the geek-mode round
+
+Drawn on `Settings` (and the two sheet boards that draw the page
+beneath them), and up for review in the same pass. The mode itself
+draws nothing new — it decides whether the numbers already on every
+board are painted — so the round's whole copy surface is one row.
+
+**The setting says what it shows, not how it works.** `Show exact
+values` — the switch in Settings' Reading group. *Exact* is the word
+that distinguishes the digits from the glyph beside them, which is the
+only distinction the reader is being offered; *geek mode* is the name
+the round was ruled under and never reaches the screen.
+
+**Its status names what is behind the drawing.** `The number pairs
+behind the faces.` Pairs, because that is the whole of what the setting
+governs — a score and a rank keep their digits either way.
+
+**The Reading group's footnote carries both rows' facts.** `Every feed
+starts from what it shows, and a change made inside a feed lasts until
+you change it back. Both choices stay on this device.` *Stays on this
+device* is the theme group's own spelling for a client-local choice,
+said once under the group rather than inside either row.
+
+## Awaiting blessing — the geek round's review
+
+The lines the review round wrote (jakob's rulings, 2026-09-11 evening).
+The naming law above is part of the same ruling and is written where it
+belongs; these are the new strings.
+
+**The gesture, said in the settings group.** `Giving an opinion` is the
+group, `A tap opens it; drift to where it feels right.` the pad's hint, and
+`A tap opens this, everywhere. Press and hold instead, and a small
+positive one is signed on the spot.` the footnote — the one place the
+shortcut and the price are said together.
+
+**The coach mark teaches the shortcut, not the control.**
+`Press and hold to sign it outright` over `Nothing was signed just now.
+A tap opens this pad. Press and hold the same button and a gentle 🙂
+*(+0.10 / +0.10)* is signed without opening anything.` The blessed
+first line stays: a reader who has just tapped and seen a pad still
+needs to be told nothing was spent.
+
+**The pad's four help lines.** `Drag the knob. Left
+to right is against to for; bottom to top is how much more of it you
+want reaching you.` / `Letting go changes nothing. Set signs it, Cancel
+leaves without signing.` / `Your pick adds to what you've said before —
+that's why the two faces can differ.` / `Walk it back takes everything
+you've said to nothing. It has its own confirmation, and each thing
+you've said is walked back by its own signature.` The alternates' set
+differs in its first two lines only: `Two values, not one. …` /
+`Nothing is signed until you press Sign it.` / the same fold line /
+`Walk it back takes everything to nothing, and each thing you've said
+is walked back by its own signature.`
+
+**The fold is explained in faces.** *That's why the two faces can
+differ* replaces a sentence about two different numbers: the
+explanation has to hold for a reader who has never turned the digits
+on, and the faces are what they see.
+
+**The signed-opinion snackbar.** `Signed, still settling. Current
+opinion 🙂 *(+0.55 / +0.20)*` — built from spans so its numbers ride
+the reading mode, with the spoken twin naming the anchor's word and
+both axes. A walk-back signature keeps its sentence:
+`Signed 3 things, still settling. You've walked @ada back to nothing.`
+
+**The walk-back.** Button `Walk it back`, dialog `Walk it all back?`,
+cost `It signs 3 things, each paid separately.` (`It signs 1 thing,
+paid on its own.` in the singular), and the cap aside trimmed to
+`Your feed reads it capped at +1.00 / +0.85.`
+
+**What one signature commits is counted in things.** The footer reads
+`You're signing 2 things`, the total `2 things, signed together`
+(`1 thing, signed` in the singular), the rows carry bare counts, and
+the subline is `They land together, or none does.` everywhere.
+
+**The wallet says reach, not paths.** `In escrow` · `Held` ·
+`…paid when an advertiser's reach flows through you.` ·
+`Posting, connecting, and giving opinions is how reach starts flowing
+through you.` · `Every payout is traceable to the reach it paid for.` ·
+`Earned · last 8 payouts` (`Earned · last payouts` as the chart's own
+default) · `When it settles`.
+
+**The straight fixes.** `What your feed shows` as the filter's first
+section · `Your feed is showing nothing — everything is switched off.`
+· `Your sky — every account a star, sized by your own paths to it.` ·
+`These wait with your application and arrive with you.` ·
+`Invites open when you're in.` · `What you post now arrives with you.`
+
+**Carried over unchanged, and still unblessed** — drawn by the tag
+round, named here so the review pass has them in one place: `Un-tag`,
+the edit body's `Withdrawn: #coastroad`, and the acts card's
+`Tags withdrawn` row label.

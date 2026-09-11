@@ -197,7 +197,7 @@ function Session() {
       <aside className="notes">
         <h1 className="text-title-medium" style={{ margin: 0 }}>Core loop — feed, post, stance</h1>
         <p className="text-body-small" style={{ margin: 0, color: "var(--text-secondary)" }}>
-          Backlog item 1. Built only from components already in the system. Hold a stance target for half a second to bloom the pad; release parks the pick, <b>Set</b> signs it. The first tap ever teaches and signs nothing.
+          Backlog item 1. Built only from components already in the system. Tap a stance target to bloom the pad; release parks the pick, <b>Set</b> signs it. Hold the same target for half a second and the gentle default is signed outright. The first open ever teaches.
         </p>
         <Group label="Theme" value={dark ? "dark" : "light"} onPick={(v) => setDark(v === "dark")}
                options={[{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} />

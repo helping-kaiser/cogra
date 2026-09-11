@@ -104,7 +104,7 @@ export function ReelRail({
       )}
       <ReelRailItem label="Share this post" glyph="share" onClick={onShare} />
       {score !== undefined && (
-        <ExplainableNumber glyph="graph" label="Post Score" value={score} onOpenDetail={onOpenScore ?? (() => {})} overMedia />
+        <ExplainableNumber glyph="graph" label="Post score" value={score} onOpenDetail={onOpenScore ?? (() => {})} overMedia />
       )}
     </div>
   );

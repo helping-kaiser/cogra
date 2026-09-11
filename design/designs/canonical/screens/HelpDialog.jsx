@@ -1,7 +1,7 @@
 /* THE "?" DIALOG (legacy conversion, lane C) — the pattern board for the one
    help affordance a screen is allowed, opened. Captions stay to one short line
    and the full explanation lives behind a small "?", at most one per screen;
-   this is what is behind it, drawn on the seal whose "Signed actions" is the
+   this is what is behind it, drawn on the seal whose "How signing works" is the
    longest thing the system has to explain.
 
    IT IS A PLAIN DIALOG, and deliberately the dullest surface in the system: a
@@ -18,18 +18,18 @@ export function Screen() {
     <>
       <ComposeSealBody />
 
-      <DialogSurface ariaLabel="Signed actions" width="21rem">
+      <DialogSurface ariaLabel="How signing works" width="21rem">
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-            Signed actions
+            How signing works
           </h2>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Each piece of a post — the post itself, every tag, every citation — is its own signed action, written in your
-            name. They sign together: all of them land, or none does.
+            Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They
+            sign together: all of them land, or none does.
           </p>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
             You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each
-            action still counts.
+            one still counts.
           </p>
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Button>Close</Button>

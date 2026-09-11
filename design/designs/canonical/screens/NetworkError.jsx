@@ -19,13 +19,13 @@
 export function Screen() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions" />
+      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
 
         <ActsCard
           rows={[
-            { label: "Post", value: "Salt maps of the coast road", count: "1 action" },
+            { label: "Post", value: "Salt maps of the coast road", count: "1" },
             {
               label: "Tags",
               value: (
@@ -34,7 +34,7 @@ export function Screen() {
                   <Chip label="#coastroad" tone="readout" />
                 </span>
               ),
-              count: "2 actions",
+              count: "2",
             },
             {
               label: "References",
@@ -44,17 +44,17 @@ export function Screen() {
                   <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
                 </span>
               ),
-              count: "1 action",
+              count: "1",
             },
           ]}
-          total="4 signed actions"
-          note="they land together, or none does"
+          total="4 things, signed together"
+          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value="Public domain — your default" action="Change" />
           <FactRow
-            label="Where you stand on it"
+            label="Your opinion"
             value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
             action="Adjust"
           />

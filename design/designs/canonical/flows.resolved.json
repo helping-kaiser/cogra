@@ -23,6 +23,7 @@
         "ProfileComments",
         "ProfileNotFound",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -35,7 +36,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 27 boards → ComposePick",
+        "start · «nav · New post» on 28 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -63,6 +64,7 @@
         "ProfileComments",
         "ProfileNotFound",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -619,6 +621,7 @@
         "ProfileComments",
         "ProfileNotFound",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -631,7 +634,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 27 boards → ComposePick",
+        "start · «nav · New post» on 28 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -659,6 +662,7 @@
         "ProfileComments",
         "ProfileNotFound",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -693,6 +697,7 @@
         "ProfileComments",
         "ProfileNotFound",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -705,7 +710,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 27 boards → ComposePick",
+        "start · «nav · New post» on 28 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -733,6 +738,7 @@
         "ProfileComments",
         "ProfileNotFound",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -767,6 +773,7 @@
         "ProfileComments",
         "ProfileNotFound",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -779,7 +786,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 27 boards → ComposePick",
+        "start · «nav · New post» on 28 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -805,6 +812,7 @@
         "ProfileComments",
         "ProfileNotFound",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -990,10 +998,11 @@
         "ProfileApplicant",
         "ProfileComments",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts"
       ],
       "steps": [
-        "start · «the figures row» on 5 boards → ProfileStances",
+        "start · «the figures row» on 6 boards → ProfileStances",
         "end · arrival at ProfileStances"
       ],
       "boards": [
@@ -1002,6 +1011,7 @@
         "ProfileApplicant",
         "ProfileComments",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts"
       ]
     },
@@ -1041,16 +1051,18 @@
       "startsOn": [
         "ProfileComments",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts"
       ],
       "steps": [
-        "start · «the stance anchor» on 3 boards → VouchBackPad",
+        "start · «the stance anchor» on 4 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
         "VouchBackPad",
         "ProfileComments",
         "ProfileOther",
+        "ProfileOtherHeld",
         "ProfilePosts"
       ]
     },
@@ -1989,6 +2001,17 @@
         "visit-an-author"
       ]
     },
+    "ProfileOtherHeld": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "see-who-stands-with-someone",
+        "take-a-stance-on-a-person"
+      ],
+      "endpoint": []
+    },
     "ProfilePosts": {
       "flows": [
         "follow-a-citation",
@@ -2406,6 +2429,7 @@
     "ProfileApplicant/1: the chat surface (not designed)",
     "ProfileComments/5: the chat surface (not designed)",
     "ProfileOther/5: the chat surface (not designed)",
+    "ProfileOtherHeld/5: the chat surface (not designed)",
     "ProfilePosts/13: Post Score drill-down (backlog item 13)",
     "ProfilePosts/5: the chat surface (not designed)",
     "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",

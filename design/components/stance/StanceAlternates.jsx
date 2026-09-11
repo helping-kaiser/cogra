@@ -2,7 +2,7 @@ import React from "react";
 import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { StanceSlider } from "./StanceSlider.jsx";
-import { STANCE_ALTERNATES_HELP } from "./StanceCoachMark.jsx";
+import { STANCE_ALTERNATES_HELP, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { clampDimension, DIRECTED_LABEL, DIRECTED_POLES, INTEREST_LABEL, INTEREST_POLES } from "./StanceReadout.jsx";
 
 /* The alternate inputs (design.md §8.6) — paired sliders and direct entry. Same
@@ -73,7 +73,7 @@ export function StanceAlternates({
   children,
   landing,
   inline = false,
-  helpLabel = "How stances work",
+  helpLabel = "How opinions work",
 }) {
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
@@ -99,7 +99,7 @@ export function StanceAlternates({
     if (measured) setSlotHeight(measured);
   }, [explaining, showing]);
   return (
-    <DialogSurface ariaLabel="Choose your stance" inline={inline} onScrimPress={onCancel} width="24rem">
+    <DialogSurface ariaLabel="Choose your opinion" inline={inline} onScrimPress={onCancel} width="24rem">
       <div style={{ position: "relative" }}>
         <button
           type="button"
@@ -148,7 +148,7 @@ export function StanceAlternates({
             fontWeight: "var(--text-title-large--font-weight)",
           }}
         >
-          Choose your stance
+          Choose your opinion
         </h2>
       </div>
       {/* The help replaces the readouts and the inputs alike. */}
@@ -162,8 +162,8 @@ export function StanceAlternates({
           }}
         >
           {STANCE_ALTERNATES_HELP.map((line) => (
-            <p key={line} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
-              {line}
+            <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
+              <HelpLine line={line} />
             </p>
           ))}
           <button
@@ -223,7 +223,7 @@ export function StanceAlternates({
       )}
       <div style={{ marginTop: "var(--space-6)", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
         <button type="button" onClick={onSever} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}>
-          Sever
+          Walk it back
         </button>
         <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>
           Cancel

@@ -32,7 +32,9 @@
    unchanged, and at +0.10 / +0.10 the nearest row is 🙂 (0.15 / 0.15). It is
    spelled here for `ComposePad`'s reason: `nearestAnchor` is not among the
    names the bundle exposes to screens, and a board must never name a face the
-   system has no row for.
+   system has no row for. The numbers carry `cg-exact` exactly as the master's
+   do, so a hand-drawn readout follows the reading mode instead of diverging
+   from it (readme §13).
 
    THE ANCHOR'S WORD DOES NOT COME WITH IT. The face is a lossy readout and
    survives the change of family; the word beside it names a feeling about a
@@ -58,18 +60,6 @@
 /* The four poles, named for the record family that fills the slots. */
 const CITATION_AXES = { left: "Barely", right: "Entirely", bottom: "Against", top: "For" };
 
-const SR_ONLY = {
-  position: "absolute",
-  width: "1px",
-  height: "1px",
-  padding: 0,
-  margin: "-1px",
-  overflow: "hidden",
-  clip: "rect(0 0 0 0)",
-  whiteSpace: "nowrap",
-  border: 0,
-};
-
 export function Screen() {
   return (
     <>
@@ -92,7 +82,7 @@ export function Screen() {
             </span>
             <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
               <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
-              <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
+              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
                 +0.10 / +0.10
               </span>
             </span>

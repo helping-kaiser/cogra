@@ -1,5 +1,5 @@
 /* EDIT A POST · THE ACTIONS (legacy conversion, lane C): the footer's "This
-   creates 3 signed actions" opened. An M3 modal bottom sheet, the count in its
+   signing 3 things" opened. An M3 modal bottom sheet, the count in its
    title and the acts themselves in `ActsCard` — the same pattern
    `CommentEditActs` draws at comment scale, from the same two components.
 
@@ -15,13 +15,13 @@ export function Screen() {
       <EditComposeBody />
 
       <BottomSheet open ariaLabel="What the edit signs">
-        <SheetTitle>3 signed actions</SheetTitle>
+        <SheetTitle>3 things, signed together</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px 16px" }}>
           <ActsCard
             rows={[
-              { label: "Edit", value: "Salt maps of the coast road", count: "1 action" },
-              { label: "Tags added", value: "#saltmaps", count: "1 action" },
-              { label: "Tags withdrawn", value: "#coastroad", count: "1 action" },
+              { label: "Edit", value: "Salt maps of the coast road", count: "1" },
+              { label: "Tags added", value: "#saltmaps", count: "1" },
+              { label: "Tags withdrawn", value: "#coastroad", count: "1" },
             ]}
             note="They land together, or none does."
           />

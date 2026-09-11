@@ -1163,13 +1163,14 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 
 [data-flow] { position: relative; }
 [data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
+.screen:not([data-geek="on"]) .cg-exact { display: none !important; }
   </style>
 </helmet>
-<div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
+<div class="screen" data-theme="{{theme}}" data-geek="{{geek}}" style="width: 390px; height: 844px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
 <header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:48px;padding:0 var(--space-3)"><div style="display:flex;align-items:center;gap:var(--space-2)"><a data-flow="1" href="#" aria-label="Back a step" class="cg-state cg-focus" style="height:48px;width:48px;display:grid;place-items:center;border-radius:var(--radius-full);color:var(--text-secondary);text-decoration:none;flex:none"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></a><h1 style="margin:0;font-size:var(--text-title-large);line-height:var(--text-title-large--line-height);font-weight:var(--text-title-large--font-weight);white-space:nowrap">The video&#x27;s face</h1></div><span style="display:flex;align-items:center;gap:var(--space-2)"><button data-flow="2" type="button" aria-label="Leave — your draft is kept" class="cg-state cg-focus" style="height:48px;width:48px;display:grid;place-items:center;border:0;background:none;border-radius:var(--radius-full);color:var(--text-secondary);cursor:pointer;flex:none;padding:0"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></button><span style="display:flex;align-items:center;gap:8px"><span style="font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);color:var(--text-secondary);white-space:nowrap">Video only</span></span></span></header><div style="flex:1;display:flex;flex-direction:column;gap:16px;padding:16px 24px;overflow:hidden"><div style="position:relative;aspect-ratio:1 / 1;width:100%;max-height:var(--media-max-height);min-height:0;overflow:hidden;border-radius:var(--radius-medium);background:var(--surface-container-high)"><video src="post-clip.mp4" poster="post-photo.jpg" muted="" autoplay="" loop="" playsinline="" preload="metadata" aria-label="The clip being given a face." style="display:block;width:100%;height:100%;object-fit:cover"></video><div style="position:absolute;inset:0;z-index:2"><div aria-hidden="true" style="position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0));pointer-events:none"></div><div style="position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;gap:var(--space-6)"><button data-flow="4" type="button" aria-label="Back ten seconds" class="cg-state cg-focus" style="display:grid;place-items:center;width:44px;height:44px;flex:none;border:none;background:transparent;border-radius:var(--radius-full);color:#fff;padding:0;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6))"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"></path></svg></button><button data-flow="3" type="button" aria-label="Pause" class="cg-state cg-focus" style="display:grid;place-items:center;width:64px;height:64px;flex:none;border:none;background:rgba(0,0,0,0.35);border-radius:var(--radius-full);color:#fff;padding:0;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6))"><svg viewBox="0 0 24 24" width="34" height="34" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg></button><button data-flow="4" type="button" aria-label="Forward ten seconds" class="cg-state cg-focus" style="display:grid;place-items:center;width:44px;height:44px;flex:none;border:none;background:transparent;border-radius:var(--radius-full);color:#fff;padding:0;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6))"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"></path></svg></button></div><div style="position:absolute;left:12px;right:12px;bottom:16px;display:flex;align-items:center;gap:var(--space-2)"><span style="font-family:var(--font-sans);font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-variant-numeric:tabular-nums;color:#fff;flex:none;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6))">0:12</span><div data-flow="5" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="29" aria-valuetext="0:12 of 0:42" class="cg-focus" style="position:relative;flex:1;min-width:0;height:16px;display:flex;align-items:center;cursor:pointer;touch-action:none"><span style="position:absolute;left:0;right:0;height:3px;border-radius:var(--radius-full);background:rgba(255,255,255,0.32)"></span><span style="position:absolute;left:0;width:28.999999999999996%;height:3px;border-radius:var(--radius-full);background:var(--primary)"></span><span style="position:absolute;left:28.999999999999996%;width:12px;height:12px;margin-left:-6px;border-radius:var(--radius-full);background:var(--primary)"></span></div><span style="font-family:var(--font-sans);font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-variant-numeric:tabular-nums;color:#fff;flex:none;opacity:0.85;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6))">0:42</span><button data-flow="6" type="button" aria-label="Turn sound on" class="cg-state cg-focus" style="display:grid;place-items:center;width:28px;height:28px;flex:none;border:none;background:transparent;border-radius:var(--radius-full);color:#fff;padding:0;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6))"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"></path></svg></button></div></div></div><div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);font-weight:var(--text-label-large--font-weight);letter-spacing:var(--text-label-large--letter-spacing)">Cover</span><div style="display:flex;gap:8px"><div data-flow="7" class="cg-cover-frame" style="width:56px;height:56px;border-radius:var(--radius-small);overflow:hidden;flex:none;outline:2px solid var(--primary);outline-offset:1px"><img src="post-photo.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block"/></div><div data-flow="7" class="cg-cover-frame" style="width:56px;height:56px;border-radius:var(--radius-small);overflow:hidden;flex:none;opacity:0.65"><img src="post-photo.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.25) translateX(-4%)"/></div><div data-flow="7" class="cg-cover-frame" style="width:56px;height:56px;border-radius:var(--radius-small);overflow:hidden;flex:none;opacity:0.65"><img src="post-photo.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.5)"/></div><div data-flow="7" class="cg-cover-frame" style="width:56px;height:56px;border-radius:var(--radius-small);overflow:hidden;flex:none;opacity:0.65"><img src="post-photo.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.8) translateY(6%)"/></div><div data-flow="8" class="cg-cover-own" style="width:56px;height:56px;border-radius:var(--radius-small);border:1px dashed var(--border-field);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);box-sizing:border-box;flex:none"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"></path></svg></div></div><p style="margin:0;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);letter-spacing:var(--text-label-small--letter-spacing);color:var(--text-secondary)">A frame, or a picture of your own.</p></div><div style="flex:1"></div><button data-flow="9" type="button" class="cg-state cg-focus cg-hit" style="background:var(--primary);color:var(--on-primary);border:1px solid transparent;padding:10px 24px;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Next</button></div>
 </div>
 </x-dc>
-<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"},"geek":{"editor":"enum","options":["off","on"],"default":"off"}}'>
 class Component extends DCLogic {
   componentDidMount() {
     this.media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -1182,28 +1183,41 @@ class Component extends DCLogic {
       } else if (d && d.cograThemeQuery && this.state && this.state.remote && event.source) {
         try { event.source.postMessage({ cograTheme: this.state.remote }, "*"); } catch (e) {}
       }
+      if (d && (d.cograGeek === "off" || d.cograGeek === "on")) {
+        if (!this.state || this.state.remoteGeek !== d.cograGeek) this.setState({ remoteGeek: d.cograGeek });
+      } else if (d && d.cograGeekQuery && this.state && this.state.remoteGeek && event.source) {
+        try { event.source.postMessage({ cograGeek: this.state.remoteGeek }, "*"); } catch (e) {}
+      }
     };
     window.addEventListener("message", this.onMsg);
-    try {
-      const askWalk = (w, depth) => {
-        if (depth > 5) return;
-        let n = 0;
-        try { n = w.length; } catch (e) { n = 0; }
-        for (let i = 0; i < n; i++) {
-          let c = null;
-          try { c = w[i]; } catch (e) { c = null; }
-          if (c) {
-            try { c.postMessage({ cograThemeQuery: true }, "*"); } catch (e) {}
-            askWalk(c, depth + 1);
+    this.tell = (payload) => {
+      try {
+        const walk = (w, depth) => {
+          if (depth > 5) return;
+          let n = 0;
+          try { n = w.length; } catch (e) { n = 0; }
+          for (let i = 0; i < n; i++) {
+            let c = null;
+            try { c = w[i]; } catch (e) { c = null; }
+            if (c) {
+              try { c.postMessage(payload, "*"); } catch (e) {}
+              walk(c, depth + 1);
+            }
           }
-        }
-      };
-      askWalk(window.top, 0);
-    } catch (e) {}
+        };
+        walk(window.top, 0);
+      } catch (e) {}
+    };
+    this.tell({ cograThemeQuery: true });
+    this.tell({ cograGeekQuery: true });
   }
   componentDidUpdate(prevProps) {
     if (prevProps.theme !== this.props.theme && this.state && this.state.remote) {
       this.setState({ remote: null });
+    }
+    if (prevProps.geek !== this.props.geek) {
+      if (this.state && this.state.remoteGeek) this.setState({ remoteGeek: null });
+      if (this.tell) this.tell({ cograGeek: this.props.geek === "on" ? "on" : "off" });
     }
   }
   componentWillUnmount() {
@@ -1216,7 +1230,9 @@ class Component extends DCLogic {
     const dark = mode === "auto"
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
       : mode === "dark";
-    return { theme: dark ? "dark" : "light" };
+    const remoteGeek = this.state ? this.state.remoteGeek : null;
+    const geek = remoteGeek ?? this.props.geek ?? "off";
+    return { theme: dark ? "dark" : "light", geek };
   }
 }
 </script>
