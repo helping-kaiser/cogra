@@ -16,6 +16,8 @@
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
+        "History",
+        "HistoryEmpty",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
@@ -29,6 +31,8 @@
         "ProfileUnreachable",
         "Reel",
         "Removed",
+        "Saved",
+        "SavedEmpty",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -36,7 +40,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 28 boards → ComposePick",
+        "start · «nav · New post» on 32 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -57,6 +61,8 @@
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
+        "History",
+        "HistoryEmpty",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
@@ -70,6 +76,8 @@
         "ProfileUnreachable",
         "Reel",
         "Removed",
+        "Saved",
+        "SavedEmpty",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -614,6 +622,8 @@
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
+        "History",
+        "HistoryEmpty",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
@@ -627,6 +637,8 @@
         "ProfileUnreachable",
         "Reel",
         "Removed",
+        "Saved",
+        "SavedEmpty",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -634,7 +646,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 28 boards → ComposePick",
+        "start · «nav · New post» on 32 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -655,6 +667,8 @@
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
+        "History",
+        "HistoryEmpty",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
@@ -668,6 +682,8 @@
         "ProfileUnreachable",
         "Reel",
         "Removed",
+        "Saved",
+        "SavedEmpty",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -690,6 +706,8 @@
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
+        "History",
+        "HistoryEmpty",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
@@ -703,6 +721,8 @@
         "ProfileUnreachable",
         "Reel",
         "Removed",
+        "Saved",
+        "SavedEmpty",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -710,7 +730,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 28 boards → ComposePick",
+        "start · «nav · New post» on 32 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -731,6 +751,8 @@
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
+        "History",
+        "HistoryEmpty",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
@@ -744,6 +766,8 @@
         "ProfileUnreachable",
         "Reel",
         "Removed",
+        "Saved",
+        "SavedEmpty",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -766,6 +790,8 @@
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
+        "History",
+        "HistoryEmpty",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
@@ -779,6 +805,8 @@
         "ProfileUnreachable",
         "Reel",
         "Removed",
+        "Saved",
+        "SavedEmpty",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -786,7 +814,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 28 boards → ComposePick",
+        "start · «nav · New post» on 32 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -805,6 +833,8 @@
         "FeedGallery",
         "FeedNarrowed",
         "FeedNothing",
+        "History",
+        "HistoryEmpty",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
@@ -818,6 +848,8 @@
         "ProfileUnreachable",
         "Reel",
         "Removed",
+        "Saved",
+        "SavedEmpty",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -1819,6 +1851,24 @@
       ],
       "endpoint": []
     },
+    "History": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
+      ],
+      "endpoint": []
+    },
+    "HistoryEmpty": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
+      ],
+      "endpoint": []
+    },
     "InviteEntry": {
       "flows": [
         "guest-turns-applicant",
@@ -2218,6 +2268,24 @@
       "endpoint": [
         "restore-your-key"
       ]
+    },
+    "Saved": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
+      ],
+      "endpoint": []
+    },
+    "SavedEmpty": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
+      ],
+      "endpoint": []
     },
     "SettingsBackupKeyAbsent": {
       "flows": [

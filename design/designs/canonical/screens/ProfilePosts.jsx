@@ -10,7 +10,7 @@ const ADA_SECOND_POST = {
   score: "4.70",
   comments: 1,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 export function Screen() {
