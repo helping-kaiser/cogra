@@ -12,6 +12,24 @@ import com.cogra.domain.stance.StanceInputMode
 import kotlinx.coroutines.flow.Flow
 
 /**
+ * What the token store knows about the device's session once it has
+ * finished loading. The three answers are deliberately distinct: a read
+ * that could not be COMPLETED is not a reader who is signed out, and
+ * collapsing the two is how a possibly-authenticated request goes out
+ * anonymous while a member is signed in.
+ */
+sealed interface SessionRead {
+    /** A usable pair. */
+    data class Present(val tokens: AuthTokens) : SessionRead
+
+    /** Loaded, and there is no session: guest browsing, onboarding, login. */
+    data object None : SessionRead
+
+    /** A record is stored and the store could not open or decode it. */
+    data object Unreadable : SessionRead
+}
+
+/**
  * Session tokens — one slot, one active session at a time. The refresh
  * token rotates on every use — [save] overwrites the stored pair each
  * refresh. The pair carries the account it authenticates
@@ -22,6 +40,19 @@ interface TokenStore {
     val tokens: Flow<AuthTokens?>
 
     suspend fun current(): AuthTokens?
+
+    /**
+     * The session as this store can answer it — suspending until the
+     * store has finished loading, so "not loaded yet" is never reported
+     * as "signed out", and separating a fault from an absence, which
+     * [current] cannot. Every possibly-authenticated request resolves
+     * through this.
+     *
+     * The default is the answer of a store that cannot fail to read —
+     * the in-memory fakes; the encrypted store overrides it.
+     */
+    suspend fun read(): SessionRead =
+        current()?.let(SessionRead::Present) ?: SessionRead.None
 
     suspend fun save(tokens: AuthTokens)
 
