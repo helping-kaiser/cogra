@@ -4279,6 +4279,130 @@ such.
   scrolls, the way `FeedNarrowed` (1337) and `FeedGallery` (1102)
   already do.
 
+### The score-and-opinions round — 2026-09-11
+
+Round 4 of the MVP design queue, and the last of the slice-3 remainders:
+the Post score's drill-down (backlog item 13, all four screens) and the
+opinions-on-content list (item 55). jakob ruled every input before the
+round opened — level one shows the strongest handful with a quiet row
+that expands, the all-paths-moved case is a quiet line in the graph
+register, and item 55's entry is a bottom sheet from a row on the detail
+plus the comment's ⋮.
+
+**The drill-down answers one question, and it is the reader's**: why is
+this post in *my* feed. `feed-ranking.md` §6.1 makes that answerable —
+the score is the sum of up to `k` internally disjoint paths from the
+viewer's own outgoing opinions to the post — so the four levels are that
+structure walked down: the **paths**, one **path**, one **step**, and the
+signed **records** behind that step. Each level carries a small cover of
+the post it came from, so a reader four taps deep never loses what they
+are reading about.
+
+- **The register is paths and people, never a chart.** Rows, faces and a
+  trace of avatars; no bar, no meter, no percentage and no trend arrow
+  anywhere on the four boards. A bar would turn a reader's own
+  connections into a statistic about the post, which is the
+  growth-dashboard framing `ExplainableNumber` already refuses.
+- **The arithmetic closes on the drawn surface.** Four paths at 6.80,
+  4.20, 2.60 and 1.10, and the more-paths row carrying the remaining
+  0.50: 15.20, the score the reader tapped. That is why the quiet row
+  states what the folded paths add rather than only how many there are —
+  a row saying "2 more paths" alone would leave a hole in the one place
+  the product promises there is none. At the floor the same discipline
+  holds: the step's two records, `+0.45 / +0.10` and `+0.10 / +0.10`,
+  add to the `+0.55 / +0.20` it carries.
+- **No step carries a magnitude, and that is a truth claim.** A path's
+  contribution is not the product of the opinions drawn along it — the
+  per-step weight is damped and tier-bound (§3.1) and only the terminal
+  step decays (§5.3) — so a figure on every row would invite an
+  arithmetic that does not hold. Each step says what carries it and when;
+  the path says what it adds.
+- **The freshness fact is the last step's.** `PathSummary`'s second row
+  is the newest opinion on the path, because silence on a relationship is
+  not a partial revocation: an old connection with a fresh opinion at its
+  end competes at full weight. That is the sentence the row exists to
+  make checkable.
+- **Level three is the fold, seen.** A step shows one face and the row
+  above it said two opinions; this screen is where those two are named,
+  counted and dated, and the note says the rest in the reader's own word
+  — the same adding up the pad already shows them as their current
+  opinion.
+- **Level four is the honesty case's floor.** The signed records, their
+  identity keys in mono, and the line that is the whole point: *These
+  records are public. Anyone can run the same sum and land on the same
+  number.* A drill-down that stopped at a summary would have asked to be
+  believed.
+- **The numbers here are not pairs, so they paint in both readings.** A
+  score and a path's contribution have no glyph that could carry their
+  magnitude, exactly as the Post score itself has none (§13, *Geek
+  mode*). The pairs on these boards — a step's opinion, a record's own —
+  are `StanceValue`s and follow the mode like every other pair.
+- **The five parts are glue, not masters.** `ScoreOrigin`, `PathTrace`,
+  `PathSummary`, `StepSummary` and `ActionLog` live in `_shared.jsx`: a
+  master is a shape reused across PRODUCTS, and `_shared.jsx` is the
+  shape reused across BOARDS of one surface (`CommentsSheet`'s rule).
+  These five are drawn on five boards of one flow and nowhere else, which
+  is the backlog item's own instruction. Nothing in them formats a value
+  the system already formats — every pair goes through `StanceValue`,
+  where the `cg-exact` span and its screen-reader twin are assigned — and
+  every row a master already draws IS that master: the cover is
+  `QuotedRow`, the step rows are `ContentRow`, the facts are `FactRow`,
+  and the way down is `FactRow`'s own action slot. `PathTrace` is the one
+  genuinely new drawing, and it exists because no master's leading slot
+  holds a chain.
+- **The aged-out state is content, not a tap.** The score opens the same
+  board in the state the dust floor leaves a post whose every path's last
+  opinion has decayed past it — `TagPageEmpty`'s arrangement exactly. It
+  is not `EmptyState`: that master says "nothing here yet" and offers the
+  action that fills it, and here something *was* here and nothing is
+  owed.
+
+**The opinions list is the profile's own page, mirrored onto content**
+and ungated — everyone can check every post and comment, the way
+everyone can read a profile's counts. Its rows are `StanceRow`, the
+master the profile's opinions page uses, and its order mirrors
+`ProfileStances`: strongest first, by the for-or-against value. That
+order was read off that board rather than found written down anywhere;
+mirroring it is the point, since a second surface sorting the same rows
+differently would teach a reader the order means nothing.
+
+- **Two doors, because a comment has no detail surface.** A post's is a
+  quiet count line under its tags, in `TopicsLine`'s register — the
+  affordance row is closed (opinion · score · comments · share) and
+  nothing joins it. A comment's is its ⋮, where the row reads *Opinions
+  on this* and sits after the acts and before the license.
+- **The line drops away at zero and the menu row does not**, which is
+  where the empty state lives. `SettingsHidden`'s rule: a tap that can
+  only open an empty list is a tap spent on nothing, so a post nobody has
+  answered says so by having nothing to open — while a menu row that came
+  and went with a number would make the menu a different menu every time.
+- **No face on the card's line.** A face on a post card already means
+  "your opinion"; a second one meaning somebody else's would make both
+  unreadable. The count is the whole line, and the count IS the list's
+  length — `RefsSheet`'s discipline, and this sheet is the only place
+  that number can be checked.
+
+**The gate**: 171 → **178 boards**, 1287 → **1327 edges**, gaps 65 →
+**43**, flows 61/58/3 → **63/60/3**. The 22 closed gaps are every `Post
+Score drill-down (backlog item 13)` outcome in the graph — one per board
+that draws a score — retargeted onto `FeedEntry`; it is the largest
+single gap closure the canvas has had, and no item-13 gap remains. The
+40 new edges are the five drill-down boards' 34 (their back arrows, the
+three drill-ins, the more-paths unfold and five nav slots each), the two
+sheets' three, and the three doors — `PostDetail`/15,
+`PostDetailVideo`/20 and `CommentMenu`/5, appended rather than inserted
+so no existing via renumbers. Two flows are newly declared and both
+resolve: `trace-a-score-to-its-records` (a control start on the score,
+`Reel` excepted — there the score is the detail door by ruling — with a
+witness that reads the four levels in order to *arrival at RankRecords*)
+and `who-holds-an-opinion-on-this`. **No flow changed status**: none of
+the three blocked ones was blocked on item 13. The witness otherwise
+moved only in origin lists — the four publish flows' `nav · New post`
+start growing 39 → 44 boards as the five drill-down boards join the bar.
+One label was aligned in passing: `FeedHidden`'s score edge read `Post
+score` where the other 21 read `Post Score`, which would have dropped it
+silently from the control start.
+
 ## 14. Index
 
 **Root**
