@@ -1,0 +1,127 @@
+/* THE STAGED TAG'S PAIR EDITOR (jakob's rulings 2026-09-10). What a staged tag
+   chip opens in a composer — the sheet that closes item 18's compose-side pair
+   setting for tags.
+
+   IT IS THE PAD. A tag's two user parameters are aboutness and certainty, and
+   the author sets both at once, so the instrument is one field rather than two
+   tracks: a pair is a place, and a place is picked in one gesture. The pad's
+   two slots take the contract's own: relevance in `pDirected`, the horizontal,
+   and confidence in `pInterest`, the vertical (`TagInput`, api-spec.md).
+
+   BOTH AXES RUN 0 TO 1, AND THE FIELD IS DRAWN THAT WAY. Confidence is
+   census-bounded to `c ∈ [0, 1]` (hashtag.md §4), and the composer authors only
+   the positive half of relevance — an author saying what their own post is
+   about says how much, never how much it is not. So the square is the reachable
+   square, corner to corner, and `StancePad` takes the bound as `ranges` the way
+   it already takes the poles as `axes`: the control owns the geometry, the
+   census owns how far each slot reaches.
+
+   THE POLES ARE NAMED ON THE FIELD, in the reader's words. Aboutness runs
+   `Barely` to `Entirely` — the two words a citation's relevance uses for the
+   same slot — and certainty runs `Guessing` up to `Certain`. §3 keeps `p_d`,
+   `p_i` and the repo's internal vocabulary off the screen, and the four pole
+   words are the only place this sheet could smuggle them in.
+
+   THE FACE IS THE TAG'S OWN, AND THE TABLE IS DISJOINT FROM THE STANCE FACES.
+   Wherever a pair is being set its readout carries the nearest anchor beside
+   the exact numbers, but a tag has no mood to wear: it is a claim about what a
+   post is about, so its thirteen anchors are objects rather than faces — a key,
+   a magnet, a die. Not one glyph is shared with `STANCE_ANCHORS`, which is what
+   keeps a single lossy readout from meaning two things. It is spelled here for
+   `RefPair`'s reason: the lookup is not among the names the bundle exposes to
+   screens, and a board must never name a face the system has no row for. At the
+   contract's default the nearest row is 🔍 (0.15 / 0.90).
+
+   THE ANCHOR'S WORD DOES COME WITH IT, unlike a citation's. A citation borrows
+   the stance table, whose words name a feeling about a stance the record is
+   not; these words were written for this table and say what the pair claims, so
+   the spoken reading carries the word and the two axes both.
+
+   THE DEFAULTS ARE THE CONTRACT'S, +0.1 AND 1. `TagInput` gives relevance the
+   low-defaults value and confidence 1, and says why: an author believes their
+   own declaration, and confidence is not a stance whose headroom needs
+   preserving. A stance starts gentle because it will be added to; a declaration
+   about your own post does not need room to grow. The sheet opens where the
+   reader arrives rather than at a value chosen to flatter the control.
+
+   THE READOUT STANDS ABOVE THE FIELD, because a thumb on the pad covers exactly
+   the spot where feedback would otherwise appear.
+
+   IT IS TITLED BY THE TAG IT EDITS, for the settings sheets' reason — a sheet
+   that covers the surface it came from has to say what it is — and the tag is
+   what the reader tapped, so the two cannot drift.
+
+   `Done` CLOSES IT, and the scrim is the way out that keeps nothing. Nothing is
+   signed here: the pair rides the tag's own record and the tag rides the
+   composer's batch, so this sheet stages and the seal signs.
+
+   THE × ON THE CHIP IS STILL THE UN-TAG. Withdrawal has a value of its own on
+   this field — relevance 0 — and `TagPadWithdraw` draws what the pad says when
+   a pick lands there, but the willing gesture stays the one the reader already
+   has.
+
+   THE SURFACE BENEATH IS DRAWN WHOLE (`EditComposeBody`), the overlay rule from
+   2026-09-08: a sheet covers the surface the reader came from, and that surface
+   is the real one, not a shortened stand-in of it. */
+
+/* The four poles, named for the record family that fills the slots. */
+const TAG_AXES = { left: "Barely", right: "Entirely", bottom: "Guessing", top: "Certain" };
+
+const SR_ONLY = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
+export function Screen() {
+  return (
+    <>
+      <EditComposeBody />
+
+      <BottomSheet open ariaLabel="#saltmaps">
+        <SheetTitle>#saltmaps</SheetTitle>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 4px" }}>
+          {/* The pick's readout, in the pad's own block shape: the name of the
+              quantity, then the face and the exact pair on the line below it.
+              `aria-hidden` beside a screen-reader reading that carries the
+              anchor's word and names both axes — the numbers alone say nothing
+              about which slot they fill. */}
+          <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <span
+              aria-hidden="true"
+              style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
+            >
+              Your pick
+            </span>
+            <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
+              <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🔍</span>
+              <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
+                +0.10 / 1.00
+              </span>
+            </span>
+            <span style={SR_ONLY}>
+              Your pick: had to look, but it&apos;s in there. How much it is about this +0.10, How sure you are 1.00
+            </span>
+          </div>
+
+          <div role="group" aria-label="The pair this tag signs" style={{ alignSelf: "center", width: 240 }}>
+            <StancePad value={{ pDirected: 0.1, pInterest: 1 }} axes={TAG_AXES} ranges={TAG_RANGES} />
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
+            <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+              Signed with the post, as its own action.
+            </span>
+            <Button>Done</Button>
+          </div>
+        </div>
+      </BottomSheet>
+    </>
+  );
+}

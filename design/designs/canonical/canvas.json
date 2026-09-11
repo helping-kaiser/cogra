@@ -668,6 +668,15 @@
       "page": "compose"
     },
     {
+      "file": "TagPadWithdraw.dc.html",
+      "title": "A staged tag's pair · at the withdrawal",
+      "x": 2400,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "Explore.dc.html",
       "title": "Explore · at rest",
       "x": 0,
@@ -1077,7 +1086,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2501,
+      "h": 2527,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1379,7 +1388,7 @@
       "page": "compose"
     },
     {
-      "file": "TagPair.dc.html",
+      "file": "TagPad.dc.html",
       "title": "A staged tag's pair",
       "x": 2400,
       "y": 3180,
