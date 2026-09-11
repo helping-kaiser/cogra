@@ -7,6 +7,7 @@ import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.auth.BearerInterceptor
+import com.cogra.network.auth.SessionGate
 import com.cogra.network.auth.SessionRefresher
 import com.cogra.network.repo.MediaRepositoryImpl
 import com.cogra.network.repo.PartUploader
@@ -71,7 +72,7 @@ class MediaUploadTest {
         server.start()
         client = ApolloClient.Builder()
             .serverUrl(server.url("/graphql").toString())
-            .addHttpInterceptor(BearerInterceptor(tokens))
+            .addHttpInterceptor(BearerInterceptor(sessionGate()))
             .build()
     }
 
@@ -79,6 +80,11 @@ class MediaUploadTest {
     fun tearDown() {
         client.close()
         server.shutdown()
+    }
+
+    /** The suite's tokens are opaque, so the gate only ever passes them on. */
+    private fun sessionGate() = SessionGate(tokens) {
+        SessionRefresher(tokens, EndLocalSession(FakeIdentityStore(), tokens)) { client }
     }
 
     private fun part(request: RecordedRequest): MockResponse {
