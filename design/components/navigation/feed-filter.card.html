@@ -29,7 +29,7 @@ function Demo(){
     <div className="inner">
       <div className="top"><span className="wordmark">cogra</span><FeedFilter value={filter} onChange={setFilter}/></div>
       {nothing ? (
-        <EmptyState title="Your feed admits nothing right now — every kind is switched off." actionLabel="Show posts again" onAction={()=>setFilter({...filter,kinds:["posts"]})}/>
+        <EmptyState title="Your feed is showing nothing — everything is switched off." actionLabel="Show posts again" onAction={()=>setFilter({...filter,kinds:["posts"]})}/>
       ) : (
         <>
         <PostCard author={{handle:"ada",displayName:"Ada Okonkwo"}} timestamp="2h" score="15.20" comments={3}
@@ -43,7 +43,7 @@ function Demo(){
   <div className="col">
     <span className="lbl">The trigger reads back the view — tap it to open the sheet</span>
     <p><b>What replaced what.</b> A three-segment row (Posts / Comments / Stances) was wrong twice: a stance is not a thing that gets ranked, and the real set is ten kinds that <b>combine</b>. A segmented row cannot express a combination.</p>
-    <p><b>Kinds combine, order does not.</b> Posts, comments, chats, messages, profiles, proposals, topics, items, campaigns, offers are chips — one list, shared with search; ranked-versus-newest is a two-option segmented control. Forms of post combine too — photos and video with no text posts is a legitimate feed.</p>
+    <p><b>Kinds combine, order does not.</b> Posts, comments, chats, messages, profiles, proposals, tags, items, campaigns, offers are chips — one list, shared with search; ranked-versus-newest is a two-option segmented control. Forms of post combine too — photos and video with no text posts is a legitimate feed.</p>
     <p><b>Order carries the seen toggle.</b> "Show what you've already seen", default off — what you've seen stays out until you ask for it back. Seen means the card's impression entered the viewport, kept on this device, shared transiently with the viewer's chosen ranker. The trigger speaks deviations only: "showing seen" appears when it is on, nothing when it is not.</p>
     <p><b>It applies live and it is never permanently on screen.</b> One chip in the top region, everything else a tap away in the sheet. No Apply button: that asks the reader to commit to a guess about their own feed.</p>
     <p><b>Switching everything off is allowed.</b> The feed says what is off and offers to switch it back — the chip does not refuse the tap.</p>
@@ -56,7 +56,7 @@ function Demo(){
       <TopicChip topic="coastroads"/>
       <TopicChip topic="#routing"/>
     </div>
-    <span className="lbl">The readout tone — not a small control: topics shown inside something being read</span>
+    <span className="lbl">The readout tone — not a small control: tags shown inside something being read</span>
     <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center"}}>
       <Chip label="#tidemarket" tone="readout"/>
       <Chip label="#coastroad" tone="readout"/>
