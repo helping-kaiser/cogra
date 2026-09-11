@@ -1185,7 +1185,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2109,
+      "h": 2442,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1620,6 +1620,69 @@
       "w": 390,
       "h": 844,
       "page": "profile"
+    },
+    {
+      "file": "FeedEntry.dc.html",
+      "title": "Post score · why it reached you",
+      "x": 0,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedEntryMoved.dc.html",
+      "title": "Post score · the paths have moved on",
+      "x": 480,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "RankPath.dc.html",
+      "title": "Post score · one path",
+      "x": 960,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "RankHop.dc.html",
+      "title": "Post score · one step",
+      "x": 1440,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "RankRecords.dc.html",
+      "title": "Post score · what landed",
+      "x": 1920,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "PostOpinions.dc.html",
+      "title": "Post · opinions on it",
+      "x": 2880,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "CommentOpinionsEmpty.dc.html",
+      "title": "Comment · opinions on it, none yet",
+      "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
     }
   ],
   "annotations": [
@@ -1814,6 +1877,14 @@
       "w": 290,
       "text": "COMMENTS · The reply composer\n\nThe comment box in the thread is an ENTRY, not a composer: tapping it opens the same full-focus flow, pre-targeted, parent pinned. Two steps — words, then the seal. A comment is TEXT PLUS OPTIONAL MEDIA (comment.md; text required) — deliberately asymmetric to the post's words-XOR-media body, because an answer is words first; '+ Add pictures' rides the writing step, and COMMENTS HAVE NO PICK STAGE (ruled 2026-08-31): it opens the platform's own picker — Android's photo-picker sheet, the browser's file dialog on web — never the post wizard's grid; the web board adds the drop-anywhere path. Comment pictures never crop, so they upload at pick; descriptions ride the signed act (detached from the upload — no race, nothing gates) and are entered from the describe counter. The reply's stance on its parent (+0.10 / +0.10 default) is DISCLOSED on the seal and adjustable on the full two-axis pad: 'Replying also signs where you stand on the post it answers.' Topics and citations can join a comment from its seal, each row raising the count. COMMENT VIDEO (jakob 2026-09-02): a comment's media grammar is the post's at comment caps — four pictures OR one video with its cover, never both kinds. Entry is unchanged (the platform picker; a video pick lands in the video state), there is still no pick stage and no crop, and the cover row is ComposeCover's inlined at comment scale, because the comment composer is one screen and has no stage to give it. Caps as facts: a picture 10 MiB (10 per post, 4 per comment), a video 100 MiB in a post and 50 MiB in a comment, a cover 10 MiB. A FILE THE SURFACE REFUSES — over its cap, or a format nothing here reads — is refused WHERE IT WAS OFFERED, a line in the composer's media row: never a dialog, never a snackbar. The line names the cap it broke, and that is the only place a cap is named. Its one way out is Remove it — never Retry, which cannot make a file smaller or a format readable. Round 2 (jakob, same day): A VIDEO TAKES ONE DESCRIPTION for the whole clip and its cover takes none — the counter reads 'Describe the video · 0 of 1 described' and opens the same describe sheet. THE ADD LABEL FOLLOWS THE STATE: empty reads '+ Add pictures or a video', with pictures '+ Add pictures · n of 4' (the video is out — the grammar is exclusive), with a video no add control at all. WEB TAKES THE VIDEO BOARD 1:1 (file dialog + the drop path; no web board, the avatar blessing's form) and the drop hint grows to 'pictures or a video'. SCREENS WRITE MB while the caps are enforced in MiB — 50 MiB is 52.4 MB, so the readable number under-promises and never refuses a file the product would take. Boards: write (words) · pictures attached · pictures on the web · a video and its cover · files refused · the pad · what you sign.",
       "page": "comments"
+    },
+    {
+      "id": "note-score-drilldown",
+      "x": -340,
+      "y": 3616,
+      "w": 290,
+      "page": "feed",
+      "text": "THE POST SCORE’S DRILL-DOWN (jakob 2026-09-11, backlog item 13). Four levels — the paths, one path, one step, the records behind it — each carrying a small cover of the post it came from. The register is paths and people, never a chart: a bar would turn a reader’s own connections into a statistic about the post. Level one shows the strongest handful and a quiet row that unfolds the rest in place (never a second page), and that row carries what they add, so the drawn figures still sum to the score. The fifth board is the same screen for a post whose paths have all aged out."
     }
   ],
   "launch": {

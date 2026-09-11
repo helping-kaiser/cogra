@@ -72,6 +72,7 @@ const {
   WashCard,
   StancePad,
   StanceReadout,
+  StanceValue,
   StanceSlider,
   TAG_RANGES,
   TaggedRow,
@@ -185,6 +186,7 @@ const ADA_POST = {
   references: 1,
   score: "15.20",
   comments: 3,
+  opinions: 9,
   license: { attribution: 1, provenance: 0 },
   menuItems: CARD_MENU,
 };
@@ -195,6 +197,7 @@ const TOBIAS_POST = {
   timestamp: "1h",
   score: "3.10",
   comments: 1,
+  opinions: 2,
   license: { attribution: 0, provenance: 0 },
   menuItems: CARD_MENU,
 };
@@ -212,6 +215,7 @@ const SOL_POST = {
   topics: ["fieldnotes", "saltmaps"],
   score: "9.10",
   comments: 2,
+  opinions: 4,
   license: { attribution: 0.5, provenance: 0.5 },
   menuItems: CARD_MENU,
 };
@@ -233,6 +237,7 @@ const MIRA_GALLERY_POST = {
   topics: ["tidemarket", "coastroad"],
   score: "6.40",
   comments: 2,
+  opinions: 8,
   license: { attribution: 0, provenance: 0 },
   menuItems: CARD_MENU,
 };
@@ -368,7 +373,22 @@ const OWN_POST_MENU = [
   LICENSE_ROW,
 ];
 const READER_POST_MENU = [...CARD_MENU, { label: "Hide @ada", onSelect: () => {} }, LICENSE_ROW];
-const COMMENT_MENU = [...CARD_MENU, LICENSE_ROW];
+/* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
+   both doors, and this is the comment's). A post's door is a count row on its
+   detail surface; a comment has no detail surface of its own — it lives inside a
+   sheet — so its door is the ⋮ that every other act on it already uses.
+
+   IT STANDS WHATEVER THE COUNT IS, which is the difference between a menu row
+   and a count line: the line drops away at zero because a tap that can only open
+   an empty list is a tap spent on nothing, while a menu row that came and went
+   with a number would make the menu a different menu every time. That is also
+   why the empty sheet is reachable only from here.
+
+   IT SITS AFTER THE ACTS AND BEFORE THE LICENSE. A menu leads with the acts it
+   was opened for and closes on the license (`CARD_MENU`'s order); reading who
+   holds an opinion is not an act, so it falls between them. */
+const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {} };
+const COMMENT_MENU = [...CARD_MENU, OPINIONS_ROW, LICENSE_ROW];
 /* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
    from the bottom edge over the surface the reader asked from, and go back to
    it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
@@ -1263,6 +1283,7 @@ const MIRA_CLIP_POST = {
   topics: ["stillwater", "coastroad"],
   score: "7.40",
   comments: 2,
+  opinions: 6,
   license: { attribution: 0, provenance: 0 },
   menuItems: CARD_MENU,
 };
@@ -1584,4 +1605,322 @@ function SettingsBody() {
     </>
   );
 }
+
+/* ── THE POST SCORE'S DRILL-DOWN (readme §13, the score-and-opinions round) ──
+   Backlog item 13, whole: FeedEntry → RankPath → RankHop → the records behind
+   one step, each carrying a small cover of the post it came from.
+
+   ITS FIVE PARTS LIVE HERE, NOT IN `components/` — the item's own instruction,
+   and the bundle-exposure law agrees with it. A master is a shape reused across
+   PRODUCTS; `_shared.jsx` is the shape reused across BOARDS of one surface
+   (`CommentsSheet`'s rule). `ScoreOrigin`, `PathTrace`, `PathSummary`,
+   `StepSummary` and `ActionLog` are drawn on five boards of one flow and
+   nowhere else in the product, so they are glue. Nothing here formats a
+   value the system already formats: every pair goes through `StanceValue`,
+   which is where the geek mode's `cg-exact` span and its screen-reader twin
+   are assigned, and every row that a master already draws — a step, a
+   step's facts — IS that master.
+
+   THE REGISTER IS GRAPH, PATHS, CONNECTIONS — never statistics, never a chart
+   (jakob). So: faces and rows, a trace of avatars for a path's shape, ages on
+   the ladder, and the reader's word throughout is OPINION. There is no bar, no
+   meter, no percentage and no trend anywhere in these five parts, and the one
+   place a magnitude appears it appears as the product's own number format.
+
+   THE NUMBERS HERE ARE NOT PAIRS, SO THEY PAINT IN BOTH READING MODES. Geek
+   mode governs the two-parameter readings a face stands in for; a score and a
+   path's contribution have no glyph that could carry their magnitude, exactly
+   as the Post score itself has none (readme §13, geek mode). The pairs on these
+   boards — a step's opinion, a record's own — are `StanceValue`s and follow the
+   mode like every other pair in the product.
+
+   NO PER-STEP MAGNITUDE IS DRAWN, and that is a truth claim rather than a gap.
+   A path's contribution is not the product of the opinions a reader can see
+   along it (feed-ranking.md §3.1, §5.1: the per-step weight is damped and
+   tier-bound, and the last step alone decays) — so a surface that put a number
+   on every step would invite an arithmetic that does not hold. The path states
+   what it adds; the steps state what carries them and when. */
+
+/* The cast this flow adds to the canvas's four — the people at the far end of
+   the weaker paths, and the holders on the opinions sheet. They live beside the
+   drill-down rather than up with ADA/TOBIAS/SOL/MIRA because these five boards
+   and the opinions sheet are everywhere they appear. */
+const KEL = { handle: "kel", displayName: "Kel Moreau" };
+const WREN = { handle: "wren", displayName: "Wren Aliyev" };
+const NADIA = { handle: "nadia", displayName: "Nadia Rask" };
+const JUNO = { handle: "juno", displayName: "Juno Baptiste" };
+
+/* THE POST THE DRILL-DOWN IS ABOUT, and the viewer it reached. `ADA_POST` is
+   the canvas's canonical post and @sol is its canonical reader (`ProfileOwnBody`
+   is Sol's own profile), so the whole flow is one honest question: why did
+   @ada's post reach @sol at 15.20? */
+const SCORE_VIEWER = SOL;
+
+/* THE PATH SET, and it ADDS UP (feed-ranking.md §6.1: the score is the sum of
+   the signed, decayed terms of up to `k` internally disjoint paths, strongest
+   first, and `k` is governed at order 4–8). Six paths here, disjoint by person:
+   6.80 + 4.20 + 2.60 + 1.10 + 0.50 = 15.20, which is `ADA_POST`'s own score.
+   The two weakest ride the "more paths" row rather than being spelled out, so
+   the arithmetic still closes on the drawn surface. */
+const ADA_FACED = { ...ADA, src: "ava1.jpg" };
+const MIRA_FACED = { ...MIRA, src: "inviter.jpg" };
+const SCORE_PATHS = [
+  { through: "@ada", people: [SCORE_VIEWER, ADA_FACED], value: "+6.80" },
+  { through: "@tobias", people: [SCORE_VIEWER, TOBIAS], value: "+4.20" },
+  { through: "@mira", people: [SCORE_VIEWER, MIRA_FACED], value: "+2.60" },
+  { through: "@kel and @wren", people: [SCORE_VIEWER, KEL, WREN], value: "+1.10" },
+];
+const SCORE_MORE_PATHS = { count: 2, value: "+0.50" };
+
+/* ScoreOrigin — THE POST THE SCORE BELONGS TO, carried on all four levels so a
+   reader four taps deep never loses what they are reading about.
+
+   IT IS `QuotedRow`, which is the master for exactly this: the thing a surface
+   is about, held above it, contained and inert. Inert is right here for the
+   master's own reason — the reader came from that post and the back arrow is
+   the way to it, so a second door would be a second answer to one question.
+
+   THE SCORE UNDER IT IS PLAIN TEXT, NEVER `ExplainableNumber`. That master is
+   the affordance and never the explanation; here the reader is standing inside
+   the explanation, so a control that opened it again would open nothing. It
+   keeps the master's own register — the label quiet, the value on-surface at
+   500 — because it is the same figure, read rather than pressed. */
+function ScoreOrigin({ score = "15.20" }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <QuotedRow
+        title="The long way home — @ada"
+        snippet="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
+        name={ADA.displayName}
+        src="ava1.jpg"
+      />
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "baseline",
+          gap: 6,
+          fontSize: "var(--text-body-small)",
+          lineHeight: "var(--text-body-small--line-height)",
+          color: "var(--text-secondary)",
+        }}
+      >
+        Post score
+        <span style={{ color: "var(--on-surface)", fontWeight: 500 }}>{score}</span>
+      </span>
+    </div>
+  );
+}
+
+/* PathTrace — A PATH'S SHAPE, drawn as the thing it is: the people it runs
+   through, in order, from you to the post. This is the round's one new drawing
+   and the reason it exists: a path is a connection between people, and every
+   other way of showing one — a bar, a share of a total, a percentage — turns it
+   into a statistic about the post instead of a fact about the reader's own
+   network.
+
+   IT ENDS ON THE POST, as a tile rather than a circle: people are circles
+   everywhere in this system (`NodeMark`), and a post is a thing with a face.
+
+   THE AVATARS ARE `aria-hidden` BY THE MASTER, so the trace carries its own
+   screen-reader line — the same discipline every stance readout takes. */
+function PathTrace({ people, size = 24 }) {
+  const spoken = `You, then ${people.slice(1).map((p) => `@${p.handle}`).join(", then ")}, then the post`;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center" }}>
+      {people.map((person, index) => (
+        <React.Fragment key={person.handle}>
+          {index > 0 && (
+            <span aria-hidden="true" style={{ width: 14, height: 1, background: "var(--border-hairline)", flex: "none" }} />
+          )}
+          <MonogramAvatar name={person.displayName} size={size} src={person.src} />
+        </React.Fragment>
+      ))}
+      <span aria-hidden="true" style={{ width: 14, height: 1, background: "var(--border-hairline)", flex: "none" }} />
+      <img
+        src="post-photo.jpg"
+        alt=""
+        style={{ width: size, height: size, flex: "none", borderRadius: "var(--radius-extra-small)", objectFit: "cover", display: "block" }}
+      />
+      <span style={SR_ONLY}>{spoken}</span>
+    </span>
+  );
+}
+
+/* One path on the list — `ContentRow`'s geometry, with the trace where the disc
+   would be. It is not `ContentRow` itself: that master's leading slot holds ONE
+   40px disc, and a path is a chain. Everything else about the row is the
+   master's — the card ground, the medium corner, the 12px padding, the chevron
+   that says this opens another surface. */
+function PathRow({ people, through, value, onOpen }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="cg-state cg-focus"
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-3)",
+        width: "100%",
+        border: 0,
+        borderRadius: "var(--radius-medium)",
+        background: "var(--surface-card)",
+        padding: "var(--space-3)",
+        cursor: "pointer",
+        fontFamily: "var(--font-sans)",
+        color: "var(--on-surface)",
+        textAlign: "left",
+        boxSizing: "border-box",
+      }}
+    >
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
+        <PathTrace people={people} />
+        <span
+          style={{
+            fontSize: "var(--text-label-small)",
+            lineHeight: "var(--text-label-small--line-height)",
+            color: "var(--text-secondary)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Through {through}
+        </span>
+      </span>
+      <span style={{ flex: "none", fontSize: "var(--text-body-small)", fontWeight: 500 }}>{value}</span>
+      <span style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true">
+        <Icon name="chevron_right" size={18} />
+      </span>
+    </button>
+  );
+}
+
+/* PathSummary — what one path does, in the two facts that are true of it:
+   what it adds to the score, and how fresh the last opinion on it is. Both are
+   `FactRow`s, the product's one fact block.
+
+   TWO ROWS AND NOT THREE. The sign of a path — whether it carries the post
+   toward the reader or away (feed-ranking.md §5.2) — is already the sign on the
+   figure, and a row repeating it in words would be the same fact twice.
+
+   THE AGE IS THE LAST STEP'S, because only the last step decays (§5.3): silence
+   on a relationship is not a partial revocation, so an old path with a fresh
+   opinion at its end competes at full weight. That is the sentence this row
+   exists to make checkable. */
+function PathSummary({ adds, newest }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <FactRow label="What it adds" value={adds} />
+      <FactRow label="Newest opinion on it" value={newest} last />
+    </div>
+  );
+}
+
+/* StepSummary — one step's facts. The opinion that carries it goes through
+   `StanceValue`, so the face leads and the pair rides the mode; the records
+   behind it are a count with the way to them on the row's own action, which is
+   `FactRow`'s slot for exactly that. */
+function StepSummary({ pair, behind, newest, onOpenRecords }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <FactRow label="What carries it" value={<StanceValue pDirected={pair.pDirected} pInterest={pair.pInterest} />} />
+      <FactRow label="Behind it" value={behind} action="Show them" onAction={onOpenRecords} />
+      <FactRow label="Newest of them" value={newest} last />
+    </div>
+  );
+}
+
+/* ActionLog — the signed records behind one step, which is the floor of this
+   whole surface: below it there is nothing but what the network published.
+
+   THE ROWS ARE INERT (`ContentRow`'s rule: a record with no destination is the
+   same row with nothing to press). What a reader would want from one of these
+   is its identity, and the row states it rather than hiding it behind a tap.
+
+   THE KEY IS DRAWN IN MONO AND NAMED EXACTLY, the copy rule for a format that
+   IS the content: a record nobody can look up is not a record. It is the only
+   place on these four boards where the system's own vocabulary reaches the
+   screen, and it earns it.
+
+   THE PAIR GOES THROUGH `StanceValue`, whole — face and `cg-exact` digits in one
+   master, which is also where the accessible name that speaks the whole fact in
+   both reading modes is assigned. It rides the row's second line rather than a
+   leading disc: at the card's 334px of content a face, a pair, a name, a key and
+   an age do not share one line, and the name is what a reader scans. */
+function ActionLog({ records }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {records.map((record) => (
+        <div
+          key={record.key}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            borderRadius: "var(--radius-medium)",
+            background: "var(--surface-card)",
+            padding: "var(--space-3)",
+            boxSizing: "border-box",
+          }}
+        >
+          <span style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {record.what}
+            </span>
+            <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
+              {record.when}
+            </span>
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+            <span style={{ flex: "none" }}>
+              <StanceValue pDirected={record.pair.pDirected} pInterest={record.pair.pInterest} />
+            </span>
+            <span style={{ flex: 1, minWidth: 0, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {record.key}
+            </span>
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* The drill-down's column — the read surface's own gutter, matching the
+   chronicle's and the post detail's. */
+function ScoreColumn({ children }) {
+  return (
+    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, padding: "8px 16px 0" }}>
+      {children}
+    </div>
+  );
+}
+
+/* ── WHO HOLDS AN OPINION ON THIS (backlog item 55) ────────────────────────
+   The profile's "opinions on you", mirrored onto content and UNGATED (jakob):
+   everyone can check every post and every comment, the way everyone can read a
+   profile's counts.
+
+   THE SHEET IS `RefsSheet`'s PATTERN, which is what jakob's ruling names: a row
+   on the detail opens a bottom sheet holding the full set, and the count on the
+   row IS the list's length — the sheet is the only place that number can be
+   checked, so a count that quietly dropped a holder would tell a reader the
+   sheet holds less than it does.
+
+   THE ROWS ARE `StanceRow`, the master the profile's own opinions page uses.
+   The order MIRRORS `ProfileStances`: strongest first, by the opinion's own
+   for-or-against value. That order is the precedent's, read off the board
+   rather than found written down — it is what a reader of the profile page has
+   already learned to expect, and a second surface sorting the same rows a
+   different way would teach them it means nothing. */
+const POST_OPINION_HOLDERS = [
+  { name: MIRA.displayName, handle: MIRA.handle, src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
+  { name: ADA.displayName, handle: ADA.handle, src: "ava1.jpg", pDirected: 0.7, pInterest: 0.4 },
+  { name: TOBIAS.displayName, handle: TOBIAS.handle, pDirected: 0.6, pInterest: 0.65 },
+  { name: SOL.displayName, handle: SOL.handle, pDirected: 0.55, pInterest: 0.2 },
+  { name: KEL.displayName, handle: KEL.handle, pDirected: 0.25, pInterest: 0.95 },
+  { name: NADIA.displayName, handle: NADIA.handle, pDirected: 0.15, pInterest: 0.15 },
+  { name: WREN.displayName, handle: WREN.handle, pDirected: -0.2, pInterest: 0.1 },
+  { name: JUNO.displayName, handle: JUNO.handle, pDirected: -0.55, pInterest: 0.25 },
+];
 

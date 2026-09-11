@@ -443,6 +443,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
     { n: 3, find: ">License terms</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
+    { n: 5, find: ">Opinions on this</button>", tag: "button" },
   ],
   ProfileMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },
@@ -853,6 +854,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="Share this post"', tag: "button" },
     ...nav(10),
+    { n: 15, find: 'aria-label="Opinions on this post"', tag: "button" },
   ],
   PostDetailVideo: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -872,6 +874,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 18, find: 'aria-label="Back ten seconds"', tag: "button" },
     { n: 18, find: 'aria-label="Forward ten seconds"', tag: "button" },
     { n: 19, find: 'aria-label="Full screen"', tag: "button" },
+    { n: 20, find: 'aria-label="Opinions on this post"', tag: "button" },
   ],
   ViewerPicture: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },
@@ -1468,6 +1471,48 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: ">@juno landed through your invite<", tag: "button" },
     { n: 8, find: ">@mira approved your application<", tag: "button" },
     ...nav(9),
+  ],
+  /* ── The Post score’s drill-down (backlog item 13) ─────────────────────
+     The path rows and the step rows carry one number each: they are one control
+     the reader meets four times and twice, exactly as a repeated per-post control
+     is, so one edge covers them (readme §13, canvas pages and flows). Each is
+     found by the words it ends on rather than by an accessible name, because the
+     row IS its content — a label naming it "a path" would say less than the
+     trace already does. */
+  FeedEntry: [
+    { n: 1, find: `aria-label="Back to the post"`, tag: "a" },
+    { n: 2, find: ">Through ", tag: "button", all: true },
+    { n: 3, find: `aria-label="Show 2 more paths"`, tag: "button" },
+    ...nav(4),
+  ],
+  FeedEntryMoved: [
+    { n: 1, find: `aria-label="Back to the post"`, tag: "a" },
+    ...nav(2),
+  ],
+  RankPath: [
+    { n: 1, find: `aria-label="Back to the paths"`, tag: "a" },
+    { n: 2, find: "border-radius:var(--radius-medium);background:var(--surface-card);padding:var(--space-3)", tag: "button", all: true },
+    ...nav(3),
+  ],
+  RankHop: [
+    { n: 1, find: `aria-label="Back to the path"`, tag: "a" },
+    { n: 2, find: ">Show them</button>", tag: "button" },
+    ...nav(3),
+  ],
+  RankRecords: [
+    { n: 1, find: `aria-label="Back to the step"`, tag: "a" },
+    ...nav(2),
+  ],
+  /* The opinions sheet (backlog item 55). Its rows are `StanceRow`s and carry no
+     accessible name of their own — the person IS the row — so the marker finds
+     the master’s own geometry, the way the media markers find a crop’s
+     aspect ratio. */
+  PostOpinions: [
+    { n: 1, find: "min-height:56px;border:0;background:none;padding:6px 16px", tag: "button", all: true },
+    { n: 2, find: `class="cg-scrim-in"`, tag: "div", all: true },
+  ],
+  CommentOpinionsEmpty: [
+    { n: 1, find: `class="cg-scrim-in"`, tag: "div", all: true },
   ],
   NotificationsEmpty: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
   FeedUnread: [
