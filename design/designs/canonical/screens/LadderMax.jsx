@@ -1,6 +1,9 @@
-/* The post ladder — the maximal collapsed card, held under the height cap
-   by the system itself: the media honors --media-max-height, the title and
-   description clamp, tags and citations share one line. */
+/* The post ladder — the maximal collapsed card, held in shape by the system
+   itself: the title clamps to one line and the description to two, tags and
+   citations share one line, and the media stands at its own 4:5. That last one
+   is what runs the card past the fold, which is the ruling: a vertical post
+   scrolls (jakob 2026-09-11). What this board records is that everything ELSE
+   is bounded — the card grows by its picture's shape and by nothing else. */
 export function Screen() {
   return (
     <>
