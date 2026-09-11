@@ -345,15 +345,32 @@ export function landingLine(landing) {
   return `Resulting stance ${readout.emoji} ${formatStancePair(landing.landing)}`;
 }
 
-/** The confirmation a signed gesture leaves. Names where it LEFT the viewer.
-    A transient surface is read away from the pad, so the words stay here: this
-    line IS the accessible text, with no visual redundancy to carry them. */
+/* The confirmation a signed gesture leaves. Names where it LEFT the viewer.
+
+   IT IS BUILT FROM SPANS, NOT A SENTENCE (jakob's ruling, the geek round —
+   backlog item 53.1). A snackbar that spelled the pair in prose was the one
+   Group A reading the mode could not reach: a sentence carries no marker. So
+   the face is the reading, the digits ride a `cg-exact` span behind it, and a
+   screen-reader twin says the whole thing — including the anchor's word, which
+   the eye gets from the face — in both modes.
+
+   The severed line has no pair to show and stays a plain string. */
 export function signedLine(standing, records, severed, targetLabel) {
   const acts = records === 1 ? "Signed" : `Signed ${records} actions`;
-  const where = severed
-    ? `You've severed ${targetLabel}.`
-    : `Current stance: ${bundleReadout(standing).label}, ${formatStanceWords(standing)}`;
-  return `${acts}, still settling. ${where}`;
+  if (severed) return `${acts}, still settling. You've severed ${targetLabel}.`;
+  const readout = bundleReadout(standing);
+  return (
+    <>
+      <span aria-hidden="true">
+        {`${acts}, still settling. Current stance `}
+        {readout.emoji}
+        <span className="cg-exact">{` (${formatStancePair(standing)})`}</span>
+      </span>
+      <span style={SR_ONLY}>
+        {`${acts}, still settling. Current stance: ${readout.label}, ${formatStanceWords(standing)}`}
+      </span>
+    </>
+  );
 }
 
 /** Face and pair, and the words for a reader who cannot see the face (§8.3). */
