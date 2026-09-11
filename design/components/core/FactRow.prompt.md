@@ -2,7 +2,7 @@ Use `FactRow` for every hairline line that reads *label · value* — the seal's
 
 ```jsx
 <FactRow label="License" value="Public domain — your default" action="Change" onAction={openLicense} />
-<FactRow label="Where you stand on it" value={<StanceReadout pair={pair} />} action="Adjust" onAction={openPad} />
+<FactRow label="Your opinion" value={<StanceReadout pair={pair} />} action="Adjust" onAction={openPad} />
 <FactRow label="Sensitive" value="Not marked" action="Mark" onAction={openSensitive} last />
 ```
 

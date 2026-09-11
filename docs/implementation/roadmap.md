@@ -615,9 +615,11 @@ from the media path and carrying their own doc write-back:
 
 ### Slice 3.1 — Notifications
 
-- Design first: notifications have no doc anywhere, so the slice
-  opens by writing one — what notifies, delivery channels,
-  storage, read state — and then builds against it.
+- Built against [notifications.md](notifications.md): the seven
+  addressed acts, the in-app list as the one channel, per-viewer
+  rows and their two-level read state, and the contract sketch the
+  slice moves into [api-spec.md](api-spec.md) and
+  [data-model.md](data-model.md).
 - Sequenced behind the ranker: the feed is the product's core
   surfacing channel and ships first; notifications are the
   second.

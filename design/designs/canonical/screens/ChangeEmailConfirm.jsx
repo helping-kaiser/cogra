@@ -23,6 +23,14 @@
    still outstanding — `LicenseTerms`' quiet inset, which exists for the same
    reason: two readings a reader has to act on, aligned so neither can be missed.
 
+   THE INSET IS DRAWN HERE, because the two masters it resembles do not fit it.
+   `SectionLabel` carries the screen gutter itself, for a scroll column of
+   full-bleed rows; this caption sits inside a padded inset that already carries
+   its own. `FactRow emphasis="ledger"` is a full-width ruled row whose value
+   right-aligns away from its label; these two are a compact reading pair, the
+   address beside the errand that names it, on one narrow block with nothing to
+   rule off.
+
    THE COMMITMENT ANSWERS ONE SIDE AND SAYS SO. `Confirm the code` is what
    pressing it does; `Confirm email change` is what the reader would have
    believed it did. A control says what will happen, and what happens here is

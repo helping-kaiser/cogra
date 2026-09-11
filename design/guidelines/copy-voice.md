@@ -416,8 +416,20 @@ spelling — one `License terms` everywhere, never the British spelling:
 - `Mention in a new post` — the same row on a person, and the same
   fact; only the far end of the reference differs.
 - `Share this profile` — another's profile.
-- `Share your profile` — your own, the row that closes the band's menu
+- `Share your profile` — your own, the row that closes the profile's ⋮
   under the two private lists.
+- `Save` while a thing is not kept, `Unsave` while it is — one word
+  either way (jakob 2026-09-11). It is the FIRST row of every menu that
+  has it, a post's, a comment's, a person's and your own post's alike,
+  so the thumb learns one position. A control says what the next tap
+  will do (§3), which is why the kept state is a verb and never the
+  word *Saved* sitting there as a status — and nothing outside the menu
+  shows it, so this row is the only place a reader learns whether a
+  thing is kept. `Unsave` is also the accessible name of the Saved
+  list's own icon-only control, where the filled bookmark carries the
+  act and no word is drawn at all: the glyph is a glyph, and the
+  reader's word stays *save* — never *bookmark*, which is a filing word
+  for a thing readers think of as keeping.
 
 ## The license block
 
@@ -522,8 +534,10 @@ Writing, web said Signing, and the setting is about what a submit does,
 not about the key.
 
 **A row's second line is status, not description.** `Last created
-12 August` · `Last used 2 days ago` · `This browser` · `Changed 3 weeks
-ago`. A switch is the exception, because its label alone cannot say what
+12.08.2026` · `Last used 2d` · `This browser` · `Changed 21d`. Every
+age on the page speaks the one ladder above — a settings row is not a
+place the product changes vocabulary. A switch is the exception to
+"status, not description", because its label alone cannot say what
 turning it on does.
 
 **Theme**: `Light` · `Dark` · `Auto`, and under them
@@ -584,7 +598,7 @@ you sign out.`
 
 **A new recovery code** (`SettingsBackup`): the heading, then
 `A new code re-encrypts your key and replaces the old backup — recovery
-always uses the newest one. Your current code was made on 12 August.`,
+always uses the newest one. Your current code was made on 12.08.2026.`,
 the field `Current recovery code`, the commitment `Create a new recovery
 code`, and last: `The new code is shown once and never stored. Have
 somewhere to write it down before you go on — the old code stops working
@@ -860,16 +874,10 @@ Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,
 `HistoryEmpty`, `SettingsHidden`, the three content menus and the
 settings page, and up for review in the same pass.
 
-**The reader's word is save** (jakob's ruling). `Save` on a post, a
-comment and a person alike — never *bookmark*, which is a filing word
-for a thing readers think of as keeping. The surface it fills is
-`Saved`, and the row in your own profile's menu is that same word, so
-the act and the place cannot drift apart.
-
-**The saved row says what the next tap will do.** `Remove from saved`,
-not the word *Saved* sitting there as a status. A control says what
-will happen (§3), and this row is the only place a reader can learn or
-change whether a thing is kept — the card carries no mark of it.
+**The reader's word is save** (jakob's ruling). The surface it fills is
+`Saved`, and the row in your own profile's ⋮ is that same word, so the
+act and the place cannot drift apart. The pair of verbs is blessed and
+lives under *Menu rows*.
 
 **Hiding names its person.** `Hide @ada`, on the post menu and on the
 profile menu, because the handle is what a reader recognises and what
@@ -906,3 +914,341 @@ the group anatomy's own rule. With nobody hidden the row reads `None`.
 and each row carries `Unhide` and the moment of the hiding in the ages
 vocabulary (`Hidden 3d`, `Hidden 12.08.2026`) — the removal mark's own
 precedent: the word, then the ladder or the date.
+
+## Awaiting blessing — the caps-affordance round
+
+Drawn on `ComposeDetailsCaps`, `ComposeWordsCaps` and `TagPickerRefused`,
+and up for review in the same pass. Two families: the count a capped
+field shows near its cap, and the refusal it shows past it.
+
+**The count is two words, and the second one is the reader's side.**
+`6 left` while there is room, `7 over` past it — never `94/100`, which
+is the field reporting on itself in the statistics register §3 refuses,
+and never a bare number, which would leave the reader to guess whether
+it counts what is written or what is left. *Left* is the word because
+the count only ever appears when what is left is the thing worth
+knowing.
+
+**Characters is the reader's word for the unit,** as it already is in
+`A password is at least 12 characters.` and `3–30 characters: a–z, 0–9,
+_`. The caps are counted in Unicode scalar values; nothing on screen
+says so, and nothing should.
+
+**Every over-cap refusal is one construction,** the blessed password
+line's own, turned to the other bound — a field's length rule said once,
+whichever end of it the writer met:
+
+- `A title is at most 100 characters.` — the composer's title.
+- `A description is at most 500 characters.` — a post's description.
+  **Drawn** on `ComposeDetailsCaps`.
+- `A post's words are at most 5,000 characters.` — the words body.
+  **Drawn** on `ComposeWordsCaps`. The plural is the field's: the body
+  is words, not a word count.
+- `A comment is at most 2,000 characters.` — the comment body, in the
+  composer and the edit alike.
+- `A picture's description is at most 1,000 characters.` — the describe
+  sheet, and `A video's description…` on its other shape. The
+  possessive is what keeps it apart from the post's description.
+- `A reason is at most 140 characters.` — the sensitive sheet's `Why?`.
+- `A display name is at most 50 characters.` · `A bio is at most 500
+  characters.` · `A website address is at most 2,048 characters.` —
+  the profile edit.
+
+Thousands are grouped the way every other figure in the product groups
+them (`MoneyFigure`: `12,500.00`), so the body's cap reads `5,000`.
+
+**The tag name's refusal restates the rule it broke**, in the rule's own
+words — the line under the picker's field says `Letters, digits, dot,
+dash and underscore. Capitals become lowercase.` at rest, and in the
+refused state:
+
+- `A tag name is letters, digits, dot, dash and underscore.` — **drawn**
+  on `TagPickerRefused`.
+- `A tag name is at most 128 characters.` — the gate's other half, in
+  the same construction as every cap above. Copy-only.
+
+*Name*, not *tag*, because the string is what is wrong and the tag is
+fine — there is no tag yet.
+
+## Awaiting blessing — the notifications round
+
+Drawn on `Notifications`, `NotificationsEmpty` and `FeedUnread`, and up
+for review in the same pass.
+
+**A row is a sentence, and the handle is its subject.** `@ada commented
+on your post`, not *Ada Okonkwo · commented* — the disc already carries
+the face, so the words are free to be the whole fact, and a handle is
+what a reader recognises and can go looking for. Seven kinds, seven
+sentences, all present tense of the act that happened:
+
+- `@ada commented on your post` — a comment on a post of yours.
+- `@tobias replied to your comment` — a reply one level down. *Replied*,
+  not *commented*, because the two land in different places and a reader
+  who is told which will know where they are going.
+- `@sol gave an opinion on you` — the profile opinion, in the
+  chronicle's own verb (`Gave an opinion`). The reader's word is
+  **opinion**; *followed* would name a gesture this product does not
+  have, and *vouched* is the inviter's word, not this one's.
+- `@mira mentioned you` — a citation whose target is you.
+- `@ada cited your post` — a citation whose target is something you
+  wrote. *Cited*, the product's verb for a Reference, and the second
+  line says where: `in Sunday at the tide market`.
+- `@juno landed through your invite` — *landed* is already the word the
+  approval flow speaks (`Your registration is landing`), so the invite's
+  other end keeps it.
+- `@mira approved your application` — the inviter's act, named as
+  theirs. Not *You were approved*, which is the passive the register
+  refuses and hides the person who did it.
+
+**The second line is what arrived, or where it is.** The comment's and
+the reply's own words for the two that carry words; `in <title>` for the
+mention and the citation, the saved comment row's `on <title>`
+construction turned to the citing side. The other three have neither and
+carry none — a line invented to even the rhythm would be chrome.
+
+**The unread mark is a dot and says `New`.** On the row's trailing edge
+under the age, and in the accessibility tree as the one word, because
+the mark's whole content is that this has not been opened. Nothing says
+*unread* on screen.
+
+**The bell names itself, and names its dot.** `Notifications` at rest,
+`Notifications — something new` when the dot is lit — the accessible
+name changes with the drawing, because a marker a listener cannot hear
+is not a marker. Never a number in either: the count belongs to no
+sentence a reader needs.
+
+**The empty state names the kinds.** `Nothing here yet. Comments,
+replies, citations, mentions and opinions on you arrive here as they
+happen.` The list has no gesture of its own — it fills from what other
+people do — so naming what arrives is the only way to say the channel is
+empty rather than broken. No action button: nothing the reader can do
+from here fills it.
+
+**The surface is `Notifications`,** in the page header and wherever it
+is named. Not *Activity*, which describes a log, and not *Alerts*, which
+describes an emergency.
+
+## Awaiting blessing — the account-deletion round
+
+Drawn on `Settings`, `DeleteAccount`, `DeleteAccountMail`,
+`FeedDeleting`, `DeleteAccountCanceled` and `ProfileDeleted`. This
+flow's words carry the product's erasure ethic, so the register is held
+tighter here than anywhere: honest, quiet, no drama, and nothing that
+argues with a decision the reader has made.
+
+**THE ONE WORD NOT YET RULED — how a FUTURE moment is said.** The ages
+ladder above is a vocabulary for how long ago something happened; the
+deletion band counts FORWARD, and no ruling covers that (backlog 54.1).
+Three candidates:
+
+1. `Deleted in 6d` — the ladder read forward, one vocabulary for every
+   duration on screen. Cheapest to hold, and the one place the ladder's
+   compression can genuinely mislead: `6d` means *ago* everywhere else
+   in the product, so a reader scanning a band could read the account as
+   already gone.
+2. `Deleted in 6 days` — spelled out. **Recommended, and what is
+   drawn.** The ladder's compression buys room in lists where many ages
+   compete for it; this is one sentence in a band with room to spare, so
+   the compression buys nothing and costs the ambiguity above. Running
+   down: `in 1 day`, then `in 5 hours` on the last day.
+3. `Deleted on 17.09.2026` — the ladder's own past-30-days branch, a
+   fixed date. Exact and needs no arithmetic, but a date does not shrink,
+   and a window whose whole point is that it is closing should read as
+   closing.
+
+**The settings row is two words and a footnote.** `Delete account` on a
+navigating row, and under the group: `Nothing is deleted here. The next
+screen says what goes and what stays, and the deletion is confirmed by a
+link we email you.` The row is quiet by ruling; the footnote is what lets
+it be, because the fact a reader needs before tapping is that the tap
+deletes nothing.
+
+**The request screen says what goes before what stays, and says both.**
+Heading `Delete account`; then `This takes your name off CoGra. What you
+signed stays on the graph, because it is other people's record as much
+as yours — what goes is everything that says it was you.`
+
+- `What goes` — `Your profile — display name, bio, picture and cover.` ·
+  `The link between you and this account. Nothing left here points back
+  to you.` · `Your sessions, and what this account kept for you alone:
+  saved items, hidden accounts, what you have read.`
+- `What stays` — `Everything you signed, and everything others signed
+  about you. Your posts still route and still credit their author; what
+  is removed leaves a mark saying so.` · `Your wallet and its address.
+  They are held by your key, never by CoGra, so nothing here can touch
+  them.`
+
+**The content sweep is the reader's own sentence, in the first person.**
+`Also remove what I posted`, with `The words and pictures go out of your
+posts, comments and messages, each leaving its mark. Leave this off and
+they stay as you wrote them.` under it. *Also* is what makes it an
+addition to a decision already made rather than a second question.
+
+**The commitment is `Send the confirmation link`** — what the press does,
+and `Reset`'s `Send reset link` said for the same mechanism. Not `Delete
+my account`, which would be a lie about a button that sends an email.
+Under it: `Nothing is deleted until you open that link. After that it
+runs in seven days, and you can cancel from any device until it does.`
+
+**No "are you sure".** Nothing in this flow asks twice, scolds, or lists
+what the reader will miss. The friction is the emailed link, which is
+also the check against a session that is not theirs; a typed handle or a
+re-entered password on top would be ceremony, and ceremony here reads as
+the product trying to talk them out of it.
+
+**The mail state is the errand and the address.** `Check your mail` ·
+`We sent a link to sol@solferreira.art. Opening it confirms the deletion
+and starts the seven days.` · `Until you open it nothing is scheduled and
+nothing has changed. Closing this screen changes nothing either — the
+link is the whole of it.` · `Resend the link`. No expiry is claimed: the
+reset link states its fifteen minutes because `auth.md` gives it fifteen
+minutes, and `erasure.md` sets no window on this one.
+
+**The band is one sentence and one word.** `Your account is deleted in 6
+days.` with `Cancel`, and `Your account and everything you posted are
+deleted in 6 days.` where the sweep was opted into. The band names what
+is going, because a reader who chose the sweep is waiting on something
+larger than one who did not.
+
+**The cancel says what happened, and offers no way back.** `Canceled —
+your account stays, and nothing was deleted.` Every other snackbar in the
+product carries an Undo; this one cannot, because its undo would re-arm
+an irreversible countdown from a control that disappears in four seconds.
+
+**The third removal mark.** Beside `Removed by its author` and `Removed
+under the platform's rules`: `Deleted by the person whose account it was`
+— `Their name and profile are gone. What they signed stays on the graph
+and still credits them.` Three marks now, still never interchangeable.
+A deleted account must not read as a moderation verdict, and it must not
+read as `This profile doesn't exist.` — someone was here, and the product
+never pretends otherwise.
+
+## Awaiting blessing — the review round
+
+Drawn on `ProfileDeleted` and on every card and row a deleted actor
+authored, plus the snackbar `FeedHidden` fires. The rest of the round's
+words were ruled on canvas and have moved into the sections above:
+`Unsave` sits under *Menu rows*, the settings ages under *The settings
+page*, and the empty hidden row's `None` where the settings group is
+written out.
+
+**The name in a redacted actor's place.** `Deleted account` — two
+words, in the system's own voice and in `text-secondary`, because it is
+the product saying what happened and not a name anybody chose. It is the
+same string wherever the actor appears: their own page's header, an
+author chip on a post they wrote, a row in a list. The handle beside it
+is dropped rather than replaced; a redacted handle is a uniqueness
+device in the store, and printing anything in its place would invent a
+handle a reader could try to reach.
+
+**The moderation variant, which must never be the same string.**
+`Removed by the network` where an actor's identity was taken by a
+passed proposal rather than given up. The two readings have to stay
+distinguishable for the reason the two removal marks do — collapsing
+them lets a verdict hide behind a person's own decision, or the reverse
+(`erasure.md` §7). Specced here, drawn nowhere yet: no board shows a
+community-redacted actor.
+
+**Hiding's snackbar, now that it has a board.** `@ada is hidden — their
+posts stay out of your feed.` with `Undo`. The second clause is the one
+that matters: what a reader wonders after hiding someone is whether
+they have done something *to* that person, and the answer is that they
+have changed their own feed and nothing else. `Undo` beside it: hiding
+is a comfort a reader may have meant for one post rather than for a
+person, and the way back costs nothing.
+
+## Awaiting blessing — the score-and-opinions round
+
+Every new line on the Post score's four drill-down boards and on the two
+opinions sheets. The register the round was ruled into is paths, people
+and connections — never statistics — so the words are sparse by design:
+each board says what the reader is looking at, and the honesty lands in
+one sentence rather than a paragraph.
+
+**The four titles.** `Why this reached you` · `One path` · `One step` ·
+`What landed`. The first is the question the whole feature answers, put
+from the reader's side and in their own terms; the three below it name
+what the screen holds and nothing more, because the cover carried down
+from level one already says what it is all about. Sentence case, no
+colon, no subtitle.
+
+**The rule under the cover**, on level one: `Every path here starts with
+an opinion you gave.` This is the inbound-inert invariant
+(`feed-ranking.md` §1) in the reader's vocabulary — nothing anyone points
+at you moves anything toward you — and it is the one sentence that makes
+the list below it mean what it means.
+
+**A path's own words.** `Through @ada` · `Through @kel and @wren`, under
+the trace that draws it. The trace says the shape; the words say who. The
+handles rather than the names, because the row has one line for them and
+a chain of display names would ellipsise before the last person in it.
+
+**The quiet expand row**: `2 more paths`, with what they add beside it,
+and `Show 2 more paths` as its accessible name. Never `See all`, never a
+page number — the row unfolds the rest in place.
+
+**A path's two facts**: `What it adds` and `Newest opinion on it`. Both
+are questions a reader would actually ask out loud, which is what a
+`FactRow` label is for.
+
+**A step's three**: `What carries it` · `Behind it` · `Newest of them`,
+and the way down is the word `Show them`. *Carries* is the round's one
+piece of borrowed vocabulary and it is load-bearing: a step does not
+*have* a value, it conveys the post along itself, and no plainer verb
+says that.
+
+**What a step is, in words**: `Your opinion of @ada` · `@ada published
+it`, with `Her own opinion rides the post` under the second. A publish is
+a step like any other, and what makes it one is the opinion the author
+signed with it — which the composer's seal already told them.
+
+**The fold, said once**: `You have given @ada two opinions. They add up
+to one, and that one is what carries — the same adding up the pad shows
+you as your current opinion.` It speaks faces and counts rather than
+arithmetic, the geek round's rule for a sentence about pairs: it has to
+hold for a reader who has never turned the digits on.
+
+**The floor's two lines**: `The two records behind your opinion of @ada.`
+and `These records are public. Anyone can run the same sum and land on
+the same number.` The second is the sentence the whole drill-down exists
+for, and it is a fact rather than a boast — the spec binds every
+implementation to compute the sum exactly rather than sample it, which is
+what makes it true.
+
+**The aged-out line**: `The paths that carried it here have moved on.`
+One line, and no offer of anything to do about it — nothing is owed and
+nothing is broken. It is deliberately not an empty-list line: something
+*was* here.
+
+**The opinions list.** The post's door reads `8 opinions on this post`
+(`1 opinion on this post` in the singular) with `Opinions on this post`
+as its accessible name; the comment's menu row reads `Opinions on this`.
+The sheets are titled `Opinions on this post` and `Opinions on this
+comment`. *Opinion* throughout, never *stance* — the reader's word
+(*Naming*, above) — and the count is bare beside it, the row's own words
+having already said what was counted.
+
+**The empty sheet**: `No opinions yet — yours would be the first.` The
+`Nothing here yet — write the first post.` shape: calm, and naming the
+one thing that would fill it. It never scolds and it carries no `error`
+colour; a comment nobody has answered is not a fault.
+
+## Awaiting blessing — the follow-up bundle
+
+Two strings, drawn on `SavedUndo` and owed by the redacted-actor law.
+
+**Unsaving's snackbar.** `Removed from Saved.` with `Undo`, the second
+snackbar in the product to carry an action. It names the LIST and not
+the row: the thing that went is the one the reader just pressed, and
+the fact they may want reversed is that it is no longer kept. The pair
+is deliberately lopsided against saving's bare `Saved.` — saving costs
+a reader nothing to repeat, and a mis-pressed unsave costs them finding
+the thing again.
+
+**The hide row with no name to say.** `Hide this account`, where the
+author is a deleted account and there is no handle to spell. It stands
+beside `Hide @ada`, never instead of it, and the row never drops: the
+act is about an ACTOR, the actor is still there, and its content still
+ranks into the reader's feed. The system's voice for the same reason
+`Deleted account` is — it is the product saying what the tap does when
+it cannot say whose.

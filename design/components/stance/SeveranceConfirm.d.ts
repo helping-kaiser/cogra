@@ -7,7 +7,7 @@ export interface SeveranceConfirmProps {
   /** Already in the reader's words — "this post", "@ada". */
   targetLabel: string;
   bundle: StanceBundle | null | undefined;
-  /** How many signed actions reaching zero takes — the legible cost. */
+  /** How many things reaching zero takes — the legible cost. */
   records?: number;
   /** The fold reports nothing left to walk back; severing would be a no-op. */
   alreadySevered?: boolean;

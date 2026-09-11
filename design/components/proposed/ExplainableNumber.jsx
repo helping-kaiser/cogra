@@ -38,7 +38,7 @@ const SR_ONLY = {
 /* THE FIGURE IS DRAWN WHATEVER THE READING MODE SAYS (jakob's ruling, the geek
    round's review). Geek mode governs the number PAIRS — the two-parameter
    readings the faces and the tag objects already stand in for — and nothing
-   else. A Post Score has no glyph that carries its magnitude, so hiding the
+   else. A Post score has no glyph that carries its magnitude, so hiding the
    digits would leave the `graph` mark saying only "there is a score", which is
    the black box §7 exists to refuse. */
 export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, overMedia = false }) {

@@ -43,12 +43,13 @@ export function Screen() {
           <QuietNote>It plays the moment it is on screen, so it starts on its own first frame.</QuietNote>
         </div>
 
-        <TextField label="Title" corner="Optional" value="Forty seconds of the lake doing nothing" />
+        <TextField label="Title" corner="Optional" cap={100} value="Forty seconds of the lake doing nothing" />
 
         <TextField
           label="Description"
           corner="Optional"
           rows={2}
+          cap={500}
           value="Stood there long enough that the midges found me. Worth it for the last ten seconds."
         />
 

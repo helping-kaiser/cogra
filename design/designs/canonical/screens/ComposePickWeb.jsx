@@ -32,7 +32,7 @@ export function Screen() {
             <Icon name="add" />
           </span>
           <Button variant="outline">Choose from your files</Button>
-          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             …or drop them here.
           </span>
         </div>

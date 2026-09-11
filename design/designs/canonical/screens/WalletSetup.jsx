@@ -25,7 +25,7 @@ export function Screen() {
             <Button>Create and publish</Button>
           </div>
         </WashCard>
-        <p style={{ margin: 0, padding: "8px 24px 0", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+        <p style={{ margin: 0, padding: "8px 24px 0", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
           Nothing is created until you continue.
         </p>
         <div style={{ flex: 1 }} />

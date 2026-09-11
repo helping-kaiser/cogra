@@ -22,7 +22,7 @@ export interface StanceAlternatesProps {
   inline?: boolean;
   /**
    * The "?" button's accessible name (jakob's ruling A7) — the name of the pad
-   * it belongs to, not a generic one. Defaults to "How stances work", the
+   * it belongs to, not a generic one. Defaults to "How opinions work", the
    * ordinary feed-card control's name; `StanceControl` passes its own
    * `helpLabel` through unchanged.
    */

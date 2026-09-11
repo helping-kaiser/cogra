@@ -16,17 +16,17 @@ function Demo(){return (
     <Card>
       <ActorChip handle="mira_l" displayName="Mira Lindqvist"/>
       <p style={{margin:0}} className="text-body-medium">Finished the shelf. It holds.</p>
-      <ExplainableNumber glyph="graph" label="Post Score" value="15.20" onOpenDetail={()=>{}}/>
+      <ExplainableNumber glyph="graph" label="Post score" value="15.20" onOpenDetail={()=>{}}/>
     </Card>
     <span className="lbl">Negative, plainly, with no colour</span>
-    <ExplainableNumber glyph="graph" label="Post Score" value="−4.10" onOpenDetail={()=>{}}/>
+    <ExplainableNumber glyph="graph" label="Post score" value="−4.10" onOpenDetail={()=>{}}/>
   </div>
   <div className="open">
     <p><b>Every number is explainable</b> — traceable, on demand, to what produced it. A figure with no path behind it is the black box again, just smaller.</p>
     <p><b>This is the affordance only.</b> <code>body-small</code> on <code>onSurfaceVariant</code>, 48px target, glyph plus number. The label lives in the accessibility tree: a word would not fit the one-line affordance row, which is why the glyph is the right answer rather than a compromise.</p>
-    <p><b>A glyph, never an emoji.</b> Emoji belong to the stance readout alone — a second face on the same card would make both unreadable.</p>
+    <p><b>A glyph, never an emoji.</b> Emoji belong to the opinion readout alone — a second face on the same card would make both unreadable.</p>
     <p><b>Negative is ordinary:</b> a minus sign, no colour. <code>error</code> is failure; a low score is not one. Never a badge, a trend arrow, or a sparkline.</p>
-    <p><b>No expand-in-place variant.</b> The only figure the product has is the Post Score, and its explanation is four screens deep, not three rows. Nothing here is designed against a number that does not exist yet — earnings included.</p>
+    <p><b>No expand-in-place variant.</b> The only figure the product has is the Post score, and its explanation is four screens deep, not three rows. Nothing here is designed against a number that does not exist yet — earnings included.</p>
   </div>
 </div>)}
 ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);

@@ -1,5 +1,5 @@
 /**
- * "This creates 2 signed actions ⌄" — the short form of `ActsCard`, for the
+ * "You're signing 2 things ⌄" — the short form of `ActsCard`, for the
  * edit wizards where the acts are the obvious consequence of what was typed.
  * Sits directly above the sign button, with no gap of its own.
  */

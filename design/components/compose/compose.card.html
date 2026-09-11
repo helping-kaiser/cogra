@@ -8,7 +8,7 @@
 <style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:360px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { MediaThumb, PickPrompt, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, WizardFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot } = window.CoGraDesignSystem_9084ba;
+const { MediaThumb, PickPrompt, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, WizardFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot, InlineAction } = window.CoGraDesignSystem_9084ba;
 const P = "../../assets/photos/";
 
 function Demo(){return (
@@ -17,7 +17,7 @@ function Demo(){return (
     <span className="lbl">WizardHeader — the arrow steps ONE stage back; the X leaves the flow. No forward action up here</span>
     <WizardHeader title="New post"/>
     <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing"/>
-    <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions"/>
+    <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works"/>
     <span className="lbl">Caret — the still frame of the composer's cursor; it is what makes drawn words read as being written</span>
     <p style={{margin:0,fontSize:"var(--text-body-large)",lineHeight:"var(--text-body-large--line-height)"}}>The glovebox camera earns its keep — this is the print from 2019.<Caret/></p>
     <span className="lbl">MediaThumb — plain, cover, uploading, failed, removable, uncropped</span>
@@ -50,7 +50,7 @@ function Demo(){return (
     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
       <TopicRemovable topic="fieldnotes"/>
       <TopicRemovable topic="coastroad"/>
-      <Button variant="outline" size="sm">Add a topic</Button>
+      <InlineAction size="sm">+ Add a tag</InlineAction>
     </div>
     <span className="lbl">StagedReference — the composer's twin of ReferenceRow: held, not followed</span>
     <StagedReference kind="post" name="The long way home — @ada" sub="Post" src={P+"01-landscape-4x3.jpg"} value="+0.10 / +0.10" onRemove={()=>{}}/>
@@ -58,7 +58,7 @@ function Demo(){return (
     <RefusedFile src={P+"10-square-1x1.jpg"} message="That picture is too big — a picture can be up to 10 MB."/>
     <RefusedFile message="That file isn't a picture or a video CoGra can read."/>
     <span className="lbl">ActsCard — what one signature commits, where the surface has room</span>
-    <ActsCard rows={[{label:"Post",value:"Sunday at the tide market",count:"1 action"},{label:"Picture",value:"A new profile picture",count:"1 action"}]} total="2 signed actions"/>
+    <ActsCard rows={[{label:"Post",value:"Sunday at the tide market",count:"1"},{label:"Picture",value:"A new profile picture",count:"1"}]} total="2 things, signed together"/>
     <span className="lbl">ActsFooter + SealFooter — the same fact on one line, and the pair every seal ends with</span>
     <ActsFooter count={2}/>
     <SealFooter signLabel="Sign the edit"/>
