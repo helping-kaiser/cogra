@@ -129,33 +129,6 @@ export function ReplyWizard({
   const videoFile = video?.file ?? null;
   const cover = state.cover;
 
-  useEffect(() => {
-    // A VIDEO IS ONE SEQUENCE, NOT TWO RACES: the cover must exist as an asset
-    // before the video can name it, so the pair goes through a single runner.
-    if (video !== undefined) {
-      if (cover === null || video.upload.kind !== "waiting" || started.current.has(video.id)) return;
-      started.current.add(video.id);
-      started.current.add(cover.id);
-      void runVideoUpload(
-        client,
-        guard,
-        video,
-        cover,
-        (upload) => dispatch({ type: "upload", id: video.id, upload }),
-        (upload) => dispatch({ type: "coverUpload", upload }),
-      );
-      return;
-    }
-    for (const asset of state.media) {
-      if (asset.upload.kind !== "waiting" || started.current.has(asset.id)) continue;
-      started.current.add(asset.id);
-      // No ratio: a comment's pictures keep their own shape.
-      void runUpload(client, guard, asset, undefined, (upload) =>
-        dispatch({ type: "upload", id: asset.id, upload }),
-      );
-    }
-  }, [state.media, video, cover, client, guard, dispatch]);
-
   // ---- the clip's length, and the faces it offers ---------------------------
 
   const [probed, setProbed] = useState<{ file: Blob; durationMs: number } | null>(null);
@@ -203,14 +176,46 @@ export function ReplyWizard({
         }
       })
       .catch(() => {
-        // No frames is a state the row draws: "A picture" still works, and the
-        // gate keeps the author from signing without a cover.
+        // No frames is a state the row draws: "A picture" still works, and a
+        // clip that never found a face goes up without one.
         if (!cancelled) setCaptured({ file: videoFile, frames: NO_FRAMES, urls: NO_URLS });
       });
     return () => {
       cancelled = true;
     };
   }, [videoFile, captured, dispatch]);
+
+  // THE UPLOADS WAIT FOR THE CAPTURE TO SETTLE, NOT FOR A COVER TO EXIST, and
+  // the difference is the whole bug. A comment's face is taken off the clip the
+  // moment it lands, so `cover === null` means one of two opposite things — the
+  // frames are still being pulled, or there were none to pull. Read as "not
+  // ready" it is right once and wrong forever after: a clip whose capture found
+  // nothing sat at "waiting" with no message and no retry. `capturing` is the
+  // question actually being asked, and it answers false either way.
+  useEffect(() => {
+    if (video !== undefined) {
+      if (capturing || video.upload.kind !== "waiting" || started.current.has(video.id)) return;
+      started.current.add(video.id);
+      if (cover !== null) started.current.add(cover.id);
+      void runVideoUpload(
+        client,
+        guard,
+        video,
+        cover,
+        (upload) => dispatch({ type: "upload", id: video.id, upload }),
+        (upload) => dispatch({ type: "coverUpload", upload }),
+      );
+      return;
+    }
+    for (const asset of state.media) {
+      if (asset.upload.kind !== "waiting" || started.current.has(asset.id)) continue;
+      started.current.add(asset.id);
+      // No ratio: a comment's pictures keep their own shape.
+      void runUpload(client, guard, asset, undefined, (upload) =>
+        dispatch({ type: "upload", id: asset.id, upload }),
+      );
+    }
+  }, [state.media, video, cover, capturing, client, guard, dispatch]);
 
   const chooseCover = (file: Blob, frame: number) => {
     // A new face is a new upload: the old one may already be on the server, and

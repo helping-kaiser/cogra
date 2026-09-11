@@ -205,8 +205,8 @@ export function ComposeWizard({
         }
       })
       .catch(() => {
-        // No frames is a state the screen draws: "A picture" still works, and
-        // the gate keeps the author from leaving without a cover.
+        // No frames is a state the screen draws: "A picture" still works, and a
+        // clip that never found a face goes up without one.
         if (!cancelled) setCaptured({ file: videoFile, frames: NO_FRAMES, urls: NO_URLS });
       });
     return () => {
@@ -357,12 +357,19 @@ export function ComposeWizard({
     // A VIDEO IS ONE SEQUENCE, NOT TWO RACES. The cover must exist as an asset
     // before the video can name it, so the pair goes through a single runner
     // and neither is started independently.
+    //
+    // A MISSING COVER IS NOT A REASON TO WAIT. The face has been optional since
+    // the cover pick stopped being a wall, so `null` is a settled answer rather
+    // than a not-yet — and three ordinary routes reach it: the author skipped
+    // the screen, the capture found no frames to offer, or they stepped off
+    // before the capture resolved. Waiting on it stranded the clip at
+    // "waiting", with nothing on screen to say so, for as long as they looked.
     if (video !== undefined) {
-      if (cover === null || video.upload.kind !== "waiting" || started.current.has(video.id)) {
+      if (video.upload.kind !== "waiting" || started.current.has(video.id)) {
         return;
       }
       started.current.add(video.id);
-      started.current.add(cover.id);
+      if (cover !== null) started.current.add(cover.id);
       void runVideoUpload(
         client,
         guard,
