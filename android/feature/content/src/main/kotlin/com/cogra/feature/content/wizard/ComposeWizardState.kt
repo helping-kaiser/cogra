@@ -7,6 +7,9 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.compose.DraftShape
+import com.cogra.domain.content.isDescriptionTooLong
+import com.cogra.domain.content.isPostBodyTooLong
+import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.domain.content.isTitleTooLong
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
@@ -367,9 +370,13 @@ data class ComposeWizardState(
      */
     val bodyReady: Boolean
         get() = when (mode) {
-            BodyMode.Words -> body.isNotBlank()
+            BodyMode.Words -> body.isNotBlank() && !bodyTooLong
             BodyMode.Media -> picked.size in 1..MAX_POST_ASSETS
         }
+
+    /** The words body's own cap — a media post's body is never this field. */
+    val bodyTooLong: Boolean
+        get() = mode == BodyMode.Words && isPostBodyTooLong(body)
 
     /**
      * Whether the body is one clip.
@@ -434,6 +441,9 @@ data class ComposeWizardState(
         get() = !submitting &&
             !keyAbsent &&
             !titleTooLong &&
+            !descriptionTooLong &&
+            !bodyTooLong &&
+            !sensitiveReasonTooLong &&
             when (mode) {
                 BodyMode.Words -> body.isNotBlank()
                 BodyMode.Media -> uploadsComplete
@@ -447,6 +457,14 @@ data class ComposeWizardState(
      */
     val titleTooLong: Boolean
         get() = isTitleTooLong(title)
+
+    /** The description's own cap — blocks the seal the same way the title does. */
+    val descriptionTooLong: Boolean
+        get() = isDescriptionTooLong(description)
+
+    /** The sensitive mark's reason, capped the same way every authored field is. */
+    val sensitiveReasonTooLong: Boolean
+        get() = sensitive && isSensitiveReasonTooLong(sensitiveReason)
 
     /** The draft this state would be kept as. */
     fun toDraft(): ComposeDraft = ComposeDraft(

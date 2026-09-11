@@ -56,6 +56,45 @@ export function titleProblem(title: string): string | null {
     : null;
 }
 
+/**
+ * The write side's cap on a description, pinned to `client-constants.json` in
+ * `lib/client-constants.test.ts`.
+ */
+export const DESCRIPTION_MAX_CHARS = 500;
+
+/** The refusal an over-long description earns, or null. Scalar values, as `titleProblem`. */
+export function descriptionProblem(description: string): string | null {
+  return [...description.trim()].length > DESCRIPTION_MAX_CHARS
+    ? `Too long — at most ${DESCRIPTION_MAX_CHARS} characters.`
+    : null;
+}
+
+/**
+ * The write side's cap on a words-mode body, pinned to `client-constants.json`
+ * in `lib/client-constants.test.ts`.
+ */
+export const BODY_MAX_CHARS = 5000;
+
+/** The refusal an over-long body earns, or null. Scalar values, as `titleProblem`. */
+export function bodyProblem(body: string): string | null {
+  return [...body.trim()].length > BODY_MAX_CHARS
+    ? `Too long — at most ${BODY_MAX_CHARS} characters.`
+    : null;
+}
+
+/**
+ * The write side's cap on a sensitive-mark reason, pinned to
+ * `client-constants.json` in `lib/client-constants.test.ts`.
+ */
+export const SENSITIVE_REASON_MAX_CHARS = 140;
+
+/** The refusal an over-long reason earns, or null. Scalar values, as `titleProblem`. */
+export function sensitiveReasonProblem(reason: string): string | null {
+  return [...reason.trim()].length > SENSITIVE_REASON_MAX_CHARS
+    ? `Too long — at most ${SENSITIVE_REASON_MAX_CHARS} characters.`
+    : null;
+}
+
 export type BodyMode = "words" | "media";
 
 /**
@@ -233,7 +272,9 @@ const ALLOWED: Gate = { ok: true };
 /** Whether the body — the one mandatory field — is there at all. */
 export function bodyGate(state: WizardState): Gate {
   if (state.mode === "words") {
-    return state.words.trim() === "" ? { ok: false, reason: "The post needs a body." } : ALLOWED;
+    if (state.words.trim() === "") return { ok: false, reason: "The post needs a body." };
+    const problem = bodyProblem(state.words);
+    return problem === null ? ALLOWED : { ok: false, reason: problem };
   }
   if (state.assets.length === 0) {
     return { ok: false, reason: "Pick at least one picture." };
@@ -247,10 +288,12 @@ export function bodyGate(state: WizardState): Gate {
   return ALLOWED;
 }
 
-/** The details are optional, but a title that is there answers to its cap. */
+/** The details are optional, but a title or a description that is there answers to its cap. */
 export function detailsGate(state: WizardState): Gate {
-  const problem = titleProblem(state.title);
-  return problem === null ? ALLOWED : { ok: false, reason: problem };
+  const titleIssue = titleProblem(state.title);
+  if (titleIssue !== null) return { ok: false, reason: titleIssue };
+  const descriptionIssue = descriptionProblem(state.description);
+  return descriptionIssue === null ? ALLOWED : { ok: false, reason: descriptionIssue };
 }
 
 /**
@@ -293,6 +336,14 @@ export function sealGate(state: WizardState): Gate {
   // server sees — a draft that reached here over-titled would sign a refusal.
   const details = detailsGate(state);
   if (!details.ok) return details;
+  // The reason is entered on the seal itself, so this is the one place that
+  // can catch it — and only while the mark is on: an unmarked draft's reason
+  // is never sent (`sensitiveInput`), so an over-length leftover from a mark
+  // switched back off would refuse a write the server was never going to see.
+  if (state.sensitive) {
+    const reasonIssue = sensitiveReasonProblem(state.sensitiveReason);
+    if (reasonIssue !== null) return { ok: false, reason: reasonIssue };
+  }
   if (state.mode === "words") return ALLOWED;
   const cover = coverGate();
   if (!cover.ok) return cover;

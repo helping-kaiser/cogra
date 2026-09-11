@@ -174,14 +174,27 @@ pub fn verify_password(hash: &str, password: &str) -> bool {
         .is_ok()
 }
 
-/// The password floor (auth.md "Password requirements"): no maximum, no
-/// composition rules.
+/// The password floor (auth.md "Password requirements"): paired with
+/// [`PASSWORD_MAX_CHARS`], no composition rules besides the two bounds.
 ///
 /// Named rather than inline because both clients enforce it before a
 /// round trip, and a form that disagrees with the server refuses a
 /// password the server would take — or takes one it refuses. The number
 /// leaves here through `client-constants.json`.
 pub const PASSWORD_MIN_CHARS: usize = 12;
+
+/// The password ceiling (auth.md "Password requirements"): Argon2id's
+/// cost is paid per byte hashed, so an unbounded password is unbounded
+/// hashing work an attacker can spend the server's own CPU on for free.
+/// NIST SP 800-63B and OWASP both require permitting at least 64
+/// characters; 128 clears that floor with room to spare.
+///
+/// Checked only where a NEW password is chosen — registration, change,
+/// and reset, through [`check_password`]/[`validate_new_password`] —
+/// never at login: an account whose password predates this cap must go
+/// on logging in with it, so login verifies the stored hash directly
+/// and never runs this check.
+pub const PASSWORD_MAX_CHARS: usize = 128;
 
 /// The handle grammar's length bounds (auth.md "Handle and email
 /// format"), named for the same reason as [`PASSWORD_MIN_CHARS`].
@@ -199,10 +212,34 @@ pub const HANDLE_MAX_CHARS: usize = 30;
 /// exactly the kind of rule that drifts.
 pub const HANDLE_CHARSET_PATTERN: &str = "^[a-z0-9_]+$";
 
-/// The password floor (auth.md "Password requirements").
+/// The device label's cap (auth.md "Sessions"), Unicode scalar values —
+/// named for the same reason as [`PASSWORD_MIN_CHARS`].
+pub const MAX_DEVICE_LABEL_CHARS: usize = 100;
+
+/// The device label as a session may carry it: trimmed, length-checked,
+/// blank folded to absent — the same rule every optional authored field
+/// on this surface runs. Register and login both send one, so both
+/// come through here before it reaches [`issue_session`].
+pub fn checked_device_label(raw: Option<&str>) -> Result<Option<String>, &'static str> {
+    match raw.map(str::trim) {
+        Some(label) if label.chars().count() > MAX_DEVICE_LABEL_CHARS => {
+            Err("device label must be at most 100 characters")
+        }
+        Some(label) if !label.is_empty() => Ok(Some(label.to_string())),
+        _ => Ok(None),
+    }
+}
+
+/// The password floor and ceiling (auth.md "Password requirements").
+/// Both bounds apply only where a new password is chosen — see
+/// [`PASSWORD_MAX_CHARS`] for why login never calls this.
 pub fn check_password(password: &str) -> Result<(), &'static str> {
-    if password.chars().count() < PASSWORD_MIN_CHARS {
+    let count = password.chars().count();
+    if count < PASSWORD_MIN_CHARS {
         return Err("password must be at least 12 characters");
+    }
+    if count > PASSWORD_MAX_CHARS {
+        return Err("password must be at most 128 characters");
     }
     Ok(())
 }
@@ -520,6 +557,42 @@ mod tests {
         assert!(check_password("elevenchars").is_err());
         assert!(check_password("twelve chars").is_ok());
         assert!(check_password("all lowercase no digits works").is_ok());
+    }
+
+    /// A new password is bounded on both ends: the floor refuses too
+    /// short, and the ceiling — Argon2's cost is paid per byte hashed —
+    /// refuses too long. `check_password` is what registration, change,
+    /// and reset run; login never calls it (see
+    /// `password_max_chars_is_never_checked_at_login`).
+    ///
+    /// A new password is capped at a hundred twenty-eight Unicode scalar values, the same floor-then-ceiling check registration, change, and reset all run.
+    /// ´claim:auth:a-new-password-is-capped-at-a-hundred-twenty-eight-characters´
+    #[test]
+    fn a_new_password_is_capped_at_a_hundred_twenty_eight_characters() {
+        assert!(check_password(&"x".repeat(PASSWORD_MAX_CHARS)).is_ok());
+        assert!(check_password(&"x".repeat(PASSWORD_MAX_CHARS + 1)).is_err());
+    }
+
+    /// The device label mirrors the title's own rule: trimmed,
+    /// length-checked, blank folded to absent.
+    ///
+    /// A device label is capped at a hundred Unicode scalar values, trimmed, with blank folding to absent.
+    /// ´claim:auth:a-device-label-stops-at-a-hundred-characters´
+    #[test]
+    fn a_device_label_is_capped_at_a_hundred_characters_and_blank_folds() {
+        let at_cap = "é".repeat(MAX_DEVICE_LABEL_CHARS);
+        assert_eq!(
+            checked_device_label(Some(&at_cap)).expect("at the cap"),
+            Some(at_cap)
+        );
+        let over = "x".repeat(MAX_DEVICE_LABEL_CHARS + 1);
+        assert!(checked_device_label(Some(&over)).is_err());
+        assert_eq!(checked_device_label(Some("  ")).expect("blank"), None);
+        assert_eq!(checked_device_label(None).expect("absent"), None);
+        assert_eq!(
+            checked_device_label(Some("  phone  ")).expect("trims"),
+            Some("phone".to_string())
+        );
     }
 
     /// A corpus with a scripted answer, standing in for HIBP.

@@ -18,13 +18,21 @@ import { describe, expect, it } from "vitest";
 import { CONTENT_PAGE_SIZE } from "@/lib/api/content-api";
 import { PROFILE_PAGE_SIZE } from "@/lib/api/profile-api";
 import { COMMENT_ATTACHMENT_CAP } from "@/lib/compose/comment-media";
-import { POST_ATTACHMENT_CAP, TITLE_MAX_CHARS } from "@/lib/compose/wizard";
+import {
+  BODY_MAX_CHARS,
+  DESCRIPTION_MAX_CHARS,
+  POST_ATTACHMENT_CAP,
+  SENSITIVE_REASON_MAX_CHARS,
+  TITLE_MAX_CHARS,
+} from "@/lib/compose/wizard";
+import { COMMENT_BODY_MAX_CHARS } from "@/lib/compose/reply-wizard";
 import {
   HANDLE_MAX_CHARS,
   HANDLE_MIN_CHARS,
   HANDLE_PATTERN,
   PASSWORD_MIN_CHARS,
 } from "@/lib/onboarding/registration-rules";
+import { BIO_MAX_CHARS, DISPLAY_NAME_MAX_CHARS, WEBSITE_URL_MAX_CHARS } from "@/lib/profile/caps";
 import { TAP_DEFAULT } from "@/lib/stance/model";
 import {
   SEAL_POLL_ATTEMPTS,
@@ -41,7 +49,18 @@ import {
 
 type Constants = {
   version: number;
-  content: { titleChars: number };
+  content: {
+    titleChars: number;
+    descriptionChars: number;
+    postBodyChars: number;
+    commentBodyChars: number;
+    sensitiveReasonChars: number;
+  };
+  profile: {
+    displayNameChars: number;
+    bioChars: number;
+    websiteUrlChars: number;
+  };
   media: {
     altTextChars: number;
     commentAttachments: number;
@@ -102,6 +121,27 @@ describe("media caps", () => {
 describe("the authored text caps", () => {
   it("cap a title at the length the write side refuses past", () => {
     expect(TITLE_MAX_CHARS).toBe(constants.content.titleChars);
+  });
+
+  it("cap a post's description and words at the lengths the write side refuses past", () => {
+    expect(DESCRIPTION_MAX_CHARS).toBe(constants.content.descriptionChars);
+    expect(BODY_MAX_CHARS).toBe(constants.content.postBodyChars);
+  });
+
+  it("caps a comment's words at the length the write side refuses past", () => {
+    expect(COMMENT_BODY_MAX_CHARS).toBe(constants.content.commentBodyChars);
+  });
+
+  it("caps a sensitive-mark reason at the length the write side refuses past", () => {
+    expect(SENSITIVE_REASON_MAX_CHARS).toBe(constants.content.sensitiveReasonChars);
+  });
+});
+
+describe("the profile's authored text caps", () => {
+  it("cap the display name, bio and website URL at the lengths the write side refuses past", () => {
+    expect(DISPLAY_NAME_MAX_CHARS).toBe(constants.profile.displayNameChars);
+    expect(BIO_MAX_CHARS).toBe(constants.profile.bioChars);
+    expect(WEBSITE_URL_MAX_CHARS).toBe(constants.profile.websiteUrlChars);
   });
 });
 

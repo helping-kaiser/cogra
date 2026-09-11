@@ -22,6 +22,18 @@ use crate::ingest::PromotionFailure;
 use crate::l1::L1Boundary;
 use crate::prepare::{self, Gesture, PrepareError, Target};
 
+/// The longest a display name may run (user.md §4), Unicode scalar
+/// values like every character cap on this surface.
+pub const MAX_DISPLAY_NAME_CHARS: usize = 50;
+
+/// The longest a bio may run (user.md §4), Unicode scalar values.
+pub const MAX_BIO_CHARS: usize = 500;
+
+/// The longest a website URL may run (user.md §4), Unicode scalar
+/// values — wide enough for the URLs the field actually carries
+/// (RFC 3986 sets no practical ceiling of its own).
+pub const MAX_WEBSITE_URL_CHARS: usize = 2048;
+
 #[derive(Debug, thiserror::Error)]
 pub enum ProfileError {
     #[error("{message}")]
@@ -88,6 +100,26 @@ pub struct ProfileUpdateDraft {
     pub avatar_media_id: Option<Option<Uuid>>,
 }
 
+/// A profile text field's length against its own cap. `None` (untouched)
+/// and `Some("")` (the clear sentinel) both pass through unchecked — the
+/// cap bounds what an author writes, not the absence of a write.
+fn checked_profile_len(
+    field: &'static str,
+    label: &str,
+    value: Option<String>,
+    max: usize,
+) -> Result<Option<String>, ProfileError> {
+    match &value {
+        Some(text) if !text.is_empty() && text.chars().count() > max => {
+            Err(ProfileError::BadInput {
+                field,
+                message: format!("the {label} is longer than {max} characters"),
+            })
+        }
+        _ => Ok(value),
+    }
+}
+
 /// Prepares a profile update: a parallel Registration toward the
 /// author's own Profile at the census-fixed `(1, 1)` (edges.md §2),
 /// chained behind the current head — the backend populates the causal
@@ -121,6 +153,19 @@ pub async fn prepare_profile_update<B: L1Boundary>(
             message: "the display name cannot be cleared".into(),
         });
     }
+    let display_name = checked_profile_len(
+        "displayName",
+        "display name",
+        draft.display_name,
+        MAX_DISPLAY_NAME_CHARS,
+    )?;
+    let bio = checked_profile_len("bio", "bio", draft.bio, MAX_BIO_CHARS)?;
+    let website_url = checked_profile_len(
+        "websiteUrl",
+        "website URL",
+        draft.website_url,
+        MAX_WEBSITE_URL_CHARS,
+    )?;
     let address = crate::nodes::required_address(pool, viewer)
         .await
         .map_err(|e| ProfileError::Internal(e.to_string()))?;
@@ -144,9 +189,9 @@ pub async fn prepare_profile_update<B: L1Boundary>(
             .await?;
     let payload = CograProfile {
         node: viewer,
-        display_name: draft.display_name,
-        bio: draft.bio,
-        website_url: draft.website_url,
+        display_name,
+        bio,
+        website_url,
         avatar,
     }
     .encode_payload();

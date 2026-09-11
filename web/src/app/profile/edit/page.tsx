@@ -5,11 +5,17 @@
 // the full field set, and a blanked bio or website clears. Client-gated
 // like the (app) group.
 //
-// THIS SURFACE VALIDATES NOTHING LOCALLY (design/backlog.md item 36.2). A
-// display name is optional — account creation never asks for one and a profile
-// with none is presented by its handle — so the empty-name check that used to
-// stand here was a rule the product does not have. It was this form's only
-// local rule; Save's outcomes are the seal's and the faults the seal owns.
+// THIS SURFACE INVENTS NO PRODUCT RULES OF ITS OWN (design/backlog.md item
+// 36.2). A display name is optional — account creation never asks for one and
+// a profile with none is presented by its handle — so the empty-name check
+// that used to stand here was a rule the product does not have, and it was
+// this form's only local rule; Save's outcomes past what is checked below are
+// the seal's and the faults the seal owns.
+//
+// THE LENGTH CAPS BELOW ARE NOT A LOCAL RULE EITHER — they are the write
+// side's own limits, mirrored client-side exactly as a title or an alt text
+// is elsewhere (`lib/profile/caps.ts`, pinned to `client-constants.json`), so
+// a reader never types past a boundary the server was always going to refuse.
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -25,6 +31,7 @@ import { firstRefusalMessage, mediaRefusalMessage } from "@/lib/ui/error-message
 import { TOO_BIG_PICTURE } from "@/lib/compose/pick";
 import { pictureTooBig } from "@/lib/ui2/media/caps";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
+import { bioProblem, displayNameProblem, websiteUrlProblem } from "@/lib/profile/caps";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useAuthPhase } from "@/lib/session/provider";
 import { useWriteSigner } from "@/lib/signing/provider";
@@ -170,6 +177,14 @@ export default function ProfileEditPage() {
   const field =
     "rounded-medium border border-outline bg-surface px-3 py-2 text-body-large text-on-surface";
 
+  // The write side's own caps, mirrored so an over-length value never reaches
+  // Save — a client stricter than the server would be the one failure a
+  // mirrored cap must not have, so these read the exact same limits
+  // `lib/profile/caps.ts` pins to `client-constants.json`.
+  const displayNameTooLong = displayNameProblem(displayName);
+  const bioTooLong = bioProblem(bio);
+  const websiteUrlTooLong = websiteUrlProblem(websiteUrl);
+
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       <PageHeader
@@ -201,6 +216,15 @@ export default function ProfileEditPage() {
               className={field}
             />
           </label>
+          {displayNameTooLong !== null && (
+            <p
+              role="alert"
+              data-testid="profile-edit-display-name-error"
+              className="text-body-small text-error"
+            >
+              {displayNameTooLong}
+            </p>
+          )}
           <label className="flex flex-col gap-1 text-label-large">
             Bio
             <textarea
@@ -211,6 +235,11 @@ export default function ProfileEditPage() {
               className={field}
             />
           </label>
+          {bioTooLong !== null && (
+            <p role="alert" data-testid="profile-edit-bio-error" className="text-body-small text-error">
+              {bioTooLong}
+            </p>
+          )}
           <label className="flex flex-col gap-1 text-label-large">
             Website
             <input
@@ -220,6 +249,15 @@ export default function ProfileEditPage() {
               className={field}
             />
           </label>
+          {websiteUrlTooLong !== null && (
+            <p
+              role="alert"
+              data-testid="profile-edit-website-error"
+              className="text-body-small text-error"
+            >
+              {websiteUrlTooLong}
+            </p>
+          )}
           {refusedMessage !== null && (
             <p role="alert" data-testid="profile-edit-refused" className="text-body-small text-error">
               {refusedMessage}
@@ -233,7 +271,16 @@ export default function ProfileEditPage() {
           {transportFailed && displayName !== "" && (
             <TransportError testId="profile-edit-submit-transport" />
           )}
-          <Button testId="profile-edit-save" type="submit" disabled={submitting}>
+          <Button
+            testId="profile-edit-save"
+            type="submit"
+            disabled={
+              submitting ||
+              displayNameTooLong !== null ||
+              bioTooLong !== null ||
+              websiteUrlTooLong !== null
+            }
+          >
             Save
           </Button>
         </form>
