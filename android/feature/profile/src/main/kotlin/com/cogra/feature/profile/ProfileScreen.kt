@@ -90,7 +90,7 @@ fun ProfileRoute(
     // replaced for the whole four seconds — and drop the refetch
     // entirely whenever the snackbar was cancelled early.
     LaunchedEffect(profileSavedResult) {
-        if (profileSavedResult) viewModel.refresh()
+        if (profileSavedResult) viewModel.onEditSaved()
     }
     ProfileScreen(
         state = state,

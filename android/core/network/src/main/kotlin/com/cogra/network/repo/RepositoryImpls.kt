@@ -738,7 +738,10 @@ class ContentRepositoryImpl @Inject constructor(
             data.comment?.let {
                 CommentForEdit(
                     comment = it.commentFields.toDomain(),
-                    selfMark = SelfMarkView(it.sensitiveSelfMark, it.sensitiveReason),
+                    selfMark = SelfMarkView(
+                        it.commentFields.sensitiveSelfMark,
+                        it.commentFields.sensitiveReason,
+                    ),
                 )
             }
         }

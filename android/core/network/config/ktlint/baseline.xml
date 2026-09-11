@@ -50,20 +50,14 @@
         <error line="496" column="5" source="standard:class-signature" />
         <error line="496" column="34" source="standard:class-signature" />
         <error line="497" column="5" source="standard:class-signature" />
-        <error line="781" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="900" column="5" source="standard:class-signature" />
-        <error line="901" column="5" source="standard:class-signature" />
-        <error line="901" column="34" source="standard:class-signature" />
-        <error line="902" column="5" source="standard:class-signature" />
+        <error line="784" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="903" column="5" source="standard:class-signature" />
+        <error line="904" column="5" source="standard:class-signature" />
+        <error line="904" column="34" source="standard:class-signature" />
+        <error line="905" column="5" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/network/repo/Stance.kt">
         <error line="1" column="1" source="standard:filename" />
-    </file>
-    <file name="src/main/kotlin/com/cogra/network/repo/StanceStandIn.kt">
-        <error line="1" column="1" source="standard:filename" />
-        <error line="17" column="1" source="standard:import-ordering" />
-        <error line="34" column="5" source="standard:class-signature" />
-        <error line="34" column="41" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/network/repo/Topics.kt">
         <error line="1" column="1" source="standard:filename" />
@@ -111,9 +105,6 @@
     </file>
     <file name="src/test/kotlin/com/cogra/network/StanceRepositoryTest.kt">
         <error line="9" column="1" source="standard:import-ordering" />
-        <error line="105" column="17" source="standard:wrapping" />
-        <error line="107" column="20" source="standard:wrapping" />
-        <error line="110" column="15" source="standard:wrapping" />
     </file>
     <file name="src/test/kotlin/com/cogra/network/TopicRepositoryTest.kt">
         <error line="8" column="1" source="standard:import-ordering" />
