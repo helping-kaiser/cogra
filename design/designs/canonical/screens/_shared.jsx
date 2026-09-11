@@ -587,6 +587,47 @@ function ChronicleList({ children }) {
   );
 }
 
+/* THE SAVED ROW'S OWN UNSAVE (jakob 2026-09-11). Sending a reader back to the
+   thing's own ⋮ to undo what is in front of them is the long way round, and the
+   Saved list is the one place where every row offers the same act. It is
+   ICON-ONLY — the filled bookmark, `Unsave` in the accessibility tree, no word
+   on screen (jakob: with the icon "we dont even need any word there") — because
+   the same word repeated down a list is four copies of one sentence, and this
+   glyph is one every reader already reads as "kept".
+
+   IT TAKES THE CHEVRON'S SLOT, NEVER THE AGE'S. The age is when YOU saved the
+   thing, which is this list's whole order and what a reader is retracing, so it
+   keeps its place and the control stands outboard of it. The chevron was never
+   drawn here — a row that opens says so by being a row — so the edge was already
+   free. The glyph takes `text-secondary`, the colour every icon-only control in
+   this system rests in: it is the row's control, not a badge saying the row is
+   saved. Every row in this list is.
+
+   It lives here because the list is drawn on more than one board — at rest and
+   in the moment after a row goes — and a control spelled twice is a control
+   that drifts. */
+const Unsave = () => (
+  <button
+    type="button"
+    aria-label="Unsave"
+    className="cg-state cg-focus cg-hit"
+    style={{
+      display: "grid",
+      placeItems: "center",
+      height: "40px",
+      width: "40px",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      color: "var(--text-secondary)",
+      cursor: "pointer",
+      padding: 0,
+    }}
+  >
+    <Icon name="bookmark" size={22} />
+  </button>
+);
+
 /* The post-detail column: the read surface a card opens into. */
 function DetailColumn({ children }) {
   return (

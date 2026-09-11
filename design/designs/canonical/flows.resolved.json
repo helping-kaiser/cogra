@@ -45,6 +45,7 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedUndo",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -52,7 +53,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 44 boards → ComposePick",
+        "start · «nav · New post» on 45 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -102,6 +103,7 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedUndo",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -691,6 +693,7 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedUndo",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -698,7 +701,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 44 boards → ComposePick",
+        "start · «nav · New post» on 45 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -748,6 +751,7 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedUndo",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -799,6 +803,7 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedUndo",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -806,7 +811,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 44 boards → ComposePick",
+        "start · «nav · New post» on 45 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -856,6 +861,7 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedUndo",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -907,6 +913,7 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedUndo",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -914,7 +921,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 44 boards → ComposePick",
+        "start · «nav · New post» on 45 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -962,6 +969,7 @@
         "Removed",
         "Saved",
         "SavedEmpty",
+        "SavedUndo",
         "VouchBack",
         "Wallet",
         "WalletEmpty",
@@ -2712,6 +2720,15 @@
       "endpoint": []
     },
     "SavedEmpty": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
+      ],
+      "endpoint": []
+    },
+    "SavedUndo": {
       "flows": [
         "publish-a-post",
         "publish-a-vertical-video",
