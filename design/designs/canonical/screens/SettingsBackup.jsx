@@ -51,7 +51,7 @@ export function Screen() {
           }}
         >
           A new code re-encrypts your key and replaces the old backup — recovery always uses the
-          newest one. Your current code was made on 12 August.
+          newest one. Your current code was made on 12.08.2026.
         </p>
 
         <div style={{ marginTop: 32 }}>

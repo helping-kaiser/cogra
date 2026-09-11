@@ -1502,7 +1502,7 @@ function SettingsBody() {
           label="Key backup"
           footnote="Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
         >
-          <SettingsRow label="Recovery code" status="Last created 12 August" onOpen={() => {}} />
+          <SettingsRow label="Recovery code" status="Last created 12.08.2026" onOpen={() => {}} />
           <SettingsRow label="Your key" onOpen={() => {}} />
         </SettingsGroup>
 
@@ -1513,13 +1513,13 @@ function SettingsBody() {
           <SettingsRow label="Firefox on Ubuntu" status="This browser" inert />
           <SettingsRow
             label="Pixel 8"
-            status="Last used 2 days ago"
+            status="Last used 2d"
             inert
             trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
           />
           <SettingsRow
             label="Unnamed device"
-            status="Last used 12 August"
+            status="Last used 12.08.2026"
             inert
             trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
           />
@@ -1530,7 +1530,7 @@ function SettingsBody() {
           label="Credentials"
           footnote="Changing your password signs out every other device."
         >
-          <SettingsRow label="Password" status="Changed 3 weeks ago" onOpen={() => {}} />
+          <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} />
           <SettingsRow label="Handle" value="@sol" onOpen={() => {}} />
           <SettingsRow label="Email" value="sol@solferreira.art" onOpen={() => {}} />
         </SettingsGroup>
