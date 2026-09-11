@@ -333,16 +333,23 @@ function DetailHeader({ items }) {
    card's dot and the header carries the menu instead, so these lists are that
    same menu written out for the header, and they take the row's words from the
    master's atom rather than spelling them again. The reader's menu keeps the
-   card's own order, the license row first; the author's leads with the acts it
-   was opened for and lets the license row close it. */
+   card's own order; both leads with the acts the menu was opened for and lets
+   the license row close it, the license being the rarest read in the product.
+
+   SAVE IS THE ROW THAT CARRIES ITS OWN STATE (readme §13, the private-viewer-
+   state round). Nothing outside this menu says a thing is saved — the action
+   row stays opinion · score · comments · share — so the row reads `Save` while
+   it is not and `Remove from saved` while it is. A control says what will
+   happen (§3), which is why the saved form is a verb and not the word Saved. */
 const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
+const SAVE_ROW = { label: "Save", onSelect: () => {} };
 const OWN_POST_MENU = [
   { label: "Edit", onSelect: () => {} },
   { label: "Mark as sensitive", onSelect: () => {} },
   { label: "Remove", onSelect: () => {} },
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [LICENSE_ROW, CITE_ROW];
+const READER_POST_MENU = [SAVE_ROW, CITE_ROW, { label: "Hide @ada", onSelect: () => {} }, LICENSE_ROW];
 /* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
    from the bottom edge over the surface the reader asked from, and go back to
    it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
@@ -373,10 +380,24 @@ function LicenseSheet({ license, stacked = false }) {
 }
 
 /* Another's profile: no license (a profile declares none) and no citing — the
-   word for referencing a person is mentioning (readme §13, the menus round). */
+   word for referencing a person is mentioning (readme §13, the menus round). A
+   person is saveable like anything else, and hiding one is the read-side
+   comfort this menu is the natural home of (the private-viewer-state round).
+   Hide sits last: it is the rarest row and the one that takes something away. */
 const PROFILE_MENU = [
+  SAVE_ROW,
   { label: "Mention in a new post", onSelect: () => {} },
   { label: "Share this profile", onSelect: () => {} },
+  { label: "Hide @ada", onSelect: () => {} },
+];
+
+/* Your own profile's menu (the private-viewer-state round): the two private
+   lists, then share. Saved and History are the only surfaces in the product
+   nobody but the reader can see, and the band's ⋮ is where they hang. */
+const OWN_PROFILE_MENU = [
+  { label: "Saved", onSelect: () => {} },
+  { label: "History", onSelect: () => {} },
+  { label: "Share your profile", onSelect: () => {} },
 ];
 
 /* A device-local recent query — a quiet row, never a record (readme §13). */
@@ -469,15 +490,19 @@ function HelpDot({ ariaLabel = "How searching works", ...rest }) {
   return <SystemHelpDot ariaLabel={ariaLabel} {...rest} />;
 }
 
-/* The own-profile band cluster (profile round): the share control and the gear
-   on the band's edge — chats arrives built into the band itself. Shared by the
+/* The own-profile band cluster (profile round): the overflow and the gear on
+   the band's edge — chats arrives built into the band itself. Shared by the
    member and applicant own-profile boards.
 
-   YOUR OWN PROFILE HAS NO MENU (readme §13, the menus round). Another person's
-   holds two rows; on your own, mentioning yourself is not a thing anyone does,
-   and share is what is left. A ⋮ that opens a sheet holding one row is a tap
-   spent on nothing — so the band wears the share glyph the action rows already
-   use, and one tap hands the profile to the platform's own sheet. */
+   THE ⋮ IS WHERE YOUR PRIVATE STATE LIVES (readme §13, the private-viewer-state
+   round). Saved and History are lists only you can see, and a profile page has
+   no row to hang them off — its one wide control is the person. So they sit in
+   the band's menu with Share your profile, and the dot opens a sheet rather
+   than acting on its own.
+
+   The dot keeps the slot left of the gear. Material's app bar would put an
+   overflow last; the gear has been the band's right edge since the profile
+   round, and moving it would move the thing every reader already aims at. */
 function ProfileBandIcon({ name, label }) {
   return (
     <button
@@ -495,7 +520,7 @@ function ProfileBand({ children }) {
     <CograBand
       trailing={
         <span style={{ display: "flex", alignItems: "center" }}>
-          <ProfileBandIcon name="share" label="Share your profile" />
+          <ProfileBandIcon name="more_vert" label="More on your profile" />
           <ProfileBandIcon name="settings" label="Settings" />
         </span>
       }
@@ -559,6 +584,49 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
         <PostCard {...ADA_POST} variant="detail" />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
+    </>
+  );
+}
+
+/* Your own profile, whole — shared the moment the band's ⋮ opened a sheet over
+   it (readme §13, the private-viewer-state round). The page is now drawn on
+   three boards, and one drawing is what keeps the three from disagreeing about
+   what your own profile holds.
+
+   `tail` is the chronicle's last slot: the row a page-failure puts where the
+   next page would have been. Given none, the list simply ends. */
+function ProfileOwnBody({ tail = null }) {
+  return (
+    <>
+      <ProfileBand />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ padding: "0 16px" }}>
+          <ProfileHeader
+            handle="sol"
+            displayName="Sol Ferreira"
+            bio="Field notes from the flats — salt, paper, and whatever the wind allows."
+            website="solferreira.art"
+            posts={5}
+            stancesOn={9}
+            stancesTaken={14}
+            own
+            onEdit={() => {}}
+            onInvites={() => {}}
+            onAvatarChange={() => {}}
+            onCounts={() => {}}
+          />
+        </div>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
+        <ChronicleList>
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert />
+          {tail}
+        </ChronicleList>
+      </div>
+      <BottomNav active="profile" slots={ALL_SLOTS} inline />
     </>
   );
 }
