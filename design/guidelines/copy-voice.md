@@ -961,3 +961,61 @@ refused state:
 
 *Name*, not *tag*, because the string is what is wrong and the tag is
 fine — there is no tag yet.
+
+## Awaiting blessing — the notifications round
+
+Drawn on `Notifications`, `NotificationsEmpty` and `FeedUnread`, and up
+for review in the same pass.
+
+**A row is a sentence, and the handle is its subject.** `@ada commented
+on your post`, not *Ada Okonkwo · commented* — the disc already carries
+the face, so the words are free to be the whole fact, and a handle is
+what a reader recognises and can go looking for. Seven kinds, seven
+sentences, all present tense of the act that happened:
+
+- `@ada commented on your post` — a comment on a post of yours.
+- `@tobias replied to your comment` — a reply one level down. *Replied*,
+  not *commented*, because the two land in different places and a reader
+  who is told which will know where they are going.
+- `@sol gave an opinion on you` — the profile opinion, in the
+  chronicle's own verb (`Gave an opinion`). The reader's word is
+  **opinion**; *followed* would name a gesture this product does not
+  have, and *vouched* is the inviter's word, not this one's.
+- `@mira mentioned you` — a citation whose target is you.
+- `@ada cited your post` — a citation whose target is something you
+  wrote. *Cited*, the product's verb for a Reference, and the second
+  line says where: `in Sunday at the tide market`.
+- `@juno landed through your invite` — *landed* is already the word the
+  approval flow speaks (`Your registration is landing`), so the invite's
+  other end keeps it.
+- `@mira approved your application` — the inviter's act, named as
+  theirs. Not *You were approved*, which is the passive the register
+  refuses and hides the person who did it.
+
+**The second line is what arrived, or where it is.** The comment's and
+the reply's own words for the two that carry words; `in <title>` for the
+mention and the citation, the saved comment row's `on <title>`
+construction turned to the citing side. The other three have neither and
+carry none — a line invented to even the rhythm would be chrome.
+
+**The unread mark is a dot and says `New`.** On the row's trailing edge
+under the age, and in the accessibility tree as the one word, because
+the mark's whole content is that this has not been opened. Nothing says
+*unread* on screen.
+
+**The bell names itself, and names its dot.** `Notifications` at rest,
+`Notifications — something new` when the dot is lit — the accessible
+name changes with the drawing, because a marker a listener cannot hear
+is not a marker. Never a number in either: the count belongs to no
+sentence a reader needs.
+
+**The empty state names the kinds.** `Nothing here yet. Comments,
+replies, citations, mentions and opinions on you arrive here as they
+happen.` The list has no gesture of its own — it fills from what other
+people do — so naming what arrives is the only way to say the channel is
+empty rather than broken. No action button: nothing the reader can do
+from here fills it.
+
+**The surface is `Notifications`,** in the page header and wherever it
+is named. Not *Activity*, which describes a log, and not *Alerts*, which
+describes an emergency.

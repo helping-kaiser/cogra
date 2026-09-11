@@ -474,7 +474,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SettingsGroup`, `SettingsRow`, `Switch`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton`, `NodeMark` |
 | `components/forms/` | `TextField`, `FieldLabel`, `FieldSupport`, `FieldCount`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
-| `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
+| `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand`, `BandIcon` |
 | `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `StagedReference`, `TopicRemovable`, `Caret` |
 | `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
@@ -3923,6 +3923,76 @@ refusal are one component's problem. Ruled by jakob the same day.
   lines: `ComposeDetailsCaps` joins `cite-something` and
   `describe-your-pictures` as a ninth and seventh origin, because the
   stage it draws carries those controls.
+
+### The notifications round — 2026-09-11
+
+Slice 3.1's design half. Notifications had no doc anywhere, so the round
+opened by writing one — `docs/implementation/notifications.md` — and
+drew against it. Ruled by jakob the same day.
+
+- **Seven acts notify, and they are the ones addressed to you.** A
+  comment on your post, a reply to your comment, a mention, a citation
+  of your content, an opinion on your PROFILE, someone landing through
+  your invite, your application approved. What makes the set a set is
+  that somebody else acted and the act reached something with an owner
+  — so nothing you did yourself ever notifies you.
+- **Opinions on your CONTENT are out (jakob).** A post collects those
+  continuously, and a row each would turn the list into a counter of
+  ambient sentiment rather than a list of things that happened. The
+  curiosity is real and gets its own answer: the opinions-on-content
+  list (backlog 55), ungated, on the post itself.
+- **The bell is the band's right edge on every root.** Right-most,
+  outboard of the screen's own control — the feed's filter trigger, the
+  profile's ⋮ and gear — because one corner everywhere is what makes it
+  findable, and a different corner per tab is four things to learn. It
+  rides `CograBand` built in, the way chats does, so no board hand-builds
+  it and `bell={false}` is the only way to be without one.
+- **Guests have no bell; applicants do.** Nothing can be addressed to an
+  account that does not exist, so `Main`, `FeedBare`, `GuestGate` and
+  `WalletGuest` opt out. An applicant is an addressee already — the
+  approval and the inviter's opinion both land on them — so the
+  applicant boards carry it.
+- **A dot, never a count (jakob).** `--primary` at 8px, ringed in the
+  surface, pinned to the glyph's top-right in `ContentRow`'s own badge
+  geometry. What the shell honestly knows is that something arrived; a
+  number turns that into an errand. The bell's accessible name changes
+  with it — `Notifications — something new` — because a marker a
+  listener cannot hear is not a marker.
+- **`BandIcon` is the band's one icon-control.** `CograBand`'s chats
+  button and the profile's ⋮/gear were the same style object written
+  twice; they are one master now, and the dot is a prop on it rather
+  than a drawing on a board.
+- **Read state is two levels, and there is no mark-all (jakob).**
+  Opening the list clears the bell's dot — the bell asks *is there
+  anything new*, and the honest answer stops being yes once the reader
+  has looked. Each row keeps its own quiet mark until it is opened,
+  because the row asks a different question. A broom for the whole list
+  is a control for a list that asks too much; the fix for that is
+  per-kind muting, filed post-MVP.
+- **The row's unread mark is the bell's dot at row scale**, on the
+  trailing edge under the age — `ContentRow`'s new `unread`. A weight
+  change would make eight unread rows eight headlines.
+- **One flat list, newest first, no grouping (jakob).** Grouping trades
+  away the two things a row is for, the actor and the moment, and needs
+  a second read model for what makes a group unread. It is named in the
+  doc's later section and designed when it is reached.
+- **The opinion row wears the face, the chronicle's row exactly** — the
+  disc's own precedence puts a stance face where a picture would go, and
+  no digits ride along in either reading. That is the chronicle's
+  standing shape, inherited rather than re-decided.
+- **The list lives on the Profile page** with `Saved`, `History`,
+  `Hidden accounts` and `Settings` — the per-viewer surfaces reached
+  from the shell rather than from a feed. Its back arrow is the `back`
+  terminal, because the bell is on four roots and the way out is
+  wherever the reader came from.
+- **The gate**: 162 → **165 boards**, 1158 → **1214 edges**, gaps 57 →
+  **59** and flows hold at **60/57/3**. The edge jump is honest and
+  expected: 19 roots × the bell, `FeedUnread`'s clone of `Feed`'s
+  eighteen, and the two new boards' own. The two new gaps are
+  `FeedUnread` inheriting `Feed`'s Post Score and chats gaps. The
+  witness moved only in origin lists — the three new boards join every
+  flow that starts on a bottom-nav tap, and `FeedUnread` joins the ones
+  that start on a post card; no step rerouted.
 
 ## 14. Index
 
