@@ -266,6 +266,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(11),
   ],
+  // The feed a moment after Hide @ada: her card gone, the ranker's next posts
+  // moved up, and the act's own line over them. Neither card carries a
+  // reference, so the numbering closes over the slot `Feed` keeps for one.
+  FeedHidden: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 7, score: 8 }),
+    { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 9, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 9, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 18, find: ">Undo</button>", tag: "button" },
+    ...nav(10),
+  ],
   FeedNothing: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
     { n: 2, find: ">Show posts again</button>", tag: "button" },
@@ -1516,7 +1528,7 @@ const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 9,
   Feed: 16, FeedUnread: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
-  FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16,
+  FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15,
   FeedGallery: 15, FeedCover: 17,
   Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
   WalletGuest: 8, WalletApplicant: 6,
@@ -1535,7 +1547,7 @@ const BAND_BELL = {
   ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
   ComposeExpired: 20, Explore: 10,
   Feed: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
-  FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17,
+  FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17,
   FeedCover: 19,
   Wallet: 15, WalletEmpty: 10, WalletSetup: 9, WalletKeyAbsent: 11,
   WalletApplicant: 7,
@@ -1552,7 +1564,7 @@ for (const [board, n] of Object.entries(BAND_BELL)) {
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
   KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
-  FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16,
+  FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
 };
 for (const [board, n] of Object.entries(CARD_SHARE)) {
