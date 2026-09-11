@@ -1517,7 +1517,22 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: 'aria-label="1 comment"', tag: "button" },
     ...nav(11),
   ],
-  ProfileDeleted: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  // The husk's page is the other-profile page with its identity placeholdered
+  // (the redacted-actor law), so it wires like one — minus Message and the ⋮,
+  // which each need a name there is none of.
+  ProfileDeleted: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="Opinions on and by this account"', tag: "button" },
+    { n: 3, find: 'aria-label="Give your opinion on this account"', tag: "button" },
+    { n: 3, find: ">Choose your opinion on this account</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Posts"', tag: "button" },
+    { n: 4, find: 'aria-label="Comments"', tag: "button" },
+    { n: 4, find: 'aria-label="Everything"', tag: "button" },
+    { n: 5, find: "Three mornings on the wall", tag: "button" },
+    { n: 5, find: "The tunnel is faster", tag: "button" },
+    { n: 5, find: "Low sun on the salt crust", tag: "button" },
+    ...nav(6),
+  ],
 });
 
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on

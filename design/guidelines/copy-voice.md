@@ -1122,3 +1122,38 @@ and still credits them.` Three marks now, still never interchangeable.
 A deleted account must not read as a moderation verdict, and it must not
 read as `This profile doesn't exist.` — someone was here, and the product
 never pretends otherwise.
+
+## Awaiting blessing — the review round
+
+Drawn on `ProfileDeleted` and on every card and row a deleted actor
+authored, plus the snackbar `FeedHidden` fires. The rest of the round's
+words were ruled on canvas and have moved into the sections above:
+`Unsave` sits under *Menu rows*, the settings ages under *The settings
+page*, and the empty hidden row's `None` where the settings group is
+written out.
+
+**The name in a redacted actor's place.** `Deleted account` — two
+words, in the system's own voice and in `text-secondary`, because it is
+the product saying what happened and not a name anybody chose. It is the
+same string wherever the actor appears: their own page's header, an
+author chip on a post they wrote, a row in a list. The handle beside it
+is dropped rather than replaced; a redacted handle is a uniqueness
+device in the store, and printing anything in its place would invent a
+handle a reader could try to reach.
+
+**The moderation variant, which must never be the same string.**
+`Removed by the network` where an actor's identity was taken by a
+passed proposal rather than given up. The two readings have to stay
+distinguishable for the reason the two removal marks do — collapsing
+them lets a verdict hide behind a person's own decision, or the reverse
+(`erasure.md` §7). Specced here, drawn nowhere yet: no board shows a
+community-redacted actor.
+
+**Hiding's snackbar, now that it has a board.** `@ada is hidden — their
+posts stay out of your feed.` with `Undo`. The second clause is the one
+that matters: what a reader wonders after hiding someone is whether
+they have done something *to* that person, and the answer is that they
+have changed their own feed and nothing else. `Undo` is the only
+snackbar action in the product — hiding is a comfort a reader may have
+meant for one post rather than for a person, and the way back costs
+nothing.

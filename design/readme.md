@@ -4070,17 +4070,19 @@ mechanics were already specified — `docs/instances/erasure.md` §2 and §5
   The band's absence is the lasting confirmation — which is why no band
   is drawn in some cancelled state. And an Undo here would re-arm an
   irreversible countdown from a control that disappears in four seconds.
-- **`ProfileDeleted` is a removal mark, not an empty state (jakob: "we
-  never pretend sth that once was there never existed").** `RedactedContent`
-  gains a third reason, `account`: identity-level redaction empties the
-  Registration bundle exactly as a removal empties a post's, so a deleted
-  profile wears the mark a post wears, on the reserved surface that says
-  a space was kept rather than lost. `ProfileNotFound` keeps its own
-  case — a freed handle resolving to nothing — and this board is reached
-  by structure that still points at the actor, an author chip on a post
-  they wrote. The header keeps no handle: the handle is the thing that
-  was removed, and printing it back would undo the redaction on the one
-  surface that exists to report it.
+- **A deleted profile wears a removal mark, not an empty state (jakob:
+  "we never pretend sth that once was there never existed").**
+  `RedactedContent` gains a third reason, `account`: identity-level
+  redaction empties the Registration bundle exactly as a removal empties
+  a post's, so a deleted profile wears the mark a post wears, on the
+  reserved surface that says a space was kept rather than lost.
+  `ProfileNotFound` keeps its own case — a freed handle resolving to
+  nothing — and `ProfileDeleted` is reached by structure that still
+  points at the actor, an author chip on a post they wrote. The handle is
+  printed nowhere on it: the handle is the thing that was removed, and
+  printing it back would undo the redaction on the one surface that
+  exists to report it. Where the mark sits, and what stands around it, is
+  the review-fix round's ruling below.
 - **The gate**: 165 → **170 boards**, 1214 → **1263 edges**, gaps 59 →
   **63**, flows 60/57/3 → **61/58/3**. The edge count is honest: the two
   feed boards clone `Feed`'s eighteen each, `ProfileDeleted` takes

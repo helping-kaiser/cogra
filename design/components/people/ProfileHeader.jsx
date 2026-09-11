@@ -1,5 +1,5 @@
 import React from "react";
-import { MonogramAvatar } from "./ActorChip.jsx";
+import { MonogramAvatar, REDACTED_ACTOR_NAME } from "./ActorChip.jsx";
 import { Button } from "../core/Button.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
@@ -55,7 +55,19 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    person's record.
 
    It is not a card. It is the top of a screen, on the page ground — a card would
-   imply a second card beside it. */
+   imply a second card beside it.
+
+   A DELETED ACCOUNT KEEPS THIS WHOLE HEADER (`redacted`, the redacted-actor
+   law, jakob 2026-09-11). The shells never go: an actor whose identity payloads
+   were removed is still an actor, still the author of everything it signed,
+   still carrying the standing others vouched into it (`erasure.md` §2–3) — so
+   the header it gets is this one, with the counts it really has, and only the
+   personal data placeholdered. The avatar becomes the reserved disc, the name
+   slot takes `ActorChip`'s one word in the system's own voice, the handle is
+   dropped rather than invented, and `bio` takes the redaction mark in the place
+   the bio's words were. Drawing a stripped-down page instead would be the
+   product pretending less was there than there was, which is the one thing the
+   erasure ethic forbids. */
 
 function Figure({ value, label }) {
   return (
@@ -86,9 +98,10 @@ export function ProfileHeader({
   onAvatarChange,
   onCounts,
   menu,
+  redacted = false,
   showHandle = true,
 }) {
-  const name = displayName && displayName.trim() ? displayName : handle;
+  const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
   const hasFigures = posts !== undefined || stancesOn !== undefined || stancesTaken !== undefined;
   const figures = (
     <>
@@ -101,7 +114,7 @@ export function ProfileHeader({
     <header style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", padding: "var(--space-3) 0 var(--space-1)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
         <div style={{ position: "relative", flex: "none" }}>
-          <MonogramAvatar name={name} size={80} src={avatarSrc} />
+          <MonogramAvatar name={name} size={80} src={avatarSrc} redacted={redacted} />
           {own && onAvatarChange && (
             <button
               type="button"
@@ -129,16 +142,16 @@ export function ProfileHeader({
           )}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
-          <h1 style={{ margin: 0, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere" }}>{name}</h1>
+          <h1 style={{ margin: 0, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere", color: redacted ? "var(--text-secondary)" : undefined }}>{name}</h1>
           {/* The handle repeats only where the screen's top bar does not already
               carry it — a drill-in is titled @handle, so it passes showHandle
-              false (jakob 2026-09-01). */}
-          {showHandle && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>}
+              false (jakob 2026-09-01). A redacted actor has none to repeat. */}
+          {showHandle && !redacted && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>}
           {hasFigures &&
             (onCounts ? (
               <button
                 type="button"
-                aria-label={own ? "Your opinions, both directions" : "Opinions on and by @" + handle}
+                aria-label={own ? "Your opinions, both directions" : redacted ? "Opinions on and by this account" : "Opinions on and by @" + handle}
                 onClick={onCounts}
                 className="cg-state cg-focus"
                 style={{ display: "flex", gap: "var(--space-5)", border: 0, background: "none", padding: 0, marginTop: 4, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", width: "fit-content", maxWidth: "100%", borderRadius: "var(--radius-small)" }}
@@ -150,7 +163,10 @@ export function ProfileHeader({
             ))}
         </div>
       </div>
-      {bio && <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p>}
+      {/* The bio slot takes a node as readily as a string: where the words were
+          removed, the redaction mark stands in their place rather than the slot
+          collapsing — a space kept, not a space lost. */}
+      {bio && (typeof bio === "string" ? <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p> : bio)}
       {website && <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--primary)", overflowWrap: "anywhere" }}>{website}</span>}
       {/* The actions row. On someone else's profile the stance leads and
           Message stands beside it, the pair every social profile puts here
@@ -168,7 +184,11 @@ export function ProfileHeader({
         ) : (
           <>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <StanceControl wide targetLabel={"@" + handle} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
+              {/* The target's name, except where there is none left to print:
+                  a redacted actor's handle went with the rest of its identity,
+                  and naming it back here would undo the redaction in the one
+                  string a screen reader reads aloud. */}
+              <StanceControl wide targetLabel={redacted ? "this account" : "@" + handle} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
             </div>
             {onMessage && (
               <Button variant="outline" onClick={onMessage} style={{ flex: "none" }}>
