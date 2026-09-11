@@ -642,6 +642,26 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "transform:scale(1.15)", tag: "div" },
   ],
+  // The video-cover round's two wizard boards. The cover step with no frames
+  // keeps ComposeCover's numbering minus the strip and the preview's disc,
+  // which is what "the same step, smaller" means in the graph as well.
+  ComposeCoverNoFrames: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 4, find: ">Next</button>", tag: "button" },
+  ],
+  ComposeDetailsVideo: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Describe the video</button>", tag: "button" },
+    { n: 4, find: ">Add a cover</button>", tag: "button" },
+    { n: 5, find: 'data-field="Title"', tag: "div" },
+    { n: 6, find: 'data-field="Description"', tag: "div" },
+    { n: 7, find: "+ Add a tag", tag: "button" },
+    { n: 8, find: "+ Cite something", tag: "button" },
+    { n: 9, find: ">Next</button>", tag: "button" },
+  ],
   ReplyVideoFailed: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
@@ -650,8 +670,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Retry</button>", tag: "button" },
     { n: 6, find: ">Remove it</button>", tag: "button" },
     { n: 7, find: ">Describe the video</button>", tag: "button" },
-    { n: 8, find: 'class="cg-cover-frame"', tag: "div", all: true },
-    { n: 9, find: 'class="cg-cover-own"', tag: "div" },
+    { n: 8, find: ">Add a cover</button>", tag: "button" },
   ],
   CommentEditVideo: [
     { n: 14, find: "aria-label=\"#glovebox — set how it relates\"", tag: "button" },
@@ -676,7 +695,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
     { n: 4, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 5, find: ">Describe the video</button>", tag: "button" },
-    { n: 6, find: ">Change the cover</button>", tag: "button" },
+    { n: 6, find: ">Add a cover</button>", tag: "button" },
     { n: 7, find: 'data-field="Title"', tag: "div" },
     { n: 8, find: 'data-field="Description"', tag: "div" },
     { n: 9, find: 'aria-label="Remove #coastroad"', tag: "button" },

@@ -27,7 +27,18 @@ import { Icon } from "../navigation/Icon.jsx";
    THE ROW IS THE WHOLE CLUSTER — the "Cover" field label, the strip, and the
    line underneath — because those three only ever appear together. The comment
    composer inlines it at 56px and the post's cover stage draws it larger; both
-   want the label and the line. */
+   want the label and the line.
+
+   NO FRAMES IS A STATE THE ROW HOLDS (video-cover round, 2026-09-10): hand it
+   an empty `frames` and what remains is the way out to the gallery, alone,
+   under a `caption` that says why. Extraction can come back with nothing, and
+   a strip of blank tiles would offer pictures that do not exist. The row shrinks
+   to the one path that still works rather than growing a state of its own.
+
+   THE ROW IS NOT ALWAYS THERE (same round). A vertical clip's default is no
+   cover, so at comment scale the row gives way to an "Add a cover" door and
+   appears when the door is opened; a horizontal or square clip wears it from
+   the start. The row draws the choosing, never the decision to choose. */
 
 const TILE = {
   width: 56,

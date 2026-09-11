@@ -10,6 +10,14 @@
    face is `CoverRow`, inlined: the comment composer is one screen, so the cover
    is picked here rather than in a stage of its own.
 
+   THE ROW IS SHOWING BECAUSE IT WAS ASKED FOR (jakob 2026-09-10). This clip is
+   vertical, and a vertical clip's default is no cover at either scale: the
+   composer opens with the "Add a cover" door in the row's place, which is what
+   `ReplyVideoFailed` draws. This is the state the door opens — and it is also,
+   unchanged, what a horizontal or square clip wears from the start. One
+   drawing, because there is one row; what differs is whether anyone had to ask
+   for it.
+
    WEB TAKES THIS BOARD 1:1 (jakob 2026-09-02): the file dialog and the
    composer's drop-anywhere path play the picker's part, and nothing else about
    the state differs, so no web board is drawn — the avatar flow's blessing,
