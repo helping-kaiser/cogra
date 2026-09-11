@@ -2106,3 +2106,15 @@ the DIMMEST, so the weight reading runs backwards in the dark theme.
 `VouchedIn` avoided it by dropping to two rungs (`outline` /
 `primaryContainer`); the hero needs the same treatment or a dark-side
 token fix. Moves the Explore board — its own pass.
+
+### 62 · The canvas sits at the editor's file ceiling · *tooling*
+
+The published canvas editor loads at most 200 files; the tree now
+holds exactly 200 (188 artboards + 10 images + canvas.json + Theme).
+Every new board breaks the publish until something yields. Tonight's
+stopgap: gallery-grapes.jpg doubles as the square clip's poster
+(clip-grapes.jpg removed). A strategy is owed before the next boards:
+consolidate fixture images further, retire a generated map from the
+canvas (needs gen-maps + graph.json to learn exclusion — check-flows
+requires every generated map on the canvas today), or split the
+canvas. Related: 61's Explore pass will want new imagery — budget it.
