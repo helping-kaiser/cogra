@@ -9,14 +9,14 @@
 use async_graphql::{Context, Object, SimpleObject};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
-use postgres_store::{PgPool, auth as store, content as content_store, mirror, staged};
+use postgres_store::{PgPool, auth as store, content as content_store, genesis, mirror, staged};
 use uuid::Uuid;
 
 use super::types::{
     Actor, CommentType, CursorKey, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType,
     Record, RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User,
-    connection_cost, content_cursor, content_cursor_key, keyset_connection, keyset_page, list_cost,
-    list_limit, resolve_reference_target,
+    borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
+    keyset_page, list_cost, list_limit, resolve_reference_target,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -109,6 +109,51 @@ impl Query {
         Ok(store::actor_identity(pool, viewer.user_id)
             .await?
             .map(|identity| User::from_viewer(identity, viewer)))
+    }
+
+    /// The actor whose view this reader is browsing from
+    /// (`design/readme.md` §13). A feed is rooted in the viewer's own
+    /// outgoing stances, and a reader who has none is served someone
+    /// else's view — named, always, by the borrowed-view band, which
+    /// reads this field to know whose name to say.
+    ///
+    /// **The most specific available vantage wins**, and the answer
+    /// always carries whose view it is. In preference order:
+    ///
+    /// 1. An **invite-link arrival**, still signed out, borrows **the
+    ///    inviter's** view, resolved from the link id. That resolution
+    ///    arrives with slice 3 and its own band-line ruling.
+    /// 2. An **applicant** borrows **their inviter's**, from the moment
+    ///    the account exists and before either proof is in — and a
+    ///    **landed member** keeps borrowing it until their own first
+    ///    stance toward them exists, the vouch-back.
+    /// 3. A **bare visitor**, with nothing more specific to go on,
+    ///    borrows the **Genesis Moderator's** view. Strictly the
+    ///    fallback: it is the only vantage that names no relationship
+    ///    the reader arrived through.
+    ///
+    /// **The handle is load-bearing, not decoration.** The band speaks
+    /// the name, because a borrowed rank the reader cannot attribute is
+    /// exactly the unlabelled feed §9 refuses — so this resolves to an
+    /// `Actor`, never to a bare "yes, borrowed".
+    ///
+    /// Null is the end of the ladder: the reader's view is their own.
+    /// It is the rule the band reads as "disappear", not missing data.
+    async fn borrowed_view(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
+        let pool = ctx.data::<PgPool>()?;
+        let vantage = match ctx.data::<Option<Viewer>>()?.as_ref().copied() {
+            None => genesis::genesis_moderator(pool).await?,
+            Some(viewer) => match store::actor_identity(pool, viewer.user_id).await? {
+                Some(account) => borrowed_vantage(ctx, &account).await?,
+                None => None,
+            },
+        };
+        Ok(vantage.map(|identity| {
+            Actor::User(User {
+                identity,
+                viewer_session: None,
+            })
+        }))
     }
 
     /// One user by id or unique handle — exactly one argument

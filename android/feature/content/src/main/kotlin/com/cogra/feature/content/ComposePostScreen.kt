@@ -54,6 +54,7 @@ import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.media.MediaGallery
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.topics.TagNameProblem
 import com.cogra.domain.topics.canonicalTagName
 import com.cogra.domain.topics.isAddableTagName
@@ -197,15 +198,7 @@ fun ComposePostScreen(
                 ErrorLine(R.string.content_error_not_found, "compose_not_found")
                 return@Column
             }
-            OutlinedTextField(
-                value = state.title,
-                onValueChange = onTitleChange,
-                label = { Text(stringResource(R.string.content_field_title)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("compose_title"),
-            )
+            TitleField(state.title, state.titleTooLong, onTitleChange)
             OutlinedTextField(
                 value = state.description,
                 onValueChange = onDescriptionChange,
@@ -318,7 +311,7 @@ fun ComposePostScreen(
                 )
                 Button(
                     onClick = onSubmit,
-                    enabled = !state.submitting && !state.nothingToSign,
+                    enabled = state.canSubmit,
                     modifier = Modifier.testTag("compose_submit"),
                 ) {
                     Text(
@@ -337,6 +330,30 @@ fun ComposePostScreen(
             onConfirm = onConfirmSubmit,
             onDismiss = onDismissConfirm,
             withdrawalCost = state.withdrawalCost,
+        )
+    }
+}
+
+/**
+ * The title and the one refusal it can earn — the field's own cap
+ * (post.md §1), said where the words are rather than at the submit.
+ */
+@Composable
+private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(stringResource(R.string.content_field_title)) },
+        singleLine = true,
+        isError = tooLong,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("compose_title"),
+    )
+    if (tooLong) {
+        ErrorLine(
+            text = stringResource(R.string.content_error_title_too_long, MAX_TITLE_CHARS),
+            testTag = "compose_title_too_long",
         )
     }
 }

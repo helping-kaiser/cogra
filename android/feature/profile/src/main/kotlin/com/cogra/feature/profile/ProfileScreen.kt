@@ -16,12 +16,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -29,9 +32,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,10 +48,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.CollapsingTopBanner
-import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.crypto.Family
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
@@ -90,7 +91,7 @@ fun ProfileRoute(
     // replaced for the whole four seconds — and drop the refetch
     // entirely whenever the snackbar was cancelled early.
     LaunchedEffect(profileSavedResult) {
-        if (profileSavedResult) viewModel.refresh()
+        if (profileSavedResult) viewModel.onEditSaved()
     }
     ProfileScreen(
         state = state,
@@ -201,99 +202,110 @@ fun ProfileScreen(
             }
         },
     ) { padding ->
-        when {
-            state.loading -> Box(Modifier.fillMaxSize().padding(padding)) {
-                CircularProgressIndicator(
-                    modifier = Modifier.padding(24.dp).testTag("profile_loading"),
-                )
-            }
-            state.notFound -> Column(Modifier.fillMaxSize().padding(padding).padding(24.dp)) {
-                Text(
-                    text = stringResource(R.string.profile_not_found),
-                    modifier = Modifier.testTag("profile_not_found"),
-                )
-            }
-            state.transportFailed && state.profile == null ->
-                Column(Modifier.fillMaxSize().padding(padding).padding(24.dp)) {
-                    Text(
-                        text = stringResource(R.string.error_transport),
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.testTag("profile_transport_error"),
+        // The pull-to-refresh box wires up inside the Scaffold's content
+        // slot, not around it — the Feed/PostDetail wiring (design/readme.md,
+        // "The pull-down lives on every full-screen scrolling root", ruled
+        // 2026-09-10): every full-screen scrolling root answers pull-to-
+        // refresh, and the profile is exactly such a root.
+        PullToRefreshBox(
+            isRefreshing = state.refreshing,
+            onRefresh = onRetry,
+            modifier = Modifier.padding(padding).fillMaxSize(),
+        ) {
+            when {
+                state.loading -> Box(Modifier.fillMaxSize()) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(24.dp).testTag("profile_loading"),
                     )
-                    TextButton(onClick = onRetry, modifier = Modifier.testTag("profile_retry")) {
-                        Text(stringResource(R.string.profile_retry))
-                    }
                 }
-            else -> {
-                val profile = state.profile ?: return@Scaffold
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(padding),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    item(key = "banners") {
-                        Box(Modifier.padding(horizontal = 16.dp)) { banners() }
-                    }
-                    item(key = "header") {
-                        ProfileHeader(
-                            state = state,
-                            onEdit = onEdit,
-                            onOpenInvites = openInvites,
-                            stanceControl = stanceControl,
+                state.notFound -> Column(Modifier.fillMaxSize().padding(24.dp)) {
+                    Text(
+                        text = stringResource(R.string.profile_not_found),
+                        modifier = Modifier.testTag("profile_not_found"),
+                    )
+                }
+                state.transportFailed && state.profile == null ->
+                    Column(Modifier.fillMaxSize().padding(24.dp)) {
+                        Text(
+                            text = stringResource(R.string.error_transport),
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.testTag("profile_transport_error"),
                         )
-                    }
-                    item(key = "filters") {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                        ) {
-                            FilterChip(
-                                selected = state.filter == ChronicleFilter.POSTS,
-                                onClick = { onFilterChange(ChronicleFilter.POSTS) },
-                                label = { Text(stringResource(R.string.profile_filter_posts)) },
-                                modifier = Modifier.testTag("profile_filter_posts"),
-                            )
-                            FilterChip(
-                                selected = state.filter == ChronicleFilter.COMMENTS,
-                                onClick = { onFilterChange(ChronicleFilter.COMMENTS) },
-                                label = { Text(stringResource(R.string.profile_filter_comments)) },
-                                modifier = Modifier.testTag("profile_filter_comments"),
-                            )
-                            FilterChip(
-                                selected = state.filter == ChronicleFilter.EVERYTHING,
-                                onClick = { onFilterChange(ChronicleFilter.EVERYTHING) },
-                                label = { Text(stringResource(R.string.profile_filter_everything)) },
-                                modifier = Modifier.testTag("profile_filter_everything"),
-                            )
+                        TextButton(onClick = onRetry, modifier = Modifier.testTag("profile_retry")) {
+                            Text(stringResource(R.string.profile_retry))
                         }
                     }
-                    if (state.rows.isEmpty() && !state.rowsLoading) {
-                        item(key = "empty") {
-                            Text(
-                                text = stringResource(R.string.profile_chronicle_empty),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(16.dp).testTag("profile_chronicle_empty"),
+                else -> {
+                    val profile = state.profile ?: return@PullToRefreshBox
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize().testTag("profile_list"),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        item(key = "banners") {
+                            Box(Modifier.padding(horizontal = 16.dp)) { banners() }
+                        }
+                        item(key = "header") {
+                            ProfileHeader(
+                                state = state,
+                                onEdit = onEdit,
+                                onOpenInvites = openInvites,
+                                stanceControl = stanceControl,
                             )
                         }
-                    }
-                    items(state.rows, key = { it.id }) { row ->
-                        ChronicleRow(row = row, onOpenPost = onOpenPost)
-                    }
-                    item(key = "more") {
-                        when {
-                            state.rowsLoading -> CircularProgressIndicator(
-                                modifier = Modifier.padding(16.dp).testTag("profile_rows_loading"),
-                            )
-                            state.pageFailed -> TextButton(
-                                onClick = onLoadMore,
-                                modifier = Modifier.padding(4.dp).testTag("profile_rows_retry"),
+                        item(key = "filters") {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(horizontal = 16.dp),
                             ) {
-                                Text(stringResource(R.string.profile_retry))
+                                FilterChip(
+                                    selected = state.filter == ChronicleFilter.POSTS,
+                                    onClick = { onFilterChange(ChronicleFilter.POSTS) },
+                                    label = { Text(stringResource(R.string.profile_filter_posts)) },
+                                    modifier = Modifier.testTag("profile_filter_posts"),
+                                )
+                                FilterChip(
+                                    selected = state.filter == ChronicleFilter.COMMENTS,
+                                    onClick = { onFilterChange(ChronicleFilter.COMMENTS) },
+                                    label = { Text(stringResource(R.string.profile_filter_comments)) },
+                                    modifier = Modifier.testTag("profile_filter_comments"),
+                                )
+                                FilterChip(
+                                    selected = state.filter == ChronicleFilter.EVERYTHING,
+                                    onClick = { onFilterChange(ChronicleFilter.EVERYTHING) },
+                                    label = { Text(stringResource(R.string.profile_filter_everything)) },
+                                    modifier = Modifier.testTag("profile_filter_everything"),
+                                )
                             }
-                            state.hasMore -> TextButton(
-                                onClick = onLoadMore,
-                                modifier = Modifier.padding(4.dp).testTag("profile_rows_more"),
-                            ) {
-                                Text(stringResource(R.string.profile_load_more))
+                        }
+                        if (state.rows.isEmpty() && !state.rowsLoading) {
+                            item(key = "empty") {
+                                Text(
+                                    text = stringResource(R.string.profile_chronicle_empty),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(16.dp).testTag("profile_chronicle_empty"),
+                                )
+                            }
+                        }
+                        items(state.rows, key = { it.id }) { row ->
+                            ChronicleRow(row = row, onOpenPost = onOpenPost)
+                        }
+                        item(key = "more") {
+                            when {
+                                state.rowsLoading -> CircularProgressIndicator(
+                                    modifier = Modifier.padding(16.dp).testTag("profile_rows_loading"),
+                                )
+                                state.pageFailed -> TextButton(
+                                    onClick = onLoadMore,
+                                    modifier = Modifier.padding(4.dp).testTag("profile_rows_retry"),
+                                ) {
+                                    Text(stringResource(R.string.profile_retry))
+                                }
+                                state.hasMore -> TextButton(
+                                    onClick = onLoadMore,
+                                    modifier = Modifier.padding(4.dp).testTag("profile_rows_more"),
+                                ) {
+                                    Text(stringResource(R.string.profile_load_more))
+                                }
                             }
                         }
                     }

@@ -94,8 +94,8 @@
         <error line="59" column="25" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/core/designsystem/v2/token/MediaTokens.kt">
-        <error line="108" column="15" source="standard:property-naming" />
-        <error line="118" column="15" source="standard:property-naming" />
+        <error line="113" column="15" source="standard:property-naming" />
+        <error line="123" column="15" source="standard:property-naming" />
     </file>
     <file name="src/main/kotlin/com/cogra/core/designsystem/v2/token/Previews.kt">
         <error line="1" column="1" source="standard:filename" />

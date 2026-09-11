@@ -453,6 +453,22 @@ data class CommentView(
     val attachmentsStatus: FieldStatus = FieldStatus.NORMAL,
     /** This comment's own moderation state — what names a removal's reason. */
     val moderation: ModerationState = ModerationState.NORMAL,
+    /**
+     * The author's **own** sensitive mark, alone — not the veil.
+     *
+     * The field statuses carry the veil, which is the OR of this mark
+     * and a moderator's verdict. It is what tells the veil whose mark it
+     * is: an author's warning and the platform's verdict read back as
+     * the same veil, so the face has to name which one a reader met.
+     */
+    val sensitiveSelfMark: Boolean = false,
+    /**
+     * The public reason the author gave for their own mark — shown on
+     * the veil, so a reader chooses whether to look knowing what they
+     * would be looking at. Null when unmarked, when the mark carries no
+     * reason, and when the payload is gone.
+     */
+    val sensitiveReason: String? = null,
 )
 
 /**
@@ -679,6 +695,13 @@ data class ProfileView(
     val websiteUrl: ModeratedField,
     /** Null for an account that has never set one — the monogram (D13). */
     val avatar: MediaAssetView? = null,
+    /**
+     * The newest profile version's authoring instant — what says *which*
+     * version this is. A profile edit lands asynchronously, and the read
+     * serves only what has landed, so this is how a screen tells the
+     * version it asked for from the one it already had.
+     */
+    val updatedAt: Instant = Instant.EPOCH,
 )
 
 /** A tappable link from a chronicle row into the content it touched. */

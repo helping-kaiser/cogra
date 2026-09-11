@@ -28,6 +28,46 @@ export function useRevokeOnChange(urls: readonly string[]): void {
   }, [urls]);
 }
 
+/**
+ * An object URL for one optional blob outside `assets` — the video's cover,
+ * which is its own asset (`CoverAsset`) rather than an attachment, so it
+ * needs the same mint-once/revoke-on-change treatment as `usePreviewUrls`
+ * without the array bookkeeping that hook exists for.
+ *
+ * THE SAME STRICT-MODE GUARD APPLIES: the pairing is kept in a ref so a
+ * Strict Mode double-invoke of the effect sees its own first pass already
+ * landed and mints nothing twice.
+ */
+export function useObjectUrl(file: Blob | null | undefined): string | null {
+  const [url, setUrl] = useState<string | null>(null);
+  const live = useRef<{ file: Blob; url: string } | null>(null);
+
+  useEffect(() => {
+    const current = live.current;
+    if (!file) {
+      if (current === null) return;
+      URL.revokeObjectURL(current.url);
+      live.current = null;
+      setUrl(null);
+      return;
+    }
+    if (current !== null && current.file === file) return;
+    if (current !== null) URL.revokeObjectURL(current.url);
+    const next = URL.createObjectURL(file);
+    live.current = { file, url: next };
+    setUrl(next);
+  }, [file]);
+
+  useEffect(() => {
+    return () => {
+      if (live.current !== null) URL.revokeObjectURL(live.current.url);
+      live.current = null;
+    };
+  }, []);
+
+  return url;
+}
+
 export function usePreviewUrls(assets: readonly PickedAsset[]): Readonly<Record<string, string>> {
   const [urls, setUrls] = useState<Record<string, string>>({});
   // What is actually outstanding, mirrored in a ref so the unmount cleanup can

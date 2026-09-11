@@ -12,6 +12,8 @@
 use sqlx::{PgConnection, PgPool};
 use uuid::Uuid;
 
+use crate::auth::ActorIdentity;
+
 /// The reserved system-actor handles (network.md §2 — system handles are
 /// reserved at bootstrap; one namespace across kinds).
 pub const PUBLISHER_HANDLE: &str = "publisher";
@@ -136,6 +138,31 @@ pub async fn insert_credentials(
     .await?
     .rows_affected()
         == 1)
+}
+
+/// The Genesis Moderator — the human account the bootstrap seeds beside
+/// the system cast, whom a reader with no view of their own borrows one
+/// from (`design/readme.md` §13: "a bare arrival borrows the genesis
+/// moderator's view — a human account, never a system one").
+///
+/// Identified by the custodied key rather than by handle, because the
+/// handle is runtime input (`GENESIS_HANDLE`) and the API process never
+/// sees it. The bootstrap writes `system_actor_keys` for the cast and
+/// for this one account; the cast is `system`-kind, so a `user`-kind
+/// actor holding a genesis key is the Genesis Moderator and no one else.
+pub async fn genesis_moderator(pool: &PgPool) -> Result<Option<ActorIdentity>, sqlx::Error> {
+    sqlx::query_as!(
+        ActorIdentity,
+        r#"SELECT a.id AS "id!", a.kind AS "kind!", a.handle AS "handle!",
+                  a.actor_pubkey, a.l0_address, a.created_at AS "created_at!"
+           FROM actors a
+           JOIN system_actor_keys k ON k.actor_id = a.id
+           WHERE a.kind = 'user'
+           ORDER BY a.created_at
+           LIMIT 1"#,
+    )
+    .fetch_optional(pool)
+    .await
 }
 
 pub async fn system_key(pool: &PgPool, actor_id: Uuid) -> Result<Option<Vec<u8>>, sqlx::Error> {

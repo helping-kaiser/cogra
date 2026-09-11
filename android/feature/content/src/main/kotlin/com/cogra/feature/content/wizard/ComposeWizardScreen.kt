@@ -408,6 +408,7 @@ internal fun ComposeWizardScreen(
                     CograButton(
                         text = "Next",
                         onClick = onNext,
+                        enabled = !state.titleTooLong,
                         modifier = Modifier.fillMaxWidth(),
                         testTag = "wizard_details_next",
                     )
@@ -611,11 +612,13 @@ internal fun ComposeWizardState.headerTitle(): String = when (step) {
 /**
  * Whether the stage's bottom Next may be taken.
  *
- * Only the body can be unready — the crop and details stages always have
- * somewhere to go, and the seal commits by signing rather than by Next.
+ * The body can be unready and the details can carry an over-long title;
+ * the crop stage always has somewhere to go, and the seal commits by
+ * signing rather than by Next.
  */
 internal fun ComposeWizardState.forwardEnabled(): Boolean = when (step) {
     WizardStep.Body -> bodyReady
+    WizardStep.Details -> !titleTooLong
     else -> true
 }
 
