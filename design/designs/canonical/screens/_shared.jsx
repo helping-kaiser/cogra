@@ -1340,8 +1340,9 @@ function SettingsBody() {
         {/* THE EXACT VALUES ARE A READING SETTING, and a client-local one —
             like the theme, never an L2 preference (jakob's ruling, backlog item
             53). Off is the drawn state because glyph-first is the product's
-            default: the faces, the tag objects and the `graph` mark carry every
-            signal number until a reader asks for the digits. */}
+            default: the faces and the tag objects carry every PAIR until a
+            reader asks for the digits. Scores and ranks are not pairs and are
+            drawn either way. */}
         <SettingsGroup
           label="Reading"
           footnote="Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device."
@@ -1350,7 +1351,7 @@ function SettingsBody() {
           <SettingsRow
             checked={false}
             label="Show exact values"
-            status="The numbers behind the faces and the glyphs."
+            status="The number pairs behind the faces."
             onOpen={() => {}}
           />
         </SettingsGroup>
