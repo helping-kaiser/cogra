@@ -2067,3 +2067,13 @@ the same sweep: `Post Score` in prose and in the graph's gap names
 specimen `SheetTitle` the live `OverflowMenu` doesn't render;
 `feed-filter.card.html:46`'s history sentence naming the replaced
 segmented row; the frozen search-ideation canvases' `3w` ages.
+
+### 58 · The vouch-back ceremony · *design*
+
+jakob, 2026-09-11 (the second ruling round): once a landed member
+vouches back, the moment deserves a ceremonial ending — "some
+indicator that you are now part of the network… you becoming part of
+the sky or sth", an animation welcome. Not a notification (the
+approved kind already notifies the vouch-in); this is the crown of
+the entry flow, a dedicated surface after reciprocation. Runs as its
+own standalone mini-round after round 4 of the MVP queue.
