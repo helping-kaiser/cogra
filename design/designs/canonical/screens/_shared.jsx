@@ -34,6 +34,7 @@ const {
   SheetTitle,
   TextField,
   FieldLabel,
+  FieldSupport,
   PasswordField,
   RecoveryCode,
   SearchBar,
@@ -915,31 +916,46 @@ function ReplySealBody() {
 
    It lives here because the words STAGE and the words EDIT both draw it, and
    a body on a second board stops being board-local (`ReplyDraft`'s reason).
-   The caret rides the last paragraph wherever the box is drawn. */
-function WordsBody({ paragraphs }) {
+   The caret rides the last paragraph wherever the box is drawn.
+
+   IT CARRIES THE LATE COUNTER LIKE ANY OTHER CAPPED FIELD. The box is not a
+   `TextField`, so it renders the atom's own `FieldSupport` row rather than
+   inheriting it — one reading, one threshold, one formatter, one geometry under
+   the field, whatever the field is made of.
+   `used` is what the counter counts here: a body near 5,000 characters is far
+   longer than the box shows, and the paragraphs drawn are the visible tail of
+   it, so a count taken from them would be a lie about what is written. Over the
+   cap the box takes the `--error` outline and the surface's own refusal renders
+   under it, which is `TextField`'s arrangement exactly. */
+function WordsBody({ paragraphs, cap, used, error }) {
+  const spent = used ?? [...paragraphs.join("\n\n")].length;
+  const over = cap != null && spent > cap;
   return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        gap: 16,
-        padding: 12,
-        borderRadius: "var(--radius-extra-small)",
-        border: "1px solid var(--border-field)",
-        overflow: "hidden",
-        boxSizing: "border-box",
-      }}
-    >
-      {paragraphs.map((text, index) => (
-        <p
-          key={text}
-          style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)", letterSpacing: "var(--text-body-large--letter-spacing)" }}
-        >
-          {text}
-          {index === paragraphs.length - 1 && <Caret />}
-        </p>
-      ))}
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-1)", minHeight: 0 }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+          padding: 12,
+          borderRadius: "var(--radius-extra-small)",
+          border: over ? "1px solid var(--error)" : "1px solid var(--border-field)",
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
+        {paragraphs.map((text, index) => (
+          <p
+            key={text}
+            style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)", letterSpacing: "var(--text-body-large--letter-spacing)" }}
+          >
+            {text}
+            {index === paragraphs.length - 1 && <Caret />}
+          </p>
+        ))}
+      </div>
+      <FieldSupport error={error} cap={cap} used={spent} />
     </div>
   );
 }
@@ -947,8 +963,20 @@ function WordsBody({ paragraphs }) {
 /* THE PICTURE PATH'S DETAILS STAGE, whole — `ComposeDetails` itself, and what
    the reference pair sheet stands on. Factored for `ReplySealBody`'s reason: a
    sheet covers the surface the reader came from, and that surface has to be the
-   real one, so the two boards share one markup. */
-function ComposeDetailsBody() {
+   real one, so the two boards share one markup.
+
+   THE TWO CAPPED FIELDS TAKE THEIR CONTENT FROM THE BOARD (the caps-affordance
+   round), so the stage near its caps is this stage and not a copy of it. The
+   defaults are the canonical fixtures; `ComposeDetailsCaps` passes longer ones
+   and the refusal that belongs to the surface, and `nextDisabled` is what a
+   field over its cap does to the step. Nothing else about the stage moves. */
+function ComposeDetailsBody({
+  title = "Salt maps of the coast road",
+  titleError,
+  description = "Rubbings from three weekends at low tide — paper against the salt crust.",
+  descriptionError,
+  nextDisabled = false,
+}) {
   return (
     <>
       <WizardHeader title="Details" />
@@ -960,9 +988,9 @@ function ComposeDetailsBody() {
         />
         <DescribeCounter described={0} total={2} onDescribe={() => {}} />
 
-        <TextField label="Title" corner="Optional" value="Salt maps of the coast road" />
+        <TextField label="Title" corner="Optional" cap={100} value={title} error={titleError} />
 
-        <TextField label="Description" corner="Optional" rows={3} value="Rubbings from three weekends at low tide — paper against the salt crust." />
+        <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} error={descriptionError} />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Tags</FieldLabel>
@@ -988,7 +1016,7 @@ function ComposeDetailsBody() {
 
         <div style={{ flex: 1 }} />
 
-        <Button style={{ width: "100%" }}>Next</Button>
+        <Button style={{ width: "100%" }} disabled={nextDisabled}>Next</Button>
       </div>
     </>
   );
@@ -1023,12 +1051,13 @@ function EditComposeBody() {
           <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
         </div>
 
-        <TextField label="Title" corner="Optional" value="Salt maps of the coast road" />
+        <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" />
 
         <TextField
           label="Description"
           corner="Optional"
           rows={2}
+          cap={500}
           value="Rubbings from three weekends at low tide — paper against the salt crust."
         />
 
@@ -1088,7 +1117,7 @@ function CommentComposerFoot() {
     <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
       <MonogramAvatar name="Sol Ferreira" />
       <div style={{ flex: 1 }}>
-        <TextField label="Add a comment" value="" />
+        <TextField label="Add a comment" cap={2000} value="" />
       </div>
     </div>
   );

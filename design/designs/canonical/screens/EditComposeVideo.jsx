@@ -53,8 +53,8 @@ export function Screen() {
           <QuietNote>It plays the moment it is on screen, so it starts on its own first frame.</QuietNote>
         </div>
 
-        <TextField label="Title" corner="Optional" value="The long way home" />
-        <TextField label="Description" corner="Optional" rows={2} value="Took the coast road instead of the tunnel. Four hours longer, worth every minute." />
+        <TextField label="Title" corner="Optional" cap={100} value="The long way home" />
+        <TextField label="Description" corner="Optional" rows={2} cap={500} value="Took the coast road instead of the tunnel. Four hours longer, worth every minute." />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Tags</FieldLabel>

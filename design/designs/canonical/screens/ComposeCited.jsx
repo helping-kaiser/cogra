@@ -22,9 +22,9 @@ export function Screen() {
     <>
       <WizardHeader title="Details" leaveLabel="Leave — your draft is kept" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <TextField label="Title" corner="Optional" value="" />
+        <TextField label="Title" corner="Optional" cap={100} value="" />
 
-        <TextField label="Description" corner="Optional" rows={3} value="" />
+        <TextField label="Description" corner="Optional" rows={3} cap={500} value="" />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Tags</FieldLabel>

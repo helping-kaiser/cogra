@@ -18,6 +18,7 @@ export function Screen() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, padding: "8px 24px 24px", overflow: "hidden" }}>
         <FieldLabel>What do you want to publish?</FieldLabel>
         <WordsBody
+          cap={5000}
           paragraphs={[
             "Three weekends of walking the same stretch at low tide, tracing where the salt crust draws its lines.",
             "The rubbings pick up what the light misses. Paper against the crust, the side of a wax stick, and whatever the wind allows — none of them took longer than the walk out to make.",

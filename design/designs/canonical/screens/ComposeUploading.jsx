@@ -20,8 +20,8 @@ export function Screen() {
         <UploadErrorLine onRetry={() => {}} onRemove={() => {}} />
         <DescribeCounter described={1} total={3} onDescribe={() => {}} />
 
-        <TextField label="Title" corner="Optional" value="Sunday at the tide market" />
-        <TextField label="Description" corner="Optional" rows={2} value="Everything the flats give up in one morning." />
+        <TextField label="Title" corner="Optional" cap={100} value="Sunday at the tide market" />
+        <TextField label="Description" corner="Optional" rows={2} cap={500} value="Everything the flats give up in one morning." />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Tags</FieldLabel>
