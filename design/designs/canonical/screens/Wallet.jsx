@@ -13,7 +13,7 @@ export function Screen() {
     <>
       <CograBand />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 0 0" }}>
-        <WalletBalance amount={128.4} approx="0.00087" delta="+14.40 this week" onHelp={() => {}} />
+        <WalletBalance amount={128.4} approx="0.00087" delta={14.4} onHelp={() => {}} />
 
         <div style={{ padding: "8px 16px 0" }}>
           <PayoutAddressRow address={SOL_ADDRESS} onOpen={() => {}} />
