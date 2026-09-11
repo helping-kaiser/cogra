@@ -803,6 +803,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedHidden.dc.html",
+      "title": "Feed · someone hidden",
+      "x": 3840,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "Money.dc.html",
       "title": "Money · the CGT figure",
       "x": 0,
@@ -1173,9 +1182,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -2740,
+      "x": -3030,
       "y": 0,
-      "w": 2320,
+      "w": 2610,
       "h": 2109,
       "page": "feed",
       "title": "Feed & Search · flow map"

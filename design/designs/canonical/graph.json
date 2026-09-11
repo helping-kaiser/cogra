@@ -558,6 +558,25 @@
     { "from": "FeedNarrowed", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "FeedNarrowed", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
+    { "from": "FeedHidden", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
+    { "from": "FeedHidden", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
+    { "from": "FeedHidden", "via": 3, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
+    { "from": "FeedHidden", "via": 4, "kind": "advance", "label": "post media", "to": [{ "board": "PostDetail", "case": "pictures — the post opens" }, { "board": "PostDetailVideo", "case": "a clip wider than tall — the post opens" }, { "board": "Reel", "case": "a portrait clip — the stream opens" }] },
+    { "from": "FeedHidden", "via": 5, "kind": "detour", "label": "More (caption)", "to": [{ "terminal": "self", "case": "the caption unfolds" }] },
+    { "from": "FeedHidden", "via": 6, "kind": "advance", "label": "tag chip", "to": [{ "board": "TagPage" }] },
+    { "from": "FeedHidden", "via": 7, "kind": "advance", "label": "stance face", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }] },
+    { "from": "FeedHidden", "via": 8, "kind": "detour", "label": "Post score", "to": [{ "gap": "Post Score drill-down (backlog item 13)" }] },
+    { "from": "FeedHidden", "via": 9, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
+    { "from": "FeedHidden", "via": 10, "kind": "nav", "label": "nav · Feed", "to": [{ "terminal": "self", "case": "scrolled — back to the top" }, { "terminal": "self", "case": "at the top — the feed refreshes" }] },
+    { "from": "FeedHidden", "via": 11, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "FeedHidden", "via": 12, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "FeedHidden", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
+    { "from": "FeedHidden", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "FeedHidden", "via": 15, "kind": "nav", "label": "chats", "to": [{ "gap": "the chat surface (not designed)" }] },
+    { "from": "FeedHidden", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "FeedHidden", "via": 17, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
+    { "from": "FeedHidden", "via": 18, "kind": "cancel", "label": "Undo", "to": [{ "board": "Feed", "case": "she is unhidden, her posts come back, and the feed is as it was" }] },
+
     { "from": "FeedNothing", "via": 1, "kind": "advance", "label": "filter chip (Nothing · showing seen)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedNothing", "via": 2, "kind": "advance", "label": "Show posts again", "to": [{ "board": "Feed", "case": "the default restored" }] },
     { "from": "FeedNothing", "via": 3, "kind": "nav", "label": "nav · Feed", "to": [{ "terminal": "self", "case": "scrolled — back to the top" }, { "terminal": "self", "case": "at the top — the feed refreshes" }] },
@@ -978,7 +997,7 @@
 
     { "from": "ReaderPostMenu", "via": 1, "kind": "advance", "label": "Save", "to": [{ "terminal": "self", "case": "the post is kept — the sheet closes, the snackbar confirms, and the row reads Unsave next time" }] },
     { "from": "ReaderPostMenu", "via": 2, "kind": "advance", "label": "Cite in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this post rides along invisibly until details" }] },
-    { "from": "ReaderPostMenu", "via": 3, "kind": "advance", "label": "Hide @ada", "to": [{ "terminal": "self", "case": "no confirm — their posts leave your feed and the snackbar offers Undo; the post being read stays, hiding clearing the feed rather than the record" }] },
+    { "from": "ReaderPostMenu", "via": 3, "kind": "advance", "label": "Hide @ada", "to": [{ "board": "FeedHidden", "case": "opened from a card in the feed — no confirm: her rows go, the ones behind them move up, and the snackbar offers Undo" }, { "terminal": "self", "case": "opened from the post being read — that post stays, hiding clearing the feed rather than the record" }] },
     { "from": "ReaderPostMenu", "via": 4, "kind": "detour", "label": "License terms", "to": [{ "board": "PostLicense", "case": "the menu closes and the terms come up in a sheet over the post" }] },
     { "from": "ReaderPostMenu", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
@@ -990,7 +1009,7 @@
     { "from": "ProfileMenu", "via": 1, "kind": "advance", "label": "Save", "to": [{ "terminal": "self", "case": "the person is kept — they join the one Saved list beside posts and comments" }] },
     { "from": "ProfileMenu", "via": 2, "kind": "advance", "label": "Mention in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this person rides along invisibly until details, mentioning being citing" }] },
     { "from": "ProfileMenu", "via": 3, "kind": "advance", "label": "Share this profile", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
-    { "from": "ProfileMenu", "via": 4, "kind": "advance", "label": "Hide @ada", "to": [{ "terminal": "self", "case": "no confirm — their posts leave your feed and the snackbar offers Undo; this page stays open, hiding clearing the feed rather than the person" }] },
+    { "from": "ProfileMenu", "via": 4, "kind": "advance", "label": "Hide @ada", "to": [{ "terminal": "self", "case": "no confirm — the snackbar offers Undo and this page stays open, hiding clearing the feed rather than the person" }, { "board": "FeedHidden", "case": "the feed, the next time it is opened — her rows gone, the ones behind them moved up" }] },
     { "from": "ProfileMenu", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
     { "from": "ProfileOwnMenu", "via": 1, "kind": "advance", "label": "Saved", "to": [{ "board": "Saved" }, { "board": "SavedEmpty", "case": "nothing kept yet" }] },

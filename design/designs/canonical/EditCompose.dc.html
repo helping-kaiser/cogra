@@ -431,6 +431,10 @@
   --on-surface-loud: var(--on-primary-container);
   --surface-snackbar: var(--inverse-surface);
   --on-surface-snackbar: var(--inverse-on-surface);
+  /* A snackbar's one action. `primary` is unreadable on the inverse ground, so
+     Material gives the inverted surface the inverted brand colour; this is the
+     only place it is spent. */
+  --action-on-snackbar: var(--inverse-primary);
 
   /* Text. Secondary text is `onSurfaceVariant`, never `onSurface` at reduced
      opacity — opacity breaks the contrast guarantee the token carries. */
@@ -1006,6 +1010,10 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --on-surface-loud: var(--on-primary-container);
   --surface-snackbar: var(--inverse-surface);
   --on-surface-snackbar: var(--inverse-on-surface);
+  /* A snackbar's one action. `primary` is unreadable on the inverse ground, so
+     Material gives the inverted surface the inverted brand colour; this is the
+     only place it is spent. */
+  --action-on-snackbar: var(--inverse-primary);
 
   /* Text. Secondary text is `onSurfaceVariant`, never `onSurface` at reduced
      opacity — opacity breaks the contrast guarantee the token carries. */
