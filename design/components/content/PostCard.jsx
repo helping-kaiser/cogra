@@ -135,8 +135,12 @@ export function PostCard({
   // sheet over whatever surface the reader asked from (readme §13, the menus
   // round), and the card's only part in it is carrying the row. The license
   // rode the payload, so a redacted record has none to show.
+  //
+  // It CLOSES the menu rather than leading it: the rows the menu was opened for
+  // come first, the rarest read last — the order the author's own menu has
+  // always had, and the one the menu boards draw.
   const items = license && !redacted
-    ? [{ label: LICENSE_MENU_LABEL, onSelect: () => {} }, ...menuItems]
+    ? [...menuItems, { label: LICENSE_MENU_LABEL, onSelect: () => {} }]
     : menuItems;
 
   const heading = title ? (
