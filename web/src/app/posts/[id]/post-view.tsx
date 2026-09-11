@@ -260,13 +260,13 @@ export function PostView({
       startedEditUploads.current.add(asset.id);
       // No ratio: a comment's pictures keep their own shape, on an edit as on
       // a compose.
-      void runUpload(client, asset, undefined, (upload) =>
+      void runUpload(client, guard, asset, undefined, (upload) =>
         setEditing((current) =>
           current === null ? current : { ...current, gallery: withUpload(current.gallery, asset.id, upload) },
         ),
       );
     }
-  }, [editAdded, client]);
+  }, [editAdded, client, guard]);
 
   const refresh = useCallback(() => {
     let cancelled = false;
