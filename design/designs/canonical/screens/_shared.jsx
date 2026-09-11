@@ -141,7 +141,7 @@ function ExactTail({ exact, spoken }) {
   );
 }
 
-/* A standing of one gentle record — the vouch-back default made a bundle. */
+/* An opinion of one gentle record — the vouch-back default made a bundle. */
 function mkBundle(pDirected, pInterest) {
   const pair = { pDirected, pInterest };
   return { current: pair, rawSum: pair, records: 1 };
