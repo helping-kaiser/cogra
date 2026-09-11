@@ -1423,6 +1423,14 @@ Object.assign(FLOW_MARKERS, {
   ],
   TagPad: [
     { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
+    { n: 2, find: ">Withdraw</button>", tag: "button" },
+    { n: 3, find: ">Done</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The composer's twin of the pad. It has no `Withdraw` — nothing is signed on
+  // that path yet — so its three live things are the pad, `Done` and the scrim.
+  TagPadCompose: [
+    { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
