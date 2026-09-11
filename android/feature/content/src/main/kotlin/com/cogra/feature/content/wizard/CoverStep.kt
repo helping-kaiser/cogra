@@ -153,7 +153,6 @@ private fun DurationBadge(label: String, modifier: Modifier = Modifier) {
     )
 }
 
-
 /**
  * The frame the clip will be met in, from the clip's own shape.
  *
