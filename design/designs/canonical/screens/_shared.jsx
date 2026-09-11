@@ -159,9 +159,15 @@ const SOL_ADDRESS_NEW = "lq1qqw7t3xk0zfvljmv2u49h5tld6mfj7z2vhnn0mjcz2q0edgp5yh3
 
 /* Genesis content always declares a license, so every card has at least that
    menu entry — without one the dot vanishes, and it must not. Citing rides the
-   same menu on every content (readme §13). */
+   same menu on every content (readme §13), and so does saving (the private-
+   viewer-state round): both act on the thing itself, whoever wrote it.
+
+   THE HIDE ROW IS NOT HERE, and that is the difference between a card's menu
+   and a menu board: hiding names the author, so it is spelled where the author
+   is known rather than handed to every card as one string. */
 const CITE_ROW = { label: "Cite in a new post", onSelect: () => {} };
-const CITE_MENU = [CITE_ROW];
+const SAVE_ROW = { label: "Save", onSelect: () => {} };
+const CARD_MENU = [SAVE_ROW, CITE_ROW];
 
 /* A POST'S BODY IS WORDS XOR MEDIA (post.md). Every fixture with a picture
    carries its words as the DESCRIPTION — the caption beside the body — and no
@@ -177,7 +183,7 @@ const ADA_POST = {
   score: "15.20",
   comments: 3,
   license: { attribution: 1, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 const TOBIAS_POST = {
@@ -187,7 +193,7 @@ const TOBIAS_POST = {
   score: "3.10",
   comments: 1,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 const SOL_POST = {
@@ -204,7 +210,7 @@ const SOL_POST = {
   score: "9.10",
   comments: 2,
   license: { attribution: 0.5, provenance: 0.5 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 /* The gallery post (media slice, 2026-08-31): four pictures at one crop shape,
@@ -225,7 +231,7 @@ const MIRA_GALLERY_POST = {
   score: "6.40",
   comments: 2,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 /* CograBand moved into the system (components/navigation/CograBand.jsx) the
@@ -328,13 +334,19 @@ function DetailHeader({ items }) {
 
 /* What the one menu holds — the author's post vs someone else's.
 
-   ONE MECHANISM, SPELLED TWICE. A card mounts its own menu and prepends the
-   license row to whatever `menuItems` it was handed; a DETAIL surface hides the
+   ONE MECHANISM, SPELLED TWICE. A card mounts its own menu and closes whatever
+   `menuItems` it was handed with the license row; a DETAIL surface hides the
    card's dot and the header carries the menu instead, so these lists are that
    same menu written out for the header, and they take the row's words from the
-   master's atom rather than spelling them again. The reader's menu keeps the
-   card's own order, the license row first; the author's leads with the acts it
-   was opened for and lets the license row close it. */
+   master's atom rather than spelling them again. Both keep the card's own
+   order: the acts the menu was opened for lead, and the license row closes it,
+   the license being the rarest read in the product.
+
+   SAVE IS THE ROW THAT CARRIES ITS OWN STATE (readme §13, the private-viewer-
+   state round). Nothing outside this menu says a thing is saved — the action
+   row stays opinion · score · comments · share — so the row reads `Save` while
+   it is not and `Remove from saved` while it is. A control says what will
+   happen (§3), which is why the saved form is a verb and not the word Saved. */
 const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
 const OWN_POST_MENU = [
   { label: "Edit", onSelect: () => {} },
@@ -342,7 +354,8 @@ const OWN_POST_MENU = [
   { label: "Remove", onSelect: () => {} },
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [LICENSE_ROW, CITE_ROW];
+const READER_POST_MENU = [...CARD_MENU, { label: "Hide @ada", onSelect: () => {} }, LICENSE_ROW];
+const COMMENT_MENU = [...CARD_MENU, LICENSE_ROW];
 /* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
    from the bottom edge over the surface the reader asked from, and go back to
    it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
@@ -373,10 +386,24 @@ function LicenseSheet({ license, stacked = false }) {
 }
 
 /* Another's profile: no license (a profile declares none) and no citing — the
-   word for referencing a person is mentioning (readme §13, the menus round). */
+   word for referencing a person is mentioning (readme §13, the menus round). A
+   person is saveable like anything else, and hiding one is the read-side
+   comfort this menu is the natural home of (the private-viewer-state round).
+   Hide sits last: it is the rarest row and the one that takes something away. */
 const PROFILE_MENU = [
+  SAVE_ROW,
   { label: "Mention in a new post", onSelect: () => {} },
   { label: "Share this profile", onSelect: () => {} },
+  { label: "Hide @ada", onSelect: () => {} },
+];
+
+/* Your own profile's menu (the private-viewer-state round): the two private
+   lists, then share. Saved and History are the only surfaces in the product
+   nobody but the reader can see, and the band's ⋮ is where they hang. */
+const OWN_PROFILE_MENU = [
+  { label: "Saved", onSelect: () => {} },
+  { label: "History", onSelect: () => {} },
+  { label: "Share your profile", onSelect: () => {} },
 ];
 
 /* A device-local recent query — a quiet row, never a record (readme §13). */
@@ -469,15 +496,19 @@ function HelpDot({ ariaLabel = "How searching works", ...rest }) {
   return <SystemHelpDot ariaLabel={ariaLabel} {...rest} />;
 }
 
-/* The own-profile band cluster (profile round): the share control and the gear
-   on the band's edge — chats arrives built into the band itself. Shared by the
+/* The own-profile band cluster (profile round): the overflow and the gear on
+   the band's edge — chats arrives built into the band itself. Shared by the
    member and applicant own-profile boards.
 
-   YOUR OWN PROFILE HAS NO MENU (readme §13, the menus round). Another person's
-   holds two rows; on your own, mentioning yourself is not a thing anyone does,
-   and share is what is left. A ⋮ that opens a sheet holding one row is a tap
-   spent on nothing — so the band wears the share glyph the action rows already
-   use, and one tap hands the profile to the platform's own sheet. */
+   THE ⋮ IS WHERE YOUR PRIVATE STATE LIVES (readme §13, the private-viewer-state
+   round). Saved and History are lists only you can see, and a profile page has
+   no row to hang them off — its one wide control is the person. So they sit in
+   the band's menu with Share your profile, and the dot opens a sheet rather
+   than acting on its own.
+
+   The dot keeps the slot left of the gear. Material's app bar would put an
+   overflow last; the gear has been the band's right edge since the profile
+   round, and moving it would move the thing every reader already aims at. */
 function ProfileBandIcon({ name, label }) {
   return (
     <button
@@ -495,7 +526,7 @@ function ProfileBand({ children }) {
     <CograBand
       trailing={
         <span style={{ display: "flex", alignItems: "center" }}>
-          <ProfileBandIcon name="share" label="Share your profile" />
+          <ProfileBandIcon name="more_vert" label="More on your profile" />
           <ProfileBandIcon name="settings" label="Settings" />
         </span>
       }
@@ -559,6 +590,49 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
         <PostCard {...ADA_POST} variant="detail" />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
+    </>
+  );
+}
+
+/* Your own profile, whole — shared the moment the band's ⋮ opened a sheet over
+   it (readme §13, the private-viewer-state round). The page is now drawn on
+   three boards, and one drawing is what keeps the three from disagreeing about
+   what your own profile holds.
+
+   `tail` is the chronicle's last slot: the row a page-failure puts where the
+   next page would have been. Given none, the list simply ends. */
+function ProfileOwnBody({ tail = null }) {
+  return (
+    <>
+      <ProfileBand />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ padding: "0 16px" }}>
+          <ProfileHeader
+            handle="sol"
+            displayName="Sol Ferreira"
+            bio="Field notes from the flats — salt, paper, and whatever the wind allows."
+            website="solferreira.art"
+            posts={5}
+            stancesOn={9}
+            stancesTaken={14}
+            own
+            onEdit={() => {}}
+            onInvites={() => {}}
+            onAvatarChange={() => {}}
+            onCounts={() => {}}
+          />
+        </div>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
+        <ChronicleList>
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert />
+          {tail}
+        </ChronicleList>
+      </div>
+      <BottomNav active="profile" slots={ALL_SLOTS} inline />
     </>
   );
 }
@@ -1052,7 +1126,7 @@ function CommentsThreadSheet() {
         topics={["glovebox", "coastroad"]}
         references={1}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CITE_MENU}
+        menuItems={CARD_MENU}
       />
       {/* The veiled comment sits SECOND, where the frame still shows it
           whole: the thread is taller than the sheet, and a state drawn
@@ -1071,7 +1145,7 @@ function CommentsThreadSheet() {
         sensitive={{ reason: "A dead seabird in the second frame." }}
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CITE_MENU}
+        menuItems={CARD_MENU}
       />
       <CommentCard
         author={SOL}
@@ -1079,7 +1153,7 @@ function CommentsThreadSheet() {
         timestamp="45m"
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CITE_MENU}
+        menuItems={CARD_MENU}
         replies={[
           {
             id: "r1",
@@ -1088,7 +1162,7 @@ function CommentsThreadSheet() {
             timestamp: "40m",
             onReply: () => {},
             license: { attribution: 0, provenance: 0 },
-            menuItems: CITE_MENU,
+            menuItems: CARD_MENU,
           },
           {
             id: "r2",
@@ -1097,7 +1171,7 @@ function CommentsThreadSheet() {
             timestamp: "22m",
             onReply: () => {},
             license: { attribution: 0, provenance: 0 },
-            menuItems: CITE_MENU,
+            menuItems: CARD_MENU,
           },
         ]}
       />
@@ -1130,7 +1204,7 @@ const MIRA_CLIP_POST = {
   score: "7.40",
   comments: 2,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 /* ── The other two clip shapes (video-cover round, 2026-09-10) ─────────────
@@ -1174,7 +1248,7 @@ const TOBIAS_CANOE_POST = {
   score: "4.80",
   comments: 1,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 const ADA_GRAPES_POST = {
@@ -1186,7 +1260,7 @@ const ADA_GRAPES_POST = {
   score: "3.60",
   comments: 4,
   license: { attribution: 0, provenance: 0 },
-  menuItems: CITE_MENU,
+  menuItems: CARD_MENU,
 };
 
 /* The bottom bar's height — what the stream's own chrome has to clear. */
@@ -1355,6 +1429,23 @@ function SettingsBody() {
             status="The number pairs behind the faces."
             onOpen={() => {}}
           />
+        </SettingsGroup>
+
+        {/* HIDING IS A READING SETTING THAT IS NOT THIS DEVICE'S (the private-
+            viewer-state round). It sits beside Reading because that is the
+            activity it belongs to — a reader who wants their feed quieter looks
+            where the feed's own default lives — and in a group of its own
+            because the Reading footnote's promise, that both its choices stay
+            on this device, is not true of a hidden account: that list follows
+            the account everywhere. Its count is bare, the row's label having
+            already said what is counted (§3); with nobody hidden the row goes
+            inert and reads `None`, since a tap that can only open an empty
+            sheet is a tap spent on nothing. */}
+        <SettingsGroup
+          label="People"
+          footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
+        >
+          <SettingsRow label="Hidden accounts" value="3" onOpen={() => {}} />
         </SettingsGroup>
 
         <SettingsGroup

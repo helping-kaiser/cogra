@@ -76,7 +76,7 @@ export function CommentCard({
   // Same rule as PostCard: the license is a rare read, so it arrives from the
   // menu rather than sitting on the comment, and it comes up in a sheet over
   // the thread rather than on the card.
-  const items = license ? [{ label: LICENSE_MENU_LABEL, onSelect: () => {} }, ...menuItems] : menuItems;
+  const items = license ? [...menuItems, { label: LICENSE_MENU_LABEL, onSelect: () => {} }] : menuItems;
   /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
      has no title to leave outside it, so what carries the informed choice is
      the frame the card already wears — the author, the timestamp, the topics,
