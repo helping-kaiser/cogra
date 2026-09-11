@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
+import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
+import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
@@ -1356,6 +1358,109 @@ describe("PostView", () => {
       expect(signer.signStaged).not.toHaveBeenCalled();
       fireEvent.click(screen.getByTestId("comment-edit-multi-action-proceed"));
       await waitFor(() => expect(signer.signStaged).toHaveBeenCalledTimes(2));
+    });
+  });
+
+  // The post detail is one of the named surfaces (design/readme.md, "The
+  // pull-down lives on every full-screen scrolling root", ruled
+  // 2026-09-10) — the feed's own twin test (feed-view.test.tsx,
+  // "pulling down at the top").
+  describe("pulling down at the top", () => {
+    function touch(type: string, clientY: number): Event {
+      const event = new Event(type, { bubbles: true });
+      const points = [{ clientY }];
+      Object.defineProperty(event, "touches", { value: points });
+      Object.defineProperty(event, "changedTouches", { value: points });
+      return event;
+    }
+
+    function pull(scroller: HTMLElement, travel = PULL_THRESHOLD) {
+      fireEvent(scroller, touch("touchstart", 100));
+      fireEvent(scroller, touch("touchmove", 100 + travel));
+      fireEvent(scroller, touch("touchend", 100 + travel));
+    }
+
+    function postIn() {
+      const scroller = document.createElement("div");
+      document.body.append(scroller);
+      renderWithProviders(
+        <ScrollHostProvider value={{ current: scroller }}>
+          <PostView postId="p1" />
+        </ScrollHostProvider>,
+        { writeSigner: fakeWriteSigner() },
+      );
+      return scroller;
+    }
+
+    it("asks the server again without blanking the post already on screen", async () => {
+      let reads = 0;
+      server.use(
+        graphql.query("PostDetail", () => {
+          reads += 1;
+          return HttpResponse.json({ data: detail("u1", []) });
+        }),
+      );
+      const scroller = postIn();
+      await screen.findByTestId("post-title");
+      expect(reads).toBe(1);
+
+      pull(scroller);
+      await waitFor(() => expect(reads).toBe(2));
+      // The already-drawn post stays — the pull is an indicator, not a
+      // blank page (the shared HT-10 rule).
+      expect(screen.getByTestId("post-title")).toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("says it is asking, in its own loading line, without the nothing-loaded page", async () => {
+      let reads = 0;
+      server.use(
+        graphql.query("PostDetail", () => {
+          reads += 1;
+          return HttpResponse.json({ data: detail("u1", []) });
+        }),
+      );
+      const scroller = postIn();
+      await screen.findByTestId("post-title");
+
+      pull(scroller);
+      expect(screen.getByTestId("post-refreshing")).toHaveTextContent("Loading…");
+      await waitFor(() => expect(reads).toBe(2));
+      expect(screen.queryByTestId("post-refreshing")).not.toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("takes a short tug for what it is — a scroll, not an ask", async () => {
+      let reads = 0;
+      server.use(
+        graphql.query("PostDetail", () => {
+          reads += 1;
+          return HttpResponse.json({ data: detail("u1", []) });
+        }),
+      );
+      const scroller = postIn();
+      await screen.findByTestId("post-title");
+
+      pull(scroller, PULL_THRESHOLD - 1);
+      await waitFor(() => expect(reads).toBe(1));
+      scroller.remove();
+    });
+
+    it("ignores a pull that starts anywhere but the top", async () => {
+      let reads = 0;
+      server.use(
+        graphql.query("PostDetail", () => {
+          reads += 1;
+          return HttpResponse.json({ data: detail("u1", []) });
+        }),
+      );
+      const scroller = postIn();
+      await screen.findByTestId("post-title");
+
+      scroller.scrollTop = 900;
+      pull(scroller);
+      await waitFor(() => expect(reads).toBe(1));
+      scroller.remove();
     });
   });
 });
