@@ -1355,7 +1355,10 @@ const CLIP_CANOE = {
 const CLIP_GRAPES = {
   kind: "video",
   src: "clip-grapes.mp4",
-  poster: "clip-grapes.jpg",
+  /* gallery-grapes.jpg doubles as this clip's poster: the published
+     canvas editor holds at most 200 files and the tree sits at that
+     ceiling, so no image may serve a single board (backlog 62). */
+  poster: "gallery-grapes.jpg",
   ratio: "square",
   alt: "Two hands turning a bunch of grapes in the light.",
 };
