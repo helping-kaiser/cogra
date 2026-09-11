@@ -50,7 +50,7 @@
    is a second order. This board is the page whole; those are the page under a
    sheet. */
 
-export const FRAME = { width: 390, height: 1774 };
+export const FRAME = { width: 390, height: 1845 };
 
 export function Screen() {
   return <SettingsBody />;

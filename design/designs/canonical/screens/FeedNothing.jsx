@@ -8,7 +8,7 @@ export function Screen() {
     <>
       <CograBand trailing={<FeedFilter value={NOTHING} />} />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
-        <EmptyState title="Your feed admits nothing right now — every kind is switched off." actionLabel="Show posts again" onAction={() => {}} />
+        <EmptyState title="Your feed is showing nothing — everything is switched off." actionLabel="Show posts again" onAction={() => {}} />
       </div>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>

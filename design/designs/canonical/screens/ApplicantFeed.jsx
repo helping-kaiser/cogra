@@ -11,7 +11,7 @@ export function Screen() {
             Resend the link
           </Button>
         </TaskCard>
-        <TaskCard title="Create your key" body="Your application needs a key on this device before @mira can approve it.">
+        <TaskCard title="Create your key" body="Your application needs a key on this browser before @mira can approve it.">
           <Button selfStart>Create my key</Button>
         </TaskCard>
         <PostCard {...ADA_POST} signedIn={false} />

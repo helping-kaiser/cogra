@@ -19,7 +19,7 @@ export function Screen() {
           </span>
         </div>
 
-        <ActsCard rows={[{ label: "Profile", value: "A new picture, bio and website", count: "1 action" }]} total="1 signed action" />
+        <ActsCard rows={[{ label: "Profile", value: "A new picture, bio and website", count: "1" }]} total="1 thing, signed" />
 
         <QuietNote>Every change to your profile is signed in your name and stays in your public record.</QuietNote>
 

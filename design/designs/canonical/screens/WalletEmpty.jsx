@@ -26,10 +26,10 @@ export function Screen() {
         <SectionLabel>History</SectionLabel>
         <div style={{ flex: "none", padding: "4px 24px 0" }}>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-            Nothing here yet. Earnings come from campaigns — paid when the paths between an advertiser's crowd and their target run through you.
+            Nothing here yet. Earnings come from campaigns — paid when an advertiser's reach flows through you.
           </p>
           <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-            Posting, connecting, and taking stances is how paths start running through you. Tips land the moment someone sends one.
+            Posting, connecting, and giving opinions is how reach starts flowing through you. Tips land the moment someone sends one.
           </p>
         </div>
 

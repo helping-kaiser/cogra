@@ -111,6 +111,35 @@ const {
   CropViewport,
 } = components;
 
+/* Visually hidden, still read aloud — `StanceReadout`'s own constant, spelled
+   here because a board reaches the bundle's components and not its helpers. */
+const SR_ONLY = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
+/* THE NUMBERS IN A SENTENCE (readme §13, the geek round). A help or coaching
+   line that speaks a pair leads with the face and carries the digits in a
+   trailing `cg-exact` span, so the sentence follows the reading mode the way
+   every readout does. The painted tail is `aria-hidden` and `spoken` says the
+   same fact to a screen reader in both modes — the mode draws, it never
+   redacts. */
+function ExactTail({ exact, spoken }) {
+  return (
+    <>
+      <span className="cg-exact" aria-hidden="true">{exact}</span>
+      <span style={SR_ONLY}>{spoken}</span>
+    </>
+  );
+}
+
 /* A standing of one gentle record — the vouch-back default made a bundle. */
 function mkBundle(pDirected, pInterest) {
   const pair = { pDirected, pInterest };
@@ -282,7 +311,7 @@ function KeyPledge() {
             letterSpacing: "var(--text-body-large--letter-spacing)",
           }}
         >
-          Everything you publish is signed with a key that is created on this device and stays in your hands — CoGra never
+          Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never
           holds it and can never reissue it.
         </p>
       </div>
@@ -536,7 +565,7 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
 
 /* Someone else's profile, whole — shared the moment its own overflow menu
    needed the same page with a sheet over it (readme §13, the menus round). */
-function ProfileOtherBody() {
+function ProfileOtherBody({ bundle } = {}) {
   return (
     <>
       <PageHeader
@@ -555,6 +584,7 @@ function ProfileOtherBody() {
             posts={12}
             stancesOn={48}
             stancesTaken={31}
+            bundle={bundle}
             onCounts={() => {}}
             onCommit={() => {}}
             onMessage={() => {}}
@@ -565,7 +595,7 @@ function ProfileOtherBody() {
         <ChronicleList>
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Took a stance" titleAside="on @tobias" trailing="2d" inert />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert />
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert />
         </ChronicleList>
@@ -619,8 +649,8 @@ function ReplyDraft() {
    with a reference staged are one surface in two states, and a row spelled
    twice is a row that drifts. */
 const ADD_ROWS = [
-  { label: "", action: "+ Add a tag", count: "1 more action" },
-  { label: "", action: "+ Cite something", count: "1 more action" },
+  { label: "", action: "+ Add a tag", count: "1 more" },
+  { label: "", action: "+ Cite something", count: "1 more" },
 ];
 
 /* ── WHAT AN OVERLAY SITS ON (jakob's ruling, 2026-09-08) ──────────────────
@@ -639,13 +669,13 @@ const ADD_ROWS = [
 function ComposeSealBody() {
   return (
     <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="Signed actions" />
+      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
 
         <ActsCard
           rows={[
-            { label: "Post", value: "Salt maps of the coast road", count: "1 action" },
+            { label: "Post", value: "Salt maps of the coast road", count: "1" },
             {
               label: "Tags",
               value: (
@@ -654,7 +684,7 @@ function ComposeSealBody() {
                   <Chip label="#coastroad" tone="readout" />
                 </span>
               ),
-              count: "2 actions",
+              count: "2",
             },
             {
               label: "References",
@@ -667,17 +697,17 @@ function ComposeSealBody() {
                   <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
                 </span>
               ),
-              count: "1 action",
+              count: "1",
             },
           ]}
-          total="4 signed actions"
-          note="they land together, or none does"
+          total="4 things, signed together"
+          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value="Public domain — your default" action="Change" />
           <FactRow
-            label="Where you stand on it"
+            label="Your opinion"
             value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
             action="Adjust"
           />
@@ -737,14 +767,14 @@ function ReplyPadBody() {
           </span>
           <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
             <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
-            <span style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
+            <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
           </span>
           <span style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 }}>
             Nice, For or against +0.10, How much reaches you +0.10
           </span>
         </div>
 
-        <div role="group" aria-label="Stance pad for the post you answer" style={{ alignSelf: "center", width: 240 }}>
+        <div role="group" aria-label="Opinion pad for the post you answer" style={{ alignSelf: "center", width: 240 }}>
           <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
         </div>
 
@@ -764,7 +794,7 @@ function ReplySealBody() {
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
         stageLabel="Last step"
-        help="Signed actions"
+        help="How signing works"
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
@@ -773,10 +803,10 @@ function ReplySealBody() {
             signature carries more than one thing (`ActsCard`'s rule). */}
         <ActsCard
           rows={[
-            { label: "Comment", value: "Reply to @ada's post", count: "1 action" },
+            { label: "Comment", value: "Reply to @ada's post", count: "1" },
             ...ADD_ROWS,
           ]}
-          total="1 signed action"
+          total="1 thing, signed"
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -792,7 +822,7 @@ function ReplySealBody() {
         {/* The stance the reply carries is a fact about replying, not about
             this row — so it stands under the ruled block rather than inside
             it, where `FactRow` has no slot for it. */}
-        <QuietNote>Replying also signs where you stand on the post it answers.</QuietNote>
+        <QuietNote>Replying also signs your opinion on the post it answers.</QuietNote>
 
         <div style={{ flex: 1 }} />
 
@@ -876,7 +906,7 @@ function ComposeDetailsBody() {
             name="The long way home — @ada"
             sub="Post"
             src="post-photo.jpg"
-            value="+0.10 / +0.10"
+            pair={{ pDirected: 0.1, pInterest: 0.1 }}
             onEdit={() => {}}
           />
           <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
@@ -949,7 +979,7 @@ function EditComposeBody() {
             name="The long way home — @ada"
             sub="Post"
             src="post-photo.jpg"
-            value="+0.10 / +0.10"
+            pair={{ pDirected: 0.1, pInterest: 0.1 }}
             onEdit={() => {}}
           />
           <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
@@ -1272,20 +1302,20 @@ function SettingsBody() {
         </SettingsGroup>
 
         <SettingsGroup
-          label="Taking a stance"
-          footnote="A tap always adds a small positive one. This is what a longer press opens, everywhere."
+          label="Giving an opinion"
+          footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot."
         >
           <SettingsRow
             name="settings-stance-input"
             selected
             label="The pad"
-            status="Press and hold, then drift to where you stand."
+            status="A tap opens it; drift to where it feels right."
           />
           <SettingsRow
             name="settings-stance-input"
             selected={false}
             label="Sliders"
-            status="One slider per side of the stance."
+            status="One slider per side of the opinion."
           />
           <SettingsRow
             name="settings-stance-input"
@@ -1297,7 +1327,7 @@ function SettingsBody() {
 
         <SettingsGroup
           label="Writing"
-          footnote="Every signed action is paid for separately. A post's license is settled when it is first signed and never changes."
+          footnote="Everything you sign is paid for separately. A post's license is settled when it is first signed and never changes."
         >
           <SettingsRow
             checked
@@ -1308,11 +1338,23 @@ function SettingsBody() {
           <SettingsRow label="Default license" value="Public domain" onOpen={() => {}} />
         </SettingsGroup>
 
+        {/* THE EXACT VALUES ARE A READING SETTING, and a client-local one —
+            like the theme, never an L2 preference (jakob's ruling, backlog item
+            53). Off is the drawn state because glyph-first is the product's
+            default: the faces and the tag objects carry every PAIR until a
+            reader asks for the digits. Scores and ranks are not pairs and are
+            drawn either way. */}
         <SettingsGroup
           label="Reading"
-          footnote="Every feed starts from this. A change made inside a feed lasts until you change it back, on that device only."
+          footnote="Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device."
         >
           <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} />
+          <SettingsRow
+            checked={false}
+            label="Show exact values"
+            status="The number pairs behind the faces."
+            onOpen={() => {}}
+          />
         </SettingsGroup>
 
         <SettingsGroup

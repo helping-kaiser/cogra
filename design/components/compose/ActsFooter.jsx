@@ -2,7 +2,7 @@ import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
 import { BUTTON_CLASS } from "../core/Button.jsx";
 
-/* "This creates 2 signed actions ⌄" (item 17, the conformance round): the one
+/* "You're signing 2 things ⌄" (item 17, the conformance round): the one
    line above the sign button on the edit wizards, saying how much a signature
    commits before it is given.
 
@@ -35,7 +35,7 @@ export function ActsFooter({ count, onOpen }) {
       className={BUTTON_CLASS}
       style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
     >
-      This creates {count} signed actions
+      You're signing {count} things
       <span style={{ display: "inline-flex" }}>
         <Icon name="expand_more" size={16} />
       </span>

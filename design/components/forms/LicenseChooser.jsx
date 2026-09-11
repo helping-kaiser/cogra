@@ -16,9 +16,9 @@ export const ATTRIBUTION_TIERS = [
 ];
 
 export const PROVENANCE_TIERS = [
-  { value: 0, label: "No record", hint: "Uses go unlogged." },
-  { value: 0.5, label: "Record commercially", hint: "Commercial uses are logged publicly and stay open to audit." },
-  { value: 1, label: "Record always", hint: "Every use is logged publicly and stays open to audit." },
+  { value: 0, label: "Not logged", hint: "Uses go unlogged." },
+  { value: 0.5, label: "Log commercial use", hint: "Commercial uses are logged publicly and stay open to audit." },
+  { value: 1, label: "Log every use", hint: "Every use is logged publicly and stays open to audit." },
 ];
 
 export const PUBLIC_DOMAIN = { attribution: 0, provenance: 0 };

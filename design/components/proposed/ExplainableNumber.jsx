@@ -34,12 +34,19 @@ const SR_ONLY = {
 /* OVER MEDIA (jakob, review round 1): on the stream this figure sits on the
    clip, where onSurfaceVariant on photography is not quiet but unreadable. It
    goes white with a shadow — the register is unchanged, the contrast is not. */
+
+/* THE FIGURE IS DRAWN WHATEVER THE READING MODE SAYS (jakob's ruling, the geek
+   round's review). Geek mode governs the number PAIRS — the two-parameter
+   readings the faces and the tag objects already stand in for — and nothing
+   else. A Post Score has no glyph that carries its magnitude, so hiding the
+   digits would leave the `graph` mark saying only "there is a score", which is
+   the black box §7 exists to refuse. */
 export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, overMedia = false }) {
   return (
     <button
       type="button"
       onClick={onOpenDetail}
-      className="cg-state cg-focus"
+      className="cg-state cg-focus cg-hit"
       style={{
         flex: "none",
         display: "inline-flex",

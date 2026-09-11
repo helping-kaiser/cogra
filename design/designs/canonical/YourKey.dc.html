@@ -1163,15 +1163,16 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 
 [data-flow] { position: relative; }
 [data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
+.screen:not([data-geek="on"]) .cg-exact { display: none !important; }
   </style>
 </helmet>
-<div class="screen" data-theme="{{theme}}" style="width: 390px; height: 844px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
+<div class="screen" data-theme="{{theme}}" data-geek="{{geek}}" style="width: 390px; height: 844px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
 <header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:48px;padding:0 var(--space-3)"><div style="display:flex;align-items:center;gap:var(--space-2)"><a data-flow="1" href="/settings" aria-label="Back to settings" class="cg-state cg-focus" style="height:48px;width:48px;display:grid;place-items:center;border-radius:var(--radius-full);color:var(--text-secondary);text-decoration:none;flex:none"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></a><h1 style="margin:0;font-size:var(--text-title-large);line-height:var(--text-title-large--line-height);font-weight:var(--text-title-large--font-weight);white-space:nowrap">Your key</h1></div></header><div style="flex:1;display:flex;flex-direction:column;gap:16px;padding:8px 24px 32px;overflow:hidden"><p style="margin:0;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);letter-spacing:var(--text-body-medium--letter-spacing);color:var(--text-secondary)">This key signs everything you publish, and it lives only in this browser. Store a copy somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act as you.</p><section aria-label="Your actor key" style="display:flex;flex-direction:column;gap:var(--card-gap);border-radius:var(--radius-medium);background:var(--surface-card);color:var(--on-surface);padding:var(--card-padding)"><h2 style="margin:0;font-size:var(--text-title-medium);line-height:var(--text-title-medium--line-height);font-weight:var(--text-title-medium--font-weight)">Your actor key</h2><div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);font-weight:var(--text-label-large--font-weight);letter-spacing:var(--text-label-large--letter-spacing)">PEM (PKCS#8)</span><button data-flow="2" type="button" aria-label="Copy the PEM block" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);font-weight:var(--text-label-large--font-weight);letter-spacing:var(--text-label-large--letter-spacing);color:var(--primary);flex:none">Copy</button></div><p style="margin:0;padding:12px;border:1px solid var(--border-field);border-radius:var(--radius-extra-small);font-family:var(--font-mono);font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text-body)">-----BEGIN PRIVATE KEY-----
 MC4CAQAwBQYDK2VwBCIEIHq2ZP9c1sVe0mQ4bT8xLp3RkA6yNfW5jChD7uXsG2vB
 -----END PRIVATE KEY-----</p></div><div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;align-items:center;gap:8px"><span style="flex:1;font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);font-weight:var(--text-label-large--font-weight);letter-spacing:var(--text-label-large--letter-spacing)">Raw hex — Ed25519 private key</span><button data-flow="3" type="button" aria-label="Copy the raw hex" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);font-weight:var(--text-label-large--font-weight);letter-spacing:var(--text-label-large--letter-spacing);color:var(--primary);flex:none">Copy</button></div><p style="margin:0;padding:12px;border:1px solid var(--border-field);border-radius:var(--radius-extra-small);font-family:var(--font-mono);font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text-body)">7ab664ff5cd6c55ed264386d3f312e9dd1900eb235f5b98c2843eee5ec1b6bc1</p></div></section><p style="margin:0;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);letter-spacing:var(--text-label-small--letter-spacing);color:var(--text-secondary)">Nothing here is sent anywhere — the key is read from this browser and shown.</p></div>
 </div>
 </x-dc>
-<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"}}'>
+<script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"},"geek":{"editor":"enum","options":["off","on"],"default":"off"}}'>
 class Component extends DCLogic {
   componentDidMount() {
     this.media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -1184,28 +1185,41 @@ class Component extends DCLogic {
       } else if (d && d.cograThemeQuery && this.state && this.state.remote && event.source) {
         try { event.source.postMessage({ cograTheme: this.state.remote }, "*"); } catch (e) {}
       }
+      if (d && (d.cograGeek === "off" || d.cograGeek === "on")) {
+        if (!this.state || this.state.remoteGeek !== d.cograGeek) this.setState({ remoteGeek: d.cograGeek });
+      } else if (d && d.cograGeekQuery && this.state && this.state.remoteGeek && event.source) {
+        try { event.source.postMessage({ cograGeek: this.state.remoteGeek }, "*"); } catch (e) {}
+      }
     };
     window.addEventListener("message", this.onMsg);
-    try {
-      const askWalk = (w, depth) => {
-        if (depth > 5) return;
-        let n = 0;
-        try { n = w.length; } catch (e) { n = 0; }
-        for (let i = 0; i < n; i++) {
-          let c = null;
-          try { c = w[i]; } catch (e) { c = null; }
-          if (c) {
-            try { c.postMessage({ cograThemeQuery: true }, "*"); } catch (e) {}
-            askWalk(c, depth + 1);
+    this.tell = (payload) => {
+      try {
+        const walk = (w, depth) => {
+          if (depth > 5) return;
+          let n = 0;
+          try { n = w.length; } catch (e) { n = 0; }
+          for (let i = 0; i < n; i++) {
+            let c = null;
+            try { c = w[i]; } catch (e) { c = null; }
+            if (c) {
+              try { c.postMessage(payload, "*"); } catch (e) {}
+              walk(c, depth + 1);
+            }
           }
-        }
-      };
-      askWalk(window.top, 0);
-    } catch (e) {}
+        };
+        walk(window.top, 0);
+      } catch (e) {}
+    };
+    this.tell({ cograThemeQuery: true });
+    this.tell({ cograGeekQuery: true });
   }
   componentDidUpdate(prevProps) {
     if (prevProps.theme !== this.props.theme && this.state && this.state.remote) {
       this.setState({ remote: null });
+    }
+    if (prevProps.geek !== this.props.geek) {
+      if (this.state && this.state.remoteGeek) this.setState({ remoteGeek: null });
+      if (this.tell) this.tell({ cograGeek: this.props.geek === "on" ? "on" : "off" });
     }
   }
   componentWillUnmount() {
@@ -1218,7 +1232,9 @@ class Component extends DCLogic {
     const dark = mode === "auto"
       ? window.matchMedia("(prefers-color-scheme: dark)").matches
       : mode === "dark";
-    return { theme: dark ? "dark" : "light" };
+    const remoteGeek = this.state ? this.state.remoteGeek : null;
+    const geek = remoteGeek ?? this.props.geek ?? "off";
+    return { theme: dark ? "dark" : "light", geek };
   }
 }
 </script>

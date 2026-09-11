@@ -18,7 +18,7 @@ export function Screen() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, padding: "0 16px 12px 16px" }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <span style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>The orbit</span>
-              <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>The graph as a sky.</span>
+              <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>Your sky.</span>
             </div>
             <Button size="sm">Enter</Button>
           </div>
