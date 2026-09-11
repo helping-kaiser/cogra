@@ -33,7 +33,7 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)", textAlign: "center" }}>
+        <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)", textAlign: "center" }}>
           Pictures upload while you write — signing waits for them.
         </p>
         <Button style={{ width: "100%" }}>Next</Button>

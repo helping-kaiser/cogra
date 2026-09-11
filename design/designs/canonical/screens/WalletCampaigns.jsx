@@ -37,7 +37,7 @@ export function Screen() {
             <MoneyFigure amount={12500} />
           </span>
           <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
               1 open campaign
             </span>
             <Button size="sm">Start a campaign</Button>
@@ -54,7 +54,7 @@ export function Screen() {
             value="yours"
             onChange={() => {}}
           />
-          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)", textAlign: "center" }}>
+          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)", textAlign: "center" }}>
             "You took part" lists the campaigns that paid you.
           </span>
         </div>
