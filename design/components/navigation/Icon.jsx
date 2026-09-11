@@ -149,6 +149,11 @@ const PATHS = {
     "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z",
   ],
   expand_more: ["M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"],
+  /* The Saved list's own control (the review-fix round). A filled bookmark is
+     the one glyph a reader already reads as "kept", so the row's unsave needs
+     no word beside it — which is what lets the row carry the act and keep its
+     age on the same edge. Classic filled 24px, verbatim. */
+  bookmark: ["M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"],
   /* The wallet's glyphs (item 12). `arrow_outward` is the direction badge —
      outgoing as drawn, incoming rotated 180° by the badge that wears it. */
   chevron_right: ["M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"],
