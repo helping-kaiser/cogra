@@ -2,7 +2,7 @@ import React from "react";
 import { NodeMark } from "../content/ReferenceRow.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { BUTTON_CLASS } from "../core/Button.jsx";
-import { formatStancePair, SR_ONLY } from "../stance/StanceReadout.jsx";
+import { formatStancePair, nearestAnchor, SR_ONLY } from "../stance/StanceReadout.jsx";
 
 /* A reference already staged in a composer (item 17, the conformance round):
    the citation the author has committed to, shown back to them — the kind's
@@ -41,9 +41,17 @@ import { formatStancePair, SR_ONLY } from "../stance/StanceReadout.jsx";
    citation signs both axes (`ReferenceInput`, api-spec.md), so it wears the
    stance shape; the digits ride a `cg-exact` span and paint only in geek mode
    (readme §13), with a screen-reader-only twin so nothing spoken moves with
-   the setting. */
+   the setting.
+
+   AND THE FACE IS WHAT IS LEFT WHEN THEY DO NOT PAINT (jakob's ruling, the
+   geek round — backlog item 53.3). The citation's two axes fill the slots
+   `STANCE_ANCHORS` is drawn over, so the row reads the twenty faces, the same
+   lookup `RefPair`'s readout uses. The anchor's WORD does not come with it:
+   it names a feeling about a stance and this record is a citation, so the
+   spoken reading stays the pair exactly. */
 function Body({ kind, name, sub, src, pair }) {
   const exact = pair ? formatStancePair(pair) : null;
+  const anchor = pair ? nearestAnchor(pair) : null;
   return (
     <>
       <NodeMark kind={kind} name={name} src={src} />
@@ -53,7 +61,10 @@ function Body({ kind, name, sub, src, pair }) {
       </span>
       {exact && (
         <>
-          <span className="cg-exact" aria-hidden="true" style={{ flex: "none", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{exact}</span>
+          <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: 1 }}>{anchor.emoji}</span>
+            <span className="cg-exact">{exact}</span>
+          </span>
           <span style={SR_ONLY}>{exact}</span>
         </>
       )}
