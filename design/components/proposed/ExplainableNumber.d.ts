@@ -18,6 +18,13 @@ export interface ExplainableNumberProps {
   onOpenDetail?: () => void;
   /** Restyled to sit on photography — white with a drop shadow, same register. */
   overMedia?: boolean;
+  /**
+   * This figure is a SIGNAL NUMBER: the digits (and the `—` that stands in for
+   * them) ride a `cg-exact` span and paint only in geek mode, leaving the glyph
+   * to carry the reading. The Post Score sets it. Money, ages and counts never
+   * do — they are shown whatever the reader's setting says.
+   */
+  exact?: boolean;
 }
 
 export declare function ExplainableNumber(props: ExplainableNumberProps): JSX.Element;
