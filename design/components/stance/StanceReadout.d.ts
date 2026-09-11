@@ -95,6 +95,7 @@ export declare function nearestTagAnchor(pair: StancePair): StancePair & { emoji
 export declare function bundleReadout(pair: StancePair, zeroLabel?: string): { emoji: string; label: string };
 export declare function formatStancePair(pair: StancePair): string;
 export declare function formatStanceWords(pair: StancePair): string;
+/** Always signed, two decimals, the negative arm on U+2212 MINUS (readme §3). */
 export declare function formatDimension(value: number): string;
 /** Two decimals, no sign — for an axis whose range has no negative half. */
 export declare function formatUnsigned(value: number): string;
