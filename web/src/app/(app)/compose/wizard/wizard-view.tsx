@@ -142,10 +142,19 @@ export function ComposeWizard({
   // changes: a result that belongs to a file the draft no longer holds is
   // simply not read, which is the same outcome as clearing it without the
   // cascading render that clearing from an effect would cost.
-  const [probed, setProbed] = useState<{ file: Blob; durationMs: number } | null>(null);
+  const [probed, setProbed] = useState<{
+    file: Blob;
+    durationMs: number;
+    ratio: number | null;
+  } | null>(null);
   const [captured, setCaptured] = useState<Captured | null>(null);
   const mine = captured !== null && captured.file === videoFile ? captured : null;
-  const durationMs = probed !== null && probed.file === videoFile ? probed.durationMs : 0;
+  const forThisClip = probed !== null && probed.file === videoFile ? probed : null;
+  const durationMs = forThisClip?.durationMs ?? 0;
+  // The shape the clip will BE once it is posted: its own, clamped to tall —
+  // the same derivation the feed tile makes, so the preview and the post agree
+  // (jakob 2026-09-11: the preview shows the actual output format).
+  const clipRatio = forThisClip === null ? null : forThisClip.ratio;
   const frames = mine?.frames ?? NO_FRAMES;
   const framePreviews = mine?.urls ?? NO_URLS;
   const capturing = videoFile !== null && captured?.file !== videoFile;
@@ -160,14 +169,22 @@ export function ComposeWizard({
   // tile can both show it rather than the video's bytes or a bare outline.
   const coverPreview = useObjectUrl(cover?.file ?? null);
 
-  // The badge's number, read off the clip as soon as it is picked rather than
-  // waiting for the cover screen — the details row shows it too.
+  // The badge's number AND the clip's shape, read off the clip as soon as it is
+  // picked rather than waiting for the cover screen — the details row shows the
+  // length too, and the cover screen has to draw the preview at the shape the
+  // post will take.
   useEffect(() => {
     if (videoFile === null) return;
     let cancelled = false;
     void probeVideo(videoFile)
       .then((probe) => {
-        if (!cancelled) setProbed({ file: videoFile, durationMs: probe.durationMs });
+        if (cancelled) return;
+        // A decoder that reported no dimensions gives null rather than a
+        // NaN ratio; the preview then falls back to the neutral square, which
+        // is what "shape unknown" has always meant here.
+        const ratio =
+          probe.width > 0 && probe.height > 0 ? probe.width / probe.height : null;
+        setProbed({ file: videoFile, durationMs: probe.durationMs, ratio });
       })
       // A clip whose header states no duration still uploads; only the badge
       // is poorer for it, and the server writes the authoritative number.
@@ -651,6 +668,7 @@ export function ComposeWizard({
         <CoverStep
           videoUrl={video === undefined ? null : (previews[video.id] ?? null)}
           durationMs={durationMs}
+          clipRatio={clipRatio}
           framePreviews={framePreviews}
           cover={cover}
           coverPreview={coverPreview}
