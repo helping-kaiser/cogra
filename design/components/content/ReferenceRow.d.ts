@@ -1,3 +1,5 @@
+import type { StancePair } from "../stance/StanceReadout";
+
 /**
  * One row of the topics-and-references sheet, and the result-row shape search
  * reuses: leading mark · name · the signed pair (readme §13, 2026-08-28).
@@ -42,15 +44,20 @@ export interface ReferenceRowProps {
   /** A person's avatar photo or a media post's cover. */
   src?: string;
   /**
-   * The row's right edge: the signed pair in the references sheet, the
-   * viewer-relative rank in ranked results, the age past the seam.
+   * The row's right edge when what sits there is not a signal number: the age
+   * past the seam, a date. Printed as given, in both reading modes.
    */
   value?: string;
-  /** Old name of `value`; still accepted. */
-  pair?: string;
   /**
-   * A viewer-relative rank: rendered with the score's graph glyph so the
-   * number is recognized before it is read. Wins over `value`.
+   * The pair signed on this act, as numbers. A `topic` row reads it as a tag's
+   * — `formatTagPair`, with the nearest of the thirteen `TAG_ANCHORS` beside
+   * it — and every other kind as a citation's, both axes signed. The digits
+   * paint only in geek mode; the glyph and the spoken name do not depend on it.
+   */
+  pair?: StancePair;
+  /**
+   * A viewer-relative rank: the score's graph glyph, with the number beside it
+   * in geek mode. Wins over `pair` and `value`.
    */
   rank?: string;
   /**
