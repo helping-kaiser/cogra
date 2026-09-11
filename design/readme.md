@@ -3162,10 +3162,12 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   gesture gets its surface in slice 3's round, which is also when the
   roadmap first lets it ship (topic follow is client-hidden until the
   topic feed lands).
-- **Every row carries its claim's pair, plainly.** A signed act is
-  public record, so `TaggedRow` simply shows it — and the reveal
-  gesture on content surfaces stays the tags-and-references sheet.
-  A chip's tap goes to the tag's page, on every surface, always.
+- **Every row carries its claim, plainly.** A signed act is public
+  record, so `TaggedRow` simply shows it: the nearest of the thirteen
+  `TAG_ANCHORS` leads the flag and the exact pair sits with it. There
+  is no reveal gesture on a content surface — a chip's tap goes to the
+  tag's page, on every surface, always, and what a node's own tags are
+  worth is read in the tags-and-references sheet.
 - **The empty page is contractual, not an error.** Every well-formed
   name already denotes a Type, so `hashtag(name)` resolves without a
   registry row; the board says the tag exists and the list does not
@@ -3420,15 +3422,13 @@ edit body's editability and the single-long-tag state are ruled in the
 same review and recorded with the boards that draw them.
 
 - **Wherever a pair is being set, the readout shows the nearest anchor's
-  face.** Emojis whenever possible: a face is the fastest rough read of
-  where a knob currently sits, and the exact pair beside it carries the
-  fact for anyone who wants it. `RefPair` takes it — the lookup is
+  face.** Emojis: a face is the fastest rough read of where a knob
+  currently sits, and the exact pair beside it carries the fact for
+  anyone who wants it. `RefPair` takes it — the lookup is
   `STANCE_ANCHORS` unchanged, the two slots being the ones the contract
   assigns. What does not travel with the face is the anchor's word: it
   names a feeling about a stance, so a citation keeps the face and
-  speaks its own two axes instead. A pair whose axes the anchor table
-  cannot speak for — a tag's census-bounded confidence — has no face to
-  be nearest to, which is what "whenever possible" excludes.
+  speaks its own two axes instead.
 - **A reference count counts every kind.** The number on a card is the
   length of the list the sheet draws, whatever kind of node each row
   points at, a cited chat message included. A count that quietly dropped
@@ -3692,6 +3692,57 @@ Three rulings about the still a clip wears, and the wizard they rewrite
   and `publish-a-vertical-video` and `give-a-vertical-clip-a-cover` are
   newly declared. `CLIP_CANOE` moved into `_shared.jsx` — a third screen
   wanted it — and every board that already drew it renders byte-identically.
+
+### Geek mode — 2026-09-11
+
+A friend's proposal, adopted scoped by jakob: the exact values of the
+signal numbers are geekery, and the glyph is what a reader is owed.
+Ruled the same day, drawn as its own round because it rewrites every
+stance master.
+
+- **Group A only — the signal numbers.** Stance pairs, tag pairs,
+  citation pairs, the Post Score and the viewer-relative rank. Money,
+  ages, comment and fold counts, media mechanics, field constraints and
+  codes are Group B and are shown whatever the setting says: hiding what
+  something costs, or how old it is, trades honesty for aesthetics,
+  which is the opposite trade to this one. The profile's figures —
+  Posts, Stances on, Stances taken — are bare integers and stay out.
+- **Glyph-first is the default.** A card shows the stance face alone, a
+  score its `graph` mark alone, a tag row the nearest of the thirteen
+  `TAG_ANCHORS`, a ranked result the score's mark. The numbers arrive
+  only when a reader asks for them. Every glyph was already the lossy
+  readout of its pair; the mode makes it the primary one.
+- **Tag rows wear a glyph.** `TaggedRow` and a topic `ReferenceRow`
+  read `nearestTagAnchor` and lead with it. The tag table is what makes
+  this possible — before it there was no lossy readout a tag's pair
+  could take, and the rows said nothing at all to a reader who does not
+  read numbers.
+- **One markup, two paintings.** Every master draws the glyph AND the
+  number; the number sits in a `cg-exact` span, and one base rule —
+  `.screen:not([data-geek="on"]) .cg-exact { display: none }` — decides
+  which is painted. No board forks and no state is conditionally
+  rendered, so a flow pin anchors on markup that does not move with the
+  reading. The rule is scoped to the not-on case rather than written as
+  a show/hide pair, because the marked spans carry their own display
+  and a rule that had to restore one would restore the wrong one.
+- **Nothing spoken depends on the mode.** Every hidden number keeps a
+  screen-reader twin, so a button's accessible name is the same in both
+  modes. The mode draws; it does not redact.
+- **The severance confirm is the one exemption.** Its raw sum and its
+  fold paint in both modes: the sheet exists to show the difference
+  between them, and two lossy faces would wear the same glyph — the
+  whole content of the sheet erased. A reader about to walk back
+  everything they have said is owed the arithmetic.
+- **One client-local setting.** *Show exact values*, a switch in
+  Settings' Reading group, drawn off — like the theme, never an L2
+  preference. The canvas carries the same switch as a `geek` data-props
+  chip beside the theme chip, landing as `data-geek` on the screen root
+  with its own `cograGeek` broadcast, so one board's chip syncs the
+  canvas and the two toggles stay independent.
+- **The gate**: **151 screens** unchanged, 1086 → **1087 edges**, gaps
+  hold at **56** and flows at **60/57/3**. The new edge is the switch's
+  own self-terminal; the settings board's rows below it renumber, and
+  the witness did not move because no declared flow crosses Settings.
 
 ## 14. Index
 

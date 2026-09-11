@@ -673,10 +673,10 @@ title (jakob's review removed the explanatory line): the rows say what
 they are, and a sentence restating the contract was noise where the
 title and the claims already carry it.
 
-**A row says which act put it there.** `Tagged` and then the pair, on
-a flag attached to every card's top edge — the word names the act, the
-numbers say what it claimed, and the tag itself is not repeated because
-the page is titled by it.
+**A row says which act put it there.** The claim's glyph, `Tagged`, and
+then the pair, on a flag attached to every card's top edge — the word
+names the act, the glyph and the numbers say what it claimed, and the
+tag itself is not repeated because the page is titled by it.
 
 **An unused tag is not a miss.** `Nothing carries this tag yet. The name
 is still a place — anyone can be the first to use it.` No "not found",
@@ -722,3 +722,27 @@ before takes no extra step. Tagging is its own signed action, and it
 carries how much the post is about that tag. / Names are lowercased,
 and a name can hold letters, digits, dot, dash and underscore. Tap a
 tag you have added to set how it relates.`
+
+## Awaiting blessing — the geek-mode round
+
+Drawn on `Settings` (and the two sheet boards that draw the page
+beneath them), and up for review in the same pass. The mode itself
+draws nothing new — it decides whether the numbers already on every
+board are painted — so the round's whole copy surface is one row.
+
+**The setting says what it shows, not how it works.** `Show exact
+values` — the switch in Settings' Reading group. *Exact* is the word
+that distinguishes the digits from the glyph beside them, which is the
+only distinction the reader is being offered; *geek mode* is the name
+the round was ruled under and never reaches the screen.
+
+**Its status names what is behind the drawing.** `The numbers behind
+the faces and the glyphs.` The faces are the stance table's, the glyphs
+the tag table's and the score's mark — one line covering every signal
+number without listing five families.
+
+**The Reading group's footnote carries both rows' facts.** `Every feed
+starts from what it shows, and a change made inside a feed lasts until
+you change it back. Both choices stay on this device.` *Stays on this
+device* is the theme group's own spelling for a client-local choice,
+said once under the group rather than inside either row.
