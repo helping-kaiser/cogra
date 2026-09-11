@@ -29,7 +29,6 @@ import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.RemovalReason
 import com.cogra.core.designsystem.v2.media.RemovedPlaceholder
 import com.cogra.core.designsystem.v2.media.SensitiveVeil
-import com.cogra.core.designsystem.v2.media.cappedToTallestTile
 import com.cogra.core.designsystem.v2.token.MediaFrame
 import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.domain.CommentView
@@ -51,9 +50,10 @@ import com.cogra.feature.content.R
  * **A comment is words first and its pictures join them**
  * (`design/components/content/CommentCard.prompt.md`): they follow the
  * words, stay inset at the card's medium rung, round their corners, and cap
- * far lower. They are an attachment, not the body, so no full-bleed — and
- * they are never cropped (2026-08-31), which is why each whole frame is
- * fitted inside the frame rather than filling it.
+ * far lower. They are an attachment, not the body, so no full-bleed. The
+ * bytes are never cropped on the way up (2026-08-31) — but every comment
+ * gallery display-crops to the pager's fixed square frame, because nothing
+ * in this product letterboxes (2026-09-03).
  */
 internal enum class BodySurface { Post, Comment }
 
@@ -254,9 +254,10 @@ private fun ClampedText(
 /**
  * The gallery at the rung its surface gives it.
  *
- * A comment's set rides the same pager, in a fixed square frame each whole
- * frame fits inside — but a lone picture keeps its own shape, which is what
- * the board draws (a single 4:5 comment picture, fitted).
+ * Every comment gallery — one item or many, a clip included — rides the
+ * same pager in the comment scale's fixed square frame and display-crops
+ * to fill it: nothing in this product letterboxes
+ * (`design/components/content/CommentCard.prompt.md`).
  */
 @Composable
 private fun Gallery(
@@ -284,12 +285,8 @@ private fun Gallery(
         BodySurface.Comment -> MediaGallery(
             items = items,
             onOpen = onOpenMedia,
-            frameRatio = if (items.size == 1) {
-                items[0].aspectRatio.cappedToTallestTile()
-            } else {
-                MediaShape.Square.ratio
-            },
-            fit = ContentScale.Fit,
+            frameRatio = MediaShape.Square.ratio,
+            fit = ContentScale.Crop,
             maxHeight = MediaFrame.CommentMaxHeight,
             shape = MaterialTheme.shapes.medium,
             testTag = testTag,
