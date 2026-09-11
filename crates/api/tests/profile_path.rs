@@ -312,6 +312,50 @@ async fn refuses_the_display_name_clear(pool: PgPool) {
     }
 }
 
+/// Each of the three text fields answers to its own cap, Unicode scalar
+/// values like every character cap on this surface. `None` (untouched)
+/// and `Some("")` (the clear sentinel, where clearing is allowed) both
+/// pass through unchecked — the cap bounds what an author writes, not
+/// the absence of a write.
+///
+/// A profile's display name, bio, and website URL are each capped at their own length, in Unicode scalar values.
+/// ´claim:profile:the-text-fields-answer-to-their-own-caps´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_text_fields_are_capped_at_their_own_lengths(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.registered_actor("ada").await;
+
+    // The at-cap case lands (rather than just prepares) between fields:
+    // only one update may be in flight per profile, so a landed success
+    // is what frees the chain for the next field's own cap check.
+    let at_cap = "é".repeat(profile::MAX_DISPLAY_NAME_CHARS);
+    rig.land_update(actor, &key, draft(Some(&at_cap), None, None))
+        .await;
+    let over = "x".repeat(profile::MAX_DISPLAY_NAME_CHARS + 1);
+    match rig.update(actor, draft(Some(&over), None, None)).await {
+        Err(ProfileError::BadInput { field, .. }) => assert_eq!(field, "displayName"),
+        other => panic!("expected BadInput, got {other:?}"),
+    }
+
+    let at_cap = "é".repeat(profile::MAX_BIO_CHARS);
+    rig.land_update(actor, &key, draft(None, Some(&at_cap), None))
+        .await;
+    let over = "x".repeat(profile::MAX_BIO_CHARS + 1);
+    match rig.update(actor, draft(None, Some(&over), None)).await {
+        Err(ProfileError::BadInput { field, .. }) => assert_eq!(field, "bio"),
+        other => panic!("expected BadInput, got {other:?}"),
+    }
+
+    let at_cap = "é".repeat(profile::MAX_WEBSITE_URL_CHARS);
+    rig.land_update(actor, &key, draft(None, None, Some(&at_cap)))
+        .await;
+    let over = "x".repeat(profile::MAX_WEBSITE_URL_CHARS + 1);
+    match rig.update(actor, draft(None, None, Some(&over))).await {
+        Err(ProfileError::BadInput { field, .. }) => assert_eq!(field, "websiteUrl"),
+        other => panic!("expected BadInput, got {other:?}"),
+    }
+}
+
 /// Only one update may be in flight per profile, so a second prepare is
 /// refused while the first is unlanded. Landing the first frees the chain
 /// for the next.
