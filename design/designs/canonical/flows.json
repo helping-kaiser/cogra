@@ -292,7 +292,7 @@
       "description": "The own-post overflow offers Edit; the edit surface carries its changes as signed acts of their own and the post settles with them.",
       "start": { "board": "ComposeLanded", "via": 2 },
       "waypoints": [
-        { "board": "RemoveMenu", "via": 1 }
+        { "board": "RemoveMenu", "via": 2 }
       ],
       "end": { "board": "EditCompose", "via": 12, "case": "signed — the post, the edit settling" }
     },
@@ -301,7 +301,7 @@
       "description": "Remove asks once, then leaves the mark — the post is redacted where it stood, never silently erased.",
       "start": { "board": "ComposeLanded", "via": 2 },
       "waypoints": [
-        { "board": "RemoveMenu", "via": 3 }
+        { "board": "RemoveMenu", "via": 4 }
       ],
       "end": { "board": "RemoveConfirm", "via": 1 }
     },

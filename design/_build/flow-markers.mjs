@@ -406,11 +406,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   RemoveMenu: [
-    { n: 1, find: ">Edit</button>", tag: "button" },
-    { n: 2, find: ">Mark as sensitive</button>", tag: "button" },
-    { n: 3, find: ">Remove</button>", tag: "button" },
-    { n: 4, find: ">License terms</button>", tag: "button" },
-    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Edit</button>", tag: "button" },
+    { n: 3, find: ">Mark as sensitive</button>", tag: "button" },
+    { n: 4, find: ">Remove</button>", tag: "button" },
+    { n: 5, find: ">License terms</button>", tag: "button" },
+    { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // The menus round: four sheet boards, one per surface a ⋮ opens on. Each is
   // scanExempt, so only the sheet's own rows and its scrim carry numbers, and
@@ -1075,6 +1076,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">The third headland light is real<", tag: "button" },
     { n: 2, find: ">Mira Voss<", tag: "button" },
     { n: 2, find: ">Sunday at the tide market<", tag: "button" },
+    // The row's own unsave, drawn once per row — one edge covers all four.
+    { n: 8, find: 'aria-label="Unsave"', tag: "button", all: true },
     ...nav(3),
   ],
   SavedEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],

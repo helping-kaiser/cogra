@@ -348,10 +348,20 @@ function DetailHeader({ items }) {
    SAVE IS THE ROW THAT CARRIES ITS OWN STATE (readme §13, the private-viewer-
    state round). Nothing outside this menu says a thing is saved — the action
    row stays opinion · score · comments · share — so the row reads `Save` while
-   it is not and `Remove from saved` while it is. A control says what will
-   happen (§3), which is why the saved form is a verb and not the word Saved. */
+   it is not and `Unsave` while it is: one word (jakob 2026-09-11). A control
+   says what will happen (§3), which is why the saved form is a verb and not
+   the word Saved.
+
+   SAVE IS ON YOUR OWN POSTS TOO (jakob 2026-09-11), and it LEADS. Saving is
+   private, so whose post it is has nothing to do with whether a reader may
+   keep it — and the Saved list is a shelf, which is exactly what a person
+   reaches for on their own work. It takes the first row on every menu that
+   has it, post, comment and profile alike: the thumb learns one position, and
+   the one menu that also holds Remove is the last place to move the rows
+   around. The license closes this menu as it closes the others. */
 const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
 const OWN_POST_MENU = [
+  SAVE_ROW,
   { label: "Edit", onSelect: () => {} },
   { label: "Mark as sensitive", onSelect: () => {} },
   { label: "Remove", onSelect: () => {} },

@@ -3814,7 +3814,7 @@ Ruled by jakob the same day.
   `HistoryEmpty` says the opposite, that this list fills without being
   asked.
 - **The menu rows say what the next tap does.** `Save` while a thing is
-  not kept, `Remove from saved` while it is: the row carries the state
+  not kept, `Unsave` while it is: the row carries the state
   because nothing else does, and §3 asks a control to say what will
   happen rather than to report a status. The license row moves to the
   END of both content menus with it — the rarest read in the product
@@ -3943,7 +3943,7 @@ drew against it. Ruled by jakob the same day.
   list (backlog 55), ungated, on the post itself.
 - **The bell is the band's right edge on every root.** Right-most,
   outboard of the screen's own control — the feed's filter trigger, the
-  profile's ⋮ and gear — because one corner everywhere is what makes it
+  profile's gear — because one corner everywhere is what makes it
   findable, and a different corner per tab is four things to learn. It
   rides `CograBand` built in, the way chats does, so no board hand-builds
   it and `bell={false}` is the only way to be without one.

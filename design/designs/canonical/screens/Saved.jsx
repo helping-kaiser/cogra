@@ -20,9 +20,43 @@
    boards at all yet, so its row shape lands with the chat round and joins this
    same list rather than starting a second one.
 
-   NO REMOVE ON THE ROW. Unsaving happens where saving happened — the thing's
-   own ⋮ — so the list stays a list and a scrolling thumb can never drop
-   something out of it. */
+   THE ROW CARRIES ITS OWN UNSAVE (jakob 2026-09-11). Sending a reader back to
+   the thing's own ⋮ to undo what is in front of them is the long way round,
+   and this is the one list where every row offers the same act. It is
+   ICON-ONLY — the filled bookmark, `Unsave` in the accessibility tree, no word
+   on screen (jakob: with the icon "we dont even need any word there") —
+   because the same word repeated down a list is four copies of one sentence,
+   and this glyph is one every reader already reads as "kept".
+
+   IT TAKES THE CHEVRON'S SLOT, NEVER THE AGE'S. The age is when YOU saved the
+   thing, which is this list's whole order and what a reader is retracing, so
+   it keeps its place and the control stands outboard of it. The chevron was
+   never drawn here — a row that opens says so by being a row — so the edge was
+   already free. The glyph takes `text-secondary`, the colour every icon-only
+   control in this system rests in: it is the row's control, not a badge saying
+   the row is saved. Every row in this list is. */
+const Unsave = () => (
+  <button
+    type="button"
+    aria-label="Unsave"
+    className="cg-state cg-focus cg-hit"
+    style={{
+      display: "grid",
+      placeItems: "center",
+      height: "40px",
+      width: "40px",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      color: "var(--text-secondary)",
+      cursor: "pointer",
+      padding: 0,
+    }}
+  >
+    <Icon name="bookmark" size={22} />
+  </button>
+);
+
 export function Screen() {
   return (
     <>
@@ -36,6 +70,7 @@ export function Screen() {
           titleAside="@ada"
           second="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
           trailing="2d"
+          action={<Unsave />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -46,6 +81,7 @@ export function Screen() {
           titleAside="@tobias"
           second="on The long way home"
           trailing="3d"
+          action={<Unsave />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -56,6 +92,7 @@ export function Screen() {
           titleAside="@mira"
           second="Runs the stand by the sea wall — honey from the headland hives."
           trailing="5d"
+          action={<Unsave />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -66,6 +103,7 @@ export function Screen() {
           titleAside="@mira"
           second="Everything the flats give up in one morning."
           trailing="7d"
+          action={<Unsave />}
           onOpen={() => {}}
         />
       </ChronicleList>
