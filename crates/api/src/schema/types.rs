@@ -2898,6 +2898,8 @@ async fn comments_connection(
 /// picture.
 #[derive(SimpleObject, Debug, Clone, Default)]
 pub struct MediaOptions {
+    /// The displayed aspect ratio, after container rotation — derived by
+    /// the server from the bytes, never supplied.
     pub aspect_ratio: Option<String>,
     pub duration_ms: Option<i32>,
 }

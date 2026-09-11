@@ -848,6 +848,10 @@ animated still's when its frames state one, and null on a single-frame
 picture.
 """
 type MediaOptions {
+	"""
+	The displayed aspect ratio, after container rotation — derived by
+	the server from the bytes, never supplied.
+	"""
 	aspectRatio: String
 	durationMs: Int
 }
