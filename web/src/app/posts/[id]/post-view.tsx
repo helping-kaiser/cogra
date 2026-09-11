@@ -53,6 +53,8 @@ import { Card } from "@/lib/ui/card";
 import { LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
+import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
+import { useScrollHost } from "@/lib/ui/scroll-host";
 import {
   BodyRegion,
   PostMedia,
@@ -173,12 +175,18 @@ export function PostView({
   const signer = useWriteSigner();
   const viewerId = useActiveAccountId();
   const phase = useAuthPhase();
+  const host = useScrollHost();
 
   const [detail, setDetail] = useState<PostDetail | null>(null);
   const [comments, setComments] = useState<readonly CommentView[]>([]);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
+  // The read in flight while the post is already on screen — distinct
+  // from `loading`, which gates the nothing-loaded page. A pull-to-
+  // refresh must not fall back to that blank page over content the
+  // reader can already see (HT-10's shared rule).
+  const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
@@ -272,6 +280,7 @@ export function PostView({
     void fetchPostDetail(client, postId).then((outcome) => {
       if (cancelled) return;
       setLoading(false);
+      setRefreshing(false);
       if (outcome.kind !== "success") {
         setTransportFault("refresh");
       } else if (outcome.value === null) {
@@ -293,6 +302,17 @@ export function PostView({
   }, [client, postId]);
 
   useEffect(() => refresh(), [refresh]);
+
+  // Pull-down at the top is one of the surfaces the pull-to-refresh
+  // ruling names (design/readme.md, "The pull-down lives on every
+  // full-screen scrolling root", ruled 2026-09-10). It goes through
+  // the same fetch the first arrival takes, so a fault it raises
+  // surfaces in the same place.
+  const onPull = useCallback(() => {
+    setRefreshing(true);
+    refresh();
+  }, [refresh]);
+  usePullToRefresh({ host, onPull });
 
   const onLoadMore = async () => {
     if (loadingMore || !hasMore) return;
@@ -866,6 +886,11 @@ export function PostView({
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       {header(isOwnPost && !redacted)}
+      {refreshing && (
+        <p role="status" aria-live="polite" data-testid="post-refreshing">
+          Loading…
+        </p>
+      )}
       {/* THE POST IS A CARD HERE TOO (`PostCard.jsx:363` — `<Card>` for every
           variant, `detail` included). It was the page ground while its own
           comments sat on cards, which is the inverse of the board's emphasis.

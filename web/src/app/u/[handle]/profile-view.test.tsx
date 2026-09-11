@@ -3,6 +3,8 @@ import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
+import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
@@ -311,5 +313,92 @@ describe("ProfileScreen", () => {
     );
     fireEvent.click(screen.getByTestId("profile-retry"));
     expect(await screen.findByTestId("profile-display-name")).toBeInTheDocument();
+  });
+
+  // The profile is one of the named surfaces (design/readme.md, "The
+  // pull-down lives on every full-screen scrolling root", ruled
+  // 2026-09-10) — the feed's own twin test (feed-view.test.tsx,
+  // "pulling down at the top").
+  describe("pulling down at the top", () => {
+    function touch(type: string, clientY: number): Event {
+      const event = new Event(type, { bubbles: true });
+      const points = [{ clientY }];
+      Object.defineProperty(event, "touches", { value: points });
+      Object.defineProperty(event, "changedTouches", { value: points });
+      return event;
+    }
+
+    function pull(scroller: HTMLElement, travel = PULL_THRESHOLD) {
+      fireEvent(scroller, touch("touchstart", 100));
+      fireEvent(scroller, touch("touchmove", 100 + travel));
+      fireEvent(scroller, touch("touchend", 100 + travel));
+    }
+
+    function profileIn() {
+      const scroller = document.createElement("div");
+      document.body.append(scroller);
+      renderWithProviders(
+        <ScrollHostProvider value={{ current: scroller }}>
+          <ProfileScreen handle="ada" />
+        </ScrollHostProvider>,
+      );
+      return scroller;
+    }
+
+    it("asks the server again without blanking the profile already on screen", async () => {
+      let reads = 0;
+      server.use(
+        graphql.query("UserProfile", () => {
+          reads += 1;
+          return HttpResponse.json({ data: { user: profile("u2", "ada") } });
+        }),
+        recordsHandler([]),
+      );
+      const scroller = profileIn();
+      await screen.findByTestId("profile-display-name");
+      expect(reads).toBe(1);
+
+      pull(scroller);
+      await waitFor(() => expect(reads).toBe(2));
+      // The already-drawn profile stays — the pull is an indicator, not
+      // a blank page (PostDetailViewModel's shared rule, HT-10).
+      expect(screen.getByTestId("profile-display-name")).toBeInTheDocument();
+      scroller.remove();
+    });
+
+    it("takes a short tug for what it is — a scroll, not an ask", async () => {
+      let reads = 0;
+      server.use(
+        graphql.query("UserProfile", () => {
+          reads += 1;
+          return HttpResponse.json({ data: { user: profile("u2", "ada") } });
+        }),
+        recordsHandler([]),
+      );
+      const scroller = profileIn();
+      await screen.findByTestId("profile-display-name");
+
+      pull(scroller, PULL_THRESHOLD - 1);
+      await waitFor(() => expect(reads).toBe(1));
+      scroller.remove();
+    });
+
+    it("ignores a pull that starts anywhere but the top", async () => {
+      let reads = 0;
+      server.use(
+        graphql.query("UserProfile", () => {
+          reads += 1;
+          return HttpResponse.json({ data: { user: profile("u2", "ada") } });
+        }),
+        recordsHandler([]),
+      );
+      const scroller = profileIn();
+      await screen.findByTestId("profile-display-name");
+
+      scroller.scrollTop = 900;
+      pull(scroller);
+      await waitFor(() => expect(reads).toBe(1));
+      scroller.remove();
+    });
   });
 });
