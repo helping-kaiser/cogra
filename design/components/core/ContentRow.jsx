@@ -110,6 +110,7 @@ export function ContentRow({
   direction,
   chevron = true,
   inert = false,
+  unread = false,
   onOpen,
 }) {
   const shape = VARIANTS[variant] ?? VARIANTS.ledger;
@@ -196,7 +197,7 @@ export function ContentRow({
           <span style={{ ...TYPE[shape.second], color: "var(--text-secondary)", ...ellipsis }}>{second}</span>
         )}
       </span>
-      {(trailing || pending) && (
+      {(trailing || pending || unread) && (
         <span style={{ flex: "none", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
           <span
             style={{
@@ -207,6 +208,17 @@ export function ContentRow({
             {trailing}
           </span>
           {pending && <PendingMarker />}
+          {/* The shell's unread mark, the bell's own dot at row scale: the one
+              drawing the product uses for "this arrived and you have not
+              opened it". A dot and not a weight change, so a list of eight
+              unread rows stays a list rather than eight headlines. */}
+          {unread && (
+            <span
+              role="img"
+              aria-label="New"
+              style={{ width: "8px", height: "8px", borderRadius: "var(--radius-full)", background: "var(--primary)" }}
+            />
+          )}
         </span>
       )}
       {chevron && (

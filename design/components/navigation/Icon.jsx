@@ -91,6 +91,10 @@ const PATHS = {
   ],
   /* A chat MESSAGE, distinct from the chat that holds it (`forum`). */
   send: ["M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"],
+  /* The band's bell — the notifications surface (notifications.md). */
+  notifications: [
+    "M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z",
+  ],
   /* The compose media surfaces' glyphs (media slice, 2026-08-31). */
   close: ["M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"],
   /* The transport pair. Where a clip is the thing the reader came for — the

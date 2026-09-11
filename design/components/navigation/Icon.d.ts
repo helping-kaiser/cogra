@@ -31,6 +31,7 @@ export interface IconProps {
     | "sell"
     | "forum"
     | "send"
+    | "notifications"
     | "close"
     | "drag_indicator"
     | "lock"
