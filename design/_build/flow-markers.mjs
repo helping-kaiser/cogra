@@ -605,7 +605,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Opinion pad', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
-    { n: 5, find: "background:var(--scrim-wash", tag: "div" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
 });
 
@@ -1340,7 +1340,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Opinion pad for the post you answer"', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
-    { n: 5, find: "background:var(--scrim-wash", tag: "div" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // The bare seal. `ReplyCited` is this list plus its staged reference's ×.
   ReplySeal: [

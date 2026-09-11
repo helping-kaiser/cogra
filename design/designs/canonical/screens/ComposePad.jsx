@@ -28,7 +28,7 @@ export function Screen() {
       <ComposeSealBody />
 
       {/* The wash over the shell; the parked pad above it stays sharp. */}
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-wash, rgba(0, 0, 0, 0.5))" }} />
+      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-dialog)" }} />
 
       <div
         style={{
@@ -68,7 +68,7 @@ export function Screen() {
             <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
             <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.30</span>
           </span>
-          <span style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 }}>
+          <span style={SR_ONLY}>
             Nice, For or against +0.30
           </span>
         </div>
