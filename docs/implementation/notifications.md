@@ -205,20 +205,25 @@ per-kind preferences, not a broom.
 
 ### Retention
 
-Notification rows are **pruned at 90 days**, per viewer, oldest
-first. The bound is what the surface is for: the list answers
-*what happened lately*, and anything older is answered better by
-the thing itself — your post's comments on the post, your
-opinions on your profile, your invites in the invite surface. The
-seen-list's own compaction policy is the precedent for bounding a
-per-viewer operational table by age
-([feed-ranking.md §8](../primitive/feed-ranking.md)).
+**Notification rows are kept.** No age bound, no count cap, no
+pruning job: a viewer's list holds every row ever written for
+them. The test phase is the wrong moment to throw rows away — a
+list that quietly forgets is a list nobody can audit when the
+channel misbehaves, and the volumes a bound would protect against
+are volumes nobody has measured yet.
 
-**The 90-day figure is an open parameter** — the shape (prune by
-age, per viewer, no cap on count) is the decision; the number is
-a call to make against real volume once the channel has run.
-Pruning never leaves a mark: these rows carry no history anyone is
-entitled to, and the acts behind them are on the graph forever.
+**The bound belongs to the era in which a reader owns their own
+storage.** How long someone's own operational rows live is a
+question about whose disk they sit on, and the answer moves the
+moment the reader picks that home — a delegate, their device, this
+backend. So the shape of pruning is settled there, with the reader
+in it, rather than fixed now as a number nobody chose.
+
+Nothing here is load-bearing either way. These rows are
+rebuildable from the record mirror and the application registry,
+they carry no history anyone is entitled to, and the acts behind
+them are on the graph forever — so whatever bound eventually
+arrives, adopting it is a maintenance change and never a loss.
 
 ---
 
