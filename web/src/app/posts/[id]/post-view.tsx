@@ -57,7 +57,6 @@ import {
   BodyRegion,
   PostMedia,
   bodyIsSensitive,
-  commentHasVideo,
   hasMedia,
   payloadIsRedacted,
   sensitiveSignature,
@@ -647,20 +646,25 @@ export function PostView({
                     the words, INSET at the card's medium rung rather than
                     full-bleed (they are an attachment, not the body), and
                     capped at comment scale so a comment never turns into a
-                    post. Comment pictures never crop, so multiples share a
-                    fixed square frame and each whole frame fits inside it. */}
+                    post. Comment pictures never crop, and every attachment —
+                    one or several, picture or clip alike — shares the one
+                    fixed square frame, filled rather than letterboxed
+                    (design/readme.md §"the media slice"). */}
                 {hasMedia(comment) && (
                   <PostMedia
                     node={comment}
                     bleed="none"
                     radius="var(--radius-medium)"
-                    // A VIDEO TAKES THE SQUARE TOO (ReplyMedia). The pager's
-                    // one frame is what keeps a thread's rhythm steady, and a
-                    // clip that set its own height would break it exactly where
-                    // the reader is scrolling past.
-                    ratio={
-                      comment.attachments.length > 1 || commentHasVideo(comment) ? 1 : undefined
-                    }
+                    // SQUARE IS THE COMMENT SCALE'S SHAPE (design/readme.md
+                    // §"the media slice"): every attachment, picture or clip,
+                    // alike — not only a video or a multi-picture set — takes
+                    // the one frame, so a thread's rhythm never changes per
+                    // comment.
+                    ratio={1}
+                    // ...AND FILLED, NEVER LETTERBOXED: an uncropped picture
+                    // display-crops to the frame rather than fitting whole
+                    // inside it, same as the video's own centre-crop.
+                    fit="cover"
                     maxHeight="220px"
                     // One control, the sound; no transport bar and no duration
                     // pill on a surface meant for reading.

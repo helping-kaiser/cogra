@@ -35,6 +35,7 @@ export function CoverStep({
   durationMs,
   framePreviews,
   cover,
+  coverPreview,
   capturing,
   blocked,
   error,
@@ -48,6 +49,8 @@ export function CoverStep({
   /** Object URLs for the offered frames, in the order they were taken. */
   framePreviews: readonly string[];
   cover: CoverAsset | null;
+  /** An object URL for the author's own chosen picture — see `CoverRow`. */
+  coverPreview: string | null;
   capturing: boolean;
   blocked: boolean;
   error: string | null;
@@ -75,6 +78,7 @@ export function CoverStep({
         <CoverRow
           framePreviews={framePreviews}
           cover={cover}
+          coverPreview={coverPreview}
           capturing={capturing}
           onPickFrame={onPickFrame}
           onPickPicture={onPickPicture}

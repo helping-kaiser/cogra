@@ -20,7 +20,7 @@
 // that path is unavailable on Firefox Android and carries a documented
 // patent/royalty caveat. Remuxing needs neither.
 //
-// THE LIBRARY: mediabunny 1.55.5, MPL-2.0, pinned exactly.
+// THE LIBRARY: mediabunny 1.55.7, MPL-2.0, pinned exactly.
 // (https://mediabunny.dev · https://github.com/Vanilagy/mediabunny)
 // Chosen because it is the muxer MDN's own WebCodecs guide points to, it ships
 // ZERO WebAssembly and no worker asset on this path — so nothing has to be

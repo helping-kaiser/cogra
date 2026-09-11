@@ -16,6 +16,8 @@ export type PickedThumb = {
   altText?: string | null;
   /** The framing the author chose, so the row shows it rather than the source. */
   crop?: Crop | null;
+  /** The clip's length — turns the tile into the composer's video anatomy. */
+  durationMs?: number | null;
   progress?: number | "indeterminate";
   failed?: boolean;
 };
@@ -48,6 +50,7 @@ export function PickedRow({
           altText={item.altText}
           crop={item.crop}
           cover={index === 0}
+          durationMs={item.durationMs}
           progress={item.progress}
           failed={item.failed}
           testId={`${testId}-thumb-${index}`}

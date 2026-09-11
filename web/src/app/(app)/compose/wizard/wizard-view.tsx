@@ -53,7 +53,7 @@ import {
   type ComposeDraftStore,
 } from "@/lib/compose/draft-store";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
-import { usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
+import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { PickStep } from "./pick-step";
 import { CropStep } from "./crop-step";
 import { CoverStep } from "./cover-step";
@@ -155,6 +155,10 @@ export function ComposeWizard({
   // dismisses each line rather than clearing on the next pick.
   const [refusals, setRefusals] = useState<readonly PickRefusal[]>(NO_REFUSALS);
   const cover = state.cover;
+  // The face itself, wherever it came from — a captured frame or the
+  // author's own picture — so the details thumbnail and the cover row's own
+  // tile can both show it rather than the video's bytes or a bare outline.
+  const coverPreview = useObjectUrl(cover?.file ?? null);
 
   // The badge's number, read off the clip as soon as it is picked rather than
   // waiting for the cover screen — the details row shows it too.
@@ -642,6 +646,7 @@ export function ComposeWizard({
           durationMs={durationMs}
           framePreviews={framePreviews}
           cover={cover}
+          coverPreview={coverPreview}
           capturing={capturing}
           error={gate.ok ? null : gate.reason}
           blocked={!gate.ok}
@@ -659,6 +664,8 @@ export function ComposeWizard({
           mode={state.mode}
           assets={state.assets}
           previews={previews}
+          coverPreview={coverPreview}
+          durationMs={durationMs}
           title={state.title}
           description={state.description}
           tags={state.tags}
