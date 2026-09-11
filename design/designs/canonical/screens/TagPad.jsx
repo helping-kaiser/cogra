@@ -32,7 +32,9 @@
    keeps a single lossy readout from meaning two things. It is spelled here for
    `RefPair`'s reason: the lookup is not among the names the bundle exposes to
    screens, and a board must never name a face the system has no row for. At the
-   contract's default the nearest row is 🔍 (0.15 / 0.90).
+   contract's default the nearest row is 🔍 (0.15 / 0.90). The numbers carry
+   `cg-exact` exactly as the master's do, so a hand-drawn readout follows the
+   reading mode instead of diverging from it (readme §13).
 
    THE ANCHOR'S WORD DOES COME WITH IT, unlike a citation's. A citation borrows
    the stance table, whose words name a feeling about a stance the record is
@@ -128,7 +130,7 @@ export function Screen() {
             </span>
             <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
               <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🔍</span>
-              <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
+              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
                 +0.10 / 1.00
               </span>
             </span>

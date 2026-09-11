@@ -58,7 +58,7 @@ export function Screen() {
             </span>
             <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
               <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🔍</span>
-              <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
+              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", whiteSpace: "nowrap" }}>
                 +0.10 / 1.00
               </span>
             </span>
