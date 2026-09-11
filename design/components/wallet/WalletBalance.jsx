@@ -8,8 +8,10 @@ import { WashCard } from "./WashCard.jsx";
    one surface that spells CGT (readme §13, Money figures): mark and word
    adjacent at display size, the "?" (What is CGT?) beside them. The ≈ L-BTC
    line reads the public ladder market — an estimate, never a promise, hidden
-   at zero. `delta` is the recent-earnings chip ("+14.40 this week"): quiet
-   pride, real number, omitted when there is nothing new. */
+   at zero. `delta` is the recent-earnings chip: quiet pride, real number,
+   omitted when there is nothing new. It is an AMOUNT, not a string — money is
+   `MoneyFigure`'s and never formatted by hand (readme §13, Money figures), so
+   the chip renders the figure itself and adds "this week". */
 
 export function WalletBalance({ amount = 0, approx, delta, onHelp }) {
   return (
@@ -61,7 +63,8 @@ export function WalletBalance({ amount = 0, approx, delta, onHelp }) {
                 letterSpacing: "var(--text-label-small--letter-spacing)",
               }}
             >
-              {delta}
+              <MoneyFigure amount={delta} signed />
+              &nbsp;this week
             </span>
           )}
         </div>
