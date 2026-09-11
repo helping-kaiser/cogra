@@ -73,7 +73,7 @@ export function StanceAlternates({
   children,
   landing,
   inline = false,
-  helpLabel = "How stances work",
+  helpLabel = "How opinions work",
 }) {
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
@@ -99,7 +99,7 @@ export function StanceAlternates({
     if (measured) setSlotHeight(measured);
   }, [explaining, showing]);
   return (
-    <DialogSurface ariaLabel="Choose your stance" inline={inline} onScrimPress={onCancel} width="24rem">
+    <DialogSurface ariaLabel="Choose your opinion" inline={inline} onScrimPress={onCancel} width="24rem">
       <div style={{ position: "relative" }}>
         <button
           type="button"
@@ -148,7 +148,7 @@ export function StanceAlternates({
             fontWeight: "var(--text-title-large--font-weight)",
           }}
         >
-          Choose your stance
+          Choose your opinion
         </h2>
       </div>
       {/* The help replaces the readouts and the inputs alike. */}

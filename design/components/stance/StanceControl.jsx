@@ -124,7 +124,7 @@ export function StanceControl({
   padNote,
   wide = false,
   overMedia = false,
-  helpLabel = "How stances work",
+  helpLabel = "How opinions work",
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -265,8 +265,8 @@ export function StanceControl({
           type="button"
           aria-label={
             restingFace === null
-              ? `Take a stance on ${targetLabel}`
-              : `Your stance on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Tap to add a positive one.`
+              ? `Give your opinion on ${targetLabel}`
+              : `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
           }
           onClick={onTap}
           onPointerDown={onPointerDown}
@@ -324,7 +324,7 @@ export function StanceControl({
           {wide && restingPair === null && (
             /* The wide anchor's words — only where there is no pair to show. */
             <span aria-hidden="true" style={{ whiteSpace: "nowrap" }}>
-              Take a stance
+              Give your opinion
             </span>
           )}
           {restingPair !== null && (
@@ -371,7 +371,7 @@ export function StanceControl({
             className={`cg-sr-focusable ${BUTTON_CLASS}`}
             style={{ fontFamily: "var(--font-sans)" }}
           >
-            Choose your stance on {targetLabel}
+            Choose your opinion on {targetLabel}
           </button>
         )}
       </div>
@@ -388,7 +388,7 @@ export function StanceControl({
           />
           <div
             role="group"
-            aria-label={`Stance pad for ${targetLabel}`}
+            aria-label={`Opinion pad for ${targetLabel}`}
             style={{
               ...parkedPadStyle(padInset),
               zIndex: 20,

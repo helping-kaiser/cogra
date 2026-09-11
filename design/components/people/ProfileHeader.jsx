@@ -121,7 +121,7 @@ export function ProfileHeader({
             (onCounts ? (
               <button
                 type="button"
-                aria-label={own ? "Your stances, both directions" : "Stances on and by @" + handle}
+                aria-label={own ? "Your opinions, both directions" : "Opinions on and by @" + handle}
                 onClick={onCounts}
                 className="cg-state cg-focus"
                 style={{ display: "flex", gap: "var(--space-5)", border: 0, background: "none", padding: 0, marginTop: 4, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", width: "fit-content", maxWidth: "100%", borderRadius: "var(--radius-small)" }}

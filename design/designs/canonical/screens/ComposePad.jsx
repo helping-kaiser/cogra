@@ -75,7 +75,7 @@ export function Screen() {
 
         <div
           role="group"
-          aria-label="Stance pad for your own post"
+          aria-label="Opinion pad for your own post"
           style={{ alignSelf: "center", position: "relative", width: 260, height: 72, borderRadius: "var(--radius-large)", background: "var(--surface-container-highest)", touchAction: "none" }}
         >
           <span aria-hidden="true" style={{ position: "absolute", left: 8, right: 8, top: "50%", height: 1, background: "var(--border-hairline)" }} />
