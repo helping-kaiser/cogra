@@ -1777,15 +1777,15 @@ takes `ranges`, so what the clients need is the same bound — the floor
 included, it being the contract's — the tag's four poles, and the
 thirteen-anchor lookup, none of which the stance pad can supply, the two
 tables being deliberately disjoint. Both owe the two contexts as well:
-the composer's pad carries no `Withdraw`, the edit's does.
+the composer's pad carries no un-tag control, the edit's does.
 
 **The anchors have not been through `copy-voice.md`.** The table's
 thirteen glosses are the words the boards draw and speak, and they are
 ruled, but a copy pass has not read them as a set against the guide's
-register. `Withdraw`, the edit pad's foot control, goes with them — it
-is the one word here read at a moment of consequence, and it was picked
-to match the `Withdrawn:` line and the acts card's "Tags withdrawn"
-rather than give one act a second name.
+register. `Un-tag`, the edit pad's foot control, goes with them — the
+reader's word for the act (api-spec's own noun for the r-0 record),
+ruled 2026-09-11; the `Withdrawn:` line and the acts card's "Tags
+withdrawn" keep the register's record-speak for the result.
 
 **The contract's default reads oddly through the table.** A tag opens
 at relevance +0.1, whose nearest anchor is 🔍 "had to look, but it's in
@@ -1794,12 +1794,9 @@ to say about their own post's tag. Either the low-defaults value is
 wrong for a self-declaration or the lowest aboutness band is, and
 nothing here settles which.
 
-**The chip's × at an edit is undecided.** `TopicRemovable` draws its ×
-unconditionally and no board passes `onRemove`, so on an edit surface
-the glyph stands with nothing ruled behind it. A composer's × unstages
-on the spot; an edit's `Withdraw` stages a record the seal signs. One
-glyph carrying both meanings is the confusion the field's floor was put
-in to end, so either the edit's chips drop the × and `Withdraw` is the
-single door, or the × at an edit is ruled to ask for that same staged
-withdrawal. Dropping it reaches `TopicRemovable`, `EditComposeBody`,
-`EditWords` and the comment edits, which is why this round left it.
+**The chip's × at an edit is ruled** (jakob 2026-09-11): the × stays,
+and it asks for the same staged withdrawal the pad's `Un-tag` does —
+two doors, one act, because a reader who just wants the tag gone should
+not need the pad roundtrip. A composer's × unstages on the spot as
+ever; the graph's edit-board × edges already read "the tag leaves the
+edit", which covers both doors honestly.

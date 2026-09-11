@@ -57,14 +57,19 @@
    signed here: the pair rides the tag's own record and the tag rides the
    composer's batch, so this sheet stages and the seal signs.
 
-   `Withdraw` IS THE UN-TAG, AND IT IS ITS OWN GESTURE (jakob's ruling,
-   2026-09-11). Taking a tag off a post that carries it is a record like adding
-   one, which is why the body's `Withdrawn:` line names it and the acts sheet
-   counts it. An act of that weight is asked for by a control that says what it
-   does, never by dragging a claim down to nothing. It takes `Sever`'s place on
-   the stance pad — the walk-away pushed left, the decisions kept right — and
-   `Sever`'s restraint with it: a text button and no colour of its own, because
-   a withdrawal is a deliberate act and not a failure (§2.4).
+   `Un-tag` IS ITS OWN GESTURE (jakob's rulings, 2026-09-11). Taking a tag off
+   a post that carries it is a record like adding one, which is why the body's
+   `Withdrawn:` line names the result and the acts sheet counts it — the
+   control speaks the reader's word (api-spec's own noun for the r-0 record is
+   "the un-tag") and the record-speak stays the register's. An act of that
+   weight is asked for by a control that says what it does, never by dragging
+   a claim down to nothing. It takes `Sever`'s place on the stance pad — the
+   walk-away pushed left, the decisions kept right — and `Sever`'s restraint
+   with it: a text button and no colour of its own, because a withdrawal is a
+   deliberate act and not a failure (§2.4). THE CHIP'S × DOES THE SAME AT AN
+   EDIT, without the pad roundtrip: a reader who just wants the tag gone taps
+   the ×, and the same staged withdrawal lands — two doors, one act, neither
+   asking twice.
 
    IT STAGES, AND THE SEAL SIGNS. The sheet closes, the chip leaves the row, and
    what stands in its place is the `Withdrawn:` line the edit body already
@@ -145,7 +150,7 @@ export function Screen() {
               Signed with the post, as its own action.
             </span>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
-              <Button variant="text" style={{ marginRight: "auto" }}>Withdraw</Button>
+              <Button variant="text" style={{ marginRight: "auto" }}>Un-tag</Button>
               <Button>Done</Button>
             </div>
           </div>

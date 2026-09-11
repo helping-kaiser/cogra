@@ -1423,7 +1423,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   TagPad: [
     { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
-    { n: 2, find: ">Withdraw</button>", tag: "button" },
+    { n: 2, find: ">Un-tag</button>", tag: "button" },
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
   ],
