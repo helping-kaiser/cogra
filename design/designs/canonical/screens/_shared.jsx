@@ -431,6 +431,20 @@ const PROFILE_MENU = [
   { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} },
 ];
 
+/* A DELETED ACCOUNT'S MENU (jakob 2026-09-12): the three rows that work on a
+   nameless actor. Saving keeps a pointer, sharing sends a page, and hiding acts
+   on an ACTOR — none of the three needs a name, and the actor is still there,
+   still authoring, still ranking into the reader's feed. Mentioning is the one
+   row that does: it stages a Reference at a PERSON and spells their handle in
+   the composer, and a redacted actor has no handle to spell. The hide row takes
+   its own wording from `HIDE_ACTOR_LABEL`, which is where the master already
+   answers the same question. */
+const PROFILE_DELETED_MENU = [
+  SAVE_ROW,
+  { label: "Share this profile", onSelect: () => {} },
+  { label: HIDE_ACTOR_LABEL(null, true), onSelect: () => {} },
+];
+
 /* Your own profile's menu (the private-viewer-state round): the two private
    lists, then share. Saved and History are the only surfaces in the product
    nobody but the reader can see, and the band's ⋮ is where they hang. */
@@ -555,6 +569,14 @@ const ownProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More on yo
 
 /* Another person's ⋮, likewise: closing their actions row after Message. */
 const otherProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More about @ada" items={PROFILE_MENU} />;
+
+/* A deleted account's ⋮, closing a row that has no Message to stand after. Its
+   name says `this account` for `StanceControl`'s reason on the same row: the
+   handle went with the rest of the identity, and naming it back in the one
+   string a screen reader reads aloud would undo the redaction. */
+const deletedProfileMenu = () => (
+  <OverflowMenu placement="row" ariaLabel="More about this account" items={PROFILE_DELETED_MENU} />
+);
 
 /* The chronicle's tab row (profile round, 2026-09-01): the `TabBar` master
    holding the chronicle's own three glyphs. What lives here is the tab data —

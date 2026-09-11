@@ -1351,6 +1351,7 @@
     { "from": "ProfileDeleted", "via": 8, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "ProfileDeleted", "via": 9, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "ProfileDeleted", "via": 10, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "ProfileDeleted", "via": 11, "kind": "detour", "label": "profile overflow ⋮", "to": [{ "gap": "the deleted account's sheet (not boarded — `ProfileMenu` without Mention, the hide row on its redacted wording)" }] },
 
     { "from": "ProfileUnreachable", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the profile was opened from" }] },
     { "from": "ProfileUnreachable", "via": 2, "kind": "advance", "label": "Retry", "to": [{ "board": "ProfileOther", "case": "reaches this time — the profile loads" }, { "terminal": "self", "case": "still nothing — the fault stays in place", "info": true }] },
