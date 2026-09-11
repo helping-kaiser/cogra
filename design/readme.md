@@ -136,7 +136,7 @@ system's own acts.** "You" is the reader; "we" appears only where the
 service did something on the reader's behalf.
 
 - `Your key isn't on this browser`
-- `Current stance 😊 +0.55 / +0.20`
+- `Current opinion 😊 +0.55 / +0.20`
 - `We sent you a verification link — open it to prove this email is yours.`
 
 **Sentence case everywhere.** Titles, buttons, labels, dialog headings.
@@ -673,7 +673,7 @@ four quadrants are legitimate.
   explicit **Set** signs it, **Cancel** or a press outside stages
   nothing.
 - The pad shows the **face and the exact pair**, live under the drag,
-  with the **landing** ("Resulting stance …") below the field — two
+  with the **landing** ("Resulting opinion …") below the field — two
   different numbers, never merged into one line, each labelled above its
   own value.
 - **The control never prevents a choice.** A pick that nets a standing to
@@ -815,8 +815,8 @@ transient line is read away from the pad, so it *is* the accessible text.
 sliders. The originals were the repo's own framing rather than words a
 reader could act on, and a square with no edge labels taught nothing.
 
-**Three labelled readouts, formatted alike.** `Current stance` ·
-`Your pick` · `Resulting stance`, each a label with the face and the
+**Three labelled readouts, formatted alike.** `Current opinion` ·
+`Your pick` · `Resulting opinion`, each a label with the face and the
 numbers on the line below it. The source ran them together as sentences
 ("Where you stand now: …", "This leaves you at: …"), which made three
 different numbers read as prose.
@@ -839,7 +839,7 @@ the mark exists for.
 was a `primary` text button beside every stance, so a feed of twenty
 posts carried twenty copies of a control duplicating the one next to it —
 and "values" named nothing a reader could place. It is now
-`Choose your stance`, visually hidden until focused. §10's "every drag
+`Choose your opinion`, visually hidden until focused. §10's "every drag
 gesture has a non-drag equivalent" is satisfied by the equivalent
 existing and being reachable, not by it being on screen twenty times.
 
@@ -3257,7 +3257,7 @@ one sitting.
   you stand on it`, `Toward what you answer` and `Your first stance` —
   their own dialogs' titles, the way every other "?" in the system
   already takes its subject. One name across three surfaces says only
-  that a dialog exists; `How stances work` stays where the control
+  that a dialog exists; `How opinions work` stays where the control
   itself is the subject.
 - **An @-scope hit on a tag is indirect, and the drawing stands.** The
   row's second line says the route out loud ("tagged by @sol"). A
@@ -3703,23 +3703,32 @@ signal numbers are geekery, and the glyph is what a reader is owed.
 Ruled the same day, drawn as its own round because it rewrites every
 stance master.
 
-- **Group A only — the signal numbers.** Stance pairs, tag pairs,
-  citation pairs, the Post Score and the viewer-relative rank. Money,
-  ages, comment and fold counts, media mechanics, field constraints and
-  codes are Group B and are shown whatever the setting says: hiding what
-  something costs, or how old it is, trades honesty for aesthetics,
-  which is the opposite trade to this one. The profile's figures —
-  Posts, Stances on, Stances taken — are bare integers and stay out.
+- **The pairs, and only the pairs.** Stance pairs, tag pairs and
+  citation pairs — the two-parameter readings a face or a tag object
+  already stands in for. The Post score and the viewer-relative rank
+  keep their digits in both modes: neither has a glyph that could carry
+  its magnitude, and a `graph` mark alone would say only that a score
+  exists, which is the black box §7 refuses. Money, ages, comment and
+  fold counts, media mechanics, field constraints and codes are shown
+  whatever the setting says. The profile's figures — Posts, Opinions
+  on, Opinions by — are bare integers and stay out.
 - **Glyph-first is the default.** A card shows the stance face alone, a
-  score its `graph` mark alone, a tag row the nearest of the thirteen
-  `TAG_ANCHORS`, a ranked result the score's mark. The numbers arrive
-  only when a reader asks for them. Every glyph was already the lossy
-  readout of its pair; the mode makes it the primary one.
+  tag row the nearest of the thirteen `TAG_ANCHORS`, a citation row and
+  a staged reference the nearest of the twenty faces. The numbers
+  arrive only when a reader asks for them. Every glyph was already the
+  lossy readout of its pair; the mode makes it the primary one.
 - **Tag rows wear a glyph.** `TaggedRow` and a topic `ReferenceRow`
   read `nearestTagAnchor` and lead with it. The tag table is what makes
   this possible — before it there was no lossy readout a tag's pair
   could take, and the rows said nothing at all to a reader who does not
   read numbers.
+- **A sentence follows the mode too.** Every help, coach and snackbar
+  line that speaks a pair is emoji-first: the face reads, the digits
+  ride a trailing `cg-exact` span, and a screen-reader twin says the
+  whole fact in both modes. The fold explanation speaks faces rather
+  than numbers — "your pick adds to what you've said before, that's
+  why the two faces can differ" — because it has to hold for a reader
+  who has never turned the digits on.
 - **One markup, two paintings.** Every master draws the glyph AND the
   number; the number sits in a `cg-exact` span, and one base rule —
   `.screen:not([data-geek="on"]) .cg-exact { display: none }` — decides
@@ -3742,10 +3751,29 @@ stance master.
   chip beside the theme chip, landing as `data-geek` on the screen root
   with its own `cograGeek` broadcast, so one board's chip syncs the
   canvas and the two toggles stay independent.
-- **The gate**: **151 screens** unchanged, 1086 → **1087 edges**, gaps
-  hold at **56** and flows at **60/57/3**. The new edge is the switch's
-  own self-terminal; the settings board's rows below it renumber, and
-  the witness did not move because no declared flow crosses Settings.
+- **The gesture inverts: a tap opens, a hold signs.** The light gesture
+  — the one a thumb gives by accident — blooms the pad and stages
+  nothing; the shortcut that spends a signature on the gentle
+  `(+0.1, +0.1)` takes a held finger. The price is accepted
+  deliberately, because nobody holds a control for half a second by
+  mistake. The one-time coach mark moves to the pad's first open,
+  inside the pad, and what it teaches is the shortcut.
+- **The affordance rows spread.** `PostCard`'s and `CommentCard`'s
+  controls sit at even intervals across the card's full width — the
+  social pattern a thumb already has a habit for — and every control in
+  them answers to the 48px target through `cg-hit`, so wider spacing
+  never becomes smaller aim.
+- **The reader's word is "opinion".** On screen and aloud a reader
+  gives an *opinion*; the record, the components, the contract and the
+  file names keep *stance*, exactly as the tag/topic law keeps *topic*
+  (`copy-voice.md`, *Naming*). "Standing" leaves the screen entirely —
+  *Current opinion* and *Resulting opinion* carry it — and `Sever`
+  becomes *Walk it back*, `signed actions` become *things*.
+- **The gate**: **151 screens** unchanged, edges hold at **1087**, gaps
+  at **56** and flows at **60/57/3**. Nothing rewired: the round
+  rewrites what the boards say and how their numbers paint, and the
+  witness did not move. `Settings`' canvas slot grows 1774 → **1845**
+  to match the artboard it holds; every other slot audits clean.
 
 ## 14. Index
 

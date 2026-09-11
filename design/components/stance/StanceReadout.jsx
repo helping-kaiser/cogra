@@ -356,7 +356,7 @@ export function landingLine(landing) {
 
    The severed line has no pair to show and stays a plain string. */
 export function signedLine(standing, records, severed, targetLabel) {
-  const acts = records === 1 ? "Signed" : `Signed ${records} actions`;
+  const acts = records === 1 ? "Signed" : `Signed ${records} things`;
   if (severed) return `${acts}, still settling. You've severed ${targetLabel}.`;
   const readout = bundleReadout(standing);
   return (
