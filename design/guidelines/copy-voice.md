@@ -1019,3 +1019,98 @@ from here fills it.
 **The surface is `Notifications`,** in the page header and wherever it
 is named. Not *Activity*, which describes a log, and not *Alerts*, which
 describes an emergency.
+
+## Awaiting blessing — the account-deletion round
+
+Drawn on `Settings`, `DeleteAccount`, `DeleteAccountMail`,
+`FeedDeleting`, `DeleteAccountCanceled` and `ProfileDeleted`. This
+flow's words carry the product's erasure ethic, so the register is held
+tighter here than anywhere: honest, quiet, no drama, and nothing that
+argues with a decision the reader has made.
+
+**THE ONE WORD NOT YET RULED — how a FUTURE moment is said.** The ages
+ladder above is a vocabulary for how long ago something happened; the
+deletion band counts FORWARD, and no ruling covers that (backlog 54.1).
+Three candidates:
+
+1. `Deleted in 6d` — the ladder read forward, one vocabulary for every
+   duration on screen. Cheapest to hold, and the one place the ladder's
+   compression can genuinely mislead: `6d` means *ago* everywhere else
+   in the product, so a reader scanning a band could read the account as
+   already gone.
+2. `Deleted in 6 days` — spelled out. **Recommended, and what is
+   drawn.** The ladder's compression buys room in lists where many ages
+   compete for it; this is one sentence in a band with room to spare, so
+   the compression buys nothing and costs the ambiguity above. Running
+   down: `in 1 day`, then `in 5 hours` on the last day.
+3. `Deleted on 17.09.2026` — the ladder's own past-30-days branch, a
+   fixed date. Exact and needs no arithmetic, but a date does not shrink,
+   and a window whose whole point is that it is closing should read as
+   closing.
+
+**The settings row is two words and a footnote.** `Delete account` on a
+navigating row, and under the group: `Nothing is deleted here. The next
+screen says what goes and what stays, and the deletion is confirmed by a
+link we email you.` The row is quiet by ruling; the footnote is what lets
+it be, because the fact a reader needs before tapping is that the tap
+deletes nothing.
+
+**The request screen says what goes before what stays, and says both.**
+Heading `Delete account`; then `This takes your name off CoGra. What you
+signed stays on the graph, because it is other people's record as much
+as yours — what goes is everything that says it was you.`
+
+- `What goes` — `Your profile — display name, bio, picture and cover.` ·
+  `The link between you and this account. Nothing left here points back
+  to you.` · `Your sessions, and what this account kept for you alone:
+  saved items, hidden accounts, what you have read.`
+- `What stays` — `Everything you signed, and everything others signed
+  about you. Your posts still route and still credit their author; what
+  is removed leaves a mark saying so.` · `Your wallet and its address.
+  They are held by your key, never by CoGra, so nothing here can touch
+  them.`
+
+**The content sweep is the reader's own sentence, in the first person.**
+`Also remove what I posted`, with `The words and pictures go out of your
+posts, comments and messages, each leaving its mark. Leave this off and
+they stay as you wrote them.` under it. *Also* is what makes it an
+addition to a decision already made rather than a second question.
+
+**The commitment is `Send the confirmation link`** — what the press does,
+and `Reset`'s `Send reset link` said for the same mechanism. Not `Delete
+my account`, which would be a lie about a button that sends an email.
+Under it: `Nothing is deleted until you open that link. After that it
+runs in seven days, and you can cancel from any device until it does.`
+
+**No "are you sure".** Nothing in this flow asks twice, scolds, or lists
+what the reader will miss. The friction is the emailed link, which is
+also the check against a session that is not theirs; a typed handle or a
+re-entered password on top would be ceremony, and ceremony here reads as
+the product trying to talk them out of it.
+
+**The mail state is the errand and the address.** `Check your mail` ·
+`We sent a link to sol@solferreira.art. Opening it confirms the deletion
+and starts the seven days.` · `Until you open it nothing is scheduled and
+nothing has changed. Closing this screen changes nothing either — the
+link is the whole of it.` · `Resend the link`. No expiry is claimed: the
+reset link states its fifteen minutes because `auth.md` gives it fifteen
+minutes, and `erasure.md` sets no window on this one.
+
+**The band is one sentence and one word.** `Your account is deleted in 6
+days.` with `Cancel`, and `Your account and everything you posted are
+deleted in 6 days.` where the sweep was opted into. The band names what
+is going, because a reader who chose the sweep is waiting on something
+larger than one who did not.
+
+**The cancel says what happened, and offers no way back.** `Canceled —
+your account stays, and nothing was deleted.` Every other snackbar in the
+product carries an Undo; this one cannot, because its undo would re-arm
+an irreversible countdown from a control that disappears in four seconds.
+
+**The third removal mark.** Beside `Removed by its author` and `Removed
+under the platform's rules`: `Deleted by the person whose account it was`
+— `Their name and profile are gone. What they signed stays on the graph
+and still credits them.` Three marks now, still never interchangeable.
+A deleted account must not read as a moderation verdict, and it must not
+read as `This profile doesn't exist.` — someone was here, and the product
+never pretends otherwise.
