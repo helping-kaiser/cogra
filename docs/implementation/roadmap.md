@@ -196,10 +196,10 @@ only if the core lands early, in this order:
 
 **Order** (dependency-driven, as always):
 
-0. The audit-salvage wave: merge the held 2026-09-04 audit lanes
-   r1-store, r2-api and d1-docs; cherry-pick w1-web's bug fixes.
-   The other audit branches are discarded as superseded by the
-   conformance overhaul.
+0. The audit-salvage wave — resolved 2026-09-11 with no code
+   motion: every 2026-09-04 audit branch had already been
+   squash-merged the day it was cut (PRs #618–#632), so nothing
+   remained to salvage; the held refs were stale local branches.
 1. W3 and W4 (slice 2.5.3's remainder rides them), then W5–W7.
 2. Slice 2.6 (design first), then slice 2.7.
 3. Slice 3 (feed + Reel), then slice 3.1 (design first).
