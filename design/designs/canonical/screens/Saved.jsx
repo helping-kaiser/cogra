@@ -20,42 +20,9 @@
    boards at all yet, so its row shape lands with the chat round and joins this
    same list rather than starting a second one.
 
-   THE ROW CARRIES ITS OWN UNSAVE (jakob 2026-09-11). Sending a reader back to
-   the thing's own ⋮ to undo what is in front of them is the long way round,
-   and this is the one list where every row offers the same act. It is
-   ICON-ONLY — the filled bookmark, `Unsave` in the accessibility tree, no word
-   on screen (jakob: with the icon "we dont even need any word there") —
-   because the same word repeated down a list is four copies of one sentence,
-   and this glyph is one every reader already reads as "kept".
-
-   IT TAKES THE CHEVRON'S SLOT, NEVER THE AGE'S. The age is when YOU saved the
-   thing, which is this list's whole order and what a reader is retracing, so
-   it keeps its place and the control stands outboard of it. The chevron was
-   never drawn here — a row that opens says so by being a row — so the edge was
-   already free. The glyph takes `text-secondary`, the colour every icon-only
-   control in this system rests in: it is the row's control, not a badge saying
-   the row is saved. Every row in this list is. */
-const Unsave = () => (
-  <button
-    type="button"
-    aria-label="Unsave"
-    className="cg-state cg-focus cg-hit"
-    style={{
-      display: "grid",
-      placeItems: "center",
-      height: "40px",
-      width: "40px",
-      border: 0,
-      background: "none",
-      borderRadius: "var(--radius-full)",
-      color: "var(--text-secondary)",
-      cursor: "pointer",
-      padding: 0,
-    }}
-  >
-    <Icon name="bookmark" size={22} />
-  </button>
-);
+   EVERY ROW CARRIES ITS OWN UNSAVE (jakob 2026-09-11) — the shared `Unsave`,
+   icon-only, standing in the chevron's slot outboard of the age. `SavedUndo`
+   draws the same list the moment one of them is tapped. */
 
 export function Screen() {
   return (

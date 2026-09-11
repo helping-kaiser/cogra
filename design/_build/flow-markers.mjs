@@ -1095,6 +1095,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="Unsave"', tag: "button", all: true },
     ...nav(3),
   ],
+  // The same list a moment after one row was unsaved. It borrows `Saved`'s
+  // numbering — the same controls in the same places — and appends `Undo`
+  // rather than inserting it, so no via renumbers.
+  SavedUndo: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">The third headland light is real<", tag: "button" },
+    { n: 2, find: ">Mira Voss<", tag: "button" },
+    { n: 2, find: ">Sunday at the tide market<", tag: "button" },
+    { n: 8, find: 'aria-label="Unsave"', tag: "button", all: true },
+    { n: 9, find: ">Undo</button>", tag: "button" },
+    ...nav(3),
+  ],
   SavedEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
   History: [
     { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },

@@ -1028,7 +1028,17 @@
     { "from": "Saved", "via": 5, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "Saved", "via": 6, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "Saved", "via": 7, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
-    { "from": "Saved", "via": 8, "kind": "detour", "label": "a row's unsave", "to": [{ "terminal": "self", "case": "the row goes — the list is one shorter, and the last of them leaves SavedEmpty", "info": true }] },
+    { "from": "Saved", "via": 8, "kind": "advance", "label": "a row's unsave", "to": [{ "board": "SavedUndo", "case": "the row goes, the list closes over it, and the line offers Undo — the last of them leaves SavedEmpty" }] },
+
+    { "from": "SavedUndo", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the menu was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
+    { "from": "SavedUndo", "via": 2, "kind": "advance", "label": "a saved row", "to": [{ "board": "PostDetail", "case": "a post" }, { "board": "ReplyEntry", "case": "a comment — the post it hangs under, its thread open on it" }, { "board": "ProfileOther", "case": "a person" }] },
+    { "from": "SavedUndo", "via": 3, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
+    { "from": "SavedUndo", "via": 4, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "SavedUndo", "via": 5, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "SavedUndo", "via": 6, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
+    { "from": "SavedUndo", "via": 7, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "SavedUndo", "via": 8, "kind": "detour", "label": "another row's unsave", "to": [{ "terminal": "self", "case": "that row goes too — the list is one shorter again and the line renews", "info": true }] },
+    { "from": "SavedUndo", "via": 9, "kind": "cancel", "label": "Undo", "to": [{ "board": "Saved", "case": "the row comes back where it was and the list is as it was" }] },
 
     { "from": "SavedEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the menu was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
     { "from": "SavedEmpty", "via": 2, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },

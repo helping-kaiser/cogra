@@ -1248,7 +1248,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 3623,
+      "h": 3653,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1571,6 +1571,15 @@
       "file": "SavedEmpty.dc.html",
       "title": "Saved · nothing kept yet",
       "x": 480,
+      "y": 4194,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SavedUndo.dc.html",
+      "title": "Saved · one just removed",
+      "x": 2400,
       "y": 4194,
       "w": 390,
       "h": 844,
