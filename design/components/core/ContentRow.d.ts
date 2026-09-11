@@ -43,6 +43,15 @@ export interface ContentRowProps {
   /** The shell's unread dot on the row's trailing edge: this arrived and has
    *  not been opened. The bell's own mark at row scale, never a weight change. */
   unread?: boolean;
+  /**
+   * One control of the row's own, in the trailing-most slot — the chevron's,
+   * which it replaces. The trailing edge keeps its own content and sits
+   * inboard of it: on the Saved list the age is the list's order and the thing
+   * a reader retraces, so the control stands beside the age, never instead of
+   * it. Given one, the row splits into a pressable part and this control, so
+   * there is never a button inside a button.
+   */
+  action?: React.ReactNode;
   /** Where the row goes. */
   onOpen?: () => void;
 }

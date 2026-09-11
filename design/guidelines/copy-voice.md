@@ -416,8 +416,20 @@ spelling — one `License terms` everywhere, never the British spelling:
 - `Mention in a new post` — the same row on a person, and the same
   fact; only the far end of the reference differs.
 - `Share this profile` — another's profile.
-- `Share your profile` — your own, the row that closes the band's menu
+- `Share your profile` — your own, the row that closes the profile's ⋮
   under the two private lists.
+- `Save` while a thing is not kept, `Unsave` while it is — one word
+  either way (jakob 2026-09-11). It is the FIRST row of every menu that
+  has it, a post's, a comment's, a person's and your own post's alike,
+  so the thumb learns one position. A control says what the next tap
+  will do (§3), which is why the kept state is a verb and never the
+  word *Saved* sitting there as a status — and nothing outside the menu
+  shows it, so this row is the only place a reader learns whether a
+  thing is kept. `Unsave` is also the accessible name of the Saved
+  list's own icon-only control, where the filled bookmark carries the
+  act and no word is drawn at all: the glyph is a glyph, and the
+  reader's word stays *save* — never *bookmark*, which is a filing word
+  for a thing readers think of as keeping.
 
 ## The license block
 
@@ -862,16 +874,10 @@ Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,
 `HistoryEmpty`, `SettingsHidden`, the three content menus and the
 settings page, and up for review in the same pass.
 
-**The reader's word is save** (jakob's ruling). `Save` on a post, a
-comment and a person alike — never *bookmark*, which is a filing word
-for a thing readers think of as keeping. The surface it fills is
-`Saved`, and the row in your own profile's menu is that same word, so
-the act and the place cannot drift apart.
-
-**The saved row says what the next tap will do.** `Remove from saved`,
-not the word *Saved* sitting there as a status. A control says what
-will happen (§3), and this row is the only place a reader can learn or
-change whether a thing is kept — the card carries no mark of it.
+**The reader's word is save** (jakob's ruling). The surface it fills is
+`Saved`, and the row in your own profile's ⋮ is that same word, so the
+act and the place cannot drift apart. The pair of verbs is blessed and
+lives under *Menu rows*.
 
 **Hiding names its person.** `Hide @ada`, on the post menu and on the
 profile menu, because the handle is what a reader recognises and what

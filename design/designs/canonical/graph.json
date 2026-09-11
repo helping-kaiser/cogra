@@ -969,13 +969,14 @@
     { "from": "RefsSheet", "via": 2, "kind": "advance", "label": "reference rows", "to": [{ "gap": "the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)" }] },
     { "from": "RefsSheet", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
-    { "from": "RemoveMenu", "via": 1, "kind": "advance", "label": "Edit", "to": [{ "board": "EditCompose" }] },
-    { "from": "RemoveMenu", "via": 2, "kind": "advance", "label": "Mark as sensitive", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master)" }] },
-    { "from": "RemoveMenu", "via": 3, "kind": "advance", "label": "Remove", "to": [{ "board": "RemoveConfirm" }] },
-    { "from": "RemoveMenu", "via": 4, "kind": "detour", "label": "License terms", "to": [{ "board": "PostLicense", "case": "the menu closes and the terms come up in a sheet over the post (master — a post's terms read the same from either menu)" }] },
-    { "from": "RemoveMenu", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+    { "from": "RemoveMenu", "via": 1, "kind": "advance", "label": "Save", "to": [{ "terminal": "self", "case": "your own post is kept too — the sheet closes, the snackbar confirms, and the row reads Unsave next time" }] },
+    { "from": "RemoveMenu", "via": 2, "kind": "advance", "label": "Edit", "to": [{ "board": "EditCompose" }] },
+    { "from": "RemoveMenu", "via": 3, "kind": "advance", "label": "Mark as sensitive", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master)" }] },
+    { "from": "RemoveMenu", "via": 4, "kind": "advance", "label": "Remove", "to": [{ "board": "RemoveConfirm" }] },
+    { "from": "RemoveMenu", "via": 5, "kind": "detour", "label": "License terms", "to": [{ "board": "PostLicense", "case": "the menu closes and the terms come up in a sheet over the post (master — a post's terms read the same from either menu)" }] },
+    { "from": "RemoveMenu", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
-    { "from": "ReaderPostMenu", "via": 1, "kind": "advance", "label": "Save", "to": [{ "terminal": "self", "case": "the post is kept — the sheet closes, the snackbar confirms, and the row reads Remove from saved next time" }] },
+    { "from": "ReaderPostMenu", "via": 1, "kind": "advance", "label": "Save", "to": [{ "terminal": "self", "case": "the post is kept — the sheet closes, the snackbar confirms, and the row reads Unsave next time" }] },
     { "from": "ReaderPostMenu", "via": 2, "kind": "advance", "label": "Cite in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this post rides along invisibly until details" }] },
     { "from": "ReaderPostMenu", "via": 3, "kind": "advance", "label": "Hide @ada", "to": [{ "terminal": "self", "case": "no confirm — their posts leave your feed and the snackbar offers Undo; the post being read stays, hiding clearing the feed rather than the record" }] },
     { "from": "ReaderPostMenu", "via": 4, "kind": "detour", "label": "License terms", "to": [{ "board": "PostLicense", "case": "the menu closes and the terms come up in a sheet over the post" }] },
@@ -1004,6 +1005,7 @@
     { "from": "Saved", "via": 5, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "Saved", "via": 6, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "Saved", "via": 7, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "Saved", "via": 8, "kind": "detour", "label": "a row's unsave", "to": [{ "terminal": "self", "case": "the row goes — the list is one shorter, and the last of them leaves SavedEmpty", "info": true }] },
 
     { "from": "SavedEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the menu was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
     { "from": "SavedEmpty", "via": 2, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
