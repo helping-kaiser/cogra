@@ -18,7 +18,7 @@ export function Screen() {
           comments={2}
           bundle={null}
           license={{ attribution: 0.5, provenance: 0.5 }}
-          menuItems={CITE_MENU}
+          menuItems={CARD_MENU}
         />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
