@@ -59,6 +59,14 @@ import { VideoTransport } from "./VideoControls.jsx";
    · THE COVER IS THE CLIP'S FACE WHEREVER THE CLIP ISN'T RUNNING (`resting`):
      first paint before autoplay, and every context where autoplay is suppressed
      — reduced motion, data saver. It never returns once playback has started.
+   · A CLIP NEED NOT HAVE ONE (jakob 2026-09-10). A vertical clip's default is
+     NO cover, so `poster` is then the clip's FIRST FRAME, cropped exactly as
+     the clip is — the same 4:5 centre-crop the frame takes, because a face
+     that stood at another shape would not be this clip's. Nothing here
+     branches on it: the tile is handed a still and shows it, and whether that
+     still was chosen or taken is an authoring fact. Where a clip yields no
+     frame at all, `poster` and `src` are both absent and the reserved region's
+     `label` stands — never a borrowed picture.
 
    The sound toggle shows the CURRENT state (`volume_up` = sound on) and its
    accessible name says what the tap will DO. A sensitive post veils the WHOLE
