@@ -1911,6 +1911,20 @@ Password maximum (128) is implementation-side only — Argon2 cost
 bounding, never drawn as a counter or meter — and sits outside this
 affordance round's scope.
 
+**Ruled 2026-09-11** (the MVP design-queue rulings, dev-state
+`cogra/tmp_dev/2026-09-11-mvp-design-queue-rulings.md`): the
+affordance is the **late counter** — a field stays silent until the
+writer nears the cap (last ~10%, minimum last 20 scalar values),
+then a quiet remaining count appears, `--error` only when over;
+never a persistent counter, never a meter. The 2.0 field atom gains
+its **one drawn error state** — the message below the field in
+`--error` — closing the web/Android refusal divergence, with 46.3's
+refused tag name riding the same state. The round sweeps the
+affordance across every capped field's board, and carries the
+MVP-wide hand-drawn/outdated audit: the implementation UI overhaul
+will copy the boards 1:1, so nothing hand-drawn where a master
+exists survives the round.
+
 ### 53 · Geek mode — glyph-first signal numbers · *design* · **drawn 2026-09-11**
 
 A friend's proposal, jakob adopted it scoped (the full record:
@@ -2006,3 +2020,15 @@ batch could not settle:
    formatters are master-side helpers the bundle does not expose to
    screens. A check in the design gate that validates those literals
    against the format contract would close the rest.
+
+### 55 · The opinions-on-content list · *design*
+
+jakob, 2026-09-11 (the MVP design-queue rulings): the profile's
+"opinions on you" needs its content mirror — who holds opinions on
+this post or comment, and in what way. **No author gating**: everyone
+can check every post and comment, the way everyone can read a
+profile's counts. Rides round 4 of the MVP queue (the slice-3
+remainders, beside the item-13 drill-down). Entry point awaiting
+jakob's word — recommended: a bottom sheet from a row on the detail
+(the tags-&-references sheet's pattern) plus the comment ⋮ menu.
+Contract implication: a per-node opinion-holders query, ungated.
