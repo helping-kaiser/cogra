@@ -686,7 +686,7 @@ describe("PostView", () => {
     // has none yet. Nothing on this surface is viewer-scoped except the
     // stance controls — the post and its thread read fine anonymously —
     // so the stance read is the first request that needs a viewer, and it
-    // is the one that has to notice it is not carrying one.
+    // must already be carrying one when it goes.
     window.localStorage.setItem("cogra.activeAccount", "u2");
     window.localStorage.setItem("cogra.refreshToken", "refresh-1");
     const store = createTokenStore();
@@ -752,9 +752,10 @@ describe("PostView", () => {
       ),
     );
     expect(screen.getByTestId("post-stance")).toHaveAccessibleName(/Love this/);
-    // The reads really did start out anonymous — the standing arrived by
-    // refreshing and replaying, not because the rig handed it a token.
-    expect(anonymous).toContain("p1");
+    // And no read went out without one: the tab settled its session before
+    // it sent anything, so the standing is right on the first answer rather
+    // than on a replay of it.
+    expect(anonymous).toEqual([]);
     expect(store.accessToken()).toBe("access-2");
   });
 
