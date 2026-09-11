@@ -346,15 +346,17 @@
     },
     {
       "name": "vouch-back-for-your-inviter",
-      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view and the member's own feed opens.",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view, the ceremony says so, and the member's own feed opens.",
       "status": "resolved",
       "steps": [
         "start · VouchBack · 3 «Vouch back» → VouchBackPad",
-        "end · VouchBackPad · 4 «Set» → Feed — the vouch-back — signed, the way opens"
+        "VouchBackPad · 4 «Set» → VouchedIn — the vouch-back — signed, the ceremony opens",
+        "end · VouchedIn · 1 «Go to your feed» → Feed"
       ],
       "boards": [
         "VouchBack",
         "VouchBackPad",
+        "VouchedIn",
         "Feed"
       ]
     },
@@ -2813,6 +2815,12 @@
         "take-a-stance-on-a-person",
         "take-a-stance-on-a-post"
       ]
+    },
+    "VouchedIn": {
+      "flows": [
+        "vouch-back-for-your-inviter"
+      ],
+      "endpoint": []
     },
     "Wallet": {
       "flows": [

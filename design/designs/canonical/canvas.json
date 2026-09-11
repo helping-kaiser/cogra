@@ -137,6 +137,15 @@
       "page": "entry"
     },
     {
+      "file": "VouchedIn.dc.html",
+      "title": "Vouched in · part of the sky",
+      "x": 1920,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "SignIn.dc.html",
       "title": "Sign in",
       "x": 0,
@@ -1155,9 +1164,9 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -1580,
+      "x": -1870,
       "y": 0,
-      "w": 1160,
+      "w": 1450,
       "h": 3782,
       "page": "entry",
       "title": "Entry · flow map"
