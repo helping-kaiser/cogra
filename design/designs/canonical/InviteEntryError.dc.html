@@ -294,28 +294,6 @@
   /* The short navigation bar, and the small top app bar's band. */
   --bottom-bar-height: 64px;
   --top-bar-height: 48px;
-
-  /* A POST MUST FIT ON THE SCREEN. The whole card — author row, media, text,
-     affordances — has to sit inside the phone's height minus the top safe area
-     and the bottom bar, or the reader never sees a post whole and never sees the
-     affordance row without scrolling. Media is the only part that can flex, so
-     the cap lands on it.
-
-     THE CHROME FIGURE IS THE WORST CASE, NOT THE AVERAGE — measured on the
-     heaviest post the system can produce: author row, title, a two-line caption,
-     a `More` opener, an honesty marker, the 52px affordance row, and the card's
-     own 2×16px padding. Budgeting for the average is how you ship a layout that
-     fits four posts out of five, and the fifth is the one with something to say.
-     A short post simply never reaches the cap; it is a maximum, not a target.
-
-     The floor keeps media from collapsing to a sliver on a short viewport — a
-     landscape phone or a desktop panel — where scrolling is the lesser evil. */
-  --safe-area-top: env(safe-area-inset-top, 44px);
-  --post-chrome-height: 360px;
-  --media-max-height: max(
-    180px,
-    calc(100dvh - var(--safe-area-top) - var(--bottom-bar-height) - var(--post-chrome-height))
-  );
 }
 
 /* M3 motion, standard easing and durations (design.md §4). Motion clarifies where
@@ -431,6 +409,10 @@
   --on-surface-loud: var(--on-primary-container);
   --surface-snackbar: var(--inverse-surface);
   --on-surface-snackbar: var(--inverse-on-surface);
+  /* A snackbar's one action. `primary` is unreadable on the inverse ground, so
+     Material gives the inverted surface the inverted brand colour; this is the
+     only place it is spent. */
+  --action-on-snackbar: var(--inverse-primary);
 
   /* Text. Secondary text is `onSurfaceVariant`, never `onSurface` at reduced
      opacity — opacity breaks the contrast guarantee the token carries. */
@@ -869,28 +851,6 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   /* The short navigation bar, and the small top app bar's band. */
   --bottom-bar-height: 64px;
   --top-bar-height: 48px;
-
-  /* A POST MUST FIT ON THE SCREEN. The whole card — author row, media, text,
-     affordances — has to sit inside the phone's height minus the top safe area
-     and the bottom bar, or the reader never sees a post whole and never sees the
-     affordance row without scrolling. Media is the only part that can flex, so
-     the cap lands on it.
-
-     THE CHROME FIGURE IS THE WORST CASE, NOT THE AVERAGE — measured on the
-     heaviest post the system can produce: author row, title, a two-line caption,
-     a `More` opener, an honesty marker, the 52px affordance row, and the card's
-     own 2×16px padding. Budgeting for the average is how you ship a layout that
-     fits four posts out of five, and the fifth is the one with something to say.
-     A short post simply never reaches the cap; it is a maximum, not a target.
-
-     The floor keeps media from collapsing to a sliver on a short viewport — a
-     landscape phone or a desktop panel — where scrolling is the lesser evil. */
-  --safe-area-top: env(safe-area-inset-top, 44px);
-  --post-chrome-height: 360px;
-  --media-max-height: max(
-    180px,
-    calc(100dvh - var(--safe-area-top) - var(--bottom-bar-height) - var(--post-chrome-height))
-  );
 }
 
 /* M3 motion, standard easing and durations (design.md §4). Motion clarifies where
@@ -1006,6 +966,10 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --on-surface-loud: var(--on-primary-container);
   --surface-snackbar: var(--inverse-surface);
   --on-surface-snackbar: var(--inverse-on-surface);
+  /* A snackbar's one action. `primary` is unreadable on the inverse ground, so
+     Material gives the inverted surface the inverted brand colour; this is the
+     only place it is spent. */
+  --action-on-snackbar: var(--inverse-primary);
 
   /* Text. Secondary text is `onSurfaceVariant`, never `onSurface` at reduced
      opacity — opacity breaks the contrast guarantee the token carries. */
@@ -1167,7 +1131,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   </style>
 </helmet>
 <div class="screen" data-theme="{{theme}}" data-geek="{{geek}}" style="width: 390px; height: 844px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
-<header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:48px;padding:0 var(--space-3)"><div style="display:flex;align-items:center;gap:var(--space-2)"><a data-flow="1" href="#" aria-label="Back" class="cg-state cg-focus" style="height:48px;width:48px;display:grid;place-items:center;border-radius:var(--radius-full);color:var(--text-secondary);text-decoration:none;flex:none"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></a></div></header><div style="flex:1;display:flex;flex-direction:column;padding:8px 24px 32px;overflow:hidden"><h1 style="margin:0;font-size:var(--text-headline-small);line-height:var(--text-headline-small--line-height);font-weight:var(--text-headline-small--font-weight)">Enter your invite</h1><p style="margin:8px 0 0;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);letter-spacing:var(--text-body-medium--letter-spacing);color:var(--text-secondary)">CoGra is invite-only. Paste your invite link to get started.</p><div style="margin-top:32px"><div data-flow="2" data-field="Invite link" style="display:flex;flex-direction:column;gap:var(--space-1)"><div style="display:flex;align-items:baseline;gap:var(--space-2)"><label for="invite-link" style="flex:1;font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);color:var(--error)">Invite link</label></div><input id="invite-link" type="text" aria-describedby="invite-link-support" aria-invalid="true" style="border-radius:var(--radius-extra-small);border:1px solid var(--error);background:transparent;color:var(--on-surface);padding:8px 12px;font-family:var(--font-sans);font-size:var(--text-body-large);line-height:var(--text-body-large--line-height);min-width:0;width:100%;box-sizing:border-box" value="cogra"/><span id="invite-link-support" role="alert" style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);letter-spacing:var(--text-body-small--letter-spacing);color:var(--error)">That doesn&#x27;t look like an invite link.</span></div></div><div style="margin-top:24px"><button data-flow="3" type="button" class="cg-state cg-focus cg-hit" style="background:var(--primary);color:var(--on-primary);border:1px solid transparent;padding:10px 24px;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Continue</button></div><div style="margin-top:24px;display:flex;flex-direction:column"><button data-flow="4" type="button" class="cg-state cg-focus cg-hit" style="background:transparent;color:var(--primary);border:1px solid transparent;padding:0;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:flex-start;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Already have an account? Sign in</button><button data-flow="5" type="button" class="cg-state cg-focus cg-hit" style="background:transparent;color:var(--primary);border:1px solid transparent;padding:0;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:flex-start;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Just looking? Browse the feed →</button></div></div>
+<header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:48px;padding:0 var(--space-3)"><div style="display:flex;align-items:center;gap:var(--space-2)"><a data-flow="1" href="#" aria-label="Back" class="cg-state cg-focus" style="height:48px;width:48px;display:grid;place-items:center;border-radius:var(--radius-full);color:var(--text-secondary);text-decoration:none;flex:none"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></a></div></header><div style="flex:1;display:flex;flex-direction:column;padding:8px 24px 32px;overflow:hidden"><h1 style="margin:0;font-size:var(--text-headline-small);line-height:var(--text-headline-small--line-height);font-weight:var(--text-headline-small--font-weight)">Enter your invite</h1><p style="margin:8px 0 0;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);letter-spacing:var(--text-body-medium--letter-spacing);color:var(--text-secondary)">CoGra is invite-only. Paste your invite link to get started.</p><div style="margin-top:32px"><div data-flow="2" data-field="Invite link" style="display:flex;flex-direction:column;gap:var(--space-1)"><div style="display:flex;align-items:baseline;gap:var(--space-2)"><label for="invite-link" style="flex:1;font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);color:var(--error)">Invite link</label></div><input id="invite-link" type="text" aria-describedby="invite-link-support" aria-invalid="true" style="border-radius:var(--radius-extra-small);border:1px solid var(--error);background:transparent;color:var(--on-surface);padding:8px 12px;font-family:var(--font-sans);font-size:var(--text-body-large);line-height:var(--text-body-large--line-height);min-width:0;width:100%;box-sizing:border-box" value="cogra"/><div style="display:flex;align-items:baseline;gap:var(--space-2);flex:none"><span id="invite-link-support" role="alert" style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);letter-spacing:var(--text-body-small--letter-spacing);color:var(--error)">That doesn&#x27;t look like an invite link.</span></div></div></div><div style="margin-top:24px"><button data-flow="3" type="button" class="cg-state cg-focus cg-hit" style="background:var(--primary);color:var(--on-primary);border:1px solid transparent;padding:10px 24px;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Continue</button></div><div style="margin-top:24px;display:flex;flex-direction:column"><button data-flow="4" type="button" class="cg-state cg-focus cg-hit" style="background:transparent;color:var(--primary);border:1px solid transparent;padding:0;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:flex-start;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Already have an account? Sign in</button><button data-flow="5" type="button" class="cg-state cg-focus cg-hit" style="background:transparent;color:var(--primary);border:1px solid transparent;padding:0;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:flex-start;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Just looking? Browse the feed →</button></div></div>
 </div>
 </x-dc>
 <script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"},"geek":{"editor":"enum","options":["off","on"],"default":"off"}}'>

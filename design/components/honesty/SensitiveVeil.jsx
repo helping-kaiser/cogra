@@ -22,7 +22,7 @@ import { Icon } from "../navigation/Icon.jsx";
    So `RedactedContent` replaces a node's ENTIRE content region, and it is the
    only shape it has. What remains is the skeleton: the structural record, its
    witness, and everything it does on L1 — author, timestamp, thread position,
-   standing, the stance you can still take on it. That is not a courtesy, it is
+   the opinion, the opinion you can still give on it. That is not a courtesy, it is
    the invariant: no record ever leaves the graph, and every redaction leaves a
    visible mark, so that no reader is left wondering whether something was quietly
    deleted.
@@ -253,6 +253,18 @@ const REASONS = {
     line: "Removed by its author",
     detail: "The post's place in the thread, and every response, remain.",
   },
+  /* A WHOLE ACCOUNT, deleted by the person who had it (erasure §2, the
+     account-deletion round). The third mark, and it is the same mechanism at a
+     different scale: identity-level redaction empties the Registration
+     bundle's payloads, so a profile carries exactly the mark a post carries
+     when its payload goes. Naming the person's own choice is the ruling —
+     nothing that was here is pretended never to have existed, and a deleted
+     account must not read as a moderation verdict or as a dead link. Pass
+     `note` for the reading where the content sweep was opted into as well. */
+  account: {
+    line: "Deleted by the person whose account it was",
+    detail: "Their name and profile are gone. What they signed stays on the graph and still credits them.",
+  },
 };
 
 /**
@@ -261,8 +273,8 @@ const REASONS = {
  * record-granular — one illegal attachment takes the whole payload with it.
  *
  * What is left around it is the skeleton, and the skeleton is the point: the
- * author, the timestamp, the thread position, the standing, the stance a reader
- * can still take. No record leaves the graph, and no removal is silent.
+ * author, the timestamp, the thread position, the opinion, the opinion a reader
+ * can still give. No record leaves the graph, and no removal is silent.
  *
  * `when` is the redaction's own moment (the contract's `redactedAt`), never
  * the content's age, and it speaks the one age vocabulary every timestamp

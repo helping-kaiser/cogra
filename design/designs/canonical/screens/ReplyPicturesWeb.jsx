@@ -32,7 +32,7 @@ export function Screen() {
 
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
           <InlineAction size="sm">+ Add pictures · 2 of 4</InlineAction>
-          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "0.4px", color: "var(--text-secondary)" }}>
+          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             …or drop pictures or a video here.
           </span>
         </div>

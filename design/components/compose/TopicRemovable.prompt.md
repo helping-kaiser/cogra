@@ -4,7 +4,7 @@ A topic the author has staged, shown back to them.
 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
   <TopicRemovable topic="fieldnotes"/>
   <TopicRemovable topic="coastroad"/>
-  <Button variant="outline" size="sm">Add a topic</Button>
+  <InlineAction size="sm">+ Add a tag</InlineAction>
 </div>
 ```
 
@@ -12,6 +12,6 @@ A topic the author has staged, shown back to them.
 
 **Pass the word, not the hash.** The author names a topic; the mark saying what kind of name it is belongs to the row showing it back.
 
-The row it sits in is the composer's own — a wrapping flex row ending in the outline `Add a topic` button, under a field label.
+The row it sits in is the composer's own — a wrapping flex row ending in the `+ Add a tag` inline action, under a field label.
 
 **The × is the button, not the pill.** Making the pill pressable would say removal is the only thing a topic is for. The button adds no box — no border, no background, no padding, colour inherited — so it draws the glyph it always was, and brings the state layer, the focus ring and the 48px target with it. It names what it removes: `Remove #coastroad`, because a row of these is otherwise a row of identically-named controls.

@@ -44,8 +44,8 @@ export interface StanceControlProps {
   /**
    * The pad's "?" accessible name (jakob's ruling A7) — the name of the
    * dialog it belongs to, not a generic one, on a board that draws a named
-   * pad ("Where you stand on it", "Toward what you answer", "Your first
-   * stance"). Defaults to "How stances work", the ordinary feed-card
+   * pad ("Your opinion on your post", "Toward what you answer", "Your
+   * first opinion"). Defaults to "How opinions work", the ordinary feed-card
    * control's name. Passed through to `StanceAlternates` unchanged.
    */
   helpLabel?: string;

@@ -37,7 +37,7 @@ export function Screen() {
             Veils the pictures and the words until a reader chooses to look.
           </p>
 
-          <TextField label="Why?" corner="Optional — shown on the veil" value="One rubbing includes a dead seabird." />
+          <TextField label="Why?" corner="Optional — shown on the veil" cap={140} value="One rubbing includes a dead seabird." />
 
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Button>Done</Button>

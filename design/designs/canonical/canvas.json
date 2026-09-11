@@ -137,6 +137,15 @@
       "page": "entry"
     },
     {
+      "file": "VouchedIn.dc.html",
+      "title": "Vouched in · part of the sky",
+      "x": 1920,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "SignIn.dc.html",
       "title": "Sign in",
       "x": 0,
@@ -344,6 +353,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeDetailsCaps.dc.html",
+      "title": "Compose · details against the caps",
+      "x": 1920,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "HelpDialog.dc.html",
       "title": "The ? dialog",
       "x": 0,
@@ -410,6 +428,15 @@
       "file": "ComposeExpired.dc.html",
       "title": "Didn't land · the notice",
       "x": 1440,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "ComposeWordsCaps.dc.html",
+      "title": "Compose · words past the cap",
+      "x": 1920,
       "y": 2120,
       "w": 390,
       "h": 844,
@@ -758,6 +785,42 @@
       "page": "feed"
     },
     {
+      "file": "FeedUnread.dc.html",
+      "title": "Feed · something waiting",
+      "x": 2400,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedDeleting.dc.html",
+      "title": "Feed · the deletion band",
+      "x": 2880,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "DeleteAccountCanceled.dc.html",
+      "title": "Feed · the deletion canceled",
+      "x": 3360,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedHidden.dc.html",
+      "title": "Feed · someone hidden",
+      "x": 3840,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "Money.dc.html",
       "title": "Money · the CGT figure",
       "x": 0,
@@ -979,7 +1042,7 @@
       "x": 0,
       "y": 4240,
       "w": 390,
-      "h": 1934,
+      "h": 2059,
       "page": "media"
     },
     {
@@ -1101,19 +1164,19 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -1580,
+      "x": -1870,
       "y": 0,
-      "w": 1160,
-      "h": 3696,
+      "w": 1450,
+      "h": 3782,
       "page": "entry",
       "title": "Entry · flow map"
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -3030,
+      "x": -3320,
       "y": 0,
-      "w": 2610,
-      "h": 2553,
+      "w": 2900,
+      "h": 2809,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1128,10 +1191,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -1870,
+      "x": -3030,
       "y": 0,
-      "w": 1450,
-      "h": 1984,
+      "w": 2610,
+      "h": 2442,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1140,7 +1203,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1275,
+      "h": 1361,
       "page": "money",
       "title": "Money & Wallet · flow map"
     },
@@ -1149,7 +1212,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 2996,
+      "h": 3082,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1194,7 +1257,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 2782,
+      "h": 3653,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1262,6 +1325,15 @@
       "page": "profile"
     },
     {
+      "file": "ProfileDeleted.dc.html",
+      "title": "Profile · deleted by the person whose account it was",
+      "x": 2400,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ProfilePosts.dc.html",
       "title": "Profile · the posts view",
       "x": 1920,
@@ -1294,7 +1366,7 @@
       "x": 0,
       "y": 1928,
       "w": 390,
-      "h": 2027,
+      "h": 2163,
       "page": "profile"
     },
     {
@@ -1388,6 +1460,24 @@
       "page": "profile"
     },
     {
+      "file": "DeleteAccount.dc.html",
+      "title": "Delete account · what goes and what stays",
+      "x": 1440,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "DeleteAccountMail.dc.html",
+      "title": "Delete account · check your mail",
+      "x": 1920,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "TagPage.dc.html",
       "title": "A tag's page",
       "x": 0,
@@ -1418,6 +1508,15 @@
       "file": "TagPickerTyping.dc.html",
       "title": "Add a tag · naming one",
       "x": 3840,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "TagPickerRefused.dc.html",
+      "title": "Add a tag · a name it can't take",
+      "x": 4320,
       "y": 0,
       "w": 390,
       "h": 844,
@@ -1472,7 +1571,7 @@
       "file": "Saved.dc.html",
       "title": "Saved · what you kept",
       "x": 0,
-      "y": 4058,
+      "y": 4194,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1481,7 +1580,16 @@
       "file": "SavedEmpty.dc.html",
       "title": "Saved · nothing kept yet",
       "x": 480,
-      "y": 4058,
+      "y": 4194,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SavedUndo.dc.html",
+      "title": "Saved · one just removed",
+      "x": 2400,
+      "y": 4194,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1490,7 +1598,7 @@
       "file": "History.dc.html",
       "title": "History · what you have read",
       "x": 960,
-      "y": 4058,
+      "y": 4194,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1499,7 +1607,7 @@
       "file": "HistoryEmpty.dc.html",
       "title": "History · nothing seen yet",
       "x": 1440,
-      "y": 4058,
+      "y": 4194,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1508,10 +1616,91 @@
       "file": "SettingsHidden.dc.html",
       "title": "Settings · hidden accounts",
       "x": 1920,
-      "y": 4058,
+      "y": 4194,
       "w": 390,
       "h": 844,
       "page": "profile"
+    },
+    {
+      "file": "Notifications.dc.html",
+      "title": "Notifications · what happened",
+      "x": 0,
+      "y": 5264,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "NotificationsEmpty.dc.html",
+      "title": "Notifications · nothing yet",
+      "x": 480,
+      "y": 5264,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "FeedEntry.dc.html",
+      "title": "Post score · why it reached you",
+      "x": 0,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedEntryMoved.dc.html",
+      "title": "Post score · the paths have moved on",
+      "x": 480,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "RankPath.dc.html",
+      "title": "Post score · one path",
+      "x": 960,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "RankHop.dc.html",
+      "title": "Post score · one step",
+      "x": 1440,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "RankRecords.dc.html",
+      "title": "Post score · what landed",
+      "x": 1920,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "PostOpinions.dc.html",
+      "title": "Post · opinions on it",
+      "x": 2880,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "CommentOpinionsEmpty.dc.html",
+      "title": "Comment · opinions on it, none yet",
+      "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
     }
   ],
   "annotations": [
@@ -1706,6 +1895,14 @@
       "w": 290,
       "text": "COMMENTS · The reply composer\n\nThe comment box in the thread is an ENTRY, not a composer: tapping it opens the same full-focus flow, pre-targeted, parent pinned. Two steps — words, then the seal. A comment is TEXT PLUS OPTIONAL MEDIA (comment.md; text required) — deliberately asymmetric to the post's words-XOR-media body, because an answer is words first; '+ Add pictures' rides the writing step, and COMMENTS HAVE NO PICK STAGE (ruled 2026-08-31): it opens the platform's own picker — Android's photo-picker sheet, the browser's file dialog on web — never the post wizard's grid; the web board adds the drop-anywhere path. Comment pictures never crop, so they upload at pick; descriptions ride the signed act (detached from the upload — no race, nothing gates) and are entered from the describe counter. The reply's stance on its parent (+0.10 / +0.10 default) is DISCLOSED on the seal and adjustable on the full two-axis pad: 'Replying also signs where you stand on the post it answers.' Topics and citations can join a comment from its seal, each row raising the count. COMMENT VIDEO (jakob 2026-09-02): a comment's media grammar is the post's at comment caps — four pictures OR one video with its cover, never both kinds. Entry is unchanged (the platform picker; a video pick lands in the video state), there is still no pick stage and no crop, and the cover row is ComposeCover's inlined at comment scale, because the comment composer is one screen and has no stage to give it. Caps as facts: a picture 10 MiB (10 per post, 4 per comment), a video 100 MiB in a post and 50 MiB in a comment, a cover 10 MiB. A FILE THE SURFACE REFUSES — over its cap, or a format nothing here reads — is refused WHERE IT WAS OFFERED, a line in the composer's media row: never a dialog, never a snackbar. The line names the cap it broke, and that is the only place a cap is named. Its one way out is Remove it — never Retry, which cannot make a file smaller or a format readable. Round 2 (jakob, same day): A VIDEO TAKES ONE DESCRIPTION for the whole clip and its cover takes none — the counter reads 'Describe the video · 0 of 1 described' and opens the same describe sheet. THE ADD LABEL FOLLOWS THE STATE: empty reads '+ Add pictures or a video', with pictures '+ Add pictures · n of 4' (the video is out — the grammar is exclusive), with a video no add control at all. WEB TAKES THE VIDEO BOARD 1:1 (file dialog + the drop path; no web board, the avatar blessing's form) and the drop hint grows to 'pictures or a video'. SCREENS WRITE MB while the caps are enforced in MiB — 50 MiB is 52.4 MB, so the readable number under-promises and never refuses a file the product would take. Boards: write (words) · pictures attached · pictures on the web · a video and its cover · files refused · the pad · what you sign.",
       "page": "comments"
+    },
+    {
+      "id": "note-score-drilldown",
+      "x": -340,
+      "y": 3616,
+      "w": 290,
+      "page": "feed",
+      "text": "THE POST SCORE’S DRILL-DOWN (jakob 2026-09-11, backlog item 13). Four levels — the paths, one path, one step, the records behind it — each carrying a small cover of the post it came from. The register is paths and people, never a chart: a bar would turn a reader’s own connections into a statistic about the post. Level one shows the strongest handful and a quiet row that unfolds the rest in place (never a second page), and that row carries what they add, so the drawn figures still sum to the score. The fifth board is the same screen for a post whose paths have all aged out."
     }
   ],
   "launch": {

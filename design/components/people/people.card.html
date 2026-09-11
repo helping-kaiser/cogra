@@ -22,19 +22,19 @@ const bundle = { current:{pDirected:0.55,pInterest:0.2}, rawSum:{pDirected:0.9,p
 function Demo(){return (
 <>
 <div className="pane">
-  <span className="lbl">Someone else's profile — the stance on the person leads</span>
+  <span className="lbl">Someone else's profile — the opinion on the person leads</span>
   <ProfileHeader handle="ada" displayName="Ada Okonkwo" avatarSrc={PHOTO}
                  bio="Coast roads, long exposures, and the occasional argument about routing."
                  stancesOn="128" stancesTaken="341" bundle={bundle}
-                 menuItems={[{label:"Copy link"},{label:"Report"}]}/>
+                 menuItems={[{label:"Save"},{label:"Mention in a new post"},{label:"Share this profile"},{label:"Hide @ada"}]}/>
   <hr/>
-  <span className="lbl">StanceRow — a stances list; the value IS the row's information, and the whole row opens the person</span>
-  <TabBar ariaLabel="Which direction" value="on" tabs={[{id:"on",label:"On them"},{id:"taken",label:"They've taken"}]}/>
+  <span className="lbl">StanceRow — an opinions list; the value IS the row's information, and the whole row opens the person</span>
+  <TabBar ariaLabel="Which direction" value="on" tabs={[{id:"on",label:"On them"},{id:"taken",label:"By them"}]}/>
   <StanceRow name="Tobias Lindqvist" handle="tobias" pDirected={0.7} pInterest={0.4} onOpen={()=>{}}/>
   <StanceRow name="Mira Voss" handle="mira" src={PHOTO} pDirected={0.4} pInterest={0.5} onOpen={()=>{}}/>
   <StanceRow name="Juno Baptiste" handle="juno" pDirected={-0.2} pInterest={0.1} onOpen={()=>{}}/>
   <hr/>
-  <span className="lbl">Your own — no stance to take, so the row is what you do to your own record</span>
+  <span className="lbl">Your own — no opinion to give, so the row is what you do to your own record</span>
   <ProfileHeader handle="juno" displayName="Juno Baptiste" own stancesOn="12" stancesTaken="96"
                  onEdit={()=>{}} onSettings={()=>{}}/>
   <hr/>
@@ -55,7 +55,7 @@ function Demo(){return (
     <MonogramAvatar name="Ada Okonkwo" size="lg" src={PHOTO}/>
     <MonogramAvatar name="Mira Lindqvist" size="lg"/>
   </div>
-  <p><b>Two counts, each labelled, never merged.</b> "Stances on them" and "Stances they've taken". Not "followers" — there is no following here — and not the repo's own word for the link, which is banned vocabulary.</p>
+  <p><b>Two counts, each labelled, never merged.</b> "Opinions on them" and "Opinions by them". Not "followers" — there is no following here — and not the repo's own word for the link, which is banned vocabulary.</p>
   <p><b>The avatar is decorative at every size.</b> The adjacent text names the actor, so a photo carries no alt text and never becomes the only way to tell two people apart. A broken image falls back to the monogram silently.</p>
   <p><b>No cover image, no banner.</b> The largest thing on a person's screen should not be decoration.</p>
 </div>

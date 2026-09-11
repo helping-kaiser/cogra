@@ -402,10 +402,11 @@ fills is the most common way an icon set starts to look accidental.
 | `visibility` / `visibility_off` | password field toggle |
 | `settings` | profile top bar |
 | `arrow_back` | every page header |
-| `more_vert` | every overflow menu — a post's, a comment's, a profile's, and your own profile's band |
+| `more_vert` | every overflow menu — a post's, a comment's, and either profile's actions row |
 | `chat_bubble` | the comments affordance on a card |
 | `volume_up` / `volume_off` | a video's sound toggle |
-| `graph_3` | the Post Score |
+| `graph_3` | the Post score |
+| `bookmark` | the unsave control on a Saved row — the system's own addition (the review-fix round), not yet in the product's set |
 | `check` | the checkbox's mark — the system's own addition (§13's entry screens), not yet in the product's set |
 | `photo_camera` | the avatar's change badge on one's own profile — the system's own addition (profile round), not yet in the product's set |
 | `history` | the chronicle's Everything tab — the system's own addition (profile round), not yet in the product's set |
@@ -473,8 +474,8 @@ is a different thing from a piece the apps have not reached yet.
 |---|---|
 | `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SettingsGroup`, `SettingsRow`, `Switch`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton`, `NodeMark` |
-| `components/forms/` | `TextField`, `FieldLabel`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
-| `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `CograBand` |
+| `components/forms/` | `TextField`, `FieldLabel`, `FieldSupport`, `FieldCount`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
+| `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `DeletionBand`, `CograBand`, `BandIcon` |
 | `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `StagedReference`, `TopicRemovable`, `Caret` |
 | `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
@@ -519,7 +520,7 @@ which is what makes a guess expensive.
 
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
-| `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post Score and its explanation is four screens deep | — |
+| `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post score and its explanation is four screens deep | — |
 | `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
@@ -657,8 +658,8 @@ Every interaction authors two independent continuous values in `[−1, +1]`
 — on screen, **"For or against"** and **"How much reaches you"**. All
 four quadrants are legitimate.
 
-- **At rest** the target shows the standing: the face and the exact
-  pair. A viewer with no standing sees a **muted, translucent 🫥** —
+- **At rest** the target shows the opinion: the face and the exact
+  pair. A viewer with no opinion sees a **muted, translucent 🫥** —
   never a bare word.
 - **A plain tap** blooms the pad at the lower centre of the viewport and
   stages nothing. The **first open ever teaches** — the coach mark rides
@@ -823,15 +824,15 @@ different numbers read as prose.
 
 **Both help affordances exist, and both replace the body they sit in.** A
 circled `?` in the corner of the pad and of the alternates dialog. The
-pad's four lines cover what the field means, what commits, why the pick
-and the resulting stance differ, and what severing costs; the
+pad's four lines cover what the field means, what commits, why the two
+faces can differ, and what walking it back costs; the
 alternates' first line instead teaches the thing two sliders cannot —
 *two values, not one*. Neither grows below its surface: on the pad that
 would push `Set` away from the thumb, and in the centred dialog it would
 move every button. `Set` is disabled while the pad's help shows.
 
-**The coach mark says less** — two facts (a tap signs `+0.10 / +0.10`; a
-hold opens the pad) instead of five at the moment a reader is least
+**The coach mark says less** — two facts (a tap opens the pad; a hold
+signs `+0.10 / +0.10`) instead of five at the moment a reader is least
 willing to read. `Nothing was signed just now.` stays: it is the line
 the mark exists for.
 
@@ -861,7 +862,7 @@ sum actually exceeded it.
 "Intentional additions" above. All four are §6 requirements the product
 has not met yet, not new ideas.
 
-**One affordance row.** The stance control leads, the Post Score follows,
+**One affordance row.** The stance control leads, the Post score follows,
 then anything else the post grows — so each surface stops arranging them
 itself. Nothing in that row may take `primaryContainer`; the stance knob
 already spends the screen's one loud surface.
@@ -872,7 +873,7 @@ It is now a `License terms` item in the new `OverflowMenu`, which every
 post and comment carries — the row carries what a reader reaches for, the
 menu carries the rest.
 
-**The Post Score is a card prop, shown as `graph_3` plus the number.**
+**The Post score is a card prop, shown as `graph_3` plus the number.**
 Not the word "Score", and never an emoji: the product's only emoji
 vocabulary is the stance readout, and a second face on the same card
 would make both unreadable. Uncapped, negative allowed, never coloured —
@@ -1252,7 +1253,7 @@ as Q46 in docs/open-questions.md):
   maps of the coast road*").
 - **Ranks on every kind**, quiet viewer-relative numbers on the
   row's right edge; explained by the "?", drill-down waits for the
-  Post Score screens (item 13).
+  Post score screens (item 13).
 - **The Explore tab at rest**: recent searches (device-local) plus
   a PROMINENT entry into THE SKY — the 3D graph view (item 16) — never a
   small side thing. Typing drops the Sky entry off the bottom
@@ -1458,8 +1459,8 @@ set of findings; jakob's rulings 2026-08-31):
   is the same counter line everywhere a composer shows picked
   pictures; the reply composer already wore it, *Edit comment*
   now does too.
-- **The edit's acts footer opens a sheet.** "This creates n
-  signed actions" opens an M3 modal bottom sheet — the EditActs
+- **The edit's acts footer opens a sheet.** "You're signing n
+  things" opens an M3 modal bottom sheet — the EditActs
   pattern, now rendered with `ActsCard` (*Edit comment · the
   acts*): the sheet title carries the count, the card the rows
   and the all-or-nothing note. The sheet is the
@@ -1712,7 +1713,7 @@ entry first". What stands:
   wallet's traceability promise owes,
   the settings and invites screens, the chat surface (its band entry
   now on every tab root), the item / offer surfaces, the Sky
-  (item 16), and item 13's Post Score drill-down. Cross-flow reuse
+  (item 16), and item 13's Post score drill-down. Cross-flow reuse
   is wired as edges into the master boards (the describe sheet, the
   gated seal, the license / sensitive sheets, the key-absent seal,
   the stance pad, and the three pattern boards — the guest gate, the
@@ -1782,7 +1783,8 @@ The rulings the layer rests on:
 - **A stance concludes where it was taken.** The pad is reached from
   posts, comments and profiles alike, so its signed outcome returns
   wherever it bloomed. The applicant's vouch-back is the one exception
-  — that one opens the way into the member's own feed.
+  — that one opens the ceremony, and the ceremony opens the way into the
+  member's own feed.
 - **The start is the click, not a screen.** A flow starts from a board,
   from a given edge, or from a **control**: `{"control": "nav · New
   post"}` expands to every edge wearing that label, and they must all
@@ -3207,7 +3209,7 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   drawn, then jakob's review removed the follow anchors and the
   comment's reply affordances), 79 →
   **56 gaps**, and flows 58/53/5 → **58/55/3**. The twenty-four close
-  and one opens — `TagPage`'s own Post Score row, which every board
+  and one opens — `TagPage`'s own Post score row, which every board
   drawing a post card carries. `open-a-topic` and `add-a-topic` resolve
   for the first time, which is the round's headline: both had been
   blocked since the flow set was authored. No hand-drawn board moved a
@@ -3245,10 +3247,10 @@ one sitting.
   clears it exactly as on a person's profile, and a Collective with none
   written is presented by its handle. The handle is the only name the
   product requires, of anyone.
-- **Each "?" names its own dialog.** The three stance pads read `Where
-  you stand on it`, `Toward what you answer` and `Your first stance` —
-  their own dialogs' titles, the way every other "?" in the system
-  already takes its subject. One name across three surfaces says only
+- **Each "?" names its own dialog.** The three opinion pads read `Your
+  opinion on your post`, `Toward what you answer` and `Your first
+  opinion` — their own dialogs' titles, the way every other "?" in
+  the system already takes its subject. One name across three surfaces says only
   that a dialog exists; `How opinions work` stays where the control
   itself is the subject.
 - **An @-scope hit on a tag is indirect, and the drawing stands.** The
@@ -3814,7 +3816,7 @@ Ruled by jakob the same day.
   `HistoryEmpty` says the opposite, that this list fills without being
   asked.
 - **The menu rows say what the next tap does.** `Save` while a thing is
-  not kept, `Remove from saved` while it is: the row carries the state
+  not kept, `Unsave` while it is: the row carries the state
   because nothing else does, and §3 asks a control to say what will
   happen rather than to report a status. The license row moves to the
   END of both content menus with it — the rarest read in the product
@@ -3845,6 +3847,722 @@ Ruled by jakob the same day.
   origin set, which is the whole of the witness diff. `Settings`' frame
   and its canvas slot grow 1845 → **2027** for the People group,
   measured rather than guessed.
+
+### The caps-affordance round — 2026-09-11
+
+Ten ruled length caps and no drawn way to say so (backlog 52), and the
+tag picker's refused name (46.3) — one round, because a cap and its
+refusal are one component's problem. Ruled by jakob the same day.
+
+- **A capped field is silent until the writer is near the cap.** The
+  affordance is a LATE COUNTER: nothing under the field while there is
+  room, then a quiet remaining count at the end of the supporting row,
+  `--error` only once it is past. Never the persistent Material counter
+  and never a meter — a number that sits under an empty field turns
+  writing into a budget, and a bar turns a sentence into progress. What
+  a writer needs is a warning in time to finish the thought; everything
+  before that is pressure, not information.
+- **The threshold is the last tenth, never fewer than the last 20.** The
+  count appears at `remaining <= max(20, round(cap / 10))`. The tenth
+  keeps the warning proportional — the description warns at 450, the
+  body at 4,500 — and the floor keeps a short cap from warning too late
+  to act on, since a tenth of the 50-character display name is five,
+  which arrives after the word that will be cut is already written. Both
+  halves are drawn: title and display name are floor-driven, description
+  and body tenth-driven.
+- **The unit is the Unicode scalar value,** which is what every ruled cap
+  counts in and what `[...string]` iterates. `.length` counts UTF-16 code
+  units and would tell a writer of emoji they had spent twice what they
+  had. Nothing on screen says *scalar value*: the reader's word is
+  characters, as it already is in `A password is at least 12
+  characters.`
+- **The count is a third element in the supporting row, not a third
+  state of the supporting slot.** M3's own text field puts supporting
+  text at the start of that row and the character count at its end; the
+  slot keeps its two states (hint, error) untouched and the count sits
+  beside whichever is live. `FieldSupport` is that row, assigned once —
+  `FieldLabel`'s counterpart under the field — so the composer's growing
+  body box, which is not a `TextField`, renders the same geometry
+  instead of drawing its own.
+- **The field atom's one error state now reaches every field.** The
+  outline and label in `--error`, the message below, replacing the hint
+  — the input-error round's shape, extended to the caps and to the tag
+  name, which closes the web/Android divergence the caps lane hit: one
+  drawn refusal, both clients.
+- **The atom colours the count; the surface words the message.** A field
+  error is worded per field and per surface, so `A title is at most 100
+  characters.` belongs to the board and the arithmetic belongs to the
+  component. An atom that wrote the sentence would flatten nine fields
+  into one house line.
+- **The tag picker's refusal is the same state in the search bar's
+  idiom.** `TagPickerRefused`: the pill takes an inset `--error` ring,
+  the naming rule under it turns into the refusal, and the `Signs as`
+  preview goes — it is a promise about the record the tap will make, and
+  a string that can be no name has no such record. The candidate list is
+  simply empty; a second voice saying what the field has already said
+  would be noise.
+- **The sweep is the cap reaching the field, not the counter reaching
+  the board.** All nine drawable caps are on their fields — title 100,
+  alt 1,000, description 500, words 5,000, comment 2,000, reason 140,
+  display name 50, bio 500, website 2,048 — and no resting board moved,
+  because no fixture is near its cap. What is drawn is the resting
+  state; the affordance is demonstrated where a state demonstrates it.
+  The password maximum is never drawn, and the device label has no
+  field.
+- **Three state boards, one per field shape.** `ComposeDetailsCaps`
+  carries the input near its cap and the textarea past it on one screen
+  (`ComposePickedErrors`' reason: a step drawn with enough in it to show
+  its whole vocabulary), `ComposeWordsCaps` carries the growing body box
+  past 5,000, and `TagPickerRefused` the name. Each fixture is the
+  length it claims — `6 left` off 94 of 100, `7 over` off 507 of 500 —
+  computed from the text drawn, never spelled onto the board.
+- **A field over its cap disables the step.** `Next` goes inert on both
+  compose boards, which is what the title cap already does in the
+  product; the badge stays on the control and its edge says it goes
+  nowhere, the disabled Sign's own pair.
+- **The gate**: 152 → **155 boards**, 1137 → **1158 edges**, gaps hold at
+  **57** and flows at **60/57/3**. The witness moved by exactly two
+  lines: `ComposeDetailsCaps` joins `cite-something` and
+  `describe-your-pictures` as a ninth and seventh origin, because the
+  stage it draws carries those controls.
+
+### The notifications round — 2026-09-11
+
+Slice 3.1's design half. Notifications had no doc anywhere, so the round
+opened by writing one — `docs/implementation/notifications.md` — and
+drew against it. Ruled by jakob the same day.
+
+- **Seven acts notify, and they are the ones addressed to you.** A
+  comment on your post, a reply to your comment, a mention, a citation
+  of your content, an opinion on your PROFILE, someone landing through
+  your invite, your application approved. What makes the set a set is
+  that somebody else acted and the act reached something with an owner
+  — so nothing you did yourself ever notifies you.
+- **Opinions on your CONTENT are out (jakob).** A post collects those
+  continuously, and a row each would turn the list into a counter of
+  ambient sentiment rather than a list of things that happened. The
+  curiosity is real and gets its own answer: the opinions-on-content
+  list (backlog 55), ungated, on the post itself.
+- **The bell is the band's right edge on every root.** Right-most,
+  outboard of the screen's own control — the feed's filter trigger, the
+  profile's gear — because one corner everywhere is what makes it
+  findable, and a different corner per tab is four things to learn. It
+  rides `CograBand` built in, the way chats does, so no board hand-builds
+  it and `bell={false}` is the only way to be without one.
+- **Guests have no bell; applicants do.** Nothing can be addressed to an
+  account that does not exist, so `Main`, `FeedBare`, `GuestGate` and
+  `WalletGuest` opt out. An applicant is an addressee already — the
+  approval and the inviter's opinion both land on them — so the
+  applicant boards carry it.
+- **A dot, never a count (jakob).** `--primary` at 8px, ringed in the
+  surface, pinned to the glyph's top-right in `ContentRow`'s own badge
+  geometry. What the shell honestly knows is that something arrived; a
+  number turns that into an errand. The bell's accessible name changes
+  with it — `Notifications — something new` — because a marker a
+  listener cannot hear is not a marker.
+- **`BandIcon` is the band's one icon-control.** `CograBand`'s chats
+  button and the profile's ⋮/gear were the same style object written
+  twice; they are one master now, and the dot is a prop on it rather
+  than a drawing on a board.
+- **Read state is two levels, and there is no mark-all (jakob).**
+  Opening the list clears the bell's dot — the bell asks *is there
+  anything new*, and the honest answer stops being yes once the reader
+  has looked. Each row keeps its own quiet mark until it is opened,
+  because the row asks a different question. A broom for the whole list
+  is a control for a list that asks too much; the fix for that is
+  per-kind muting, filed post-MVP.
+- **The row's unread mark is the bell's dot at row scale**, on the
+  trailing edge under the age — `ContentRow`'s new `unread`. A weight
+  change would make eight unread rows eight headlines.
+- **One flat list, newest first, no grouping (jakob).** Grouping trades
+  away the two things a row is for, the actor and the moment, and needs
+  a second read model for what makes a group unread. It is named in the
+  doc's later section and designed when it is reached.
+- **The opinion row wears the face, the chronicle's row exactly** — the
+  disc's own precedence puts a stance face where a picture would go, and
+  no digits ride along in either reading. That is the chronicle's
+  standing shape, inherited rather than re-decided.
+- **The list lives on the Profile page** with `Saved`, `History`,
+  `Hidden accounts` and `Settings` — the per-viewer surfaces reached
+  from the shell rather than from a feed. Its back arrow is the `back`
+  terminal, because the bell is on four roots and the way out is
+  wherever the reader came from.
+- **The gate**: 162 → **165 boards**, 1158 → **1214 edges**, gaps 57 →
+  **59** and flows hold at **60/57/3**. The edge jump is honest and
+  expected: 19 roots × the bell, `FeedUnread`'s clone of `Feed`'s
+  eighteen, and the two new boards' own. The two new gaps are
+  `FeedUnread` inheriting `Feed`'s Post Score and chats gaps. The
+  witness moved only in origin lists — the three new boards join every
+  flow that starts on a bottom-nav tap, and `FeedUnread` joins the ones
+  that start on a post card; no step rerouted.
+
+### The account-deletion round — 2026-09-11
+
+Slice 8's erasure half, and the product's most destructive gesture. The
+mechanics were already specified — `docs/instances/erasure.md` §2 and §5
+— and nothing had ever been drawn. Ruled by jakob the same day.
+
+- **The entry is the last row of Settings, in its own group, quiet at
+  rest (jakob).** `Delete account` on a plain navigating row: no `error`
+  colour, no `action` emphasis, a chevron. The weight of this act belongs
+  to the flow it opens, not to a page a reader came to for the theme — a
+  red row among eight neighbours makes the whole page feel dangerous, and
+  a reader who has decided does not need arguing with. The group's
+  footnote carries the one fact the row cannot: *Nothing is deleted
+  here.* The label is a verb phrase where `SettingsRow`'s note asks for a
+  noun, because the row names a task rather than a setting; the chevron
+  is what keeps the promise the verb might break.
+- **The request screen draws what stays, not only what goes.** Deleting
+  an account here does not unmake a record: the husk keeps authoring
+  everything it authored (`erasure.md` §3), and a screen listing only the
+  disappearances would let a reader commit believing their comments would
+  leave other people's threads. Two insets, `ChangeEmailConfirm`'s shape,
+  for its reason — two readings a reader has to hold at once. The wallet
+  is named in `What stays`: the L0 address is held by the reader's key
+  and no part of the platform can touch it.
+- **The content sweep is a checkbox, and the emailed link is the whole
+  friction.** `erasure.md` makes identity-level the default and
+  content-level the opt-in; the system's own distinction settles the
+  control, since a switch takes effect when pressed and nothing here
+  takes effect until the link is opened. And the link is the only
+  ceremony: it proves the account's own address, which is the check
+  against a compromised session that a typed handle cannot be. No
+  password, no typing the handle back, no *are you sure* — theatre here
+  reads as the product trying to talk the reader out of it.
+- **`DeleteAccountMail` exists because the confirmation leaves the app.**
+  The seven days start at the CONFIRMATION, not the request, so the one
+  thing this board owes is that nothing is scheduled yet. `Reset` says
+  the same thing in a status line because its form is still on screen;
+  here the form is spent, so it is a board — `VerifyExpired`'s column and
+  its foot. No expiry is claimed: `auth.md` gives the reset link fifteen
+  minutes and `erasure.md` gives this one no window, so drawing one would
+  be inventing a mechanic.
+- **The grace state is a band on every logged-in surface (jakob), and
+  `DeletionBand` is the mechanism.** A reader may have confirmed from a
+  mail client on another device; a state only a settings page confesses
+  is a state most readers would meet at the deadline. It is a SIBLING of
+  `BorrowedViewBand`, not the same band — they share the slot under the
+  surface's header (`CograBand`'s children on a root, under `PageHeader`
+  on an inner surface) and nothing else. This one is filled and its line
+  is `on-surface` where that one is transparent and secondary: the two
+  dials the system has for presence, turned once, without reaching for a
+  colour.
+- **It is not `--error`, and that is §4 rather than restraint.** `error`
+  is for failure, and this is a thing the reader asked for proceeding
+  exactly as asked. Colouring a chosen act like a fault would be the
+  surface arguing with the decision — the same reason Sign out takes no
+  error colour and `EmptyState` refuses it for an absence. The band wears
+  `surface-bar`, the shell's own chrome fill, because shell is what it is.
+- **`FeedDeleting` draws the band once, on the most-seen root**, the way
+  `FeedUnread` draws the bell's lit state. The feed beneath it is
+  untouched, and that is the ruling drawn: during the grace period
+  nothing is redacted and nothing is withdrawn, so a feed that started
+  hiding the reader's own posts would be redacting early.
+- **AWAITING A RULING: how the count says a FUTURE moment.** The ages
+  ladder is a vocabulary for how long ago something happened; this counts
+  forward and no ruling covers that (backlog 54.1). Drawn: `Your account
+  is deleted in 6 days.` — spelled out, because the ladder's compression
+  buys room in lists where many ages compete for it and buys nothing in a
+  band, while `6d` means *ago* everywhere else in the product. The two
+  alternatives and the reasoning are in `copy-voice.md`.
+- **The cancel is a snackbar, and it has no Undo.** The band is on every
+  surface, so the cancel is pressed anywhere; a confirmation screen would
+  move a reader who tapped two words mid-scroll. The settings round
+  already settled that shape for acts that finish where they are pressed.
+  The band's absence is the lasting confirmation — which is why no band
+  is drawn in some cancelled state. And an Undo here would re-arm an
+  irreversible countdown from a control that disappears in four seconds.
+- **A deleted profile wears a removal mark, not an empty state (jakob:
+  "we never pretend sth that once was there never existed").**
+  `RedactedContent` gains a third reason, `account`: identity-level
+  redaction empties the Registration bundle exactly as a removal empties
+  a post's, so a deleted profile wears the mark a post wears, on the
+  reserved surface that says a space was kept rather than lost.
+  `ProfileNotFound` keeps its own case — a freed handle resolving to
+  nothing — and `ProfileDeleted` is reached by structure that still
+  points at the actor, an author chip on a post they wrote. The handle is
+  printed nowhere on it: the handle is the thing that was removed, and
+  printing it back would undo the redaction on the one surface that
+  exists to report it. Where the mark sits, and what stands around it, is
+  the review-fix round's ruling below.
+- **The gate**: 165 → **170 boards**, 1214 → **1263 edges**, gaps 59 →
+  **63**, flows 60/57/3 → **61/58/3**. The edge count is honest: the two
+  feed boards clone `Feed`'s eighteen each, `ProfileDeleted` takes
+  `ProfileNotFound`'s six, and the request flow's own six close the
+  settings row's gap without opening one. The four new gaps are the two
+  clones inheriting `Feed`'s Post Score and chats — `FeedUnread`'s own
+  inheritance, twice. The new flow is `request-account-deletion`, which
+  ends where the flow leaves the app; the witness moved only in origin
+  lists and the six start counts they feed, and no step rerouted.
+  `Settings`' frame and its canvas slot grow 2027 → **2163** for the
+  delete group, measured rather than guessed — the harness reproduced the
+  recorded 2027 on the pre-change board before it was trusted for 2163.
+
+### The media true-shape round — 2026-09-11
+
+jakob's implementation-session ruling, confirmed here after a pixel check
+found the boards drawing a capped tile where the product draws a true
+one. The height cap is gone; what bounds a card tile is its shape.
+
+- **`--media-max-height` retires entirely**, and `--post-chrome-height`
+  and `--safe-area-top` with it — both existed only to feed its formula,
+  and a token nothing reads is a number pretending to be a decision.
+  `MediaAttachment` keeps no default for `maxHeight`. A card tile stands
+  at its TRUE ratio at full width: on a 390px phone a `wide` tile is 219,
+  a `square` one 390, a `tall` one 487. The crop vocabulary's 4:5 is the
+  only bound left, and it is a SHAPE rather than a ceiling. The prop
+  itself stays, because one surface still holds media below its shape's
+  own scale on purpose — a comment's inset pictures at 220px, so the
+  media joins the words instead of turning the comment into a post.
+- **Which scopes "a post fits the screen" to wide and square.** A card at
+  those shapes sits inside the phone whole, affordance row included. A
+  vertical post runs past the fold and the reader scrolls to reach its
+  affordances: jakob built the biggest post the system can make, saw it
+  barely miss, and took it — *"insta also does this."* The alternative
+  spends the picture's height on every reader forever to save one scroll.
+  `MediaAttachment`'s header had still been claiming the opposite — that
+  a capped tile is *fitted* inside whatever height is left — which the
+  2026-09-03 no-letterboxing rule had already overtaken.
+- **Five boards changed height; thirty-one changed only markup.** The
+  rendered diff is the census, and every byte of it is one declaration
+  leaving 36 boards. Where the tile was `wide` (204px at the card's
+  content width), `square` (390), or a comment's (220/240), the cap was
+  never binding and nothing moved. The five that grew are the ones
+  carrying a 4:5 frame — capped at 376 on a phone, 487.5 now:
+  `FeedCover`, `FeedGallery`, `LadderMax`, `PostDetail`,
+  `PostDetailVideo`. All five are 390×844
+  phone boards that clip at the fold by design — three of them already
+  overflowed before the round — so no frame moved for them. Four boards
+  in the canvas carry a frame of their own; one of those grew.
+- **`FeedShapes` redraws, and its frame and canvas slot grow 1934 →
+  2059**, measured rather than guessed — the harness reproduced the
+  recorded 1934 on the pre-change board before it was trusted for 2059.
+  The board had pinned the cap's own formula with a phone's height
+  written in where `100dvh` stood, so its three clips stood 219 · 376 ·
+  376 and the prose called two shapes at one height the honest
+  presentation. They stand 219 · 390 · 487 now, which is what the board
+  exists to show: three shapes, three heights, at one width.
+- **The wizard's cover preview is the clip's output format**, never a
+  square specimen: what `ComposeCover` shows is the shape the post will
+  stand at. The clip on that path is square — `ComposeCoverPlaying` plays
+  the same one through `MediaAttachment` at `ratio="square"` — so the
+  preview is 342 × 342, unchanged in pixels and derived now rather than
+  pinned. A 16:9 clip's would be 342 × 192; a vertical clip never reaches
+  the step at all, because its default is no cover.
+- **The card's text clamps were already conform** — title one line,
+  description two, and `More` under a media post's caption always. What
+  was stale was the `media` card's own inventory, which had the
+  description clamping to one. The text body's ceiling stays at 18 lines;
+  its derivation had been floor(376 ÷ 20) against the capped tile, and
+  with the cap gone there is no one tile height to derive it from.
+- **The gate did not move**: 169 screens, 1263 edges, 63 gaps, flows
+  61/58/3. No flow pin anchors on a tile's `max-height` — the media pins
+  find `aspect-ratio`, which no tile lost.
+
+### The review-fix round — 2026-09-11
+
+jakob's second pass over the canvas, and the round where three standing
+rulings were replaced rather than extended. Everything below is his,
+from the rulings sheet; what the round decided for itself is named as
+such.
+
+- **THE BAND LAW (supersedes the 2026-09-01 corner ruling AND the
+  notifications round's order).** No band carries a ⋮ any more, and the
+  trailing cluster on every root is **[the screen's own control] · chats
+  · bell** — the feed's is filter · chats · bell. The two the shell owns
+  keep the same two corners on every tab, so a thumb aiming at chats or
+  at the bell aims at one place whatever screen it is on; the control
+  that changes per screen is the one that moves inboard. The old order
+  put chats first and the screen's own control between the two the shell
+  owns, which made the middle slot mean something different per tab.
+- **Band icons draw at 40px and answer at 48** (`cg-hit`, the trade
+  `Button`'s small rung and `Chip` already make). 48px of DRAWN box was
+  what crowded the band: three of them beside the mark and the wordmark
+  left the one control whose width carries WORDS too little room, and
+  the feed's filter trigger ellipsised on the boards that narrow the
+  feed. Measured: at 48px boxes `FeedNarrowed`'s trigger had 160px of
+  room for 170px of words; at 40px it has 170 and the ellipsis is gone,
+  with `FeedNothing` (172/172) and `FeedFar` (144/144) clear as well.
+- **Your own profile's ⋮ joins the Edit profile · Invites row**, and the
+  band keeps gear · chats · bell. **Another's joins its actions row**,
+  where **Message gives up the half of the row it never needed** (jakob:
+  "the message button already is so wide.. with quite a lot of
+  padding"): Message is sized by its own word now and the anchor takes
+  the remainder. That makes `ProfileOtherHeld`'s mode-invariance rule
+  stronger rather than weaker — a width derived from one word cannot
+  depend on what the anchor says — so the row is identical in both
+  reading modes (measured: anchor 196px, Message 106px at x=220, the dot
+  40px at x=334, the same in geek mode, and the exact pair paints inside
+  the anchor's own space). `OverflowMenu` gains `placement="row"` for
+  it: the header placement's -12px pull is right on a 24px line and
+  wrong in a row of controls, which has no gutter to pull into.
+  `ProfilePosts` and `ProfileComments` follow the page — and their ⋮ now
+  holds the whole profile menu rather than two of its four rows, because
+  a tab of a page is not a smaller page.
+- **The Saved row carries its own unsave**, icon-only: the filled
+  bookmark, `Unsave` in the accessibility tree, no word on screen
+  (jakob: with the icon "we dont even need any word there"). It takes
+  the CHEVRON's slot and never the trailing edge's — the age there is
+  when YOU saved the thing, which is the list's whole order and what a
+  reader is retracing — so `ContentRow` gains `action`, splits into a
+  pressable part and the control beside it, and nests no button in a
+  button. `SettingsRow` had already assigned that slot the same way.
+- **The saved state is one word, `Unsave`**, replacing
+  `Remove from saved` on every menu and in copy-voice. **Save joins your
+  own post's menu too**, and LEADS it — saving is private, so whose post
+  it is has nothing to do with whether a reader may keep it, and one
+  position for the row on every menu that has it is worth more than
+  ordering each menu by its own use. The license still closes.
+  (`RemoveMenu` also stopped hand-writing its four rows and draws
+  `OWN_POST_MENU`, which is what makes the Save row appear in the sheet
+  and in the header's menu at once.)
+- **Hiding gets its board**: `FeedHidden` — the feed with @ada's card
+  gone, the ranker's next posts moved up, and
+  `@ada is hidden — their posts stay out of your feed.` with `Undo`.
+  Nothing marks the space her card was in: a "hidden post" rail would
+  keep her on the screen the reader just asked to be rid of her on.
+  `Snackbar` gains its one Material action for it — a WORD, never a
+  pill, in the new `--action-on-snackbar`, `primary` being the one
+  colour that stops being legible on the inverse ground.
+- **Settings prose ages join the ladder**: `Changed 21d`, `Last used 2d`,
+  `Last created 12.08.2026`. copy-voice's own examples were the source of
+  the contradiction — a guideline spelling `Changed 3 weeks ago` a few
+  sections under the rule that forbids weeks — so they conform too.
+- **THE REDACTED-ACTOR LAW (supersedes the account-deletion round's
+  `ProfileDeleted`).** The shells never go. A deleted account's profile
+  keeps its exact structure — header, real counts, tabs, chronicle, the
+  acts with their real words — and ONLY the personal data is
+  placeholdered: the avatar becomes the reserved disc (no monogram,
+  there being no name to take a letter from; no glyph, that being
+  imagery with no source), the name slot reads `Deleted account` in
+  `text-secondary`, and the handle is dropped rather than replaced. The
+  removal mark moves into the BIO's place, which is a profile's one
+  authored, personal region and exactly the payload that went; as a band
+  under the header it would have read as a fault with the page. A page
+  stripped to a notice is the erasure ethic's other failure mode — it
+  hides a record still on the graph, still credited, still ranked.
+- **The treatment follows the actor, so it lives on the masters.**
+  `MonogramAvatar` and `ActorChip` take `redacted`, and `ProfileHeader`
+  is that same chip at page scale — one drawing for the header, for the
+  author chip on a post they wrote, and for every row that names them.
+  `REDACTED_ACTOR_NAME` is the word, assigned once.
+- **The actions row keeps the opinion and loses the message** (the
+  round's own call, read off `erasure.md` §3). An opinion targets the
+  ACTOR and the actor is there — its content still ranks in other
+  people's feeds, so a reader who wants it out of theirs needs the
+  control that does that, severance included. A message targets a
+  PERSON, and the identity association is deleted, so a composer there
+  would address nobody. The ⋮ goes with Message: every row it holds
+  names the person, and there is no name to put in them.
+- **The empty hidden row stays `None`** (jakob, final). Nothing else was
+  ever drawn.
+- **Notification rows are kept** (`docs/implementation/notifications.md`):
+  no age bound, no cap, no pruning job for the test phase, and the bound
+  belongs to the era in which a reader owns their own storage — how long
+  someone's operational rows live is a question about whose disk they sit
+  on. The rows are rebuildable either way, so adopting a bound later is
+  maintenance and never a loss.
+- **The score reads `Post score` in prose too** — `PostCard`'s docblock
+  and its `.d.ts`, the icons README, the numbers card, the iconography
+  guideline. Graph gap names keep the old spelling by ruling.
+- **The gate**: 170 → **171 boards**, 1263 → **1287 edges**, gaps 63 →
+  **65**, flows hold at **61/58/3**. The 24 new edges are `FeedHidden`'s
+  eighteen (the feed's own anatomy, plus Undo), `ProfileDeleted`'s four
+  (its counts, its anchor, its tabs, its rows — the page it got back),
+  the Saved row's unsave, and Save on the own-post menu. The two new gaps
+  are `FeedHidden` inheriting the feed's Post Score and chats. The
+  witness moved in origin lists and their start counts only —
+  `FeedHidden` joining nine feed-rooted flows, `ProfileDeleted` joining
+  the two profile ones its new controls open — plus `RemoveMenu`'s two
+  steps renumbering behind the Save row. No step rerouted and no flow
+  changed status. No frame grew: `ProfileDeleted` measures 752px of
+  content inside the phone's 844, and `FeedHidden`'s 1005 is a list that
+  scrolls, the way `FeedNarrowed` (1337) and `FeedGallery` (1102)
+  already do.
+
+### The score-and-opinions round — 2026-09-11
+
+Round 4 of the MVP design queue, and the last of the slice-3 remainders:
+the Post score's drill-down (backlog item 13, all four screens) and the
+opinions-on-content list (item 55). jakob ruled every input before the
+round opened — level one shows the strongest handful with a quiet row
+that expands, the all-paths-moved case is a quiet line in the graph
+register, and item 55's entry is a bottom sheet from a row on the detail
+plus the comment's ⋮.
+
+**The drill-down answers one question, and it is the reader's**: why is
+this post in *my* feed. `feed-ranking.md` §6.1 makes that answerable —
+the score is the sum of up to `k` internally disjoint paths from the
+viewer's own outgoing opinions to the post — so the four levels are that
+structure walked down: the **paths**, one **path**, one **step**, and the
+signed **records** behind that step. Each level carries a small cover of
+the post it came from, so a reader four taps deep never loses what they
+are reading about.
+
+- **The register is paths and people, never a chart.** Rows, faces and a
+  trace of avatars; no bar, no meter, no percentage and no trend arrow
+  anywhere on the four boards. A bar would turn a reader's own
+  connections into a statistic about the post, which is the
+  growth-dashboard framing `ExplainableNumber` already refuses.
+- **The arithmetic closes on the drawn surface.** Four paths at 6.80,
+  4.20, 2.60 and 1.10, and the more-paths row carrying the remaining
+  0.50: 15.20, the score the reader tapped. That is why the quiet row
+  states what the folded paths add rather than only how many there are —
+  a row saying "2 more paths" alone would leave a hole in the one place
+  the product promises there is none. At the floor the same discipline
+  holds: the step's two records, `+0.45 / +0.10` and `+0.10 / +0.10`,
+  add to the `+0.55 / +0.20` it carries.
+- **No step carries a magnitude, and that is a truth claim.** A path's
+  contribution is not the product of the opinions drawn along it — the
+  per-step weight is damped and tier-bound (§3.1) and only the terminal
+  step decays (§5.3) — so a figure on every row would invite an
+  arithmetic that does not hold. Each step says what carries it and when;
+  the path says what it adds.
+- **The freshness fact is the last step's.** `PathSummary`'s second row
+  is the newest opinion on the path, because silence on a relationship is
+  not a partial revocation: an old connection with a fresh opinion at its
+  end competes at full weight. That is the sentence the row exists to
+  make checkable.
+- **Level three is the fold, seen.** A step shows one face and the row
+  above it said two opinions; this screen is where those two are named,
+  counted and dated, and the note says the rest in the reader's own word
+  — the same adding up the pad already shows them as their current
+  opinion.
+- **Level four is the honesty case's floor.** The signed records, their
+  identity keys in mono, and the line that is the whole point: *These
+  records are public. Anyone can run the same sum and land on the same
+  number.* A drill-down that stopped at a summary would have asked to be
+  believed.
+- **The numbers here are not pairs, so they paint in both readings.** A
+  score and a path's contribution have no glyph that could carry their
+  magnitude, exactly as the Post score itself has none (§13, *Geek
+  mode*). The pairs on these boards — a step's opinion, a record's own —
+  are `StanceValue`s and follow the mode like every other pair.
+- **The five parts are glue, not masters.** `ScoreOrigin`, `PathTrace`,
+  `PathSummary`, `StepSummary` and `ActionLog` live in `_shared.jsx`: a
+  master is a shape reused across PRODUCTS, and `_shared.jsx` is the
+  shape reused across BOARDS of one surface (`CommentsSheet`'s rule).
+  These five are drawn on five boards of one flow and nowhere else, which
+  is the backlog item's own instruction. Nothing in them formats a value
+  the system already formats — every pair goes through `StanceValue`,
+  where the `cg-exact` span and its screen-reader twin are assigned — and
+  every row a master already draws IS that master: the cover is
+  `QuotedRow`, the step rows are `ContentRow`, the facts are `FactRow`,
+  and the way down is `FactRow`'s own action slot. `PathTrace` is the one
+  genuinely new drawing, and it exists because no master's leading slot
+  holds a chain.
+- **The aged-out state is content, not a tap.** The score opens the same
+  board in the state the dust floor leaves a post whose every path's last
+  opinion has decayed past it — `TagPageEmpty`'s arrangement exactly. It
+  is not `EmptyState`: that master says "nothing here yet" and offers the
+  action that fills it, and here something *was* here and nothing is
+  owed.
+
+**The opinions list is the profile's own page, mirrored onto content**
+and ungated — everyone can check every post and comment, the way
+everyone can read a profile's counts. Its rows are `StanceRow`, the
+master the profile's opinions page uses, and its order mirrors
+`ProfileStances`: strongest first, by the for-or-against value. That
+order was read off that board rather than found written down anywhere;
+mirroring it is the point, since a second surface sorting the same rows
+differently would teach a reader the order means nothing.
+
+- **Two doors, because a comment has no detail surface.** A post's is a
+  quiet count line under its tags, in `TopicsLine`'s register — the
+  affordance row is closed (opinion · score · comments · share) and
+  nothing joins it. A comment's is its ⋮, where the row reads *Opinions
+  on this* and sits after the acts and before the license.
+- **The line drops away at zero and the menu row does not**, which is
+  where the empty state lives. `SettingsHidden`'s rule: a tap that can
+  only open an empty list is a tap spent on nothing, so a post nobody has
+  answered says so by having nothing to open — while a menu row that came
+  and went with a number would make the menu a different menu every time.
+- **No face on the card's line.** A face on a post card already means
+  "your opinion"; a second one meaning somebody else's would make both
+  unreadable. The count is the whole line, and the count IS the list's
+  length — `RefsSheet`'s discipline, and this sheet is the only place
+  that number can be checked.
+
+**The gate**: 171 → **178 boards**, 1287 → **1327 edges**, gaps 65 →
+**43**, flows 61/58/3 → **63/60/3**. The 22 closed gaps are every `Post
+Score drill-down (backlog item 13)` outcome in the graph — one per board
+that draws a score — retargeted onto `FeedEntry`; it is the largest
+single gap closure the canvas has had, and no item-13 gap remains. The
+40 new edges are the five drill-down boards' 34 (their back arrows, the
+three drill-ins, the more-paths unfold and five nav slots each), the two
+sheets' three, and the three doors — `PostDetail`/15,
+`PostDetailVideo`/20 and `CommentMenu`/5, appended rather than inserted
+so no existing via renumbers. Two flows are newly declared and both
+resolve: `trace-a-score-to-its-records` (a control start on the score,
+`Reel` excepted — there the score is the detail door by ruling — with a
+witness that reads the four levels in order to *arrival at RankRecords*)
+and `who-holds-an-opinion-on-this`. **No flow changed status**: none of
+the three blocked ones was blocked on item 13. The witness otherwise
+moved only in origin lists — the four publish flows' `nav · New post`
+start growing 39 → 44 boards as the five drill-down boards join the bar.
+One label was aligned in passing: `FeedHidden`'s score edge read `Post
+score` where the other 21 read `Post Score`, which would have dropped it
+silently from the control start.
+
+### The vouch-back ceremony — 2026-09-11
+
+Item 58, jakob's line: "once you vouche back there should be some
+indicator that you are now part of the network… it is the ceremonial
+ending of you becomming part of the graph.. we could even think of a
+nice animation for this.. you becomming part of the sky or sth". One
+board, `VouchedIn`, between the signed vouch-back and the feed.
+**Scope: an MVP-window stretch, and the first thing to yield** — the
+entry flow is complete and correct without it, so if the window
+closes the ceremony is what gets dropped, not a step the product
+needs.
+
+- **What the ceremony is ABOUT is the borrowed view ending.** A feed
+  is ranked from the viewer's own outgoing opinions; until the
+  vouch-back the new member had none and browsed from their inviter's
+  vantage. The signature is the moment their own view begins — that,
+  not a milestone badge, is the thing worth marking, and it lets the
+  copy stay concrete while the headline carries the metaphor.
+- **The sky is `SkyField`'s vocabulary, not a new drawing.** The
+  Explore hero already draws the graph as weighted discs on hairlines
+  in token colours ("Your sky — every account a star"). The ceremony
+  is that at full bleed with the two things the moment owes: the
+  reader's own point, and the one edge they just made. **The ground
+  stays `surface`** — no night-black special case, so the board is a
+  sky in the light theme too and the dark theme gets the night for
+  free.
+- **Two rungs of point, and `secondaryContainer` is not one.** Dark
+  `secondaryContainer` is #743918, which sinks into the dark ground —
+  so `SkyField`'s mid-weight points come out dimmest exactly where
+  they should read brightest. The ceremony spends `outline` (far) and
+  `primaryContainer` (near, and the same #ef6c1a in both themes),
+  plus `primary` for the reader. **The same inversion is latent in
+  `SkyField`** and is reported, not fixed here: fixing it moves the
+  Explore board.
+- **You are marked as a vantage, not ranked as a star.** The reader's
+  point is `primary` with a hairline halo. It is deliberately not the
+  biggest point: in the Sky size means "your own paths to it", and
+  there is no path from you to yourself.
+- **@mira carries her actual face**, the only identified point —
+  the act being celebrated is reciprocation to a person. **Your edge
+  is the one `primary` stroke, and it leaves your point for hers**:
+  only viewer-rooted forward paths shape a feed, so the edge runs
+  outward from you. The ranking law, drawn.
+- **The field claims nothing about weighting.** Drawn strictly by the
+  hero's "sized by your own paths" rule, a day-one sky would be one
+  lit point and a dozen grey ones — true, and the wrong note for a
+  welcome. So the picture is the network with the reader newly in it,
+  and the WORDS claim only what is certainly true. Nothing is
+  promised that a later Sky (item 16) would have to honour.
+- **No back, no bottom bar, one way out.** The opinion is signed and
+  on the record, so the screen it came from no longer exists and a
+  back arrow would be a lie; a bottom bar would make a ceremony into
+  a tab. `Go to your feed` is the single control, which is why the
+  board carries exactly one flow number.
+- **The motion is a DECLARED EXCEPTION to §4.** "Nothing inside an
+  arriving screen animates" and "motion never performs" are the
+  standing rules; this is the one board that asks to break them, and
+  it is recorded as an exception to accept or reject rather than
+  taken quietly. Two things keep it inside the system's spirit: every
+  duration and easing is an EXISTING token — no new motion value is
+  introduced, and the phase offsets are sums of those same durations
+  — and the motion is still deictic, showing where the reader's point
+  came from and which way their edge runs.
+- **The storyboard.** The sky ARRIVES ALREADY DRAWN: the other
+  accounts and the hairlines between them are in the first frame, and
+  nothing builds or assembles — the network did not wait for you.
+  Only what is new animates. `t=0` the standard forward transition
+  (300ms). `t=300` your point fades in and rises 24px
+  (`--duration-long-2`, `--ease-emphasized-decelerate`); opacity and
+  translate only — no scale, no bounce, no spring. `t=600` the halo
+  expands from the disc's radius to twice it and stays
+  (`--duration-medium-2`, `--ease-standard-decelerate`) — one move
+  that settles, never a pulse. `t=900` your edge draws outward to
+  @mira's rim (`--duration-long-2`, `--ease-standard`). `t=1100` the
+  headline, subline and button arrive together on an 8px rise and
+  fade — `cg-dialog-in`'s own entrance reused
+  (`--duration-medium-4`, `--ease-standard-decelerate`), together and
+  never staggered. It ends at 1500ms, and **a tap anywhere completes
+  every phase at once**, so nobody is held.
+- **Reduced motion: the resting state IS the end state**, which is
+  what the board draws. The phases collapse to 0ms (the duration
+  tokens already do this) and the screen arrives whole — edge drawn,
+  halo full, words in place. A reader who asked for stillness loses
+  the choreography and none of the content.
+- **Copy awaiting blessing.** Drawn: *"You're part of the sky now."*
+  over *"Your opinion on @mira is signed, and the way is open both
+  ways. The feed you see from here is your own."* **jakob's own
+  phrase "part of the graph" cannot be used**: §3 bans *graph* in
+  user-facing copy. *Sky* is legal and already product-facing, and
+  the picture glosses it. Alternates, both legal and both drop-in:
+  *"You're part of the network now."* (closest to the ruling's
+  words, and free of any dependency on the Sky shipping) and
+  *"You're in."* (the quietest). The subline carries the whole honest
+  content either way, so the headline can be swapped without touching
+  the substance.
+- **Wiring.** `VouchBackPad/4`'s vouch-back outcome lands on
+  `VouchedIn` instead of `Feed`, and `VouchedIn/1` carries on to the
+  feed. `vouch-back-for-your-inviter` gains the pad as a pinned
+  waypoint and now ends on the ceremony's own edge, so the journey
+  still concludes where it always claimed to. **§13's user-flow
+  ruling is amended**: "a stance concludes where it was taken — the
+  applicant's vouch-back is the one exception" still holds, and that
+  exception now opens the ceremony, which opens the feed.
+
+### The follow-up bundle — 2026-09-11
+
+jakob's go on the review round's standing recommendations, taken in one
+pass: one board, one law, and two sweeps.
+
+- **Unsaving gets hiding's treatment.** `SavedUndo` is the Saved list a
+  moment after a row's unsave — the row gone, the ones behind it moved
+  up, and `Removed from Saved.` with `Undo` over them. It is drawn for
+  `FeedHidden`'s reason: the act takes no dialog and leaves no mark, so
+  a list one row shorter and one line saying so ARE the whole design.
+  The line names the LIST rather than the row — the thing that went is
+  the one the reader just pressed, and the list is the fact they may
+  want back. Three rows are left and all three drawn kinds are among
+  them, so the mixed list goes on reading as one. Nothing marks the
+  space the row was in, and nothing happened to the post: it still
+  stands in its author's chronicle, still ranks, still opens. The
+  `Unsave` control moved into the shared screen helpers on the way —
+  it is drawn on two boards now, and a control spelled twice drifts.
+- **A hide row cannot say a name that is gone.** On a deleted author's
+  post or comment the reader's menu reads `Hide this account`;
+  everywhere else it spells the handle. The ROW stays either way —
+  hiding is a read-side comfort about an ACTOR, and a redacted actor
+  still ranks into the reader's feed — so only the wording gives way.
+  `ActorChip` composes it (`HIDE_ACTOR_LABEL`, beside
+  `REDACTED_ACTOR_NAME`), because every menu that carries the row
+  builds its label from an actor and a fallback spelled per menu is a
+  fallback that drifts; `OverflowMenu`'s own rules send every such row
+  there. **No board draws it**: the law and the master's fallback are
+  the entire mechanism, and a second `ReaderPostMenu` differing in one
+  word would be four-fifths of a board already on the canvas.
+- **The score reads `Post score` in prose, wherever prose says it** —
+  `readme` in six places, `ExplainableNumber` across its three files,
+  `PostCard`'s prompt, `ReelRail`, the score glyph's note in `Icon`,
+  the media card, the core-loop prototype's notes, and `shell.mjs`.
+  The graph's 23 edge labels keep `Post Score`, and the maps generated
+  from them with it: `flows.json` starts `trace-a-score-to-its-records`
+  by matching that label, so the string is a key there and not a word.
+  Gap names were the same exception and no longer carry it — item 13's
+  gaps closed with the drill-down.
+- **The text clamp is founded on the square tile.** Eighteen lines at
+  20px is 360px of words against a square crop's 358 at the card's
+  content width, so a text post comes to rest at the neutral media
+  shape rather than rising into the 4:5 wall a picture may take. The
+  value did not move; what it is measured against is now written down.
+- **The gate**: 178 → **179 boards**, 1327 → **1336 edges**, gaps hold
+  at **43** and flows at **63/60/3**. The nine new edges are
+  `SavedUndo`'s own — the back arrow, the rows, its five nav slots, the
+  unsave that fires it again, and `Undo` appended last so no via
+  renumbers. `Saved`/8 stops being a self-informing detour and becomes
+  the advance onto the new board, which is the only edge that moved.
+  The witness moved in origin lists alone: `SavedUndo` joins the four
+  publish flows that start on the bar, whose `nav · New post` start
+  grows 44 → 45 boards. No `.dc.html` but the new one changed — the
+  sweeps are comments and prose, and the shared `Unsave` renders the
+  markup it rendered inside `Saved`.
 
 ## 14. Index
 

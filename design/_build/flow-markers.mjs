@@ -39,6 +39,36 @@ const guestBand = [
 ];
 const secondComments = (n) => ({ n, find: 'aria-label="1 comment"', tag: "button" });
 
+// The details stage's controls, shared by the stage and by the stage drawn
+// against its caps — one anatomy, so one marker list.
+const composeDetails = [
+  { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+  { n: 12, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
+  { n: 13, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+  { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+  { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+  { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
+  { n: 4, find: 'data-field="Title"', tag: "div" },
+  { n: 5, find: 'data-field="Description"', tag: "div" },
+  { n: 6, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+  { n: 6, find: 'aria-label="Remove #coastroad"', tag: "button" },
+  { n: 7, find: "+ Add a tag", tag: "button" },
+  { n: 8, find: 'aria-label="Remove The long way home', tag: "button" },
+  { n: 9, find: "+ Cite something", tag: "button" },
+  { n: 10, find: ">Next</button>", tag: "button" },
+  { n: 11, find: ">Describe the pictures</button>", tag: "button" },
+];
+
+// The words stage, likewise — the body box is found by its own outline, which
+// is the one thing the cap state changes about it.
+const composeWords = (bodyOutline) => [
+  { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+  { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+  { n: 3, find: ">Next</button>", tag: "button" },
+  { n: 4, find: ">Add pictures instead</button>", tag: "button" },
+  { n: 5, find: bodyOutline, tag: "div" },
+];
+
 export const FLOW_MARKERS = {
   Main: [
     filter,
@@ -81,6 +111,8 @@ export const FLOW_MARKERS = {
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
   ],
+  /* The ceremony has exactly one control, which is the whole point of it. */
+  VouchedIn: [{ n: 1, find: ">Go to your feed</button>", tag: "button" }],
   KeyElsewhere: [
     filter,
     { n: 2, find: ">Restore the key</button>", tag: "button" },
@@ -236,6 +268,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(11),
   ],
+  // The feed a moment after Hide @ada: her card gone, the ranker's next posts
+  // moved up, and the act's own line over them. Neither card carries a
+  // reference, so the numbering closes over the slot `Feed` keeps for one.
+  FeedHidden: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 7, score: 8 }),
+    { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 9, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 9, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 18, find: ">Undo</button>", tag: "button" },
+    ...nav(10),
+  ],
   FeedNothing: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
     { n: 2, find: ">Show posts again</button>", tag: "button" },
@@ -376,11 +420,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   RemoveMenu: [
-    { n: 1, find: ">Edit</button>", tag: "button" },
-    { n: 2, find: ">Mark as sensitive</button>", tag: "button" },
-    { n: 3, find: ">Remove</button>", tag: "button" },
-    { n: 4, find: ">License terms</button>", tag: "button" },
-    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Edit</button>", tag: "button" },
+    { n: 3, find: ">Mark as sensitive</button>", tag: "button" },
+    { n: 4, find: ">Remove</button>", tag: "button" },
+    { n: 5, find: ">License terms</button>", tag: "button" },
+    { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // The menus round: four sheet boards, one per surface a ⋮ opens on. Each is
   // scanExempt, so only the sheet's own rows and its scrim carry numbers, and
@@ -400,6 +445,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Cite in a new post</button>", tag: "button" },
     { n: 3, find: ">License terms</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
+    { n: 5, find: ">Opinions on this</button>", tag: "button" },
   ],
   ProfileMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },
@@ -434,23 +480,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Next</button>", tag: "button" },
     { n: 9, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
   ],
-  ComposeDetails: [
-    { n: 12, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
-    { n: 12, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
-    { n: 13, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: 'aria-label="Manage the pictures"', tag: "button" },
-    { n: 4, find: 'data-field="Title"', tag: "div" },
-    { n: 5, find: 'data-field="Description"', tag: "div" },
-    { n: 6, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
-    { n: 6, find: 'aria-label="Remove #coastroad"', tag: "button" },
-    { n: 7, find: "+ Add a tag", tag: "button" },
-    { n: 8, find: 'aria-label="Remove The long way home', tag: "button" },
-    { n: 9, find: "+ Cite something", tag: "button" },
-    { n: 10, find: ">Next</button>", tag: "button" },
-    { n: 11, find: ">Describe the pictures</button>", tag: "button" },
-  ],
+  ComposeDetails: composeDetails,
+  ComposeDetailsCaps: composeDetails,
   RemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
@@ -502,13 +533,8 @@ Object.assign(FLOW_MARKERS, {
 // The seal's three sheet boards are scanExempt; only the sheet layer and its
 // scrim are stamped, and the seal beneath them is inert in those states.
 Object.assign(FLOW_MARKERS, {
-  ComposeWords: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: ">Next</button>", tag: "button" },
-    { n: 4, find: ">Add pictures instead</button>", tag: "button" },
-    { n: 5, find: "1px solid var(--border-field)", tag: "div" },
-  ],
+  ComposeWords: composeWords("1px solid var(--border-field)"),
+  ComposeWordsCaps: composeWords("1px solid var(--error)"),
   ComposePick: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
@@ -595,7 +621,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Opinion pad', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
-    { n: 5, find: "background:var(--scrim-wash", tag: "div" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
 });
 
@@ -830,6 +856,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="Share this post"', tag: "button" },
     ...nav(10),
+    { n: 15, find: 'aria-label="Opinions on this post"', tag: "button" },
   ],
   PostDetailVideo: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -849,6 +876,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 18, find: 'aria-label="Back ten seconds"', tag: "button" },
     { n: 18, find: 'aria-label="Forward ten seconds"', tag: "button" },
     { n: 19, find: 'aria-label="Full screen"', tag: "button" },
+    { n: 20, find: 'aria-label="Opinions on this post"', tag: "button" },
   ],
   ViewerPicture: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },
@@ -1046,6 +1074,9 @@ Object.assign(FLOW_MARKERS, {
     // mid-page would renumber nine edges to say nothing new: the badge is an
     // identity, not a position.
     { n: 17, find: ">Hidden accounts</span>", tag: "button" },
+    // Deleting the account is the page's last row and its next free number —
+    // the same rule the People group followed, for the same reason.
+    { n: 18, find: ">Delete account</span>", tag: "button" },
   ],
   // The hidden-accounts sheet over the settings page (the private-viewer-state
   // round). scanExempt like its two siblings, so only the sheet is numbered —
@@ -1062,6 +1093,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">The third headland light is real<", tag: "button" },
     { n: 2, find: ">Mira Voss<", tag: "button" },
     { n: 2, find: ">Sunday at the tide market<", tag: "button" },
+    // The row's own unsave, drawn once per row — one edge covers all four.
+    { n: 8, find: 'aria-label="Unsave"', tag: "button", all: true },
+    ...nav(3),
+  ],
+  // The same list a moment after one row was unsaved. It borrows `Saved`'s
+  // numbering — the same controls in the same places — and appends `Undo`
+  // rather than inserting it, so no via renumbers.
+  SavedUndo: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">The third headland light is real<", tag: "button" },
+    { n: 2, find: ">Mira Voss<", tag: "button" },
+    { n: 2, find: ">Sunday at the tide market<", tag: "button" },
+    { n: 8, find: 'aria-label="Unsave"', tag: "button", all: true },
+    { n: 9, find: ">Undo</button>", tag: "button" },
     ...nav(3),
   ],
   SavedEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
@@ -1330,7 +1375,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Opinion pad for the post you answer"', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
-    { n: 5, find: "background:var(--scrim-wash", tag: "div" },
+    { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // The bare seal. `ReplyCited` is this list plus its staged reference's ×.
   ReplySeal: [
@@ -1425,6 +1470,130 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* THE NOTIFICATIONS ROUND'S THREE BOARDS. The list borrows the chronicle's row
+   anatomy, and each row is its own via — seven kinds, seven destinations. The
+   lit feed is `Feed`'s numbering exactly; only its bell's accessible name
+   differs, which is why that marker sits here and not in the sweep below. */
+Object.assign(FLOW_MARKERS, {
+  Notifications: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">@ada commented on your post<", tag: "button" },
+    { n: 3, find: ">@tobias replied to your comment<", tag: "button" },
+    { n: 4, find: ">@sol gave an opinion on you<", tag: "button" },
+    { n: 5, find: ">@mira mentioned you<", tag: "button" },
+    { n: 6, find: ">@ada cited your post<", tag: "button" },
+    { n: 7, find: ">@juno landed through your invite<", tag: "button" },
+    { n: 8, find: ">@mira approved your application<", tag: "button" },
+    ...nav(9),
+  ],
+  /* ── The Post score’s drill-down (backlog item 13) ─────────────────────
+     The path rows and the step rows carry one number each: they are one control
+     the reader meets four times and twice, exactly as a repeated per-post control
+     is, so one edge covers them (readme §13, canvas pages and flows). Each is
+     found by the words it ends on rather than by an accessible name, because the
+     row IS its content — a label naming it "a path" would say less than the
+     trace already does. */
+  FeedEntry: [
+    { n: 1, find: `aria-label="Back to the post"`, tag: "a" },
+    { n: 2, find: ">Through ", tag: "button", all: true },
+    { n: 3, find: `aria-label="Show 2 more paths"`, tag: "button" },
+    ...nav(4),
+  ],
+  FeedEntryMoved: [
+    { n: 1, find: `aria-label="Back to the post"`, tag: "a" },
+    ...nav(2),
+  ],
+  RankPath: [
+    { n: 1, find: `aria-label="Back to the paths"`, tag: "a" },
+    { n: 2, find: "border-radius:var(--radius-medium);background:var(--surface-card);padding:var(--space-3)", tag: "button", all: true },
+    ...nav(3),
+  ],
+  RankHop: [
+    { n: 1, find: `aria-label="Back to the path"`, tag: "a" },
+    { n: 2, find: ">Show them</button>", tag: "button" },
+    ...nav(3),
+  ],
+  RankRecords: [
+    { n: 1, find: `aria-label="Back to the step"`, tag: "a" },
+    ...nav(2),
+  ],
+  /* The opinions sheet (backlog item 55). Its rows are `StanceRow`s and carry no
+     accessible name of their own — the person IS the row — so the marker finds
+     the master’s own geometry, the way the media markers find a crop’s
+     aspect ratio. */
+  PostOpinions: [
+    { n: 1, find: "min-height:56px;border:0;background:none;padding:6px 16px", tag: "button", all: true },
+    { n: 2, find: `class="cg-scrim-in"`, tag: "div", all: true },
+  ],
+  CommentOpinionsEmpty: [
+    { n: 1, find: `class="cg-scrim-in"`, tag: "div", all: true },
+  ],
+  NotificationsEmpty: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  FeedUnread: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(11),
+    { n: 18, find: 'aria-label="Notifications — something new"', tag: "button" },
+  ],
+});
+
+/* The account-deletion round (jakob 2026-09-11). The request screen and its
+   mail state are task-flow columns and number like the credential screens; the
+   grace state and its cancel are `Feed`'s numbering exactly, for `FeedUnread`'s
+   reason — they draw the same root under a band and a snackbar, so a different
+   numbering would say the surface changed when only the shell did. The band's
+   Cancel takes the board's next free number after the three sweeps below. */
+Object.assign(FLOW_MARKERS, {
+  DeleteAccount: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">Also remove what I posted</span>", tag: "label" },
+    { n: 3, find: ">Send the confirmation link</button>", tag: "button" },
+  ],
+  DeleteAccountMail: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">Resend the link</button>", tag: "button" },
+  ],
+  FeedDeleting: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(11),
+    { n: 19, find: ">Cancel</button>", tag: "button" },
+  ],
+  DeleteAccountCanceled: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(11),
+  ],
+  // The husk's page is the other-profile page with its identity placeholdered
+  // (the redacted-actor law), so it wires like one — minus Message and the ⋮,
+  // which each need a name there is none of.
+  ProfileDeleted: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="Opinions on and by this account"', tag: "button" },
+    { n: 3, find: 'aria-label="Give your opinion on this account"', tag: "button" },
+    { n: 3, find: ">Choose your opinion on this account</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Posts"', tag: "button" },
+    { n: 4, find: 'aria-label="Comments"', tag: "button" },
+    { n: 4, find: 'aria-label="Everything"', tag: "button" },
+    { n: 5, find: "Three mornings on the wall", tag: "button" },
+    { n: 5, find: "The tunnel is faster", tag: "button" },
+    { n: 5, find: "Low sun on the salt crust", tag: "button" },
+    ...nav(6),
+  ],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
@@ -1432,13 +1601,34 @@ Object.assign(FLOW_MARKERS, {
 const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 9,
-  Feed: 16, FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedGallery: 15,
-  FeedCover: 17,
+  Feed: 16, FeedUnread: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
+  FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15,
+  FeedGallery: 15, FeedCover: 17,
   Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
   WalletGuest: 8, WalletApplicant: 6,
 };
 for (const [board, n] of Object.entries(BAND_CHATS)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Chats"', tag: "button" });
+}
+
+/* THE BELL RIDES THE BAND (jakob 2026-09-11), right-most on every bottom-bar
+   root, so it sweeps exactly as chats does: each board's next free number, and
+   one edge each into the notifications list. The guest boards are absent
+   because they opt out of the bell — nothing can be addressed to an account
+   that does not exist. `FeedUnread` is absent because its bell wears the unread
+   name and carries its marker in its own list above. */
+const BAND_BELL = {
+  ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
+  ComposeExpired: 20, Explore: 10,
+  Feed: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
+  FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17,
+  FeedCover: 19,
+  Wallet: 15, WalletEmpty: 10, WalletSetup: 9, WalletKeyAbsent: 11,
+  WalletApplicant: 7,
+  Profile: 15, ProfileApplicant: 15,
+};
+for (const [board, n] of Object.entries(BAND_BELL)) {
+  (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Notifications"', tag: "button" });
 }
 
 /* SHARE JOINED THE ACTION ROW (jakob, review round 1), so every board drawing a
@@ -1447,7 +1637,8 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
    the platform's own sheet. */
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
-  KeyElsewhere: 18, Feed: 17, FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16,
+  KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
+  FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
 };
 for (const [board, n] of Object.entries(CARD_SHARE)) {
@@ -1501,6 +1692,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="How searching works"', tag: "button" },
     { n: 3, find: ">#SaltMaps<", tag: "div" },
     { n: 4, find: ">saltmaps<", tag: "button" },
+  ],
+  TagPickerRefused: [
+    { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
+    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 3, find: ">#salt maps<", tag: "div" },
   ],
   TagPad: [
     { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },

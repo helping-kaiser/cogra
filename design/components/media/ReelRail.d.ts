@@ -22,7 +22,7 @@ export interface ReelRailAuthor {
 
 export interface ReelRailProps {
   author?: ReelRailAuthor;
-  /** The Post Score, already formatted — the rail never does arithmetic. */
+  /** The Post score, already formatted — the rail never does arithmetic. */
   score?: string;
   /** Omitted, the comment item is not drawn. */
   comments?: number;

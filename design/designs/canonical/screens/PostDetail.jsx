@@ -10,13 +10,18 @@
 
    Tapping the media here opens the FULLSCREEN VIEWER: on a card the same tap
    opens the post, because a reader scrolling is choosing between posts, but the
-   reader who is already here came to look. */
+   reader who is already here came to look.
+
+   THE OPINIONS ROW IS THE DETAIL'S OWN (backlog item 55, the score-and-opinions
+   round): a quiet count under the tags line, opening the sheet that lists who
+   holds one. It is drawn from the post's own count, so every board that draws
+   this surface draws it too. */
 export function Screen() {
   return (
     <>
       <DetailHeader items={READER_POST_MENU} />
       <DetailColumn>
-        <PostCard {...MIRA_GALLERY_POST} variant="detail" />
+        <PostCard {...MIRA_GALLERY_POST} variant="detail" onOpenOpinions={() => {}} />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>

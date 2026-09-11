@@ -5,13 +5,23 @@
 
    THE PREVIEW IS `MediaThumb`'s VIDEO STATE at post scale — the play disc on
    its scrim and the duration on the trailing corner are that component's
-   anatomy, drawn once for the tray's 114×64 tile and once here at 342, and the
-   disc sizes itself to the frame it lands in.
+   anatomy, drawn once for the tray's 114×64 tile and once here, and the disc
+   sizes itself to the frame it lands in.
+
+   AND ITS SHAPE IS THE CLIP'S OUTPUT FORMAT (jakob 2026-09-11), never a square
+   specimen: what the author is shown here is the shape the post will stand at.
+   This clip is square — `ComposeCoverPlaying` plays the same one — so the
+   preview is the wizard's content width by the same again. A 16:9 clip's would
+   be 342 × 192; a vertical clip never reaches this step, because its default is
+   no cover at all.
 
    THE STRIP IS `CoverRow`, whole: the "Cover" label, the four frames cut from
    the clip, the dashed way out to the gallery, and the line underneath. The
    comment composer and the reply's failed-video board draw the same row, and a
    fourth spelling of it here is the drift the round exists to end. */
+const PREVIEW_WIDTH = 342; // the wizard's 390 less its two 24px gutters
+const CLIP_RATIO = 1; // square — the shape this clip posts at
+
 export function Screen() {
   return (
     <>
@@ -19,8 +29,8 @@ export function Screen() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "16px 24px", overflow: "hidden" }}>
         <MediaThumb
           src="post-photo.jpg"
-          width={342}
-          height={342}
+          width={PREVIEW_WIDTH}
+          height={PREVIEW_WIDTH / CLIP_RATIO}
           radius="var(--radius-medium)"
           video
           duration="0:42"
