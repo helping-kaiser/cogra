@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -636,8 +637,9 @@ class ComposeWizardScreenTest {
     fun theCoverStageOffersEveryFrameAndAPictureOfYourOwn() {
         compose.setContent { Wizard(onCover) }
         compose.onNodeWithTag("wizard_cover_preview").assertIsDisplayed()
-        // The preview is 342dp tall, so the tile row sits below the fold
-        // on a test viewport and the stage scrolls to reach it.
+        // The preview is as tall as the clip's frame — 4:5 for this
+        // vertical one — so the tile row sits below the fold on a test
+        // viewport and the stage scrolls to reach it.
         repeat(3) {
             compose.onNodeWithTag("wizard_cover_frame_$it").performScrollTo().assertIsDisplayed()
         }
@@ -657,6 +659,65 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(onCover) }
         compose.onNodeWithTag("wizard_cover_picture").performScrollTo().performClick()
         assertThat(coverPickers).isEqualTo(1)
+    }
+
+    /**
+     * The preview's measured frame, as a width ÷ height ratio.
+     *
+     * Read off the laid-out node rather than from the state: the finding
+     * this pins was a preview that *computed* nothing wrong and still
+     * drew a square, because its height was a constant.
+     */
+    private fun previewRatio(): Float {
+        val bounds = compose.onNodeWithTag("wizard_cover_preview").getUnclippedBoundsInRoot()
+        return bounds.width.value / bounds.height.value
+    }
+
+    @Test
+    fun aWideClipIsPreviewedWide() {
+        val clip = PickedAsset("clip", 16f / 9f, durationMs = 42_000)
+        compose.setContent { Wizard(onCover.copy(picked = listOf(clip))) }
+        assertThat(previewRatio()).isWithin(TOLERANCE).of(16f / 9f)
+    }
+
+    @Test
+    fun aSquareClipIsPreviewedSquare() {
+        val clip = PickedAsset("clip", 1f, durationMs = 42_000)
+        compose.setContent { Wizard(onCover.copy(picked = listOf(clip))) }
+        assertThat(previewRatio()).isWithin(TOLERANCE).of(1f)
+    }
+
+    /**
+     * A phone's own recording is 9:16, and the reel round clamps it:
+     * "anything taller than 4:5 centre-crops to 4:5". The preview is the
+     * frame the post will have, so it clamps with it.
+     */
+    @Test
+    fun aVerticalClipIsPreviewedAtTheFourFiveClamp() {
+        compose.setContent { Wizard(onCover) }
+        assertThat(previewRatio()).isWithin(TOLERANCE).of(0.8f)
+    }
+
+    /**
+     * The header is read a beat after the pick, and the preview cannot
+     * wait for it — nor may it hand `Modifier.aspectRatio` a number that
+     * would throw.
+     */
+    @Test
+    fun aClipThatHasNotSaidItsShapeIsPreviewedSquare() {
+        assertThat(coverPreviewRatio(null)).isEqualTo(1f)
+        assertThat(coverPreviewRatio(0f)).isEqualTo(1f)
+        assertThat(coverPreviewRatio(-2f)).isEqualTo(1f)
+        assertThat(coverPreviewRatio(Float.NaN)).isEqualTo(1f)
+        assertThat(coverPreviewRatio(Float.POSITIVE_INFINITY)).isEqualTo(1f)
+    }
+
+    @Test
+    fun theClampIsOnlyEverAFloor() {
+        // Wider than 4:5 keeps its own shape; taller is raised to it.
+        assertThat(coverPreviewRatio(1.91f)).isWithin(TOLERANCE).of(1.91f)
+        assertThat(coverPreviewRatio(0.8f)).isWithin(TOLERANCE).of(0.8f)
+        assertThat(coverPreviewRatio(0.5625f)).isWithin(TOLERANCE).of(0.8f)
     }
 
     @Test
@@ -715,3 +776,9 @@ class ComposeWizardScreenTest {
         assertThat(formatDuration(3_725_000)).isEqualTo("1:02:05")
     }
 }
+
+/**
+ * A laid-out frame is measured in whole pixels, so its ratio lands a
+ * rounding away from the number that produced it.
+ */
+private const val TOLERANCE = 0.02f
