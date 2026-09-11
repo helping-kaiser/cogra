@@ -176,8 +176,8 @@ before it is signed, and anything half-finished says who acts next.
 
 - `Nothing here yet — write the first post.`
 - `Nothing here yet.` (a profile's chronicle)
-- `No comments yet.` · `Loading…` · `Checking where you stand…`
-- `Working out where this leaves you…`
+- `No comments yet.` · `Loading…` · `Checking your current opinion…`
+- `Adding it up…`
 
 **Guest copy invites, it does not nag.**
 
@@ -2655,7 +2655,7 @@ could close. These are the answers, and what each one moved.
   passes `fullscreen` through for it and every other board renders
   byte-identical.
 - **The reply seal earns the orphaned line.** "Replying also signs
-  where you stand on the post it answers." stands as a `QuietNote`
+  your opinion on the post it answers." stands as a `QuietNote`
   beneath the ruled block — `FactRow` grows no note slot, because
   the line is a fact about replying rather than about any one row.
   It lands on both states of the seal: they are one surface, and a

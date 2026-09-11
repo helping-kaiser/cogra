@@ -577,7 +577,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   ComposePad: [
-    { n: 1, find: 'aria-label="Where you stand on it"', tag: "button" },
+    { n: 1, find: 'aria-label="Your opinion on your post"', tag: "button" },
     { n: 2, find: 'aria-label="Opinion pad', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },

@@ -1942,8 +1942,9 @@ canvas slot un-clipped. What is left:
    at full width reads as lost" — and with an opinion held, those words
    ARE the pair, so the geek-off drawing is the lone face the variant
    was written against. Either the anchor draws its label there, or the
-   variant accepts the face alone. (The unset case now reads `Give your
-   opinion`; the held case is the open one.)
+   variant accepts the face alone. (The unset case now reads `Your
+   opinion` — shortened same day, the longer label overflowed the wide
+   anchor; the held case is the open one.)
 3. ~~A citation row's pair has no glyph to fall back to.~~
    **Closed by the review round.** `ReferenceRow`'s non-topic rows and
    `StagedReference` read `nearestAnchor` and draw the nearest of the
