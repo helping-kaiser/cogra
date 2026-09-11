@@ -56,13 +56,12 @@ const CLAMP = (lines) => ({
    become the reading. */
 const DESCRIPTION_CLAMP_LINES = 2;
 
-/* THE TEXT BODY'S CEILING — a text post stands about as tall as a media post,
-   never taller, so a feed of both keeps one rhythm. Eighteen lines at
-   `--text-body-medium--line-height` (1.25rem = 20px) is 360px of words, the
-   scale of the crops a media post puts in the same place: at the card's 358px
-   content width a square stands 358 and a 4:5 crop 447.5. Past it the body
-   folds and `More` opens it. The detail view is the read surface and clamps
-   nothing. */
+/* THE TEXT BODY'S CEILING IS THE SQUARE TILE. Eighteen lines at
+   `--text-body-medium--line-height` (1.25rem = 20px) is 360px of words, and at
+   the card's 358px content width a square crop stands 358 — so a text post
+   comes to rest at the neutral media shape, and never rises into the 4:5 wall
+   (447.5) the same card would allow a picture. Past it the body folds and
+   `More` opens it. The detail view is the read surface and clamps nothing. */
 const TEXT_BODY_CLAMP_LINES = 18;
 
 /* A static render cannot measure a paragraph, so the opener is offered on an
