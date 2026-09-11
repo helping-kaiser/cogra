@@ -11,7 +11,8 @@ import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
-import { captureFrames } from "@/lib/ui2/media/video";
+import { PORTRAIT_CAP } from "@/lib/ui2/media/aspect";
+import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
@@ -150,6 +151,67 @@ describe("picking a video", () => {
     expect(screen.getByTestId("wizard-cover-frame-2")).toHaveAttribute("aria-pressed", "false");
     // The board's own escape hatch, beside the offers.
     expect(screen.getByTestId("wizard-cover-picture")).toBeInTheDocument();
+  });
+
+  // F3-4, ruled final 2026-09-11: the preview shows the ACTUAL OUTPUT FORMAT.
+  // It used to run at `w-full` under a `max-h-96` with no ratio at all, so a
+  // replaced element sized itself from its own shape, the cap took the
+  // difference out of the height alone, and `object-cover` cropped what was
+  // left — every clip previewed as a square whatever went in.
+  describe("the clip preview's shape", () => {
+    /** The frame the preview reserves, once the probe has landed. */
+    async function previewRatio() {
+      const frame = await screen.findByTestId("wizard-cover-preview-frame");
+      return frame.style.aspectRatio;
+    }
+
+    it("shows a vertical clip at 4:5, not as a square", async () => {
+      // The harness's own clip is 1080x1920.
+      render();
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+
+      // Taller than the cap, so it shows AT the cap — which is what the post
+      // will be, and what the feed tile reserves for it.
+      expect(await previewRatio()).toBe(`${PORTRAIT_CAP} / 1`);
+    });
+
+    it("shows a landscape clip landscape", async () => {
+      vi.mocked(probeVideo).mockResolvedValueOnce({
+        durationMs: 8_000,
+        width: 1920,
+        height: 1080,
+      });
+      render();
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+
+      expect(await previewRatio()).toBe(`${1920 / 1080} / 1`);
+    });
+
+    it("shows a square clip square", async () => {
+      vi.mocked(probeVideo).mockResolvedValueOnce({
+        durationMs: 8_000,
+        width: 720,
+        height: 720,
+      });
+      render();
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+
+      expect(await previewRatio()).toBe("1 / 1");
+    });
+
+    it("falls back to the neutral square when the decoder reported no size", async () => {
+      vi.mocked(probeVideo).mockResolvedValueOnce({ durationMs: 8_000, width: 0, height: 0 });
+      render();
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+
+      // Shape unknown is the one case a square is the honest answer, rather
+      // than a collapsed box or a shape nobody stated.
+      expect(await previewRatio()).toBe("1 / 1");
+    });
   });
 
   it("shows the clip's length where the board draws it", async () => {

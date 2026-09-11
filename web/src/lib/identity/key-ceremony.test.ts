@@ -18,7 +18,7 @@ import { startMswServer } from "@/test/msw";
 
 const server = startMswServer();
 
-const passthroughGuard: AuthGuard = { run: (block) => block() };
+const passthroughGuard: AuthGuard = { run: (block) => block(), prime: async () => {} };
 
 function client() {
   return new ApolloClient({

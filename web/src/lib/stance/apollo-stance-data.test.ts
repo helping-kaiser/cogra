@@ -21,7 +21,7 @@ const POST: StanceTarget = { id: "post-1", kind: "post" };
 const PROFILE: StanceTarget = { id: "user-1", kind: "profile" };
 
 /** Passes everything through: the replay path has its own tests. */
-const guard: AuthGuard = { run: (block) => block() };
+const guard: AuthGuard = { run: (block) => block(), prime: async () => {} };
 
 function client() {
   return new ApolloClient({
