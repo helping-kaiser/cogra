@@ -169,8 +169,10 @@ export function CommentCard({
         {edited && <EditedMarker />}
         {pending && <PendingMarker />}
         {/* One affordance row, as on PostCard: the stance leads, everything else
-            the comment grows lands beside it. */}
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: "var(--space-2)", rowGap: "var(--space-1)" }}>
+            the comment grows lands beside it — and it spreads across the card
+            the same way, every control on a 48px target (jakob's ruling, the
+            geek round). */}
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }}>
           {/* Owned by the shell — see PostCard. */}
           <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
           {signedIn && onReply && (

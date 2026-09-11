@@ -8,7 +8,7 @@ Use `FactRow` for every hairline line that reads *label · value* — the seal's
 
 ```jsx
 <FactRow emphasis="ledger" label="Deposit" value={<MoneyFigure amount={12500} />} />
-<FactRow emphasis="ledger" label="At settlement" value="One public record" last />
+<FactRow emphasis="ledger" label="When it settles" value="One public record" last />
 ```
 
 **The emphasis says which half is the quiet one.** In `seal` the reader is checking a list of things they are about to sign, so the labels are what they read down: the label keeps `on-surface`, the value goes quiet, and the rules **enclose** the block — one above every row and one below the `last`. In `ledger` the label is the question and the value is the answer: the label goes quiet, the value right-aligns in `on-surface`, and the rules **separate**, sitting under every row but the `last`, because the block already stands inside a card.

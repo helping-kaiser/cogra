@@ -12,7 +12,7 @@ export function Screen() {
             One thing left after approval
           </h2>
           <p style={{ margin: 0, position: "relative", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Come back here once you're approved and create your payout address — one signed action.
+            Come back here once you're approved and create your payout address — one signature.
           </p>
           <p style={{ margin: 0, position: "relative", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
             Earnings can't land until it exists.

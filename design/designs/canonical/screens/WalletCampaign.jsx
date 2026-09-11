@@ -23,16 +23,16 @@ export function Screen() {
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <FactRow emphasis="ledger" label="Deposit" value={<MoneyFigure amount={12500} />} />
-            <FactRow emphasis="ledger" label="Where it sits" value="In escrow, on the rail" />
+            <FactRow emphasis="ledger" label="Where it sits" value="In escrow" />
             <FactRow emphasis="ledger" label="Window" value="Runs 6 more days · ends 8 Sep" />
-            <FactRow emphasis="ledger" label="At settlement" value="One public record" last />
+            <FactRow emphasis="ledger" label="When it settles" value="One public record" last />
           </div>
           <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-            Every payout will be traceable to the paths that carried the reach. What the window doesn't spend returns when it settles.
+            Every payout is traceable to the reach it paid for. What the window doesn't spend returns when it settles.
           </p>
         </Card>
 
-        <SectionLabel>On the rail</SectionLabel>
+        <SectionLabel>Held</SectionLabel>
         <LedgerRow words="Campaign deposit" context="In escrow · funded from this wallet" when="12d" amount={-12500} glyph="campaign" onOpen={() => {}} />
 
         <div style={{ flex: 1 }} />

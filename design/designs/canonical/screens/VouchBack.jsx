@@ -21,7 +21,7 @@ export function Screen() {
             </h2>
           </div>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-            Vouch back to open the way from your side — your first stance, and your feed grows from it. Vouching opens the stance control, set to a gentle default.
+            Vouch back to open the way from your side — your first opinion, and your feed grows from it. Vouching opens the opinion control, set to a gentle default.
           </p>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
             <Button variant="text">Not now</Button>

@@ -54,18 +54,23 @@ looking like a bug.
 
 | Input | What happens |
 |---|---|
-| Tap (first ever) | opens the coach mark and **stages nothing** |
-| Tap (after that) | commits `(+0.1, +0.1)` — the low default |
-| Press and hold 500ms | the pad blooms at the lower centre of the viewport |
+| Tap | the pad blooms at the lower centre of the viewport, and **stages nothing** |
+| Press and hold 500ms | commits `(+0.1, +0.1)` — the low default |
 | Drag | moves the knob by **accumulated travel**, not absolute position |
 | Release | parks the pick; the pad stays open; **nothing is signed** |
 | Set | signs the pick |
 | Cancel, outside press, Esc | dismisses and stages nothing |
 | `?` | replaces the pad's body with four lines of help, and disables Set while it shows |
-| Sever | the explicit route to `(0, 0)` |
+| Walk it back | the explicit route to `(0, 0)` |
+
+**The light gesture costs nothing and the held one spends.** A tap is
+what a thumb gives by accident, so it opens the surface where a reader
+chooses; the shortcut that signs without opening anything takes a held
+finger. The price is accepted deliberately: nobody holds a control for
+half a second by mistake.
 
 The pad opens **at the origin**, untilted — the low default belongs to
-the tap, not to the considered gesture.
+the shortcut, not to the considered gesture.
 
 **The control owns its touches.** No interaction with it — tap, hold,
 drag, release, or the open pad itself — may also trigger the surface
@@ -105,8 +110,7 @@ instead is explain, and confirm when it matters:
   ask whether that was the intent.
 
 The cost is legible: each counter-record is its own priced act, so the
-dialog states the count — `It takes 3 signed actions, each paid for
-separately.`
+dialog states the count — `It signs 3 things, each paid separately.`
 
 ## The emoji readout
 
@@ -140,7 +144,7 @@ screen-reader and switch users the full range through ordinary,
 well-supported controls rather than a degraded version of the gesture.
 Selecting an alternate replaces the pad **everywhere**, not per-screen.
 The entry into them is present on every stance control regardless of the
-stored preference — as `Choose your stance`, visually hidden until
+stored preference — as `Choose your opinion`, visually hidden until
 focused (readme §11.3), so it is one tab away without being printed
 beside every stance in a feed. Both surfaces carry the same circled `?`
 as the pad, and on the alternates its first line is the one thing two
@@ -148,18 +152,16 @@ sliders cannot teach by themselves: *two values, not one*.
 
 ## Teaching it
 
-A held gesture is invisible until taught, and a tap that stages a priced
-act must not be the teaching moment's casualty. The **first tap ever** on
-a stance target teaches before it acts: it opens the coach mark —
-anchored to the target, overlapping nothing, staying until dismissed or
-until the first successful hold — and stages nothing. Its first line is
-`Nothing was signed just now.`, because a reader who thinks their tap was
-swallowed taps again, which is the exact spend the teaching moment exists
-to prevent.
+A held gesture is invisible until taught — and the pad is the teacher.
+The tap that opens it costs nothing, so a reader finds the considered
+route on their own; what is left to teach is the shortcut. The **first
+open ever** carries the coach mark inside the pad, above the field,
+staying until dismissed or until the pad closes, and it says one thing:
+the same button, held, signs the gentle default outright.
 
 ## Confirmation
 
-**A tap answers immediately.** The resting target updates to the new
+**The hold answers immediately.** The resting target updates to the new
 standing at once, and a snackbar confirms the signature. A gesture that
 stages a priced act must never be silent: silence reads as failure and
 invites the same act again.

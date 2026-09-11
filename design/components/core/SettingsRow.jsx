@@ -115,8 +115,12 @@ export function Switch({ checked = false, ariaLabel, onChange, decorative = fals
         aria-hidden="true"
         style={{
           position: "absolute",
-          [checked ? "right" : "left"]: 3,
-          top: 3,
+          [checked ? "right" : "left"]: checked ? 3 : 2,
+          /* The unchecked track's 1px border shrinks the padding box the
+             thumb measures from, so a fixed top serves only one state —
+             centering is the invariant, not the offset. */
+          top: "50%",
+          transform: "translateY(-50%)",
           width: 18,
           height: 18,
           borderRadius: "var(--radius-full)",

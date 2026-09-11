@@ -31,14 +31,14 @@ export function Screen() {
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
         stageLabel="Last step"
-        help="Signed actions"
+        help="How signing works"
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
 
         <ActsCard
           rows={[
-            { label: "Comment", value: "Reply to @ada's post", count: "1 action" },
+            { label: "Comment", value: "Reply to @ada's post", count: "1" },
             {
               label: "Reference",
               value: (
@@ -64,12 +64,12 @@ export function Screen() {
                   </button>
                 </span>
               ),
-              count: "1 action",
+              count: "1",
             },
             ...ADD_ROWS,
           ]}
-          total="2 signed actions"
-          note="they land together, or none does"
+          total="2 things, signed together"
+          note="They land together, or none does."
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -84,7 +84,7 @@ export function Screen() {
 
         {/* `ReplySeal` carries the same line: the two are one surface in two
             states, and a note on one of them only is a disagreement. */}
-        <QuietNote>Replying also signs where you stand on the post it answers.</QuietNote>
+        <QuietNote>Replying also signs your opinion on the post it answers.</QuietNote>
 
         <div style={{ flex: 1 }} />
 

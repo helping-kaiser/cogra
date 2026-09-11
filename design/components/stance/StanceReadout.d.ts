@@ -30,9 +30,10 @@ export interface StanceLanding {
   severed: boolean;
 }
 
-/** One pair's default reading: the face and the exact numbers. The anchor's words
- *  ride a screen-reader-only span — an emoji's own accessible name is "slightly
- *  smiling face", not "Like this". */
+/** One pair's reading: the face, and the exact numbers in a `cg-exact` span that
+ *  paints only in geek mode. The anchor's words ride a screen-reader-only span —
+ *  an emoji's own accessible name is "slightly smiling face", not "Like this" —
+ *  and are spoken in both modes. */
 export interface StanceReadoutProps {
   pair: StancePair;
   /** "pick" reads the edge being authored; "standing" reads a bundle. */
@@ -50,7 +51,8 @@ export declare function StanceReadout(props: StanceReadoutProps): JSX.Element;
 export interface StanceValueProps {
   pDirected: number;
   pInterest: number;
-  /** Shows the exact pair beside the face. Defaults to true. */
+  /** Draws the exact pair beside the face — geek mode decides whether it paints.
+   *  Defaults to true; false is for a row that has no room for it at all. */
   showPair?: boolean;
 }
 
@@ -87,6 +89,9 @@ export declare const TAP_DEFAULT: StancePair;
 export declare const DIRECTED_LABEL: string;
 export declare const INTEREST_LABEL: string;
 export declare function nearestAnchor(pair: StancePair): StancePair & { emoji: string; label: string };
+/** The nearest of the thirteen TAG anchors — the glyph a tag's pair reads as
+ *  wherever it is drawn without the pad. */
+export declare function nearestTagAnchor(pair: StancePair): StancePair & { emoji: string; label: string };
 export declare function bundleReadout(pair: StancePair, zeroLabel?: string): { emoji: string; label: string };
 export declare function formatStancePair(pair: StancePair): string;
 export declare function formatStanceWords(pair: StancePair): string;

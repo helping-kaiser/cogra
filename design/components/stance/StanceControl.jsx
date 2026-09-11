@@ -5,7 +5,7 @@ import { Snackbar } from "../core/Snackbar.jsx";
 import { JoinPrompt } from "../core/JoinPrompt.jsx";
 import { StancePad } from "./StancePad.jsx";
 import { StanceAlternates } from "./StanceAlternates.jsx";
-import { StanceCoachMark, STANCE_PAD_HELP } from "./StanceCoachMark.jsx";
+import { StanceCoachMark, STANCE_PAD_HELP, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { SeveranceConfirm } from "./SeveranceConfirm.jsx";
 import {
   bundleReadout,
@@ -28,15 +28,25 @@ import {
    rest, visibly waiting to be given a value, never a bare word and never the shrug
    a zero standing owns.
 
-   THE FIRST TAP EVER TEACHES and stages nothing. Every tap after that acts,
-   committing the modest positive default (+0.1, +0.1) verbatim.
+   A TAP OPENS THE PAD (jakob's ruling, the geek round). The light gesture — the
+   one a thumb gives by accident — costs nothing and signs nothing; it blooms the
+   pad at ONE FIXED SPOT, the lower centre of the viewport, the same place every
+   time. Muscle memory is part of the control.
 
-   A TAP ANSWERS IMMEDIATELY. The resting target moves to the new standing at once
-   and a snackbar confirms the signature: a gesture that stages a priced act must
-   never be silent, because silence reads as failure and invites the same act again.
+   PRESS AND HOLD 500ms SIGNS THE DEFAULT, the modest positive (+0.1, +0.1)
+   verbatim. THE PRICE IS ACCEPTED DELIBERATELY: the shortcut that spends a
+   signature is the one that takes a held finger, and the gesture nobody gives by
+   mistake is the only one allowed to act by itself.
 
-   PRESS AND HOLD 500ms and the pad blooms — at ONE FIXED SPOT, the lower centre of
-   the viewport, the same place every time. Muscle memory is part of the control.
+   THE HOLD ANSWERS IMMEDIATELY. The resting target moves to the new standing at
+   once and a snackbar confirms the signature: a gesture that stages a priced act
+   must never be silent, because silence reads as failure and invites the same act
+   again.
+
+   THE PAD IS THE TEACHER. The one-time coach mark rides the FIRST OPEN, inside
+   the pad it explains, and what it teaches is the shortcut — a reader who has
+   found the pad has already found everything they need, and the only thing left
+   to say is that the hold is faster.
 
    RELEASING THE FINGER NEVER COMMITS. Release parks the pick and leaves the pad
    open; an explicit SET commits; CANCEL or a press outside stages nothing. An
@@ -114,7 +124,7 @@ export function StanceControl({
   padNote,
   wide = false,
   overMedia = false,
-  helpLabel = "How stances work",
+  helpLabel = "How opinions work",
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -154,6 +164,7 @@ export function StanceControl({
     setOpen(false);
     setAlternates(false);
     setExplaining(false);
+    setCoach(false);
   };
 
   React.useEffect(() => {
@@ -200,6 +211,9 @@ export function StanceControl({
     });
   };
 
+  /* THE TAP OPENS. It teaches on the first open ever and never again — the
+     coach rides inside the pad, so opening it is both the answer and the
+     lesson, and a feed of twenty cannot teach twenty times. */
   const onTap = () => {
     if (suppressClick.current) {
       suppressClick.current = false;
@@ -209,25 +223,27 @@ export function StanceControl({
       setJoinPrompt(true);
       return;
     }
-    if (!taught) {
+    setPick(ORIGIN);
+    setSigned(null);
+    setOpen(true);
+    if (taught) {
+      setCoach(false);
+    } else {
       setTaught(true);
       setCoach(true);
-      return;
     }
-    commitChecked(TAP_DEFAULT);
   };
 
+  /* THE HOLD SIGNS. It fires under the finger, so the click that follows the
+     release has to be swallowed or the pad would open on top of the signature. */
   const onPointerDown = () => {
     if (!signedIn) return;
     clearHold();
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
       suppressClick.current = true;
-      setPick(ORIGIN);
       setSigned(null);
-      setTaught(true);
-      setCoach(false);
-      setOpen(true);
+      commitChecked(TAP_DEFAULT);
     }, LONG_PRESS_MS);
   };
 
@@ -249,8 +265,8 @@ export function StanceControl({
           type="button"
           aria-label={
             restingFace === null
-              ? `Take a stance on ${targetLabel}`
-              : `Your stance on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Tap to add a positive one.`
+              ? `Give your opinion on ${targetLabel}`
+              : `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
           }
           onClick={onTap}
           onPointerDown={onPointerDown}
@@ -308,14 +324,20 @@ export function StanceControl({
           {wide && restingPair === null && (
             /* The wide anchor's words — only where there is no pair to show. */
             <span aria-hidden="true" style={{ whiteSpace: "nowrap" }}>
-              Take a stance
+              Your opinion
             </span>
           )}
           {restingPair !== null && (
             /* NEVER WRAPS. This is the post card's affordance row, which is one
                line by rule — a pair broken across two text lines reads as a
-               two-line block even when the row height has not changed. */
+               two-line block even when the row height has not changed.
+
+               The face is the default reading and these numbers are the geek
+               one (`cg-exact`, readme §13): at rest the affordance row carries
+               the face alone, and the button's accessible name carries the
+               values in both modes. */
             <span
+              className="cg-exact"
               aria-hidden="true"
               style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
             >
@@ -349,12 +371,10 @@ export function StanceControl({
             className={`cg-sr-focusable ${BUTTON_CLASS}`}
             style={{ fontFamily: "var(--font-sans)" }}
           >
-            Choose your stance on {targetLabel}
+            Choose your opinion on {targetLabel}
           </button>
         )}
       </div>
-
-      {coach && <StanceCoachMark onDismiss={() => setCoach(false)} style={{ position: "absolute", top: "100%", left: 0, marginTop: 8 }} />}
 
       {open && (
         <>
@@ -368,7 +388,7 @@ export function StanceControl({
           />
           <div
             role="group"
-            aria-label={`Stance pad for ${targetLabel}`}
+            aria-label={`Opinion pad for ${targetLabel}`}
             style={{
               ...parkedPadStyle(padInset),
               zIndex: 20,
@@ -388,7 +408,7 @@ export function StanceControl({
                 out of the reading order of the three readouts. 48px target, 32px
                 ring. Its name is `helpLabel` (jakob's ruling A7) — the dialog's
                 own title, not a generic one, wherever a board draws a named
-                pad (`ComposePad`'s "Where you stand on it", `ReplyPad`'s
+                pad (`ComposePad`'s "Your opinion on your post", `ReplyPad`'s
                 "Toward what you answer", `VouchBackPad`'s "Your first
                 stance"); the ordinary feed-card control keeps the default. */}
             <button
@@ -430,14 +450,31 @@ export function StanceControl({
               </span>
             </button>
             <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} style={{ paddingRight: "40px" }} />
+            {/* THE COACH RIDES THE FIRST OPEN, INSIDE THE PAD. It is a note on
+                the surface it explains rather than a card floating beside the
+                anchor — the anchor may be anywhere on the screen and the pad is
+                always parked at the same spot, so a mark attached to the anchor
+                would point at nothing the reader is looking at.
+
+                IT GROWS UPWARD, not down: the pad is parked by its bottom edge,
+                so a note above the field leaves Set and Cancel exactly where the
+                thumb expects them. It wears the pad's own container tone rather
+                than the dialog surface — a second dialog-coloured card inside a
+                dialog reads as a second dialog. */}
+            {coach && (
+              <StanceCoachMark
+                onDismiss={() => setCoach(false)}
+                style={{ width: "auto", background: "var(--surface-container-highest)", padding: "var(--space-3)" }}
+              />
+            )}
             {/* The help panel REPLACES the field and the readouts rather than
                 growing below them: the pad is parked, and a panel that pushes Set
                 and Cancel away from the thumb defeats the parking. */}
             {explaining ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
                 {STANCE_PAD_HELP.map((line) => (
-                  <p key={line} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
-                    {line}
+                  <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
+                    <HelpLine line={line} />
                   </p>
                 ))}
                 <button
@@ -468,7 +505,7 @@ export function StanceControl({
                   className={BUTTON_CLASS}
                   style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}
                 >
-                  Sever
+                  Walk it back
                 </button>
               )}
               <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>

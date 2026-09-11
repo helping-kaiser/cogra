@@ -13,7 +13,7 @@ The full-width row that chooses what the list beneath it shows.
 <TabBar
   ariaLabel="Which direction"
   value="on"
-  tabs={[{ id: "on", label: "On them" }, { id: "taken", label: "They've taken" }]}/>
+  tabs={[{ id: "on", label: "On them" }, { id: "taken", label: "By them" }]}/>
 ```
 
 **A cell's kind is its content.** Give a tab an `icon` and it draws a glyph, taking its accessible name from `label` — the only way an icon-only control gets one. Leave the icon out and `label` becomes the visible words, in `label-large`, with no aria-label at all: a second name for a button that already shows its own can only disagree with it. Never mix the two kinds in one row.

@@ -22,7 +22,7 @@ export function Screen() {
         <div style={{ height: 12, flex: "none" }} />
         <EarnedChart
           height={48}
-          caption="Earned · last 8 settlements"
+          caption="Earned · last 8 payouts"
           points={[
             { amount: 2.1 },
             { amount: 4.6 },

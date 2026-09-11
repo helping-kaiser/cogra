@@ -58,7 +58,7 @@ export function Screen() {
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <QuietNote>
-            <span aria-hidden="true">🤷</span> No stance on this post yet.
+            <span aria-hidden="true">🤷</span> No opinion on this post yet.
           </QuietNote>
           {/* The pick's readout, above the field where a thumb cannot cover it. */}
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -67,7 +67,7 @@ export function Screen() {
             </span>
             <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
               <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
-              <span style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
+              <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10 / +0.10</span>
             </span>
             <span style={{ position: "absolute", width: "1px", height: "1px", padding: 0, margin: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 }}>
               Nice, For or against +0.10, How much reaches you +0.10

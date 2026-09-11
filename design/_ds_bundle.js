@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"60be373be4f6","components/compose/ActsFooter.jsx":"18f6b3a04c86","components/compose/Caret.jsx":"7c8616dba407","components/compose/CoverRow.jsx":"c52618a34fe5","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"d8ac1f091ba5","components/compose/MediaThumb.jsx":"7a4e260a43ac","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"947836ad201f","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"2d4da59a66f8","components/compose/TopicRemovable.jsx":"e36e24c12cfb","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f1ad3e7f28e4","components/content/CommentCard.jsx":"29b2af1a2f4e","components/content/OverflowMenu.jsx":"fa89204ca7b5","components/content/PostCard.jsx":"83f0dc4b1542","components/content/ReferenceRow.jsx":"33ed49cd49ac","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TaggedRow.jsx":"3e4ec49372ea","components/content/TopicsLine.jsx":"6b9e07b63f21","components/core/BottomSheet.jsx":"7887a3ccf45b","components/core/Button.jsx":"49115256e31e","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"c0fe5f63cbb7","components/core/ContentRow.jsx":"cde9cf105af1","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"fd5bdff663fb","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"9d59a9de6678","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"0c3ff52ac00f","components/honesty/PendingMarker.jsx":"7428662f343f","components/honesty/SensitiveVeil.jsx":"6b693d3c9af2","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"46b9010c8478","components/media/MediaViewer.jsx":"8de3eaa8144c","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"9e5e1f908b8f","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"1eb54848dfa9","components/navigation/BottomNav.jsx":"97b7b37b3100","components/navigation/CograBand.jsx":"6350fa5e6832","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"e19c5e8532c5","components/navigation/Icon.jsx":"5a982b28005b","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"8f609947a202","components/navigation/TabBar.jsx":"2d2f44c5a698","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"f24d0bc82d50","components/people/StanceRow.jsx":"6296d2136f98","components/proposed/ExplainableNumber.jsx":"9a4a12a0d268","components/stance/SeveranceConfirm.jsx":"1a0dbafb9e95","components/stance/StanceAlternates.jsx":"839fba4349fe","components/stance/StanceCoachMark.jsx":"4d4cfdcab8db","components/stance/StanceControl.jsx":"9c18be9b6efb","components/stance/StancePad.jsx":"be49bf0f663c","components/stance/StanceReadout.jsx":"c5ca7962b725","components/stance/StanceSlider.jsx":"bffd4db66fd7","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"2cea15cee817","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"b41a5971e24e","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"44ff990afba5","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"60be373be4f6","components/compose/ActsFooter.jsx":"4d474d1463db","components/compose/Caret.jsx":"7c8616dba407","components/compose/CoverRow.jsx":"c52618a34fe5","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"d8ac1f091ba5","components/compose/MediaThumb.jsx":"7a4e260a43ac","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"947836ad201f","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"570f672e033c","components/compose/TopicRemovable.jsx":"e36e24c12cfb","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f1ad3e7f28e4","components/content/CommentCard.jsx":"d3b11de20e7c","components/content/OverflowMenu.jsx":"fa89204ca7b5","components/content/PostCard.jsx":"4edfde1caef1","components/content/ReferenceRow.jsx":"64219e74ca21","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6b9e07b63f21","components/core/BottomSheet.jsx":"7887a3ccf45b","components/core/Button.jsx":"49115256e31e","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"c0fe5f63cbb7","components/core/ContentRow.jsx":"cde9cf105af1","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"510c23803cc7","components/core/Snackbar.jsx":"f77453cb3244","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"2ed2d91945fc","components/forms/TextField.jsx":"0c3ff52ac00f","components/honesty/PendingMarker.jsx":"7428662f343f","components/honesty/SensitiveVeil.jsx":"6b693d3c9af2","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"46b9010c8478","components/media/MediaViewer.jsx":"8de3eaa8144c","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"e1407898f8fb","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"1eb54848dfa9","components/navigation/BottomNav.jsx":"97b7b37b3100","components/navigation/CograBand.jsx":"6350fa5e6832","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/FeedFilter.jsx":"4e54abd8cbc0","components/navigation/Icon.jsx":"5a982b28005b","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"8f609947a202","components/navigation/TabBar.jsx":"2d2f44c5a698","components/people/ActorChip.jsx":"0870cb9a9681","components/people/ProfileHeader.jsx":"b7bc38353db1","components/people/StanceRow.jsx":"6296d2136f98","components/proposed/ExplainableNumber.jsx":"860fac62e041","components/stance/SeveranceConfirm.jsx":"22409f34d548","components/stance/StanceAlternates.jsx":"5fd873421d0d","components/stance/StanceCoachMark.jsx":"66ebe4394049","components/stance/StanceControl.jsx":"a2789a0d588b","components/stance/StancePad.jsx":"be49bf0f663c","components/stance/StanceReadout.jsx":"606ea4f770dd","components/stance/StanceSlider.jsx":"57078ae91304","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"b41a5971e24e","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"ca4324cab20a","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -536,7 +536,7 @@ __ds_scope.Icon = Icon;
 // components/compose/ActsFooter.jsx
 try { (() => {
 const { Icon, BUTTON_CLASS } = __ds_scope;
-/* "This creates 2 signed actions ⌄" (item 17, the conformance round): the one
+/* "You're signing 2 things ⌄" (item 17, the conformance round): the one
    line above the sign button on the edit wizards, saying how much a signature
    commits before it is given.
 
@@ -584,7 +584,7 @@ function ActsFooter({
       letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
     }
-  }, "This creates ", count, " signed actions", /*#__PURE__*/React.createElement("span", {
+  }, "You're signing ", count, " things", /*#__PURE__*/React.createElement("span", {
     style: {
       display: "inline-flex"
     }
@@ -2417,9 +2417,753 @@ __ds_scope.PendingMarker = PendingMarker;
 __ds_scope.EditedMarker = EditedMarker;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/honesty/PendingMarker.jsx", error: String((e && e.message) || e) }); }
 
+// components/stance/StanceReadout.jsx
+try { (() => {
+/* The stance readout — the numbers and the faces (design.md §8.2, §8.3, §8.4).
+
+   TWO DIFFERENT NUMBERS, NEVER MERGED INTO ONE LINE:
+     · "Current stance" sits ABOVE the readout — the bundle as it stands.
+     · The FACE is the lossy readout of the EDGE BEING AUTHORED — this pick, not
+       the bundle it joins. Conflating the two would make the face mean something
+       different depending on history, which is exactly what a readout must not do.
+       The EXACT PAIR rides the same line in a `cg-exact` span: the face carries
+       the feel by default and the numbers paint only in geek mode (readme §13,
+       the geek-mode rule). Both are always drawn, so the markup is one markup.
+     · "Resulting stance" sits BELOW the field — the bundle after the pick.
+
+   DIVERGENCE FROM THE SOURCE: the anchor's WORDS ARE NO LONGER DRAWN. The source
+   renders face + words + pair — three encodings of one value, which is two too
+   many. The words are the redundant one: the face carries the feel and the pair
+   carries the fact exactly.
+
+   THE WORDS STILL EXIST, in the accessibility tree, and this must not become
+   "colour carries meaning alone" (§10). An emoji's own accessible name is
+   "slightly smiling face", never "Like this", so dropping the label from the DOM
+   entirely would take the meaning from exactly the readers §10 protects. Every
+   visible readout therefore pairs an `aria-hidden` visual with a
+   screen-reader-only reading that names the stance and its axes.
+
+   Nothing sits under the knob: a thumb on the control covers exactly the spot
+   where feedback would otherwise appear. Both lines are `aria-live`.
+
+   The anchor table IS THE CONTRACT — both clients read these twenty values, and a
+   change here changes both apps. They are deliberately dense in the
+   for-it-and-want-it quadrant, where most real stances land and small differences
+   matter, and sparse at the extremes. */
+
+const DIMENSION_MIN = -1;
+const DIMENSION_MAX = 1;
+const ORIGIN = {
+  pDirected: 0,
+  pInterest: 0
+};
+
+/* THE BOUNDS TRAVEL WITH THE RECORD FAMILY, exactly as the axis words do. The
+   pad's two slots are `pDirected` and `pInterest`; what fills them, and how far
+   each one reaches, is the census's business and not the control's. A stance
+   fills both slots with signed Dimensions; a Tag's confidence is
+   census-bounded to `c ∈ [0, 1]` (hashtag.md §4, `TagInput` in api-spec.md),
+   and the tag pad authors only the positive half of relevance. Naming the
+   range as data keeps one pad honest about two families instead of a second
+   pad drifting from the first. */
+const STANCE_RANGES = {
+  pDirected: {
+    min: DIMENSION_MIN,
+    max: DIMENSION_MAX
+  },
+  pInterest: {
+    min: DIMENSION_MIN,
+    max: DIMENSION_MAX
+  }
+};
+
+/* THE TAG FIELD STARTS JUST ABOVE NOTHING (jakob's ruling, 2026-09-11).
+   Relevance 0 is the withdrawal — re-tagging at `r = 0`, an ordinary priced,
+   visible record (hashtag.md §4) — and that is not a degree of aboutness the
+   way every other point on this axis is. Ending the axis there put the
+   heaviest act on the field where the lightest drag lands, so the field
+   carries claims only and the floor is where a claim stops being one. It also
+   makes the left pole true: `Barely` is a fair reading of 0.01 and never was
+   one of 0. Withdrawing is asked for by its own control instead.
+
+   The floor is the contract's, like the anchors — both clients read it. */
+const TAG_RELEVANCE_FLOOR = 0.01;
+const TAG_RANGES = {
+  pDirected: {
+    min: TAG_RELEVANCE_FLOOR,
+    max: DIMENSION_MAX
+  },
+  pInterest: {
+    min: 0,
+    max: DIMENSION_MAX
+  }
+};
+/** What a plain tap commits — the repo-wide low-defaults policy. */
+const TAP_DEFAULT = {
+  pDirected: 0.1,
+  pInterest: 0.1
+};
+
+/** `p_d`. Neither "valence" nor "p_d" ever reaches the screen. */
+const DIRECTED_LABEL = "For or against";
+/** `p_i`. Neither "connection" nor "p_i" ever reaches the screen. */
+const INTEREST_LABEL = "How much reaches you";
+/** The ends of each axis, named. A slider from −1 to +1 needs its poles said. */
+const DIRECTED_POLES = ["Against", "For"];
+const INTEREST_POLES = ["Less", "More"];
+/** What the middle pair is: the edge being authored, not the standing. */
+const PICK_LABEL = "Your pick";
+const SEVERED_LABEL = "Walked back";
+const NO_STANDING_LABEL = "No opinion yet";
+/** What a bundle standing at exactly (0, 0) reads as. */
+const ZERO_BUNDLE_EMOJI = "🤷";
+/** The face an unauthored target wears at rest — the dotted-line face, deliberately
+    outside the table so an empty control cannot read as a standing already held. */
+const RESTING_FACE_EMOJI = "🫥";
+
+/** Visually hidden, still read aloud — where the anchors' words now live. */
+const SR_ONLY = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0
+};
+const STANCE_ANCHORS = [{
+  pDirected: 0.15,
+  pInterest: 0.15,
+  emoji: "🙂",
+  label: "Nice"
+}, {
+  pDirected: 0.55,
+  pInterest: 0.2,
+  emoji: "😊",
+  label: "Like this"
+}, {
+  pDirected: 0.9,
+  pInterest: 0.25,
+  emoji: "😍",
+  label: "Love this"
+}, {
+  pDirected: 0.2,
+  pInterest: 0.6,
+  emoji: "👀",
+  label: "Show me more"
+}, {
+  pDirected: 0.6,
+  pInterest: 0.65,
+  emoji: "🤩",
+  label: "Really into this"
+}, {
+  pDirected: 0.25,
+  pInterest: 0.95,
+  emoji: "🍿",
+  label: "Tell me everything"
+}, {
+  pDirected: 0.95,
+  pInterest: 0.9,
+  emoji: "🔥",
+  label: "All in"
+}, {
+  pDirected: -0.15,
+  pInterest: 0.15,
+  emoji: "😕",
+  label: "Not for me"
+}, {
+  pDirected: -0.55,
+  pInterest: 0.25,
+  emoji: "🙁",
+  label: "Don't like this"
+}, {
+  pDirected: -0.9,
+  pInterest: 0.3,
+  emoji: "😠",
+  label: "Really against this"
+}, {
+  pDirected: -0.45,
+  pInterest: 0.75,
+  emoji: "😤",
+  label: "Against, but keep me posted"
+}, {
+  pDirected: -0.9,
+  pInterest: 0.9,
+  emoji: "🤬",
+  label: "Against, and I want all of it"
+}, {
+  pDirected: 0.2,
+  pInterest: -0.2,
+  emoji: "😶",
+  label: "Fine, just not for me"
+}, {
+  pDirected: 0.7,
+  pInterest: -0.3,
+  emoji: "😌",
+  label: "Good, but not in my world"
+}, {
+  pDirected: 0.3,
+  pInterest: -0.8,
+  emoji: "🙈",
+  label: "Rather not see this"
+}, {
+  pDirected: 0.9,
+  pInterest: -0.85,
+  emoji: "🤐",
+  label: "Good, keep it away"
+}, {
+  pDirected: -0.2,
+  pInterest: -0.2,
+  emoji: "😑",
+  label: "Meh"
+}, {
+  pDirected: -0.6,
+  pInterest: -0.45,
+  emoji: "😖",
+  label: "Dislike, keep away"
+}, {
+  pDirected: -0.35,
+  pInterest: -0.85,
+  emoji: "🚫",
+  label: "Keep this away"
+}, {
+  pDirected: -0.9,
+  pInterest: -0.9,
+  emoji: "💀",
+  label: "Absolutely not"
+}];
+
+/* THE TAG TABLE IS ITS OWN, AND IT IS DISJOINT FROM THE STANCE FACES (jakob's
+   ruling, the tag pad round). Not one glyph appears in both tables, and that is
+   the point rather than an accident of picking: a face that means "Like this"
+   on a post must never also mean "locked on" about a topic, or the one lossy
+   readout the system has starts lying about which family a reader is looking
+   at. The stance table is twenty faces; this one is thirteen objects.
+
+   IT READS AS A SENTENCE ABOUT AN OBJECT, NOT A FEELING. A tag is a claim
+   about what a post is about — it has no mood to wear — so each row names a
+   thing that stands in for a degree of aboutness held at a degree of
+   certainty: a key, a magnet, a die, a fishhook.
+
+   THE GRID IS FOUR BY THREE. Aboutness runs Barely → Entirely across four
+   columns, certainty runs Guessing → Certain up three rows, and the twelve
+   sit at the band centres. `💯` is the thirteenth and floats: it sits just
+   left of `🎯` and higher, so the very top of the field — all of it, said
+   flat out — is reachable without stealing the Entirely corner from the row
+   that owns it.
+
+   LIKE `STANCE_ANCHORS`, THIS TABLE IS THE CONTRACT — both clients read these
+   thirteen rows, and a change here changes both apps. The words are the
+   spoken reading, never drawn beside the face: §8.3's rule that the face
+   carries the feel and the pair carries the fact holds for a tag too. */
+const TAG_ANCHORS = [{
+  pDirected: 0.15,
+  pInterest: 0.9,
+  emoji: "🔍",
+  label: "had to look, but it's in there"
+}, {
+  pDirected: 0.45,
+  pInterest: 0.9,
+  emoji: "🔗",
+  label: "definitely linked"
+}, {
+  pDirected: 0.72,
+  pInterest: 0.9,
+  emoji: "🔒",
+  label: "locked on"
+}, {
+  pDirected: 0.95,
+  pInterest: 0.9,
+  emoji: "🎯",
+  label: "exactly this"
+}, {
+  pDirected: 0.15,
+  pInterest: 0.55,
+  emoji: "💧",
+  label: "a drop of it, I think"
+}, {
+  pDirected: 0.45,
+  pInterest: 0.55,
+  emoji: "🧩",
+  label: "a piece of the picture"
+}, {
+  pDirected: 0.72,
+  pInterest: 0.55,
+  emoji: "🧲",
+  label: "pulled toward it"
+}, {
+  pDirected: 0.95,
+  pInterest: 0.55,
+  emoji: "🗝️",
+  label: "likely the key to it"
+}, {
+  pDirected: 0.15,
+  pInterest: 0.15,
+  emoji: "❔",
+  label: "faint maybe"
+}, {
+  pDirected: 0.45,
+  pInterest: 0.15,
+  emoji: "🎲",
+  label: "could go either way"
+}, {
+  pDirected: 0.72,
+  pInterest: 0.15,
+  emoji: "🎣",
+  label: "fishing for it"
+}, {
+  pDirected: 0.95,
+  pInterest: 0.15,
+  emoji: "🔮",
+  label: "big claim, divined"
+}, {
+  pDirected: 0.86,
+  pInterest: 0.95,
+  emoji: "💯",
+  label: "all of it, full stop"
+}];
+function clampDimension(value, min = DIMENSION_MIN, max = DIMENSION_MAX) {
+  if (Number.isNaN(value)) return 0;
+  const bounded = Math.min(max, Math.max(min, value));
+  return bounded === 0 ? 0 : bounded;
+}
+function clampPair(pair, ranges = STANCE_RANGES) {
+  return {
+    pDirected: clampDimension(pair.pDirected, ranges.pDirected.min, ranges.pDirected.max),
+    pInterest: clampDimension(pair.pInterest, ranges.pInterest.min, ranges.pInterest.max)
+  };
+}
+
+/** The nearest anchor by Euclidean distance; the first of an exact tie wins. */
+function nearestAnchor(pair) {
+  let best = STANCE_ANCHORS[0];
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const anchor of STANCE_ANCHORS) {
+    const dd = anchor.pDirected - pair.pDirected;
+    const di = anchor.pInterest - pair.pInterest;
+    const distance = dd * dd + di * di;
+    if (distance < bestDistance) {
+      best = anchor;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+/** The nearest TAG anchor, over the thirteen objects rather than the twenty
+ *  faces. Exported because the rows that draw a tag's pair without the pad —
+ *  `TaggedRow`, `ReferenceRow`'s topic edge — need the same glyph the pad
+ *  shows, and a second walk of the table would be a second table. */
+function nearestTagAnchor(pair) {
+  let best = TAG_ANCHORS[0];
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const anchor of TAG_ANCHORS) {
+    const dd = anchor.pDirected - pair.pDirected;
+    const di = anchor.pInterest - pair.pInterest;
+    const distance = dd * dd + di * di;
+    if (distance < bestDistance) {
+      best = anchor;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+/** The readout a STANDING wears. The table never speaks for zero. */
+function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
+  if (pair.pDirected === 0 && pair.pInterest === 0) return {
+    emoji: ZERO_BUNDLE_EMOJI,
+    label: zeroLabel
+  };
+  return nearestAnchor(pair);
+}
+
+/* The read-only value readout (profile round, 2026-09-01): a stance RECORD's
+   face and pair drawn plainly wherever a stance is data rather than a control
+   — the stances page's rows, the chronicle's stance entries. Never
+   interactive: acting on a person means opening their profile first (jakob —
+   stancing here is more deliberate than a follow). */
+function StanceValue({
+  pDirected,
+  pInterest,
+  showPair = true
+}) {
+  const pair = {
+    pDirected,
+    pInterest
+  };
+  const readout = bundleReadout(pair);
+  return /*#__PURE__*/React.createElement("span", {
+    role: "img",
+    "aria-label": `${readout.label}, ${formatStancePair(pair)}`,
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      fontSize: "var(--text-title-medium)"
+    }
+  }, readout.emoji), showPair && /*#__PURE__*/React.createElement("span", {
+    className: "cg-exact",
+    "aria-hidden": "true",
+    style: {
+      fontSize: "var(--text-body-small)",
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap"
+    }
+  }, formatStancePair(pair)));
+}
+
+/** Always signed, two decimals. The sign carries the direction, so it shows at zero. */
+function formatDimension(value) {
+  return new Intl.NumberFormat(undefined, {
+    signDisplay: "always",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
+/** Unsigned, two decimals — for a value whose range has no negative half. */
+function formatUnsigned(value) {
+  return new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
+}
+
+/** `+0.40 / +0.20`-style. Valence first, matching the pad's horizontal-then-vertical order. */
+function formatStancePair(pair) {
+  return `${formatDimension(pair.pDirected)} / ${formatDimension(pair.pInterest)}`;
+}
+
+/* A TAG'S PAIR IS NOT A STANCE'S, AND IT MUST NOT LOOK LIKE ONE (jakob's
+   ruling, the tag round). Relevance is a signed Dimension over [-1, +1] and
+   keeps the sign, which is the whole content of the value. Confidence is
+   census-bounded to [0, 1] (hashtag.md §4, `TagInput` in api-spec.md), so a
+   `+` on it advertises a pole that does not exist — it reads unsigned:
+   `+0.40 / 0.90`. Two decimals either way, the system's one number format.
+   The difference between the two shapes is the point: a reader who can tell a
+   tag's pair from a stance's at a glance is being told the truth about which
+   family they are looking at. */
+function formatTagPair(pair) {
+  return `${formatDimension(pair.pDirected)} / ${formatUnsigned(pair.pInterest)}`;
+}
+
+/** The same two values with their axes named, for surfaces without the pad's layout. */
+function formatStanceWords(pair) {
+  return `${DIRECTED_LABEL} ${formatDimension(pair.pDirected)}, ${INTEREST_LABEL} ${formatDimension(pair.pInterest)}`;
+}
+
+/** Where a pick lands the bundle: `clip` of RAW SUM plus pick, folded locally. */
+function localLanding(rawSum, pick) {
+  const landing = clampPair({
+    pDirected: rawSum.pDirected + pick.pDirected,
+    pInterest: rawSum.pInterest + pick.pInterest
+  });
+  return {
+    landing,
+    inert: landing.pDirected === 0 || landing.pInterest === 0,
+    severed: landing.pDirected === 0 && landing.pInterest === 0
+  };
+}
+function standingLine(bundle, targetLabel) {
+  if (bundle === undefined) return "Checking your current opinion…";
+  if (bundle === null || bundle.records === 0) return `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.`;
+  if (bundle.severed) return `${ZERO_BUNDLE_EMOJI} You've walked ${targetLabel} back to nothing.`;
+  // Face and pair; the words ride the spoken line beside it.
+  return `Current opinion ${bundleReadout(bundle.current).emoji} ${formatStancePair(bundle.current)}`;
+}
+
+/**
+ * The severance read, split so the two numbers can be introduced in an order that
+ * makes sense.
+ *
+ * The raw sum LEADS and the fold is derived from it. Stating the fold first and
+ * the raw sum second reads as arithmetic that does not work — "my stance is +1.00,
+ * so why does walking back take 1.40?" — because it presents the capped number as
+ * the thing that exists and the true total as a correction to it. The total is
+ * what the reader built up; the cap is what the feed reads of it. In that order it
+ * explains itself, and §8.3's "clipped is not hidden" is honoured without
+ * confusing anyone.
+ *
+ * `capped` is false when the sum never reached the clip, and then there is only
+ * one number to show and no aside to make.
+ *
+ * THE ONE EXEMPTION FROM GEEK MODE (jakob's ruling, backlog item 53). These two
+ * numbers carry no `cg-exact` marker and paint in both modes: the sheet exists to
+ * show the DIFFERENCE between the raw sum and the fold, and the faces are a
+ * lossy readout — the two would wear the same glyph, which is the whole content
+ * of the sheet erased. A reader about to walk back everything they have said is
+ * owed the arithmetic, whatever their reading setting says.
+ */
+function severanceParts(bundle, targetLabel) {
+  if (bundle === undefined) return {
+    sentence: "Checking your current opinion…"
+  };
+  if (bundle === null || bundle.records === 0) {
+    return {
+      sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.`
+    };
+  }
+  const raw = formatStancePair(bundle.rawSum);
+  const folded = formatStancePair(bundle.current);
+  return {
+    raw,
+    folded,
+    capped: raw !== folded
+  };
+}
+function landingLine(landing) {
+  if (landing === null || landing === undefined) return "Adding it up…";
+  if (landing.severed) return "This takes you back to zero.";
+  if (landing.inert) {
+    const directedInert = landing.landing.pDirected === 0;
+    const interestInert = landing.landing.pInterest === 0;
+    if (directedInert && interestInert) return "Resulting opinion: carries nothing.";
+    if (directedInert) return "Resulting opinion: your side of it carries nothing.";
+    if (interestInert) return "Resulting opinion: what reaches you carries nothing.";
+  }
+  const readout = bundleReadout(landing.landing);
+  return `Resulting opinion ${readout.emoji} ${formatStancePair(landing.landing)}`;
+}
+
+/* The confirmation a signed gesture leaves. Names where it LEFT the viewer.
+
+   IT IS BUILT FROM SPANS, NOT A SENTENCE (jakob's ruling, the geek round —
+   backlog item 53.1). A snackbar that spelled the pair in prose was the one
+   Group A reading the mode could not reach: a sentence carries no marker. So
+   the face is the reading, the digits ride a `cg-exact` span behind it, and a
+   screen-reader twin says the whole thing — including the anchor's word, which
+   the eye gets from the face — in both modes.
+
+   The severed line has no pair to show and stays a plain string. */
+function signedLine(standing, records, severed, targetLabel) {
+  const acts = records === 1 ? "Signed" : `Signed ${records} things`;
+  if (severed) return `${acts}, still settling. You've walked ${targetLabel} back to nothing.`;
+  const readout = bundleReadout(standing);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, `${acts}, still settling. Current opinion `, readout.emoji, /*#__PURE__*/React.createElement("span", {
+    className: "cg-exact"
+  }, ` (${formatStancePair(standing)})`)), /*#__PURE__*/React.createElement("span", {
+    style: SR_ONLY
+  }, `${acts}, still settling. Current opinion: ${readout.label}, ${formatStanceWords(standing)}`));
+}
+
+/** Face and pair, and the words for a reader who cannot see the face (§8.3). */
+function StanceReadout({
+  pair,
+  kind = "pick",
+  zeroLabel = SEVERED_LABEL,
+  style
+}) {
+  const readout = kind === "standing" ? bundleReadout(pair, zeroLabel) : nearestAnchor(pair);
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      display: "inline-flex",
+      alignItems: "baseline",
+      gap: "var(--space-2)",
+      flex: "none",
+      ...style
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, readout.emoji), /*#__PURE__*/React.createElement("span", {
+    className: "cg-exact",
+    "aria-hidden": "true",
+    style: {
+      fontSize: "var(--text-body-small)",
+      color: "var(--text-secondary)",
+      whiteSpace: "nowrap"
+    }
+  }, formatStancePair(pair)), /*#__PURE__*/React.createElement("span", {
+    style: SR_ONLY
+  }, `${readout.label}, ${formatStanceWords(pair)}`));
+}
+
+/** The standing, split for rendering: either a sentence, or a readout to lay out. */
+function standingParts(bundle, targetLabel) {
+  if (bundle === undefined) return {
+    sentence: "Checking your current opinion…"
+  };
+  if (bundle === null || bundle.records === 0) return {
+    sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.`
+  };
+  if (bundle.severed) return {
+    sentence: `${ZERO_BUNDLE_EMOJI} You've walked ${targetLabel} back to nothing.`
+  };
+  const readout = bundleReadout(bundle.current);
+  return {
+    label: "Current opinion",
+    emoji: readout.emoji,
+    pair: formatStancePair(bundle.current),
+    spoken: `Current opinion: ${readout.label}, ${formatStanceWords(bundle.current)}`
+  };
+}
+
+/** The landing, split the same way. */
+function landingParts(landing) {
+  if (landing === null || landing === undefined) return {
+    sentence: "Adding it up…"
+  };
+  if (landing.severed || landing.inert) return {
+    sentence: landingLine(landing)
+  };
+  const readout = bundleReadout(landing.landing);
+  return {
+    label: "Resulting opinion",
+    emoji: readout.emoji,
+    pair: formatStancePair(landing.landing),
+    spoken: `Resulting opinion: ${readout.label}, ${formatStanceWords(landing.landing)}`
+  };
+}
+
+/* One labelled readout: the name of the quantity, then the face and the numbers on
+   the line below it. Three of these stack in the pad — current stance, the pick,
+   the resulting stance — and they are formatted identically so the eye can compare
+   them without reading. */
+function ReadoutBlock({
+  label,
+  emoji,
+  pair,
+  spoken,
+  sentence,
+  big = false,
+  style
+}) {
+  if (sentence !== undefined) {
+    return /*#__PURE__*/React.createElement("p", {
+      style: {
+        margin: 0,
+        fontSize: "var(--text-body-small)",
+        color: "var(--text-secondary)",
+        ...style
+      }
+    }, sentence);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      ...style
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      fontSize: "var(--text-label-small)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      fontWeight: "var(--text-label-small--font-weight)",
+      color: "var(--text-secondary)"
+    }
+  }, label), /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      display: "inline-flex",
+      alignItems: "baseline",
+      gap: "var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)",
+      lineHeight: 1.2
+    }
+  }, emoji), /*#__PURE__*/React.createElement("span", {
+    className: "cg-exact",
+    style: {
+      fontSize: "var(--text-body-small)",
+      color: big ? "var(--on-surface)" : "var(--text-secondary)",
+      whiteSpace: "nowrap"
+    }
+  }, pair)), /*#__PURE__*/React.createElement("span", {
+    style: SR_ONLY
+  }, spoken));
+}
+
+/** The standing and the pick — everything that sits above the field. */
+function StanceStanding({
+  pick,
+  bundle,
+  targetLabel,
+  style
+}) {
+  const anchor = nearestAnchor(pick);
+  return /*#__PURE__*/React.createElement("div", {
+    "aria-live": "polite",
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-2)",
+      ...style
+    }
+  }, /*#__PURE__*/React.createElement(ReadoutBlock, standingParts(bundle, targetLabel)), /*#__PURE__*/React.createElement(ReadoutBlock, {
+    big: true,
+    label: PICK_LABEL,
+    emoji: anchor.emoji,
+    pair: formatStancePair(pick),
+    spoken: `${PICK_LABEL}: ${anchor.label}, ${formatStanceWords(pick)}`
+  }));
+}
+
+/** The landing — the one readout that sits below the field. */
+function StanceLandingLine({
+  landing,
+  style
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    "aria-live": "polite",
+    style: style
+  }, /*#__PURE__*/React.createElement(ReadoutBlock, landingParts(landing)));
+}
+__ds_scope.DIMENSION_MIN = DIMENSION_MIN;
+__ds_scope.DIMENSION_MAX = DIMENSION_MAX;
+__ds_scope.ORIGIN = ORIGIN;
+__ds_scope.STANCE_RANGES = STANCE_RANGES;
+__ds_scope.TAG_RELEVANCE_FLOOR = TAG_RELEVANCE_FLOOR;
+__ds_scope.TAG_RANGES = TAG_RANGES;
+__ds_scope.TAP_DEFAULT = TAP_DEFAULT;
+__ds_scope.DIRECTED_LABEL = DIRECTED_LABEL;
+__ds_scope.INTEREST_LABEL = INTEREST_LABEL;
+__ds_scope.DIRECTED_POLES = DIRECTED_POLES;
+__ds_scope.INTEREST_POLES = INTEREST_POLES;
+__ds_scope.PICK_LABEL = PICK_LABEL;
+__ds_scope.SEVERED_LABEL = SEVERED_LABEL;
+__ds_scope.NO_STANDING_LABEL = NO_STANDING_LABEL;
+__ds_scope.ZERO_BUNDLE_EMOJI = ZERO_BUNDLE_EMOJI;
+__ds_scope.RESTING_FACE_EMOJI = RESTING_FACE_EMOJI;
+__ds_scope.SR_ONLY = SR_ONLY;
+__ds_scope.STANCE_ANCHORS = STANCE_ANCHORS;
+__ds_scope.TAG_ANCHORS = TAG_ANCHORS;
+__ds_scope.clampDimension = clampDimension;
+__ds_scope.clampPair = clampPair;
+__ds_scope.nearestAnchor = nearestAnchor;
+__ds_scope.nearestTagAnchor = nearestTagAnchor;
+__ds_scope.bundleReadout = bundleReadout;
+__ds_scope.StanceValue = StanceValue;
+__ds_scope.formatDimension = formatDimension;
+__ds_scope.formatUnsigned = formatUnsigned;
+__ds_scope.formatStancePair = formatStancePair;
+__ds_scope.formatTagPair = formatTagPair;
+__ds_scope.formatStanceWords = formatStanceWords;
+__ds_scope.localLanding = localLanding;
+__ds_scope.standingLine = standingLine;
+__ds_scope.severanceParts = severanceParts;
+__ds_scope.landingLine = landingLine;
+__ds_scope.signedLine = signedLine;
+__ds_scope.StanceReadout = StanceReadout;
+__ds_scope.standingParts = standingParts;
+__ds_scope.landingParts = landingParts;
+__ds_scope.StanceStanding = StanceStanding;
+__ds_scope.StanceLandingLine = StanceLandingLine;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceReadout.jsx", error: String((e && e.message) || e) }); }
+
 // components/content/ReferenceRow.jsx
 try { (() => {
-const { Icon, NODE_GLYPHS, MonogramAvatar, PendingMarker } = __ds_scope;
+const { Icon, NODE_GLYPHS, MonogramAvatar, PendingMarker, formatStancePair, formatTagPair, nearestAnchor, nearestTagAnchor, SR_ONLY } = __ds_scope;
 /* One row of the topics-and-references sheet (readme §13, 2026-08-28), and the
    result-row shape search reuses: EVERY row is leading mark · name · value, so
    a heterogeneous list reads as one list.
@@ -2436,6 +3180,23 @@ const { Icon, NODE_GLYPHS, MonogramAvatar, PendingMarker } = __ds_scope;
    THE VALUE is the pair the author signed on this act — set at compose (a
    changeable default), shown here for any reader: a signed act is public
    record. Right-aligned, `body-small`, never coloured.
+
+   THE PAIR ARRIVES AS NUMBERS AND THE ROW FORMATS IT (backlog item 53). Which
+   family it belongs to is the row's own `kind`: a topic's pair is a tag's —
+   `formatTagPair`, and the nearest of the thirteen `TAG_ANCHORS` beside it —
+   and every other kind's is a citation's, both axes signed. One value in, so a
+   glyph and its numbers cannot disagree. `value` is the other edge entirely:
+   a plain string the row prints as given — an age, a date — and geek mode
+   never touches it, because an age is not a signal number.
+
+   THE PAIRS ARE THE GEEK READING (readme §13). Every pair is drawn as its
+   nearest anchor's glyph — the thirteen objects for a topic, the twenty faces
+   for a citation — with the digits in a `cg-exact` span that paints only when
+   the screen root says `data-geek="on"`. The rank keeps its number in both
+   modes: geek governs the pairs, not every figure. The button's accessible
+   name is the same in both modes — every hidden number has a screen-reader-only
+   twin, because the mode is a drawing setting and nothing spoken may depend
+   on it.
 
    AN ACT STILL SETTLING SAYS SO HERE, AND ONLY HERE (jakob's ruling,
    2026-09-10). A chip on a card shows nothing pending — a tag's word is the tag's
@@ -2504,10 +3265,9 @@ function NodeMark({
 /* `sub` is the INDIRECT-HIT line (readme §13, the search rulings): a scoped
    query that matched through an act's target says both halves — the comment
    row reads "on <post title>", the offer row "on <item name>". Without it an
-   indirect hit is indistinguishable from a mishit. `value` is the row's right
-   edge: the signed pair in the references sheet, the viewer-relative rank in
-   ranked search results, the age past the seam. (`pair` remains as its old
-   name.) */
+   indirect hit is indistinguishable from a mishit. The row's right edge is one
+   of three: `pair` (the signed pair, as numbers), `rank` (the viewer-relative
+   rank), or `value` (a plain string — the age past the seam). */
 function ReferenceRow({
   kind = "post",
   name,
@@ -2520,7 +3280,19 @@ function ReferenceRow({
   pending = false,
   onOpen
 }) {
-  const edge = value ?? pair;
+  const tagFamily = kind === "topic";
+  const exact = pair ? tagFamily ? formatTagPair(pair) : formatStancePair(pair) : null;
+  /* EVERY PAIR HAS A FACE TO FALL BACK TO (jakob's ruling, the geek round —
+     backlog item 53.3). A topic reads the thirteen objects; a person, post or
+     comment row is a CITATION, whose two axes fill the slots `STANCE_ANCHORS`
+     is drawn over, so it reads the twenty faces — the same lookup `RefPair`'s
+     own readout uses. Without it the row simply lost its right edge with the
+     digits off, which is the one thing the mode must never do.
+      THE WORD COMES WITH THE TAG AND NOT WITH THE CITATION (`RefPair`'s rule).
+     A tag anchor's word names a degree of aboutness and is true of the row; a
+     stance anchor's names a feeling about a stance, and a citation is not one
+     — so the spoken reading there is the pair itself, exactly. */
+  const anchor = pair ? tagFamily ? nearestTagAnchor(pair) : nearestAnchor(pair) : null;
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpen,
@@ -2574,7 +3346,8 @@ function ReferenceRow({
       display: "inline-flex",
       color: "var(--text-secondary)"
     }
-  }, trailing) : rank ? /*#__PURE__*/React.createElement("span", {
+  }, trailing) : rank ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
     style: {
       flex: "none",
       display: "inline-flex",
@@ -2588,7 +3361,9 @@ function ReferenceRow({
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "graph",
     size: 14
-  }), rank) : (edge || pending) && /*#__PURE__*/React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", null, rank)), /*#__PURE__*/React.createElement("span", {
+    style: SR_ONLY
+  }, rank)) : (value || exact || pending) && /*#__PURE__*/React.createElement("span", {
     style: {
       flex: "none",
       display: "flex",
@@ -2599,7 +3374,23 @@ function ReferenceRow({
       color: "var(--text-secondary)",
       whiteSpace: "nowrap"
     }
-  }, edge, pending && /*#__PURE__*/React.createElement(PendingMarker, {
+  }, value, !value && exact && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "4px"
+    }
+  }, anchor && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-medium)",
+      lineHeight: 1
+    }
+  }, anchor.emoji), /*#__PURE__*/React.createElement("span", {
+    className: "cg-exact"
+  }, exact)), /*#__PURE__*/React.createElement("span", {
+    style: SR_ONLY
+  }, tagFamily && anchor ? `${anchor.label}, ${exact}` : exact)), pending && /*#__PURE__*/React.createElement(PendingMarker, {
     inline: true
   })));
 }
@@ -2609,7 +3400,7 @@ __ds_scope.ReferenceRow = ReferenceRow;
 
 // components/compose/StagedReference.jsx
 try { (() => {
-const { NodeMark, Icon, BUTTON_CLASS } = __ds_scope;
+const { NodeMark, Icon, BUTTON_CLASS, formatStancePair, nearestAnchor, SR_ONLY } = __ds_scope;
 /* A reference already staged in a composer (item 17, the conformance round):
    the citation the author has committed to, shown back to them — the kind's
    mark, what it points at, the pair signed on the act, and the × that takes it
@@ -2641,14 +3432,29 @@ const { NodeMark, Icon, BUTTON_CLASS } = __ds_scope;
 
 /* The row minus its ×: the mark, what it points at, and the pair it signs. One
    markup whether or not it is pressable, so the drawing cannot drift between
-   the two states. */
+   the two states.
+
+   THE PAIR ARRIVES AS NUMBERS AND THE ROW FORMATS IT (backlog item 53). A
+   citation signs both axes (`ReferenceInput`, api-spec.md), so it wears the
+   stance shape; the digits ride a `cg-exact` span and paint only in geek mode
+   (readme §13), with a screen-reader-only twin so nothing spoken moves with
+   the setting.
+
+   AND THE FACE IS WHAT IS LEFT WHEN THEY DO NOT PAINT (jakob's ruling, the
+   geek round — backlog item 53.3). The citation's two axes fill the slots
+   `STANCE_ANCHORS` is drawn over, so the row reads the twenty faces, the same
+   lookup `RefPair`'s readout uses. The anchor's WORD does not come with it:
+   it names a feeling about a stance and this record is a citation, so the
+   spoken reading stays the pair exactly. */
 function Body({
   kind,
   name,
   sub,
   src,
-  value
+  pair
 }) {
+  const exact = pair ? formatStancePair(pair) : null;
+  const anchor = pair ? nearestAnchor(pair) : null;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(NodeMark, {
     kind: kind,
     name: name,
@@ -2674,22 +3480,35 @@ function Body({
       lineHeight: "var(--text-body-small--line-height)",
       color: "var(--text-secondary)"
     }
-  }, sub)), value && /*#__PURE__*/React.createElement("span", {
+  }, sub)), exact && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
     style: {
       flex: "none",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "4px",
       fontSize: "var(--text-body-small)",
       lineHeight: "var(--text-body-small--line-height)",
       color: "var(--text-secondary)",
       whiteSpace: "nowrap"
     }
-  }, value));
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-medium)",
+      lineHeight: 1
+    }
+  }, anchor.emoji), /*#__PURE__*/React.createElement("span", {
+    className: "cg-exact"
+  }, exact)), /*#__PURE__*/React.createElement("span", {
+    style: SR_ONLY
+  }, exact)));
 }
 function StagedReference({
   kind = "post",
   name,
   sub,
   src,
-  value,
+  pair,
   onRemove,
   onEdit
 }) {
@@ -2698,7 +3517,7 @@ function StagedReference({
     name: name,
     sub: sub,
     src: src,
-    value: value
+    pair: pair
   });
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3157,15 +3976,15 @@ const ATTRIBUTION_TIERS = [{
 }];
 const PROVENANCE_TIERS = [{
   value: 0,
-  label: "No record",
+  label: "Not logged",
   hint: "Uses go unlogged."
 }, {
   value: 0.5,
-  label: "Record commercially",
+  label: "Log commercial use",
   hint: "Commercial uses are logged publicly and stay open to audit."
 }, {
   value: 1,
-  label: "Record always",
+  label: "Log every use",
   hint: "Every use is logged publicly and stays open to audit."
 }];
 const PUBLIC_DOMAIN = {
@@ -3559,706 +4378,6 @@ __ds_scope.DialogSurface = DialogSurface;
 __ds_scope.JoinPrompt = JoinPrompt;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/JoinPrompt.jsx", error: String((e && e.message) || e) }); }
 
-// components/stance/StanceReadout.jsx
-try { (() => {
-/* The stance readout — the numbers and the faces (design.md §8.2, §8.3, §8.4).
-
-   TWO DIFFERENT NUMBERS, NEVER MERGED INTO ONE LINE:
-     · "Current stance" sits ABOVE the readout — the bundle as it stands.
-     · The FACE is the lossy readout of the EDGE BEING AUTHORED — this pick, not
-       the bundle it joins. Conflating the two would make the face mean something
-       different depending on history, which is exactly what a readout must not do.
-       The EXACT PAIR sits with it and is equally default: the face carries the
-       feel and the pair carries the fact, and hiding either makes the other harder
-       to trust.
-     · "Resulting stance" sits BELOW the field — the bundle after the pick.
-
-   DIVERGENCE FROM THE SOURCE: the anchor's WORDS ARE NO LONGER DRAWN. The source
-   renders face + words + pair — three encodings of one value, which is two too
-   many. The words are the redundant one: the face carries the feel and the pair
-   carries the fact exactly.
-
-   THE WORDS STILL EXIST, in the accessibility tree, and this must not become
-   "colour carries meaning alone" (§10). An emoji's own accessible name is
-   "slightly smiling face", never "Like this", so dropping the label from the DOM
-   entirely would take the meaning from exactly the readers §10 protects. Every
-   visible readout therefore pairs an `aria-hidden` visual with a
-   screen-reader-only reading that names the stance and its axes.
-
-   Nothing sits under the knob: a thumb on the control covers exactly the spot
-   where feedback would otherwise appear. Both lines are `aria-live`.
-
-   The anchor table IS THE CONTRACT — both clients read these twenty values, and a
-   change here changes both apps. They are deliberately dense in the
-   for-it-and-want-it quadrant, where most real stances land and small differences
-   matter, and sparse at the extremes. */
-
-const DIMENSION_MIN = -1;
-const DIMENSION_MAX = 1;
-const ORIGIN = {
-  pDirected: 0,
-  pInterest: 0
-};
-
-/* THE BOUNDS TRAVEL WITH THE RECORD FAMILY, exactly as the axis words do. The
-   pad's two slots are `pDirected` and `pInterest`; what fills them, and how far
-   each one reaches, is the census's business and not the control's. A stance
-   fills both slots with signed Dimensions; a Tag's confidence is
-   census-bounded to `c ∈ [0, 1]` (hashtag.md §4, `TagInput` in api-spec.md),
-   and the tag pad authors only the positive half of relevance. Naming the
-   range as data keeps one pad honest about two families instead of a second
-   pad drifting from the first. */
-const STANCE_RANGES = {
-  pDirected: {
-    min: DIMENSION_MIN,
-    max: DIMENSION_MAX
-  },
-  pInterest: {
-    min: DIMENSION_MIN,
-    max: DIMENSION_MAX
-  }
-};
-
-/* THE TAG FIELD STARTS JUST ABOVE NOTHING (jakob's ruling, 2026-09-11).
-   Relevance 0 is the withdrawal — re-tagging at `r = 0`, an ordinary priced,
-   visible record (hashtag.md §4) — and that is not a degree of aboutness the
-   way every other point on this axis is. Ending the axis there put the
-   heaviest act on the field where the lightest drag lands, so the field
-   carries claims only and the floor is where a claim stops being one. It also
-   makes the left pole true: `Barely` is a fair reading of 0.01 and never was
-   one of 0. Withdrawing is asked for by its own control instead.
-
-   The floor is the contract's, like the anchors — both clients read it. */
-const TAG_RELEVANCE_FLOOR = 0.01;
-const TAG_RANGES = {
-  pDirected: {
-    min: TAG_RELEVANCE_FLOOR,
-    max: DIMENSION_MAX
-  },
-  pInterest: {
-    min: 0,
-    max: DIMENSION_MAX
-  }
-};
-/** What a plain tap commits — the repo-wide low-defaults policy. */
-const TAP_DEFAULT = {
-  pDirected: 0.1,
-  pInterest: 0.1
-};
-
-/** `p_d`. Neither "valence" nor "p_d" ever reaches the screen. */
-const DIRECTED_LABEL = "For or against";
-/** `p_i`. Neither "connection" nor "p_i" ever reaches the screen. */
-const INTEREST_LABEL = "How much reaches you";
-/** The ends of each axis, named. A slider from −1 to +1 needs its poles said. */
-const DIRECTED_POLES = ["Against", "For"];
-const INTEREST_POLES = ["Less", "More"];
-/** What the middle pair is: the edge being authored, not the standing. */
-const PICK_LABEL = "Your pick";
-const SEVERED_LABEL = "Severed";
-const NO_STANDING_LABEL = "No stance yet";
-/** What a bundle standing at exactly (0, 0) reads as. */
-const ZERO_BUNDLE_EMOJI = "🤷";
-/** The face an unauthored target wears at rest — the dotted-line face, deliberately
-    outside the table so an empty control cannot read as a standing already held. */
-const RESTING_FACE_EMOJI = "🫥";
-
-/** Visually hidden, still read aloud — where the anchors' words now live. */
-const SR_ONLY = {
-  position: "absolute",
-  width: "1px",
-  height: "1px",
-  padding: 0,
-  margin: "-1px",
-  overflow: "hidden",
-  clip: "rect(0 0 0 0)",
-  whiteSpace: "nowrap",
-  border: 0
-};
-const STANCE_ANCHORS = [{
-  pDirected: 0.15,
-  pInterest: 0.15,
-  emoji: "🙂",
-  label: "Nice"
-}, {
-  pDirected: 0.55,
-  pInterest: 0.2,
-  emoji: "😊",
-  label: "Like this"
-}, {
-  pDirected: 0.9,
-  pInterest: 0.25,
-  emoji: "😍",
-  label: "Love this"
-}, {
-  pDirected: 0.2,
-  pInterest: 0.6,
-  emoji: "👀",
-  label: "Show me more"
-}, {
-  pDirected: 0.6,
-  pInterest: 0.65,
-  emoji: "🤩",
-  label: "Really into this"
-}, {
-  pDirected: 0.25,
-  pInterest: 0.95,
-  emoji: "🍿",
-  label: "Tell me everything"
-}, {
-  pDirected: 0.95,
-  pInterest: 0.9,
-  emoji: "🔥",
-  label: "All in"
-}, {
-  pDirected: -0.15,
-  pInterest: 0.15,
-  emoji: "😕",
-  label: "Not for me"
-}, {
-  pDirected: -0.55,
-  pInterest: 0.25,
-  emoji: "🙁",
-  label: "Don't like this"
-}, {
-  pDirected: -0.9,
-  pInterest: 0.3,
-  emoji: "😠",
-  label: "Really against this"
-}, {
-  pDirected: -0.45,
-  pInterest: 0.75,
-  emoji: "😤",
-  label: "Against, but keep me posted"
-}, {
-  pDirected: -0.9,
-  pInterest: 0.9,
-  emoji: "🤬",
-  label: "Against, and I want all of it"
-}, {
-  pDirected: 0.2,
-  pInterest: -0.2,
-  emoji: "😶",
-  label: "Fine, just not for me"
-}, {
-  pDirected: 0.7,
-  pInterest: -0.3,
-  emoji: "😌",
-  label: "Good, but not in my world"
-}, {
-  pDirected: 0.3,
-  pInterest: -0.8,
-  emoji: "🙈",
-  label: "Rather not see this"
-}, {
-  pDirected: 0.9,
-  pInterest: -0.85,
-  emoji: "🤐",
-  label: "Good, keep it away"
-}, {
-  pDirected: -0.2,
-  pInterest: -0.2,
-  emoji: "😑",
-  label: "Meh"
-}, {
-  pDirected: -0.6,
-  pInterest: -0.45,
-  emoji: "😖",
-  label: "Dislike, keep away"
-}, {
-  pDirected: -0.35,
-  pInterest: -0.85,
-  emoji: "🚫",
-  label: "Keep this away"
-}, {
-  pDirected: -0.9,
-  pInterest: -0.9,
-  emoji: "💀",
-  label: "Absolutely not"
-}];
-
-/* THE TAG TABLE IS ITS OWN, AND IT IS DISJOINT FROM THE STANCE FACES (jakob's
-   ruling, the tag pad round). Not one glyph appears in both tables, and that is
-   the point rather than an accident of picking: a face that means "Like this"
-   on a post must never also mean "locked on" about a topic, or the one lossy
-   readout the system has starts lying about which family a reader is looking
-   at. The stance table is twenty faces; this one is thirteen objects.
-
-   IT READS AS A SENTENCE ABOUT AN OBJECT, NOT A FEELING. A tag is a claim
-   about what a post is about — it has no mood to wear — so each row names a
-   thing that stands in for a degree of aboutness held at a degree of
-   certainty: a key, a magnet, a die, a fishhook.
-
-   THE GRID IS FOUR BY THREE. Aboutness runs Barely → Entirely across four
-   columns, certainty runs Guessing → Certain up three rows, and the twelve
-   sit at the band centres. `💯` is the thirteenth and floats: it sits just
-   left of `🎯` and higher, so the very top of the field — all of it, said
-   flat out — is reachable without stealing the Entirely corner from the row
-   that owns it.
-
-   LIKE `STANCE_ANCHORS`, THIS TABLE IS THE CONTRACT — both clients read these
-   thirteen rows, and a change here changes both apps. The words are the
-   spoken reading, never drawn beside the face: §8.3's rule that the face
-   carries the feel and the pair carries the fact holds for a tag too. */
-const TAG_ANCHORS = [{
-  pDirected: 0.15,
-  pInterest: 0.9,
-  emoji: "🔍",
-  label: "had to look, but it's in there"
-}, {
-  pDirected: 0.45,
-  pInterest: 0.9,
-  emoji: "🔗",
-  label: "definitely linked"
-}, {
-  pDirected: 0.72,
-  pInterest: 0.9,
-  emoji: "🔒",
-  label: "locked on"
-}, {
-  pDirected: 0.95,
-  pInterest: 0.9,
-  emoji: "🎯",
-  label: "exactly this"
-}, {
-  pDirected: 0.15,
-  pInterest: 0.55,
-  emoji: "💧",
-  label: "a drop of it, I think"
-}, {
-  pDirected: 0.45,
-  pInterest: 0.55,
-  emoji: "🧩",
-  label: "a piece of the picture"
-}, {
-  pDirected: 0.72,
-  pInterest: 0.55,
-  emoji: "🧲",
-  label: "pulled toward it"
-}, {
-  pDirected: 0.95,
-  pInterest: 0.55,
-  emoji: "🗝️",
-  label: "likely the key to it"
-}, {
-  pDirected: 0.15,
-  pInterest: 0.15,
-  emoji: "❔",
-  label: "faint maybe"
-}, {
-  pDirected: 0.45,
-  pInterest: 0.15,
-  emoji: "🎲",
-  label: "could go either way"
-}, {
-  pDirected: 0.72,
-  pInterest: 0.15,
-  emoji: "🎣",
-  label: "fishing for it"
-}, {
-  pDirected: 0.95,
-  pInterest: 0.15,
-  emoji: "🔮",
-  label: "big claim, divined"
-}, {
-  pDirected: 0.86,
-  pInterest: 0.95,
-  emoji: "💯",
-  label: "all of it, full stop"
-}];
-function clampDimension(value, min = DIMENSION_MIN, max = DIMENSION_MAX) {
-  if (Number.isNaN(value)) return 0;
-  const bounded = Math.min(max, Math.max(min, value));
-  return bounded === 0 ? 0 : bounded;
-}
-function clampPair(pair, ranges = STANCE_RANGES) {
-  return {
-    pDirected: clampDimension(pair.pDirected, ranges.pDirected.min, ranges.pDirected.max),
-    pInterest: clampDimension(pair.pInterest, ranges.pInterest.min, ranges.pInterest.max)
-  };
-}
-
-/** The nearest anchor by Euclidean distance; the first of an exact tie wins. */
-function nearestAnchor(pair) {
-  let best = STANCE_ANCHORS[0];
-  let bestDistance = Number.POSITIVE_INFINITY;
-  for (const anchor of STANCE_ANCHORS) {
-    const dd = anchor.pDirected - pair.pDirected;
-    const di = anchor.pInterest - pair.pInterest;
-    const distance = dd * dd + di * di;
-    if (distance < bestDistance) {
-      best = anchor;
-      bestDistance = distance;
-    }
-  }
-  return best;
-}
-
-/** The readout a STANDING wears. The table never speaks for zero. */
-function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
-  if (pair.pDirected === 0 && pair.pInterest === 0) return {
-    emoji: ZERO_BUNDLE_EMOJI,
-    label: zeroLabel
-  };
-  return nearestAnchor(pair);
-}
-
-/* The read-only value readout (profile round, 2026-09-01): a stance RECORD's
-   face and pair drawn plainly wherever a stance is data rather than a control
-   — the stances page's rows, the chronicle's stance entries. Never
-   interactive: acting on a person means opening their profile first (jakob —
-   stancing here is more deliberate than a follow). */
-function StanceValue({
-  pDirected,
-  pInterest,
-  showPair = true
-}) {
-  const pair = {
-    pDirected,
-    pInterest
-  };
-  const readout = bundleReadout(pair);
-  return /*#__PURE__*/React.createElement("span", {
-    role: "img",
-    "aria-label": `${readout.label}, ${formatStancePair(pair)}`,
-    style: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 6
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      fontSize: "var(--text-title-medium)"
-    }
-  }, readout.emoji), showPair && /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      fontSize: "var(--text-body-small)",
-      color: "var(--text-secondary)",
-      whiteSpace: "nowrap"
-    }
-  }, formatStancePair(pair)));
-}
-
-/** Always signed, two decimals. The sign carries the direction, so it shows at zero. */
-function formatDimension(value) {
-  return new Intl.NumberFormat(undefined, {
-    signDisplay: "always",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(value);
-}
-
-/** Unsigned, two decimals — for a value whose range has no negative half. */
-function formatUnsigned(value) {
-  return new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(value);
-}
-
-/** `+0.40 / +0.20`-style. Valence first, matching the pad's horizontal-then-vertical order. */
-function formatStancePair(pair) {
-  return `${formatDimension(pair.pDirected)} / ${formatDimension(pair.pInterest)}`;
-}
-
-/* A TAG'S PAIR IS NOT A STANCE'S, AND IT MUST NOT LOOK LIKE ONE (jakob's
-   ruling, the tag round). Relevance is a signed Dimension over [-1, +1] and
-   keeps the sign, which is the whole content of the value. Confidence is
-   census-bounded to [0, 1] (hashtag.md §4, `TagInput` in api-spec.md), so a
-   `+` on it advertises a pole that does not exist — it reads unsigned:
-   `+0.40 / 0.90`. Two decimals either way, the system's one number format.
-   The difference between the two shapes is the point: a reader who can tell a
-   tag's pair from a stance's at a glance is being told the truth about which
-   family they are looking at. */
-function formatTagPair(pair) {
-  return `${formatDimension(pair.pDirected)} / ${formatUnsigned(pair.pInterest)}`;
-}
-
-/** The same two values with their axes named, for surfaces without the pad's layout. */
-function formatStanceWords(pair) {
-  return `${DIRECTED_LABEL} ${formatDimension(pair.pDirected)}, ${INTEREST_LABEL} ${formatDimension(pair.pInterest)}`;
-}
-
-/** Where a pick lands the bundle: `clip` of RAW SUM plus pick, folded locally. */
-function localLanding(rawSum, pick) {
-  const landing = clampPair({
-    pDirected: rawSum.pDirected + pick.pDirected,
-    pInterest: rawSum.pInterest + pick.pInterest
-  });
-  return {
-    landing,
-    inert: landing.pDirected === 0 || landing.pInterest === 0,
-    severed: landing.pDirected === 0 && landing.pInterest === 0
-  };
-}
-function standingLine(bundle, targetLabel) {
-  if (bundle === undefined) return "Checking your current stance…";
-  if (bundle === null || bundle.records === 0) return `${ZERO_BUNDLE_EMOJI} No stance on ${targetLabel} yet.`;
-  if (bundle.severed) return `${ZERO_BUNDLE_EMOJI} You've severed ${targetLabel}.`;
-  // Face and pair; the words ride the spoken line beside it.
-  return `Current stance ${bundleReadout(bundle.current).emoji} ${formatStancePair(bundle.current)}`;
-}
-
-/**
- * The severance read, split so the two numbers can be introduced in an order that
- * makes sense.
- *
- * The raw sum LEADS and the fold is derived from it. Stating the fold first and
- * the raw sum second reads as arithmetic that does not work — "my stance is +1.00,
- * so why does walking back take 1.40?" — because it presents the capped number as
- * the thing that exists and the true total as a correction to it. The total is
- * what the reader built up; the cap is what the feed reads of it. In that order it
- * explains itself, and §8.3's "clipped is not hidden" is honoured without
- * confusing anyone.
- *
- * `capped` is false when the sum never reached the clip, and then there is only
- * one number to show and no aside to make.
- */
-function severanceParts(bundle, targetLabel) {
-  if (bundle === undefined) return {
-    sentence: "Checking your current stance…"
-  };
-  if (bundle === null || bundle.records === 0) {
-    return {
-      sentence: `${ZERO_BUNDLE_EMOJI} No stance on ${targetLabel} yet.`
-    };
-  }
-  const raw = formatStancePair(bundle.rawSum);
-  const folded = formatStancePair(bundle.current);
-  return {
-    raw,
-    folded,
-    capped: raw !== folded
-  };
-}
-function landingLine(landing) {
-  if (landing === null || landing === undefined) return "Working out the resulting stance…";
-  if (landing.severed) return "Resulting stance: nothing — this nets everything you've said about it back to zero.";
-  if (landing.inert) {
-    const directedInert = landing.landing.pDirected === 0;
-    const interestInert = landing.landing.pInterest === 0;
-    if (directedInert && interestInert) return "Resulting stance: carries nothing.";
-    if (directedInert) return "Resulting stance: your side of it carries nothing.";
-    if (interestInert) return "Resulting stance: what reaches you carries nothing.";
-  }
-  const readout = bundleReadout(landing.landing);
-  return `Resulting stance ${readout.emoji} ${formatStancePair(landing.landing)}`;
-}
-
-/** The confirmation a signed gesture leaves. Names where it LEFT the viewer.
-    A transient surface is read away from the pad, so the words stay here: this
-    line IS the accessible text, with no visual redundancy to carry them. */
-function signedLine(standing, records, severed, targetLabel) {
-  const acts = records === 1 ? "Signed" : `Signed ${records} actions`;
-  const where = severed ? `You've severed ${targetLabel}.` : `Current stance: ${bundleReadout(standing).label}, ${formatStanceWords(standing)}`;
-  return `${acts}, still settling. ${where}`;
-}
-
-/** Face and pair, and the words for a reader who cannot see the face (§8.3). */
-function StanceReadout({
-  pair,
-  kind = "pick",
-  zeroLabel = SEVERED_LABEL,
-  style
-}) {
-  const readout = kind === "standing" ? bundleReadout(pair, zeroLabel) : nearestAnchor(pair);
-  return /*#__PURE__*/React.createElement("span", {
-    style: {
-      display: "inline-flex",
-      alignItems: "baseline",
-      gap: "var(--space-2)",
-      flex: "none",
-      ...style
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true"
-  }, readout.emoji), /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      fontSize: "var(--text-body-small)",
-      color: "var(--text-secondary)",
-      whiteSpace: "nowrap"
-    }
-  }, formatStancePair(pair)), /*#__PURE__*/React.createElement("span", {
-    style: SR_ONLY
-  }, `${readout.label}, ${formatStanceWords(pair)}`));
-}
-
-/** The standing, split for rendering: either a sentence, or a readout to lay out. */
-function standingParts(bundle, targetLabel) {
-  if (bundle === undefined) return {
-    sentence: "Checking your current stance…"
-  };
-  if (bundle === null || bundle.records === 0) return {
-    sentence: `${ZERO_BUNDLE_EMOJI} No stance on ${targetLabel} yet.`
-  };
-  if (bundle.severed) return {
-    sentence: `${ZERO_BUNDLE_EMOJI} You've severed ${targetLabel}.`
-  };
-  const readout = bundleReadout(bundle.current);
-  return {
-    label: "Current stance",
-    emoji: readout.emoji,
-    pair: formatStancePair(bundle.current),
-    spoken: `Current stance: ${readout.label}, ${formatStanceWords(bundle.current)}`
-  };
-}
-
-/** The landing, split the same way. */
-function landingParts(landing) {
-  if (landing === null || landing === undefined) return {
-    sentence: "Working out the resulting stance…"
-  };
-  if (landing.severed || landing.inert) return {
-    sentence: landingLine(landing)
-  };
-  const readout = bundleReadout(landing.landing);
-  return {
-    label: "Resulting stance",
-    emoji: readout.emoji,
-    pair: formatStancePair(landing.landing),
-    spoken: `Resulting stance: ${readout.label}, ${formatStanceWords(landing.landing)}`
-  };
-}
-
-/* One labelled readout: the name of the quantity, then the face and the numbers on
-   the line below it. Three of these stack in the pad — current stance, the pick,
-   the resulting stance — and they are formatted identically so the eye can compare
-   them without reading. */
-function ReadoutBlock({
-  label,
-  emoji,
-  pair,
-  spoken,
-  sentence,
-  big = false,
-  style
-}) {
-  if (sentence !== undefined) {
-    return /*#__PURE__*/React.createElement("p", {
-      style: {
-        margin: 0,
-        fontSize: "var(--text-body-small)",
-        color: "var(--text-secondary)",
-        ...style
-      }
-    }, sentence);
-  }
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      ...style
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      fontSize: "var(--text-label-small)",
-      letterSpacing: "var(--text-label-small--letter-spacing)",
-      fontWeight: "var(--text-label-small--font-weight)",
-      color: "var(--text-secondary)"
-    }
-  }, label), /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      display: "inline-flex",
-      alignItems: "baseline",
-      gap: "var(--space-2)"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)",
-      lineHeight: 1.2
-    }
-  }, emoji), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-small)",
-      color: big ? "var(--on-surface)" : "var(--text-secondary)",
-      whiteSpace: "nowrap"
-    }
-  }, pair)), /*#__PURE__*/React.createElement("span", {
-    style: SR_ONLY
-  }, spoken));
-}
-
-/** The standing and the pick — everything that sits above the field. */
-function StanceStanding({
-  pick,
-  bundle,
-  targetLabel,
-  style
-}) {
-  const anchor = nearestAnchor(pick);
-  return /*#__PURE__*/React.createElement("div", {
-    "aria-live": "polite",
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "var(--space-2)",
-      ...style
-    }
-  }, /*#__PURE__*/React.createElement(ReadoutBlock, standingParts(bundle, targetLabel)), /*#__PURE__*/React.createElement(ReadoutBlock, {
-    big: true,
-    label: PICK_LABEL,
-    emoji: anchor.emoji,
-    pair: formatStancePair(pick),
-    spoken: `${PICK_LABEL}: ${anchor.label}, ${formatStanceWords(pick)}`
-  }));
-}
-
-/** The landing — the one readout that sits below the field. */
-function StanceLandingLine({
-  landing,
-  style
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    "aria-live": "polite",
-    style: style
-  }, /*#__PURE__*/React.createElement(ReadoutBlock, landingParts(landing)));
-}
-__ds_scope.DIMENSION_MIN = DIMENSION_MIN;
-__ds_scope.DIMENSION_MAX = DIMENSION_MAX;
-__ds_scope.ORIGIN = ORIGIN;
-__ds_scope.STANCE_RANGES = STANCE_RANGES;
-__ds_scope.TAG_RELEVANCE_FLOOR = TAG_RELEVANCE_FLOOR;
-__ds_scope.TAG_RANGES = TAG_RANGES;
-__ds_scope.TAP_DEFAULT = TAP_DEFAULT;
-__ds_scope.DIRECTED_LABEL = DIRECTED_LABEL;
-__ds_scope.INTEREST_LABEL = INTEREST_LABEL;
-__ds_scope.DIRECTED_POLES = DIRECTED_POLES;
-__ds_scope.INTEREST_POLES = INTEREST_POLES;
-__ds_scope.PICK_LABEL = PICK_LABEL;
-__ds_scope.SEVERED_LABEL = SEVERED_LABEL;
-__ds_scope.NO_STANDING_LABEL = NO_STANDING_LABEL;
-__ds_scope.ZERO_BUNDLE_EMOJI = ZERO_BUNDLE_EMOJI;
-__ds_scope.RESTING_FACE_EMOJI = RESTING_FACE_EMOJI;
-__ds_scope.SR_ONLY = SR_ONLY;
-__ds_scope.STANCE_ANCHORS = STANCE_ANCHORS;
-__ds_scope.TAG_ANCHORS = TAG_ANCHORS;
-__ds_scope.clampDimension = clampDimension;
-__ds_scope.clampPair = clampPair;
-__ds_scope.nearestAnchor = nearestAnchor;
-__ds_scope.bundleReadout = bundleReadout;
-__ds_scope.StanceValue = StanceValue;
-__ds_scope.formatDimension = formatDimension;
-__ds_scope.formatUnsigned = formatUnsigned;
-__ds_scope.formatStancePair = formatStancePair;
-__ds_scope.formatTagPair = formatTagPair;
-__ds_scope.formatStanceWords = formatStanceWords;
-__ds_scope.localLanding = localLanding;
-__ds_scope.standingLine = standingLine;
-__ds_scope.severanceParts = severanceParts;
-__ds_scope.landingLine = landingLine;
-__ds_scope.signedLine = signedLine;
-__ds_scope.StanceReadout = StanceReadout;
-__ds_scope.standingParts = standingParts;
-__ds_scope.landingParts = landingParts;
-__ds_scope.StanceStanding = StanceStanding;
-__ds_scope.StanceLandingLine = StanceLandingLine;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceReadout.jsx", error: String((e && e.message) || e) }); }
-
 // components/stance/StancePad.jsx
 try { (() => {
 const { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_RANGES } = __ds_scope;
@@ -4509,7 +4628,12 @@ const { formatDimension, formatUnsigned } = __ds_scope;
    THE POLES ARE NAMED. A track says nothing about what either end means, and
    the axis label alone was carrying too much: "Against" and "For" under the
    ends make the control readable at a glance instead of after a sentence.
-   `body-small` on `onSurfaceVariant` so they inform without competing. */
+   `body-small` on `onSurfaceVariant` so they inform without competing.
+
+   THE VALUE IN THE LABEL IS THE GEEK READING (`cg-exact`, readme §13). The
+   poles, the label and the thumb's position say where the axis stands without
+   it; the range input announces its own value to a screen reader in both
+   modes, so nothing spoken is lost when the number is not painted. */
 
 function StanceSlider({
   label,
@@ -4543,7 +4667,9 @@ function StanceSlider({
         lineHeight: "var(--text-label-large--line-height)",
         fontWeight: "var(--text-label-large--font-weight)"
       }
-    }, label, " ", format(value)), /*#__PURE__*/React.createElement("input", {
+    }, label, " ", /*#__PURE__*/React.createElement("span", {
+      className: "cg-exact"
+    }, format(value))), /*#__PURE__*/React.createElement("input", {
       id: fieldId,
       type: "range",
       min: min,
@@ -4571,20 +4697,52 @@ __ds_scope.StanceSlider = StanceSlider;
 
 // components/stance/StanceCoachMark.jsx
 try { (() => {
-const { buttonStyle, BUTTON_CLASS } = __ds_scope;
+const { buttonStyle, BUTTON_CLASS, SR_ONLY } = __ds_scope;
+/* A HELP SENTENCE SPEAKS THE FACE AND CARRIES THE DIGITS BEHIND IT (jakob's
+   ruling, the geek round). Every line that names a pair is emoji-first: the
+   face is the reading, and the numbers ride a trailing `cg-exact` span that
+   paints only when the reader has asked for them (readme §13). The painted
+   tail is `aria-hidden` and `spoken` says the whole fact in both modes —
+   prose follows the mode exactly as a readout does, and neither redacts.
+
+   A line with nothing to hide is a plain string and stays one. */
+function HelpLine({
+  line
+}) {
+  if (typeof line === "string") return line;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, line.text, line.face, /*#__PURE__*/React.createElement("span", {
+    className: "cg-exact"
+  }, line.exact), line.tail), /*#__PURE__*/React.createElement("span", {
+    style: SR_ONLY
+  }, line.spoken));
+}
+
+/** The key a list needs, whichever shape the line takes. */
+function helpKey(line) {
+  return typeof line === "string" ? line : line.spoken;
+}
+
 /* The coach mark of design.md §8.7.
-   "A held gesture is invisible until taught, and a tap that stages a priced act
-   must not be the teaching moment's casualty." The FIRST TAP EVER on a stance
-   target opens this and stages NOTHING; every tap after it acts. So the mark's
-   first job is to say that nothing was signed — a reader who thinks their tap was
-   swallowed taps again, which is the exact spend the teaching moment exists to
-   prevent.
+
+   A HELD GESTURE IS INVISIBLE UNTIL TAUGHT. The tap opens the pad, so the pad
+   is where a reader arrives on their own and the teaching moment costs nothing;
+   what is left to say is that the same button, HELD, signs the gentle default
+   without opening anything. This rides the FIRST OPEN EVER and never again.
 
    NON-MODAL: discoverable but never blocking. Nothing behind it is inert and
-   nothing is trapped. It stays until dismissed or until the first successful hold   — never on a timer, because a hint that disappears while it is being read has
-   not taught anything. */
+   nothing is trapped. It stays until dismissed or until the pad closes — never
+   on a timer, because a hint that disappears while it is being read has not
+   taught anything. */
 
-const STANCE_EXPLANATION = "A tap signs a small positive, +0.10 / +0.10. Press and hold the same button to open the pad and " + "pick exactly where you stand.";
+const STANCE_EXPLANATION = {
+  text: "A tap opens this pad. Press and hold the same button and a gentle ",
+  face: "🙂",
+  exact: " (+0.10 / +0.10)",
+  tail: " is signed without opening anything.",
+  spoken: "A tap opens this pad. Press and hold the same button and a gentle Nice, For or against +0.10, " + "How much reaches you +0.10, is signed without opening anything."
+};
 
 /* What the pad's `?` opens (design.md §8.7: "a small `?` on the pad opens the
    explanation on demand, for anyone meeting the control after the one-time coach
@@ -4598,14 +4756,17 @@ const STANCE_EXPLANATION = "A tap signs a small positive, +0.10 / +0.10. Press a
    Four lines, in the order a reader needs them: what the field means, what commits,
    why the three readouts differ, and what the way out costs. The third is the one
    nobody can guess — that a pick ADDS to what they already said — and it is the
-   reason "Your pick" and "Resulting stance" are two different numbers. */
-const STANCE_PAD_HELP = ["Drag the knob to where you stand. Left to right is against to for; bottom to top is how much more of it you want reaching you.", "Letting go changes nothing. Set signs it, Cancel leaves without signing.", "Your pick is one new thing you're saying. It adds to what you've said before, which is why the resulting stance is a different number.", "Sever walks everything you've said back to nothing. It has its own confirmation, and it costs one signed action per record."];
+   reason the pick and the result wear two different faces. IT SPEAKS FACES, not
+   numbers (jakob's ruling, the geek round): the explanation has to hold for a
+   reader who has never turned the digits on, and "the two faces can differ" is
+   the same fact said in what they can see. */
+const STANCE_PAD_HELP = ["Drag the knob. Left to right is against to for; bottom to top is how much more of it you want reaching you.", "Letting go changes nothing. Set signs it, Cancel leaves without signing.", "Your pick adds to what you've said before — that's why the two faces can differ.", "Walk it back takes everything you've said to nothing. It has its own confirmation, and each thing you've said is walked back by its own signature."];
 
 /* The same help, for the alternates — which have no field, so the first line has
    to teach the thing the pad teaches by being a square: that an interaction here
    carries TWO values, not one. That is the genuinely new idea in this control, and
    a reader meeting it as two sliders has nothing to infer it from. */
-const STANCE_ALTERNATES_HELP = ["Two values, not one. The first is whether you're for or against it; the second is how much more of it you want reaching you.", "Nothing is signed until you press Sign it.", "Your pick adds to what you've said before, which is why the resulting stance is a different number.", "Sever walks everything back to nothing, at one signed action per record."];
+const STANCE_ALTERNATES_HELP = ["Two values, not one. The first is whether you're for or against it; the second is how much more of it you want reaching you.", "Nothing is signed until you press Sign it.", "Your pick adds to what you've said before — that's why the two faces can differ.", "Walk it back takes everything to nothing, and each thing you've said is walked back by its own signature."];
 function StanceCoachMark({
   onDismiss,
   style
@@ -4617,7 +4778,7 @@ function StanceCoachMark({
   return /*#__PURE__*/React.createElement("div", {
     role: "dialog",
     "aria-modal": "false",
-    "aria-label": "How stances work",
+    "aria-label": "How opinions work",
     style: {
       zIndex: 20,
       display: "flex",
@@ -4636,13 +4797,15 @@ function StanceCoachMark({
       fontSize: "var(--text-title-small)",
       fontWeight: "var(--text-title-small--font-weight)"
     }
-  }, "Press and hold to pick exactly"), /*#__PURE__*/React.createElement("p", {
+  }, "Press and hold to sign it outright"), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
       fontSize: "var(--text-body-small)",
       color: "var(--text-secondary)"
     }
-  }, "Nothing was signed just now. ", STANCE_EXPLANATION), /*#__PURE__*/React.createElement("button", {
+  }, "Nothing was signed just now. ", /*#__PURE__*/React.createElement(HelpLine, {
+    line: STANCE_EXPLANATION
+  })), /*#__PURE__*/React.createElement("button", {
     ref: dismissRef,
     type: "button",
     onClick: onDismiss,
@@ -4656,6 +4819,8 @@ function StanceCoachMark({
     }
   }, "Got it"));
 }
+__ds_scope.HelpLine = HelpLine;
+__ds_scope.helpKey = helpKey;
 __ds_scope.STANCE_EXPLANATION = STANCE_EXPLANATION;
 __ds_scope.STANCE_PAD_HELP = STANCE_PAD_HELP;
 __ds_scope.STANCE_ALTERNATES_HELP = STANCE_ALTERNATES_HELP;
@@ -4664,7 +4829,7 @@ __ds_scope.StanceCoachMark = StanceCoachMark;
 
 // components/stance/StanceAlternates.jsx
 try { (() => {
-const { DialogSurface, buttonStyle, BUTTON_CLASS, StanceSlider, STANCE_ALTERNATES_HELP, clampDimension, DIRECTED_LABEL, DIRECTED_POLES, INTEREST_LABEL, INTEREST_POLES } = __ds_scope;
+const { DialogSurface, buttonStyle, BUTTON_CLASS, StanceSlider, STANCE_ALTERNATES_HELP, HelpLine, helpKey, clampDimension, DIRECTED_LABEL, DIRECTED_POLES, INTEREST_LABEL, INTEREST_POLES } = __ds_scope;
 /* The alternate inputs (design.md §8.6) — paired sliders and direct entry. Same
    machinery as the pad, different surface: they write the same two values, and the
    readout above them is the same lossy face.
@@ -4744,7 +4909,7 @@ function StanceAlternates({
   children,
   landing,
   inline = false,
-  helpLabel = "How stances work"
+  helpLabel = "How opinions work"
 }) {
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
@@ -4769,7 +4934,7 @@ function StanceAlternates({
     if (measured) setSlotHeight(measured);
   }, [explaining, showing]);
   return /*#__PURE__*/React.createElement(DialogSurface, {
-    ariaLabel: "Choose your stance",
+    ariaLabel: "Choose your opinion",
     inline: inline,
     onScrimPress: onCancel,
     width: "24rem"
@@ -4818,7 +4983,7 @@ function StanceAlternates({
       lineHeight: "var(--text-title-large--line-height)",
       fontWeight: "var(--text-title-large--font-weight)"
     }
-  }, "Choose your stance")), explaining ? /*#__PURE__*/React.createElement("div", {
+  }, "Choose your opinion")), explaining ? /*#__PURE__*/React.createElement("div", {
     style: {
       minHeight: slotHeight ?? undefined,
       display: "flex",
@@ -4826,13 +4991,15 @@ function StanceAlternates({
       gap: "var(--space-2)"
     }
   }, STANCE_ALTERNATES_HELP.map(line => /*#__PURE__*/React.createElement("p", {
-    key: line,
+    key: helpKey(line),
     style: {
       margin: 0,
       fontSize: "var(--text-body-small)",
       color: "var(--text-secondary)"
     }
-  }, line)), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement(HelpLine, {
+    line: line
+  }))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: () => setExplaining(false),
     className: BUTTON_CLASS,
@@ -4921,7 +5088,7 @@ function StanceAlternates({
       }),
       marginRight: "auto"
     }
-  }, "Sever"), /*#__PURE__*/React.createElement("button", {
+  }, "Walk it back"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onCancel,
     className: BUTTON_CLASS,
@@ -4956,7 +5123,7 @@ const { DialogSurface, buttonStyle, BUTTON_CLASS, nearestAnchor, severanceParts,
 // The order is fixed (Android parity): title · the pick line when it was reached
 // by a pick · the consequences · what the reader has said in total (and, only when
 // it exceeds the clip, the cap as an aside) · the cost · the failure line when one
-// exists · Sever, Keep it.
+// exists · Walk it back, Keep it.
 //
 // THE RAW TOTAL LEADS. §8.3 requires the raw sums on every surface that explains
 // cost, because they are what a walk back to zero actually walks — but stating the
@@ -4969,7 +5136,7 @@ const { DialogSurface, buttonStyle, BUTTON_CLASS, nearestAnchor, severanceParts,
 // buttons of equal weight. On a destructive dialog that is a coin flip — two
 // identical-looking words, one of which is irreversible and priced. Here the SAFE
 // action carries the emphasis (filled) and keeps the right-hand slot the thumb
-// goes to by habit, while `Sever` stays a text button on the left. It is still
+// goes to by habit, while `Walk it back` stays a text button on the left. It is still
 // reachable in one tap, so the control still never prevents the choice; it just
 // stops being the default-looking one. No new colour is introduced — severance is
 // a deliberate act, not a failure, so `error` stays off this surface (§2.4).
@@ -4991,11 +5158,14 @@ function SeveranceConfirm({
   onCancel,
   inline = false
 }) {
-  const actions = records === 1 ? "1 signed action" : `${records} signed actions`;
+  /* THE COST IS COUNTED IN THINGS, NOT IN ACTIONS (jakob's ruling, the geek
+     round). "Signed action" is the repo's word for a record; what the reader
+     has is a pile of things they said, each of which has to be said back. */
+  const cost = records === 1 ? "It signs 1 thing, paid on its own." : `It signs ${records} things, each paid separately.`;
   const pickAnchor = pick === null ? null : nearestAnchor(pick);
   const read = severanceParts(bundle, targetLabel);
   return /*#__PURE__*/React.createElement(DialogSurface, {
-    ariaLabel: "Sever this?",
+    ariaLabel: "Walk it all back?",
     inline: inline,
     onScrimPress: onCancel,
     width: "22rem"
@@ -5006,7 +5176,7 @@ function SeveranceConfirm({
       lineHeight: "var(--text-headline-small--line-height)",
       fontWeight: "var(--text-headline-small--font-weight)"
     }
-  }, "Sever this?"), pickAnchor !== null && /*#__PURE__*/React.createElement("p", {
+  }, "Walk it all back?"), pickAnchor !== null && /*#__PURE__*/React.createElement("p", {
     style: {
       margin: "8px 0 0",
       fontSize: "var(--text-body-medium)"
@@ -5021,7 +5191,7 @@ function SeveranceConfirm({
       fontSize: "var(--text-body-medium)",
       color: "var(--text-secondary)"
     }
-  }, "Your standing toward ", targetLabel, " drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you."), read.sentence !== undefined ? /*#__PURE__*/React.createElement("p", {
+  }, "Your opinion of ", targetLabel, " drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you."), read.sentence !== undefined ? /*#__PURE__*/React.createElement("p", {
     style: {
       margin: "8px 0 0",
       fontSize: "var(--text-body-small)",
@@ -5033,18 +5203,18 @@ function SeveranceConfirm({
       fontSize: "var(--text-body-small)",
       color: "var(--text-secondary)"
     }
-  }, "Everything you've said about ", targetLabel, " adds up to ", read.raw, ", and that is what severing walks back."), read.capped && /*#__PURE__*/React.createElement("p", {
+  }, "Everything you've said about ", targetLabel, " adds up to ", read.raw, ", and that is what this walks back."), read.capped && /*#__PURE__*/React.createElement("p", {
     style: {
       margin: "4px 0 0",
       fontSize: "var(--text-body-small)",
       color: "var(--text-secondary)"
     }
-  }, "Your feed reads it capped at ", read.folded, " \u2014 the cap is what routing uses, not what you said.")), /*#__PURE__*/React.createElement("p", {
+  }, "Your feed reads it capped at ", read.folded, ".")), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: "8px 0 0",
       fontSize: "var(--text-body-medium)"
     }
-  }, alreadySevered ? "You are already at nothing here." : `It takes ${actions}, each paid for separately.`), failed && /*#__PURE__*/React.createElement("p", {
+  }, alreadySevered ? "You are already at nothing here." : cost), failed && /*#__PURE__*/React.createElement("p", {
     role: "alert",
     style: {
       margin: "8px 0 0",
@@ -5068,7 +5238,7 @@ function SeveranceConfirm({
       size: "sm",
       disabled: busy || alreadySevered
     })
-  }, "Sever"), /*#__PURE__*/React.createElement("button", {
+  }, "Walk it back"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onCancel,
     className: BUTTON_CLASS,
@@ -5083,7 +5253,7 @@ __ds_scope.SeveranceConfirm = SeveranceConfirm;
 
 // components/stance/StanceControl.jsx
 try { (() => {
-const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, StanceAlternates, StanceCoachMark, STANCE_PAD_HELP, SeveranceConfirm, bundleReadout, clampPair, formatStancePair, localLanding, ORIGIN, RESTING_FACE_EMOJI, signedLine, StanceLandingLine, StanceStanding, TAP_DEFAULT } = __ds_scope;
+const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, StanceAlternates, StanceCoachMark, STANCE_PAD_HELP, HelpLine, helpKey, SeveranceConfirm, bundleReadout, clampPair, formatStancePair, localLanding, ORIGIN, RESTING_FACE_EMOJI, signedLine, StanceLandingLine, StanceStanding, TAP_DEFAULT } = __ds_scope;
 /* CoGra's SIGNATURE INTERACTION (design.md §8). Everything in this file is a rule
    from that section, not a preference:
 
@@ -5092,15 +5262,25 @@ const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, Stance
    rest, visibly waiting to be given a value, never a bare word and never the shrug
    a zero standing owns.
 
-   THE FIRST TAP EVER TEACHES and stages nothing. Every tap after that acts,
-   committing the modest positive default (+0.1, +0.1) verbatim.
+   A TAP OPENS THE PAD (jakob's ruling, the geek round). The light gesture — the
+   one a thumb gives by accident — costs nothing and signs nothing; it blooms the
+   pad at ONE FIXED SPOT, the lower centre of the viewport, the same place every
+   time. Muscle memory is part of the control.
 
-   A TAP ANSWERS IMMEDIATELY. The resting target moves to the new standing at once
-   and a snackbar confirms the signature: a gesture that stages a priced act must
-   never be silent, because silence reads as failure and invites the same act again.
+   PRESS AND HOLD 500ms SIGNS THE DEFAULT, the modest positive (+0.1, +0.1)
+   verbatim. THE PRICE IS ACCEPTED DELIBERATELY: the shortcut that spends a
+   signature is the one that takes a held finger, and the gesture nobody gives by
+   mistake is the only one allowed to act by itself.
 
-   PRESS AND HOLD 500ms and the pad blooms — at ONE FIXED SPOT, the lower centre of
-   the viewport, the same place every time. Muscle memory is part of the control.
+   THE HOLD ANSWERS IMMEDIATELY. The resting target moves to the new standing at
+   once and a snackbar confirms the signature: a gesture that stages a priced act
+   must never be silent, because silence reads as failure and invites the same act
+   again.
+
+   THE PAD IS THE TEACHER. The one-time coach mark rides the FIRST OPEN, inside
+   the pad it explains, and what it teaches is the shortcut — a reader who has
+   found the pad has already found everything they need, and the only thing left
+   to say is that the hold is faster.
 
    RELEASING THE FINGER NEVER COMMITS. Release parks the pick and leaves the pad
    open; an explicit SET commits; CANCEL or a press outside stages nothing. An
@@ -5184,7 +5364,7 @@ function StanceControl({
   padNote,
   wide = false,
   overMedia = false,
-  helpLabel = "How stances work"
+  helpLabel = "How opinions work"
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -5220,6 +5400,7 @@ function StanceControl({
     setOpen(false);
     setAlternates(false);
     setExplaining(false);
+    setCoach(false);
   };
   React.useEffect(() => {
     if (!open) return undefined;
@@ -5274,6 +5455,10 @@ function StanceControl({
       }
     });
   };
+
+  /* THE TAP OPENS. It teaches on the first open ever and never again — the
+     coach rides inside the pad, so opening it is both the answer and the
+     lesson, and a feed of twenty cannot teach twenty times. */
   const onTap = () => {
     if (suppressClick.current) {
       suppressClick.current = false;
@@ -5283,24 +5468,27 @@ function StanceControl({
       setJoinPrompt(true);
       return;
     }
-    if (!taught) {
+    setPick(ORIGIN);
+    setSigned(null);
+    setOpen(true);
+    if (taught) {
+      setCoach(false);
+    } else {
       setTaught(true);
       setCoach(true);
-      return;
     }
-    commitChecked(TAP_DEFAULT);
   };
+
+  /* THE HOLD SIGNS. It fires under the finger, so the click that follows the
+     release has to be swallowed or the pad would open on top of the signature. */
   const onPointerDown = () => {
     if (!signedIn) return;
     clearHold();
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
       suppressClick.current = true;
-      setPick(ORIGIN);
       setSigned(null);
-      setTaught(true);
-      setCoach(false);
-      setOpen(true);
+      commitChecked(TAP_DEFAULT);
     }, LONG_PRESS_MS);
   };
   const restingPair = bundle.records === 0 && !bundle.severed ? null : bundle.current;
@@ -5324,7 +5512,7 @@ function StanceControl({
     }
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    "aria-label": restingFace === null ? `Take a stance on ${targetLabel}` : `Your stance on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Tap to add a positive one.`,
+    "aria-label": restingFace === null ? `Give your opinion on ${targetLabel}` : `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`,
     onClick: onTap,
     onPointerDown: onPointerDown,
     onPointerUp: clearHold,
@@ -5378,12 +5566,17 @@ function StanceControl({
     style: {
       whiteSpace: "nowrap"
     }
-  }, "Take a stance"), restingPair !== null &&
+  }, "Your opinion"), restingPair !== null &&
   /*#__PURE__*/
   /* NEVER WRAPS. This is the post card's affordance row, which is one
      line by rule — a pair broken across two text lines reads as a
-     two-line block even when the row height has not changed. */
+     two-line block even when the row height has not changed.
+      The face is the default reading and these numbers are the geek
+     one (`cg-exact`, readme §13): at rest the affordance row carries
+     the face alone, and the button's accessible name carries the
+     values in both modes. */
   React.createElement("span", {
+    className: "cg-exact",
     "aria-hidden": "true",
     style: {
       fontSize: "var(--text-body-small)",
@@ -5402,15 +5595,7 @@ function StanceControl({
     style: {
       fontFamily: "var(--font-sans)"
     }
-  }, "Choose your stance on ", targetLabel)), coach && /*#__PURE__*/React.createElement(StanceCoachMark, {
-    onDismiss: () => setCoach(false),
-    style: {
-      position: "absolute",
-      top: "100%",
-      left: 0,
-      marginTop: 8
-    }
-  }), open && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "Choose your opinion on ", targetLabel)), open && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     "aria-hidden": "true",
     onPointerDown: event => {
       event.preventDefault();
@@ -5424,7 +5609,7 @@ function StanceControl({
     }
   }), /*#__PURE__*/React.createElement("div", {
     role: "group",
-    "aria-label": `Stance pad for ${targetLabel}`,
+    "aria-label": `Opinion pad for ${targetLabel}`,
     style: {
       ...parkedPadStyle(padInset),
       zIndex: 20,
@@ -5479,6 +5664,13 @@ function StanceControl({
     style: {
       paddingRight: "40px"
     }
+  }), coach && /*#__PURE__*/React.createElement(StanceCoachMark, {
+    onDismiss: () => setCoach(false),
+    style: {
+      width: "auto",
+      background: "var(--surface-container-highest)",
+      padding: "var(--space-3)"
+    }
   }), explaining ? /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -5486,13 +5678,15 @@ function StanceControl({
       gap: "var(--space-2)"
     }
   }, STANCE_PAD_HELP.map(line => /*#__PURE__*/React.createElement("p", {
-    key: line,
+    key: helpKey(line),
     style: {
       margin: 0,
       fontSize: "var(--text-body-small)",
       color: "var(--text-secondary)"
     }
-  }, line)), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement(HelpLine, {
+    line: line
+  }))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: () => setExplaining(false),
     className: BUTTON_CLASS,
@@ -5527,7 +5721,7 @@ function StanceControl({
       }),
       marginRight: "auto"
     }
-  }, "Sever"), /*#__PURE__*/React.createElement("button", {
+  }, "Walk it back"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: closeAll,
     className: BUTTON_CLASS,
@@ -7207,8 +7401,10 @@ function CommentCard({
       display: "flex",
       flexWrap: "wrap",
       alignItems: "center",
+      justifyContent: "space-between",
       columnGap: "var(--space-2)",
-      rowGap: "var(--space-1)"
+      rowGap: "var(--space-1)",
+      width: "100%"
     }
   }, /*#__PURE__*/React.createElement(StanceControl, {
     targetLabel: targetLabel,
@@ -7304,6 +7500,13 @@ const SR_ONLY = {
 /* OVER MEDIA (jakob, review round 1): on the stream this figure sits on the
    clip, where onSurfaceVariant on photography is not quiet but unreadable. It
    goes white with a shadow — the register is unchanged, the contrast is not. */
+
+/* THE FIGURE IS DRAWN WHATEVER THE READING MODE SAYS (jakob's ruling, the geek
+   round's review). Geek mode governs the number PAIRS — the two-parameter
+   readings the faces and the tag objects already stand in for — and nothing
+   else. A Post Score has no glyph that carries its magnitude, so hiding the
+   digits would leave the `graph` mark saying only "there is a score", which is
+   the black box §7 exists to refuse. */
 function ExplainableNumber({
   label,
   value,
@@ -7315,7 +7518,7 @@ function ExplainableNumber({
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenDetail,
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       flex: "none",
       display: "inline-flex",
@@ -7885,7 +8088,9 @@ function PostCard({
       display: "flex",
       flexWrap: "nowrap",
       alignItems: "center",
+      justifyContent: "space-between",
       gap: "var(--space-2)",
+      width: "100%",
       minWidth: 0
     }
   }, showStance && /*#__PURE__*/React.createElement(StanceControl, {
@@ -7896,7 +8101,7 @@ function PostCard({
     onCommit: onCommit
   }), score !== undefined && /*#__PURE__*/React.createElement(ExplainableNumber, {
     glyph: "graph",
-    label: "Post Score",
+    label: "Post score",
     value: score,
     onOpenDetail: onOpenScore ?? (() => {})
   }), comments !== undefined && /*#__PURE__*/React.createElement("button", {
@@ -7942,7 +8147,7 @@ __ds_scope.PostCard = PostCard;
 
 // components/content/TaggedRow.jsx
 try { (() => {
-const { PendingMarker } = __ds_scope;
+const { PendingMarker, formatTagPair, nearestTagAnchor, SR_ONLY } = __ds_scope;
 /* One row of a tag's page (readme §13, the tag round): the claim that put this
    content here, and then the content itself.
 
@@ -7961,9 +8166,24 @@ const { PendingMarker } = __ds_scope;
    `formatTagPair`'s shape says which family this is — relevance signed over
    [-1, +1], confidence unsigned over [0, 1].
 
+   THE ROW WEARS THE TAG TABLE'S GLYPH (jakob's ruling, backlog item 53). The
+   claim's nearest of the thirteen objects leads the flag and carries the
+   reading; the exact pair rides a `cg-exact` span beside it and paints only in
+   geek mode. The glyph is the lossy readout the row always needed — a reader
+   who does not read numbers was being told nothing by this flag at all.
+
+   THE PAIR ARRIVES AS NUMBERS, NOT AS A STRING. The row picks the glyph and
+   the row formats the pair, from one value, so the two can never disagree and
+   no screen can hand-type a format the contract does not use.
+
    "TAGGED" NEEDS NO NAME BESIDE IT. The page is titled by the tag, so
-   repeating it on every row is noise; the word says which act the numbers
-   belong to, and the numbers say what it claimed.
+   repeating it on every row is noise; the word says which act the glyph and
+   the numbers belong to, and they say what it claimed.
+
+   THE SPOKEN READING IS ONE SPAN, and it is the same in both modes: an emoji's
+   own accessible name is "magnifying glass tilted left", never "had to look,
+   but it's in there", so the visible parts are `aria-hidden` and a
+   screen-reader-only span names the claim and its values (§10).
 
    A CLAIM STILL IN FLIGHT SAYS SO, with the same marker every other
    unsettled record wears.
@@ -7981,6 +8201,8 @@ function TaggedRow({
   pending = false,
   children
 }) {
+  const anchor = nearestTagAnchor(pair);
+  const exact = formatTagPair(pair);
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -8000,11 +8222,23 @@ function TaggedRow({
       lineHeight: "var(--text-body-small--line-height)",
       color: "var(--text-secondary)"
     }
-  }, /*#__PURE__*/React.createElement("span", null, "Tagged"), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      fontSize: "var(--text-body-medium)",
+      lineHeight: 1
+    }
+  }, anchor.emoji), /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true"
+  }, "Tagged"), /*#__PURE__*/React.createElement("span", {
+    className: "cg-exact",
+    "aria-hidden": "true",
     style: {
       whiteSpace: "nowrap"
     }
-  }, pair), pending && /*#__PURE__*/React.createElement(PendingMarker, null)), children);
+  }, exact), /*#__PURE__*/React.createElement("span", {
+    style: SR_ONLY
+  }, `Tagged: ${anchor.label}, ${exact}`), pending && /*#__PURE__*/React.createElement(PendingMarker, null)), children);
 }
 __ds_scope.TaggedRow = TaggedRow;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/TaggedRow.jsx", error: String((e && e.message) || e) }); }
@@ -8742,8 +8976,12 @@ function Switch({
     "aria-hidden": "true",
     style: {
       position: "absolute",
-      [checked ? "right" : "left"]: 3,
-      top: 3,
+      [checked ? "right" : "left"]: checked ? 3 : 2,
+      /* The unchecked track's 1px border shrinks the padding box the
+         thumb measures from, so a fixed top serves only one state —
+         centering is the invariant, not the offset. */
+      top: "50%",
+      transform: "translateY(-50%)",
       width: 18,
       height: 18,
       borderRadius: "var(--radius-full)",
@@ -9605,7 +9843,7 @@ function ReelRail({
     onClick: onShare
   }), score !== undefined && /*#__PURE__*/React.createElement(ExplainableNumber, {
     glyph: "graph",
-    label: "Post Score",
+    label: "Post score",
     value: score,
     onOpenDetail: onOpenScore ?? (() => {}),
     overMedia: true
@@ -10395,7 +10633,7 @@ function FeedFilterSheet({
   };
   const postsish = (value.kinds || []).some(kind => kind === "posts" || kind === "comments");
   const sections = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(FilterSection, {
-    label: "What gets ranked",
+    label: "Kinds",
     hint: "Everything that can reach your feed. Combine as many as you like."
   }, FEED_KINDS.map(kind => /*#__PURE__*/React.createElement(Chip, {
     key: kind.value,
@@ -10689,10 +10927,10 @@ function ProfileHeader({
     label: "Posts"
   }), stancesOn !== undefined && /*#__PURE__*/React.createElement(Figure, {
     value: stancesOn,
-    label: own ? "Stances on you" : "Stances on them"
+    label: own ? "Opinions on you" : "Opinions on them"
   }), stancesTaken !== undefined && /*#__PURE__*/React.createElement(Figure, {
     value: stancesTaken,
-    label: own ? "Stances you've taken" : "Stances they've taken"
+    label: own ? "Opinions by you" : "Opinions by them"
   }));
   return /*#__PURE__*/React.createElement("header", {
     style: {
@@ -10763,7 +11001,7 @@ function ProfileHeader({
     }
   }, "@", handle), hasFigures && (onCounts ? /*#__PURE__*/React.createElement("button", {
     type: "button",
-    "aria-label": own ? "Your stances, both directions" : "Stances on and by @" + handle,
+    "aria-label": own ? "Your opinions, both directions" : "Opinions on and by @" + handle,
     onClick: onCounts,
     className: "cg-state cg-focus",
     style: {
@@ -10995,7 +11233,7 @@ try { (() => {
 
 function EarnedChart({
   points = [],
-  caption = "Earned · last settlements",
+  caption = "Earned · last payouts",
   height = 64
 }) {
   if (points.length === 0) return null;
@@ -11604,6 +11842,8 @@ __ds_ns.ExplainableNumber = __ds_scope.ExplainableNumber;
 __ds_ns.SeveranceConfirm = __ds_scope.SeveranceConfirm;
 
 __ds_ns.StanceAlternates = __ds_scope.StanceAlternates;
+
+__ds_ns.HelpLine = __ds_scope.HelpLine;
 
 __ds_ns.STANCE_EXPLANATION = __ds_scope.STANCE_EXPLANATION;
 
