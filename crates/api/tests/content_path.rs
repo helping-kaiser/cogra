@@ -558,6 +558,7 @@ async fn a_comment_body_is_capped_at_two_thousand_characters(pool: PgPool) {
     );
 
     let comment_id = prepared.node;
+    rig.land(&prepared, &key).await;
     let edit = content::prepare_comment_edit(
         &rig.pool,
         &rig.boundary,

@@ -512,13 +512,13 @@ fn stance_range(field: &'static str, v: f64) -> Result<(), ContentError> {
 /// media, and the asymmetry is the design's, not an oversight.
 fn post_body(content: Option<String>, gallery: &PlannedGallery) -> Result<String, ContentError> {
     let words = content.filter(|c| !c.trim().is_empty());
-    if let Some(words) = &words {
-        if words.chars().count() > MAX_POST_BODY_CHARS {
-            return Err(ContentError::BadInput {
-                field: "content",
-                message: format!("the body is longer than {MAX_POST_BODY_CHARS} characters"),
-            });
-        }
+    if let Some(words) = &words
+        && words.chars().count() > MAX_POST_BODY_CHARS
+    {
+        return Err(ContentError::BadInput {
+            field: "content",
+            message: format!("the body is longer than {MAX_POST_BODY_CHARS} characters"),
+        });
     }
     let has_media = !gallery.attachment_ids.is_empty();
     match (words, has_media) {
@@ -600,15 +600,13 @@ fn checked_comment_body(content: String) -> Result<String, ContentError> {
 /// render as nothing.
 fn self_mark(draft: SelfMarkDraft) -> Result<Option<SensitiveMark>, ContentError> {
     let reason = draft.reason.filter(|r| !r.trim().is_empty());
-    if let Some(reason) = &reason {
-        if reason.chars().count() > MAX_SENSITIVE_REASON_CHARS {
-            return Err(ContentError::BadInput {
-                field: "sensitiveReason",
-                message: format!(
-                    "the reason is longer than {MAX_SENSITIVE_REASON_CHARS} characters"
-                ),
-            });
-        }
+    if let Some(reason) = &reason
+        && reason.chars().count() > MAX_SENSITIVE_REASON_CHARS
+    {
+        return Err(ContentError::BadInput {
+            field: "sensitiveReason",
+            message: format!("the reason is longer than {MAX_SENSITIVE_REASON_CHARS} characters"),
+        });
     }
     match (draft.sensitive, reason) {
         (false, Some(_)) => Err(ContentError::BadInput {

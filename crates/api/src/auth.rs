@@ -559,6 +559,42 @@ mod tests {
         assert!(check_password("all lowercase no digits works").is_ok());
     }
 
+    /// A new password is bounded on both ends: the floor refuses too
+    /// short, and the ceiling — Argon2's cost is paid per byte hashed —
+    /// refuses too long. `check_password` is what registration, change,
+    /// and reset run; login never calls it (see
+    /// `password_max_chars_is_never_checked_at_login`).
+    ///
+    /// A new password is capped at a hundred twenty-eight Unicode scalar values, the same floor-then-ceiling check registration, change, and reset all run.
+    /// ´claim:auth:a-new-password-is-capped-at-a-hundred-twenty-eight-characters´
+    #[test]
+    fn a_new_password_is_capped_at_a_hundred_twenty_eight_characters() {
+        assert!(check_password(&"x".repeat(PASSWORD_MAX_CHARS)).is_ok());
+        assert!(check_password(&"x".repeat(PASSWORD_MAX_CHARS + 1)).is_err());
+    }
+
+    /// The device label mirrors the title's own rule: trimmed,
+    /// length-checked, blank folded to absent.
+    ///
+    /// A device label is capped at a hundred Unicode scalar values, trimmed, with blank folding to absent.
+    /// ´claim:auth:a-device-label-stops-at-a-hundred-characters´
+    #[test]
+    fn a_device_label_is_capped_at_a_hundred_characters_and_blank_folds() {
+        let at_cap = "é".repeat(MAX_DEVICE_LABEL_CHARS);
+        assert_eq!(
+            checked_device_label(Some(&at_cap)).expect("at the cap"),
+            Some(at_cap)
+        );
+        let over = "x".repeat(MAX_DEVICE_LABEL_CHARS + 1);
+        assert!(checked_device_label(Some(&over)).is_err());
+        assert_eq!(checked_device_label(Some("  ")).expect("blank"), None);
+        assert_eq!(checked_device_label(None).expect("absent"), None);
+        assert_eq!(
+            checked_device_label(Some("  phone  ")).expect("trims"),
+            Some("phone".to_string())
+        );
+    }
+
     /// A corpus with a scripted answer, standing in for HIBP.
     struct ScriptedCorpus(Result<bool, ()>);
 
