@@ -5,7 +5,30 @@
 // anonymous. Server-side answers to those are viewer-shaped nulls, not
 // errors, so which reads carry the header is a correctness question and
 // belongs where both sides can see it.
-
+//
+// WHICH IS WHY NOTHING LEAVES THIS TAB BEFORE THE SESSION HAS SETTLED. A
+// freshly loaded page holds no access token at all — the refresh token sits in
+// localStorage, but the access token is minted by a refresh — so every read a
+// surface starts on mount would otherwise go out anonymous and be answered
+// with the guest's view: the borrowed-view band under a stranger's name, a
+// listing without the reader's own pending writes. Those answers are
+// viewer-shaped nulls rather than refusals, so the guard never sees an
+// UNAUTHENTICATED to replay and nothing refetches when the token lands. The
+// gate below is the whole tab's version of the rule the uploads already
+// follow: settle the session first, then send.
+//
+// SETTLED IS NOT SIGNED IN. `prime` resolves three ways and all three are
+// settlements — a token already in hand, a refresh that produced one, and a
+// refresh that could not run or did not succeed, the last being a tab that is
+// legitimately anonymous and whose request should go out as such. A
+// signed-out visitor pays no network for it: priming asks the refresher,
+// which reads the stored refresh token synchronously and answers false, so
+// the gate costs a guest microtasks and nothing more.
+//
+// THE REFRESH ITSELF IS THE ONE OPERATION THAT MUST NOT WAIT — it is what
+// readiness resolves to, so waiting for readiness would be waiting for
+// itself. It carries `SKIP_SESSION_READINESS`, and it is the only thing that
+// does.
 //
 // THE TERMINATING LINK CARRIES UPLOADS. `uploadMedia` takes the bytes as an
 // `Upload` scalar, which on the wire is a GraphQL multipart request — a
@@ -30,8 +53,24 @@ import UploadHttpLink from "apollo-upload-client/UploadHttpLink.mjs";
 
 import type { TokenStore } from "@/lib/session/token-store";
 
-export function authorizedLink(store: TokenStore, uri: string): ApolloLink {
-  const authLink = new SetContextLink((prevContext) => {
+/**
+ * Settle this tab's session — a token in hand, or the knowledge that there is
+ * none to have. `AuthGuard.prime` is the implementation; the link takes it as
+ * a function because the guard refreshes *through* the client whose chain this
+ * is (`session/browser-guard.ts` ties the knot).
+ */
+export type SessionReadiness = () => Promise<void>;
+
+/** Marks the refresh mutation, the one operation the readiness gate lets by. */
+export const SKIP_SESSION_READINESS = "cograSkipSessionReadiness";
+
+export function authorizedLink(
+  store: TokenStore,
+  uri: string,
+  ready: SessionReadiness,
+): ApolloLink {
+  const authLink = new SetContextLink(async (prevContext) => {
+    if (prevContext[SKIP_SESSION_READINESS] !== true) await ready();
     const accessToken = store.accessToken();
     if (accessToken === null) return {};
     return {
