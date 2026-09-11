@@ -373,7 +373,7 @@ export function ComposeWizard({
     for (const asset of state.assets) {
       if (asset.upload.kind !== "waiting" || started.current.has(asset.id)) continue;
       started.current.add(asset.id);
-      void runUpload(client, asset, ratio, (upload) =>
+      void runUpload(client, guard, asset, ratio, (upload) =>
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }

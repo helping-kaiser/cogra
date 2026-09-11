@@ -49,9 +49,18 @@ function transportMessage(outcome: Outcome<unknown> & { kind: "failed" }): strin
  * the two kinds are told apart because only one of them is worth a retry
  * button — a picture this browser cannot decode will not decode on the second
  * press either.
+ *
+ * THE UPLOAD IS GUARDED like every other authenticated call. The access token
+ * lives in this tab's memory alone, so a tab that has loaded rather than signed
+ * in holds none until something refreshes it — and in a composer the picture is
+ * usually the FIRST authenticated call the page makes, with no earlier
+ * `UNAUTHENTICATED` to have woken the refresh. Unguarded it fails on a freshly
+ * loaded page and keeps failing, because the retry button re-sends the same
+ * anonymous request.
  */
 export async function runUpload(
   client: ApolloClient,
+  guard: AuthGuard,
   asset: PickedAsset,
   /**
    * The post's shape. Undefined on a comment, which has no crop step at all —
@@ -80,7 +89,7 @@ export async function runUpload(
   }
 
   step({ kind: "uploading" });
-  const uploaded = await uploadMedia(client, { blob: encoded.blob });
+  const uploaded = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
 
   if (uploaded.kind === "success") {
     step({ kind: "done", mediaId: uploaded.value.id });
@@ -161,7 +170,7 @@ export async function runVideoUpload(
   }
 
   onCover({ kind: "uploading" });
-  const poster = await uploadMedia(client, { blob: encoded.blob });
+  const poster = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
   if (poster.kind !== "success") {
     const message =
       poster.kind === "refused"
