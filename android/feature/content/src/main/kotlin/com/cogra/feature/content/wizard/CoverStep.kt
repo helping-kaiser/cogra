@@ -4,8 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,7 +28,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.media.CoverPick
 import com.cogra.core.designsystem.v2.media.CoverRow
+import com.cogra.core.designsystem.v2.media.cappedToTallestTile
 import com.cogra.core.designsystem.v2.token.MediaOverlay
+import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.R
 
@@ -58,6 +61,7 @@ internal fun CoverStepBody(
         CoverPreview(
             model = state.coverModel(),
             durationMs = clip.durationMs ?: 0,
+            ratio = coverPreviewRatio(clip.sourceRatio),
         )
 
         CoverRow(
@@ -75,19 +79,25 @@ internal fun CoverStepBody(
 }
 
 /**
- * The clip as it will be met: the chosen face, a play glyph, and the
- * running time.
+ * The clip as it will be met: the chosen face **in the clip's own
+ * frame**, a play glyph, and the running time.
  *
  * It is a still rather than a player. The board draws a play affordance
  * over a poster, and the stage's question is which frame stands in for
  * the clip — not how the clip plays, which the feed answers.
+ *
+ * [ratio] is that frame, and it is the whole point of the preview: an
+ * author picking a face is being shown the format the post will have,
+ * so a wide clip reads wide here and a vertical one reads 4:5. The
+ * board's 342×342 is one square specimen drawn at the stage's width,
+ * not a shape imposed on every clip.
  */
 @Composable
-private fun CoverPreview(model: Any?, durationMs: Int) {
+private fun CoverPreview(model: Any?, durationMs: Int, ratio: Float) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(COVER_PREVIEW_HEIGHT)
+            .aspectRatio(ratio)
             .clip(RoundedCornerShape(Space.x3))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .testTag("wizard_cover_preview"),
@@ -98,8 +108,11 @@ private fun CoverPreview(model: Any?, durationMs: Int) {
             // names it, and the words that describe the post are
             // authored on the details stage.
             contentDescription = null,
+            // Filled, never fitted: the reel round rules letterboxing
+            // out of the product, and the cover "shares the clip's
+            // ratio and crops identically".
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxWidth().height(COVER_PREVIEW_HEIGHT),
+            modifier = Modifier.fillMaxSize(),
         )
         Box(
             modifier = Modifier
@@ -140,6 +153,24 @@ private fun DurationBadge(label: String, modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * The frame the clip will be met in, from the clip's own shape.
+ *
+ * A clip's ratio is not a crop an author chose, so the crop vocabulary
+ * never governs it (design/readme.md, the reel round): **16:9 and 1:1
+ * display true, and anything taller than 4:5 centre-crops to 4:5** —
+ * which is exactly [cappedToTallestTile], the rule every tile in the
+ * product already obeys. The preview draws that same frame, so what the
+ * author settles a face on is the format the post will have.
+ *
+ * Square where the clip has not said yet: the ratio is read off the
+ * header a beat after the pick, and a preview has to measure now. A
+ * ratio that is zero, negative or not a number would make
+ * `Modifier.aspectRatio` throw, so it is treated as not said either.
+ */
+internal fun coverPreviewRatio(sourceRatio: Float?): Float =
+    (sourceRatio?.takeIf { it.isFinite() && it > 0f } ?: MediaShape.Square.ratio)
+        .cappedToTallestTile()
 
 /** What the preview draws: the chosen frame's bytes, or the chosen picture. */
 private fun ComposeWizardState.coverModel(): Any? = when (val choice = coverChoice) {
@@ -178,6 +209,5 @@ internal fun formatDuration(ms: Int): String {
     }
 }
 
-private val COVER_PREVIEW_HEIGHT = 342.dp
 private val PLAY_DIAMETER = 56.dp
 private val PLAY_GLYPH = 32.dp
