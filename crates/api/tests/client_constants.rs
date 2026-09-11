@@ -26,7 +26,7 @@
 use std::path::Path;
 
 use api::auth::{HANDLE_CHARSET_PATTERN, HANDLE_MAX_CHARS, HANDLE_MIN_CHARS, PASSWORD_MIN_CHARS};
-use api::content::DEFAULT_STANCE;
+use api::content::{DEFAULT_STANCE, MAX_TITLE_CHARS};
 use api::media::{
     MAX_ALT_TEXT_CHARS, MAX_COMMENT_ATTACHMENTS, MAX_COMMENT_VIDEO_BYTES, MAX_PIXEL_DIMENSION,
     MAX_POST_ATTACHMENTS, MAX_POST_VIDEO_BYTES, MIN_MULTIPART_PART_BYTES, MediaConfig,
@@ -67,6 +67,9 @@ fn build_constants() -> Value {
             "maxPixelDimension": MAX_PIXEL_DIMENSION,
             "resumableThresholdBytes": RESUMABLE_THRESHOLD_BYTES,
             "minMultipartPartBytes": MIN_MULTIPART_PART_BYTES,
+        },
+        "content": {
+            "titleChars": MAX_TITLE_CHARS,
         },
         "paging": {
             "defaultPageSize": DEFAULT_PAGE_SIZE,

@@ -100,6 +100,15 @@ describe("the comment gate", () => {
   it("opens once every picture has an id", () => {
     expect(commentGate("words", done(pickInto(NO_COMMENT_MEDIA, picks(2))))).toEqual({ ok: true });
   });
+
+  it("signs a video comment with no cover chosen — a faceless video is not a wall", () => {
+    // jakob, 2026-09-10, "nothing blocks you to go without a cover" — the
+    // post wizard's ruling was unqualified, so it reaches this comment-scale
+    // gate too: the contract, the database, and the backend accept a null
+    // coverMediaId on a comment's video exactly as they do on a post's.
+    const video = done(pickInto(NO_COMMENT_MEDIA, [{ id: "v0", file: file(), kind: "video" }]));
+    expect(commentGate("words", video, null)).toEqual({ ok: true });
+  });
 });
 
 describe("what goes on the wire", () => {

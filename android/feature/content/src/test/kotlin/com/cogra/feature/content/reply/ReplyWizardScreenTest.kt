@@ -65,6 +65,7 @@ class ReplyWizardScreenTest {
     private var restores = 0
     private val removals = mutableListOf<Int>()
     private val sheets = mutableListOf<ReplySealSheet>()
+    private var closedSheets = 0
     private val helps = mutableListOf<HelpTopic>()
     private val stances = mutableListOf<Pair<Double, Double>>()
     private val marks = mutableListOf<Boolean>()
@@ -89,7 +90,7 @@ class ReplyWizardScreenTest {
             onLeave = { leaves += 1 },
             onSealBack = { sealBacks += 1 },
             onOpenSheet = { sheets += it },
-            onCloseSheet = {},
+            onCloseSheet = { closedSheets += 1 },
             onLicenseChange = {},
             onStanceChange = { d, i -> stances += d to i },
             onSensitiveChange = { marks += it },
@@ -301,6 +302,55 @@ class ReplyWizardScreenTest {
         // tree, and the readout announces the anchor's words instead.
         compose.onNodeWithTag("reply_pad_reading")
             .assert(hasContentDescription("Nice", substring = true))
+    }
+
+    /**
+     * F2-10. THE PAD PARKS OVER THE PAGE, behind its own wash — it is not
+     * a drawer, and it used to draw a sheet chrome inside the sheet host's
+     * own, which read as two stacked sheets. What the wash covers is
+     * inert, not shortened (`ReplyPad.jsx`), so the seal underneath is
+     * still composed.
+     */
+    @Test
+    fun thePadParksOverTheSealBehindItsOwnWash() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(sheet = ReplySealSheet.Stance))
+        }
+
+        compose.onNodeWithTag("reply_pad").assertExists()
+        compose.onNodeWithTag("reply_pad_wash").assertExists()
+        // The seal is covered, not replaced.
+        compose.onNodeWithTag("reply_wizard").assertExists()
+    }
+
+    /** An outside press stages nothing — the wash is that press. */
+    @Test
+    fun pressingTheWashLeavesThePadWithoutStagingAnything() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(sheet = ReplySealSheet.Stance))
+        }
+
+        compose.onNodeWithTag("reply_pad_wash").performClick()
+
+        assertThat(closedSheets).isAtLeast(1)
+        assertThat(stances).isEmpty()
+    }
+
+    /**
+     * The pad's `?` opens the reply's own topic, not the post pad's:
+     * a reply's stance is toward somebody else's post, so both axes are
+     * the author's and "only for-or-against is yours to set" would be
+     * false here (`ReplyPadHelp.jsx`).
+     */
+    @Test
+    fun thePadsHelpOpensTheTopicWrittenForAReply() {
+        compose.setContent {
+            Wizard(sealWithWords().copy(sheet = ReplySealSheet.Stance))
+        }
+
+        compose.onNodeWithTag("reply_pad_help").performClick()
+
+        assertThat(helps).containsExactly(HelpTopic.TowardWhatYouAnswer)
     }
 
     /** The seal's row reads the same face beside the same pair. */

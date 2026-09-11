@@ -31,6 +31,7 @@ class ProfileScreensTest {
         onStance: (String, String) -> Unit = { _, _ -> },
         profileSavedResult: Boolean = false,
         onProfileSavedResultConsumed: () -> Unit = {},
+        onRetry: () -> Unit = {},
     ) {
         compose.setContent {
             ProfileScreen(
@@ -40,7 +41,7 @@ class ProfileScreensTest {
                 onProfileSavedResultConsumed = onProfileSavedResultConsumed,
                 onFilterChange = onFilterChange,
                 onLoadMore = {},
-                onRetry = {},
+                onRetry = onRetry,
                 onEdit = onEdit,
                 onOpenSettings = onOpenSettings,
                 onOpenInvites = onOpenInvites,
@@ -84,6 +85,19 @@ class ProfileScreensTest {
         assertThat(consumed).isFalse()
         compose.mainClock.advanceTimeBy(10_000)
         assertThat(consumed).isTrue()
+    }
+
+    // design/readme.md, "The pull-down lives on every full-screen
+    // scrolling root" (ruled 2026-09-10): the profile is one of the
+    // named surfaces. The PullToRefreshBox wraps every branch of the
+    // Scaffold's content slot, so the loaded chronicle must still
+    // render — and carry its own onRetry — underneath it.
+    @Test
+    fun theLoadedChronicleRendersUnderThePullToRefreshWrapper() {
+        var retried = false
+        render(loaded(), onRetry = { retried = true })
+        compose.onNodeWithTag("profile_list").assertExists()
+        assertThat(retried).isFalse()
     }
 
     @Test

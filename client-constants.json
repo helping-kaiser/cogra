@@ -1,4 +1,7 @@
 {
+  "content": {
+    "titleChars": 100
+  },
   "media": {
     "altTextChars": 1000,
     "commentAttachments": 4,

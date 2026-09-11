@@ -1957,6 +1957,15 @@ type Query {
    its own id."
   me: User
 
+  "The actor whose view this reader browses from — a feed is rooted
+   in the viewer's own outgoing stances, so a reader with none is
+   served someone else's, and the borrowed-view band names it
+   (design/readme.md §13). An anonymous reader borrows the Genesis
+   Moderator's view; an applicant keeps their inviter's from the
+   moment the account exists; a landed member has their own, and
+   null is that rule rather than missing data."
+  borrowedView: Actor
+
   "Fetch any node by id. The generic accessor for heterogeneous ids
    — e.g. resolving a ranked feed's mixed-type UUID list."
   node(id: UUID!): Node
@@ -2730,6 +2739,15 @@ Attachments, tags, references, and `actAs` are staged
 sub-surfaces: the inputs below are the target contract, and each
 arrives with the work that carries it (media with the media
 follow-up, `actAs` with collectives).
+
+A Post's title is **at most 100 characters**, trimmed, with blank
+folded to absent so `""` and null cannot mean two different
+nothings — refused field-level at `["title"]`, on a create and an
+edit alike, before a single act is staged. The unit is the
+Unicode scalar value, the same one every character cap here
+counts in. The number leaves through `client-constants.json`
+(`content.titleChars`), so a composer refuses the title the
+server would refuse rather than spending the round trip.
 
 A tag batch is checked whole before a single act is staged, each
 refusal a field-level `userError` naming the offender: at most

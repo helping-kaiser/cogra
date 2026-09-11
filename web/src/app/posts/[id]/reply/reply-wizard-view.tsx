@@ -149,7 +149,7 @@ export function ReplyWizard({
       if (asset.upload.kind !== "waiting" || started.current.has(asset.id)) continue;
       started.current.add(asset.id);
       // No ratio: a comment's pictures keep their own shape.
-      void runUpload(client, asset, undefined, (upload) =>
+      void runUpload(client, guard, asset, undefined, (upload) =>
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }

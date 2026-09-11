@@ -117,8 +117,6 @@
     <string name="content_submit">Sign and publish</string>
     <string name="content_save_edit">Sign the edit</string>
     <string name="content_post_saved">Signed — landing on the graph</string>
-    <string name="content_feed_signin">Sign in or join</string>
-    <string name="content_guest_body">You\'re browsing as a guest — sign in or join to post and vouch.</string>
     <string name="content_comment_signin">Sign in or join to comment</string>
     <string name="content_comment_hint">Add a comment</string>
     <string name="content_comment_submit">Sign comment</string>
@@ -126,6 +124,7 @@
     <string name="content_comments_empty">No comments yet.</string>
     <string name="content_edit">Edit</string>
     <string name="content_error_empty_body">The post needs a body.</string>
+    <string name="content_error_title_too_long">Too long — at most %1$d characters.</string>
     <string name="content_error_refused">The server refused this write.</string>
     <string name="content_error_signing">Signing did not finish — the write stays pending.</string>
     <string name="content_error_signing_no_key">Signing needs your key, which isn\'t on this device — the write waits as pending. Restore your key to finish it.</string>

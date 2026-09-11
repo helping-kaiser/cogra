@@ -53,11 +53,12 @@ import { Card } from "@/lib/ui/card";
 import { LicenseTerms } from "@/lib/ui/license-fields";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
+import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
+import { useScrollHost } from "@/lib/ui/scroll-host";
 import {
   BodyRegion,
   PostMedia,
   bodyIsSensitive,
-  commentHasVideo,
   hasMedia,
   payloadIsRedacted,
   sensitiveSignature,
@@ -174,12 +175,18 @@ export function PostView({
   const signer = useWriteSigner();
   const viewerId = useActiveAccountId();
   const phase = useAuthPhase();
+  const host = useScrollHost();
 
   const [detail, setDetail] = useState<PostDetail | null>(null);
   const [comments, setComments] = useState<readonly CommentView[]>([]);
   const [endCursor, setEndCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
+  // The read in flight while the post is already on screen — distinct
+  // from `loading`, which gates the nothing-loaded page. A pull-to-
+  // refresh must not fall back to that blank page over content the
+  // reader can already see (HT-10's shared rule).
+  const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [transportFault, setTransportFault] = useState<TransportFault | null>(null);
@@ -260,19 +267,20 @@ export function PostView({
       startedEditUploads.current.add(asset.id);
       // No ratio: a comment's pictures keep their own shape, on an edit as on
       // a compose.
-      void runUpload(client, asset, undefined, (upload) =>
+      void runUpload(client, guard, asset, undefined, (upload) =>
         setEditing((current) =>
           current === null ? current : { ...current, gallery: withUpload(current.gallery, asset.id, upload) },
         ),
       );
     }
-  }, [editAdded, client]);
+  }, [editAdded, client, guard]);
 
   const refresh = useCallback(() => {
     let cancelled = false;
     void fetchPostDetail(client, postId).then((outcome) => {
       if (cancelled) return;
       setLoading(false);
+      setRefreshing(false);
       if (outcome.kind !== "success") {
         setTransportFault("refresh");
       } else if (outcome.value === null) {
@@ -294,6 +302,17 @@ export function PostView({
   }, [client, postId]);
 
   useEffect(() => refresh(), [refresh]);
+
+  // Pull-down at the top is one of the surfaces the pull-to-refresh
+  // ruling names (design/readme.md, "The pull-down lives on every
+  // full-screen scrolling root", ruled 2026-09-10). It goes through
+  // the same fetch the first arrival takes, so a fault it raises
+  // surfaces in the same place.
+  const onPull = useCallback(() => {
+    setRefreshing(true);
+    refresh();
+  }, [refresh]);
+  usePullToRefresh({ host, onPull });
 
   const onLoadMore = async () => {
     if (loadingMore || !hasMore) return;
@@ -535,6 +554,9 @@ export function PostView({
   const header = (isCreator: boolean) => (
     <PageHeader
       backHref="/feed"
+      // The feed restores the place the reader left it in; scrolling it to the
+      // top would land on top of that restore.
+      backScroll={false}
       backLabel="Back to feed"
       backTestId="post-back"
       action={
@@ -647,20 +669,25 @@ export function PostView({
                     the words, INSET at the card's medium rung rather than
                     full-bleed (they are an attachment, not the body), and
                     capped at comment scale so a comment never turns into a
-                    post. Comment pictures never crop, so multiples share a
-                    fixed square frame and each whole frame fits inside it. */}
+                    post. Comment pictures never crop, and every attachment —
+                    one or several, picture or clip alike — shares the one
+                    fixed square frame, filled rather than letterboxed
+                    (design/readme.md §"the media slice"). */}
                 {hasMedia(comment) && (
                   <PostMedia
                     node={comment}
                     bleed="none"
                     radius="var(--radius-medium)"
-                    // A VIDEO TAKES THE SQUARE TOO (ReplyMedia). The pager's
-                    // one frame is what keeps a thread's rhythm steady, and a
-                    // clip that set its own height would break it exactly where
-                    // the reader is scrolling past.
-                    ratio={
-                      comment.attachments.length > 1 || commentHasVideo(comment) ? 1 : undefined
-                    }
+                    // SQUARE IS THE COMMENT SCALE'S SHAPE (design/readme.md
+                    // §"the media slice"): every attachment, picture or clip,
+                    // alike — not only a video or a multi-picture set — takes
+                    // the one frame, so a thread's rhythm never changes per
+                    // comment.
+                    ratio={1}
+                    // ...AND FILLED, NEVER LETTERBOXED: an uncropped picture
+                    // display-crops to the frame rather than fitting whole
+                    // inside it, same as the video's own centre-crop.
+                    fit="cover"
                     maxHeight="220px"
                     // One control, the sound; no transport bar and no duration
                     // pill on a surface meant for reading.
@@ -862,6 +889,11 @@ export function PostView({
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
       {header(isOwnPost && !redacted)}
+      {refreshing && (
+        <p role="status" aria-live="polite" data-testid="post-refreshing">
+          Loading…
+        </p>
+      )}
       {/* THE POST IS A CARD HERE TOO (`PostCard.jsx:363` — `<Card>` for every
           variant, `detail` included). It was the page ground while its own
           comments sat on cards, which is the inverse of the board's emphasis.

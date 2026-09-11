@@ -22,6 +22,7 @@ import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.testing.ThrowingMediaRepository
+import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
@@ -70,6 +71,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
+import java.time.Instant
 import javax.inject.Singleton
 
 /** Scriptable account state: tests set the profile and backup blob. */
@@ -78,7 +80,12 @@ class ScriptedAccountRepository : ThrowingAccountRepository() {
     var backupBlob: ByteArray? = null
     var uploadedBackup: ByteArray? = null
 
+    /** Whose view the band names; every viewer in these tests borrows one. */
+    var vantage: ActorRef? = ActorRef(id = "genesis-id", handle = "genesis_mod")
+
     override suspend fun me(): Outcome<UserProfile?> = Outcome.Success(profile)
+
+    override suspend fun borrowedView(): Outcome<ActorRef?> = Outcome.Success(vantage)
 
     override suspend fun keyBackup(): Outcome<ByteArray?> = Outcome.Success(backupBlob)
 
@@ -180,6 +187,11 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
             displayName = testModeratedField(displayName),
             bio = testModeratedField(bio),
             websiteUrl = testModeratedField(websiteUrl),
+            // A landed edit is a NEW profile version, and its instant is
+            // what the screen waits on: a fake that changed the words
+            // without moving this would model a backend that answers
+            // instantly, which is the one thing the real one does not do.
+            updatedAt = profile?.updatedAt?.plusSeconds(1) ?: Instant.EPOCH.plusSeconds(1),
         )
         return Outcome.Success(emptyList())
     }
@@ -297,9 +309,7 @@ class ScriptedTopicRepository(private val writes: WriteRepository) : ThrowingTop
  * scriptable, since quoting that count is the gesture's whole point
  * (D11).
  */
-class ScriptedReferenceRepository(
-    private val writes: WriteRepository,
-) : ThrowingReferenceRepository() {
+class ScriptedReferenceRepository(private val writes: WriteRepository) : ThrowingReferenceRepository() {
     var candidates: MutableMap<String, List<ReferenceCandidateView>> = mutableMapOf()
     var withdrawalRecords = 1
 

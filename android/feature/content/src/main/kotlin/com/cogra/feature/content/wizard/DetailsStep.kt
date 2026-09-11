@@ -12,13 +12,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.PickedRow
 import com.cogra.core.designsystem.v2.compose.UploadErrorLine
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.content.MAX_TITLE_CHARS
+import com.cogra.feature.content.R
 
 /**
  * `ComposeDetails` / `ComposeUploading` — the optional title and
@@ -67,13 +71,7 @@ internal fun ColumnScope.DetailsStepBody(
             )
         }
 
-        CograTextField(
-            value = state.title,
-            onValueChange = onTitleChange,
-            label = "Title",
-            optional = true,
-            testTag = "wizard_title",
-        )
+        TitleField(state.title, state.titleTooLong, onTitleChange)
         CograTextField(
             value = state.description,
             onValueChange = onDescriptionChange,
@@ -99,6 +97,31 @@ internal fun ColumnScope.DetailsStepBody(
                     .testTag("wizard_upload_footnote"),
             )
         }
+    }
+}
+
+/**
+ * The title and the one refusal it can earn — the field's own cap
+ * (post.md §1).
+ *
+ * The house error line rather than a slot inside the field: the 2.0 field
+ * atom draws no error state, and inventing one is a design decision this
+ * surface does not get to make (design/backlog.md item 47).
+ */
+@Composable
+private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) -> Unit) {
+    CograTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = "Title",
+        optional = true,
+        testTag = "wizard_title",
+    )
+    if (tooLong) {
+        ErrorLine(
+            text = stringResource(R.string.content_error_title_too_long, MAX_TITLE_CHARS),
+            testTag = "wizard_title_too_long",
+        )
     }
 }
 

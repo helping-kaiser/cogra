@@ -5,6 +5,14 @@
 fragment ProfileFields on User {
   id
   handle
+  # The newest profile version's authoring instant. A profile edit is a
+  # signed write that lands asynchronously — approve returns while the
+  # record is still relaying, and this read serves only what has landed
+  # — so an immediate re-read answers with the version the edit
+  # replaced. This is what says the new one has arrived: it advances
+  # when the edit lands, and nothing else about the profile reliably
+  # does (an edit may set a field back to what it already was).
+  updatedAt
   displayName {
     value
     status

@@ -249,6 +249,7 @@ fun testProposalBytes(author: ActorKey, seq: ULong = 1u): ByteArray {
 /** Every method throws; tests override what they script. */
 open class ThrowingAccountRepository : AccountRepository {
     override suspend fun me(): Outcome<UserProfile?> = throw UnsupportedOperationException()
+    override suspend fun borrowedView(): Outcome<ActorRef?> = throw UnsupportedOperationException()
     override suspend fun keyBackup(): Outcome<ByteArray?> = throw UnsupportedOperationException()
     override suspend fun keyBackupChallenge(): Outcome<ByteArray> = throw UnsupportedOperationException()
     override suspend fun uploadKeyBackup(
@@ -593,12 +594,15 @@ fun testProfile(
     displayName: String? = "Author",
     bio: String? = null,
     websiteUrl: String? = null,
+    /** Which profile version this is — what a landing wait compares. */
+    updatedAt: Instant = Instant.EPOCH,
 ): ProfileView = ProfileView(
     id = id,
     handle = handle,
     displayName = testModeratedField(displayName),
     bio = testModeratedField(bio),
     websiteUrl = testModeratedField(websiteUrl),
+    updatedAt = updatedAt,
 )
 
 fun testModeratedField(value: String?) = ModeratedField(value, FieldStatus.NORMAL)

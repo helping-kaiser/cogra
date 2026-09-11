@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
@@ -189,6 +190,41 @@ class PostBodyTest {
         compose.onNodeWithTag("t_veil_reveal").assertIsDisplayed().performClick()
         compose.onNodeWithTag("t_veil_reveal").assertDoesNotExist()
         compose.onNodeWithTag("t_gallery").assertIsDisplayed()
+    }
+
+    /**
+     * A COMMENT WEARS THE OTHER FACE (F2-11). A post's body blurs in
+     * place; a comment's is two lines and an inset attachment, so the
+     * whole body is replaced by one block naming the veil and whose mark
+     * it is — the reveal is that block, not a button inside it.
+     */
+    @Test
+    fun aVeiledCommentWearsTheCompactFaceAndNamesItsSource() {
+        var revealed by mutableStateOf(false)
+        compose.setContent {
+            PostBody(
+                content = words.copy(status = FieldStatus.SENSITIVE),
+                description = null,
+                attachments = listOf(picture),
+                attachmentsStatus = FieldStatus.SENSITIVE,
+                moderation = ModerationState.SENSITIVE,
+                testTagPrefix = "c",
+                surface = BodySurface.Comment,
+                revealed = revealed,
+                onReveal = { revealed = true },
+                sensitiveSource = SensitiveSource.Author,
+                sensitiveReason = "Shows an injury",
+            )
+        }
+
+        // The compact face carries no reveal button of its own.
+        compose.onNodeWithTag("c_veil_reveal").assertDoesNotExist()
+        compose.onNodeWithText("Sensitive — tap to view").assertIsDisplayed()
+        compose.onNodeWithText("The author's warning — Shows an injury").assertIsDisplayed()
+
+        compose.onNodeWithTag("c_veil").performClick()
+
+        compose.onNodeWithTag("c_gallery").assertIsDisplayed()
     }
 
     /** A body already revealed elsewhere opens unveiled — no second ask. */

@@ -108,7 +108,7 @@ export default function ProfileEditPage() {
     if (pictureTooBig(encoded.blob)) {
       return { selection: "unchanged", error: TOO_BIG_PICTURE };
     }
-    const result = await uploadMedia(client, { blob: encoded.blob });
+    const result = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
     if (result.kind === "success") return { selection: { mediaId: result.value.id } };
     return {
       selection: "unchanged",

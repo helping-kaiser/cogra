@@ -278,6 +278,89 @@ async fn a_self_mark_reconciles_its_switch_and_its_reason(pool: PgPool) {
     );
 }
 
+/// The title's cap, in the unit every character cap here counts in:
+/// Unicode scalar values, not bytes, so a hundred accented letters are a
+/// hundred characters and not the two hundred bytes they encode to.
+///
+/// The edit path runs the same check, because a title an edit could land
+/// but a create would refuse is a cap only the composer believes in.
+///
+/// A post title is capped at a hundred Unicode scalar values on a create and on an edit alike, with a blank title folding to absent.
+/// ´claim:content:a-title-stops-at-a-hundred-characters´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_post_title_is_capped_at_a_hundred_characters(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (actor, key) = rig.funded_actor("alice").await;
+
+    let draft = |title: &str| PostDraft {
+        title: Some(title.into()),
+        description: None,
+        content: Some("The body".into()),
+        license: license(),
+        p_directed: None,
+        tags: vec![],
+        references: vec![],
+        attachments: vec![],
+        sensitive: Default::default(),
+    };
+
+    let at_cap = "é".repeat(content::MAX_TITLE_CHARS);
+    assert_eq!(
+        at_cap.len(),
+        2 * content::MAX_TITLE_CHARS,
+        "the fixture is two bytes per character, so bytes and characters cannot agree by accident"
+    );
+    let prepared = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&at_cap))
+        .await
+        .expect("a title at the cap prepares");
+    assert_eq!(
+        CograContent::decode_payload(&prepared.writes[0].proposal.payload)
+            .expect("decodes")
+            .title,
+        Some(at_cap),
+        "the title the author wrote is the title the envelope carries"
+    );
+
+    let over = "x".repeat(content::MAX_TITLE_CHARS + 1);
+    let refused = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&over)).await;
+    assert!(
+        matches!(refused, Err(ContentError::BadInput { field: "title", .. })),
+        "one character past the cap is refused at the title"
+    );
+
+    let blank = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft("   "))
+        .await
+        .expect("prepares");
+    assert_eq!(
+        CograContent::decode_payload(&blank.writes[0].proposal.payload)
+            .expect("decodes")
+            .title,
+        None,
+        "a blank title is no title"
+    );
+
+    let post = rig.post(actor, &key, "Parent", "Words").await;
+    let edit = content::prepare_post_edit(
+        &rig.pool,
+        &rig.boundary,
+        GC,
+        actor,
+        PostEditDraft {
+            id: post,
+            title: Some(over),
+            description: None,
+            content: Some("Words".into()),
+            attachments: vec![],
+            sensitive: Default::default(),
+        },
+    )
+    .await;
+    assert!(
+        matches!(edit, Err(ContentError::BadInput { field: "title", .. })),
+        "an edit cannot land a title a create would have refused"
+    );
+}
+
 /// The gesture is a genesis Publish — target the mint of its own act,
 /// `p_i` census-fixed at 1, the license structural — and its envelope
 /// decodes back to the draft, node id included. Landing leaves the

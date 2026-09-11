@@ -19,6 +19,7 @@ import {
   sealGate,
   signedActions,
   stepsFor,
+  TITLE_MAX_CHARS,
   uploadsFailed,
   uploadsPending,
   wizardReducer,
@@ -419,8 +420,32 @@ describe("the details and the sheets", () => {
     );
     expect(state.title).toBe("Salt maps of the coast road");
     expect(state.description).toBe("Rubbings from three weekends.");
-    // Everything on the details screen is optional, so it always hands over.
+    // Every field on the details screen is optional, so a filled one within
+    // its cap hands over.
     expect(advanceGate(state).ok).toBe(true);
+  });
+
+  // The one rule the details screen owns. The count is the SERVER'S unit —
+  // scalar values — so the astral fixture is the whole point: `.length` would
+  // read it as double and refuse a title the server takes.
+  it("refuses a title past the cap, counting scalar values and not code units", () => {
+    const withTitle = (title: string) =>
+      run(emptyWizard(), picks(1), { type: "title", title }, { type: "goto", step: "details" });
+
+    const atCap = withTitle("é".repeat(TITLE_MAX_CHARS));
+    expect(advanceGate(atCap).ok).toBe(true);
+    expect(sealGate(uploaded(atCap)).ok).toBe(true);
+
+    const astralAtCap = withTitle("🧂".repeat(TITLE_MAX_CHARS));
+    expect(astralAtCap.title.length).toBe(2 * TITLE_MAX_CHARS);
+    expect(advanceGate(astralAtCap).ok).toBe(true);
+
+    const over = withTitle("x".repeat(TITLE_MAX_CHARS + 1));
+    const blocked = advanceGate(over);
+    expect(blocked.ok).toBe(false);
+    expect(blocked.ok === false && blocked.reason).toMatch(/too long/i);
+    // The seal is the boundary the server sees, so it refuses it too.
+    expect(sealGate(uploaded(over)).ok).toBe(false);
   });
 
   it("starts on the account's default licence and the low-defaults stance", () => {
@@ -480,10 +505,29 @@ describe("a video post", () => {
     expect(two.assets[0]!.id).toBe("v0");
   });
 
-  it("holds the cover screen shut until a face is chosen", () => {
-    const state = run(emptyWizard(), picksVideo(), { type: "advance" });
-    expect(advanceGate(state).ok).toBe(false);
-    expect(advanceGate(run(state, chosen())).ok).toBe(true);
+  it("lets a video post advance to the seal, and seal, with no cover chosen", () => {
+    // The cover screen no longer walls off a faceless video (jakob,
+    // 2026-09-10, "going without a cover is always possible"): the contract,
+    // the database, and the backend all accept a null `coverMediaId`, so
+    // both the advance past this screen and the seal at the end succeed
+    // with `cover` still null. Auto-default on a successful capture is a
+    // separate path, exercised elsewhere — this asserts the wall is gone
+    // when nothing filled it.
+    const atCover = run(emptyWizard(), picksVideo(), { type: "advance" });
+    expect(atCover.step).toBe("cover");
+    expect(atCover.cover).toBeNull();
+    expect(advanceGate(atCover).ok).toBe(true);
+
+    const atSeal = run(atCover, { type: "advance" }, { type: "advance" });
+    expect(atSeal.step).toBe("seal");
+    expect(atSeal.cover).toBeNull();
+
+    const uploaded = run(atSeal, {
+      type: "upload",
+      id: "v0",
+      upload: { kind: "done", mediaId: "m-v0" },
+    });
+    expect(sealGate(uploaded).ok).toBe(true);
   });
 
   it("counts the cover among the uploads the seal waits for", () => {

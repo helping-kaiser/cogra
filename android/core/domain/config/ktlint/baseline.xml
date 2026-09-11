@@ -15,28 +15,28 @@
         <error line="253" column="5" source="standard:class-signature" />
         <error line="254" column="5" source="standard:class-signature" />
         <error line="254" column="28" source="standard:class-signature" />
-        <error line="499" column="9" source="standard:class-signature" />
-        <error line="500" column="9" source="standard:class-signature" />
-        <error line="501" column="9" source="standard:class-signature" />
-        <error line="501" column="34" source="standard:class-signature" />
-        <error line="535" column="5" source="standard:class-signature" />
-        <error line="536" column="5" source="standard:class-signature" />
-        <error line="536" column="26" source="standard:class-signature" />
-        <error line="599" column="1" source="standard:kdoc" />
-        <error line="607" column="1" source="standard:spacing-between-declarations-with-comments" />
-        <error line="616" column="5" source="standard:class-signature" />
-        <error line="617" column="5" source="standard:class-signature" />
-        <error line="617" column="32" source="standard:class-signature" />
-        <error line="628" column="5" source="standard:class-signature" />
-        <error line="629" column="5" source="standard:class-signature" />
-        <error line="629" column="37" source="standard:class-signature" />
-        <error line="640" column="5" source="standard:class-signature" />
-        <error line="641" column="5" source="standard:class-signature" />
-        <error line="641" column="28" source="standard:class-signature" />
-        <error line="664" column="5" source="standard:class-signature" />
-        <error line="665" column="5" source="standard:class-signature" />
-        <error line="665" column="41" source="standard:class-signature" />
-        <error line="668" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="515" column="9" source="standard:class-signature" />
+        <error line="516" column="9" source="standard:class-signature" />
+        <error line="517" column="9" source="standard:class-signature" />
+        <error line="517" column="34" source="standard:class-signature" />
+        <error line="551" column="5" source="standard:class-signature" />
+        <error line="552" column="5" source="standard:class-signature" />
+        <error line="552" column="26" source="standard:class-signature" />
+        <error line="615" column="1" source="standard:kdoc" />
+        <error line="623" column="1" source="standard:spacing-between-declarations-with-comments" />
+        <error line="632" column="5" source="standard:class-signature" />
+        <error line="633" column="5" source="standard:class-signature" />
+        <error line="633" column="32" source="standard:class-signature" />
+        <error line="644" column="5" source="standard:class-signature" />
+        <error line="645" column="5" source="standard:class-signature" />
+        <error line="645" column="37" source="standard:class-signature" />
+        <error line="656" column="5" source="standard:class-signature" />
+        <error line="657" column="5" source="standard:class-signature" />
+        <error line="657" column="28" source="standard:class-signature" />
+        <error line="680" column="5" source="standard:class-signature" />
+        <error line="681" column="5" source="standard:class-signature" />
+        <error line="681" column="41" source="standard:class-signature" />
+        <error line="684" column="1" source="standard:no-consecutive-blank-lines" />
     </file>
     <file name="src/main/kotlin/com/cogra/domain/compose/ComposeDraft.kt">
         <error line="22" column="5" source="standard:class-signature" />
@@ -148,6 +148,6 @@
     </file>
     <file name="src/testFixtures/kotlin/com/cogra/domain/testing/Fakes.kt">
         <error line="8" column="1" source="standard:import-ordering" />
-        <error line="347" column="21" source="standard:string-template" />
+        <error line="348" column="21" source="standard:string-template" />
     </file>
 </baseline>

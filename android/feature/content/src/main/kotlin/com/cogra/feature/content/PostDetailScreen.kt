@@ -47,12 +47,14 @@ import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.atom.LoadingState
+import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
+import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
-import com.cogra.domain.PostView
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
@@ -261,6 +263,15 @@ fun PostDetailScreen(
                             Text(stringResource(R.string.content_retry))
                         }
                     }
+                    // Nothing held and nothing arrived: the reader opened
+                    // a post this device has never read. The surface says
+                    // what it is doing in a line of text — the boards
+                    // give a loading state no spinner
+                    // (design/components/states/EmptyState.prompt.md).
+                    state.loading && state.post == null -> LoadingState(
+                        testTag = "detail_loading",
+                        modifier = Modifier.padding(24.dp),
+                    )
                     state.post != null -> Column(modifier = Modifier.fillMaxSize()) {
                         // A transport fault never blanks content already
                         // on screen, and it surfaces where the failed
@@ -666,6 +677,15 @@ private fun CommentThread(
                     surface = BodySurface.Comment,
                     revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
                     onReveal = { onReveal(comment.id, comment.sensitiveMark()) },
+                    // The statuses are the veil — the OR of the author's
+                    // own mark and a moderator's verdict — so the
+                    // author's half is what names the source.
+                    sensitiveSource = if (comment.sensitiveSelfMark) {
+                        SensitiveSource.Author
+                    } else {
+                        SensitiveSource.Platform
+                    },
+                    sensitiveReason = comment.sensitiveReason,
                 )
                 Text(
                     licenseTerms(comment.license),

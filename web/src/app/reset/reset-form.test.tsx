@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PASSWORD_MIN_CHARS } from "@/lib/onboarding/registration-rules";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { ResetForm } from "./reset-form";
@@ -73,7 +74,13 @@ describe("ResetForm", () => {
     fireEvent.change(screen.getByTestId("reset_email"), { target: { value: "a@b.c" } });
     expect(screen.getByTestId("reset_request")).toBeEnabled();
     fireEvent.change(screen.getByTestId("reset_token"), { target: { value: "t" } });
+    // Under the floor the server states, so the confirm stays shut: the
+    // form answers to the same password rule the join form does.
     fireEvent.change(screen.getByTestId("reset_password"), { target: { value: "p" } });
+    expect(screen.getByTestId("reset_confirm")).toBeDisabled();
+    fireEvent.change(screen.getByTestId("reset_password"), {
+      target: { value: "a".repeat(PASSWORD_MIN_CHARS) },
+    });
     expect(screen.getByTestId("reset_confirm")).toBeEnabled();
   });
 

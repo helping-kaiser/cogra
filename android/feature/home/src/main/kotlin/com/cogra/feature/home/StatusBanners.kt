@@ -33,10 +33,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.StanceSlider
-import com.cogra.core.designsystem.v2.atom.BorrowedViewBand
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.signing.RegistrationProgress
-import com.cogra.core.designsystem.R as DesignSystemR
 
 @Composable
 fun StatusBannersRoute(
@@ -160,37 +158,6 @@ fun KeyRestoreBannerRoute(
 fun KeyRestoreBanner(state: HomeUiState, onRestoreActor: () -> Unit) {
     if (state.loading || !state.keyElsewhere) return
     RestoreCard(onRestoreActor)
-}
-
-/**
- * The borrowed-view band for the signed-in applicant (design.md §13,
- * 2026-08-27): the feed is still ranked from the inviter's vantage point
- * until the applicant's own first stance exists, and the borrowed view is
- * always named. It rides the top region with the other must-see cards.
- *
- * A member's band is drawn by nothing: once they have landed the feed is
- * their own view, and the band disappears — which is the rule, not an
- * omission.
- */
-@Composable
-fun BorrowedViewBandRoute(viewModel: HomeViewModel = hiltViewModel()) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
-    BorrowedViewBanner(state)
-}
-
-@Composable
-fun BorrowedViewBanner(state: HomeUiState) {
-    if (state.loading || !state.applicant) return
-    val inviter = state.profile?.invitedBy ?: return
-    BorrowedViewBand(
-        handle = inviter.handle,
-        displayName = inviter.displayName,
-        avatarUrl = inviter.avatar?.url,
-        // The band's three readings live beside each other in the design
-        // system, where the component is.
-        line = stringResource(DesignSystemR.string.borrowed_view_applicant, inviter.handle),
-        testTag = "home_borrowed_view",
-    )
 }
 
 /**

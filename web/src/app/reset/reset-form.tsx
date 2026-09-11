@@ -13,6 +13,7 @@ import { useApolloClient } from "@apollo/client/react";
 import type { ErrorCode } from "@/__generated__/graphql";
 import { fallbackMessage } from "@/lib/ui/error-messages";
 import { confirmPasswordReset, requestPasswordReset } from "@/lib/api/auth-api";
+import { PASSWORD_MIN_CHARS, passwordValid } from "@/lib/onboarding/registration-rules";
 import { Button } from "@/lib/ui/button";
 import { PasswordField } from "@/lib/ui/password-field";
 import { TextField } from "@/lib/ui/text-field";
@@ -43,7 +44,9 @@ export function ResetForm() {
   const [transportFailed, setTransportFailed] = useState(false);
 
   const canRequest = email.trim() !== "" && !inProgress;
-  const canConfirm = token.trim() !== "" && newPassword !== "" && !inProgress;
+  // The floor the server states, not merely "not empty": this form answers
+  // to the same password rule the join form does.
+  const canConfirm = token.trim() !== "" && passwordValid(newPassword) && !inProgress;
 
   const onRequest = async () => {
     if (!canRequest) return;
@@ -133,6 +136,9 @@ export function ResetForm() {
           autoComplete="new-password"
           testId="reset_password"
         />
+        <p className="text-body-small text-on-surface-variant">
+          At least {PASSWORD_MIN_CHARS} characters.
+        </p>
         {error !== null && (
           <p role="alert" data-testid="reset_error" className="text-body-medium text-error">
             {resetMessage(error)}
