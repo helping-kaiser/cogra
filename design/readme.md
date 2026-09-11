@@ -642,7 +642,7 @@ paper over:
   on the sensitive sheet and stayed a control while there was one of it; a
   second surface is what makes it a component.
 - `BorrowedViewBand` — §13's borrowed vantage point, as a component: names
-  whose view a guest or applicant feed is ranked from, carries the one
+  whose view a guest or applicant feed shows, carries the one
   sign-in-or-join entry, and subsumes the guest notice on those surfaces.
 
 ---
@@ -1037,6 +1037,15 @@ may serve any actor's view of the shared record to any reader. So:
   over to the member's own view the moment their first stance exists —
   the vouch-back — which the inviter seeded anyway, so the feed barely
   moves at the handover.
+- **The vantage resolves to the most specific actor available**, and
+  the band names whichever one it lands on. An invite-link visitor
+  borrows the inviter. An applicant borrows their own inviter — the
+  person who already chose them, and whose stances their first
+  vouch-back will echo. A bare visitor borrows genesis, strictly as the
+  fallback when nobody more particular is known. The order matters more
+  than any single rung: a reader should be shown the nearest real
+  perspective the arrival carries, and genesis is what is left when the
+  arrival carries none.
 
 To port to the product docs as an open-questions resolution.
 
@@ -1204,9 +1213,8 @@ kind (`ReferenceRow`), reused by search's results (item 9).
   reference, and displayed on the row for any reader. The changeable
   defaults differ because the census does — a reference is +0.10 /
   +0.10 with both axes signed, a tag is **+0.1 / 1**, its confidence
-  bounded to [0, 1] and starting full. A reference's pair is edited
-  through the reader's chosen stance input; a tag's is edited on two
-  sliders, for the reason the tag round records.
+  bounded to [0, 1] and starting full. Both are edited on the pad, each
+  over the reach its own census gives it.
 - A signed reference is a compose-time act; an @handle typed in text
   is only coloured text, never a record. They must not look identical
   — the typed handle is colour, the reference is a row in the sheet.
@@ -2915,10 +2923,14 @@ whole canvas rather than a fix to one board.
   messaging belongs on every tab root; the apps draw it the release a
   chat surface exists to receive the tap. Nothing is redrawn — the edges
   stay as they are, and the docblock says which half is the end state.
-- **The borrowed-view band rides the ranker.** It names a borrowed
-  *ranking* vantage and the feed is chronological until slice 3, so the
-  band and the borrowed-vantage field the contract owes land with the
-  ranker; the guest notice stands until then. Drawn ahead of built is
+- **The guest and applicant bands ship now; the rank waits.** A band
+  that names whose view this is tells the truth the moment it is drawn,
+  and the vantage it names — the genesis moderator for a bare arrival,
+  the inviter for an applicant — is knowable without a ranker. So both
+  bands stand from the start, reading newest like every other feed until
+  slice 3. What waits for the ranker is the borrowed *order*, the
+  invite-link vantage and the contract field it needs, and the band's
+  line about ranking. Naming a vantage a feed does not yet rank from is
   the staging rule, not the label-versus-behaviour divergence the Newest
   ruling refuses — that one is about what a shipped control claims.
 - **The gate**: **128 screens**, **958 edges**, **81 gaps** and **flows
@@ -3167,15 +3179,12 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   the apps ship type-only until then. The legality gate is stated under
   the field and canonicalization is previewed live, because a reader is
   choosing a permanent public endpoint.
-- **The pair editor is two sliders, not the pad**, and the census is
-  why: a Tag carries relevance `r ∈ [-1, 1]` and confidence
-  `c ∈ [0, 1]`, so half the pad's square would be unreachable and a
-  control with a dead half lies about its range. It also reconciles the
-  drawing with what shipped — 2.3 shipped sliders. Defaults are
-  `TagInput`'s, **+0.1 and 1**. `StanceSlider` gained `min`/`max` for
-  it, and the staged chip became a button for the first time: the
-  conformance round left the pill inert because removal was the only
-  thing a tag was for, and now it is not.
+- **The pair editor is the pad** (`TagPad`), over the reach the census
+  gives a Tag rather than over a stance's square — see *The tag pad*
+  below. Defaults are `TagInput`'s, **+0.1 and 1**. The staged chip
+  became a button for the first time: the conformance round left the
+  pill inert because removal was the only thing a tag was for, and now
+  it is not.
 - **A tag's pair is written unlike a stance's, deliberately.**
   Relevance keeps its sign because the sign is the content; confidence
   drops it, because a `+` on a value with no negative half advertises a
@@ -3219,10 +3228,9 @@ one sitting.
   scale's rule reaches the comment scale unchanged — the cover is the
   same clip's face, so one frame holds both — and letterboxing exists
   nowhere, pictures included.
-- **A staged citation's pair is set on the pad, not sliders.** Both of a
-  citation's axes are signed, so the square is its own shape and no half
-  of it is dead; the census-bounded confidence that sent a tag's pair to
-  sliders has no counterpart here. Item 18's remaining half, closed.
+- **A staged citation's pair is set on the pad.** Both of a citation's
+  axes are signed, so the square is its own shape corner to corner.
+  Item 18's remaining half, closed.
 - **A tag that would need cutting is not drawn as a chip.** `TopicsLine`
   folds it into the worded counts instead, so a reader gets either a
   whole name or a number saying how many are left. The ellipsis retires:
@@ -3279,13 +3287,11 @@ sets and a reader reads. Ruled by jakob the same day.
   (`RefPair`).** The instrument follows the census, not the surface.
   `ReferenceInput` (api-spec.md) gives a citation relevance `[-1, 1]`
   and support `[-1, 1]` — both signed — so the pad's square over two
-  signed axes fits it exactly, where a Tag's confidence is bounded to
-  `[0, 1]` and would hang half the field dead. That is the same
-  argument that gave `TagPair` two sliders, read the other way.
+  signed axes fits it exactly.
 - **The poles are the citation's, in the slots the contract assigns.**
   Relevance occupies `pDirected`, the pad's horizontal, and asks how
   much this post leans on what it cites — `Barely` to `Entirely`, the
-  words `TagPair` already uses for the same slot. Support occupies
+  words `TagPad` uses for the same slot. Support occupies
   `pInterest`, the vertical, and is endorsing against refuting, so
   `Against` and `For` ride there. Those two words sit on the horizontal
   when the pad carries a stance: the rotation is the contract's doing,
@@ -3501,7 +3507,114 @@ as much in copy; the edit board still drew a body nobody could touch.
   at **56** and flows at **58/55/3** — the round adds destinations, not
   journeys. The witness was re-blessed for one line: `ComposePicked`'s
   Done case, reworded because the edit no longer opens it. `EditActs`
-  and `TagPair` redrew where the shared edit body grew its two rows.
+  and `TagPad` redrew where the shared edit body grew its two rows.
+
+### The tag pad — 2026-09-10
+
+What a staged tag chip opens, and what the pair it sets reads as.
+Ruled by jakob the same day.
+
+- **The pair editor is the pad (`TagPad`).** Aboutness and certainty
+  are one place rather than two tracks, and a place is picked in one
+  gesture. The contract's slots are untouched — relevance in
+  `pDirected`, confidence in `pInterest` (`TagInput`, api-spec.md) — so
+  what the reader drags is what the record carries.
+- **The field is drawn over the reach the census gives.** Confidence
+  is census-bounded to `c ∈ [0, 1]` (hashtag.md §4), and the composer
+  authors only the positive half of relevance: an author saying what
+  their own post is about says how much, never how much it is not. So
+  the square is the reachable square corner to corner, with no half
+  hanging dead, and the poles on the field are `Barely` to `Entirely`
+  across, `Guessing` up to `Certain`. `StancePad` takes the bound as
+  `ranges` the way it already takes the poles as `axes` — the control
+  owns the geometry, the census owns how far each slot reaches — and
+  every pad already drawn renders byte-identically under it.
+- **The dead-ground lines belong to a signed axis only.** They mark
+  where an axis's zero falls, and both of this pad's axes start at
+  zero, so it draws none: a hairline along the field's own edge reads
+  as a border, not as a meaning.
+- **The face is the tag's own, and the table is disjoint from the
+  stance faces.** Thirteen anchors, not one glyph shared with
+  `STANCE_ANCHORS` — a face that means "Like this" about a post must
+  never also mean "locked on" about a topic, or the one lossy readout
+  the system has starts lying about which family a reader is looking
+  at. A tag is a claim about what a post is about and has no mood to
+  wear, so its table is objects rather than faces.
+- **The table is four aboutness bands by three certainty bands, plus a
+  floating thirteenth.** Certain, from `Barely`: 🔍 "had to look, but
+  it's in there" · 🔗 "definitely linked" · 🔒 "locked on" · 🎯
+  "exactly this". Fairly sure: 💧 "a drop of it, I think" · 🧩 "a piece
+  of the picture" · 🧲 "pulled toward it" · 🗝️ "likely the key to it".
+  Guessing: ❔ "faint maybe" · 🎲 "could go either way" · 🎣 "fishing
+  for it" · 🔮 "big claim, divined". And 💯 "all of it, full stop",
+  which floats just left of 🎯 and higher, so the very top of the field
+  is reachable without taking the Entirely corner from the row that
+  owns it. The twelve sit at band centres — aboutness 0.15, 0.45, 0.72,
+  0.95, certainty 0.15, 0.55, 0.90 — and 💯 at 0.86 / 0.95. Like
+  `STANCE_ANCHORS`, these values are the contract: both clients read
+  them.
+- **The readout is one glyph beside the exact pair**, in the labelled
+  block every pair-setting readout wears, above the field where a thumb
+  cannot cover it. The numbers are `formatTagPair`'s — relevance
+  signed, confidence unsigned. The anchor's word does come with it
+  here, unlike a citation's: these words were written for this table
+  and say what the pair claims, so the spoken reading carries the word
+  and both axes.
+- **The non-drag equivalent is the two labelled tracks.** The pad is a
+  drag gesture, so §10's standing demand reaches it as it reaches the
+  stance pad: `StanceSlider` carries the tag's own bound and poles, and
+  typed entry takes that bound rather than the stance's. It has to
+  exist and be reachable, not be drawn a second time.
+- **The gate**: 147 → **148 screens**, 1070 → **1073 edges**, gaps hold
+  at **56** and flows at **58/55/3** — the round adds a state, not a
+  journey. The witness did not move: no declared flow crosses this
+  sheet.
+
+### The tag field's floor, and the untag — 2026-09-11
+
+jakob's review of the tag pad round. The field let a drag reach
+relevance 0, which is not the faintest claim a tag can make but the
+withdrawal; this round takes that value off the field and gives the act
+a control of its own.
+
+- **The field starts just above nothing.** Relevance runs from
+  `TAG_RELEVANCE_FLOOR` — 0.01 — up to 1, so no drag can land on a
+  withdrawal and there is no edge left to warn about. Withdrawing is a
+  different act from weakening a claim, not the far end of one, and an
+  axis carrying both put the heaviest act exactly where the lightest
+  drag lands. The floor makes the left pole true as well: `Barely` is a
+  fair reading of 0.01 and never was one of 0. The value is the
+  contract's, like the anchors — both clients read it. (Supersedes the
+  tag pad round's informing withdrawal state, which is deleted.)
+- **The readout needs no special case.** `formatTagPair`'s two decimals
+  render the floor as `+0.01`, which is the truth of it, so the system
+  keeps its one number format.
+- **Untagging is its own gesture, drawn only at an edit** (`TagPad`). A
+  tag on a post that already carries it stands, so taking it off is a
+  record — the body's `Withdrawn:` line names it and the acts card
+  counts it — and an act of that weight is asked for by a control that
+  says what it does. `Un-tag` — the reader's word, api-spec's own noun
+  for the r-0 record — takes `Sever`'s place in the foot and `Sever`'s
+  restraint with it: the walk-away pushed left of the decisions, a text
+  button, no colour of its own. The chip's × at an edit asks for the
+  same staged withdrawal without the pad roundtrip (jakob 2026-09-11) —
+  two doors, one act.
+- **It stages, and the seal signs.** The sheet closes, the chip leaves
+  the row for the withdrawn line already drawn beneath it, and the acts
+  card counts one more action, which the edit seals together with
+  everything else (item 37). Nothing asks twice: the seal is the
+  willing act, and a second layer over a staged, reversible change
+  guards nothing.
+- **A composer's pad carries no un-tag control** (`TagPadCompose`). Nothing
+  on that path is signed yet, so there is no tag to withdraw — the
+  chip's × unstages on the spot, and the same control here would name
+  an act that does not exist. Two boards because two contexts reach the
+  sheet holding different controls; everything else about them is one
+  drawing.
+- **The gate**: **148 screens** hold — the withdrawal state out, the
+  composer's pad into its freed slot — 1073 → **1074 edges**, gaps hold
+  at **56** and flows at **58/55/3**. The witness did not move: no
+  declared flow crosses either sheet.
 
 ### The video-cover round — 2026-09-10
 

@@ -7,7 +7,8 @@
     "os": "Hands off to the OS — browser download, mail app, system sheet"
   },
   "scanExempt": {
-    "TagPair": "the pair sheet covers the composer — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
+    "TagPad": "the pair sheet covers the edit — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
+    "TagPadCompose": "the same sheet on the composer — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "RefPair": "the citation's pair sheet covers the details stage — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "GuestGate": "the join prompt covers the borrowed view — the band, the post card, and nav beneath the scrim are inactive in this state; only the ask (and its scrim) is live",
     "KeyConfirm": "the record-your-code dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
@@ -539,7 +540,7 @@
     { "from": "CommentEdit", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "CommentEdit", "via": 11, "kind": "detour", "label": "This creates 2 signed actions", "to": [{ "board": "CommentEditActs" }] },
     { "from": "CommentEdit", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplyMedia", "case": "signed — the thread, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
-    { "from": "CommentEdit", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPair" }] },
+    { "from": "CommentEdit", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "CommentEdit", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
 
     { "from": "CommentEditVideo", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyMedia", "case": "empty — leaves at once" }] },
@@ -554,7 +555,7 @@
     { "from": "CommentEditVideo", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "CommentEditVideo", "via": 11, "kind": "detour", "label": "This creates 2 signed actions", "to": [{ "board": "CommentEditActs" }] },
     { "from": "CommentEditVideo", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplyMedia", "case": "signed — the thread, the edit settling, the new cover pointed at" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
-    { "from": "CommentEditVideo", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPair" }] },
+    { "from": "CommentEditVideo", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "CommentEditVideo", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
 
     { "from": "CommentEditActs", "via": 1, "kind": "advance", "label": "Done", "to": [{ "board": "CommentEdit", "case": "the sheet closes" }] },
@@ -715,7 +716,7 @@
     { "from": "ComposeDetails", "via": 8, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation leaves" }] },
     { "from": "ComposeDetails", "via": 9, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "ComposeDetails", "via": 10, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeSeal" }, { "board": "ComposeUploading", "case": "uploads still running — details keep writing (drawn on the media page)" }] },
-    { "from": "ComposeDetails", "via": 12, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPair" }] },
+    { "from": "ComposeDetails", "via": 12, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPadCompose" }] },
     { "from": "ComposeDetails", "via": 13, "kind": "advance", "label": "staged reference row", "to": [{ "board": "RefPair" }] },
     { "from": "ComposeDetails", "via": 11, "kind": "advance", "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet — one entry per picture" }] },
 
@@ -776,7 +777,7 @@
     { "from": "EditCompose", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "EditCompose", "via": 11, "kind": "detour", "label": "This creates 3 signed actions", "to": [{ "board": "EditActs" }] },
     { "from": "EditCompose", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
-    { "from": "EditCompose", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPair" }] },
+    { "from": "EditCompose", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "EditCompose", "via": 15, "kind": "advance", "label": "staged reference row", "to": [{ "board": "RefPair", "case": "the citation's pair sheet (master on the compose page)" }] },
     { "from": "EditCompose", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
     { "from": "EditCompose", "via": 16, "kind": "advance", "label": "+ Add pictures · 2 of 10", "to": [{ "terminal": "os", "case": "the device's own picker — an edit has no pick stage to return to" }, { "board": "ComposeCrop", "case": "the pictures come back through the crop, locked to the post's one shape, and the edit's row has grown" }, { "board": "ComposePickedErrors", "case": "over the cap of ten, or a format nothing here reads — the picker's answer says why" }] },
@@ -798,7 +799,7 @@
     { "from": "EditWords", "via": 9, "kind": "detour", "label": "This creates 3 signed actions", "to": [{ "board": "EditActs" }] },
     { "from": "EditWords", "via": 10, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling, its body now words" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "EditWords", "via": 11, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "EditWords", "via": 12, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPair" }] },
+    { "from": "EditWords", "via": 12, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
 
     { "from": "EditComposeVideo", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — where the edit began" }] },
     { "from": "EditComposeVideo", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves — draft kept" }] },
@@ -812,7 +813,7 @@
     { "from": "EditComposeVideo", "via": 10, "kind": "advance", "label": "+ Add a tag", "to": [{ "board": "TagPicker" }] },
     { "from": "EditComposeVideo", "via": 11, "kind": "detour", "label": "This creates 3 signed actions", "to": [{ "board": "EditActs" }] },
     { "from": "EditComposeVideo", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling, the new cover pointed at" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
-    { "from": "EditComposeVideo", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPair" }] },
+    { "from": "EditComposeVideo", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "EditComposeVideo", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
 
     { "from": "EditActs", "via": 1, "kind": "advance", "label": "Done", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
@@ -832,9 +833,14 @@
     { "from": "TagPickerTyping", "via": 3, "kind": "advance", "label": "the name field", "to": [{ "terminal": "self", "case": "still typing — the preview follows the name" }] },
     { "from": "TagPickerTyping", "via": 4, "kind": "advance", "label": "candidate rows", "to": [{ "terminal": "back", "case": "the pick lands in the composer's tags" }] },
 
-    { "from": "TagPair", "via": 1, "kind": "advance", "label": "the two sliders", "to": [{ "terminal": "self", "case": "the pair moves — nothing signs until the seal" }] },
-    { "from": "TagPair", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the chip carries the pair it was given" }] },
-    { "from": "TagPair", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
+    { "from": "TagPad", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — the drag stops at the floor, and nothing signs until the seal" }] },
+    { "from": "TagPad", "via": 2, "kind": "advance", "label": "Withdraw", "to": [{ "terminal": "back", "case": "the sheet closes — the chip leaves the row for the body's withdrawn line, and the acts card counts one more" }] },
+    { "from": "TagPad", "via": 3, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the chip carries the pair it was given" }] },
+    { "from": "TagPad", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
+
+    { "from": "TagPadCompose", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — the drag stops at the floor, and nothing signs until the seal" }] },
+    { "from": "TagPadCompose", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the chip carries the pair it was given" }] },
+    { "from": "TagPadCompose", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
 
     { "from": "RefPair", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — nothing signs until the seal" }] },
     { "from": "RefPair", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the staged row carries the pair it was given" }] },
@@ -1083,7 +1089,7 @@
     { "from": "ComposeUploading", "via": 8, "kind": "advance", "label": "Description", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ComposeUploading", "via": 9, "kind": "advance", "label": "tag chip ×", "to": [{ "terminal": "self", "case": "the tag leaves" }] },
     { "from": "ComposeUploading", "via": 10, "kind": "advance", "label": "+ Add a tag", "to": [{ "board": "TagPicker" }] },
-    { "from": "ComposeUploading", "via": 12, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPair" }] },
+    { "from": "ComposeUploading", "via": 12, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPadCompose" }] },
     { "from": "ComposeUploading", "via": 11, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeSealUploading", "case": "uploads still running — the gated seal" }, { "board": "ComposeSeal", "case": "uploads done" }] },
 
     { "from": "ComposeSealUploading", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeUploading", "case": "one stage back — details, uploads running" }] },

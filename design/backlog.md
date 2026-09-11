@@ -143,12 +143,13 @@ their avatar, a media post its cover); `TopicsLine` is shared by
 post and comment cards. Drawn on the "Tags & references · the
 sheet" board.
 
-**The tag half is closed** (the tag round, 2026-09-09): a staged tag
-chip is a button, it opens `TagPair`, and the pair it sets is drawn
-back on the chip whenever it deviates from the contract's +0.1 / 1.
-The editor is two sliders rather than the reader's chosen stance
-input — a Tag's confidence is census-bounded to [0, 1] and the pad
-is a square over two signed axes, so half of it would be dead.
+**The tag half is closed** (the tag round, 2026-09-09; the editor
+settled by the tag pad round, 2026-09-10 and its review 2026-09-11): a
+staged tag chip is a button, it opens the pad — `TagPad` at an edit,
+`TagPadCompose` on a composer — and the pair it sets is drawn back on
+the chip whenever it deviates from the contract's +0.1 / 1. The field
+is the reach a Tag's census gives it, floored just above nothing so no
+drag reaches a withdrawal.
 
 **The reference half is closed** (jakob's ruling 2026-09-10, readme §13
 *The citation's pair, and the settling row*): a staged reference row is
@@ -1525,14 +1526,12 @@ question the boards leave open; none blocked the rest of the shell.
    acted on at once — the apps currently follow the graph (no dead
    button; the band draws the affordance only once a surface exists).
    Bless that reading or redraw the edge.
-3. **`BorrowedViewBand` cannot yet be true.** The band names a
-   borrowed *ranking* vantage ("the label is what makes borrowed
-   ranking honest"), but the feed is chronological until slice 3's
-   ranker — the same label-vs-behaviour divergence §13 forbids for
-   the feed filter — and the contract exposes no borrowed-vantage
-   actor for an anonymous or applicant reader anyway.
-   Implementation's input: the band lands with the ranker (and the
-   schema field it needs), and the guest card stands until then.
+3. **How much of `BorrowedViewBand` can be true before the ranker.**
+   The band names a vantage, and the feed beneath it is chronological
+   until slice 3's ranker — so the question is whether naming whose
+   view this is says anything the feed does not yet do, and which
+   vantages are knowable without a contract field the schema has not
+   grown.
 
 **Ruled by jakob 2026-09-09**, all three stops:
 
@@ -1555,10 +1554,14 @@ question the boards leave open; none blocked the rest of the shell.
    chats because messaging belongs on every tab root, and the apps
    draw it the release a chat surface exists. The edges stay as they
    are; the docblock says which half is end state.
-3. **The borrowed-view band rides the ranker.** Implementation's
-   proposal stands: the band and the borrowed-vantage field it needs
-   land with slice 3's ranker, and the guest notice stands until then.
-   Roadmap slice 3 carries it.
+3. **The guest and applicant bands ship now; the rank waits.**
+   Naming a vantage needs no ranker, and both of those vantages are
+   knowable without a new contract field — genesis for a bare
+   arrival, the applicant's own inviter for an applicant — so both
+   bands stand from the start over a feed that reads newest. What
+   waits for slice 3 is the borrowed *order*, the invite-link vantage
+   and the field it needs, and the band's line about ranking. The
+   vantage ladder is recorded in readme §13 beside the band's rules.
 
 **`KeyElsewhere` is confirmed** (jakob, same day): `Main` is the
 signed-out invite-link feed — every act on it guest-gates — so the
@@ -1785,3 +1788,46 @@ cover"*; the line under it, on all four surfaces that draw the door,
 frame."*; the no-frames caption *"This clip gave no frames — choose a
 picture of your own, or leave it without one."*; and the neutral tile's
 *"No frame."*
+
+### 50 · The tag pad · *design + implementation* · **drawn 2026-09-10**
+
+Ruled by jakob 2026-09-10, drawn the same day, and revised by his
+review 2026-09-11: a staged tag's pair is set on the pad over a field
+whose confidence runs 0 to 1 and whose relevance runs from the floor —
+0.01 — up to 1, the readout is one glyph from a thirteen-anchor table of
+the tag's own, and untagging is a control in the edit's foot rather than
+a value a drag can reach. `TagPad` and `TagPadCompose` carry it; readme
+§13 (*The tag pad*, *The tag field's floor, and the untag*) holds the
+rulings and the anchors' coordinates. The design work is done; what is
+left is below.
+
+**Both apps ship the two sliders.** Slice 2.3 built the tag pair as
+relevance and confidence tracks on Android and web alike, and the pad
+is now the drawn editor, so both owe the change. `StancePad` already
+takes `ranges`, so what the clients need is the same bound — the floor
+included, it being the contract's — the tag's four poles, and the
+thirteen-anchor lookup, none of which the stance pad can supply, the two
+tables being deliberately disjoint. Both owe the two contexts as well:
+the composer's pad carries no un-tag control, the edit's does.
+
+**The anchors have not been through `copy-voice.md`.** The table's
+thirteen glosses are the words the boards draw and speak, and they are
+ruled, but a copy pass has not read them as a set against the guide's
+register. `Un-tag`, the edit pad's foot control, goes with them — the
+reader's word for the act (api-spec's own noun for the r-0 record),
+ruled 2026-09-11; the `Withdrawn:` line and the acts card's "Tags
+withdrawn" keep the register's record-speak for the result.
+
+**The contract's default reads oddly through the table.** A tag opens
+at relevance +0.1, whose nearest anchor is 🔍 "had to look, but it's in
+there" — a fair reading of the number and a strange thing for an author
+to say about their own post's tag. Either the low-defaults value is
+wrong for a self-declaration or the lowest aboutness band is, and
+nothing here settles which.
+
+**The chip's × at an edit is ruled** (jakob 2026-09-11): the × stays,
+and it asks for the same staged withdrawal the pad's `Un-tag` does —
+two doors, one act, because a reader who just wants the tag gone should
+not need the pad roundtrip. A composer's × unstages on the spot as
+ever; the graph's edit-board × edges already read "the tag leaves the
+edit", which covers both doors honestly.

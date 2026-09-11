@@ -668,6 +668,15 @@
       "page": "compose"
     },
     {
+      "file": "TagPadCompose.dc.html",
+      "title": "A staged tag's pair · composing",
+      "x": 2400,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "Explore.dc.html",
       "title": "Explore · at rest",
       "x": 0,
@@ -1406,8 +1415,8 @@
       "page": "compose"
     },
     {
-      "file": "TagPair.dc.html",
-      "title": "A staged tag's pair",
+      "file": "TagPad.dc.html",
+      "title": "A staged tag's pair · editing",
       "x": 2400,
       "y": 3180,
       "w": 390,
