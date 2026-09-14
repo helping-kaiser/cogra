@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.compose.DescribeCounter
+import com.cogra.core.designsystem.v2.compose.DescribeSubject
 import com.cogra.core.designsystem.v2.compose.PickedRow
 import com.cogra.core.designsystem.v2.compose.UploadErrorLine
 import com.cogra.core.designsystem.v2.token.Space
@@ -68,6 +69,9 @@ internal fun ColumnScope.DetailsStepBody(
                 described = state.describedCount,
                 total = state.picked.size,
                 onDescribe = onDescribePictures,
+                // A clip takes one description for the whole thing
+                // (CW-17, web's `details-step.tsx:235` conforms already).
+                subject = if (state.isVideoPost) DescribeSubject.Video else DescribeSubject.Pictures,
                 testTag = "wizard_describe_counter",
             )
         }
