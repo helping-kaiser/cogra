@@ -78,6 +78,21 @@ class AtomsTest {
     }
 
     @Test
+    fun aReadoutChipIsNotAControl() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                CograReadoutChip("#fieldnotes", testTag = "tag")
+            }
+        }
+
+        // The readout tone states a signed fact rather than offering one to
+        // press (Chip.jsx's READOUT: no press, no state layer, no target).
+        compose.onNodeWithTag("tag")
+            .assertTextEquals("#fieldnotes")
+            .assert(hasClickAction().not())
+    }
+
+    @Test
     fun aCompactPillStillClearsTheMinimumTouchTarget() {
         compose.setContent {
             Cogra2PreviewTheme {
