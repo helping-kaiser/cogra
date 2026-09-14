@@ -24,16 +24,19 @@
    carries the one action that fills the list where there is one, and nothing —
    here, not yet anything at all — fills this one.
 
-   COPY IS A PROPOSAL, NOT BLESSED VOCABULARY. The line below is this round's
-   recommendation; the alternates and the timing question are in copy-voice
-   under "Awaiting blessing — the chats coming-soon screen". Nothing else on
-   this board is new words. */
+   IT NAMES THE PROMISE THE WAY THE SKY CARD DOES (jakob's ruling 2026-09-14).
+   Both surfaces stand in for something drawn after the MVP, and a product that
+   says `coming soon` on one and something else on the other has two answers to
+   one question. So the line takes the Sky card's construction — the thing, an
+   em dash, the promise — and then one sentence of what will be here. The copy
+   is blessed and lives in copy-voice under "The coming-soon surfaces"; nothing
+   else on this board is new words. */
 export function Screen() {
   return (
     <>
       <PageHeader title="Chats" backHref="#" backLabel="Back" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
-        <EmptyState title="Chats aren't built yet. When they are, your conversations will be here." />
+        <EmptyState title="Chats — coming soon. Your conversations will be here." />
       </div>
       <BottomNav active={null} slots={ALL_SLOTS} inline />
     </>
