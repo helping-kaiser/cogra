@@ -58,18 +58,18 @@ export function Screen() {
           <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             Your pick
           </span>
-          {/* THE FACE AND THE WORD COME FROM `STANCE_ANCHORS`: at +0.30 the
-              nearest anchor is the table's first row, 🙂 "Nice" (0.15 / 0.15).
-              They are spelled here because `nearestAnchor` is not among the
+          {/* THE FACE AND THE WORD COME FROM `VALENCE_SIX`, the one-axis table:
+              `nearestValenceAnchor(+0.10)` is 🙂 "Nice", the first band above
+              zero. They are spelled here because the lookup is not among the
               names the bundle exposes to screens — the value is the table's,
               not this board's, and the pad must never name a face the system
-              has no row for. */}
+              has no band for. */}
           <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
             <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
-            <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.30</span>
+            <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", whiteSpace: "nowrap" }}>+0.10</span>
           </span>
           <span style={SR_ONLY}>
-            Nice, For or against +0.30
+            Nice, For or against +0.10
           </span>
         </div>
 
@@ -86,7 +86,7 @@ export function Screen() {
           <span aria-hidden="true" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", padding: "0 2px", background: "var(--surface-container-highest)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             For
           </span>
-          <span aria-hidden="true" style={{ position: "absolute", left: "65%", top: "50%", width: 24, height: 24, margin: "-12px 0 0 -12px", borderRadius: "var(--radius-full)", background: "var(--surface-loud)", border: "1px solid var(--on-surface-loud)" }} />
+          <span aria-hidden="true" style={{ position: "absolute", left: "55%", top: "50%", width: 24, height: 24, margin: "-12px 0 0 -12px", borderRadius: "var(--radius-full)", background: "var(--surface-loud)", border: "1px solid var(--on-surface-loud)" }} />
         </div>
 
         <QuietNote>Your own post always reaches you in full.</QuietNote>

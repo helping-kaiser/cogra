@@ -32,7 +32,7 @@ body{margin:0;padding:16px;background:var(--surface);color:var(--on-surface)}
 </head><body><div id="root"></div>
 <script type="text/babel">
 const NS = window.CoGraDesignSystem_9084ba;
-const { STANCE_ANCHORS, DIRECTED_POLES, INTEREST_POLES } = NS;
+const { STANCE_ANCHORS, VALENCE_SIX, DIRECTED_POLES, INTEREST_POLES } = NS;
 
 const FIELD = 560;
 const STRIP = 400;
@@ -41,9 +41,6 @@ const STRIP = 400;
 const xOf = (pDirected) => 50 + pDirected * 50;
 const yOf = (pInterest) => 50 - pInterest * 50;
 const fmt = (v) => new Intl.NumberFormat(undefined, { signDisplay: "always", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
-const anchorOf = (emoji) => STANCE_ANCHORS.find((a) => a.emoji === emoji);
-/* Pure valence: the six the one-axis strip can reach, ruled by jakob. */
-const VALENCE_SIX = ["😠", "🙁", "😕", "🙂", "😊", "😍"].map(anchorOf);
 
 function Map2D() {
   return (
@@ -111,8 +108,8 @@ function Demo() {
         </p>
         <p className="note">
           Every position is the anchor's own coordinate under the pad's mapping — the drawn
-          field IS the value space, so a mark's place on the square is its value. The table
-          itself lives in <code>StanceReadout.jsx</code>, which this card reads.
+          field IS the value space, so a mark's place on the square is its value. Both tables
+          live in <code>StanceReadout.jsx</code>, which this card reads.
         </p>
       </div>
     </div>

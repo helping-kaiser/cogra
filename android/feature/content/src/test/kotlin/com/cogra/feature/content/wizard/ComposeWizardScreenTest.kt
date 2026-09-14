@@ -88,6 +88,8 @@ class ComposeWizardScreenTest {
     private var coverFrames = mutableListOf<Int>()
     private var coverPickers = 0
     private var dismissedRefusals = mutableListOf<Int>()
+    private var restoreKeys = 0
+    private var keepDrafts = 0
 
     @Composable
     private fun Wizard(
@@ -136,8 +138,8 @@ class ComposeWizardScreenTest {
             onSign = { signs += 1 },
             onContinueDraft = { draftContinues += 1 },
             onDiscardDraft = { draftDiscards += 1 },
-            onRestoreKey = {},
-            onKeepDraft = {},
+            onRestoreKey = { restoreKeys += 1 },
+            onKeepDraft = { keepDrafts += 1 },
             onTagInputChange = {},
             onAddTag = {},
             onRemoveTag = {},
@@ -758,6 +760,60 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(state) }
         compose.onNodeWithTag("wizard_key_absent").assertIsDisplayed()
         compose.onNodeWithTag("wizard_sign").assertDoesNotExist()
+    }
+
+    // CW-36: the key-absent seal reads back only the license — the stance
+    // and sensitive rows the sign flow still lets a reader adjust are gone,
+    // and a live seal still shows all three.
+    @Test
+    fun theKeyAbsentSealShowsOnlyTheLicenseRow() {
+        val absent = ComposeWizardState(body = "x", step = WizardStep.Seal, keyAbsent = true)
+        compose.setContent { Wizard(absent) }
+        compose.onNodeWithTag("wizard_seal_license").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_seal_stance").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_seal_sensitive").assertDoesNotExist()
+    }
+
+    @Test
+    fun aLiveSealStillShowsAllThreeTerms() {
+        val live = ComposeWizardState(body = "x", step = WizardStep.Seal, keyAbsent = false)
+        compose.setContent { Wizard(live) }
+        compose.onNodeWithTag("wizard_seal_license").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_seal_stance").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_seal_sensitive").assertIsDisplayed()
+    }
+
+    // CW-37/38: the panel carries its own inverse "?" (opening the "Your
+    // key" topic) and an inverse restore action.
+    @Test
+    fun theKeyAbsentPanelCarriesItsOwnHelpAndRestoresTheKey() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, keyAbsent = true)
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithTag("wizard_key_help").performClick()
+        assertThat(helps).containsExactly(HelpTopic.Key)
+
+        compose.onNodeWithTag("wizard_restore_key").performClick()
+        assertThat(restoreKeys).isEqualTo(1)
+    }
+
+    // CW-39/40: keep-draft is a sibling below the panel — reachable and
+    // wired to its own callback, distinct from the seal's ordinary back
+    // (`onKeepDraft` leaves the wizard; `wizard-view.tsx`'s web counterpart
+    // wires the same shape to `leaveFlow` rather than `dispatch({type:
+    // "back"})`).
+    @Test
+    fun keepDraftSitsBesideThePanelAndLeavesRatherThanSteppingBack() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, keyAbsent = true)
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithTag("wizard_key_absent").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_keep_draft").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_keep_draft").performClick()
+
+        assertThat(keepDrafts).isEqualTo(1)
+        assertThat(sealBacks).isEqualTo(0)
+        assertThat(backs).isEqualTo(0)
     }
 
     @Test
