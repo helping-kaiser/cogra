@@ -105,6 +105,22 @@
     <string name="stance_reading">%1$s %2$s, %3$s %4$s</string>
     <!-- The exact pair, part of the default reading (design.md §8.3). -->
     <string name="stance_pair">%1$s / %2$s</string>
+
+    <!-- THE ONE AXIS, for the surfaces where a pick names a valence and
+         nothing else (design/readme.md §11 renamed it: `How you stand`
+         → `For or against`, with its ends drawn on the field).
+
+         Deliberately its own string rather than `stance_axis_directed`:
+         that one still carries the pre-rename wording and feeds every
+         two-axis surface, so renaming it from here would rewrite the
+         bloomed control's readouts. The two-axis surfaces are reported
+         rather than renamed in passing. -->
+    <string name="valence_axis">For or against</string>
+    <string name="valence_pole_against">Against</string>
+    <string name="valence_pole_for">For</string>
+    <!-- The one-axis reading: the anchor's word, then the axis and the
+         one number — `Nice, For or against +0.10`. -->
+    <string name="valence_reading">%1$s, %2$s %3$s</string>
     <string name="stance_carries_nothing">This would carry nothing.</string>
     <string name="stance_carries_nothing_directed">Where you stand would carry nothing.</string>
     <string name="stance_carries_nothing_interest">What reaches you would carry nothing.</string>

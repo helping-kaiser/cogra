@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
@@ -19,6 +19,7 @@ function renderStep(
   overrides: Partial<WizardState> = {},
   sheet: "none" | "license" | "stance" | "sensitive" = "none",
   keyOnDevice: boolean | null = true,
+  staged = 0.1,
 ) {
   const props = {
     state: baseState(overrides),
@@ -27,9 +28,12 @@ function renderStep(
     busy: false,
     keyOnDevice,
     refusal: null,
+    stagedPDirected: staged,
     onSheet: vi.fn(),
     onLicense: vi.fn(),
-    onPDirected: vi.fn(),
+    onStagedPDirected: vi.fn(),
+    onSetStance: vi.fn(),
+    onStanceHelp: vi.fn(),
     onSensitive: vi.fn(),
     onSensitiveReason: vi.fn(),
     onHelp: vi.fn(),
@@ -75,12 +79,101 @@ describe("SealStep", () => {
     expect(screen.getAllByText("+0.10 / +0.10").length).toBeGreaterThan(0);
   });
 
-  // CW-23: the "Where you stand on it" row reads back the two-axis pair —
-  // pInterest is census-fixed at 1 for a Publish record — not a bare
-  // signed decimal.
-  it("reads where the author stands as a pair, not a lone signed number", () => {
+  // An opinion on one's own post is ONE number (jakob, 2026-09-14): the
+  // second is census-fixed rather than picked, so the row that read back a
+  // pair was showing a figure nobody chose. The face comes from the
+  // one-axis table, and the spoken twin names the one axis there is.
+  it("reads where the author stands as one number, not a pair", () => {
     renderStep({ pDirected: 0.1 });
-    expect(screen.getByText("+0.10 / +1.00")).toBeInTheDocument();
+    const readout = screen.getByTestId("wizard-stance-value");
+    expect(readout.textContent).toContain("+0.10");
+    expect(screen.queryByText("+0.10 / +1.00")).not.toBeInTheDocument();
+    expect(within(readout).getByText("Nice, For or against +0.10")).toBeInTheDocument();
+  });
+
+  it("reads the row's face off the one-axis table, both signs", () => {
+    renderStep({ pDirected: -0.9 });
+    const readout = screen.getByTestId("wizard-stance-value");
+    expect(readout.textContent).toContain("😠");
+    expect(
+      within(readout).getByText("Really against this, For or against -0.90"),
+    ).toBeInTheDocument();
+  });
+
+  // The references row is NOT touched by that ruling: a citation carries a
+  // stance toward somebody else's thing, where both parameters are picked.
+  it("keeps the citation row's pair", () => {
+    const reference = {
+      ...newReferenceDraft("u-ada", {
+        kind: "User" as const,
+        label: "The long way home — @ada",
+        href: "/u/ada",
+      }),
+      relevance: 0.1,
+      support: 0.1,
+    };
+    renderStep({ references: [reference], pDirected: 0.1 });
+    expect(screen.getByText("+0.10 / +0.10")).toBeInTheDocument();
+  });
+
+  // CW-31/CW-32/CW-33/CW-34/CW-35 + backlog item 30: the pad is a parked
+  // card carrying its own "?", a labelled "Your pick" readout above a drawn
+  // one-axis field with its ends named, and Cancel · Set.
+  describe("the opinion pad", () => {
+    it("parks as its own panel rather than riding a bottom sheet", () => {
+      renderStep({ pDirected: 0.1 }, "stance");
+      const pad = screen.getByTestId("wizard-stance-pad");
+      expect(pad.tagName).toBe("DIALOG");
+      // The drawer's own chrome — the drag handle and the title row a
+      // sheet draws — is what a pad must not be wrapped in.
+      expect(pad.className).toContain("mt-auto");
+      expect(pad.className).not.toContain("rounded-t-extra-large");
+      expect(screen.queryByTestId("wizard-stance-sheet")).not.toBeInTheDocument();
+    });
+
+    it("carries the blessed help topic on its own dot", () => {
+      const { onStanceHelp } = renderStep({}, "stance");
+      screen.getByTestId("wizard-stance-help").click();
+      expect(onStanceHelp).toHaveBeenCalledOnce();
+    });
+
+    it("labels the pick and reads the staged value, not the standing one", () => {
+      renderStep({ pDirected: 0.1 }, "stance", true, 0.6);
+      expect(screen.getByText("Your pick")).toBeInTheDocument();
+      const pick = screen.getByTestId("wizard-stance-pick");
+      expect(pick.textContent).toContain("😊");
+      expect(pick.textContent).toContain("+0.60");
+    });
+
+    it("draws the one-axis field with its ends named, never a slider", () => {
+      renderStep({}, "stance");
+      const field = screen.getByTestId("wizard-stance-field");
+      expect(field).toHaveAttribute("aria-label", "For or against");
+      expect(field).not.toHaveAttribute("type", "range");
+      expect(screen.getByText("Against")).toBeInTheDocument();
+      expect(screen.getByText("For")).toBeInTheDocument();
+      // The pre-rename wording is not on this surface.
+      expect(screen.queryByText("How you stand")).not.toBeInTheDocument();
+    });
+
+    it("stages a drag and commits only on Set", () => {
+      const { onStagedPDirected, onSetStance, onSheet } = renderStep({}, "stance");
+      const field = screen.getByTestId("wizard-stance-field");
+      fireEvent.keyDown(field, { key: "ArrowRight" });
+      // One arrow press is a twentieth of the axis, carried by ordinary
+      // float addition — the same arithmetic the two-axis pad's arrows do.
+      expect(onStagedPDirected).toHaveBeenCalledWith(expect.closeTo(0.15, 10));
+      expect(onSetStance).not.toHaveBeenCalled();
+
+      screen.getByTestId("wizard-stance-set").click();
+      expect(onSetStance).toHaveBeenCalledOnce();
+
+      screen.getByTestId("wizard-stance-cancel").click();
+      expect(onSheet).toHaveBeenCalledWith("none");
+      // Cancel stages nothing of its own: it closes, and the staged value
+      // it leaves behind was never committed.
+      expect(onSetStance).toHaveBeenCalledOnce();
+    });
   });
 
   // CW-24/CW-25: the acts card's total row is its own column (label +
@@ -101,7 +194,10 @@ describe("SealStep", () => {
     const row = label.parentElement as HTMLElement;
     const count = row.lastElementChild as HTMLElement;
     expect(label.className).toContain("text-label-small");
-    expect(count.textContent).toBe("1 action");
+    // The trailing count is the BARE NUMBER the board draws: the word
+    // form spent the row's width on a noun the label column already says,
+    // and what it spent came out of the value slot.
+    expect(count.textContent).toBe("1");
     expect(count.className).toContain("text-label-small");
   });
 
