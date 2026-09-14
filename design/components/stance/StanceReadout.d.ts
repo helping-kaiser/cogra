@@ -9,13 +9,13 @@ export interface StancePair {
   pInterest: number;
 }
 
-/** The viewer's standing toward a target, as the read that rendered it carried. */
+/** The viewer's stance toward a target, as the read that rendered it carried. */
 export interface StanceBundle {
   /** The folded pair the graph routes on — clipped to [-1, +1]. */
   current: StancePair;
   /** The unclipped history. What a walk back to zero actually walks. */
   rawSum: StancePair;
-  /** How many signed records stand behind it. 0 means no standing. */
+  /** How many signed records stand behind it. 0 means none. */
   records: number;
   severed?: boolean;
   /** How many counter-records reaching zero would take. */
@@ -38,7 +38,7 @@ export interface StanceReadoutProps {
   pair: StancePair;
   /** "pick" reads the edge being authored; "standing" reads a bundle. */
   kind?: "pick" | "standing";
-  /** Wording for a standing at exactly (0, 0) — "Severed" or "No stance yet". */
+  /** Wording for a bundle at exactly (0, 0) — "Walked back" or "No opinion yet". */
   zeroLabel?: string;
   style?: React.CSSProperties;
 }
@@ -56,7 +56,7 @@ export interface OwnStanceReadoutProps {
 export declare function OwnStanceReadout(props: OwnStanceReadoutProps): JSX.Element;
 
 /** A stance RECORD's face and pair, drawn plainly wherever a stance is data
- *  rather than a control — the stances page's rows, the chronicle's stance
+ *  rather than a control — the opinions page's rows, the chronicle's opinion
  *  entries. Never interactive. */
 export interface StanceValueProps {
   pDirected: number;
@@ -68,10 +68,10 @@ export interface StanceValueProps {
 
 export declare function StanceValue(props: StanceValueProps): JSX.Element;
 
-/** The standing and the pick's face — everything above the pad's field. */
+/** The current opinion and the pick's face — everything above the pad's field. */
 export interface StanceStandingProps {
   pick: StancePair;
-  /** `undefined` while the standing is being read, `null` where it could not be. */
+  /** `undefined` while the bundle is being read, `null` where it could not be. */
   bundle: StanceBundle | null | undefined;
   /** Already in the reader's words — "this post", "@ada". */
   targetLabel: string;
@@ -137,20 +137,20 @@ export declare function severanceParts(
   bundle: StanceBundle | null | undefined,
   targetLabel: string,
 ): { sentence: string } | { raw: string; folded: string; capped: boolean };
-/** The standing and the landing, split for layout: a sentence, or a labelled readout. */
+/** The bundle and the landing, split for layout: a sentence, or a labelled readout. */
 export declare function standingParts(bundle: StanceBundle | null | undefined, targetLabel: string): object;
 export declare function landingParts(landing: StanceLanding | null): object;
 export declare const DIRECTED_POLES: readonly string[];
 export declare const INTEREST_POLES: readonly string[];
 export declare const PICK_LABEL: string;
-/** Wording for a standing at exactly (0, 0) that has records behind it. */
+/** Wording for a bundle at exactly (0, 0) that has records behind it. */
 export declare const SEVERED_LABEL: string;
-/** Wording for a standing at exactly (0, 0) that has never had a record. */
+/** Wording for a bundle at exactly (0, 0) that has never had a record. */
 export declare const NO_STANDING_LABEL: string;
-/** What a bundle standing at exactly (0, 0) reads as. */
+/** What a bundle at exactly (0, 0) reads as. */
 export declare const ZERO_BUNDLE_EMOJI: string;
 /** The face an unauthored target wears at rest, deliberately outside the
- *  anchor table so an empty control cannot read as a standing already held. */
+ *  anchor table so an empty control cannot read as an opinion already given. */
 export declare const RESTING_FACE_EMOJI: string;
 /** Visually hidden, still read aloud — where the anchors' words live. */
 export declare const SR_ONLY: React.CSSProperties;

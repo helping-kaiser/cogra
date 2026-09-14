@@ -916,7 +916,7 @@ const REPLY_CITATION = "Tide tables and the third headland";
    The bodies stay inert under their overlay — the boards say so in their
    `scanExempt` lines — so nothing here is wired; it is drawn. */
 
-/* THE POST'S SEAL, whole — `ComposeSeal` itself, and what the stance pad, the
+/* THE POST'S SEAL, whole — `ComposeSeal` itself, and what the opinion pad, the
    license sheet, the sensitive sheet and the "?" dialog stand on. */
 function ComposeSealBody({ cited = 1 }) {
   return (
@@ -978,7 +978,7 @@ function ComposeSealBody({ cited = 1 }) {
   );
 }
 
-/* THE REPLY'S SEAL, whole — `ReplySeal` itself, and what the reply's stance pad
+/* THE REPLY'S SEAL, whole — `ReplySeal` itself, and what the reply's opinion pad
    stands on. */
 /* The reply's parked pad over its seal — `ReplyPad`'s whole drawing, lifted
    here the moment a second board needed it (the help dialog opened from its
@@ -1112,7 +1112,7 @@ function ReplySealBody({ cited = 0 }) {
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
 
-        {/* The stance the reply carries is a fact about replying, not about
+        {/* The opinion the reply carries is a fact about replying, not about
             this row — so it stands under the ruled block rather than inside
             it, where `FactRow` has no slot for it. */}
         <QuietNote>Replying also signs your opinion on the post it answers.</QuietNote>
@@ -1411,7 +1411,7 @@ function CommentsThreadSheet() {
           below the fold is a state nobody can check. The whole body — the
           words and the two pictures with them — is under one
           comment-scale block, while the author, the timestamp and the
-          stance stay readable. */}
+          opinion stay readable. */}
       <CommentCard
         author={MIRA}
         content="The gulls had been at it before the tide came back. Two frames, both grim."

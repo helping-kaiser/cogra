@@ -56,12 +56,11 @@ import { TopicsLine } from "./topics-line";
    become the reading. */
 const DESCRIPTION_CLAMP_LINES = 2;
 
-/* THE TEXT BODY'S CEILING — a text post stands about as tall as a media post,
-   never taller, so a feed of both keeps one rhythm. Derived rather than
-   chosen: `--media-max-height` is 376px on the 390×844 board and
-   `--text-body-medium--line-height` is 20px, so floor(376 / 20) = 18 lines.
-   Past that the body folds and `More` opens it. The detail view is the read
-   surface and clamps nothing. */
+/* THE TEXT BODY'S CEILING — the media law's drawn clamp (title 1 line, body
+   18, description 2; tmp_dev/2026-09-11-mvp-design-queue-rulings.md) keeps a
+   text post about as tall as a media post, so a feed of both keeps one
+   rhythm. Past that the body folds and `More` opens it. The detail view is
+   the read surface and clamps nothing. */
 const TEXT_BODY_CLAMP_LINES = 18;
 
 /* A render cannot measure a paragraph, so the opener is offered on an estimate

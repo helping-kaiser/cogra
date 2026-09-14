@@ -100,7 +100,7 @@
     <string name="content_license_heading">License</string>
     <string name="content_license_caption">Terms for anyone who reuses this — not a statement about how you made it.</string>
     <string name="content_license_attribution_label">Credit</string>
-    <string name="content_license_attribution_none">Never</string>
+    <string name="content_license_attribution_none">No credit</string>
     <string name="content_license_attribution_commercial">Commercially</string>
     <string name="content_license_attribution_always">Always</string>
     <string name="content_license_provenance_label">Public record of use</string>

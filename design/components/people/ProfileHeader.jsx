@@ -8,7 +8,7 @@ import { StanceControl } from "../stance/StanceControl.jsx";
 
    PEOPLE FIRST, AND A PERSON IS A TARGET. A profile is the one surface whose
    subject is a person, so the stance control on THEM leads the actions: the whole
-   product is stances on things, and a person is the most consequential thing to
+   product is opinions on things, and a person is the most consequential thing to
    have one on. On a profile it wears the wide anchor — the row's one action,
    stretched to the row (jakob 2026-09-01, "the stance icon looks lost" at
    anchor size).
@@ -38,11 +38,11 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    THE COUNTS ARE THE HARD PART. The thing being counted is what the repo calls a
    connection, and that word is on the banned list (readme §3) along with the rest
    of the implementation vocabulary. So the header counts what a reader can
-   actually place: how many people have taken a stance on this person, and how many
-   this person has taken. Two figures, each labelled, each plain — never one merged
-   "followers" number, because there is no following here and borrowing the word
-   would describe a different product. A Posts figure leads the row, and the
-   figures are one tap target leading to the stances page: both directions,
+   actually place: how many people have given an opinion on this person, and how
+   many this person has given. Two figures, each labelled, each plain — never one
+   merged "followers" number, because there is no following here and borrowing the
+   word would describe a different product. A Posts figure leads the row, and the
+   figures are one tap target leading to the opinions page: both directions,
    separated, never merged there either.
 
    THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (jakob 2026-09-01). Changing the
@@ -168,12 +168,12 @@ export function ProfileHeader({
           collapsing — a space kept, not a space lost. */}
       {bio && (typeof bio === "string" ? <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p> : bio)}
       {website && <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--primary)", overflowWrap: "anywhere" }}>{website}</span>}
-      {/* The actions row. On someone else's profile the stance leads and
+      {/* The actions row. On someone else's profile the opinion leads and
           Message stands beside it, the pair every social profile puts here
-          (jakob 2026-09-01) — the stance where Follow goes, the chat one tap
+          (jakob 2026-09-01) — the opinion where Follow goes, the chat one tap
           away. On your own there is no opinion to give, so the row is the two
           things you do to your own record. The page's ⋮ closes the row in
-          either case. The widths: the stance takes what is left, Message takes
+          either case. The widths: the opinion takes what is left, Message takes
           its word, and your own two buttons share what the dot leaves. */}
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
         {own ? (

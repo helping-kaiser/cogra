@@ -7,11 +7,11 @@ import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
 /* THE STREAM'S RAIL (readme §13, the reel round) — the post card's action row
    turned on its side and laid over the clip.
 
-   THE ORDER IS RULED, top to bottom: author · stance · comments · share · the
+   THE ORDER IS RULED, top to bottom: author · opinion · comments · share · the
    score. People lead, the way they lead on a card (§1) — the author is the one
    thing here that is not an act. Then the acts in the card's own order, with
    share arriving after them. THE SCORE SITS LAST because it is the door out of
-   the stream: a thumb reaching for the stance never passes over the exit.
+   the stream: a thumb reaching for the opinion never passes over the exit.
    Topics, the reference count and the reader's ⋮ are deliberately absent —
    they belong to the detail view the score opens.
 
