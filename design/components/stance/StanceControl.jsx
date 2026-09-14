@@ -23,10 +23,10 @@ import {
 /* CoGra's SIGNATURE INTERACTION (design.md §8). Everything in this file is a rule
    from that section, not a preference:
 
-   AT REST the target shows the standing — face, words, and the folded pair. A
-   viewer without a standing sees a MUTED, TRANSLUCENT face: the same control at
+   AT REST the target shows the current opinion — face, words, and the folded pair.
+   A viewer with no opinion yet sees a MUTED, TRANSLUCENT face: the same control at
    rest, visibly waiting to be given a value, never a bare word and never the shrug
-   a zero standing owns.
+   a zero opinion owns.
 
    A TAP OPENS THE PAD (jakob's ruling, the geek round). The light gesture — the
    one a thumb gives by accident — costs nothing and signs nothing; it blooms the
@@ -38,7 +38,7 @@ import {
    signature is the one that takes a held finger, and the gesture nobody gives by
    mistake is the only one allowed to act by itself.
 
-   THE HOLD ANSWERS IMMEDIATELY. The resting target moves to the new standing at
+   THE HOLD ANSWERS IMMEDIATELY. The resting target moves to the new opinion at
    once and a snackbar confirms the signature: a gesture that stages a priced act
    must never be silent, because silence reads as failure and invites the same act
    again.
@@ -56,9 +56,9 @@ import {
    opening the pad must never also open the post.
 
    IT NEVER PREVENTS A CHOICE. The whole square is reachable, corners included. A
-   pick that nets the standing to (0, 0) is confirmed, not refused.
+   pick that nets the bundle to (0, 0) is confirmed, not refused.
 
-   This recreation folds locally and keeps its own standing in state; the product
+   This recreation folds locally and keeps its own bundle in state; the product
    asks the backend for the authoritative projection before signing. */
 
 export const LONG_PRESS_MS = 500;
@@ -70,7 +70,7 @@ export const LONG_PRESS_MS = 500;
    size as the comment bubble beside it, white with the same soft shadow. No
    disc and no ring — a plate around one control in a column of five reads as
    chrome, and the first cut of it was exactly the clonky thing that made the
-   rail stop looking like one set. A stance that HAS been taken still shows its
+   rail stop looking like one set. An opinion that HAS been given still shows its
    own face at the same size, because that face is the readout.
 
    The gesture, the pad, the ceremony and the muting rule are unchanged; this
@@ -109,7 +109,7 @@ function parkedPadStyle(inset = 16) {
    `wide` (profile round, 2026-09-01) is the PRESENTATIONAL variant a profile
    header wears: the same anchor stretched to the row's width in the outline
    button's clothes, and — divergence from the card anchor, deliberate — the
-   words drawn beside the face, because here the stance IS the row's one action
+   words drawn beside the face, because here the opinion IS the row's one action
    and a lone face at full width reads as lost. Tap, hold, pad, severance: all
    unchanged — the variant restyles the anchor and nothing else. */
 export function StanceControl({
@@ -299,13 +299,13 @@ export function StanceControl({
         >
           {/* Never a bare word (§8.3): a viewer with no bundle gets a face
               outside the table, muted and translucent — the control visibly
-              waiting to be given a value, and never the shrug a zero standing
+              waiting to be given a value, and never the shrug a zero opinion
               owns (§8.4). The anchor's words are not drawn beside it; they ride
               the button's accessible name above. */}
           {overMedia && restingFace === null ? (
             /* OVER MEDIA THE UNSET STATE IS A LINE FACE, not a muted emoji: on
                photography "quiet" and "invisible" are the same thing, and the
-               glyph says "no standing yet" by being the empty face rather than
+               glyph says "no opinion yet" by being the empty face rather than
                by being faint. */
             <Icon name="sentiment_neutral" size={28} />
           ) : (
@@ -349,7 +349,7 @@ export function StanceControl({
             §10) — a drag gesture always has one.
 
             DIVERGENCE, deliberate: it is not DRAWN. The source renders it as a
-            `primary` text button beside every stance on every card, and a feed of
+            `primary` text button beside every stance control on every card, and a feed of
             twenty posts then carries twenty copies of a control that duplicates
             the one beside it — and "Choose values" names nothing a reader can
             place. It is now visually hidden until focused (the skip-link

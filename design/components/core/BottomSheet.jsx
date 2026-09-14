@@ -21,7 +21,7 @@ import React from "react";
      surface; a navigation bar under it would offer to leave mid-decision.
    · Scrim at 50%, and pressing it closes. Escape closes. Both because a drawer
      the reader opened is a drawer the reader can drop.
-   · Never open beside the stance pad: one parked surface at a time, and the pad
+   · Never open beside the opinion pad: one parked surface at a time, and the pad
      owns the same corner of the screen.
    · Enters over 400ms from the bottom, leaves over 200ms to the bottom
      (`tokens/transitions.css`) — a dismissal exits the edge it entered from. */

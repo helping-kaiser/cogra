@@ -80,7 +80,7 @@ export function CommentCard({
   /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
      has no title to leave outside it, so what carries the informed choice is
      the frame the card already wears — the author, the timestamp, the topics,
-     and the stance the reader can still take. */
+     and the opinion the reader can still give. */
   const body = (
     <>
       <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{withMentions(content)}</p>
@@ -168,7 +168,7 @@ export function CommentCard({
         <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />
         {edited && <EditedMarker />}
         {pending && <PendingMarker />}
-        {/* One affordance row, as on PostCard: the stance leads, everything else
+        {/* One affordance row, as on PostCard: the opinion leads, everything else
             the comment grows lands beside it — and it spreads across the card
             the same way, every control on a 48px target (jakob's ruling, the
             geek round). */}
