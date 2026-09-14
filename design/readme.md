@@ -692,6 +692,11 @@ four quadrants are legitimate.
   anchors by Euclidean distance — dense in the for-it-and-want-it
   quadrant, sparse at the extremes. `(0, 0)` never speaks through the
   table: it gets 🤷.
+- **A pick with only one axis reads through `VALENCE_SIX`**, the
+  pure-valence spine of the twenty — six ruled bands over `pDirected`
+  alone, for the own-post pad and the seal row that states what it
+  picked. A nearest-of-twenty lookup cannot answer for a value that
+  names no pair.
 - **Where the anchors sit is recorded on the anchor-map card**
   (`components/stance/anchor-map.card.html`) — the twenty on the
   two-axis field and the six pure-valence ones on the strip, each at its
@@ -2604,8 +2609,8 @@ of these and nothing else.
   and `PROVENANCE_TIERS` carry the readings and their hints, so the
   sheet keeps its own layout — one axis per section, one reading per
   row — and cannot say a shorter version of what a license promises.
-- **The one-axis pad names a face the table has**: at +0.30 the
-  nearest `STANCE_ANCHORS` row is the first, 🙂 "Nice".
+- **The one-axis pad names a face the table has**:
+  `nearestValenceAnchor(+0.10)` is 🙂 "Nice".
 - **A component never states a raw type value** (§7). The quiet note
   and the acts footer take `--text-label-small--letter-spacing`, and
   the label-small line gains 0.1px of tracking on 32 boards.
@@ -4655,6 +4660,48 @@ recorded rather than drawn.
   `ProfileStances` and `PostOpinions`, the only two that draw a negative
   pair — and the profile flow map grew 3653 → **3709** to hold the new
   edge's line.
+
+### The valence-six round — 2026-09-14
+
+jakob's three rulings on the one-axis pad, taken together: the six
+faces a pick with no second axis can reach become a real table, the
+pad's default moves to the number the rest of the system already
+names, and the seal stops showing a value nobody set.
+
+- **THE ONE-AXIS TABLE IS `VALENCE_SIX`** (jakob), promoted out of the
+  anchor-map card into `StanceReadout.jsx` beside the twenty: 😠 🙁 😕
+  🙂 😊 😍 at ±0.90, ±0.55 and ±0.15, with glyph, word and position
+  read from `STANCE_ANCHORS` so the six are six OF the twenty.
+  `nearestValenceAnchor(pDirected)` is the lookup, and the card now
+  draws its strip from the master rather than from a copy.
+- **THE BANDS ARE WRITTEN, AND TWO EDGES ARE RULED.** The six bands
+  are half-open intervals whose edges are the midpoints between
+  neighbouring anchors, spelled rather than computed — derived at
+  runtime the first comes out as −0.7250000000000001, and a band edge
+  that depends on the order of a multiply is a face that depends on
+  the platform. At a midpoint the MILDER face wins, the one nearer
+  zero (±0.35 and ±0.725), and exactly 0.00 reads 🙂. Six monotone
+  bands cover the closed axis; every comparison is a `<` or an `===`.
+- **THE OWN-POST DEFAULT IS +0.10**, the value the rest of the system
+  already names. `ComposePad` re-draws at it through the masters' own
+  helpers — `formatDimension(+0.10)`, `nearestValenceAnchor(+0.10)`
+  reading 🙂 "Nice", and the knob at `padPercentOf(+0.10)`, 55% of the
+  field.
+- **AN OPINION ON YOUR OWN POST IS ONE NUMBER** (jakob: "the second
+  number isn't yours to set on your own post"). A post always reaches
+  its author in full, so the seal's own-opinion row draws
+  `OwnStanceReadout` — the same line as `StanceReadout`, a shorter
+  number — and the three boards that spell that seal all take it. A
+  citation's row keeps its pair: both of its values are picked.
+- **THE GATE CHECKS THE ONE-AXIS FACE.** `check-readouts` reported it
+  as an unverifiable note while no table answered for a pick that
+  names no pair; the note is gone and the face is an assertion like
+  the other five sites'.
+- **The gate**: boards hold at **190**, the canvas at **199 files**,
+  edges at **1342**, gaps at **43**, flows at **63/60/3**. Seven boards
+  re-rendered behind the two readouts — `ComposePad` and the six that
+  draw a compose seal (`ComposeSeal`, `ComposeSealUploading`,
+  `ComposeLicense`, `ComposeSensitive`, `HelpDialog`, `NetworkError`).
 
 ## 14. Index
 
