@@ -534,6 +534,18 @@ class ContentScreensTest {
 
     // -- Post detail --
 
+    /**
+     * THE THREAD IS A SHEET (`_shared.jsx:1247-1257`): a test that reads it
+     * opens it the way a reader does — through the affordance row's count.
+     */
+    private fun openComments() {
+        compose.onNodeWithTag("detail_post_comments").performClick()
+        // The sheet animates in, so the thread's composition is not finished
+        // when the click returns — a test that reads state rather than nodes
+        // has no other sync point.
+        compose.waitForIdle()
+    }
+
     private fun renderDetail(
         state: PostDetailUiState,
         viewerId: String? = null,
@@ -610,6 +622,7 @@ class ContentScreensTest {
             ),
             onStance = { target, _ -> stanced += target },
         )
+        openComments()
         assertThat(stanced).containsExactly("p1", "c1", "c2")
     }
 
@@ -622,9 +635,33 @@ class ContentScreensTest {
                 comments = listOf(testComment("c1")),
             ),
         )
+        openComments()
         compose.onNodeWithTag("detail_body").assertExists()
         compose.onNodeWithTag("detail_comment_c1").assertExists()
         compose.onNodeWithTag("detail_no_comments").assertDoesNotExist()
+    }
+
+    /**
+     * CR-01: the thread stands in a sheet the affordance row's count raises
+     * (`_shared.jsx:1247-1257`, and graph.json's `comment count` edges), not
+     * as a second half of the page.
+     */
+    @Test
+    fun theThreadStandsInASheetTheCountRaises() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("detail_comment_c1").assertDoesNotExist()
+        compose.onNodeWithTag("detail_add_comment").assertDoesNotExist()
+        openComments()
+        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        compose.onNodeWithTag("detail_add_comment").assertExists()
     }
 
     // Pull-to-refresh belongs to the top of the thread: a reader
@@ -636,12 +673,13 @@ class ContentScreensTest {
         renderDetail(
             PostDetailUiState(
                 loading = false,
-                post = testPost("p1"),
-                comments = (1..30).map { testComment("c$it") },
+                // A post long enough to scroll: the thread stands in its own
+                // sheet now, so the page's own length is the post's.
+                post = testPost("p1", body = "Body p1. ".repeat(400)),
             ),
             onRefresh = { refreshes++ },
         )
-        // Down the thread, well past the header…
+        // Down the post, well past the header…
         repeat(3) {
             compose.onNodeWithTag("detail_list").performTouchInput { swipeUp() }
         }
@@ -669,6 +707,7 @@ class ContentScreensTest {
                 ),
             ),
         )
+        openComments()
         compose.onNodeWithTag("detail_pending").assertDoesNotExist()
         compose.onNodeWithTag("comment_pending_c1").assertExists()
         compose.onNodeWithTag("detail_comment_c1").assertExists()
@@ -703,6 +742,7 @@ class ContentScreensTest {
                 comments = listOf(testComment("c1")),
             ),
         )
+        openComments()
         compose.onNodeWithTag("detail_license_terms").assertDoesNotExist()
         compose.onNodeWithTag("comment_license_terms_c1").assertDoesNotExist()
 
@@ -818,6 +858,7 @@ class ContentScreensTest {
                 comments = listOf(testComment("c1")),
             ),
         )
+        openComments()
         compose.onNodeWithTag("comment_c1_menu").performClick()
         compose.onNodeWithTag("comment_menu_save_c1").assertExists()
         compose.onNodeWithTag("comment_menu_cite_c1").assertExists()
@@ -873,7 +914,9 @@ class ContentScreensTest {
             PostDetailUiState(loading = false, post = testPost("p1")),
             onAddComment = { opened = true },
         )
-        compose.onNodeWithTag("detail_add_comment").performScrollTo().performClick()
+        openComments()
+        // Pinned at the sheet's foot, so it never has to be scrolled to.
+        compose.onNodeWithTag("detail_add_comment").performClick()
         assertThat(opened).isTrue()
     }
 
@@ -885,8 +928,9 @@ class ContentScreensTest {
             signedIn = false,
             onSignInOrJoin = { joining = true },
         )
+        openComments()
         compose.onNodeWithTag("detail_add_comment").assertDoesNotExist()
-        compose.onNodeWithTag("detail_comment_signin").performScrollTo().performClick()
+        compose.onNodeWithTag("detail_comment_signin").performClick()
         assertThat(joining).isTrue()
     }
 
@@ -896,6 +940,7 @@ class ContentScreensTest {
             PostDetailUiState(loading = false, post = testPost("p1")),
             signedIn = null,
         )
+        openComments()
         compose.onNodeWithTag("detail_add_comment").assertDoesNotExist()
         compose.onNodeWithTag("detail_comment_signin").assertDoesNotExist()
     }
@@ -918,6 +963,7 @@ class ContentScreensTest {
             ),
             onRefresh = { retried = true },
         )
+        openComments()
         compose.onNodeWithTag("detail_body").assertExists()
         compose.onNodeWithTag("detail_comment_c1").assertExists()
         compose.onNodeWithTag("detail_transport_error").assertDoesNotExist()
@@ -940,6 +986,7 @@ class ContentScreensTest {
             ),
             onLoadMoreComments = { more = true },
         )
+        openComments()
         compose.onNodeWithTag("detail_comment_c1").assertExists()
         compose.onNodeWithTag("detail_transport_banner").assertDoesNotExist()
         compose.onNodeWithTag("detail_more_comments").assertDoesNotExist()
@@ -974,6 +1021,7 @@ class ContentScreensTest {
             ),
             viewerId = "viewer",
         )
+        openComments()
         compose.onNodeWithTag("comment_edit_mine").assertExists()
         compose.onNodeWithTag("comment_edit_theirs").assertDoesNotExist()
     }
@@ -987,6 +1035,7 @@ class ContentScreensTest {
                 comments = listOf(comment("c1", edited = true), comment("c2")),
             ),
         )
+        openComments()
         compose.onNodeWithTag("comment_edited_c1").assertExists()
         compose.onNodeWithTag("comment_edited_c2").assertDoesNotExist()
     }
@@ -1004,6 +1053,7 @@ class ContentScreensTest {
             viewerId = "viewer",
             onEditComment = { editing = it },
         )
+        openComments()
         compose.onNodeWithTag("comment_edit_mine").performScrollTo().performClick()
         assertThat(editing?.id).isEqualTo("mine")
     }
@@ -1019,6 +1069,7 @@ class ContentScreensTest {
             ),
             viewerId = "viewer",
         )
+        openComments()
         compose.onNodeWithTag("comment_edit_input").assertDoesNotExist()
         compose.onNodeWithTag("comment_edit_save").assertDoesNotExist()
         compose.onNodeWithTag("comment_edit_cancel").assertDoesNotExist()
@@ -1038,6 +1089,7 @@ class ContentScreensTest {
                 comments = listOf(comment("c1", replyCount = 2)),
             ),
         )
+        openComments()
         compose.onNodeWithTag("detail_comment_r1").assertDoesNotExist()
         compose.onNodeWithTag("replies_more_c1").assertExists()
     }
@@ -1052,6 +1104,7 @@ class ContentScreensTest {
                 comments = listOf(comment("c1", replyCount = 0)),
             ),
         )
+        openComments()
         compose.onNodeWithTag("replies_more_c1").assertDoesNotExist()
     }
 
@@ -1068,6 +1121,7 @@ class ContentScreensTest {
                 ),
             ),
         )
+        openComments()
         compose.onNodeWithTag("detail_comment_r1").assertExists()
     }
 
@@ -1079,6 +1133,7 @@ class ContentScreensTest {
             comments = listOf(comment("c1")),
         )
         renderDetail(state, signedIn = false)
+        openComments()
         compose.onNodeWithTag("comment_reply_c1").assertDoesNotExist()
     }
 
@@ -1100,6 +1155,7 @@ class ContentScreensTest {
             ),
             onReplyTo = { replied = it },
         )
+        openComments()
         compose.onNodeWithTag("comment_reply_c2").performScrollTo().performClick()
         assertThat(replied?.id).isEqualTo("c2")
     }
@@ -1113,6 +1169,7 @@ class ContentScreensTest {
                 comments = listOf(comment("c1")),
             ),
         )
+        openComments()
         compose.onNodeWithTag("comment_reply_input").assertDoesNotExist()
         compose.onNodeWithTag("comment_reply_submit").assertDoesNotExist()
     }
@@ -1126,6 +1183,7 @@ class ContentScreensTest {
                 comments = listOf(comment("c1")),
             ),
         )
+        openComments()
         compose.onNodeWithTag("detail_author").assertExists()
         compose.onNodeWithTag("comment_c1_author").assertExists()
     }
@@ -1304,6 +1362,7 @@ class ContentScreensTest {
                 comments = listOf(comment("c1")),
             ),
         )
+        openComments()
         compose.onNodeWithTag("comment_c1_age", useUnmergedTree = true).assertExists()
     }
 
@@ -1355,14 +1414,19 @@ class ContentScreensTest {
         assertThat(opened).isEqualTo("p1")
     }
 
-    /** On the detail the thread is already below it, so the count states. */
+    /** On the detail the count raises the thread's own sheet (`ReplyEntry`). */
     @Test
-    fun theCommentCountStatesRatherThanActsOnTheDetail() {
+    fun theCommentCountRaisesTheThreadOnTheDetail() {
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1").copy(commentCount = 2)),
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(commentCount = 2),
+                comments = listOf(testComment("c1")),
+            ),
         )
-        compose.onNodeWithTag("detail_post_comments", useUnmergedTree = true)
-            .assert(hasClickAction().not())
+        compose.onNodeWithTag("detail_post_comments").assert(hasClickAction())
+        openComments()
+        compose.onNodeWithTag("detail_comment_c1").assertExists()
     }
 
     @Test
@@ -1554,6 +1618,7 @@ class ContentScreensTest {
                 ),
             ),
         )
+        openComments()
         compose.onNodeWithTag("comment_c1_topic_kotlin").assertTextEquals("#kotlin")
         compose.onNodeWithTag("comment_c1_topics_counts", useUnmergedTree = true)
             .assertTextEquals("· 1 reference")
@@ -1810,6 +1875,7 @@ class ContentScreensTest {
             signedIn = true,
             onReference = { referenced += it },
         )
+        openComments()
         compose.onNodeWithTag("comment_c1_menu").performClick()
         compose.onNodeWithTag("comment_menu_cite_c1").performClick()
         assertThat(referenced).containsExactly("c1")

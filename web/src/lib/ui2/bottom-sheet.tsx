@@ -23,6 +23,8 @@ export function BottomSheet({
   title,
   titleTrailing,
   titleHidden = false,
+  height = "content",
+  foot,
   children,
   testId = "bottom-sheet",
 }: {
@@ -47,6 +49,24 @@ export function BottomSheet({
    * reaches a screen reader through `aria-label`, which is where one asks.
    */
   titleHidden?: boolean;
+  /**
+   * `content` lets the content set the sheet's size, up to the sliver the
+   * screen keeps; `full` pins it at the drawn full height instead — the
+   * comments sheet fills the screen to 72px below the top
+   * (`_shared.jsx:1249` — `height="calc(100% - 72px)"`). Design's own master
+   * takes the same prop for the same reason: "a pinned input row at its foot
+   * needs the surface itself to own the height" (`BottomSheet.jsx:29-32`),
+   * and a sheet sized by its content would rise and fall as a page of
+   * comments lands.
+   */
+  height?: "content" | "full";
+  /**
+   * The row pinned below the scrolling body — design's `CommentComposerFoot`
+   * slot. It sits outside the scroll region so it stays reachable however
+   * long the body is, and it carries its own gutters, the way every slot of
+   * design's `BottomSheet` does.
+   */
+  foot?: ReactNode;
   children: ReactNode;
   testId?: string;
 }) {
@@ -95,11 +115,11 @@ export function BottomSheet({
       // default, and this one rises from the edge it will go back to. It may
       // fill the screen up to a sliver below the top, so the rounded corners
       // keep a strip of the surface behind visible.
-      className={`${
-        closing ? "cg-sheet-out" : "cg-sheet-in"
-      } mt-auto mb-0 max-h-[92dvh] w-full max-w-[42rem] rounded-t-extra-large border-0 bg-surface-container-high p-0 text-on-surface backdrop:bg-scrim/50`}
+      className={`${closing ? "cg-sheet-out" : "cg-sheet-in"} ${
+        height === "full" ? "h-[calc(100dvh-72px)]" : "max-h-[92dvh]"
+      } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 bg-surface-container-high p-0 text-on-surface backdrop:bg-scrim/50`}
     >
-      <div className="flex max-h-[92dvh] flex-col">
+      <div className={`flex flex-col ${height === "full" ? "h-full" : "max-h-[92dvh]"}`}>
         {/* The drag handle is drawn but not a control: the sheet is dropped
             with the backdrop, Escape, or its own action, and a handle that
             looks draggable but is not would lie. */}
@@ -112,7 +132,12 @@ export function BottomSheet({
             {titleTrailing}
           </div>
         )}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-8">{children}</div>
+        <div
+          className={`min-h-0 flex-1 overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
+        >
+          {children}
+        </div>
+        {foot !== undefined && <div className="flex-none pb-8">{foot}</div>}
       </div>
     </dialog>
   );
