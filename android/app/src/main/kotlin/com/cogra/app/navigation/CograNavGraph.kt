@@ -678,6 +678,10 @@ private fun CograNavGraphContent(
                         navController.navigate(EditComment(commentId, parentTitle))
                     },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
+                    // A post cited from the tags-and-references sheet; a cited
+                    // comment lands on the post carrying it, which has no
+                    // permalink of its own.
+                    onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onOpenTopic = { name -> navController.navigate(Topic(name)) },
                     onReference = { id ->
                         navController.navigate(ComposePost(referenceTargetId = id))
