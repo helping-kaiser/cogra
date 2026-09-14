@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
@@ -95,6 +97,13 @@ internal fun ColumnScope.CropStepBody(
     // step is no place for a keyboard
     // (`design/components/compose/DescribeSheet.prompt.md`). Descriptions
     // are authored on the details stage, in `DescribeSheet`.
+
+    Text(
+        text = stringResource(R.string.content_crop_note),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.testTag("wizard_crop_note"),
+    )
 
     if (state.picked.size > 1) {
         Row(
