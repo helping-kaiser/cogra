@@ -3,6 +3,7 @@ package com.cogra.feature.content.wizard
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.media.MediaItem
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
@@ -14,7 +15,6 @@ import com.cogra.domain.content.isTitleTooLong
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.VideoFrame
-import com.cogra.domain.LicenseChoice
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 
@@ -171,10 +171,10 @@ data class RefusedPick(
 
 /**
  * Which sheet is open over the seal (`ComposeLicense`, `ComposePad`,
- * `ComposeSensitive`). One at a time: each is a drawer the reader opened
- * over the same screen.
+ * `ComposeSensitive`, `ComposeCitations`). One at a time: each is a drawer the
+ * reader opened over the same screen.
  */
-enum class SealSheet { None, License, Stance, Sensitive }
+enum class SealSheet { None, License, Stance, Sensitive, Cited }
 
 /**
  * How the wizard ended.

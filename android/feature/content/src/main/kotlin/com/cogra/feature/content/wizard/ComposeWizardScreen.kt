@@ -49,6 +49,7 @@ import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.domain.media.isAltTextTooLong
+import com.cogra.feature.content.CitedSheet
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
@@ -545,6 +546,20 @@ internal fun ComposeWizardScreen(
                     onReasonChange = onSensitiveReasonChange,
                     onDone = onCloseSheet,
                     onHelp = { onOpenHelp(HelpTopic.MarkingAsSensitive) },
+                )
+
+                // `ComposeCitations` — what the seal's "N cited" row opens. It
+                // manages the set the details stage staged and never offers
+                // another pick.
+                state.sheet == SealSheet.Cited -> CitedSheet(
+                    section = state.referenceSection,
+                    onRemoveReference = onRemoveReference,
+                    onTuneReference = onTuneReference,
+                    onDoneTuningReference = onDoneTuningReference,
+                    onReferenceRelevanceChange = onReferenceRelevanceChange,
+                    onReferenceSupportChange = onReferenceSupportChange,
+                    onDone = onCloseSheet,
+                    testTag = "wizard_cited_sheet",
                 )
 
                 else -> Unit

@@ -56,7 +56,7 @@ enum class ReplyStep { Compose, Seal }
  * picker `graph.json` points at is **not boarded**, so the row opens the
  * topic entry the app already ships rather than a screen invented here.
  */
-enum class ReplySealSheet { None, License, Stance, Sensitive, Topics, References }
+enum class ReplySealSheet { None, License, Stance, Sensitive, Topics, References, Cited }
 
 /** Whether the reply answers the post itself or one of its comments. */
 enum class ReplyTargetKind { Post, Comment }
