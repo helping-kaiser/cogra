@@ -165,6 +165,16 @@ class ReplyWizardViewModel @Inject constructor(
      * The frames are lifted here rather than on entering a stage,
      * because there is no stage: the comment composer is one screen and
      * the cover row is inlined on it.
+     *
+     * A successful extraction settles [CoverChoice.None] on the first
+     * offered frame — but only while the author is still on the
+     * composer and has not chosen anything else. An author who moved on
+     * to the seal before extraction finished meant to go without a
+     * face, and this must not reach back and give them one after the
+     * fact; an author who tapped a frame or a picture already has their
+     * own answer to keep. Extraction coming back empty leaves
+     * [CoverChoice.None] standing — there is nothing here to settle it
+     * on.
      */
     private fun acceptClip(uri: String, clip: VideoInfo) {
         _state.update {
@@ -172,7 +182,19 @@ class ReplyWizardViewModel @Inject constructor(
         }
         viewModelScope.launch {
             val frames = video.coverFrames(uri, COVER_FRAME_COUNT)
-            _state.update { if (it.video?.uri == uri) it.copy(coverFrames = frames) else it }
+            _state.update { current ->
+                if (current.video?.uri != uri) return@update current
+                val settledChoice = if (
+                    current.step == ReplyStep.Compose &&
+                    current.coverChoice is CoverChoice.None &&
+                    frames.isNotEmpty()
+                ) {
+                    CoverChoice.Frame(0)
+                } else {
+                    current.coverChoice
+                }
+                current.copy(coverFrames = frames, coverChoice = settledChoice)
+            }
         }
         transcode(uri)
     }
@@ -266,22 +288,28 @@ class ReplyWizardViewModel @Inject constructor(
     }
 
     /**
-     * The clip's whole journey to the server: its face first, then the
-     * bytes.
+     * The clip's whole journey to the server: its face first when it
+     * has one, then the bytes.
      *
-     * Two standalone uploads, in this order because the cover is the
-     * cheap leg: a refused cover is learned at once rather than after
-     * fifty megabytes. The placement names the poster's id at prepare,
-     * so the id has to exist by then.
+     * Two standalone uploads where a cover was chosen, in this order
+     * because the cover is the cheap leg: a refused cover is learned at
+     * once rather than after fifty megabytes. The placement names the
+     * poster's id at prepare, so the id has to exist by then.
+     * [CoverChoice.None] is a settled answer rather than a wait, so it
+     * skips straight to the clip's own bytes.
      */
     private fun startVideoUpload() {
         val clip = _state.value.video ?: return
         val processed = transcoded ?: return
-        if (clip.upload is AssetUpload.Done && _state.value.coverMediaId != null) return
+        val coverSettled = _state.value.coverChoice is CoverChoice.None || _state.value.coverMediaId != null
+        if (clip.upload is AssetUpload.Done && coverSettled) return
         uploads.remove(clip.uri)?.cancel()
         uploads[clip.uri] = viewModelScope.launch {
             _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
-            val coverId = _state.value.coverMediaId ?: uploadCover() ?: return@launch
+            val coverId = when (_state.value.coverChoice) {
+                CoverChoice.None -> null
+                else -> _state.value.coverMediaId ?: uploadCover() ?: return@launch
+            }
             _state.update { it.copy(coverMediaId = coverId) }
 
             val sending = { progress: UploadProgress ->
@@ -315,10 +343,9 @@ class ReplyWizardViewModel @Inject constructor(
      * framed to the clip's own shape: a poster that is not the video's
      * shape would letterbox the thing it stands in for.
      *
-     * [CoverChoice.None] is handled only for exhaustiveness: the reply
-     * composer's own default stays [CoverChoice.Frame] (W4/L4B left the
-     * comment path's cover unchanged; see the lane's own report for the
-     * open item on carrying it there too), so this is never reached.
+     * Never called for [CoverChoice.None] — [startVideoUpload] skips
+     * straight past it — so that branch is unreached in practice; it
+     * fails loudly rather than silently if that invariant ever breaks.
      */
     private suspend fun uploadCover(): String? {
         val state = _state.value
