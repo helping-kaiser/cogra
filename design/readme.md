@@ -4585,12 +4585,11 @@ recorded rather than drawn.
   page and every card the actor authored say the same thing, and the dot
   stands in the actions row at `placement="row"` — the band law, and the
   room Message vacated is exactly where the page's rare acts belong.
-- **The sheet it opens is recorded, not boarded.** It is `ProfileMenu`
-  without Mention, its hide row on the redacted wording — three rows of
-  four already on the canvas, which is the follow-up bundle's own test
-  for a board that teaches nothing. The canvas is also at the editor's
-  200-file ceiling (item 62), so the entry it would cost is not there to
-  spend. `ProfileDeleted`/11 carries the gap that says so.
+- **The sheet it opens is `ProfileDeletedMenu`.** `ProfileMenu` without
+  Mention, its hide row on the redacted wording. Both boards draw one
+  husk — `ProfileDeletedBody`, shared the way `ProfileOtherBody` is —
+  so the pair differs by the sheet alone and the page cannot drift
+  between them.
 - **The comment menu carries no hide row, and that is deliberate**
   (jakob: "he clicks the profile of the commenter and hides from
   there"). Hiding is an act on an ACTOR, and a comment is the one

@@ -774,6 +774,43 @@ function ProfileOtherBody({ bundle } = {}) {
   );
 }
 
+/* A deleted account's profile, whole — shared for the same reason
+   `ProfileOtherBody` is: its own ⋮ needs this page with a sheet over it, and a
+   husk drawn twice would drift. The page's reasoning lives on `ProfileDeleted`;
+   what matters here is that the sheet board gets the identical husk, so the two
+   boards differ by the sheet alone. */
+function ProfileDeletedBody() {
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ padding: "0 16px" }}>
+          <ProfileHeader
+            handle="marlow"
+            redacted
+            bio={<RedactedContent reason="account" when="3d" />}
+            posts={7}
+            stancesOn={22}
+            stancesTaken={19}
+            onCounts={() => {}}
+            onCommit={() => {}}
+            menu={deletedProfileMenu()}
+            showHandle={false}
+          />
+        </div>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
+        <ChronicleList>
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="9d" second="Three mornings on the wall, watching the tide come in over the flats." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="12d" second="The tunnel is faster; the coast road is the reason to drive at all." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.5, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @sol" trailing="14d" inert />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} />
+        </ChronicleList>
+      </div>
+      <BottomNav active={null} slots={ALL_SLOTS} inline />
+    </>
+  );
+}
+
 /* THE REPLY WIZARD'S FIRST STAGE, whole (legacy conversion, lane C): the thing
    being answered, the words being written, the way to add pictures to them, and
    the foot. It lives here for the KeyPledge reason — `DiscardConfirm` draws
