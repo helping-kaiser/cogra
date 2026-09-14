@@ -30,7 +30,9 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -47,11 +49,14 @@ import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
+import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
@@ -168,6 +173,11 @@ fun PostDetailScreen(
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
 ) {
     val snackbar = remember { SnackbarHostState() }
+    // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`):
+    // one sheet for the screen, raised by whichever menu row asked for it —
+    // the post's own or any comment's.
+    var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
+    var removeOpen by remember { mutableStateOf(false) }
     val signedCopy = stringResource(R.string.content_post_saved)
     LaunchedEffect(state.commentSigned) {
         if (state.commentSigned) {
@@ -202,17 +212,29 @@ fun PostDetailScreen(
                 },
                 actions = {
                     val post = state.post
-                    // A removed post has no menu left — back is the whole
-                    // header. There is nothing of it to edit.
-                    val editable = post != null &&
+                    // A REMOVED POST HAS NO MENU LEFT — back is the whole
+                    // header (`Removed.jsx:5-6`). There is nothing of it to
+                    // edit, cite or license, and the skeleton that holds the
+                    // thread's place is not a thing a reader keeps.
+                    val live = post != null &&
                         !isRemoved(post.content, post.attachments, post.attachmentsStatus)
-                    if (editable && viewerId != null && post!!.author?.id == viewerId) {
-                        TextButton(
-                            onClick = { onEdit(post.id) },
-                            modifier = Modifier.testTag("detail_edit"),
-                        ) {
-                            Text(stringResource(R.string.content_edit))
-                        }
+                    if (live) {
+                        // ON A DETAIL SURFACE THE MENU LIVES UP HERE and the
+                        // card's own dot yields (`_shared.jsx:337-341`): two
+                        // dots would be two menus for one post.
+                        CograOverflowMenu(
+                            items = postMenuRows(
+                                own = viewerId != null && post.author?.id == viewerId,
+                                handle = post.author?.handle,
+                                license = post.license,
+                                onEdit = { onEdit(post.id) },
+                                onCite = { onReference(post.id) },
+                                onRemove = { removeOpen = true },
+                                onLicense = { licenseShown = post.license },
+                            ),
+                            contentDescription = stringResource(R.string.content_menu_post),
+                            testTag = "detail_menu",
+                        )
                     }
                 },
             )
@@ -312,6 +334,7 @@ fun PostDetailScreen(
                             onOpenActor = onOpenActor,
                             onOpenTopic = onOpenTopic,
                             onReference = onReference,
+                            onLicense = { licenseShown = it },
                             onShare = onShare,
                             onSignInOrJoin = onSignInOrJoin,
                             stanceControl = stanceControl,
@@ -320,6 +343,19 @@ fun PostDetailScreen(
                 }
             }
         }
+    }
+
+    licenseShown?.let { license ->
+        LicenseSheet(license = license, onDismiss = { licenseShown = null })
+    }
+    // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
+    // slice 8's, whole — "we need to do erasure right so it should be one
+    // task" — so Remove closes the dialog and changes nothing.
+    if (removeOpen) {
+        RemoveConfirm(
+            onDismiss = { removeOpen = false },
+            onRemove = { removeOpen = false },
+        )
     }
 }
 
@@ -339,6 +375,8 @@ private fun PostWithThread(
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onReference: (String) -> Unit,
+    /** Raises the terms in the sheet the menu's License row opens. */
+    onLicense: (LicenseChoice) -> Unit,
     /** Hands this post to the platform's own share sheet. */
     onShare: (String) -> Unit,
     onSignInOrJoin: () -> Unit,
@@ -404,16 +442,6 @@ private fun PostWithThread(
                         revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
                         onReveal = { onReveal(post.id, post.sensitiveMark()) },
                     )
-                    // The license rode the payload, so a redacted record
-                    // has none to show.
-                    if (!removed) {
-                        Text(
-                            licenseTerms(post.license),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.testTag("detail_license_terms"),
-                        )
-                    }
                     if (post.landing.isPending) {
                         PendingMarker(testTag = "detail_pending")
                     }
@@ -436,21 +464,6 @@ private fun PostWithThread(
                         onOpenComments = null,
                         onShare = { onShare(post.id) },
                         testTagPrefix = "detail_post",
-                        actions = {
-                            // Every content node can be referenced, so
-                            // the affordance lives on the node and opens
-                            // the composer with the chip already staged
-                            // (D20). Its drawn home is the ⋮'s "Cite in a
-                            // new post" row, which W3 builds.
-                            if (!removed) {
-                                TextButton(
-                                    onClick = { onReference(post.id) },
-                                    modifier = Modifier.testTag("detail_post_reference_action"),
-                                ) {
-                                    Text(stringResource(R.string.content_reference_action))
-                                }
-                            }
-                        },
                     ) {
                         stanceControl(post.id, "detail_post")
                     }
@@ -491,6 +504,7 @@ private fun PostWithThread(
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onReference = onReference,
+                onLicense = onLicense,
                 stanceControl = stanceControl,
             )
         }
@@ -534,28 +548,131 @@ private fun PostWithThread(
         // `ReplyEntry` 7: the thread's foot is the way *into* the
         // composer, not the composer itself. The full-focus wizard is
         // where a comment is written, so this row only opens it.
-        if (signedIn == true) item {
-            // It looks like the field the board draws and behaves like
-            // the button it is: a real text field would take focus and
-            // raise a keyboard for words that are typed on the next
-            // screen.
-            Surface(
-                onClick = onAddComment,
-                shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("detail_add_comment"),
-            ) {
-                Text(
-                    text = stringResource(R.string.content_comment_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                )
+        if (signedIn == true) {
+            item {
+                // It looks like the field the board draws and behaves like
+                // the button it is: a real text field would take focus and
+                // raise a keyboard for words that are typed on the next
+                // screen.
+                Surface(
+                    onClick = onAddComment,
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("detail_add_comment"),
+                ) {
+                    Text(
+                        text = stringResource(R.string.content_comment_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                    )
+                }
             }
         }
     }
+}
+
+/**
+ * THE ROWS THE ONE MENU HOLDS — the author's post vs someone else's
+ * (`_shared.jsx:369-376`). Both keep the card's order: the acts the menu
+ * was opened for lead, and the license closes it, the license being the
+ * rarest read in the product.
+ *
+ * ROWS WHOSE DESTINATION IS NOT BUILT YET STAND ANYWAY and do nothing
+ * (jakob 2026-09-14, the introduced-but-inert law): a menu that grew a
+ * row per slice would be a different menu every release, and the row
+ * order is ruled. `Save` waits on slice 2.6's `setBookmark`, the hide
+ * row on its `hideActor`; `Mark as sensitive` and `Remove` wait on the
+ * slices that own them — removal whole, in slice 8's erasure half.
+ */
+@Composable
+private fun postMenuRows(
+    own: Boolean,
+    handle: String?,
+    license: LicenseChoice?,
+    onEdit: () -> Unit,
+    onCite: () -> Unit,
+    onRemove: () -> Unit,
+    onLicense: () -> Unit,
+): List<MenuRow> = buildList {
+    add(MenuRow(stringResource(R.string.content_menu_save), "detail_menu_save") {})
+    if (own) {
+        add(MenuRow(stringResource(R.string.content_edit), "detail_menu_edit", onEdit))
+        // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
+        // post sensitive is always a signed action changing the post — an
+        // edit — so there is no standalone commit path and this row is a
+        // door into the edit flow rather than a sheet of its own. Edit is
+        // the general door; this is the intentioned one. When the edit
+        // surface's drawn Sensitive row lands (CW-46) the link can focus it.
+        add(
+            MenuRow(
+                stringResource(R.string.content_menu_sensitive),
+                "detail_menu_sensitive",
+                onEdit,
+            ),
+        )
+        add(MenuRow(stringResource(R.string.content_menu_remove), "detail_menu_remove", onRemove))
+    } else {
+        add(MenuRow(stringResource(R.string.content_menu_cite), "detail_menu_cite", onCite))
+        // THE HIDE ROW NAMES ITS PERSON (`ActorChip.jsx:67`): the handle is
+        // what a reader recognises, and the word they will look for again
+        // under Hidden accounts. A redacted author has none.
+        val hide = if (handle == null) {
+            stringResource(R.string.content_menu_hide_account)
+        } else {
+            stringResource(R.string.content_menu_hide_actor, "@$handle")
+        }
+        add(MenuRow(hide, "detail_menu_hide") {})
+    }
+    // The license rode the payload, so a redacted record has none to show
+    // (`PostCard.jsx:142`).
+    if (license != null) {
+        add(MenuRow(stringResource(R.string.content_menu_license), "detail_menu_license", onLicense))
+    }
+}
+
+/**
+ * THE COMMENT'S ROWS (`_shared.jsx:392`) — Save · Cite in a new post ·
+ * Opinions on this · License terms.
+ *
+ * NO HIDE ROW, AND THE ABSENCE IS RULED (jakob 2026-09-12): hiding is an
+ * act on an ACTOR, and the route to it is the commenter's own profile,
+ * one tap away through their chip. A thread of many voices is not where
+ * that decision belongs.
+ *
+ * `Opinions on this` STANDS WHATEVER THE COUNT IS, which is the
+ * difference between a menu row and a count line: a row that came and
+ * went with a number would make the menu a different menu every time.
+ */
+@Composable
+private fun commentMenuRows(
+    comment: CommentView,
+    onCite: () -> Unit,
+    onLicense: () -> Unit,
+): List<MenuRow> = buildList {
+    add(MenuRow(stringResource(R.string.content_menu_save), "comment_menu_save_${comment.id}") {})
+    add(
+        MenuRow(
+            stringResource(R.string.content_menu_cite),
+            "comment_menu_cite_${comment.id}",
+            onCite,
+        ),
+    )
+    add(
+        MenuRow(
+            stringResource(R.string.content_menu_opinions),
+            "comment_menu_opinions_${comment.id}",
+        ) {},
+    )
+    add(
+        MenuRow(
+            stringResource(R.string.content_menu_license),
+            "comment_menu_license_${comment.id}",
+            onLicense,
+        ),
+    )
 }
 
 /**
@@ -633,6 +750,8 @@ private fun CommentThread(
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onReference: (String) -> Unit,
+    /** Raises the terms in the sheet the menu's License row opens. */
+    onLicense: (LicenseChoice) -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
     val indent = (minOf(depth, MAX_INDENT_DEPTH) * 12).dp
@@ -662,6 +781,12 @@ private fun CommentThread(
                     at = comment.createdAt,
                     onOpenActor = onOpenActor,
                     testTagPrefix = "comment_${comment.id}",
+                    menu = commentMenuRows(
+                        comment = comment,
+                        onCite = { onReference(comment.id) },
+                        onLicense = { onLicense(comment.license) },
+                    ),
+                    menuContentDescription = stringResource(R.string.content_menu_comment),
                 )
                 // A comment is text **plus** optional media (D16),
                 // so its body is never the exclusive-or a post's
@@ -686,12 +811,6 @@ private fun CommentThread(
                         SensitiveSource.Platform
                     },
                     sensitiveReason = comment.sensitiveReason,
-                )
-                Text(
-                    licenseTerms(comment.license),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.testTag("comment_license_terms_${comment.id}"),
                 )
                 // The soft marker, friendly not forensic (design.md §9).
                 if (comment.updatedAt.isAfter(comment.createdAt)) {
@@ -722,16 +841,6 @@ private fun CommentThread(
                             modifier = Modifier.testTag("comment_reply_${comment.id}"),
                         ) {
                             Text(stringResource(R.string.content_comment_reply))
-                        }
-                        // A comment is a content node like any
-                        // other, so it carries the affordance too
-                        // (D20).
-                        TextButton(
-                            onClick = { onReference(comment.id) },
-                            modifier = Modifier
-                                .testTag("comment_reference_${comment.id}"),
-                        ) {
-                            Text(stringResource(R.string.content_reference_action))
                         }
                     }
                     // `ReplyMedia` 6 — an own comment wears Edit, and it
@@ -767,6 +876,7 @@ private fun CommentThread(
                 onOpenActor = onOpenActor,
                 onOpenTopic = onOpenTopic,
                 onReference = onReference,
+                onLicense = onLicense,
                 stanceControl = stanceControl,
             )
         }

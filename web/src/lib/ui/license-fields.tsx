@@ -6,10 +6,13 @@
 // wire, but a degree CoGra has published no reading for is a term no
 // author could mean and no reader could check.
 
+import React from "react";
+
 import {
   ATTRIBUTION_TIERS,
   PROVENANCE_TIERS,
-  licenseTerms,
+  isPublicDomain,
+  licenseReadings,
   type License,
   type LicenseTier,
 } from "@/lib/license";
@@ -88,11 +91,47 @@ export function LicenseChooser({
   );
 }
 
-/** What a landed node's qualifiers oblige, on the read surface. */
+/**
+ * What a landed node's qualifiers oblige, on the read surface
+ * (`LicenseChooser.jsx:110-176`).
+ *
+ * A QUIET INSET, NOT A PARAGRAPH. The terms are the one thing about a post a
+ * reader may have to act on — a reuser checking what they owe — so they are
+ * drawn as a block read at a glance rather than a sentence to be parsed: the
+ * caption names the words the reader tapped, and each axis states its own
+ * reading on its own row, the two aligned so the pair reads as a pair.
+ *
+ * It takes NO fill. The sheet it comes up in is a raised container already, so
+ * a filled inset on top of it would either invert between the themes or claim
+ * an elevation this owes nothing to; a hairline recesses it in both. Nothing
+ * here is coloured — the terms are neither a warning nor a promotion.
+ */
 export function LicenseTerms({ license, testId }: { license: License; testId: string }) {
   return (
-    <p className="text-body-small text-on-surface-variant" data-testid={testId}>
-      {licenseTerms(license).join(" ")}
-    </p>
+    <div
+      className="flex flex-col gap-2 rounded-medium border border-outline-variant p-3"
+      data-testid={testId}
+    >
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-label-small text-on-surface-variant">License terms</span>
+        {/* THE NAME OF THE COMMON PAIR. Both axes at zero is the one reading
+            readers already have a word for, and the word carries further than
+            the two rows that spell it — so it rides the caption line rather
+            than replacing the rows, which stay uniform across every license. */}
+        {isPublicDomain(license) && (
+          <span className="text-label-small" data-testid={`${testId}-public-domain`}>
+            Public domain
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-[116px_1fr] gap-x-2 gap-y-1">
+        {licenseReadings(license).map((row) => (
+          <React.Fragment key={row.axis}>
+            <span className="text-body-small text-on-surface-variant">{row.axis}</span>
+            <span className="text-body-small">{row.reading}</span>
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
   );
 }

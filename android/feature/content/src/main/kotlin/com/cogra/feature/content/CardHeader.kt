@@ -19,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import com.cogra.core.designsystem.ActorChip
+import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
+import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.ActorRef
 import java.time.Instant
@@ -26,11 +28,13 @@ import java.time.Instant
 /**
  * The row a post and a comment share.
  *
- * **The ⋮ the master draws beside the age is gated** — it opens
- * `ReaderPostMenu`, which W3 builds, and a control that opens nothing
- * teaches the reader the card lies (design/readme.md §2).
+ * **The ⋮ sits beside the age**, where the master draws it — never in
+ * the affordance row, which is for the things a reader actually reaches
+ * for. Handed no rows it draws nothing: a trigger that opens an empty
+ * sheet teaches the reader the card lies (design/readme.md §2).
  *
  * @param at when the node was authored; drawn as a compact age.
+ * @param menu the overflow's rows, or empty for no ⋮ at all.
  */
 @Composable
 internal fun ContentCardHeader(
@@ -40,6 +44,8 @@ internal fun ContentCardHeader(
     testTagPrefix: String,
     modifier: Modifier = Modifier,
     now: Instant = Instant.now(),
+    menu: List<MenuRow> = emptyList(),
+    menuContentDescription: String = "",
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -65,6 +71,11 @@ internal fun ContentCardHeader(
             modifier = Modifier
                 .padding(start = Space.x3)
                 .testTag("${testTagPrefix}_age"),
+        )
+        CograOverflowMenu(
+            items = menu,
+            contentDescription = menuContentDescription,
+            testTag = "${testTagPrefix}_menu",
         )
     }
 }
