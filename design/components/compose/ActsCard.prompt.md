@@ -15,3 +15,5 @@ What holds:
 - One row per act kind: quiet `label-small` label (76px column), the value (clipped, or any node — chips, a stance pair), the count on the right. The total is the footer row, always.
 - The card is `surface-container-highest` at the medium rung — the same quiet summary surface the seals have always used.
 - **On a multi-act seal, pass `note="They land together, or none does."`** — the quiet subline under the total. Omit it on a single-act seal. (It had drifted across the hand boards; the component is now its one home.)
+- **A fact row that counts a collection takes `onOpen` + `openLabel`** and becomes a door: `{ label: "References", value: "3 cited", count: "3", onOpen, openLabel: "Manage the citations" }`. The whole row is the control — no chevron, no trailing word — so the accessible name is the only thing that says so. A count the reader cannot open is a number they cannot check.
+- **A row's count is that row's own, bare** — `3` for three citations, not "3 actions". The signature's total is the footer and already says in words what it counts.
