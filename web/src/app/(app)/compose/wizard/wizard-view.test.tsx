@@ -288,6 +288,7 @@ describe("the compose wizard", () => {
           displayOrder: number;
           isCover: boolean;
           altText: string | null;
+          coverMediaId: string | null;
         }[];
       };
     } | null = null;
@@ -342,10 +343,17 @@ describe("the compose wizard", () => {
 
     // The description rides the attachment, not the upload: it was typed
     // long after the bytes were already stored, and it still reaches the
-    // record that the signature covers.
+    // record that the signature covers. A picture is covered by nothing, so
+    // every placement here names a null poster rather than omitting one.
     expect(variables!.input.attachments).toEqual([
-      { mediaId: "m-a", displayOrder: 0, isCover: true, altText: "paper against the salt crust" },
-      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null },
+      {
+        mediaId: "m-a",
+        displayOrder: 0,
+        isCover: true,
+        altText: "paper against the salt crust",
+        coverMediaId: null,
+      },
+      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null, coverMediaId: null },
     ]);
   });
 
