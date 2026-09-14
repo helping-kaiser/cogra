@@ -117,7 +117,7 @@ export function PostCard({
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
   // surviving body. The card renders its skeleton instead: author, timestamp,
-  // thread position, and the stance a reader can still take all survive, because
+  // thread position, and the opinion a reader can still give all survive, because
   // no record leaves the graph and no removal is silent.
   const hasMedia = !redacted && Array.isArray(media) && media.length > 0;
   // A media post's caption is clamped and openable in place. The SUMMARY title

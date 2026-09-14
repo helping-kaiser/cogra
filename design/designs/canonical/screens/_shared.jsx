@@ -871,7 +871,7 @@ const ADD_ROWS = [
    The bodies stay inert under their overlay — the boards say so in their
    `scanExempt` lines — so nothing here is wired; it is drawn. */
 
-/* THE POST'S SEAL, whole — `ComposeSeal` itself, and what the stance pad, the
+/* THE POST'S SEAL, whole — `ComposeSeal` itself, and what the opinion pad, the
    license sheet, the sensitive sheet and the "?" dialog stand on. */
 function ComposeSealBody() {
   return (
@@ -931,7 +931,7 @@ function ComposeSealBody() {
   );
 }
 
-/* THE REPLY'S SEAL, whole — `ReplySeal` itself, and what the reply's stance pad
+/* THE REPLY'S SEAL, whole — `ReplySeal` itself, and what the reply's opinion pad
    stands on. */
 /* The reply's parked pad over its seal — `ReplyPad`'s whole drawing, lifted
    here the moment a second board needed it (the help dialog opened from its
