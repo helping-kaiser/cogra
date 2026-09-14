@@ -2341,7 +2341,7 @@ grouping mapped onto the real page ids: comments ride with feed,
 patterns with the maps. Canvas titles say "and" — the editor refuses
 `&` in a title, and the stage now gates that.
 
-### 70 · The seal's References row only draws one citation · *design*
+### 70 · The seal's References row only draws one citation · *design* · **drawn 2026-09-14**
 
 Surfaced by implementation's W4 seal lane (PR #706, 2026-09-14): the
 seal's References act row (`_shared.jsx`) draws exactly one staged
@@ -2353,6 +2353,49 @@ trailing act count still totals correctly) and will render that
 undrawn case until the board exists. Needs a drawing round: how the
 row stacks, truncates, or summarizes 2–10 citations. No lane is
 blocked on it.
+
+Ruled and drawn the same day. **One citation still reads back as
+itself** — `ComposeSeal`'s two-line row, name over the pair that rides
+with it, untouched. **Two or more read back as their count**: the value
+line is `N cited` — blessed vocabulary, recorded in copy-voice — and
+the ROW IS A DOOR to the sheet that lists them. The threshold is two
+because two is where a name stops being the shortest true answer, and
+because a seal that scrolls has stopped being a read-back: three names
+in the acts card push the license, the stance and the sensitive rows
+off the screen at the moment the author is deciding whether to sign.
+The row stays flat and the list is one tap behind it.
+
+**The trailing count is the citations, bare** — `3` for three, the
+list's length and nothing else. The signature's own total is the card's
+footer and already says in words what it counts. So implementation's
+two improvisations both conform to the drawn rule now: the value line
+is `N cited` (not a first-citation name standing in for the rest), and
+the count beside it is the bare citation count (not "N actions").
+
+**The same rule governs the reply seal** — it is about citations, not
+about which composer staged them. `ReplyCited`'s own N=1 reading is
+untouched (the name that opens the pair, the × beside it, the label
+singular); at two it counts, and its door opens the same sheet.
+
+Drawn: `ComposeSealCited` (canvas "Seal · three citations"),
+`ComposeCitations` ("Seal · citations sheet") and `ReplyCitedMany`
+("Reply · what you sign, three references staged"). The sheet is the
+new `CitedSheet` master on `PickedSheet`'s shape — `StagedReference`
+rows, each control naming its own citation, `Cited · 3` as the title,
+`Done` as the way out. **It adds nothing**: no "+ Cite something",
+because a post's seal carries no add-rows by design and `PickedSheet`
+manages a pick without offering another. `ActsCard` grew the door row
+(`onOpen` + `openLabel`) so the master owns it and boards hand values.
+`ReplyCited` now renders `ReplySealBody` at one citation — the reply's
+seal is one markup in three states, and its board is byte-identical.
+Graph: 20 gaps before and after, three boards wired, `cite-something`
+reblessed (the control now stands on ten boards).
+
+**Ten cited fits with room over.** The value slot is 205.5px at a
+count of `10`; `10 cited` measures 51.7px at body-medium, against
+184.8px for the one-citation name the row already carries — so the
+count never truncates and the ellipsis stays the single reading's
+business.
 
 ### 71 · The pipeline outgrew its budget · *tooling* · **closed 2026-09-14**
 
@@ -2396,3 +2439,16 @@ Three leftovers from item 57's judgment pass (2026-09-14):
   kept-list) or a rename to rule. Riding along: `_shared.jsx`'s "the
   staged citation carries the stance that rides with it" is a model
   question (a citation carries its own pair), not a naming one.
+
+### 73 · The acts count has no accessible reading · *design*
+
+Surfaced by implementation's bare-count conform (their PR #730,
+2026-09-14): `ActsCard`'s trailing count span carries no aria on any
+row, so a screen reader hears a bare "1" / "3" with no unit — on the
+Post and Tags rows as much as References. The system's own law says
+visual compression never strips the accessible reading (the
+StanceReadout docblock's paired sr-reading, the band icons' full
+aria names, the viewer dots' "Picture n of m"), so the master wants
+an accessible count reading; the exact wording is jakob's
+(implementation's suggested shape: "3 signed actions"). Visually the
+bare number stays — that part is ruled.

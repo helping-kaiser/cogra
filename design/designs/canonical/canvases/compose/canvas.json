@@ -109,6 +109,24 @@
       "page": "compose"
     },
     {
+      "file": "ComposeSealCited.dc.html",
+      "title": "Seal · three citations",
+      "x": 2400,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "ComposeCitations.dc.html",
+      "title": "Seal · citations sheet",
+      "x": 2880,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "ComposeWords.dc.html",
       "title": "Compose · words body",
       "x": 0,
@@ -491,7 +509,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 2809,
+      "h": 2819,
       "page": "compose",
       "title": "Compose · flow map"
     },

@@ -127,6 +127,15 @@
       "page": "comments"
     },
     {
+      "file": "ReplyCitedMany.dc.html",
+      "title": "Reply · what you sign, three references staged",
+      "x": 5760,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "DiscardConfirm.dc.html",
       "title": "Discard confirm · reply and edit",
       "x": 3840,
@@ -290,9 +299,9 @@
     },
     {
       "file": "MapComments.dc.html",
-      "x": -3900,
+      "x": -4190,
       "y": 0,
-      "w": 3480,
+      "w": 3770,
       "h": 1524,
       "page": "comments",
       "title": "Comments · flow map"
