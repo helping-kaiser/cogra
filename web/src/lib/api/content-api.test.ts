@@ -298,8 +298,8 @@ describe("preparePostEdit", () => {
       sensitive: false,
     });
     expect((variables as unknown as { input: { attachments: unknown } }).input.attachments).toEqual([
-      { mediaId: "m-1", displayOrder: 0, isCover: true, altText: "A jetty" },
-      { mediaId: "m-2", displayOrder: 1, isCover: false, altText: null },
+      { mediaId: "m-1", displayOrder: 0, isCover: true, altText: "A jetty", coverMediaId: null },
+      { mediaId: "m-2", displayOrder: 1, isCover: false, altText: null, coverMediaId: null },
     ]);
   });
 });
@@ -390,10 +390,17 @@ describe("prepareComment", () => {
     });
 
     // The description travels with the placement, and blank is not a
-    // description: a picture the author left undescribed rides as null.
+    // description: a picture the author left undescribed rides as null. The
+    // poster travels with it on the same terms, null on a picture.
     expect(variables!.input.attachments).toEqual([
-      { mediaId: "m-a", displayOrder: 0, isCover: true, altText: "the sea wall at dusk" },
-      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null },
+      {
+        mediaId: "m-a",
+        displayOrder: 0,
+        isCover: true,
+        altText: "the sea wall at dusk",
+        coverMediaId: null,
+      },
+      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null, coverMediaId: null },
     ]);
   });
 
