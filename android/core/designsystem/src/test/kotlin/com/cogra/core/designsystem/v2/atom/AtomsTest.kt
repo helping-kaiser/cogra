@@ -87,9 +87,11 @@ class AtomsTest {
 
         // The readout tone states a signed fact rather than offering one to
         // press (Chip.jsx's READOUT: no press, no state layer, no target).
-        compose.onNodeWithTag("tag")
-            .assertTextEquals("#fieldnotes")
-            .assert(hasClickAction().not())
+        // The label lives on the inner Text node, not merged onto the outer
+        // Box the test tag sits on, so the assertion targets the label text
+        // directly rather than the tagged container.
+        compose.onNodeWithTag("tag").assert(hasClickAction().not())
+        compose.onNodeWithText("#fieldnotes").assertExists()
     }
 
     @Test
