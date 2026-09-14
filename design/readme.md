@@ -4920,6 +4920,18 @@ slice-3 remainders beside it. The round's premise is one sentence:
   a seal's acts card is a different anatomy with its own totals.
 - **The clip ruling, for context only** (implementation owns it): a
   detail clip stops at its end with replay; a feed clip loops.
+- **The gate**: boards **194 → 200** (`TagPageHeld`, `YourTopics`,
+  `FeedTopic`, `CitedBy`, `CommentCitedByEmpty`, `EditComposeUnchanged`),
+  edges **1372 → 1429**, gaps hold at **15**, flows hold at **63/61/2**
+  with **2** journey-stopping — every new board joins an existing
+  control-selector start and none of them reroutes a flow, which is the
+  whole of the re-blessing diff. The compose canvas sits at **77/200
+  files** (62% headroom), the feed at 55/200. Reachable filter summaries
+  **325 → 370** with the topic axis enumerated at three states, **0**
+  over the band's 154px, and the widest reading unchanged at
+  `Chats · text · + removed`, 153.9px — the new axis costs the pill
+  nothing, because a topic that will not fit leaves the summary instead
+  of stretching it.
 
 ---
 
