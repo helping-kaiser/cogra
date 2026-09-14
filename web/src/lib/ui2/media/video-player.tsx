@@ -35,7 +35,7 @@
 // motion the reader did not ask for, and the reduced-motion preference is the
 // standing request not to be shown it. The clip still plays on a press.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { isMuted, setMuted, useMuted } from "./mute";
 import { claim, surrender } from "./video-stage";
@@ -77,17 +77,19 @@ export function VideoPlayer({
   surface?: PlayerSurface;
   /**
    * Whether the caller reserved a frame for the clip to fill. Framed, the
-   * element takes its parent's box whole; unframed it sizes itself and the
-   * height cap is what bounds it.
+   * element takes its parent's box whole; unframed it sizes itself, full
+   * width, at whatever height its own ratio gives it.
    */
   framed?: boolean;
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const muted = useMuted();
   // Identity, not value: the stage tells surfaces apart by object identity
-  // (mirroring VideoStage.kt's `token: Any`), and a stable object survives
-  // every re-render of this component.
-  const stageToken = useRef({}).current;
+  // (mirroring VideoStage.kt's `token: Any`). `useState`'s lazy initializer
+  // runs once and its result is stable across re-renders — unlike
+  // `useRef({}).current`, it never reads a ref during render, which React's
+  // own lint rule (react-hooks/refs) forbids.
+  const [stageToken] = useState(() => ({}));
 
   // The store is the truth; the element follows it. Written through the
   // property rather than the attribute because the attribute is only the
@@ -120,7 +122,7 @@ export function VideoPlayer({
             video.muted = isMuted();
             void video.play().catch(() => {
               // NotAllowedError, or a decode this browser cannot start. The
-              // poster stays, the controls stay, and nothing is said — a
+              // poster stays, the sound disc stays, and nothing is said — a
               // refusal here is the browser's policy, not a fault the reader
               // can act on.
             });
@@ -163,12 +165,12 @@ export function VideoPlayer({
         // ratio clamped to tall — 16:9 and 1:1 display true, anything taller
         // than 4:5 centre-crops to it, and letterboxing exists nowhere (the
         // reel round, review 1). Without it the element takes the CSS default
-        // `object-fit: fill`, so the moment the height cap shortened the box
-        // the picture was squeezed wider than the clip actually is.
+        // `object-fit: fill`, so the moment a caller's reserved box didn't
+        // match the clip's own ratio the picture was squeezed to fit it.
         className={
           reading || framed
             ? "block size-full bg-surface-container-high object-cover"
-            : "block max-h-[var(--media-max-height)] w-full bg-surface-container-high object-cover"
+            : "block w-full bg-surface-container-high object-cover"
         }
       />
 
