@@ -2140,10 +2140,11 @@ characters, which an advance sum measures identically.
 The measurement this item's premise rested on ran low twice: at wght 300
 rather than the 500 the pill paints, and counting `--text-label-large`'s
 tracking, which a form control's UA rule drops — the trigger renders at
-`letter-spacing: normal`. The weight is fixed; the tracking term stays
-deliberately, as the guard's margin over the kerning an advance sum
-cannot see, measured against Chrome at ~1.7% wide of the real paint. The
-truncation census still prints; only the exit code changed.
+`letter-spacing: normal`. The weight is fixed; the unpainted tracking
+term is the guard's deliberate margin (jakob 2026-09-14) — it covers the
+kerning an advance sum cannot see and holds the census ~1.7% wide of the
+real paint, checked against Chrome. The truncation census still prints;
+only the exit code changed.
 
 ### 64 · The filter summaries outgrow their trigger · *design* · **ruled + built 2026-09-14**
 
