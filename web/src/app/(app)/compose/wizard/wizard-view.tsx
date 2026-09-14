@@ -723,6 +723,7 @@ export function ComposeWizard({
           onRetry={retry}
           onRemove={(id) => dispatch({ type: "unpick", id })}
           onNext={() => dispatch({ type: "advance" })}
+          blocked={!gate.ok}
         />
       )}
 
