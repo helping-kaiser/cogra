@@ -4948,11 +4948,11 @@ slice-3 remainders beside it. The round's premise is one sentence:
   (`layer1-interface.md` §9.5), so `StanceControl` grew `axes` — the
   field's own prop, passed through to the field AND to the alternates,
   because a slider naming the ends differently from the pad would make
-  the accessible route a different question. The words proposed are
-  `Not mine` / `Mine` and `Away` / `Toward`, and they are **not
-  blessed**: copy-voice carries them with that mark, backlog 78 notes
-  that no board draws the pad they belong to, and backlog 79 notes that
-  the two axis NAMES above the sliders are still the opinion's.
+  the accessible route a different question. The words are
+  `Not mine` / `Mine` and `Away` / `Toward` (blessed 2026-09-15);
+  backlog 78 notes that no board yet draws the pad they belong to, and
+  backlog 79 notes that the two axis NAMES above the sliders are still
+  the opinion's.
 - **"YOUR TOPICS" IS A SUBPAGE OFF EXPLORE, NOT A SECTION IN IT.** The
   held set has no bound, and an unbounded list inlined in the tab would
   push the recents under the fold and turn Explore into a list page. The
@@ -4972,9 +4972,9 @@ slice-3 remainders beside it. The round's premise is one sentence:
 - **NO PER-ROW REMOVAL.** The row opens the topic's page, where the one
   control stands; a × at the end of a list row is the affordance of a
   thing that costs nothing, and this costs a signature.
-- **THE ORDER IS STRONGEST-ASSOCIATION FIRST** (proposed): the order
-  `ProfileStances` set and `PostOpinions` mirrored. Alphabetical is a
-  shelf's order and this is a set of positions.
+- **THE ORDER IS STRONGEST-ASSOCIATION FIRST** (ruled 2026-09-15): the
+  order `ProfileStances` set and `PostOpinions` mirrored. Alphabetical
+  is a shelf's order and this is a set of positions.
 - **A TOPIC FEED IS JUST ANOTHER FEED SETTING**, so it is a section of
   the feed's own filter sheet and not a surface. One topic at a time —
   every other axis combines because combining is what those axes mean,
