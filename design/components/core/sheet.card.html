@@ -31,7 +31,6 @@ function Demo(){
     </div>
     <BottomNav slots={["feed","compose","profile"]} active="feed"/>
     <BottomSheet open={open} onClose={()=>setOpen(false)} ariaLabel="This post">
-      <SheetTitle>This post</SheetTitle>
       <SheetItem label="Save" onSelect={()=>setOpen(false)}/>
       <SheetItem label="Cite in a new post" onSelect={()=>setOpen(false)}/>
       <SheetItem label="Hide @ada" onSelect={()=>setOpen(false)}/>
@@ -52,7 +51,6 @@ function Demo(){
       </div>
     </BottomSheet>
     <BottomSheet open stacked ariaLabel="Comment actions">
-      <SheetTitle>This comment</SheetTitle>
       <SheetItem label="Cite in a new post"/>
       <SheetItem label="License terms"/>
     </BottomSheet>
