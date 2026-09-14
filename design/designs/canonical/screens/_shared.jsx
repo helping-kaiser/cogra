@@ -2190,3 +2190,19 @@ function TagPageBody({ bundle } = {}) {
     </>
   );
 }
+
+/* ── THE TOPICS THE READER HOLDS (the topic round, 2026-09-14) ─────────────
+   The set behind Explore's door and behind the feed filter's topic narrowing,
+   so both read one fixture and the door's count cannot drift from the list it
+   counts. Held means the netted Affinity is not (0, 0) — `#wellness` is held
+   against, which is exactly as held, and exactly as public.
+
+   THE ORDER IS THE BOARD'S CLAIM: strongest association first, down past
+   nothing into the ones held against (`ProfileStances`' order). */
+const HELD_TOPICS = [
+  { name: "#saltmaps", pair: { pDirected: 0.6, pInterest: 0.35 } },
+  { name: "#coastroad", pair: { pDirected: 0.45, pInterest: 0.7 } },
+  { name: "#fieldnotes", pair: { pDirected: 0.3, pInterest: 0.15 }, pending: true },
+  { name: "#tidetables", pair: { pDirected: 0.15, pInterest: 0.5 } },
+  { name: "#wellness", pair: { pDirected: -0.65, pInterest: -0.3 } },
+];
