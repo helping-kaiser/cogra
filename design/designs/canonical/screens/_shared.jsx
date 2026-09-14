@@ -391,7 +391,24 @@ const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSel
    was opened for and closes on the license (`CARD_MENU`'s order); reading who
    holds an opinion is not an act, so it falls between them. */
 const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {} };
-const COMMENT_MENU = [...CARD_MENU, OPINIONS_ROW, LICENSE_ROW];
+/* ── WHAT CITES THIS (the topic round, 2026-09-14) ─────────────────────────
+   The inbound mirror of the opinions round (backlog item 55), and the same two
+   doors: a count line on the post's detail, and the comment's ⋮ — because a
+   comment has no detail surface of its own, and its ⋮ is where every other act
+   on it already lives.
+
+   THE ROW STANDS AT ANY COUNT, the menus round's rule: a count LINE drops away
+   at zero because a tap that can only open an empty list is a tap spent on
+   nothing, while a menu row that came and went with a number would make the
+   menu a different menu every time. So the empty sheet is reachable only here.
+
+   IT SITS BESIDE THE OPINIONS ROW, between the acts and the license, for that
+   row's reason: reading who has pointed at this is not an act. Inbound before
+   opinions, because it is a fact about the artifact and the other is a fact
+   about people. */
+const CITED_BY_ROW = { label: "Cited by", onSelect: () => {} };
+
+const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
 /* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
    from the bottom edge over the surface the reader asked from, and go back to
    it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
@@ -2212,3 +2229,21 @@ const HELD_TOPICS = [
    chips are the held set minus the ones held against; deriving it here means
    the filter and Your topics can never disagree about who is missing and why. */
 const FEED_TOPICS = HELD_TOPICS.filter((topic) => topic.pair.pDirected > 0).map((topic) => topic.name);
+
+/* THE INBOUND LIST ITSELF, NEWEST FIRST — a ruled departure from the opinions
+   sheet's strongest-first, and deliberate (jakob, 2026-09-14). The opinions
+   list is a standing: a set of positions that hold, where the strongest is the
+   one worth reading. This is a CHRONICLE of other people's acts — each one
+   happened at a moment, and what a reader wants from it is what has just
+   arrived. Strength is not the question a chronicle answers.
+
+   THE ROWS ARE `ReferenceRow`, the shape every reference in this system wears:
+   the kind's mark, the citing artifact, and the pair its author signed on the
+   citation — a citation's pair, both axes signed, read through the twenty
+   faces. The count on the post's line IS this list's length. */
+const CITING_ARTIFACTS = [
+  { kind: "post", name: "Where the salt goes in winter", src: "post-photo.jpg", pair: { pDirected: 0.7, pInterest: 0.5 } },
+  { kind: "comment", name: "Answering the tide-market piece", pair: { pDirected: 0.4, pInterest: 0.65 }, pending: true },
+  { kind: "post", name: "Three mornings on the wall", pair: { pDirected: 0.15, pInterest: 0.9 } },
+  { kind: "post", name: "A honey stand and a headland", pair: { pDirected: -0.3, pInterest: 0.35 } },
+];

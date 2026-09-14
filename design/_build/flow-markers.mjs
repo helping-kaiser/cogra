@@ -477,6 +477,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">License terms</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
+    { n: 6, find: ">Cited by</button>", tag: "button" },
   ],
   ProfileMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },
@@ -938,6 +939,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: 'aria-label="Share this post"', tag: "button" },
     ...nav(10),
     { n: 15, find: 'aria-label="Opinions on this post"', tag: "button" },
+    { n: 16, find: 'aria-label="Cited by"', tag: "button" },
   ],
   PostDetailVideo: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1607,6 +1609,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: `class="cg-scrim-in"`, tag: "div", all: true },
   ],
   CommentOpinionsEmpty: [
+    { n: 1, find: `class="cg-scrim-in"`, tag: "div", all: true },
+  ],
+  /* The inbound sheet and its empty twin — the opinions pair's anatomy exactly,
+     because they are the same two doors onto a different list. */
+  CitedBy: [
+    { n: 1, find: "min-height:var(--touch-target-min);width:100%;border:0", tag: "button", all: true },
+    { n: 2, find: `class="cg-scrim-in"`, tag: "div", all: true },
+  ],
+  CommentCitedByEmpty: [
     { n: 1, find: `class="cg-scrim-in"`, tag: "div", all: true },
   ],
   NotificationsEmpty: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],

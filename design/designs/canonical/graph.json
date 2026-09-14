@@ -24,6 +24,8 @@
     "RefsSheet": "the tags-and-references sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "PostOpinions": "the opinions sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "CommentOpinionsEmpty": "the opinions sheet covers the thread, which covers the post detail — two sheets deep, the thread dimmed under the sheet’s own wash, and only that wash is live",
+    "CitedBy": "the cited-by sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "CommentCitedByEmpty": "the cited-by sheet covers the thread, which covers the post detail — two sheets deep, the thread dimmed under the sheet's own wash, and only that wash is live",
     "RemoveMenu": "the own-post sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "RemoveConfirm": "the think-twice dialog covers the post detail — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
     "ComposePicked": "the Show-all sheet covers the pick — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
@@ -1083,6 +1085,7 @@
     { "from": "CommentMenu", "via": 3, "kind": "detour", "label": "License terms", "to": [{ "board": "CommentLicense", "case": "the menu closes and the comment's terms come up in a sheet over the thread" }] },
     { "from": "CommentMenu", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the menu closes — the thread is still open beneath it" }] },
     { "from": "CommentMenu", "via": 5, "kind": "advance", "label": "Opinions on this", "to": [{ "board": "CommentOpinionsEmpty", "case": "the menu closes and the holders come up over the thread — drawn in the state a comment nobody has answered leaves it" }] },
+    { "from": "CommentMenu", "via": 6, "kind": "advance", "label": "Cited by", "to": [{ "board": "CommentCitedByEmpty", "case": "the menu closes and what cites this comes up over the thread — drawn in the state nothing citing it leaves it, which is the only door that state has" }] },
 
     { "from": "ProfileMenu", "via": 1, "kind": "advance", "label": "Save", "to": [{ "terminal": "self", "case": "the person is kept — they join the one Saved list beside posts and comments" }] },
     { "from": "ProfileMenu", "via": 2, "kind": "advance", "label": "Mention in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this person rides along invisibly until details, mentioning being citing" }] },
@@ -1276,6 +1279,7 @@
     { "from": "PostDetail", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "PostDetail", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "PostDetail", "via": 15, "kind": "advance", "label": "opinions on this post", "to": [{ "board": "PostOpinions" }] },
+    { "from": "PostDetail", "via": 16, "kind": "advance", "label": "Cited by N", "to": [{ "board": "CitedBy" }] },
 
     { "from": "PostDetailVideo", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back" }] },
     { "from": "PostDetailVideo", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
@@ -1685,6 +1689,10 @@
 
     { "from": "PostOpinions", "via": 1, "kind": "advance", "label": "a holder row", "to": [{ "board": "ProfileOther", "case": "their profile, where acting on an opinion lives" }] },
     { "from": "PostOpinions", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the post is still open beneath it" }] },
-    { "from": "CommentOpinionsEmpty", "via": 1, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the thread is still open beneath it" }] }
+    { "from": "CommentOpinionsEmpty", "via": 1, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the thread is still open beneath it" }] },
+
+    { "from": "CitedBy", "via": 1, "kind": "advance", "label": "a citing row", "to": [{ "board": "PostDetail", "case": "the citing post opens" }, { "board": "ReplyEntry", "case": "a citing comment — its thread opens on the post it answers" }] },
+    { "from": "CitedBy", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the post is still open beneath it" }] },
+    { "from": "CommentCitedByEmpty", "via": 1, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the thread is still open beneath it" }] }
   ]
 }
