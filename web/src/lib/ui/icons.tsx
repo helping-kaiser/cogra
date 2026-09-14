@@ -56,11 +56,13 @@ const PATHS = {
   // A FEED CARD draws neither: presence on screen is the policy there.
   play_arrow: ["M8 5v14l11-7z"],
   pause: ["M6 19h4V5H6v14zm8-14v14h4V5h-4z"],
-  // The transport's flanking skips. Material ships `replay_10`/`forward_10`
-  // with the numerals as separate glyph paths; the plain double-triangles carry
-  // the same meaning at this size without path data no one can check.
+  // The transport's flanking skips, and the toggle that hands the clip the
+  // whole screen. Material ships `replay_10`/`forward_10` with the numerals as
+  // separate glyph paths; the plain double-triangles carry the same meaning at
+  // this size without path data no one can check.
   fast_rewind: ["M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"],
   fast_forward: ["M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"],
+  fullscreen: ["M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"],
   // `volume_up` means sound is ON — the glyph shows the CURRENT state, and the
   // accessible name says what the tap will do.
   volume_up: [
