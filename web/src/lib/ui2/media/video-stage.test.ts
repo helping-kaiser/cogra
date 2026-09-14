@@ -10,13 +10,32 @@ import { claim, resetVideoStageForTests, surrender } from "./video-stage";
 
 afterEach(() => resetVideoStageForTests());
 
+/**
+ * The slice of `HTMLVideoElement` video-stage actually reads and calls.
+ * `paused` is read-only on the real DOM type, so a test that flips it by
+ * hand (simulating a video already paused before a claim) needs a type
+ * that says so honestly, rather than fighting the real type.
+ */
+interface StageVideo {
+  paused: boolean;
+  pause(): void;
+}
+
 function fakeVideo(): HTMLVideoElement {
-  return {
+  const video: StageVideo = {
     paused: false,
-    pause: vi.fn(function (this: { paused: boolean }) {
+    pause: vi.fn(function (this: StageVideo) {
       this.paused = true;
     }),
-  } as unknown as HTMLVideoElement;
+  };
+  return video as unknown as HTMLVideoElement;
+}
+
+/** Set up a fake as already paused — `fakeVideo()`'s return type is the real
+ * `HTMLVideoElement` (what `claim`/`surrender` take), so flipping `paused`
+ * by hand goes through the narrow, honestly-mutable view instead. */
+function markPaused(video: HTMLVideoElement): void {
+  (video as unknown as StageVideo).paused = true;
 }
 
 describe("claim", () => {
@@ -37,7 +56,7 @@ describe("claim", () => {
   it("does not pause an already-paused previous owner", () => {
     const tokenA = {};
     const videoA = fakeVideo();
-    videoA.paused = true;
+    markPaused(videoA);
 
     claim(tokenA, videoA);
     claim({}, fakeVideo());
