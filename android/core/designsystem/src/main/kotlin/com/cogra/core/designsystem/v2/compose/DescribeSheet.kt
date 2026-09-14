@@ -67,6 +67,10 @@ fun DescribeSheet(
     modifier: Modifier = Modifier,
     onHelp: (() -> Unit)? = null,
     video: Boolean = false,
+    /** The field's ruled length cap, in Unicode scalar values — drives the late counter. */
+    cap: Int? = null,
+    /** The field's one refusal, worded by the caller — replaces the hint were there one. */
+    error: String? = null,
     testTag: String? = null,
 ) {
     val subject = if (video) "video" else "picture"
@@ -109,6 +113,8 @@ fun DescribeSheet(
             optional = true,
             singleLine = false,
             minLines = 2,
+            cap = cap,
+            error = error,
             testTag = testTag?.let { "${it}_field" },
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {

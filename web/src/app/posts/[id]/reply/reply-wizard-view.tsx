@@ -491,10 +491,6 @@ export function ReplyWizard({
           if (describing !== null) dispatch({ type: "altText", id: describing, altText });
         }}
         video={isVideoReply(state)}
-        position={{
-          index: state.media.findIndex((asset) => asset.id === describing),
-          total: state.media.length,
-        }}
         testId="reply-describe-sheet"
       />
 

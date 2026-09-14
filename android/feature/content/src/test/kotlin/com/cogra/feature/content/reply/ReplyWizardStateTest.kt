@@ -6,6 +6,7 @@ import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.UploadFailure
@@ -398,13 +399,32 @@ class ReplyWizardStateTest {
     }
 
     @Test
-    fun aClipIsNotCompleteUntilItsCoverHasLanded() {
+    fun aCoverlessClipIsCompleteOnceItsOwnBytesLand() {
+        // The default: no face was ever chosen, so there is no id to
+        // wait for — going without a cover is always possible.
         val uploaded = composerWithWords()
             .addPick("clip", 1f, durationMs = 18_000)
             .withUpload("clip", AssetUpload.Done("v1"))
 
-        assertThat(uploaded.uploadsComplete).isFalse()
-        assertThat(uploaded.copy(coverMediaId = "cover-1").uploadsComplete).isTrue()
+        assertThat(uploaded.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(uploaded.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun aChosenCoverMustLandBeforeTheClipIsComplete() {
+        val chosen = composerWithWords()
+            .addPick("clip", 1f, durationMs = 18_000)
+            .copy(coverChoice = CoverChoice.Frame(0))
+            .withUpload("clip", AssetUpload.Done("v1"))
+        // A face was chosen but has not landed yet: signing would send a
+        // video naming a poster that is not there.
+        assertThat(chosen.uploadsComplete).isFalse()
+        assertThat(chosen.copy(coverMediaId = "cover-1").uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun aFreshComposerStartsWithNoFaceChosen() {
+        assertThat(ReplyWizardState(target = POST_TARGET).coverChoice).isEqualTo(CoverChoice.None)
     }
 
     @Test

@@ -27,6 +27,7 @@ import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
 import com.cogra.domain.topics.TagClaim
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.UploadFailure
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
@@ -143,9 +144,15 @@ class ReplyWizardViewModelTest {
             VideoFrame(atMs = 500, picture = ProcessedPicture(ByteArray(2), 10, 10)),
         )
 
+        /** When set, extraction blocks here until it is completed — the race lanes' knob. */
+        var framesGate: CompletableDeferred<Unit>? = null
+
         override suspend fun info(uri: String): VideoInfo? = info
 
-        override suspend fun coverFrames(uri: String, count: Int): List<VideoFrame> = frames
+        override suspend fun coverFrames(uri: String, count: Int): List<VideoFrame> {
+            framesGate?.await()
+            return frames
+        }
 
         override suspend fun transcode(
             uri: String,
@@ -346,6 +353,98 @@ class ReplyWizardViewModelTest {
 
         assertThat(media.order).containsExactly("still", "clip").inOrder()
         assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+    }
+
+    /**
+     * A clip whose extraction has not had a chance to settle anything —
+     * the transcode has finished (`Next` reads `transcoded`, so it must
+     * have to do anything at all), but frame extraction is deliberately
+     * held open. The author moves on before it resolves, and going
+     * without a cover is always possible (jakob 2026-09-10), so the
+     * clip must publish rather than wait on a face that was never going
+     * to be chosen — and extraction landing late must not reach back and
+     * give it one after the fact (F2-6; #725's own report on this gap).
+     */
+    @Test
+    fun aClipWithFramesPublishesBareWhenNothingIsPickedInTime() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        val gate = CompletableDeferred<Unit>()
+        video.framesGate = gate
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+        // The transcode ran; extraction is still blocked on the gate.
+        assertThat(vm.state.value.coverFrames).isEmpty()
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // No "still" in the order: the cover leg never ran.
+        assertThat(media.order).containsExactly("clip")
+        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+
+        gate.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        // The author already moved on to the seal — arriving late does
+        // not hand them a face they never chose.
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(vm.state.value.coverMediaId).isNull()
+    }
+
+    /**
+     * A clip the device could not lift a single frame out of
+     * (`CoverRow`'s no-frames caption — PR #721). With nothing to
+     * auto-settle on, the choice stays [CoverChoice.None] for good, and
+     * the clip still publishes.
+     */
+    @Test
+    fun aClipWithNoFramesPublishesBare() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.frames = emptyList()
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.coverFrames).isEmpty()
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.order).containsExactly("clip")
+        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    /**
+     * The author's own choice is never second-guessed by the coverless
+     * path: a deliberately picked cover still uploads before the clip
+     * and rides the same placement at the seal.
+     */
+    @Test
+    fun aDeliberatelyChosenCoverStillUploadsThenAttaches() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onPickCoverPicture("my-own.jpg")
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.Picture("my-own.jpg"))
+
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.order).containsExactly("still", "clip").inOrder()
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+        assertThat(content.lastAttachments.single().coverMediaId)
+            .isEqualTo(vm.state.value.coverMediaId)
     }
 
     @Test
