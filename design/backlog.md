@@ -2440,7 +2440,7 @@ Three leftovers from item 57's judgment pass (2026-09-14):
   staged citation carries the stance that rides with it" is a model
   question (a citation carries its own pair), not a naming one.
 
-### 73 · The acts count has no accessible reading · *design*
+### 73 · The acts count has no accessible reading · *design* · **closed 2026-09-14**
 
 Surfaced by implementation's bare-count conform (their PR #730,
 2026-09-14): `ActsCard`'s trailing count span carries no aria on any
@@ -2452,3 +2452,18 @@ aria names, the viewer dots' "Picture n of m"), so the master wants
 an accessible count reading; the exact wording is jakob's
 (implementation's suggested shape: "3 signed actions"). Visually the
 bare number stays — that part is ruled.
+
+Closed 2026-09-14. jakob ruled the shape `N <the row's noun>`: the
+digit goes `aria-hidden` and a paired `SR_ONLY` reading says "1 post",
+"3 tags", "3 citations" — the unit a listener needs, and the one the
+suggested "3 signed actions" would have flattened, since the References
+row counts citations and the footer already counts acts. The noun is
+the BOARD's to give (`ActsCardRow.countNoun`, singular; the card adds
+the regular plural): it is the row's own noun, not its label's, and no
+rule turns "References" into "citation". `StanceReadout`'s `SR_ONLY` is
+the technique, unchanged and unduplicated. Rows whose count is already
+words — the reply seal's "1 more" add-rows — keep it and pass no noun.
+Recorded in copy-voice under Accessible names. The two wallet seals'
+Address rows are the one place still bare: the wallet surfaces are held
+for another lane, and an absent noun renders exactly as before, so they
+adopt it when that lane next opens them.

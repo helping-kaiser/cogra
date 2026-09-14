@@ -392,6 +392,17 @@ the control and which carries no word saying so. `Manage the pictures`
 is what the row does, and naming it is the only way a listener learns
 that a line reading "References · 3 cited · 3" is a door at all.
 
+**The acts card's count — `N <the row's noun>`** (jakob's ruling
+2026-09-14). The seal's rows end in a bare digit, which an eye reads
+against the label on the same line and an ear receives as nothing at
+all. So the digit is hidden from the accessibility tree and the count
+is spoken whole: `1 post`, `3 tags`, `3 citations`, `1 comment`,
+`1 edit`, `1 picture`. The noun is the row's own, not its label's —
+the References row counts CITATIONS — and it is given by the board
+that staged them, because no rule turns "References" into "citation".
+A count already made of words (`1 more`, on the rows that offer an
+act) keeps them and says itself.
+
 ## The staged-act snackbar
 
 An applicant's second tap of a kind already staged answers here instead
