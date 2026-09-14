@@ -737,7 +737,7 @@ function ProfileOtherBody({ bundle } = {}) {
           <ProfileHeader
             handle="ada"
             displayName="Ada Okonkwo"
-            avatarSrc="ava1.jpg"
+            avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
             posts={12}
             stancesOn={48}
@@ -779,7 +779,7 @@ function ReplyDraft() {
           title="The long way home — @ada"
           snippet="The light does something at the third headland that I have never managed…"
           name="Ada Okonkwo"
-          src="ava1.jpg"
+          src="comment-camera.jpg"
         />
 
         <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
@@ -1731,7 +1731,7 @@ const SCORE_VIEWER = SOL;
    6.80 + 4.20 + 2.60 + 1.10 + 0.50 = 15.20, which is `ADA_POST`'s own score.
    The two weakest ride the "more paths" row rather than being spelled out, so
    the arithmetic still closes on the drawn surface. */
-const ADA_FACED = { ...ADA, src: "ava1.jpg" };
+const ADA_FACED = { ...ADA, src: "comment-camera.jpg" };
 const MIRA_FACED = { ...MIRA, src: "inviter.jpg" };
 const SCORE_PATHS = [
   { through: "@ada", people: [SCORE_VIEWER, ADA_FACED], value: "+6.80" },
@@ -1761,7 +1761,7 @@ function ScoreOrigin({ score = "15.20" }) {
         title="The long way home — @ada"
         snippet="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
         name={ADA.displayName}
-        src="ava1.jpg"
+        src="comment-camera.jpg"
       />
       <span
         style={{
@@ -1984,7 +1984,7 @@ function ScoreColumn({ children }) {
    different way would teach them it means nothing. */
 const POST_OPINION_HOLDERS = [
   { name: MIRA.displayName, handle: MIRA.handle, src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
-  { name: ADA.displayName, handle: ADA.handle, src: "ava1.jpg", pDirected: 0.7, pInterest: 0.4 },
+  { name: ADA.displayName, handle: ADA.handle, src: "comment-camera.jpg", pDirected: 0.7, pInterest: 0.4 },
   { name: TOBIAS.displayName, handle: TOBIAS.handle, pDirected: 0.6, pInterest: 0.65 },
   { name: SOL.displayName, handle: SOL.handle, pDirected: 0.55, pInterest: 0.2 },
   { name: KEL.displayName, handle: KEL.handle, pDirected: 0.25, pInterest: 0.95 },
