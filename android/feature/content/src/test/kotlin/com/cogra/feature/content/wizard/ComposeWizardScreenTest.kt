@@ -464,6 +464,16 @@ class ComposeWizardScreenTest {
     }
 
     @Test
+    fun theCropStageCarriesTheQuietNote() {
+        // ComposeCrop's caption, the same words the web crop step already
+        // shows (CW-11).
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
+        compose.onNodeWithTag("wizard_crop_note").assertIsDisplayed()
+        compose.onNodeWithText("One shape for the whole post. Drag to move, pinch to zoom.")
+            .assertIsDisplayed()
+    }
+
+    @Test
     fun theFilmstripAppearsOnlyWhenThereIsMoreThanOnePicture() {
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
         // Existence rather than display: whether the strip sits above
