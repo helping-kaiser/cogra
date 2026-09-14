@@ -224,6 +224,15 @@ function detail(
   };
 }
 
+/**
+ * THE THREAD IS A SHEET (`_shared.jsx:1247-1257`), so a test that reads it
+ * opens it the way a reader does — through the affordance row's count.
+ */
+async function openComments() {
+  fireEvent.click(await screen.findByTestId("post-comments"));
+  return screen.findByTestId("comments-sheet");
+}
+
 function storeFor(accountId: string) {
   const store = createTokenStore();
   store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId });
@@ -243,6 +252,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
     expect(screen.getByTestId("post-body")).toHaveTextContent("The body");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
@@ -278,6 +288,7 @@ describe("PostView", () => {
       store: storeFor("u2"),
       writeSigner: fakeWriteSigner(),
     });
+    await openComments();
     // Opinion toward any passive node — a post, a comment, a reply
     // (design.md §6; roadmap slice 2.2).
     expect(await screen.findByTestId("post-stance")).toBeInTheDocument();
@@ -305,6 +316,7 @@ describe("PostView", () => {
       store: storeFor("u2"),
       writeSigner: fakeWriteSigner(),
     });
+    await openComments();
     await waitFor(() => expect(screen.getByTestId("post-stance")).toHaveTextContent("Love this"));
     expect(screen.getByTestId("post-stance-resting-exact")).toHaveTextContent("+0.90 / +0.25");
     expect(screen.getByTestId("comment-stance-c1")).toHaveTextContent("Don't like this");
@@ -332,6 +344,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     expect(await screen.findByTestId("post-pending")).toHaveTextContent("Still settling");
     expect(screen.getByTestId("comment-pending-c1")).toHaveTextContent("Still settling");
     expect(screen.queryByTestId("comment-pending-c2")).not.toBeInTheDocument();
@@ -363,6 +376,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     await screen.findByTestId("post-body");
     expect(screen.queryByTestId("post-license-terms")).not.toBeInTheDocument();
     expect(screen.queryByTestId("comment-license-terms-c1")).not.toBeInTheDocument();
@@ -379,6 +393,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     await screen.findByTestId("post-body");
     fireEvent.click(screen.getByTestId("comment-menu-c1"));
     fireEvent.click(screen.getByTestId("comment-menu-license-c1"));
@@ -416,6 +431,7 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
+    await openComments();
     expect(await screen.findByTestId("post-no-comments")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("post-menu"));
     expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
@@ -437,6 +453,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     await screen.findByTestId("post-body");
     fireEvent.click(screen.getByTestId("comment-menu-c1"));
     expect(screen.getByTestId("comment-menu-save-c1")).toHaveTextContent("Save");
@@ -501,6 +518,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
     expect(screen.queryByTestId("comment-draft")).not.toBeInTheDocument();
@@ -524,6 +542,7 @@ describe("PostView", () => {
       }),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     fireEvent.click(await screen.findByTestId("post-more-comments"));
     expect(await screen.findByTestId("post-more-comments-error")).toBeInTheDocument();
     // The fault surfaces where the failed fetch was requested — at the
@@ -552,6 +571,7 @@ describe("PostView", () => {
       }),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     fireEvent.click(await screen.findByTestId("post-more-comments"));
     await screen.findByTestId("post-more-comments-error");
     fireEvent.click(screen.getByTestId("post-more-comments-retry"));
@@ -599,6 +619,7 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
+    await openComments();
     expect(await screen.findByTestId("comment-edited-c1")).toBeInTheDocument();
     expect(screen.queryByTestId("comment-edited-c2")).not.toBeInTheDocument();
     expect(screen.getByTestId("comment-edit-c1")).toBeInTheDocument();
@@ -637,6 +658,7 @@ describe("PostView", () => {
     );
     const signer = fakeWriteSigner();
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("acct-1"), writeSigner: signer });
+    await openComments();
     fireEvent.click(await screen.findByTestId("comment-edit-c1"));
     const input = screen.getByTestId("comment-edit-input");
     expect(input).toHaveValue("old words");
@@ -690,6 +712,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
 
     // Nothing of the branch is on screen, and the line promises the count.
     const unfold = await screen.findByTestId("replies-more-c1");
@@ -758,6 +781,7 @@ describe("PostView", () => {
       }),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
 
     fireEvent.click(await screen.findByTestId("replies-more-c1"));
     fireEvent.click(await screen.findByTestId("replies-more-r1"));
@@ -780,6 +804,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     expect(await screen.findByTestId("replies-more-c1")).toHaveTextContent("View 1 reply");
   });
 
@@ -790,6 +815,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     await screen.findByTestId("post-comment-c1");
     expect(screen.queryByTestId("replies-more-c1")).not.toBeInTheDocument();
   });
@@ -856,6 +882,7 @@ describe("PostView", () => {
     );
 
     renderWithProviders(<PostView postId="p1" />, { store, writeSigner: fakeWriteSigner() });
+    await openComments();
 
     // Both controls, because both are viewer-scoped reads on this surface
     // and the defect took the whole class, not the post alone.
@@ -997,6 +1024,7 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
+    await openComments();
     expect(await screen.findByTestId("comment-c1-topic-rust")).toBeInTheDocument();
     expect(screen.queryByTestId("comment-c1-tag-input")).not.toBeInTheDocument();
   });
@@ -1026,8 +1054,8 @@ describe("PostView", () => {
     expect(order.indexOf("post-author")).toBeLessThan(order.indexOf("post-body"));
   });
 
-  // The count takes the reader to the thread; the sheet that will own it is
-  // not drawn here yet, and the thread is on this page in the meantime.
+  // The count states the thread's size and raises it (graph.json: every
+  // `comment count` edge advances to `ReplyEntry`).
   it("carries the comments affordance, counting the whole thread", async () => {
     server.use(
       graphql.query("PostDetail", () =>
@@ -1037,11 +1065,53 @@ describe("PostView", () => {
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     const comments = await screen.findByTestId("post-comments");
     expect(comments).toHaveAccessibleName("1 comment");
-    const heading = document.getElementById("post-comments");
-    const scrollIntoView = vi.fn();
-    if (heading !== null) heading.scrollIntoView = scrollIntoView;
+    const sheet = screen.getByTestId("comments-sheet");
+    expect(sheet).not.toBeVisible();
     fireEvent.click(comments);
-    expect(scrollIntoView).toHaveBeenCalled();
+    expect(sheet).toBeVisible();
+    expect(sheet).toHaveAccessibleName("Comments");
+    expect(sheet).toContainElement(screen.getByTestId("post-comment-c1"));
+    // The foot rides the sheet whichever way the write affordance swapped —
+    // this reader has no session, so it is the join entry.
+    expect(sheet).toContainElement(screen.getByTestId("comment-signin"));
+  });
+
+  // A drawer the reader opened is a drawer the reader can drop, and the post
+  // is where dropping it lands — never a page whose thread scrolled away.
+  it("drops the thread again, leaving the post where it was", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    const sheet = await openComments();
+    fireEvent.keyDown(sheet, { key: "Escape" });
+    fireEvent(sheet, new Event("close"));
+    await waitFor(() => expect(sheet).not.toBeVisible());
+    expect(screen.getByTestId("post-title")).toHaveTextContent("The title");
+  });
+
+  // ReplyEntry 7 → ReplyCompose, and every way out of the composer comes back
+  // to the thread: the sheet steps aside for the full-focus surface rather
+  // than standing behind it.
+  it("yields the sheet to the composer and takes it back on the way out", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("u2"),
+      writeSigner: fakeWriteSigner(),
+    });
+    const sheet = await openComments();
+    fireEvent.click(await screen.findByTestId("comment-add"));
+    expect(await screen.findByTestId("reply-wizard")).toBeInTheDocument();
+    await waitFor(() => expect(sheet).not.toBeVisible());
+    fireEvent.click(screen.getByTestId("header-back"));
+    expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
+    expect(screen.getByTestId("comments-sheet")).toBeVisible();
   });
 
   // CR-20: both apps read `createdAt` for the Edited comparison and drew none
@@ -1053,6 +1123,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     const stamp = await screen.findByTestId("comment-c1-timestamp");
     expect(stamp).toHaveAttribute("datetime");
     expect(stamp.textContent).toMatch(/^(now|\d+[mhd])$/);
@@ -1065,6 +1136,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     expect(await screen.findByTestId("post-author")).toHaveAttribute("href", "/u/alice");
     expect(screen.getByTestId("comment-author-c1")).toHaveAttribute("href", "/u/bob");
   });
@@ -1109,6 +1181,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
     expect(await screen.findByTestId("comment-c1-topic-wasm")).toBeInTheDocument();
     expect(screen.getByTestId("post-topic-rust")).toBeInTheDocument();
     expect(screen.queryByTestId("comment-c1-topics-reveal")).not.toBeInTheDocument();
@@ -1176,6 +1249,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
       });
+      await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       expect(screen.getByTestId("comment-edit-tag-0")).toHaveTextContent("#rust");
       // The chip opens on the values the claim actually carries — real
@@ -1217,6 +1291,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
       });
+      await openComments();
 
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.change(screen.getByTestId("comment-edit-input"), {
@@ -1244,6 +1319,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
       });
+      await openComments();
 
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       // Nothing typed: the row is the only change.
@@ -1291,6 +1367,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
       });
+      await openComments();
 
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       await waitFor(() =>
@@ -1313,6 +1390,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
       });
+      await openComments();
 
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.change(screen.getByTestId("comment-edit-input"), {
@@ -1331,6 +1409,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
       });
+      await openComments();
 
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.click(screen.getByTestId("comment-edit-open-sensitive"));
@@ -1376,6 +1455,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: signer,
       });
+      await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.change(screen.getByTestId("comment-edit-input"), {
         target: { value: "better words" },
@@ -1410,6 +1490,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: signer,
       });
+      await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
       fireEvent.click(screen.getByTestId("comment-edit-tag-add"));
@@ -1435,6 +1516,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
       });
+      await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.click(screen.getByTestId("comment-edit-tag-0-select"));
       fireEvent.change(screen.getByTestId("comment-edit-tag-0-relevance"), {
@@ -1479,6 +1561,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: signer,
       });
+      await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
       fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "a-b" } });
@@ -1503,6 +1586,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
       });
+      await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       // Untouched: nothing to sign, and nothing to press.
       expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
@@ -1532,6 +1616,7 @@ describe("PostView", () => {
         store: storeFor("acct-1"),
         writeSigner: signer,
       });
+      await openComments();
       fireEvent.click(await screen.findByTestId("comment-edit-c1"));
       fireEvent.change(screen.getByTestId("comment-edit-input"), { target: { value: "moved" } });
       fireEvent.change(screen.getByTestId("comment-edit-tag-input"), { target: { value: "rust" } });
@@ -1708,6 +1793,7 @@ describe("PostView — references", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />);
+    await openComments();
     expect(await screen.findByTestId("comment-c1-topics-counts")).toHaveTextContent(
       "· 1 reference",
     );
@@ -1724,6 +1810,7 @@ describe("PostView — references", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
+    await openComments();
     await screen.findByTestId("post-body");
 
     fireEvent.click(screen.getByTestId("post-menu"));
@@ -1769,6 +1856,7 @@ describe("PostView — references", () => {
       store: storeFor("u1"),
       writeSigner: signer,
     });
+    await openComments();
 
     fireEvent.click(await screen.findByTestId("comment-edit-c1"));
     fireEvent.click(screen.getByTestId("comment-edit-reference-0-remove"));
@@ -1802,6 +1890,7 @@ describe("PostView — references", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
+    await openComments();
     fireEvent.click(await screen.findByTestId("comment-edit-c1"));
     expect(screen.getByTestId("comment-edit-signed-actions")).toHaveTextContent(
       "creates no signed actions",
@@ -1929,6 +2018,7 @@ describe("PostView — references", () => {
         ),
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+      await openComments();
 
       expect(await screen.findByTestId("post-comment-c1")).toHaveTextContent("Look at this");
       expect(screen.getByTestId("comment-media-c1")).toBeInTheDocument();
@@ -1952,6 +2042,7 @@ describe("PostView — references", () => {
         ),
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+      await openComments();
 
       await screen.findByTestId("post-comment-c1");
       const frame = screen.getByTestId("media-gallery-lead");
