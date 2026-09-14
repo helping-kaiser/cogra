@@ -50,6 +50,7 @@ class ComposeWizardVideoDescribeTest {
             onCloseSheet = {},
             onLicenseChange = {},
             onPDirectedChange = {},
+            onSetStance = {},
             onSensitiveChange = {},
             onSensitiveReasonChange = {},
             onNext = {},

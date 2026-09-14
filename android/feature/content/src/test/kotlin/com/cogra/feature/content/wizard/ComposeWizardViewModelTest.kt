@@ -1203,4 +1203,41 @@ class ComposeWizardViewModelTest {
         assertThat(content.lastAttachments.single().coverMediaId)
             .isEqualTo(vm.state.value.coverMediaId)
     }
+
+    // The pad's own line: "release never commits, Set does". A drag moves
+    // the staged value and nothing else, so Cancel — and the wash, and the
+    // back gesture, which all close the pad the same way — leave the
+    // stance the seal reads exactly where it was.
+    @Test
+    fun aDragOnThePadStagesAndOnlySetCommits() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onOpenSheet(SealSheet.Stance)
+        assertThat(vm.state.value.stagedPDirected).isEqualTo(vm.state.value.pDirected)
+
+        vm.onPDirectedChange(-0.8)
+        assertThat(vm.state.value.stagedPDirected).isEqualTo(-0.8)
+        assertThat(vm.state.value.pDirected)
+            .isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
+
+        vm.onSetStance()
+        assertThat(vm.state.value.pDirected).isEqualTo(-0.8)
+        assertThat(vm.state.value.sheet).isEqualTo(SealSheet.None)
+    }
+
+    @Test
+    fun cancellingThePadStagesNothing() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.onOpenSheet(SealSheet.Stance)
+        vm.onPDirectedChange(-0.8)
+        vm.onCloseSheet()
+
+        assertThat(vm.state.value.pDirected)
+            .isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
+
+        // And re-opening starts from the standing value again, not from
+        // the pick that was walked away from.
+        vm.onOpenSheet(SealSheet.Stance)
+        assertThat(vm.state.value.stagedPDirected)
+            .isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
+    }
 }
