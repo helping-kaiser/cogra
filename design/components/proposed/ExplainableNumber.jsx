@@ -67,7 +67,7 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, ove
       }}
     >
       {/* A GLYPH, NOT AN EMOJI. The product's only emoji vocabulary is the stance
-          readout, and a face on a post card already means "your stance" — a second
+          readout, and a face on a post card already means "your opinion" — a second
           face meaning something else would make both unreadable. The label lives
           in the accessibility tree instead, which also keeps the affordance row on
           one line. */}

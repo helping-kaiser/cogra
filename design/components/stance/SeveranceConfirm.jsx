@@ -79,7 +79,7 @@ export function SeveranceConfirm({
       </p>
       {/* The RAW total leads and the cap is derived from it. The other order — the
           fold first, the sum second — reads as arithmetic that does not work: "my
-          stance is +1.00, so why does walking it back take +1.40?" */}
+          opinion is +1.00, so why does walking it back take +1.40?" */}
       {read.sentence !== undefined ? (
         <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{read.sentence}</p>
       ) : (

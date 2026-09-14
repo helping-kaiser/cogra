@@ -1028,7 +1028,7 @@ function ReplySealBody() {
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
 
-        {/* The stance the reply carries is a fact about replying, not about
+        {/* The opinion the reply carries is a fact about replying, not about
             this row — so it stands under the ruled block rather than inside
             it, where `FactRow` has no slot for it. */}
         <QuietNote>Replying also signs your opinion on the post it answers.</QuietNote>
@@ -1327,7 +1327,7 @@ function CommentsThreadSheet() {
           below the fold is a state nobody can check. The whole body — the
           words and the two pictures with them — is under one
           comment-scale block, while the author, the timestamp and the
-          stance stay readable. */}
+          opinion stay readable. */}
       <CommentCard
         author={MIRA}
         content="The gulls had been at it before the tide came back. Two frames, both grim."
