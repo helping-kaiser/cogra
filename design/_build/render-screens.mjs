@@ -13,6 +13,8 @@ import { join, resolve, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 
+const t0 = Date.now();
+
 const require = createRequire(import.meta.url);
 const React = require("react");
 const { renderToStaticMarkup } = require("react-dom/server");
@@ -104,4 +106,4 @@ for (const file of readdirSync(screensDir).sort()) {
   count += 1;
   console.log(`rendered ${name}.dc.html`);
 }
-console.log(`${count} screens rendered from the design system`);
+console.log(`${count} screens rendered from the design system in ${Date.now() - t0} ms`);

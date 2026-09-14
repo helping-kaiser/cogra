@@ -339,13 +339,33 @@ class ComposeWizardViewModel @Inject constructor(
      * Called on entering the stage rather than at pick time: extracting
      * frames costs a decode per frame, and an author who picked a clip
      * and then changed their mind should not have paid for it.
+     *
+     * A successful extraction settles [CoverChoice.None] on the first
+     * offered frame — but only while the author is still on the cover
+     * stage and has not chosen anything else. An author who moved on
+     * before extraction finished meant to go without a face, and this
+     * must not reach back and give them one after the fact; an author
+     * who tapped a frame or a picture already has their own answer to
+     * keep. Extraction coming back empty leaves [CoverChoice.None]
+     * standing — there is nothing here to settle it on.
      */
     private fun loadCoverFrames() {
         val clip = _state.value.video ?: return
         if (_state.value.coverFrames.isNotEmpty()) return
         viewModelScope.launch {
             val frames = video.coverFrames(clip.uri, COVER_FRAME_COUNT)
-            _state.update { it.copy(coverFrames = frames) }
+            _state.update { current ->
+                val settledChoice = if (
+                    current.step == WizardStep.Cover &&
+                    current.coverChoice is CoverChoice.None &&
+                    frames.isNotEmpty()
+                ) {
+                    CoverChoice.Frame(0)
+                } else {
+                    current.coverChoice
+                }
+                current.copy(coverFrames = frames, coverChoice = settledChoice)
+            }
         }
     }
 
@@ -666,19 +686,25 @@ class ComposeWizardViewModel @Inject constructor(
     }
 
     /**
-     * The clip's whole journey: its face first, then the bytes.
+     * The clip's whole journey: its face first when it has one, then the
+     * bytes.
      *
-     * Two standalone uploads, and the order is this way because the
-     * cover is the cheap leg: a refused cover is learned in a second,
-     * instead of after a minute of transcoding and a ninety-megabyte
-     * send. The placement names the poster's id at prepare, so the id
-     * has to exist by then rather than by the time the clip goes up.
+     * Two standalone uploads where a cover was chosen, and the order is
+     * this way because the cover is the cheap leg: a refused cover is
+     * learned in a second, instead of after a minute of transcoding and
+     * a ninety-megabyte send. The placement names the poster's id at
+     * prepare, so the id has to exist by then rather than by the time
+     * the clip goes up. [CoverChoice.None] is a settled answer rather
+     * than a wait, so it skips straight to the clip's own bytes.
      */
     private fun startVideoUpload() {
         val clip = _state.value.video ?: return
         uploads.remove(clip.uri)?.cancel()
         uploads[clip.uri] = viewModelScope.launch {
-            val coverId = _state.value.coverMediaId ?: uploadCover() ?: return@launch
+            val coverId = when (_state.value.coverChoice) {
+                CoverChoice.None -> null
+                else -> _state.value.coverMediaId ?: uploadCover() ?: return@launch
+            }
             _state.update { it.copy(coverMediaId = coverId) }
 
             _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(0)) }
@@ -730,11 +756,16 @@ class ComposeWizardViewModel @Inject constructor(
      * as it shapes a picked picture. A chosen picture is processed here,
      * framed to the clip's own shape: a poster that is not the video's
      * shape would letterbox the thing it stands in for.
+     *
+     * Never called for [CoverChoice.None] — [startVideoUpload] skips
+     * straight past it — so that branch is unreached in practice; it
+     * fails loudly rather than silently if that invariant ever breaks.
      */
     private suspend fun uploadCover(): String? {
         val state = _state.value
         val clip = state.video ?: return null
         val picture = when (val choice = state.coverChoice) {
+            CoverChoice.None -> null
             is CoverChoice.Frame -> state.coverFrames.getOrNull(choice.index)?.picture
             is CoverChoice.Picture -> processor.process(
                 choice.uri,

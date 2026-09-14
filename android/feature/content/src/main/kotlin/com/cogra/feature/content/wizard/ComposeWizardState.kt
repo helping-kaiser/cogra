@@ -36,10 +36,17 @@ enum class WizardStep { Body, Crop, Cover, Details, Seal }
  * The board offers frames lifted out of the clip and one dashed tile
  * that opens the device's own picker, and the ruling says the same in
  * words: the cover is "either a frame from the video or a chose image"
- * (jakob 2026-09-02). Either way it is uploaded as its own still and
- * named on the video's own upload.
+ * (jakob 2026-09-02) — but a face is not owed: "going without a cover
+ * is always possible" (jakob 2026-09-10, the video-cover round), and
+ * the contract, the database and the backend all accept a placement
+ * naming none. Either a frame or a picture is uploaded as its own
+ * still and named on the video's own upload; [None] names nothing and
+ * uploads nothing.
  */
 sealed interface CoverChoice {
+    /** No face chosen — a settled answer, not a not-yet. */
+    data object None : CoverChoice
+
     /** One of the offered frames, by index into the offered list. */
     data class Frame(val index: Int) : CoverChoice
 
@@ -253,12 +260,15 @@ data class ComposeWizardState(
     /**
      * Which cover the author settled on.
      *
-     * The board draws the first frame pre-selected, so the default is a
-     * choice already made rather than a nullable one the author has to
-     * confirm — a video always has a face, and `Next` never waits on
-     * this.
+     * Starts at [CoverChoice.None]: extraction may still be running, may
+     * come back with nothing to offer, or the author may simply move on
+     * before it resolves — every one of those is a settled "no cover"
+     * rather than a wait, so `Next` never blocks on this (D5;
+     * jakob 2026-09-10). The cover step itself auto-settles on the first
+     * offered frame once extraction succeeds, while the author is still
+     * on that step and has not chosen otherwise.
      */
-    val coverChoice: CoverChoice = CoverChoice.Frame(0),
+    val coverChoice: CoverChoice = CoverChoice.None,
 
     /** The cover's asset id once it has been uploaded on its own. */
     val coverMediaId: String? = null,
@@ -353,15 +363,15 @@ data class ComposeWizardState(
     /**
      * Every pick has an id: the gallery can be attached as it stands.
      *
-     * A video is not complete until its cover has landed too. The cover
-     * is not an attachment — it rides the clip's own placement — but the
-     * placement cannot name an id that does not exist yet, so an
-     * incomplete cover is an incomplete body.
+     * A video's face is optional, but a face that was chosen still has
+     * to land before the body counts as complete: the placement cannot
+     * name an id that does not exist yet. [CoverChoice.None] carries no
+     * such id to wait for, so it never holds this up.
      */
     val uploadsComplete: Boolean
         get() = picked.isNotEmpty() &&
             uploadedIds.size == picked.size &&
-            (!isVideoPost || coverMediaId != null)
+            (!isVideoPost || coverChoice is CoverChoice.None || coverMediaId != null)
 
     /**
      * The body carries something publishable. The XOR is read here
@@ -621,7 +631,7 @@ fun ComposeWizardState.togglePick(
  */
 fun ComposeWizardState.clearedCover(): ComposeWizardState = copy(
     coverFrames = emptyList(),
-    coverChoice = CoverChoice.Frame(0),
+    coverChoice = CoverChoice.None,
     coverMediaId = null,
 )
 
