@@ -102,7 +102,15 @@ internal fun PostBody(
      * var(--card-padding))`). Zero where there is none to escape.
      */
     bleed: Dp = 0.dp,
-    onOpenMedia: (() -> Unit)? = null,
+    /**
+     * What the gallery's tap does, handed the page the reader is on.
+     *
+     * The feed opens the POST and ignores the page; the detail opens the
+     * FULLSCREEN VIEWER on that very frame (graph.json, `PostDetail` via 4 —
+     * "detail media → the frame, whole and full-screen"; `ViewerPicture.jsx:2-3`
+     * — "the card's tap opens the post, the post's tap opens the frame").
+     */
+    onOpenMedia: ((page: Int) -> Unit)? = null,
     /**
      * The surface is already showing this body's media above the card, so the
      * body draws none — the video detail, where "THE CLIP IS PINNED ABOVE THE
@@ -305,7 +313,7 @@ private fun ClampedText(
 private fun Gallery(
     attachments: List<MediaAssetView>,
     surface: BodySurface,
-    onOpenMedia: (() -> Unit)?,
+    onOpenMedia: ((page: Int) -> Unit)?,
     bleed: Dp,
     testTag: String,
 ) {
