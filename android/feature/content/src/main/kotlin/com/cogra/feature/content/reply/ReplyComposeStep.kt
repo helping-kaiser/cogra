@@ -15,8 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,14 +36,14 @@ import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.content.MAX_COMMENT_BODY_CHARS
 import com.cogra.feature.content.R
 import com.cogra.feature.content.wizard.AssetUpload
-import com.cogra.feature.content.wizard.CoverChoice
-import com.cogra.feature.content.wizard.PickedAsset
-import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.UploadFailure
-import com.cogra.feature.content.wizard.formatDuration
+import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.inFlight
 import com.cogra.feature.content.wizard.percentOrNull
 import com.cogra.feature.content.wizard.text
+import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.formatDuration
 import com.cogra.feature.content.wizard.toPick
 
 /**

@@ -8,6 +8,7 @@ import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.UserError
+import com.cogra.domain.valueOrNull
 import com.cogra.domain.content.isDescriptionTooLong
 import com.cogra.domain.content.isPostBodyTooLong
 import com.cogra.domain.content.isTitleTooLong
@@ -18,13 +19,12 @@ import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.store.IdentityStore
-import com.cogra.domain.valueOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class ComposePostUiState(
     /** Null for a new post; the edited post's id otherwise. */
@@ -392,44 +392,40 @@ class ComposePostViewModel @Inject constructor(
             val writes = mutableListOf<PreparedWriteView>()
             val editingId = s.editingId
             if (editingId == null) {
-                when (
-                    val outcome = content.preparePost(
-                        title = s.title.ifBlank { null },
-                        description = s.description.ifBlank { null },
-                        content = s.body,
-                        license = s.license,
-                        tags = s.tagSection.tags.map { it.toClaim() },
-                        references = s.referenceSection.references.map { it.toClaim() },
-                    )
-                ) {
+                when (val outcome = content.preparePost(
+                    title = s.title.ifBlank { null },
+                    description = s.description.ifBlank { null },
+                    content = s.body,
+                    license = s.license,
+                    tags = s.tagSection.tags.map { it.toClaim() },
+                    references = s.referenceSection.references.map { it.toClaim() },
+                )) {
                     is Outcome.Success -> writes += outcome.value.writes
                     is Outcome.Refused -> return@launch refuse(outcome.errors)
                     is Outcome.Failed -> return@launch failTransport()
                 }
             } else {
                 if (s.contentChanged) {
-                    when (
-                        val outcome = content.preparePostEdit(
-                            id = editingId,
-                            title = s.title.ifBlank { null },
-                            description = s.description.ifBlank { null },
-                            // Words XOR media: a media post's body is its
-                            // gallery, so it sends no words at all rather
-                            // than an empty string, which is a value and
-                            // would read as "both".
-                            content = s.body.takeIf { !s.mediaBody },
-                            // Carried through unchanged, and shown while it
-                            // is: an edit that does not re-state the gallery
-                            // clears it, which would replace a media post's
-                            // pictures with whatever the form's words hold.
-                            attachments = s.attachments.map { AttachmentClaim(it.id, it.altText) },
-                            // Carried through unchanged: the record is the
-                            // post's complete content state, so the mark the
-                            // form read is the mark the edit has to re-state.
-                            sensitive = s.sensitive,
-                            sensitiveReason = s.sensitiveReason,
-                        )
-                    ) {
+                    when (val outcome = content.preparePostEdit(
+                        id = editingId,
+                        title = s.title.ifBlank { null },
+                        description = s.description.ifBlank { null },
+                        // Words XOR media: a media post's body is its
+                        // gallery, so it sends no words at all rather
+                        // than an empty string, which is a value and
+                        // would read as "both".
+                        content = s.body.takeIf { !s.mediaBody },
+                        // Carried through unchanged, and shown while it
+                        // is: an edit that does not re-state the gallery
+                        // clears it, which would replace a media post's
+                        // pictures with whatever the form's words hold.
+                        attachments = s.attachments.map { AttachmentClaim(it.id, it.altText) },
+                        // Carried through unchanged: the record is the
+                        // post's complete content state, so the mark the
+                        // form read is the mark the edit has to re-state.
+                        sensitive = s.sensitive,
+                        sensitiveReason = s.sensitiveReason,
+                    )) {
                         is Outcome.Success -> writes += outcome.value.writes
                         is Outcome.Refused -> return@launch refuse(outcome.errors)
                         is Outcome.Failed -> return@launch failTransport()
@@ -452,20 +448,16 @@ class ComposePostViewModel @Inject constructor(
                 // Citations are never edit fields, so each change is its
                 // own priced act staged beside the edit (post.md §3).
                 for (row in s.referenceSection.adds) {
-                    when (
-                        val outcome =
-                            references.prepareReference(editingId, row.targetId, row.relevance, row.support)
-                    ) {
+                    when (val outcome =
+                        references.prepareReference(editingId, row.targetId, row.relevance, row.support)) {
                         is Outcome.Success -> writes += outcome.value
                         is Outcome.Refused -> return@launch refuseReference(row.targetId, outcome.errors)
                         is Outcome.Failed -> return@launch failTransport()
                     }
                 }
                 for (row in s.referenceSection.removes) {
-                    when (
-                        val outcome =
-                            references.prepareReferenceWithdrawal(editingId, row.targetId)
-                    ) {
+                    when (val outcome =
+                        references.prepareReferenceWithdrawal(editingId, row.targetId)) {
                         is Outcome.Success -> writes += outcome.value
                         is Outcome.Refused -> return@launch refuseReference(row.targetId, outcome.errors)
                         is Outcome.Failed -> return@launch failTransport()

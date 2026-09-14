@@ -30,6 +30,7 @@ import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.UploadFailure
 import com.google.common.truth.Truth.assertThat
+import java.io.IOException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,7 +41,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.io.IOException
 
 /**
  * The reply wizard's flow: what a pick becomes, what reaches the wire,
@@ -58,7 +58,8 @@ class ReplyWizardViewModelTest {
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val sealer = SealingWriteRepository(actor)
 
-    private class ScriptedContent(private val sealer: SealingWriteRepository) : ThrowingContentRepository() {
+    private class ScriptedContent(private val sealer: SealingWriteRepository) :
+        ThrowingContentRepository() {
         var outcome: Outcome<PreparedContentView>? = null
         var lastContent: String? = null
         var lastAttachments: List<AttachmentClaim> = emptyList()
