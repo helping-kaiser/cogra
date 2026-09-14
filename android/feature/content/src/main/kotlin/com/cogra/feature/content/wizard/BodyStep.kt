@@ -142,7 +142,7 @@ internal fun ColumnScope.PickStage(
         modifier = Modifier
             .fillMaxWidth()
             .weight(1f)
-            .alpha(if (gridLive) 1f else DeadGridAlpha)
+            .alpha(if (gridLive) 1f else DEAD_GRID_ALPHA)
             .testTag("wizard_pick_grid"),
         contentPadding = PaddingValues(start = GridEdge, end = GridEdge, top = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(GridSeam),
@@ -217,34 +217,7 @@ private fun PickedTray(
             .padding(start = Layout.ScreenGutter, end = Layout.ScreenGutter, top = 4.dp, bottom = Space.x3),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        if (state.isVideoPost) {
-            Text(
-                text = "Picked · ${state.picked.size}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag("wizard_picked_count"),
-            )
-        } else {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Space.x2),
-            ) {
-                Text(
-                    text = "Picked · ${state.picked.size}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("wizard_picked_count"),
-                )
-                InlineAction(
-                    text = "Show all",
-                    onClick = onShowAll,
-                    testTag = "wizard_show_all",
-                )
-            }
-        }
+        PickedTrayHeader(count = state.picked.size, showAll = !state.isVideoPost, onShowAll = onShowAll)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -280,11 +253,39 @@ private fun PickedTray(
 }
 
 /**
- * The board's first tile: a dashed outline, the folder glyph, and the
- * label under it — a tile in the grid rather than a button dropped into
- * one. It opens the system photo picker, which needs no permission at
- * all, so it is also the way through when the grid's own is refused.
+ * The tray's own first line: the count, and `Show all` beside it where
+ * there is a set for the sheet to manage. A staged clip drops the button —
+ * one clip is not a set to reorder — and the count becomes the only thing
+ * on its line rather than a flex row with nothing left to push to the end.
  */
+@Composable
+private fun PickedTrayHeader(count: Int, showAll: Boolean, onShowAll: () -> Unit) {
+    if (showAll) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        ) {
+            Text(
+                text = "Picked · $count",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("wizard_picked_count"),
+            )
+            InlineAction(text = "Show all", onClick = onShowAll, testTag = "wizard_show_all")
+        }
+    } else {
+        Text(
+            text = "Picked · $count",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("wizard_picked_count"),
+        )
+    }
+}
+
 /**
  * The files the step would not take (`ComposePickedErrors`).
  *
@@ -325,6 +326,12 @@ private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
     }
 }
 
+/**
+ * The board's first tile: a dashed outline, the folder glyph, and the
+ * label under it — a tile in the grid rather than a button dropped into
+ * one. It opens the system photo picker, which needs no permission at
+ * all, so it is also the way through when the grid's own is refused.
+ */
 @Composable
 private fun PhotosAppTile(onClick: () -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier) {
     val outline = MaterialTheme.colorScheme.outline
@@ -366,7 +373,7 @@ private val GridEdge = 4.dp
 private const val GRID_COLUMNS = 3
 
 /** `ComposePickVideo`'s `DeadGrid` opacity for the inert grid under a staged clip. */
-private const val DeadGridAlpha = 0.45f
+private const val DEAD_GRID_ALPHA = 0.45f
 
 /**
  * `ComposeDraft` — the held draft, offered back before the picker takes
