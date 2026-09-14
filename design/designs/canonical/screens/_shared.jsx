@@ -1306,7 +1306,14 @@ function ComposeDetailsBody({
    stands where the gallery is. It states the body's rule, not a lock — take
    the last picture away in the manager and the words field is what the edit
    becomes (`EditWords`). */
-function EditComposeBody() {
+/* `unchanged` IS THE GUARD, AND THE GATE IS THE BATCH (the topic round,
+   2026-09-14): an edit signs when its acts batch has something in it, never
+   when the bytes happen to differ. A byte comparison would refuse an author who
+   typed a word and took it back — and, worse, would accept one whose only
+   change was whitespace the record does not carry. The batch already knows: it
+   is what the acts sheet lists and what the footer counts, so the guard reads
+   the number that was always there. */
+function EditComposeBody({ unchanged = false } = {}) {
   return (
     <>
       <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
@@ -1373,8 +1380,8 @@ function EditComposeBody() {
 
         <div style={{ flex: 1 }} />
 
-        <ActsFooter count={3} />
-        <Button style={{ width: "100%" }}>Sign the edit</Button>
+        <ActsFooter count={unchanged ? 0 : 3} />
+        <Button style={{ width: "100%" }} disabled={unchanged}>Sign the edit</Button>
       </div>
     </>
   );

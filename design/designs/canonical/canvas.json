@@ -641,6 +641,15 @@
       "page": "compose"
     },
     {
+      "file": "EditComposeUnchanged.dc.html",
+      "title": "Edit post, nothing changed",
+      "x": 4320,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "RemoveMenu.dc.html",
       "title": "Own post · menu",
       "x": 480,
@@ -1230,7 +1239,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 2819,
+      "h": 2841,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1245,10 +1254,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -3320,
+      "x": -3610,
       "y": 0,
-      "w": 2900,
-      "h": 2416,
+      "w": 3190,
+      "h": 2537,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1263,9 +1272,9 @@
     },
     {
       "file": "MapMedia.dc.html",
-      "x": -2450,
+      "x": -2740,
       "y": 0,
-      "w": 2030,
+      "w": 2320,
       "h": 3082,
       "page": "media",
       "title": "Media · flow map"

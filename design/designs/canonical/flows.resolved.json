@@ -22,6 +22,7 @@
         "FeedHidden",
         "FeedNarrowed",
         "FeedNothing",
+        "FeedTopic",
         "FeedUnread",
         "History",
         "HistoryEmpty",
@@ -54,7 +55,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 46 boards → ComposePick",
+        "start · «nav · New post» on 47 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -81,6 +82,7 @@
         "FeedHidden",
         "FeedNarrowed",
         "FeedNothing",
+        "FeedTopic",
         "FeedUnread",
         "History",
         "HistoryEmpty",
@@ -191,6 +193,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedTopic",
         "FeedUnread",
         "KeyElsewhere",
         "Main",
@@ -200,10 +203,11 @@
         "Reel",
         "Removed",
         "TagPage",
+        "TagPageHeld",
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 23 boards → ReplyEntry",
+        "start · «comment count» on 25 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
@@ -225,6 +229,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedTopic",
         "FeedUnread",
         "KeyElsewhere",
         "Main",
@@ -234,6 +239,7 @@
         "Reel",
         "Removed",
         "TagPage",
+        "TagPageHeld",
         "VouchBack"
       ]
     },
@@ -461,6 +467,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedTopic",
         "FeedUnread",
         "PostDetail",
         "PostDetailVideo",
@@ -468,10 +475,11 @@
         "Reel",
         "Removed",
         "TagPage",
+        "TagPageHeld",
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 18 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 20 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -486,6 +494,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedTopic",
         "FeedUnread",
         "PostDetail",
         "PostDetailVideo",
@@ -493,6 +502,7 @@
         "Reel",
         "Removed",
         "TagPage",
+        "TagPageHeld",
         "VouchBack"
       ]
     },
@@ -674,6 +684,7 @@
         "FeedHidden",
         "FeedNarrowed",
         "FeedNothing",
+        "FeedTopic",
         "FeedUnread",
         "History",
         "HistoryEmpty",
@@ -706,7 +717,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 46 boards → ComposePick",
+        "start · «nav · New post» on 47 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -733,6 +744,7 @@
         "FeedHidden",
         "FeedNarrowed",
         "FeedNothing",
+        "FeedTopic",
         "FeedUnread",
         "History",
         "HistoryEmpty",
@@ -786,6 +798,7 @@
         "FeedHidden",
         "FeedNarrowed",
         "FeedNothing",
+        "FeedTopic",
         "FeedUnread",
         "History",
         "HistoryEmpty",
@@ -818,7 +831,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 46 boards → ComposePick",
+        "start · «nav · New post» on 47 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -845,6 +858,7 @@
         "FeedHidden",
         "FeedNarrowed",
         "FeedNothing",
+        "FeedTopic",
         "FeedUnread",
         "History",
         "HistoryEmpty",
@@ -898,6 +912,7 @@
         "FeedHidden",
         "FeedNarrowed",
         "FeedNothing",
+        "FeedTopic",
         "FeedUnread",
         "History",
         "HistoryEmpty",
@@ -930,7 +945,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 46 boards → ComposePick",
+        "start · «nav · New post» on 47 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -955,6 +970,7 @@
         "FeedHidden",
         "FeedNarrowed",
         "FeedNothing",
+        "FeedTopic",
         "FeedUnread",
         "History",
         "HistoryEmpty",
@@ -1016,12 +1032,13 @@
         "ComposeDetailsCaps",
         "ComposeDetailsVideo",
         "EditCompose",
+        "EditComposeUnchanged",
         "ReplyCited",
         "ReplyCitedMany",
         "ReplySeal"
       ],
       "steps": [
-        "start · «+ Cite something» on 10 boards → ReferencePicker",
+        "start · «+ Cite something» on 11 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → back — the pick lands in the composer's references"
       ],
       "boards": [
@@ -1033,6 +1050,7 @@
         "ComposeDetailsCaps",
         "ComposeDetailsVideo",
         "EditCompose",
+        "EditComposeUnchanged",
         "ReplyCited",
         "ReplyCitedMany",
         "ReplySeal"
@@ -1303,6 +1321,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedTopic",
         "FeedUnread",
         "KeyElsewhere",
         "Main",
@@ -1311,10 +1330,11 @@
         "Reel",
         "Removed",
         "TagPage",
+        "TagPageHeld",
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 22 boards → ProfileOther",
+        "start · «author chip» on 24 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1332,6 +1352,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedTopic",
         "FeedUnread",
         "KeyElsewhere",
         "Main",
@@ -1340,6 +1361,7 @@
         "Reel",
         "Removed",
         "TagPage",
+        "TagPageHeld",
         "VouchBack"
       ]
     },
@@ -1605,6 +1627,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedTopic",
         "FeedUnread",
         "KeyElsewhere",
         "Main",
@@ -1613,10 +1636,11 @@
         "ProfilePosts",
         "Removed",
         "TagPage",
+        "TagPageHeld",
         "VouchBack"
       ],
       "steps": [
-        "start · «Post Score» on 22 boards → FeedEntry",
+        "start · «Post Score» on 24 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1640,6 +1664,7 @@
         "FeedGallery",
         "FeedHidden",
         "FeedNarrowed",
+        "FeedTopic",
         "FeedUnread",
         "KeyElsewhere",
         "Main",
@@ -1648,6 +1673,7 @@
         "ProfilePosts",
         "Removed",
         "TagPage",
+        "TagPageHeld",
         "VouchBack"
       ]
     },
@@ -1986,6 +2012,12 @@
         "edit-your-post"
       ]
     },
+    "EditComposeUnchanged": {
+      "flows": [
+        "cite-something"
+      ],
+      "endpoint": []
+    },
     "Explore": {
       "flows": [
         "publish-a-post",
@@ -2214,6 +2246,19 @@
         "filter-the-feed-far-from-the-default",
         "filter-the-feed-to-nothing",
         "narrow-the-feed"
+      ],
+      "endpoint": []
+    },
+    "FeedTopic": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
       ],
       "endpoint": []
     },
@@ -2804,6 +2849,15 @@
       "endpoint": [
         "open-a-topic"
       ]
+    },
+    "TagPageHeld": {
+      "flows": [
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
+      ],
+      "endpoint": []
     },
     "TagPicker": {
       "flows": [
