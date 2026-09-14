@@ -25,13 +25,6 @@ export const POST_SHAPE_ORDER: readonly PostShape[] = ["tall", "square", "wide"]
 export const AVATAR_RATIO = 1;
 
 // The portrait cap, as a bound on the TILE rather than on the picture.
-//
-// Media that did not come through this composer — anything at 3:4, 2:3, 9:16 —
-// is not shown taller than 4:5, but neither is it cut: the frame is fitted
-// WHOLE inside the capped tile and the reserved surface shows at the sides. The
-// layout never decides the author's crop. The bars stay a plain reserved
-// surface and are never a blurred enlargement of the photo, which would invent
-// image where there is none.
 export const PORTRAIT_CAP = 4 / 5;
 
 /**
@@ -75,19 +68,11 @@ export function parseAspectRatio(text: string | null | undefined): number | null
 }
 
 /**
- * Whether the frame is fitted whole inside the tile (letterboxed) or fills it.
- *
- * `contain` is the default for a lead tile and any lone attachment, because the
- * author's crop is theirs. `cover` is correct for exactly one case: a gallery's
- * secondary squares, which are an index INTO the set rather than the media
- * itself, and a ragged grid of fitted thumbnails reads as a mistake.
+ * The tile's `object-fit`. Always `cover` — nothing is letterboxed
+ * (design/components/media/MediaAttachment.jsx:34, jakob 2026-09-03: the
+ * media law). `sourceRatio` stays in the signature so call sites need no
+ * change; the fit itself is unconditional now.
  */
-export function fitFor(sourceRatio: number | null | undefined): "contain" | "cover" {
-  if (typeof sourceRatio !== "number" || !Number.isFinite(sourceRatio) || sourceRatio <= 0) {
-    return "cover";
-  }
-  // Only a frame TALLER than the cap gets letterboxed — everything else already
-  // matches the tile it was cropped for, so `cover` and `contain` agree and
-  // `cover` avoids a sub-pixel seam at the edges.
-  return sourceRatio < PORTRAIT_CAP ? "contain" : "cover";
+export function fitFor(_sourceRatio: number | null | undefined): "contain" | "cover" {
+  return "cover";
 }
