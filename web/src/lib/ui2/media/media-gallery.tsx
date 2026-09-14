@@ -81,10 +81,11 @@ export function MediaGallery({
   ratio?: number;
   /**
    * Overrides the per-item fit the frame would otherwise compute
-   * (`fitFor`/`fitInFrame`, which fit a post's own crop whole). The comment
-   * scale is the one caller that needs this: design/readme.md states a
-   * comment's pictures and clips alike FILL their square frame, uncropped
-   * bytes included — never letterboxed, whatever their source shape.
+   * (`fitInFrame`, which fits a post's own crop whole where it does not
+   * already match the shared frame). The comment scale is the one caller
+   * that needs this: design/readme.md states a comment's pictures and clips
+   * alike FILL their square frame, uncropped bytes included — never
+   * letterboxed, whatever their source shape.
    */
   fit?: "contain" | "cover";
   radius?: string;
