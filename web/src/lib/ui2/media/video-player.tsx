@@ -290,7 +290,8 @@ export function VideoPlayer({
           here changes the sound for the whole session — which is why it
           reads the shared store rather than the element. */}
       {!transport && (
-            type="button"
+        <button
+          type="button"
           data-testid={`${testId}-sound`}
           aria-label={muted ? "Turn sound on" : "Turn sound off"}
           aria-pressed={!muted}
