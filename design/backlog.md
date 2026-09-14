@@ -2192,3 +2192,19 @@ every root band and taps into a coming-soon state. That screen has no
 board. Draw it; the W1 shell lanes wire the icon to it and grade
 against the board once drawn. New board = one canvas slot; its copy
 needs blessing in copy-voice.
+
+### 69 · The canvas splits by domain · *tooling* · **ruled 2026-09-14**
+
+jakob: the canvas must support ~500 screens; the editor's 200-file
+cap is per canvas, so the canonical canvas splits into per-domain
+canvases along the `page` field (proposed grouping: Feed+Reel ·
+Profile+Settings · Compose+Media · Entry+Money+Maps — each opened
+with ≥25% headroom). "As long as the handoff gives me the link, the
+page, the screens tile and what to look at we can create as many
+boards as we want." The tooling round: canvas membership derived
+from the page field, one seed manifest per canvas, check-flows
+learns per-canvas membership, the handoff protocol carries per-
+canvas links. Per-canvas image budgets end the image squeeze (the
+item-62 pressure). Boards themselves do not change. Implementation
+is unaffected — their lanes grade against board files, not canvas
+URLs (confirmed 2026-09-14).
