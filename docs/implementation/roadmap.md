@@ -161,16 +161,16 @@ event-driven and is not an MVP dependency.
 - **Slice 2.5.3's remainder** — the fullscreen viewers, edit as one
   batch, the default-license setting, and the comment-video edit
   surface (share already shipped).
-- **Slice 2.6 — private viewer state.** Design first: bookmarks,
-  hidden actors, and view history have no boards yet.
+- **Slice 2.6 — private viewer state.** Boards drawn for bookmarks,
+  hidden actors, and view history; implementation outstanding.
 - **Slice 2.7 — search**, with the Explore surface that waits on it
   (the Explore boards are drawn).
 - **Slice 3 — the ranked feed, backend-direct only**, the Reel
   stream included. The miner-container and on-device stages stay on
   the contract and ship after the MVP; so do the feed's L1-view /
   L2-view toggle and the quick-pad variant.
-- **Slice 3.1 — notifications, the minimal cut**: the design doc and
-  an in-app notifications list; no push channel.
+- **Slice 3.1 — notifications, the minimal cut**: implementing the
+  drawn notifications list; no push channel.
 - **Slice 8's erasure half** — self-deletion of content and account
   ([erasure.md](../instances/erasure.md)). Play's account-deletion
   policy mandates it; the moderation half waits.
@@ -505,7 +505,10 @@ from the media path and carrying their own doc write-back:
 
 - Bookmarks, hidden actors, `markSeen` / view history, and
   cross-device preferences ([api-spec.md](api-spec.md) "Private
-  viewer state") — L2-only rows, no graph records.
+  viewer state") — L2-only rows, no graph records. Theme and Reading
+  preferences stay on the device; every other preference is
+  server-stored, including a has-seen-the-onboarding flag so the
+  intro shows once per account.
 - Sequenced before slice 3: `markSeen` feeds the ranked feed's
   de-duplication.
 - **Hand test:** bookmark on the phone, find it on the web;
