@@ -24,12 +24,12 @@ import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.overPictureCap
-import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
 internal class WizardUploader(
     private val scope: CoroutineScope,
