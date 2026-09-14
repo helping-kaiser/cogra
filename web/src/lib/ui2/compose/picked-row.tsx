@@ -75,6 +75,12 @@ export function PickedRow({
  * video takes ONE description and the row reads "Describe the video · 0 of 1
  * described". Its COVER takes none — a poster is the video's face, not a second
  * attachment a reader could be told about, so it never enters this count.
+ *
+ * THE REASON RIDES UNDER THE ROW (jakob 2026-09-03), permanently: an optional
+ * field with no stated purpose reads as a chore, and the one thing that makes
+ * it worth writing — someone is listening to it — was behind a "?" nobody
+ * opens. Same words as the sheet's own sub-line, so the row and the sheet it
+ * opens say one thing.
  */
 export function DescribeCounter({
   described,
@@ -90,18 +96,23 @@ export function DescribeCounter({
   testId?: string;
 }) {
   return (
-    <p className="m-0 text-label-small">
-      <button
-        type="button"
-        data-testid={testId}
-        onClick={onDescribe}
-        className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
-      >
-        Describe {subject}
-      </button>{" "}
-      <span className="text-on-surface-variant">
-        · {described} of {total} described
-      </span>
-    </p>
+    <div className="flex flex-col gap-1">
+      <p className="m-0 text-label-small">
+        <button
+          type="button"
+          data-testid={testId}
+          onClick={onDescribe}
+          className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
+        >
+          Describe {subject}
+        </button>{" "}
+        <span className="text-on-surface-variant">
+          · {described} of {total} described
+        </span>
+      </p>
+      <p className="m-0 text-label-small text-on-surface-variant">
+        Read aloud to people who can&apos;t see it.
+      </p>
+    </div>
   );
 }
