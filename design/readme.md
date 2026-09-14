@@ -4793,10 +4793,11 @@ canvas is ever checked alone.
   `_ds_manifest.json` is the claude.ai Design app's own metadata and is
   refreshed only by that app, on an explicit sync-back.
 - `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
-  `gen-maps.mjs`, `check-flows.mjs`, `check-readouts.mjs`,
-  `report-summaries.mjs` — the canonical-canvas pipeline
-  (§13, *Canvas pages and flows*): render the screens, stamp the flow
-  numbers, generate the maps, gate the result. Run all six after any
+  `gen-maps.mjs`, `gen-canvases.mjs`, `check-flows.mjs`,
+  `check-readouts.mjs`, `report-summaries.mjs` — the canonical-canvas
+  pipeline (§13, *Canvas pages and flows*): render the screens, stamp
+  the flow numbers, generate the maps, seed the per-canvas manifests
+  (§14), gate the result. Run all seven after any
   screen, component, or graph.json edit. A screen whose state is not a
   portrait phone exports `FRAME` and the shell builds that artboard
   instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
