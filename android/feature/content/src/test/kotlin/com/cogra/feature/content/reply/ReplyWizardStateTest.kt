@@ -458,10 +458,7 @@ class ReplyWizardStateTest {
     @Test
     fun aRefusalLeavesOnRequestAndTheRestStay() {
         val two = ReplyWizardState(target = POST_TARGET).copy(
-            refused = listOf(
-                RefusedPick(null, UploadFailure.UNREADABLE_FILE),
-                RefusedPick(null, UploadFailure.PICTURE_TOO_BIG),
-            ),
+            refused = listOf(RefusedPick(null, UploadFailure.UNREADABLE_FILE), RefusedPick(null, UploadFailure.PICTURE_TOO_BIG)),
         )
         assertThat(two.dismissedRefusal(0).refused.map { it.reason })
             .containsExactly(UploadFailure.PICTURE_TOO_BIG)

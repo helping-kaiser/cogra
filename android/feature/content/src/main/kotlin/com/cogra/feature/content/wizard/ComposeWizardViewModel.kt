@@ -3,7 +3,6 @@ package com.cogra.feature.content.wizard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cogra.core.designsystem.v2.compose.HelpTopic
-import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
@@ -14,16 +13,17 @@ import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
-import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.PICTURE_MAX_BYTES
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
+import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.valueOrNull
+import com.cogra.domain.AttachmentClaim
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.SectionsEditor
@@ -32,13 +32,13 @@ import com.cogra.feature.content.candidateRows
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * The compose wizard (design/readme.md §13; canonical `Compose*`

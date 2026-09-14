@@ -189,7 +189,10 @@ data class ReferenceFinderState(
 }
 
 /** One offer in the finder's list. */
-data class ReferenceCandidateRow(val targetId: String, val target: ReferenceTargetView)
+data class ReferenceCandidateRow(
+    val targetId: String,
+    val target: ReferenceTargetView,
+)
 
 /**
  * This claim as a row an authoring section can carry, or null when it

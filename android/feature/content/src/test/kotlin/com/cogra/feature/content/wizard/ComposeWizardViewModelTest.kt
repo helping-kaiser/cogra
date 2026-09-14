@@ -30,10 +30,11 @@ import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
-import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
+import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
+import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -43,7 +44,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import java.io.IOException
 
 /**
  * The wizard's flow: what reaches the wire, what the uploads do, and
