@@ -448,16 +448,26 @@ class ComposeWizardStateTest {
         )
         val swapped = faced.togglePick("other", durationMs = 1_000)
         assertThat(swapped.coverMediaId).isNull()
-        assertThat(swapped.coverChoice).isEqualTo(CoverChoice.Frame(0))
+        assertThat(swapped.coverChoice).isEqualTo(CoverChoice.None)
     }
 
     @Test
-    fun aVideoIsNotCompleteUntilItsCoverHasLanded() {
+    fun aCoverlessVideoIsCompleteOnceItsOwnBytesLand() {
+        // The default: no face was ever chosen, so there is no id to
+        // wait for — going without a cover is always possible.
         val uploaded = video.withUpload("clip", AssetUpload.Done("video-1"))
-        // The clip has an id and the cover does not: signing would send a
+        assertThat(uploaded.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(uploaded.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun aChosenCoverMustLandBeforeTheVideoIsComplete() {
+        val chosen = video.copy(coverChoice = CoverChoice.Frame(0))
+            .withUpload("clip", AssetUpload.Done("video-1"))
+        // A face was chosen but has not landed yet: signing would send a
         // video naming a poster that is not there.
-        assertThat(uploaded.uploadsComplete).isFalse()
-        assertThat(uploaded.copy(coverMediaId = "cover-1").uploadsComplete).isTrue()
+        assertThat(chosen.uploadsComplete).isFalse()
+        assertThat(chosen.copy(coverMediaId = "cover-1").uploadsComplete).isTrue()
     }
 
     @Test
@@ -468,7 +478,7 @@ class ComposeWizardStateTest {
     }
 
     @Test
-    fun theFirstFrameIsTheFaceUntilTheAuthorSaysOtherwise() {
-        assertThat(ComposeWizardState().coverChoice).isEqualTo(CoverChoice.Frame(0))
+    fun aFreshWizardStartsWithNoFaceChosen() {
+        assertThat(ComposeWizardState().coverChoice).isEqualTo(CoverChoice.None)
     }
 }
