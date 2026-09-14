@@ -668,11 +668,11 @@ class ComposeWizardViewModel @Inject constructor(
     /**
      * The clip's whole journey: its face first, then the bytes.
      *
-     * The order is the contract's. An asset row is immutable once
-     * written, so a video names its cover when it is created rather than
-     * gaining one afterwards — which means the cover must already have
-     * an id. Uploading it first also fails fast: a refused cover is
-     * learned in a second, instead of after a minute of transcoding.
+     * Two standalone uploads, and the order is this way because the
+     * cover is the cheap leg: a refused cover is learned in a second,
+     * instead of after a minute of transcoding and a ninety-megabyte
+     * send. The placement names the poster's id at prepare, so the id
+     * has to exist by then rather than by the time the clip goes up.
      */
     private fun startVideoUpload() {
         val clip = _state.value.video ?: return
@@ -702,7 +702,7 @@ class ComposeWizardViewModel @Inject constructor(
                 uploadSession = progress.uploadId
                 _state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
             }
-            when (val outcome = media.uploadVideo(processed, coverId, sending)) {
+            when (val outcome = media.uploadVideo(processed, sending)) {
                 is Outcome.Success -> _state.update {
                     it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id))
                 }
@@ -811,10 +811,17 @@ class ComposeWizardViewModel @Inject constructor(
                     license = current.license,
                     tags = current.tagSection.tags.map { it.toClaim() },
                     references = current.referenceSection.references.map { it.toClaim() },
+                    // The poster rides the clip's own placement, never a
+                    // gallery entry of its own — which is what keeps "ten
+                    // pictures or one video" one counting rule.
                     attachments = if (current.mode == BodyMode.Media) {
                         current.picked.mapNotNull { asset ->
                             asset.mediaId?.let {
-                                AttachmentClaim(it, asset.altText.ifBlank { null })
+                                AttachmentClaim(
+                                    mediaId = it,
+                                    altText = asset.altText.ifBlank { null },
+                                    coverMediaId = current.coverMediaId.takeIf { _ -> asset.isVideo },
+                                )
                             }
                         }
                     } else {

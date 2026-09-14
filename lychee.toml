@@ -22,4 +22,8 @@ no_progress = true
 # the same reason (corpus-adoption.toml, [carrier] vendored_trees).
 exclude_path = [
   "crates/cogra-linter/vendor/",
+  # Installed dependencies, gitignored and not ours to fix. CI checks out
+  # without them and so never saw these; a developer who has run `npm ci`
+  # did, which made the local gate disagree with the one that gates a merge.
+  "web/node_modules/",
 ]
