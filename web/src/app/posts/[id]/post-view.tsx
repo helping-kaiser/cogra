@@ -1228,12 +1228,6 @@ export function PostView({
                 });
               }
             }}
-            position={{
-              index: editing.gallery.findIndex(
-                (picture) => pictureId(picture) === editDescribing,
-              ),
-              total: editing.gallery.length,
-            }}
             testId="comment-edit-describe-sheet"
           />
           <HelpDialog
