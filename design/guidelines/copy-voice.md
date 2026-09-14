@@ -1328,3 +1328,91 @@ empty, and what is this screen for. The line deliberately says nothing
 about *when*: chats sit on the would-like list and the order can change,
 so the copy promises nothing the release order cannot keep.
 
+
+## Awaiting blessing — the topic round
+
+Every new line the topic round drew: the tag page's stance row, *Your
+topics*, the feed filter's one-topic narrowing, *Cited by*, and the
+acts footer's zero. Ruled by jakob 2026-09-14; the words are this
+round's and up for review in the same pass.
+
+**The word "follow" never reaches the screen, on any surface.** The ban
+above (*Naming*, the notifications section: "*followed* would name a
+gesture this product does not have") extends to topics and is now
+unconditional. There is no follow in this product — taking a position
+on a topic is an **Affinity**, priced, signed and severable like every
+other stance, and a word borrowed from a product where it is free would
+promise exactly the thing this one refuses. *Docs and code keep the
+word*; boards and this file do not.
+
+**The list is `Your topics`** — the page title, Explore's door, and the
+button that reaches it from the feed filter (`All your topics`). Second
+person, because the set is the reader's own acts; no count in the title,
+because the door beside it already carries one (`5 held`). *Held* is the
+word for having a position on a topic, and it is the predicate said
+plainly: a topic is held while the netted pair is not nothing.
+
+**The empty list**: `No topics yet — say where you stand on one from its
+page.` The `Nothing here yet — write the first post.` shape: calm, and
+naming the one thing that would fill it — including where the gesture
+lives, because a reader with no topics has not met the tag page's row
+yet.
+
+**The Affinity pad's poles — PROPOSED, NOT BLESSED.** The pad a topic's
+stance row opens fills the same two signed slots as an opinion's with
+different quantities: association and attraction
+(`layer1-interface.md` §9.5). Like a tag's pair editor, it names its own
+ends in the reader's words: association runs `Not mine` to `Mine`, and
+attraction runs `Away` up to `Toward`. *Not mine / Mine* says coherence
+rather than verdict, which is what the census means by association's
+sign being coherence and never a standing vouch; *Away / Toward* is what
+attraction is, and deliberately borrows neither the opinion's
+`Less / More` (which names reach, a different question) nor its
+`Against / For` (which names a verdict this record does not carry).
+Alternatives worth weighing: `Not my thing / My thing` for the first,
+`Push away / Draw closer` for the second.
+
+**What the pad still calls its axes is the opinion's, and that is a
+known mismatch.** Above the alternate sliders the two tracks are still
+labelled `For or against` and `How much reaches you` — the stance
+family's names, on a record that is not one. The four poles were this
+round's to propose; the two axis names are a copy ruling of their own
+and wait for one (backlog item 79).
+
+**The feed filter's section**: label `One topic`, hint `Topics you hold
+and are for. A topic you hold against stays a record — it just never
+narrows a feed.` The label says the cardinality, because it is the one
+section here that does not combine. The hint answers the question the
+section raises by existing — where is the topic I hold against — rather
+than leaving a reader to decide their own record went missing.
+
+**The trigger spells the tag itself**, hash and all, leading the
+deviations: `Posts · #saltmaps`. It is an extra rather than the head for
+two reasons that agree: the head spells kinds and a topic is not one,
+and the head is the half the collapse cannot take away — a name the pill
+cannot hold has to be able to leave it.
+
+**`Cited by N`** — the inbound count line on a post's detail, and
+`Cited by` as the sheet's title and the comment menu's row. *Cited* is
+already the product's verb for a Reference (*"@ada cited your post"*),
+and the line reads from the artifact's side: what points at this. The
+count is bare beside it, the row's own words having said what was
+counted. There is no *by whom* in the title: the list holds ARTIFACTS,
+not people, which is exactly what separates it from `Opinions on this
+post`.
+
+**The inbound empty sheet**: `Nothing cites this yet — yours would be
+the first.` `No opinions yet — yours would be the first.`'s twin, and
+kept a twin on purpose: the two sheets are reached the same way, from
+the same menu, and a reader who has met one should recognize the other.
+
+**The acts footer's zero and its singular**, closing a wording the
+master itself recorded as unruled:
+
+- `Nothing to sign yet` — at zero, and the line stops being a button,
+  because the sheet it would open is empty. *yet* is load-bearing:
+  nothing is broken and nothing is owed.
+- `You're signing 1 thing` — the singular, taken from `ActsCard`'s own
+  blessed total (`1 thing, signed`) rather than decided fresh. The short
+  form and the long form are one sentence at two lengths and may not
+  disagree about the plural.
