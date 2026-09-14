@@ -60,10 +60,14 @@ import {
   BodyRegion,
   PostMedia,
   bodyIsSensitive,
+  galleryIsRedacted,
+  galleryItems,
   hasMedia,
+  hasVideo,
   payloadIsRedacted,
   sensitiveSignature,
 } from "@/lib/ui/post-media";
+import { PinnedClip } from "@/lib/ui2/media/pinned-clip";
 import { PostCard } from "@/lib/ui/post-card";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { shortTimestamp } from "@/lib/ui/timestamp";
@@ -1028,6 +1032,21 @@ export function PostView({
   // What survives is the skeleton the card draws: author, timestamp, thread
   // position, and the stance a reader can still take.
   const redacted = payloadIsRedacted(post);
+  // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
+  // the clip leaves the card body and pins above it, wearing the full
+  // transport, and the card beneath is the post as it always reads. A post of
+  // pictures is unchanged — its gallery is still the card's body.
+  // A REDACTED GALLERY IS NOT A CLIP TO PIN: it is the placeholder, and the
+  // placeholder is the card's body wherever it lands. Only a playable clip
+  // leaves the card.
+  const clip =
+    !redacted && !galleryIsRedacted(post) && hasVideo(post)
+      ? galleryItems(post).find((item) => item.mimeType.startsWith("video/"))
+      : undefined;
+  // A gallery entry's `src` is optional on the tile because the tile also
+  // draws the asset-less reserved region; a PINNED clip is a clip, so a
+  // sourceless one is not one and the card keeps its body.
+  const pinned = clip?.src ? { ...clip, src: clip.src } : undefined;
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
@@ -1053,10 +1072,27 @@ export function PostView({
           comments sat on cards, which is the inverse of the board's emphasis.
           Edge to edge inside the page's gutter, so the card and the feed's
           cards frame their media identically (design/backlog.md item 35). */}
+      {/* THE CLIP PINS ABOVE THE CARD, edge to edge like the card's own media:
+          the board stands it outside the detail column entirely
+          (`PostDetailVideo.jsx:25-28`). */}
+      {pinned && (
+        <div className="-mx-6">
+          <PinnedClip
+            src={pinned.src}
+            mimeType={pinned.mimeType}
+            poster={pinned.poster}
+            altText={pinned.altText}
+            sourceRatio={pinned.sourceRatio}
+            durationMs={pinned.durationMs}
+            testId="post-pinned-clip"
+          />
+        </div>
+      )}
       <div className="-mx-6">
         <PostCard
           post={post}
           variant="detail"
+          mediaPinned={pinned !== undefined}
           href={`/posts/${postId}`}
           testId="post"
           authorTestId="post-author"
