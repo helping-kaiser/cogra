@@ -60,6 +60,8 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.content.MAX_COMMENT_BODY_CHARS
+import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
+import com.cogra.domain.media.isAltTextTooLong
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
@@ -402,6 +404,12 @@ private fun CommentEditSheets(
                 onValueChange = { onAltTextChange(describing.uri, it) },
                 onDone = onCloseSheet,
                 onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
+                cap = MAX_ALT_TEXT_CHARS,
+                error = if (isAltTextTooLong(describing.altText)) {
+                    stringResource(R.string.content_error_alt_text_too_long, MAX_ALT_TEXT_CHARS)
+                } else {
+                    null
+                },
                 testTag = "comment_edit_describe_sheet",
             )
 
