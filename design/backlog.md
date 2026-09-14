@@ -2306,7 +2306,7 @@ undrawn case until the board exists. Needs a drawing round: how the
 row stacks, truncates, or summarizes 2–10 citations. No lane is
 blocked on it.
 
-### 71 · The pipeline outgrew its budget · *tooling*
+### 71 · The pipeline outgrew its budget · *tooling* · **closed 2026-09-14**
 
 The valence-six round measured the six-stage pipeline at 33–50 s on
 a quiet machine, against the recorded 15–25 s budget — every run
@@ -2316,3 +2316,14 @@ these runs refute that). Either the budget re-sets to ~35–50 s
 cause (check-flows alone ran 8.2 s). Wants one quiet profiling
 pass: per-stage timings across the last few chain states, then
 either a budget commit or a fix.
+
+Closed by the split fabric's data: two quiet seven-stage runs at
+25.2 s and 27.4 s, per-stage — render-screens 17.6 · bundle 2.7 ·
+check-flows 2.4 · gen-canvases 1.9 · check-readouts 1.8 ·
+report-summaries 0.9 · gen-maps 0.2 — with check-flows back at ~2 s
+against the 33–50/8.2 readings, which did not reproduce quiet after
+all (that day ran eight lanes). No regression; the honest growth is
+render-screens scaling with the tree (~190 boards). Budget recorded
+at the design-ci target: 25–35 s quiet, render-screens ~two-thirds,
+regressions judged from quiet runs only. bundle and render-screens
+now print their own ms like every other stage.
