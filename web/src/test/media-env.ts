@@ -90,5 +90,34 @@ export function installMediaEnvironment(): void {
       this.dispatchEvent(new Event("pause"));
     };
     media.load = function () {};
+
+    // THE CLOCK, which jsdom also leaves out: `duration` answers NaN and
+    // `currentTime` never moves, so a transport driven by either would be
+    // testing the stub's silence rather than the component. Both are filled in
+    // as plain state that fires the events a browser fires — `timeupdate` on a
+    // seek, `durationchange` when the length lands — which is exactly the
+    // contract the player reads.
+    Object.defineProperty(media, "duration", {
+      configurable: true,
+      get(this: HTMLMediaElement & { _duration?: number }) {
+        return this._duration ?? NaN;
+      },
+    });
+    Object.defineProperty(media, "currentTime", {
+      configurable: true,
+      get(this: HTMLMediaElement & { _currentTime?: number }) {
+        return this._currentTime ?? 0;
+      },
+      set(this: HTMLMediaElement & { _currentTime?: number }, seconds: number) {
+        this._currentTime = seconds;
+        this.dispatchEvent(new Event("timeupdate"));
+      },
+    });
   }
+}
+
+/** The metadata landing: what a browser reports once it has read the file. */
+export function statesDuration(video: HTMLMediaElement, seconds: number): void {
+  (video as HTMLMediaElement & { _duration?: number })._duration = seconds;
+  video.dispatchEvent(new Event("durationchange"));
 }

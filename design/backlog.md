@@ -295,7 +295,7 @@ comment rows confused): one unified Comments section — the
 thread row + the reply-composer row, each with its own note; no
 board deleted (none were duplicates — distinct states).
 
-### 13 · Post Score drill-down · *design*
+### 13 · Post Score drill-down · *design* · **drawn 2026-09-12**
 Four screens — FeedEntry → RankPath → RankHop → raw records — each
 carrying a small cover of the post it came from. The register is graph,
 paths, connections; never statistics, never a chart. Its five parts
@@ -2534,6 +2534,32 @@ regular one `countNoun` already gets, said in the board's own words: the
 bundle exposes components and constants to screens, never a card's
 helpers, so the rule is tied by the docblocks rather than by an import.
 Nothing is drawn differently.
+
+### 74 · The onboarding intro amends the per-control rule · *design*
+
+jakob's ruling (2026-09-14) amends §13's per-control rule
+(design/readme.md §13, "First-time onboarding is per-control, never a
+tour"): a skippable 3-5 card first-entry intro joins the per-control
+coach marks, re-watchable from Settings. A static About page carries the
+fuller version of the differences — all-public, including future chats,
+the graph, the pad, money/pull marketing, and why a not-yet-vouched user
+cannot fully act. A new Settings group hosts the re-watch entry, the
+About page, and privacy/terms. Per-control coach marks stay as they are;
+the seen-flag is server-side.
+
+Status: open, awaiting the Round C drawing round.
+
+### 75 · The keyboard's own mechanism · *design* · **ruled + recorded**
+
+The design system said nothing about the on-screen keyboard — a census
+gap surfaced 2026-09-14. Ruled by jakob the same day: readme §13 (*The
+keyboard's own mechanism*) carries the ruling, and the parked-pad rule
+(§13 *The entry flow*) gains the keyboard as a third parking edge at
+the same 16px. No boards are drawn — the ruling names a platform
+mechanism already built (ime insets on Android, scroll-into-view on
+the web) rather than anything new to specimen. The design work is
+done; what is left is conformance where a surface still reimplements
+its own avoidance.
 
 ### 76 · The feed's scroll-to-top pill · *design* · **drawn 2026-09-14**
 
