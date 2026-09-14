@@ -1537,10 +1537,11 @@
       "status": "resolved",
       "startsOn": [
         "CommentMenu",
-        "ReaderPostMenu"
+        "ReaderPostMenu",
+        "ReaderPostMenuNarrow"
       ],
       "steps": [
-        "start · «Cite in a new post» on 2 boards → ComposePick",
+        "start · «Cite in a new post» on 3 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1550,7 +1551,8 @@
         "ComposeWords",
         "ComposeCited",
         "CommentMenu",
-        "ReaderPostMenu"
+        "ReaderPostMenu",
+        "ReaderPostMenuNarrow"
       ]
     },
     {
@@ -2564,6 +2566,12 @@
       ]
     },
     "ReaderPostMenu": {
+      "flows": [
+        "cite-a-post"
+      ],
+      "endpoint": []
+    },
+    "ReaderPostMenuNarrow": {
       "flows": [
         "cite-a-post"
       ],

@@ -1245,9 +1245,9 @@
     },
     {
       "file": "MapMedia.dc.html",
-      "x": -2450,
+      "x": -2740,
       "y": 0,
-      "w": 2030,
+      "w": 2320,
       "h": 3082,
       "page": "media",
       "title": "Media · flow map"
@@ -1736,6 +1736,15 @@
       "y": 2120,
       "w": 390,
       "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "ReaderPostMenuNarrow.dc.html",
+      "title": "Post · the reader's menu, narrow phone",
+      "x": 3360,
+      "y": 2120,
+      "w": 320,
+      "h": 568,
       "page": "media"
     },
     {

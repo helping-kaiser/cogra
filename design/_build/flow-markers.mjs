@@ -438,6 +438,16 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">License terms</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
+  // The same sheet on a phone too narrow for four actions: share has moved in
+  // from the action row and leads, so every number below it shifts by one.
+  ReaderPostMenuNarrow: [
+    { n: 1, find: ">Share</button>", tag: "button" },
+    { n: 2, find: ">Save</button>", tag: "button" },
+    { n: 3, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 4, find: ">Hide @ada</button>", tag: "button" },
+    { n: 5, find: ">License terms</button>", tag: "button" },
+    { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   // TWO WASHES on this board — the thread's, and the menu's stacked over the
   // thread it dims — and both take the same number: the edge is "tap outside",
   // and outside the menu is the whole screen.

@@ -693,10 +693,19 @@ answers is a promise the sheet cannot keep:
   menu.
 - **Bookmark** — slice 2.6. Its home is the same overflow menu, ranked
   against the rows already there before it earns a slot.
-- **The narrow-phone share-into-⋮ state is unboarded.** The reel
+- **The narrow-phone share-into-⋮ state** — *drawn 2026-09-14*. The reel
   round's rule says share is the first act to leave the action row when
-  a phone cannot hold four; no board draws that menu with a share row
-  in it.
+  a phone cannot hold four, and nothing drew the menu it moves into.
+  `ReaderPostMenuNarrow` does: the reader's sheet with Share leading it,
+  the card below showing the three the row kept. It is drawn at 320 —
+  the narrowest phone this system draws for — because the width is the
+  state, the way `ViewerLandscape` is drawn rotated; a 390 board with a
+  row missing would be a claim about this phone made on a different one.
+  Share LEADS the sheet rather than joining the end: every other row
+  here is a menu row by nature, share is the one that was a one-tap
+  control a moment ago, and a reader opening this ⋮ to share came for
+  the row that moved. It is an `entries` board — width, not a tap, the
+  shape `ViewerLandscape` and `ComposePickWeb` already take.
 - **The reel's deliberate no-⋮ ruling gets a revisit trigger.** The
   stream's rail carries no overflow on purpose. If the menu ever grows
   a row a reel viewer needs in the moment, that ruling is reopened —
