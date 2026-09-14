@@ -2060,7 +2060,7 @@ recorded `dec:lint:refused-dependencies` decision deliberately keeps
 pattern dialects out of the carrier walk; new vendored trees get a
 literal exclude row. Baseline is 0 advisories again.
 
-### 57 · The masters' prose still says "standing" off-screen · *design*
+### 57 · The masters' prose still says "standing" off-screen · *design* · **done 2026-09-14**
 
 The sweep (2026-09-11) conformed every reader-visible string and every
 self-contradicting doc, but ~151 sites of `standing`/`stance` prose
@@ -2074,6 +2074,17 @@ the same sweep: `Post Score` in prose and in the graph's gap names
 specimen `SheetTitle` the live `OverflowMenu` doesn't render;
 `feed-filter.card.html:46`'s history sentence naming the replaced
 segmented row; the frozen search-ideation canvases' `3w` ages.
+
+Done 2026-09-14: 131 prose lines conformed across 53 files under one
+rule — "standing" is two words, and only the retired UI sense goes.
+The L1 term (α_i, the inbound-derived admission scalar) and every
+model-voice "stance" (the record, the fold, the anchor tables, the
+pads' value-space prose) KEPT; reader-facing prose conformed to
+"opinion"/"give". All four smalls landed (Post Score was already
+clean; the sheet specimen's two menu titles cut; the filter card's
+history paragraph deleted and FeedFilter's docblock rewritten to
+current state; the frozen boards' ages onto the ladder, `1w` → `7d`
+included). Leftovers filed as item 72.
 
 ### 58 · The vouch-back ceremony · *design* · **drawn 2026-09-12**
 
@@ -2370,3 +2381,24 @@ render-screens scaling with the tree (~190 boards). Budget recorded
 at the design-ci target: 25–35 s quiet, render-screens ~two-thirds,
 regressions judged from quiet runs only. bundle and render-screens
 now print their own ms like every other stage.
+
+### 72 · What the standing-prose pass left for rulings · *design*
+
+Three leftovers from item 57's judgment pass (2026-09-14):
+
+- `design/readme.md` still carries the retired sense in narrative
+  prose (~:190/:295 "a zero standing"/"no standing yet", :688 "nets
+  a standing to", :732 "standing, the stance a reader can still
+  take") — the readme was outside the pass's file scope; wants the
+  same one-rule bite.
+- `design/designs/core-loop/app.jsx:198,200` renders harness chrome
+  reading "Core loop — feed, post, stance" / "Tap a stance target" —
+  reviewer-facing, but a RENDERED surface, and backlog item 1's own
+  title says "stance"; conforming either is jakob's call.
+- The naming law's kept-list names the Stance* component families
+  but not the exported identifiers `standingLine`, `standingParts`,
+  `StanceStanding`, `NO_STANDING_LABEL`, or the `kind="standing"`
+  prop value — the law has a gap to close (add them to the
+  kept-list) or a rename to rule. Riding along: `_shared.jsx`'s "the
+  staged citation carries the stance that rides with it" is a model
+  question (a citation carries its own pair), not a naming one.

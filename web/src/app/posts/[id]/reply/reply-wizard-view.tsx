@@ -390,7 +390,7 @@ export function ReplyWizard({
         action={
           state.step === "seal" ? (
             <span className="flex items-center gap-2">
-              <span className="whitespace-nowrap text-body-small text-on-surface-variant">
+              <span className="whitespace-nowrap text-label-small text-on-surface-variant">
                 Last step
               </span>
               <HelpButton

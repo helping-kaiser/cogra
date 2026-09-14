@@ -46,7 +46,7 @@ export function Screen() {
         <ReferenceRow kind="post" name="Salt flats at first light" value="5.60" onOpen={() => {}} />
         <ReferenceRow kind="item" name="Salt-crust rubbing, framed" value="4.30" onOpen={() => {}} />
         <Seam />
-        <ReferenceRow kind="post" name="Grain of the flats" value="3w" onOpen={() => {}} />
+        <ReferenceRow kind="post" name="Grain of the flats" value="21d" onOpen={() => {}} />
         <ReferenceRow kind="post" name="First try at a rubbing" value="06.09.2024" onOpen={() => {}} />
       </Column>
       <BottomNav active="search" slots={ALL_SLOTS} inline />

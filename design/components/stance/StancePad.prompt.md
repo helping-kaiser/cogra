@@ -5,6 +5,6 @@
 <StancePad value={pick} onChange={setPick} />
 ```
 
-The field is `surfaceContainerHighest` at the **large (16px)** rung; the knob is 20px of `primaryContainer` — the loudest surface, which belongs to a committed stance. The centre-lines are `outlineVariant` hairlines and must stay visible: they are drawn dead ground, not decoration. Never clamp by radius — each axis clamps on its own, so all four corners are reachable.
+The field is `surfaceContainerHighest` at the **large (16px)** rung; the knob is 20px of `primaryContainer` — the loudest surface, which belongs to a committed opinion. The centre-lines are `outlineVariant` hairlines and must stay visible: they are drawn dead ground, not decoration. Never clamp by radius — each axis clamps on its own, so all four corners are reachable.
 
 For the real interaction use `StanceControl`, which owns the tap, the hold, the parking, and the confirmations.
