@@ -613,7 +613,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Mark</button>", tag: "button" },
     { n: 7, find: ">Sign and publish</button>", tag: "button" },
     { n: 8, find: ">Back</button>", tag: "button" },
-    { n: 9, find: 'aria-label="Manage the citations"', tag: "button" },
+    { n: 9, find: 'aria-label="Manage the 3 citations"', tag: "button" },
   ],
   // What that door opens. The board is scanExempt, so only the sheet's own
   // controls and its scrim carry numbers; the three rows' name-buttons share
@@ -820,7 +820,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Mark</button>", tag: "button" },
     { n: 9, find: ">Sign comment</button>", tag: "button" },
     { n: 10, find: ">Back</button>", tag: "button" },
-    { n: 11, find: 'aria-label="Manage the citations"', tag: "button" },
+    { n: 11, find: 'aria-label="Manage the 3 citations"', tag: "button" },
   ],
   ComposeSealUploading: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },

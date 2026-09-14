@@ -4740,7 +4740,9 @@ when the thing to read back is a collection.
   numbers may never be. `ActsCard` grew the door row — a FACT row
   (label, value, count) whose whole box is the control, `PickedRow`'s
   rule said for the acts card: no chevron, no trailing word, the
-  accessible name (`Manage the citations`) saying what opens.
+  accessible name (`Manage the 3 citations`) saying what opens — and
+  carrying the count, because a name on a door replaces the door's
+  contents and a listener would otherwise trade the number for the verb.
 - **THE TRAILING COUNT IS THE CITATIONS, BARE** — `3` for three, the
   list's length and nothing else. The signature's own total is the
   card's footer and already says in words what it counts. The
