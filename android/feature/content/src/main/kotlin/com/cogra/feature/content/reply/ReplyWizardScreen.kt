@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -42,6 +43,9 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
+import com.cogra.domain.media.isAltTextTooLong
+import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
 import com.cogra.feature.content.wizard.LicenseSheet
@@ -379,6 +383,12 @@ internal fun ReplyWizardScreen(
                     onDone = onCloseSheet,
                     onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
                     video = describing.isVideo,
+                    cap = MAX_ALT_TEXT_CHARS,
+                    error = if (isAltTextTooLong(describing.altText)) {
+                        stringResource(R.string.content_error_alt_text_too_long, MAX_ALT_TEXT_CHARS)
+                    } else {
+                        null
+                    },
                     testTag = "reply_describe_sheet",
                 )
 

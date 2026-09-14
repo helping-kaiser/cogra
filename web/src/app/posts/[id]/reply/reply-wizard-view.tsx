@@ -43,6 +43,7 @@ import { commentAttachmentClaims } from "@/lib/compose/comment-media";
 import { COMMENT_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
 import {
+  advanceGate,
   commentBodyProblem,
   emptyReply,
   isVideoReply,
@@ -361,6 +362,10 @@ export function ReplyWizard({
   // ---- the frame -----------------------------------------------------------
 
   const blocked = sealGate(state);
+  // The composer's own Next, gated the way PickStep/CoverStep already gate
+  // the post wizard's — the reducer already refuses to advance past this
+  // (`advanceGate`'s existing check), so this only makes that refusal visible.
+  const composeGate = advanceGate(state);
   const title = state.step === "compose" ? "Reply" : "What you sign";
 
   return (
@@ -431,6 +436,7 @@ export function ReplyWizard({
             setRefusals((current) => current.filter((refusal) => refusal.id !== id))
           }
           onNext={() => dispatch({ type: "advance" })}
+          blocked={!composeGate.ok}
         />
       ) : (
         <ReplySealStep
@@ -485,10 +491,6 @@ export function ReplyWizard({
           if (describing !== null) dispatch({ type: "altText", id: describing, altText });
         }}
         video={isVideoReply(state)}
-        position={{
-          index: state.media.findIndex((asset) => asset.id === describing),
-          total: state.media.length,
-        }}
         testId="reply-describe-sheet"
       />
 

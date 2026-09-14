@@ -98,20 +98,30 @@ enum class HelpTopic(val title: String, val paragraphs: List<String>) {
         ),
     ),
 
-    /** The post's one-axis pad. */
-    WhereYouStand(
-        title = "Where you stand on it",
+    /**
+     * The post's one-axis pad.
+     *
+     * Transcribed from copy-voice.md's own entry, the parenthesised
+     * number and the two faces included: the guideline italicises
+     * `(+0.10)` as a `cg-exact` span, and this app draws no geek mode
+     * yet, so the text carries it as written.
+     */
+    YourOpinionOnYourPost(
+        title = "Your opinion on your post",
         paragraphs = listOf(
-            "Publishing also signs where you stand on your own post — for or " +
-                "against, from a gentle +0.10 by default.",
+            "Publishing also signs your opinion on your own post — for or " +
+                "against, from a gentle 🙂 (+0.10) by default.",
             "Your own post always reaches you in full, so only for-or-against is " +
-                "yours to set. Nothing is signed until Set. Prefer sliders or exact " +
+                "yours to set. The face is the reading: six of them run from 😠 at " +
+                "one end to 😍 at the other, and the one you see is wherever your " +
+                "number lands. Nothing is signed until Set. Prefer sliders or exact " +
                 "numbers? Swap the input in settings.",
         ),
     ),
 
     /**
-     * The reply's two-axis pad — its own topic, not [WhereYouStand].
+     * The reply's two-axis pad — its own topic, not
+     * [YourOpinionOnYourPost].
      *
      * A reply's stance is toward somebody else's post, so both axes are
      * the author's to pick; the post pad's text says the opposite

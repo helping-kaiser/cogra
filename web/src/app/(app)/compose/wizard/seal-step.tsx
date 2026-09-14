@@ -9,12 +9,13 @@
 // author stands, sensitivity — are the settings a reader might still want to
 // change with the cost in front of them.
 //
-// WHERE THE CANVAS AND THE CONTRACT DISAGREE, once.
+// THE STANCE IS ONE AXIS, AND IT IS A PAD RATHER THAN A SLIDER.
 //
-// ComposePad draws the stance as a two-axis pad. On a Publish record
-// `pInterest` is census-fixed at 1 and only `pDirected` is the author's to set,
-// so a second axis would be a control that does nothing. One slider is shown
-// instead, and that is reported rather than decided here.
+// On a Publish record `pInterest` is census-fixed at 1 and only `pDirected` is
+// the author's to set — your own post always reaches you in full — so the
+// square would offer a choice that is not one. `ComposePad` draws the line
+// that is left: a 260×72 field with its own ends named, parked over a wash
+// rather than riding a drawer.
 
 import type { ReactNode } from "react";
 
@@ -22,9 +23,11 @@ import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { ReadoutChip } from "@/lib/ui2/chip";
+import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
-import { StanceSlider } from "@/lib/ui/stance-slider";
+import { ValenceField } from "@/lib/ui2/compose/valence-field";
+import { OwnPickBlock, OwnStanceReadout } from "@/lib/ui/own-stance-readout";
 import { LicenseRows } from "@/lib/ui/license-rows";
 import { nearestAnchor } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
@@ -38,13 +41,16 @@ export type SealSheet = "none" | "license" | "stance" | "sensitive";
 export function SealStep({
   state,
   sheet,
+  stagedPDirected,
   blocked,
   busy,
   keyOnDevice,
   refusal,
   onSheet,
   onLicense,
-  onPDirected,
+  onStagedPDirected,
+  onSetStance,
+  onStanceHelp,
   onSensitive,
   onSensitiveReason,
   onHelp,
@@ -57,6 +63,8 @@ export function SealStep({
 }: {
   state: WizardState;
   sheet: SealSheet;
+  /** What the pad has under the finger — staged, not set, until Set. */
+  stagedPDirected: number;
   /** Why the seal is closed, or null when it is open. */
   blocked: string | null;
   busy: boolean;
@@ -64,7 +72,9 @@ export function SealStep({
   refusal: string | null;
   onSheet: (next: SealSheet) => void;
   onLicense: (next: License) => void;
-  onPDirected: (next: number) => void;
+  onStagedPDirected: (next: number) => void;
+  onSetStance: () => void;
+  onStanceHelp: () => void;
   onSensitive: (next: boolean) => void;
   onSensitiveReason: (next: string) => void;
   onHelp: () => void;
@@ -160,7 +170,10 @@ export function SealStep({
           <>
             <TermRow
               label="Where you stand on it"
-              value={<StanceReadout pair={{ pDirected: state.pDirected, pInterest: 1 }} />}
+              // ONE NUMBER, not a pair: the second is census-fixed rather
+              // than picked, and drawing it would show the author a figure
+              // nobody chose.
+              value={<OwnStanceReadout pDirected={state.pDirected} testId="wizard-stance-value" />}
               action="Adjust"
               testId="wizard-open-stance"
               onAction={() => onSheet("stance")}
@@ -268,27 +281,45 @@ export function SealStep({
         </div>
       </BottomSheet>
 
-      <BottomSheet
+      {/* ComposePad. Cancel and the wash stage nothing; only Set moves the
+          stance the seal reads — which is why the pad works on its own staged
+          value rather than writing through on every drag. */}
+      <ParkedPad
         open={sheet === "stance"}
         onClose={() => onSheet("none")}
-        title="Where you stand on it"
-        testId="wizard-stance-sheet"
+        ariaLabel="Your opinion on your post"
+        standoff="compose"
+        testId="wizard-stance-pad"
       >
-        <StanceSlider
-          label="How you stand"
-          value={state.pDirected}
-          onChange={onPDirected}
-          testId="wizard-stance-slider"
+        {/* The `?` sits in the corner, out of the readout's reading order,
+            and the readout keeps clear of it (`ComposePad.jsx:49-57`). */}
+        <div className="relative">
+          <span className="absolute top-0 right-0">
+            <HelpDot
+              ariaLabel="Your opinion on your post"
+              onOpen={onStanceHelp}
+              testId="wizard-stance-help"
+            />
+          </span>
+          <OwnPickBlock pDirected={stagedPDirected} testId="wizard-stance-pick" />
+        </div>
+        <ValenceField
+          value={stagedPDirected}
+          onChange={onStagedPDirected}
+          testId="wizard-stance"
         />
         <p className="m-0 text-label-small text-on-surface-variant">
           Your own post always reaches you in full.
         </p>
-        <div className="flex justify-end">
-          <PillButton testId="wizard-stance-done" onClick={() => onSheet("none")}>
+        <div className="flex justify-end gap-2">
+          <PillButton variant="text" testId="wizard-stance-cancel" onClick={() => onSheet("none")}>
+            Cancel
+          </PillButton>
+          <PillButton testId="wizard-stance-set" onClick={onSetStance}>
             Set
           </PillButton>
         </div>
-      </BottomSheet>
+      </ParkedPad>
 
       <SensitiveSheet
         open={sheet === "sensitive"}
@@ -317,9 +348,11 @@ function ActRow({
     <div className="flex min-h-11 items-center gap-2 border-b border-outline-variant">
       <span className="w-19 flex-none text-label-small text-on-surface-variant">{label}</span>
       <span className="min-w-0 flex-1 truncate text-body-medium">{detail}</span>
-      <span className="flex-none text-label-small text-on-surface-variant">
-        {count === 1 ? "1 action" : `${count} actions`}
-      </span>
+      {/* THE BARE NUMBER, as the board draws it (`ActsCard`'s `count`:
+          "1", "2"). The word form spent the row's width on a noun the
+          column already says, and what it spent came out of the value
+          slot — the drawn example name ellipsised on a real device. */}
+      <span className="flex-none text-label-small text-on-surface-variant">{count}</span>
     </div>
   );
 }

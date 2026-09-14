@@ -108,6 +108,8 @@ export function ComposeWizard({
   const [offered, setOffered] = useState<WizardState | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [sheet, setSheet] = useState<SealSheet>("none");
+  // The pad's own pick, staged until Set — Cancel and the wash stage nothing.
+  const [stagedPDirected, setStagedPDirected] = useState(state.pDirected);
   // Show all, and the describe sheet it can open. Describing holds an asset id
   // rather than an index so a remove or a reorder underneath it cannot silently
   // move the sheet onto a different picture.
@@ -723,6 +725,7 @@ export function ComposeWizard({
           onRetry={retry}
           onRemove={(id) => dispatch({ type: "unpick", id })}
           onNext={() => dispatch({ type: "advance" })}
+          blocked={!gate.ok}
         />
       )}
 
@@ -734,9 +737,20 @@ export function ComposeWizard({
           busy={busy}
           keyOnDevice={keyOnDevice}
           refusal={refusal}
-          onSheet={setSheet}
+          stagedPDirected={stagedPDirected}
+          onSheet={(next) => {
+            // Opening the pad starts it from the stance that is standing, so
+            // Cancel can put it back exactly.
+            if (next === "stance") setStagedPDirected(state.pDirected);
+            setSheet(next);
+          }}
           onLicense={(license) => dispatch({ type: "license", license })}
-          onPDirected={(pDirected) => dispatch({ type: "pDirected", pDirected })}
+          onStagedPDirected={setStagedPDirected}
+          onSetStance={() => {
+            dispatch({ type: "pDirected", pDirected: stagedPDirected });
+            setSheet("none");
+          }}
+          onStanceHelp={() => setHelp(HELP_TOPICS.yourOpinionOnYourPost)}
           onSensitive={(sensitive) => dispatch({ type: "sensitive", sensitive })}
           onSensitiveReason={(sensitiveReason) =>
             dispatch({ type: "sensitiveReason", sensitiveReason })

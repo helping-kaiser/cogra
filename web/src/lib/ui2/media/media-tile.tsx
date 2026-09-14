@@ -106,7 +106,7 @@ export function MediaTile({
   // probe lands, the true ratio takes over through the same tileRatio path a
   // probed clip already uses — no separate framing to keep in sync.
   const reserved = ratio ?? (isVideo && !probedRatio ? PORTRAIT_CAP : tileRatio(sourceRatio));
-  const objectFit = fit ?? fitFor(sourceRatio);
+  const objectFit = fit ?? fitFor();
   const alt = altText ?? "";
   // AN EXPLICIT `ratio` NAMES A FIXED FRAME — the comment scale's 220px
   // square, the gallery's secondary squares — and that frame is capped in
