@@ -21,21 +21,23 @@
 // the reachable count here is a LOWER BOUND on the true click-order space,
 // not the full one. Flagged in the lane report rather than guessed past.
 //
-// WIDTH, PRECISELY: real `figtree.ttf` advance summing — cmap (format 4) to
-// glyph id, hmtx to font-unit advance, scaled by the trigger's own
-// `--text-label-large` size (0.875rem = 14px) and letter-spacing
-// (0.00625rem = 0.1px/char). The committed TTF's default instance is the
-// variable font's wght=300 (Light) corner; the trigger itself renders at
-// wght 500 (`--text-label-large--font-weight`), which is wider. This is a
-// LOWER BOUND on true rendered width, same caveat item 60's own measurement
-// carried — no gvar/HVAR interpolation here, by the same zero-new-dependency
-// mechanical scope.
+// WIDTH, PRECISELY: real `figtree.ttf` advance summing AT THE TRIGGER'S OWN
+// RENDER WEIGHT — cmap (format 4) to glyph id, hmtx to the font-unit advance
+// of the default instance, then `fvar`/`avar`/`HVAR` to move that advance
+// from the shipped default (wght=300, the Light corner) to the 500 the
+// trigger actually renders at, scaled by `--text-label-large`'s size
+// (0.875rem = 14px) and letter-spacing (0.00625rem = 0.1px/char). Advance
+// instancing needs no glyph outlines and no new dependency: `HVAR` carries
+// the per-glyph advance deltas over the normalized axis, and `avar` the warp
+// that maps user coordinates onto it.
 //
 // Report-only: prints the census line and always exits 0 — "gaps are
 // reported, never failed" (check-flows.mjs's own idiom). It becomes a real
 // gate once item 64 rules a threshold to hold the tree to.
 //
 // Run from this directory: node report-summaries.mjs
+//   --print-metrics   emit the wght-500 advance table for FeedFilter.jsx
+//                     instead of the census (see the master's own note)
 
 import { readFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
@@ -89,10 +91,12 @@ const ds = loadMasters([
   join(root, "components/navigation/FeedFilter.jsx"),
 ]);
 
-// ---- figtree.ttf, parsed by hand: sfnt table directory, then just the two
-// tables a plain advance-width sum needs (`head` for unitsPerEm, `hhea` for
-// how many `hmtx` entries exist, `cmap` format 4 for codepoint → glyph id,
-// `hmtx` for the glyph's own advance). No glyph outlines are touched.
+// ---- figtree.ttf, parsed by hand: sfnt table directory, then just the
+// tables a per-character advance needs at a chosen weight (`head` for
+// unitsPerEm, `hhea` for how many `hmtx` entries exist, `cmap` format 4 for
+// codepoint → glyph id, `hmtx` for the default instance's advance, and
+// `fvar`/`avar`/`HVAR` to instance that advance at another point on the
+// weight axis). No glyph outlines are touched.
 const fontPath = join(root, "assets/fonts/figtree.ttf");
 const font = readFileSync(fontPath);
 
@@ -139,6 +143,133 @@ function parseCmapFormat4(buf, subtableOffset) {
   return map;
 }
 
+// ---- variable-font advance instancing, the spec's own four steps
+// (OpenType 1.9, "OpenType Font Variations Common Table Formats").
+//
+// 1. `fvar` declares the axis and its min/default/max in USER coordinates
+//    (wght 300 / 300 / 900 here — the shipped default is the Light corner).
+// 2. The user coordinate is NORMALIZED to −1…0…+1 against that triple, then
+//    warped by `avar`'s piecewise-linear segment map for the axis.
+// 3. `HVAR`'s ItemVariationStore holds, per glyph, a row of deltas — one per
+//    variation region — and each region contributes its delta scaled by how
+//    far the normalized coordinate sits inside its start/peak/end tent.
+// 4. The instanced advance is the `hmtx` advance plus that weighted sum.
+//
+// This is exactly what a shaping engine does to the advance; what it does
+// NOT do here is interpolate outlines (`gvar`), which advances never need.
+const F2DOT14 = 16384;
+
+function readAxes(buf, tables) {
+  const base = tables.fvar.offset;
+  const count = buf.readUInt16BE(base + 8);
+  const size = buf.readUInt16BE(base + 10);
+  const offset = base + buf.readUInt16BE(base + 4);
+  const axes = [];
+  for (let i = 0; i < count; i++) {
+    const rec = offset + i * size;
+    axes.push({
+      tag: buf.toString("ascii", rec, rec + 4),
+      min: buf.readInt32BE(rec + 4) / 65536,
+      def: buf.readInt32BE(rec + 8) / 65536,
+      max: buf.readInt32BE(rec + 12) / 65536,
+    });
+  }
+  return axes;
+}
+
+function normalizeCoord(axis, value) {
+  const clamped = Math.min(Math.max(value, axis.min), axis.max);
+  if (clamped === axis.def) return 0;
+  return clamped < axis.def ? -(axis.def - clamped) / (axis.def - axis.min) : (clamped - axis.def) / (axis.max - axis.def);
+}
+
+function readAvarMaps(buf, tables) {
+  if (!tables.avar) return null;
+  const base = tables.avar.offset;
+  const axisCount = buf.readUInt16BE(base + 6);
+  const maps = [];
+  let cursor = base + 8;
+  for (let i = 0; i < axisCount; i++) {
+    const pairCount = buf.readUInt16BE(cursor);
+    cursor += 2;
+    const pairs = [];
+    for (let j = 0; j < pairCount; j++) {
+      pairs.push([buf.readInt16BE(cursor) / F2DOT14, buf.readInt16BE(cursor + 2) / F2DOT14]);
+      cursor += 4;
+    }
+    maps.push(pairs);
+  }
+  return maps;
+}
+
+function applyAvar(maps, index, coord) {
+  const pairs = maps && maps[index];
+  if (!pairs || pairs.length < 2) return coord;
+  for (let i = 1; i < pairs.length; i++) {
+    const [fromPrev, toPrev] = pairs[i - 1];
+    const [from, to] = pairs[i];
+    if (coord >= fromPrev && coord <= from) {
+      return from === fromPrev ? to : toPrev + ((to - toPrev) * (coord - fromPrev)) / (from - fromPrev);
+    }
+  }
+  return coord;
+}
+
+function readItemVariationStore(buf, offset) {
+  const regionListOffset = offset + buf.readUInt32BE(offset + 2);
+  const dataCount = buf.readUInt16BE(offset + 6);
+
+  const regionAxisCount = buf.readUInt16BE(regionListOffset);
+  const regionCount = buf.readUInt16BE(regionListOffset + 2);
+  const regions = [];
+  let cursor = regionListOffset + 4;
+  for (let r = 0; r < regionCount; r++) {
+    const region = [];
+    for (let a = 0; a < regionAxisCount; a++) {
+      region.push({
+        start: buf.readInt16BE(cursor) / F2DOT14,
+        peak: buf.readInt16BE(cursor + 2) / F2DOT14,
+        end: buf.readInt16BE(cursor + 4) / F2DOT14,
+      });
+      cursor += 6;
+    }
+    regions.push(region);
+  }
+
+  const datas = [];
+  for (let i = 0; i < dataCount; i++) {
+    const dataOffset = offset + buf.readUInt32BE(offset + 8 + i * 4);
+    const itemCount = buf.readUInt16BE(dataOffset);
+    const wordDeltaCount = buf.readUInt16BE(dataOffset + 2);
+    const regionIndexCount = buf.readUInt16BE(dataOffset + 4);
+    const longWords = (wordDeltaCount & 0x8000) !== 0;
+    const wordCount = wordDeltaCount & 0x7fff;
+    const regionIndexes = [];
+    for (let j = 0; j < regionIndexCount; j++) regionIndexes.push(buf.readUInt16BE(dataOffset + 6 + j * 2));
+    const rowsOffset = dataOffset + 6 + regionIndexCount * 2;
+    const rowSize = wordCount * (longWords ? 4 : 2) + (regionIndexCount - wordCount) * (longWords ? 2 : 1);
+    datas.push({ itemCount, wordCount, longWords, regionIndexes, rowsOffset, rowSize });
+  }
+
+  return { regions, datas };
+}
+
+function regionScalar(region, coords) {
+  let scalar = 1;
+  for (let a = 0; a < region.length; a++) {
+    const { start, peak, end } = region[a];
+    const coord = coords[a] ?? 0;
+    let axisScalar;
+    if (peak === 0 || coord === peak) axisScalar = 1;
+    else if (coord <= start || coord >= end) axisScalar = 0;
+    else if (coord < peak) axisScalar = (coord - start) / (peak - start);
+    else axisScalar = (end - coord) / (end - peak);
+    scalar *= axisScalar;
+    if (scalar === 0) return 0;
+  }
+  return scalar;
+}
+
 function loadFont(buf) {
   const tables = readTableDirectory(buf);
   const unitsPerEm = buf.readUInt16BE(tables.head.offset + 18);
@@ -166,10 +297,68 @@ function loadFont(buf) {
   }
   const cmap = parseCmapFormat4(buf, chosenOffset ?? fallbackOffset);
 
+  const axes = readAxes(buf, tables);
+  const avarMaps = readAvarMaps(buf, tables);
+  const hvarBase = tables.HVAR.offset;
+  const store = readItemVariationStore(buf, hvarBase + buf.readUInt32BE(hvarBase + 4));
+  const advanceMappingOffset = buf.readUInt32BE(hvarBase + 8);
+
+  // With no advance mapping the glyph id indexes the first (and only)
+  // ItemVariationData directly; with one, a DeltaSetIndexMap splits the
+  // glyph's id into the (outer, inner) pair that addresses its delta row.
+  let deltaSetIndex;
+  if (advanceMappingOffset === 0) {
+    deltaSetIndex = (glyphId) => ({ outer: 0, inner: glyphId });
+  } else {
+    const mapBase = hvarBase + advanceMappingOffset;
+    const format = buf.readUInt8(mapBase);
+    const entryFormat = buf.readUInt8(mapBase + 1);
+    const mapCount = format === 0 ? buf.readUInt16BE(mapBase + 2) : buf.readUInt32BE(mapBase + 2);
+    const dataOffset = mapBase + (format === 0 ? 4 : 6);
+    const entrySize = ((entryFormat & 0x30) >> 4) + 1;
+    const innerBits = (entryFormat & 0x0f) + 1;
+    deltaSetIndex = (glyphId) => {
+      // Past the map's end every remaining glyph repeats the last entry.
+      const index = Math.min(glyphId, mapCount - 1);
+      let raw = 0;
+      for (let b = 0; b < entrySize; b++) raw = (raw << 8) | buf.readUInt8(dataOffset + index * entrySize + b);
+      return { outer: raw >>> innerBits, inner: raw & ((1 << innerBits) - 1) };
+    };
+  }
+
+  const deltaOf = (glyphId, coords) => {
+    const { outer, inner } = deltaSetIndex(glyphId);
+    const data = store.datas[outer];
+    if (!data || inner >= data.itemCount) return 0;
+    let cursor = data.rowsOffset + inner * data.rowSize;
+    let delta = 0;
+    for (let i = 0; i < data.regionIndexes.length; i++) {
+      let value;
+      if (i < data.wordCount) {
+        value = data.longWords ? buf.readInt32BE(cursor) : buf.readInt16BE(cursor);
+        cursor += data.longWords ? 4 : 2;
+      } else {
+        value = data.longWords ? buf.readInt16BE(cursor) : buf.readInt8(cursor);
+        cursor += data.longWords ? 2 : 1;
+      }
+      if (value === 0) continue;
+      const scalar = regionScalar(store.regions[data.regionIndexes[i]], coords);
+      if (scalar !== 0) delta += scalar * value;
+    }
+    return delta;
+  };
+
+  const coordsFor = (userCoords) => axes.map((axis, i) => applyAvar(avarMaps, i, normalizeCoord(axis, userCoords[axis.tag] ?? axis.def)));
+
   return {
     unitsPerEm,
-    advanceOf: (glyphId) => (glyphId < advances.length ? advances[glyphId] : advances[advances.length - 1]),
+    axes,
     cmap,
+    advanceOf: (glyphId, coords) => {
+      const base = glyphId < advances.length ? advances[glyphId] : advances[advances.length - 1];
+      return base + deltaOf(glyphId, coords);
+    },
+    coordsFor,
   };
 }
 
@@ -179,27 +368,11 @@ const font_ = loadFont(font);
 // (components/navigation/FeedFilter.jsx) sets `fontSize:
 // var(--text-label-large)` and inherits `fontWeight:
 // var(--text-label-large--font-weight)` — 0.875rem / 500 / 0.00625rem
-// (tokens/typography.css). 500 is above the shipped TTF's own wght=300
-// default instance — see the file header's lower-bound note.
-const FONT_SIZE_PX = 0.875 * 16;
-const LETTER_SPACING_PX = 0.00625 * 16;
-
-function measure(text) {
-  let units = 0;
-  const missing = [];
-  for (const ch of text) {
-    const cp = ch.codePointAt(0);
-    const glyphId = font_.cmap.get(cp);
-    if (glyphId === undefined) {
-      missing.push(ch);
-      continue;
-    }
-    units += font_.advanceOf(glyphId);
-  }
-  const charCount = [...text].length;
-  const widthPx = (units / font_.unitsPerEm) * FONT_SIZE_PX + charCount * LETTER_SPACING_PX;
-  return { widthPx, missing };
-}
+// (tokens/typography.css). 500 is the weight instanced above, not the
+// shipped TTF's own wght=300 default, so these are the widths the reader
+// actually sees.
+const RENDER_WEIGHT = 500;
+const renderCoords = font_.coordsFor({ wght: RENDER_WEIGHT });
 
 // ---- enumerate the reachable value space — see the file header for what
 // "reachable" means here (declared-order subsets, not click-order
@@ -233,7 +406,50 @@ for (const kinds of kindsSubsets) {
   }
 }
 
+// ---- `--print-metrics`: the master's advance table, regenerated from the
+// font. The master cannot read a TTF (it renders in the browser too), so it
+// carries the instanced advances as data; this is where that data comes
+// from, and the census below checks the two still agree.
+if (process.argv.includes("--print-metrics")) {
+  const alphabet = [];
+  for (let cp = 0x20; cp <= 0x7e; cp++) alphabet.push(String.fromCodePoint(cp));
+  alphabet.push("·");
+  const advances = alphabet.map((ch) => {
+    const glyphId = font_.cmap.get(ch.codePointAt(0));
+    if (glyphId === undefined) throw new Error(`report-summaries.mjs: figtree.ttf has no glyph for U+${ch.codePointAt(0).toString(16)}`);
+    return Math.round(font_.advanceOf(glyphId, renderCoords) * 100) / 100;
+  });
+  const literal = JSON.stringify(alphabet.join(""));
+  console.log(`const TRIGGER_ALPHABET =\n  ${literal};`);
+  console.log("const TRIGGER_ADVANCES = [");
+  for (let i = 0; i < advances.length; i += 10) {
+    console.log("  " + advances.slice(i, i + 10).map((n) => n.toFixed(2)).join(", ") + ",");
+  }
+  console.log("];");
+  process.exit(0);
+}
+
 // ---- measure every reachable summary once.
+const FONT_SIZE_PX = 0.875 * 16;
+const LETTER_SPACING_PX = 0.00625 * 16;
+
+function measure(text) {
+  let units = 0;
+  const missing = [];
+  for (const ch of text) {
+    const cp = ch.codePointAt(0);
+    const glyphId = font_.cmap.get(cp);
+    if (glyphId === undefined) {
+      missing.push(ch);
+      continue;
+    }
+    units += font_.advanceOf(glyphId, renderCoords);
+  }
+  const charCount = [...text].length;
+  const widthPx = (units / font_.unitsPerEm) * FONT_SIZE_PX + charCount * LETTER_SPACING_PX;
+  return { widthPx, missing };
+}
+
 const TRIGGER_CEILING_PX = 198; // the trigger's own maxWidth: 14rem text room (backlog item 60)
 const BAND_CEILING_PX = 154; // the CograBand's actual room for the trigger (backlog items 60, 64)
 
