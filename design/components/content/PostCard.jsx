@@ -92,6 +92,7 @@ export function PostCard({
   showStance = true,
   stanceOpen = false,
   stancePadInset = 16,
+  stanceDefaultPick,
   score,
   onOpenScore,
   comments,
@@ -377,10 +378,11 @@ export function PostCard({
               tap ever" is a fact about the reader, and a card in a feed of twenty
               cannot know it. Default true so a lone card teaches nothing.
 
-              `stanceOpen` and `stancePadInset` belong to the shell for the same
-              reason, and they are PASS-THROUGHS rather than decisions: whether
-              the pad is already bloomed, and how far its parked edge sits off
-              the bottom, are facts about the screen the card is standing on —
+              `stanceOpen`, `stancePadInset` and `stanceDefaultPick` belong to
+              the shell for the same reason, and they are PASS-THROUGHS rather
+              than decisions: whether the pad is already bloomed, how far its
+              parked edge sits off the bottom, and where the knob starts are
+              facts about the screen and the moment the card is standing in —
               a board drawing the pad open over a shell with a bottom bar clears
               the bar, one without a bar does not. The card forwards them and
               invents nothing; the pad it opens is `StanceControl`'s own, whole,
@@ -394,6 +396,7 @@ export function PostCard({
               onCommit={onCommit}
               defaultOpen={stanceOpen}
               padInset={stancePadInset}
+              defaultPick={stanceDefaultPick}
             />
           )}
           {score !== undefined && (

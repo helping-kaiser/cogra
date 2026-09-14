@@ -70,6 +70,13 @@ export interface PostCardProps {
    */
   stancePadInset?: number;
   /**
+   * Where the pad's knob starts. Pass-through to `StanceControl`'s
+   * `defaultPick`. A board drawing an open pad gives one rather than letting
+   * the knob rest at the origin: the twenty-anchor table has no entry there,
+   * so an origin pick reads as its nearest neighbour.
+   */
+  stanceDefaultPick?: { pDirected: number; pInterest: number };
+  /**
    * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
    * explanation is item 13's Post score drill-down, still undesigned.
