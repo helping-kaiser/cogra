@@ -1,39 +1,48 @@
-// Report-only census of the feed-filter trigger's truncation exposure
-// (backlog item 60, option A — ruled 2026-09-14; measurement method from the
-// gate-guards round's item-60 finding, item 64).
+// The gate on the feed-filter trigger's width, and the census behind it
+// (backlog items 60 + 64, ruled 2026-09-14).
 //
 // `feedFilterSummary` (FeedFilter.jsx) composes the trigger's words from five
 // independent axes — kinds, forms, order, seen, also — and collapses to a
-// change-count once the spelled sentence outgrows its own 26-char budget.
-// Nothing here re-implements that: every candidate summary is produced by
-// calling the real master function, the way check-readouts.mjs calls the
-// real formatters instead of re-deriving their output.
+// change-count once the spelled sentence outgrows the band's 154px. Nothing
+// here re-implements that: every candidate summary is produced by calling the
+// real master function and measured with the master's own
+// `measureTriggerText`, the way check-readouts.mjs calls the real formatters
+// instead of re-deriving their output. What this stage owns is the font: it
+// re-derives the master's advance table from `figtree.ttf` and fails if the
+// two have drifted, so the budget and the ruler can never disagree.
 //
 // WHAT "REACHABLE" MEANS HERE: the full cross product of each axis's own
 // value space (kinds/forms/also as subsets of their declared list, in
 // DECLARED order; order and seen as their two states each) — every axis is
 // independently settable through the sheet, so every combination is a state
-// a reader can leave the sheet in. Two axes (kinds, forms, also) also carry
-// an ORDER a reader could produce by clicking in a different sequence
-// (`toggle` appends by click order, and the trigger's head capitalizes only
-// the first of two kinds) — this census does not enumerate click-order
-// permutations, only the declared-order canonical member of each subset, so
-// the reachable count here is a LOWER BOUND on the true click-order space,
-// not the full one. Flagged in the lane report rather than guessed past.
+// a reader can leave the sheet in. Three axes also carry an ORDER a reader
+// could produce by clicking in a different sequence (`toggle` appends by
+// click order), and this census enumerates only the declared-order member of
+// each subset. That is EXACT for what the gate measures, not a sample:
+//   - the head no longer spells more than one kind, so a kinds permutation
+//     cannot change it (one label, or "N kinds");
+//   - forms and also join their labels into one extra, and a permutation
+//     reorders the same characters — an advance sum is commutative, so every
+//     permutation of a subset measures to the same width, collapses at the
+//     same point, and passes or fails this gate together.
+// Permutations still spell distinct STRINGS, so the count below is a lower
+// bound on distinct readings; every width they can produce is measured.
 //
 // WIDTH, PRECISELY: real `figtree.ttf` advance summing AT THE TRIGGER'S OWN
 // RENDER WEIGHT — cmap (format 4) to glyph id, hmtx to the font-unit advance
 // of the default instance, then `fvar`/`avar`/`HVAR` to move that advance
 // from the shipped default (wght=300, the Light corner) to the 500 the
 // trigger actually renders at, scaled by `--text-label-large`'s size
-// (0.875rem = 14px) and letter-spacing (0.00625rem = 0.1px/char). Advance
+// (0.875rem = 14px) and the tracking term the master documents. Advance
 // instancing needs no glyph outlines and no new dependency: `HVAR` carries
 // the per-glyph advance deltas over the normalized axis, and `avar` the warp
 // that maps user coordinates onto it.
 //
-// Report-only: prints the census line and always exits 0 — "gaps are
-// reported, never failed" (check-flows.mjs's own idiom). It becomes a real
-// gate once item 64 rules a threshold to hold the tree to.
+// A GATE, ABSOLUTELY (item 60 closed by item 64's rule): any reachable
+// summary over the band's budget exits nonzero. The budget is the master's
+// own collapse point, so an overflow is never a wide word — it is the
+// collapse failing, and no judgment is owed before failing on it. The census
+// line prints either way; it is the useful reporting the stage started as.
 //
 // Run from this directory: node report-summaries.mjs
 //   --print-metrics   emit the wght-500 advance table for FeedFilter.jsx
@@ -364,15 +373,67 @@ function loadFont(buf) {
 
 const font_ = loadFont(font);
 
-// The trigger's own type: FilterTrigger's `reading` span
+// The trigger's own type: FilterTrigger's `reading`
 // (components/navigation/FeedFilter.jsx) sets `fontSize:
-// var(--text-label-large)` and inherits `fontWeight:
-// var(--text-label-large--font-weight)` — 0.875rem / 500 / 0.00625rem
+// var(--text-label-large)` and `fontWeight:
+// var(--text-label-large--font-weight)` — 0.875rem / 500
 // (tokens/typography.css). 500 is the weight instanced above, not the
 // shipped TTF's own wght=300 default, so these are the widths the reader
 // actually sees.
 const RENDER_WEIGHT = 500;
 const renderCoords = font_.coordsFor({ wght: RENDER_WEIGHT });
+const FONT_SIZE_PX = 0.875 * 16;
+const LETTER_SPACING_PX = 0.00625 * 16;
+
+// ---- `--print-metrics`: the master's advance table, written from the font.
+// `feedFilterSummary` decides what fits by measuring, and it composes in the
+// browser too, where no TTF can be read — so the master carries the instanced
+// advances as data. This is where that data comes from; the check below is
+// what keeps it honest.
+const TABLE_ALPHABET = [];
+for (let cp = 0x20; cp <= 0x7e; cp++) TABLE_ALPHABET.push(String.fromCodePoint(cp));
+TABLE_ALPHABET.push("·");
+
+const advanceUnits = (character) => {
+  const glyphId = font_.cmap.get(character.codePointAt(0));
+  if (glyphId === undefined) throw new Error(`report-summaries.mjs: figtree.ttf has no glyph for U+${character.codePointAt(0).toString(16).toUpperCase()}`);
+  return Math.round(font_.advanceOf(glyphId, renderCoords) * 100) / 100;
+};
+
+if (process.argv.includes("--print-metrics")) {
+  const advances = TABLE_ALPHABET.map(advanceUnits);
+  console.log(`const TRIGGER_ALPHABET =\n  ${JSON.stringify(TABLE_ALPHABET.join(""))};`);
+  console.log("const TRIGGER_ADVANCES = [");
+  for (let i = 0; i < advances.length; i += 10) {
+    console.log("  " + advances.slice(i, i + 10).map((n) => n.toFixed(2)).join(", ") + ",");
+  }
+  console.log("];");
+  process.exit(0);
+}
+
+// ---- ONE MEASUREMENT, TWO READERS. The census does not measure for itself:
+// it asks the master's own `measureTriggerText` how wide a summary is, the way
+// it asks `feedFilterSummary` what the summary says. What it checks instead is
+// that the master's table still IS the font — each character re-derived from
+// `figtree.ttf` at the render weight and compared against what the master
+// makes of that character alone. A table drifting from the file it came from
+// is a gate failure, not a rounding curiosity: it would move the collapse
+// point on every board at once.
+const drifted = [];
+for (const character of TABLE_ALPHABET) {
+  const expected = (advanceUnits(character) / font_.unitsPerEm) * FONT_SIZE_PX + LETTER_SPACING_PX;
+  const actual = ds.measureTriggerText(character);
+  if (Math.abs(actual - expected) > 1e-9) drifted.push({ character, expected, actual });
+}
+if (drifted.length > 0) {
+  const shown = drifted.slice(0, 8).map((d) => `'${d.character}' ${d.actual.toFixed(4)}px vs the font's ${d.expected.toFixed(4)}px`);
+  console.error(
+    `report-summaries: FeedFilter.jsx's advance table no longer matches figtree.ttf at wght ${RENDER_WEIGHT} — ` +
+      `${drifted.length} of ${TABLE_ALPHABET.length} characters drifted (${shown.join("; ")}${drifted.length > 8 ? "; …" : ""}). ` +
+      `Regenerate it with \`node report-summaries.mjs --print-metrics\` and paste the block into the master.`,
+  );
+  process.exit(1);
+}
 
 // ---- enumerate the reachable value space — see the file header for what
 // "reachable" means here (declared-order subsets, not click-order
@@ -406,78 +467,60 @@ for (const kinds of kindsSubsets) {
   }
 }
 
-// ---- `--print-metrics`: the master's advance table, regenerated from the
-// font. The master cannot read a TTF (it renders in the browser too), so it
-// carries the instanced advances as data; this is where that data comes
-// from, and the census below checks the two still agree.
-if (process.argv.includes("--print-metrics")) {
-  const alphabet = [];
-  for (let cp = 0x20; cp <= 0x7e; cp++) alphabet.push(String.fromCodePoint(cp));
-  alphabet.push("·");
-  const advances = alphabet.map((ch) => {
-    const glyphId = font_.cmap.get(ch.codePointAt(0));
-    if (glyphId === undefined) throw new Error(`report-summaries.mjs: figtree.ttf has no glyph for U+${ch.codePointAt(0).toString(16)}`);
-    return Math.round(font_.advanceOf(glyphId, renderCoords) * 100) / 100;
-  });
-  const literal = JSON.stringify(alphabet.join(""));
-  console.log(`const TRIGGER_ALPHABET =\n  ${literal};`);
-  console.log("const TRIGGER_ADVANCES = [");
-  for (let i = 0; i < advances.length; i += 10) {
-    console.log("  " + advances.slice(i, i + 10).map((n) => n.toFixed(2)).join(", ") + ",");
-  }
-  console.log("];");
-  process.exit(0);
-}
-
-// ---- measure every reachable summary once.
-const FONT_SIZE_PX = 0.875 * 16;
-const LETTER_SPACING_PX = 0.00625 * 16;
-
-function measure(text) {
-  let units = 0;
-  const missing = [];
-  for (const ch of text) {
-    const cp = ch.codePointAt(0);
-    const glyphId = font_.cmap.get(cp);
-    if (glyphId === undefined) {
-      missing.push(ch);
-      continue;
-    }
-    units += font_.advanceOf(glyphId, renderCoords);
-  }
-  const charCount = [...text].length;
-  const widthPx = (units / font_.unitsPerEm) * FONT_SIZE_PX + charCount * LETTER_SPACING_PX;
-  return { widthPx, missing };
-}
-
+// ---- measure every reachable summary once, with the master's own stick.
 const TRIGGER_CEILING_PX = 198; // the trigger's own maxWidth: 14rem text room (backlog item 60)
-const BAND_CEILING_PX = 154; // the CograBand's actual room for the trigger (backlog items 60, 64)
+const BAND_CEILING_PX = ds.BAND_CEILING_PX; // the band's room for it, and the master's budget
 
 let overTrigger = 0;
-let overBand = 0;
+const overBand = [];
 let widestText = "";
 let widestPx = -1;
-const missingGlyphs = new Set();
+const unknownCharacters = new Set();
+const tableCharacters = new Set(TABLE_ALPHABET);
 
 for (const text of summaries) {
-  const { widthPx, missing } = measure(text);
-  for (const ch of missing) missingGlyphs.add(ch);
+  for (const character of text) if (!tableCharacters.has(character)) unknownCharacters.add(character);
+  const widthPx = ds.measureTriggerText(text);
   if (widthPx > TRIGGER_CEILING_PX) overTrigger++;
-  if (widthPx > BAND_CEILING_PX) overBand++;
+  if (widthPx > BAND_CEILING_PX) overBand.push({ text, widthPx });
   if (widthPx > widestPx) {
     widestPx = widthPx;
     widestText = text;
   }
 }
 
-if (missingGlyphs.size > 0) {
-  console.log(`note report-summaries: figtree.ttf has no glyph for: ${[...missingGlyphs].map((c) => `"${c}"`).join(", ")} — those characters measured as 0px`);
+// A summary reaching outside the checked alphabet measures by the table's
+// widest character — safe, but no longer verified against the font.
+if (unknownCharacters.size > 0) {
+  console.error(
+    `report-summaries: a reachable summary uses characters the checked table does not carry: ${[...unknownCharacters].map((c) => `'${c}'`).join(", ")} — ` +
+      `widen TABLE_ALPHABET and regenerate the master's block with \`node report-summaries.mjs --print-metrics\`.`,
+  );
+  process.exit(1);
 }
 
 const M = summaries.size;
 console.log(
   `${overTrigger} of ${M} reachable summaries exceed the trigger's ${TRIGGER_CEILING_PX}px; ` +
-    `${overBand} of ${M} exceed the band's ${BAND_CEILING_PX}px; ` +
+    `${overBand.length} of ${M} exceed the band's ${BAND_CEILING_PX}px; ` +
     `widest: '${widestText}' at ${widestPx.toFixed(1)}px`,
 );
+
+// ---- THE GATE (backlog items 60 + 64). The band's budget is the master's
+// own collapse point, so a summary past it is not a wide string — it is the
+// collapse failing to fire, and the pill drawing words nobody can read.
+// Nothing here is a judgment call, which is why it exits nonzero.
+if (overBand.length > 0) {
+  const shown = overBand
+    .sort((a, b) => b.widthPx - a.widthPx)
+    .slice(0, 5)
+    .map(({ text, widthPx }) => `'${text}' at ${widthPx.toFixed(1)}px`);
+  console.error(
+    `report-summaries: ${overBand.length} of ${M} reachable filter summaries exceed the band's ${BAND_CEILING_PX}px — ` +
+      `${shown.join("; ")}${overBand.length > 5 ? "; …" : ""}. ` +
+      `The trigger cannot draw them: widen the band's budget or shorten what the summary spells (FeedFilter.jsx).`,
+  );
+  process.exit(1);
+}
+
 console.log(`report-summaries: ${M} reachable summaries measured in ${Date.now() - t0} ms`);
