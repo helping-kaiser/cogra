@@ -2139,7 +2139,8 @@ carries Ada's face beside the attachment and the avatar crop it
 already served. Eight images remain (`clip-lakeside`,
 `comment-camera`, `gallery-grapes`, `gallery-honey`, `gallery-market`,
 `gallery-veg`, `inviter`, `post-photo`) and the canvas holds 198
-files. Six needs a ruling rather than a merge: the gallery's four
+files — 199 once `ProfileDeletedMenu` took the slot that freed, one
+under the ceiling. Six needs a ruling rather than a merge: the gallery's four
 frames are four distinct foods under one crop shape, the two faces sit
 side by side on the weighted-accounts list, and `clip-lakeside` is the
 9:16 crop case the stream and viewer show whole.
