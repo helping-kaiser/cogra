@@ -692,6 +692,11 @@ four quadrants are legitimate.
   anchors by Euclidean distance — dense in the for-it-and-want-it
   quadrant, sparse at the extremes. `(0, 0)` never speaks through the
   table: it gets 🤷.
+- **A pick with only one axis reads through `VALENCE_SIX`**, the
+  pure-valence spine of the twenty — six ruled bands over `pDirected`
+  alone, for the own-post pad and the seal row that states what it
+  picked. A nearest-of-twenty lookup cannot answer for a value that
+  names no pair.
 - **Where the anchors sit is recorded on the anchor-map card**
   (`components/stance/anchor-map.card.html`) — the twenty on the
   two-axis field and the six pure-valence ones on the strip, each at its
@@ -1718,9 +1723,16 @@ entry first". What stands:
   `nearestTagAnchor`, `padPercentOf` — so a moved value, a hyphen
   where §3 rules U+2212, or a spoken reading left behind is a
   failure. A seventh hand-spelled readout anywhere in `screens/` fails
-  too: unchecked is not a state a literal gets to be in. Full
-  pipeline: `node bundle.mjs && node render-screens.mjs &&
-  node gen-maps.mjs && node check-flows.mjs && node check-readouts.mjs`.
+  too: unchecked is not a state a literal gets to be in.
+- **`_build/report-summaries.mjs` is report-only** (item 60, option A):
+  it enumerates the feed-filter trigger's reachable summary strings
+  (`feedFilterSummary`, `FeedFilter.jsx`) and measures each by real
+  `figtree.ttf` advance summing, printing how many exceed the
+  trigger's own 198px text room and the band's tighter 154px against
+  the total — never failing on what it finds, until item 64 rules a
+  threshold to hold the tree to. Full pipeline: `node bundle.mjs &&
+  node render-screens.mjs && node gen-maps.mjs && node check-flows.mjs
+  && node check-readouts.mjs && node report-summaries.mjs`.
 - **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
   & Wallet, Feed & Search, Comments, Compose, Media + Patterns; the
   Profile page joined 2026-09-01 — 699 edges over all 93 boards, no
@@ -2597,8 +2609,8 @@ of these and nothing else.
   and `PROVENANCE_TIERS` carry the readings and their hints, so the
   sheet keeps its own layout — one axis per section, one reading per
   row — and cannot say a shorter version of what a license promises.
-- **The one-axis pad names a face the table has**: at +0.30 the
-  nearest `STANCE_ANCHORS` row is the first, 🙂 "Nice".
+- **The one-axis pad names a face the table has**:
+  `nearestValenceAnchor(+0.10)` is 🙂 "Nice".
 - **A component never states a raw type value** (§7). The quiet note
   and the acts footer take `--text-label-small--letter-spacing`, and
   the label-small line gains 0.1px of tracking on 32 boards.
@@ -4451,12 +4463,12 @@ needs.
   free.
 - **Two rungs of point, and `secondaryContainer` is not one.** Dark
   `secondaryContainer` is #743918, which sinks into the dark ground —
-  so `SkyField`'s mid-weight points come out dimmest exactly where
-  they should read brightest. The ceremony spends `outline` (far) and
+  a mid-weight point drawn in it comes out dimmest exactly where it
+  should read brightest. Every sky spends `outline` (far) and
   `primaryContainer` (near, and the same #ef6c1a in both themes),
-  plus `primary` for the reader. **The same inversion is latent in
-  `SkyField`** and is reported, not fixed here: fixing it moves the
-  Explore board.
+  plus `primary` for the point that outranks them; `SkyField` and the
+  ceremony share the rule, so size and colour climb together on both
+  grounds.
 - **You are marked as a vantage, not ranked as a star.** The reader's
   point is `primary` with a hairline halo. It is deliberately not the
   biggest point: in the Sky size means "your own paths to it", and
@@ -4596,12 +4608,11 @@ recorded rather than drawn.
   page and every card the actor authored say the same thing, and the dot
   stands in the actions row at `placement="row"` — the band law, and the
   room Message vacated is exactly where the page's rare acts belong.
-- **The sheet it opens is recorded, not boarded.** It is `ProfileMenu`
-  without Mention, its hide row on the redacted wording — three rows of
-  four already on the canvas, which is the follow-up bundle's own test
-  for a board that teaches nothing. The canvas is also at the editor's
-  200-file ceiling (item 62), so the entry it would cost is not there to
-  spend. `ProfileDeleted`/11 carries the gap that says so.
+- **The sheet it opens is `ProfileDeletedMenu`.** `ProfileMenu` without
+  Mention, its hide row on the redacted wording. Both boards draw one
+  husk — `ProfileDeletedBody`, shared the way `ProfileOtherBody` is —
+  so the pair differs by the sheet alone and the page cannot drift
+  between them.
 - **The comment menu carries no hide row, and that is deliberate**
   (jakob: "he clicks the profile of the commenter and hides from
   there"). Hiding is an act on an ACTOR, and a comment is the one
@@ -4650,6 +4661,48 @@ recorded rather than drawn.
   pair — and the profile flow map grew 3653 → **3709** to hold the new
   edge's line.
 
+### The valence-six round — 2026-09-14
+
+jakob's three rulings on the one-axis pad, taken together: the six
+faces a pick with no second axis can reach become a real table, the
+pad's default moves to the number the rest of the system already
+names, and the seal stops showing a value nobody set.
+
+- **THE ONE-AXIS TABLE IS `VALENCE_SIX`** (jakob), promoted out of the
+  anchor-map card into `StanceReadout.jsx` beside the twenty: 😠 🙁 😕
+  🙂 😊 😍 at ±0.90, ±0.55 and ±0.15, with glyph, word and position
+  read from `STANCE_ANCHORS` so the six are six OF the twenty.
+  `nearestValenceAnchor(pDirected)` is the lookup, and the card now
+  draws its strip from the master rather than from a copy.
+- **THE BANDS ARE WRITTEN, AND TWO EDGES ARE RULED.** The six bands
+  are half-open intervals whose edges are the midpoints between
+  neighbouring anchors, spelled rather than computed — derived at
+  runtime the first comes out as −0.7250000000000001, and a band edge
+  that depends on the order of a multiply is a face that depends on
+  the platform. At a midpoint the MILDER face wins, the one nearer
+  zero (±0.35 and ±0.725), and exactly 0.00 reads 🙂. Six monotone
+  bands cover the closed axis; every comparison is a `<` or an `===`.
+- **THE OWN-POST DEFAULT IS +0.10**, the value the rest of the system
+  already names. `ComposePad` re-draws at it through the masters' own
+  helpers — `formatDimension(+0.10)`, `nearestValenceAnchor(+0.10)`
+  reading 🙂 "Nice", and the knob at `padPercentOf(+0.10)`, 55% of the
+  field.
+- **AN OPINION ON YOUR OWN POST IS ONE NUMBER** (jakob: "the second
+  number isn't yours to set on your own post"). A post always reaches
+  its author in full, so the seal's own-opinion row draws
+  `OwnStanceReadout` — the same line as `StanceReadout`, a shorter
+  number — and the three boards that spell that seal all take it. A
+  citation's row keeps its pair: both of its values are picked.
+- **THE GATE CHECKS THE ONE-AXIS FACE.** `check-readouts` reported it
+  as an unverifiable note while no table answered for a pick that
+  names no pair; the note is gone and the face is an assertion like
+  the other five sites'.
+- **The gate**: boards hold at **190**, the canvas at **199 files**,
+  edges at **1342**, gaps at **43**, flows at **63/60/3**. Seven boards
+  re-rendered behind the two readouts — `ComposePad` and the six that
+  draw a compose seal (`ComposeSeal`, `ComposeSealUploading`,
+  `ComposeLicense`, `ComposeSensitive`, `HelpDialog`, `NetworkError`).
+
 ## 14. Index
 
 **Root**
@@ -4664,10 +4717,10 @@ recorded rather than drawn.
   `_ds_manifest.json` is the claude.ai Design app's own metadata and is
   refreshed only by that app, on an explicit sync-back.
 - `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
-  `gen-maps.mjs`, `check-flows.mjs`, `check-readouts.mjs` — the
-  canonical-canvas pipeline
+  `gen-maps.mjs`, `check-flows.mjs`, `check-readouts.mjs`,
+  `report-summaries.mjs` — the canonical-canvas pipeline
   (§13, *Canvas pages and flows*): render the screens, stamp the flow
-  numbers, generate the maps, gate the result. Run all five after any
+  numbers, generate the maps, gate the result. Run all six after any
   screen, component, or graph.json edit. A screen whose state is not a
   portrait phone exports `FRAME` and the shell builds that artboard
   instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
