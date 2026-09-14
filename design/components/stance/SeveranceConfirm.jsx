@@ -16,7 +16,7 @@ import { nearestAnchor, severanceParts, formatStancePair, formatStanceWords, SR_
 //
 // THE RAW TOTAL LEADS. §8.3 requires the raw sums on every surface that explains
 // cost, because they are what a walk back to zero actually walks — but stating the
-// clipped fold first and the raw sum second reads as broken arithmetic ("my stance
+// clipped fold first and the raw sum second reads as broken arithmetic ("my opinion
 // is +1.00, so why does walking it back take +1.40?"). The total is what the
 // reader built up; the cap is what routing reads of it. In that order it explains
 // itself.
@@ -79,7 +79,7 @@ export function SeveranceConfirm({
       </p>
       {/* The RAW total leads and the cap is derived from it. The other order — the
           fold first, the sum second — reads as arithmetic that does not work: "my
-          stance is +1.00, so why does walking it back take +1.40?" */}
+          opinion is +1.00, so why does walking it back take +1.40?" */}
       {read.sentence !== undefined ? (
         <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{read.sentence}</p>
       ) : (
