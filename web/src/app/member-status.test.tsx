@@ -166,14 +166,20 @@ describe("MemberStatus", () => {
       fireEvent.click(await screen.findByTestId("home_reciprocate"));
       expect(await screen.findByTestId("home_reciprocated")).toBeInTheDocument();
 
+      // The confirmation's node reaches the DOM one commit before the effect
+      // that arms its dismissal timer, so a synchronous jump can advance past
+      // a timer that does not exist yet — and the one armed a beat later then
+      // starts its four seconds from the far side of the jump. The async
+      // advance yields to the event loop as it moves the clock, so a timer
+      // armed inside the window still fires within it.
       await act(async () => {
-        vi.advanceTimersByTime(SNACKBAR_MS + 1);
+        await vi.advanceTimersByTimeAsync(SNACKBAR_MS + 1);
       });
-      // With shouldAdvanceTime the dismissal timer can fire a beat after
-      // the manual advance on a slow runner — poll instead of asserting
-      // the very next tick.
-      await waitFor(() =>
-        expect(screen.queryByTestId("home_reciprocated")).not.toBeInTheDocument(),
+      // The poll's own budget is fake time: its 1000ms default cannot outlast
+      // a dismissal window that is four times longer.
+      await waitFor(
+        () => expect(screen.queryByTestId("home_reciprocated")).not.toBeInTheDocument(),
+        { timeout: SNACKBAR_MS * 2 },
       );
       expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument();
     } finally {

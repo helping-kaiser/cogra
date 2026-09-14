@@ -19,12 +19,19 @@ import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
 /**
- * Material's three buttons and no others (design/readme.md §7): [Filled] for
+ * Material's three buttons (design/readme.md §7) plus [Inverse]: [Filled] for
  * the one committing action on a surface, [Outlined] for a secondary action,
  * [Text] for a tertiary one. Both unfilled variants put `primary` on the
  * *label* — the label carries the emphasis, not the border.
+ *
+ * [Inverse] is not a fourth emphasis: it is the filled button standing on a
+ * TONAL PANEL instead of the page — the key-absent notice is a
+ * `tertiaryContainer` block, and a `primary` fill inside it is a second
+ * colour arguing with the panel's own, so there the fill takes the panel's
+ * own pair turned over (`onTertiaryContainer` as the fill, `tertiaryContainer`
+ * as the label). Use it only inside such a panel (Button.jsx:10-17).
  */
-enum class ButtonKind { Filled, Outlined, Text }
+enum class ButtonKind { Filled, Outlined, Text, Inverse }
 
 /**
  * A pill's two sizes (design/readme.md §13).
@@ -103,6 +110,18 @@ fun CograButton(
             shape = CircleShape,
             colors = ButtonDefaults.textButtonColors(
                 contentColor = MaterialTheme.colorScheme.primary,
+            ),
+            contentPadding = padding,
+        ) { label() }
+
+        ButtonKind.Inverse -> Button(
+            onClick = onClick,
+            modifier = shared,
+            enabled = enabled,
+            shape = CircleShape,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.tertiaryContainer,
             ),
             contentPadding = padding,
         ) { label() }

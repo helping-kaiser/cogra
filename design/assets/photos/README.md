@@ -28,10 +28,11 @@ not illustration, no grain filter, no duotone.
 cropped: `MediaAttachment` never renders taller than 4:5. Use
 `08-portrait-9x16.jpg` when you need to prove the crop holds — a
 picture is fitted inside the cap, a clip centre-crops to it, and the
-9:16 frame is whole again only on the stream and in the viewer, where
-downsampled copies of this file and of `03-landscape-16x9.jpg` stand in
-for the clips (`designs/canonical/img/clip-lakeside.jpg`,
-`clip-canoe.jpg`). `10-square-1x1.jpg` stands in the same way for the
-square clip (`clip-grapes.jpg`) the three-shapes board needs: the
-corpus holds no square clip still of its own, and a clip's face is a
-frame of the clip, so it takes a clip's name.
+9:16 frame is whole again only on the stream and in the viewer.
+
+**A clip's poster is a fixture another role already carries.** The
+canvas editor holds at most 200 files (backlog 62), so no image serves
+a single board: the three clips on the three-shapes board take their
+faces from `designs/canonical/img/clip-lakeside.jpg` (the 9:16 file's
+downsample, the stream's own still), `post-photo.jpg` for the wide
+clip, and `gallery-grapes.jpg` for the square one.
