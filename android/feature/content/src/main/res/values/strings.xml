@@ -107,13 +107,20 @@
     <string name="content_license_provenance_none">Never</string>
     <string name="content_license_provenance_commercial">Commercially</string>
     <string name="content_license_provenance_always">Always</string>
-    <string name="content_license_terms_public_domain">Public domain — no obligation on reuse</string>
-    <string name="content_license_terms_credit_commercial">Commercial uses credit the maker.</string>
-    <string name="content_license_terms_credit_always">Every use credits the maker.</string>
-    <string name="content_license_terms_credit_degree">Credit owed to degree %1$s.</string>
-    <string name="content_license_terms_record_commercial">Commercial uses are logged publicly.</string>
-    <string name="content_license_terms_record_always">Every use is logged publicly.</string>
-    <string name="content_license_terms_record_degree">Uses logged publicly to degree %1$s.</string>
+    <!-- THE READER'S READINGS, not the author's (design/components/forms/LicenseChooser.jsx:36-49;
+         copy-voice.md "The license block"). The chooser's hints address the author declaring the
+         terms, which on a read surface told a reuser they were owed the credit they in fact owe.
+         One line per axis value, in the reuser's own voice. -->
+    <string name="content_license_terms_caption">License terms</string>
+    <string name="content_license_terms_public_domain">Public domain</string>
+    <string name="content_license_reading_credit_none">Not required</string>
+    <string name="content_license_reading_credit_commercial">Required for commercial use</string>
+    <string name="content_license_reading_credit_always">Required for every use</string>
+    <string name="content_license_reading_credit_degree">Owed to degree %1$s</string>
+    <string name="content_license_reading_record_none">Not logged</string>
+    <string name="content_license_reading_record_commercial">Commercial uses logged publicly</string>
+    <string name="content_license_reading_record_always">Every use logged publicly</string>
+    <string name="content_license_reading_record_degree">Logged to degree %1$s</string>
     <string name="content_submit">Sign and publish</string>
     <string name="content_save_edit">Sign the edit</string>
     <string name="content_post_saved">Signed — landing on the graph</string>
@@ -123,6 +130,28 @@
     <string name="content_comments_heading">Comments</string>
     <string name="content_comments_empty">No comments yet.</string>
     <string name="content_edit">Edit</string>
+    <!-- THE OVERFLOW MENU'S ROWS (design/designs/canonical/screens/_shared.jsx:173-176, 368-392).
+         Save leads every menu that has it so the thumb learns one position, and the license closes
+         them all — the rarest read in the product sitting last. The hide row NAMES ITS PERSON: the
+         handle is what a reader recognises, and the word they look for again under Hidden accounts
+         (ActorChip.jsx:67). No hide row on a comment, and the absence is ruled (jakob 2026-09-12):
+         hiding is an act on an actor, reached from the commenter's own profile. -->
+    <string name="content_menu_post">More on this post</string>
+    <string name="content_menu_comment">More on this comment</string>
+    <string name="content_menu_save">Save</string>
+    <string name="content_menu_cite">Cite in a new post</string>
+    <string name="content_menu_hide_actor">Hide %1$s</string>
+    <string name="content_menu_hide_account">Hide this account</string>
+    <string name="content_menu_sensitive">Mark as sensitive</string>
+    <string name="content_menu_remove">Remove</string>
+    <string name="content_menu_opinions">Opinions on this</string>
+    <string name="content_menu_license">License terms</string>
+    <!-- Remove — the think-twice dialog (RemoveConfirm.jsx). The SAFE action is the filled one. -->
+    <string name="content_remove_title">Remove this post?</string>
+    <string name="content_remove_body">The words and pictures leave every reader\'s view, along with every earlier version\'s. A visible mark stays in their place — \"Removed by its author\" — and the post\'s spot in threads stays with it.</string>
+    <string name="content_remove_permanent">This is immediate and permanent.</string>
+    <string name="content_remove_confirm">Remove</string>
+    <string name="content_remove_keep">Keep it</string>
     <string name="content_error_empty_body">The post needs a body.</string>
     <string name="content_error_title_too_long">Too long — at most %1$d characters.</string>
     <string name="content_error_description_too_long">Too long — at most %1$d characters.</string>
