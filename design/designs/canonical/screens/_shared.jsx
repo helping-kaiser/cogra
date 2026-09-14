@@ -73,6 +73,7 @@ const {
   WashCard,
   StancePad,
   StanceReadout,
+  OwnStanceReadout,
   StanceValue,
   StanceSlider,
   TAG_RANGES,
@@ -483,7 +484,17 @@ function RecentRow({ text }) {
   );
 }
 
-/* The Sky, teased — token colours only: item 16's galaxy, hinted. */
+/* The Sky, teased — token colours only: item 16's galaxy, hinted.
+
+   TWO RUNGS OF POINT, AND `secondaryContainer` IS NOT ONE OF THEM. The field
+   spends `outline` (far) and `primaryContainer` (near), plus `primary` for the
+   most-weighted point — three values that read on both grounds,
+   `primaryContainer` being literally the same #ef6c1a in either theme.
+   `secondaryContainer` cannot carry a rung here: dark it is #743918, which
+   sinks into the ground hard enough to invert the reading (CR 1.38 on the dark
+   card against `outline`'s 3.89), so the nearer points came out dimmer than the
+   far ones. Size and colour must climb together — a mid-weight point never
+   reads fainter than a small one. */
 function SkyField({ height = 180 }) {
   return (
     <Raw
@@ -493,11 +504,11 @@ function SkyField({ height = 180 }) {
         <line x1="140" y1="${height * 0.3}" x2="230" y2="${height * 0.62}" stroke="var(--border-hairline)" stroke-width="1"/>
         <line x1="230" y1="${height * 0.62}" x2="318" y2="${height * 0.38}" stroke="var(--border-hairline)" stroke-width="1"/>
         <line x1="140" y1="${height * 0.3}" x2="196" y2="${height * 0.14}" stroke="var(--border-hairline)" stroke-width="1"/>
-        <circle cx="40" cy="${height * 0.55}" r="7" fill="var(--secondary-container)"/>
+        <circle cx="40" cy="${height * 0.55}" r="7" fill="var(--primary-container)"/>
         <circle cx="140" cy="${height * 0.3}" r="12" fill="var(--primary)"/>
         <circle cx="196" cy="${height * 0.14}" r="4" fill="var(--outline)"/>
         <circle cx="230" cy="${height * 0.62}" r="9" fill="var(--primary-container)"/>
-        <circle cx="318" cy="${height * 0.38}" r="6" fill="var(--secondary-container)"/>
+        <circle cx="318" cy="${height * 0.38}" r="6" fill="var(--primary-container)"/>
         <circle cx="286" cy="${height * 0.78}" r="3" fill="var(--outline)"/>
         <circle cx="90" cy="${height * 0.82}" r="4" fill="var(--outline)"/>
       </svg>`}
@@ -737,7 +748,7 @@ function ProfileOtherBody({ bundle } = {}) {
           <ProfileHeader
             handle="ada"
             displayName="Ada Okonkwo"
-            avatarSrc="ava1.jpg"
+            avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
             posts={12}
             stancesOn={48}
@@ -764,6 +775,43 @@ function ProfileOtherBody({ bundle } = {}) {
   );
 }
 
+/* A deleted account's profile, whole — shared for the same reason
+   `ProfileOtherBody` is: its own ⋮ needs this page with a sheet over it, and a
+   husk drawn twice would drift. The page's reasoning lives on `ProfileDeleted`;
+   what matters here is that the sheet board gets the identical husk, so the two
+   boards differ by the sheet alone. */
+function ProfileDeletedBody() {
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ padding: "0 16px" }}>
+          <ProfileHeader
+            handle="marlow"
+            redacted
+            bio={<RedactedContent reason="account" when="3d" />}
+            posts={7}
+            stancesOn={22}
+            stancesTaken={19}
+            onCounts={() => {}}
+            onCommit={() => {}}
+            menu={deletedProfileMenu()}
+            showHandle={false}
+          />
+        </div>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
+        <ChronicleList>
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="9d" second="Three mornings on the wall, watching the tide come in over the flats." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="12d" second="The tunnel is faster; the coast road is the reason to drive at all." onOpen={() => {}} />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.5, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @sol" trailing="14d" inert />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} />
+        </ChronicleList>
+      </div>
+      <BottomNav active={null} slots={ALL_SLOTS} inline />
+    </>
+  );
+}
+
 /* THE REPLY WIZARD'S FIRST STAGE, whole (legacy conversion, lane C): the thing
    being answered, the words being written, the way to add pictures to them, and
    the foot. It lives here for the KeyPledge reason — `DiscardConfirm` draws
@@ -779,7 +827,7 @@ function ReplyDraft() {
           title="The long way home — @ada"
           snippet="The light does something at the third headland that I have never managed…"
           name="Ada Okonkwo"
-          src="ava1.jpg"
+          src="comment-camera.jpg"
         />
 
         <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
@@ -865,9 +913,11 @@ function ComposeSealBody() {
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value="Public domain — your default" action="Change" />
+          {/* One number: what reaches you about your own post is not a choice,
+              so the row states the one value the author set. */}
           <FactRow
             label="Your opinion"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
+            value={<OwnStanceReadout pDirected={0.1} />}
             action="Adjust"
           />
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
@@ -1369,7 +1419,9 @@ const MIRA_CLIP_POST = {
 const CLIP_CANOE = {
   kind: "video",
   src: "clip-canoe.mp4",
-  poster: "clip-canoe.jpg",
+  /* post-photo.jpg doubles as this clip's poster — it is the same frame of
+     the same lake crossing, at the same 16:9 (backlog 62). */
+  poster: "post-photo.jpg",
   ratio: "landscape",
   alt: "Two canoes crossing a mountain lake.",
 };
@@ -1729,7 +1781,7 @@ const SCORE_VIEWER = SOL;
    6.80 + 4.20 + 2.60 + 1.10 + 0.50 = 15.20, which is `ADA_POST`'s own score.
    The two weakest ride the "more paths" row rather than being spelled out, so
    the arithmetic still closes on the drawn surface. */
-const ADA_FACED = { ...ADA, src: "ava1.jpg" };
+const ADA_FACED = { ...ADA, src: "comment-camera.jpg" };
 const MIRA_FACED = { ...MIRA, src: "inviter.jpg" };
 const SCORE_PATHS = [
   { through: "@ada", people: [SCORE_VIEWER, ADA_FACED], value: "+6.80" },
@@ -1759,7 +1811,7 @@ function ScoreOrigin({ score = "15.20" }) {
         title="The long way home — @ada"
         snippet="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
         name={ADA.displayName}
-        src="ava1.jpg"
+        src="comment-camera.jpg"
       />
       <span
         style={{
@@ -1982,7 +2034,7 @@ function ScoreColumn({ children }) {
    different way would teach them it means nothing. */
 const POST_OPINION_HOLDERS = [
   { name: MIRA.displayName, handle: MIRA.handle, src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
-  { name: ADA.displayName, handle: ADA.handle, src: "ava1.jpg", pDirected: 0.7, pInterest: 0.4 },
+  { name: ADA.displayName, handle: ADA.handle, src: "comment-camera.jpg", pDirected: 0.7, pInterest: 0.4 },
   { name: TOBIAS.displayName, handle: TOBIAS.handle, pDirected: 0.6, pInterest: 0.65 },
   { name: SOL.displayName, handle: SOL.handle, pDirected: 0.55, pInterest: 0.2 },
   { name: KEL.displayName, handle: KEL.handle, pDirected: 0.25, pInterest: 0.95 },

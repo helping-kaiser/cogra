@@ -55,7 +55,7 @@ export function Screen() {
           <FactRow label="License" value="Public domain — your default" action="Change" />
           <FactRow
             label="Your opinion"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
+            value={<OwnStanceReadout pDirected={0.1} />}
             action="Adjust"
           />
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
