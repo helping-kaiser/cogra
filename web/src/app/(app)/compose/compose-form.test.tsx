@@ -441,9 +441,12 @@ describe("ComposeForm", () => {
         title: "New title",
         description: null,
         content: "",
+        // The poster is re-stated with the rest: an edit carries the whole
+        // gallery, so a placement that came back without its cover would
+        // publish a version that had quietly lost one.
         attachments: [
-          { mediaId: "m-1", displayOrder: 0, isCover: true, altText: "A jetty" },
-          { mediaId: "m-2", displayOrder: 1, isCover: false, altText: null },
+          { mediaId: "m-1", displayOrder: 0, isCover: true, altText: "A jetty", coverMediaId: null },
+          { mediaId: "m-2", displayOrder: 1, isCover: false, altText: null, coverMediaId: null },
         ],
         sensitive: false,
         sensitiveReason: null,

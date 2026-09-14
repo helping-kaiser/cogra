@@ -34,7 +34,7 @@ const bytes = (n: number) => new Blob([new Uint8Array(n) as BlobPart]);
 
 /** The gallery these ids make, undescribed — the default in these fixtures. */
 const claims = (...mediaIds: readonly string[]) =>
-  mediaIds.map((mediaId) => ({ mediaId, altText: null }));
+  mediaIds.map((mediaId) => ({ mediaId, altText: null, coverMediaId: null }));
 
 function run(state: WizardState, ...actions: readonly WizardAction[]): WizardState {
   return actions.reduce(wizardReducer, state);
@@ -628,8 +628,29 @@ describe("a video post", () => {
     expect(gate.ok === false && gate.reason).toBe("The video didn't upload.");
   });
 
-  it("attaches the video alone — the cover reaches the reader through it", () => {
-    const done = run(emptyWizard(), picksVideo(), chosen(), {
+  it("attaches the video alone, naming the poster on its placement", () => {
+    const landed = run(emptyWizard(), picksVideo(), chosen(), {
+      type: "upload",
+      id: "v0",
+      upload: { kind: "done", mediaId: "m-v0" },
+    });
+    // The poster is still on its way: publishing the clip faceless because
+    // its cover was a moment behind would quietly drop what was picked.
+    expect(attachmentClaims(landed)).toBeNull();
+
+    const withPoster = wizardReducer(landed, {
+      type: "coverUpload",
+      upload: { kind: "done", mediaId: "m-c0" },
+    });
+    // One entry — the clip. The poster rides its placement, never a gallery
+    // entry of its own, which is what keeps the counting rule one rule.
+    expect(attachmentClaims(withPoster)).toEqual([
+      { mediaId: "m-v0", altText: null, coverMediaId: "m-c0" },
+    ]);
+  });
+
+  it("attaches a faceless clip with no poster named", () => {
+    const done = run(emptyWizard(), picksVideo(), {
       type: "upload",
       id: "v0",
       upload: { kind: "done", mediaId: "m-v0" },

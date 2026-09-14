@@ -3430,8 +3430,6 @@ type BeginMediaUploadPayload { upload: MediaUploadSession! }
  again and is handed the same asset."
 input CompleteMediaUploadInput {
   uploadId: UUID!
-  "The video's poster, on the same terms uploadMedia states."
-  coverMediaId: UUID
 }
 
 "Give up on an upload and release its parts now rather than at
