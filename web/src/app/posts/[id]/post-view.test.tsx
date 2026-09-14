@@ -14,6 +14,22 @@ import { fakeWriteSigner } from "@/test/registration";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 
+// The menu rows that go somewhere navigate rather than link, because a sheet
+// row is a button — so the router is what a citing or editing row is measured
+// against.
+const routerPush = vi.fn();
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/navigation")>()),
+  useRouter: () => ({
+    push: routerPush,
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
 // The post and every comment read their own standing, so the read is a
 // default rather than something each test remembers: an unhandled one
 // degrades the control silently instead of failing the test.
@@ -217,6 +233,7 @@ function storeFor(accountId: string) {
 describe("PostView", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    routerPush.mockClear();
   });
 
   it("renders the post with its thread", async () => {
@@ -336,22 +353,41 @@ describe("PostView", () => {
   // Enforcement inside CoGra reduces to honest display
   // (platform-guidelines.md §5), so the qualifiers ride both the post
   // and every comment.
-  it("shows the license terms on the post and on each comment", async () => {
+  // THE TERMS ARE NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): the
+  // license is a rare read, so it arrives from the menu in a sheet over the
+  // surface the reader asked from, rather than sitting on the post.
+  it("keeps the license off the surface, and raises it from the menu's row", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-    expect(await screen.findByTestId("post-license-terms")).toHaveTextContent(
-      "Public domain",
-    );
-    expect(screen.getByTestId("comment-license-terms-c1")).toHaveTextContent(
-      "Public domain",
-    );
+    await screen.findByTestId("post-body");
+    expect(screen.queryByTestId("post-license-terms")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("comment-license-terms-c1")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId("post-menu-license"));
+    expect(screen.getByTestId("license-sheet-terms")).toHaveTextContent("Public domain");
   });
 
-  it("offers the edit link to the creator only", async () => {
+  it("raises a comment's own terms from the comment's menu", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("post-body");
+    fireEvent.click(screen.getByTestId("comment-menu-c1"));
+    fireEvent.click(screen.getByTestId("comment-menu-license-c1"));
+    expect(screen.getByTestId("license-sheet-terms")).toHaveTextContent("Public domain");
+  });
+
+  // The rows are `OWN_POST_MENU` (`_shared.jsx:369-375`): Save · Edit · Mark as
+  // sensitive · Remove · License terms.
+  it("gives the creator the own-post menu, Edit among its rows", async () => {
     server.use(
       graphql.query("PostDetail", () => HttpResponse.json({ data: detail("acct-1", []) })),
     );
@@ -359,10 +395,20 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
-    expect(await screen.findByTestId("post-edit")).toHaveAttribute("href", "/compose?post=p1");
+    fireEvent.click(await screen.findByTestId("post-menu"));
+    expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
+    expect(screen.getByTestId("post-menu-edit")).toHaveTextContent("Edit");
+    expect(screen.getByTestId("post-menu-sensitive")).toHaveTextContent("Mark as sensitive");
+    expect(screen.getByTestId("post-menu-remove")).toHaveTextContent("Remove");
+    expect(screen.getByTestId("post-menu-license")).toHaveTextContent("License terms");
+    // A reader's rows are not on an author's menu.
+    expect(screen.queryByTestId("post-menu-hide")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-menu-cite")).not.toBeInTheDocument();
   });
 
-  it("hides the edit link from non-creators", async () => {
+  // The rows are `READER_POST_MENU` (`_shared.jsx:376`): Save · Cite in a new
+  // post · Hide @handle · License terms.
+  it("gives a non-creator the reader menu, naming the author in its hide row", async () => {
     server.use(
       graphql.query("PostDetail", () => HttpResponse.json({ data: detail("someone-else", []) })),
     );
@@ -371,7 +417,75 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     expect(await screen.findByTestId("post-no-comments")).toBeInTheDocument();
-    expect(screen.queryByTestId("post-edit")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("post-menu"));
+    expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
+    expect(screen.getByTestId("post-menu-cite")).toHaveTextContent("Cite in a new post");
+    // `Hide @ada`, never "Hide this author" (`ActorChip.jsx:67`).
+    expect(screen.getByTestId("post-menu-hide")).toHaveTextContent(/^Hide @/);
+    expect(screen.getByTestId("post-menu-license")).toHaveTextContent("License terms");
+    expect(screen.queryByTestId("post-menu-edit")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("post-menu-remove")).not.toBeInTheDocument();
+  });
+
+  // The comment's rows are `COMMENT_MENU` (`_shared.jsx:392`) — and the missing
+  // Hide row is RULED (jakob 2026-09-12): hiding names an actor, and its route
+  // is the commenter's own profile.
+  it("gives a comment Save · Cite · Opinions · License, and no Hide", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("post-body");
+    fireEvent.click(screen.getByTestId("comment-menu-c1"));
+    expect(screen.getByTestId("comment-menu-save-c1")).toHaveTextContent("Save");
+    expect(screen.getByTestId("comment-menu-cite-c1")).toHaveTextContent("Cite in a new post");
+    expect(screen.getByTestId("comment-menu-opinions-c1")).toHaveTextContent("Opinions on this");
+    expect(screen.getByTestId("comment-menu-license-c1")).toHaveTextContent("License terms");
+    expect(screen.queryByTestId("comment-menu-hide-c1")).not.toBeInTheDocument();
+  });
+
+  // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination is
+  // not built yet stands and does nothing, rather than the menu growing a row
+  // per slice.
+  it("renders the rows whose destinations are not built yet, and they do nothing", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("someone-else", []) })),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId("post-menu-save"));
+    expect(screen.getByTestId("post-body")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId("post-menu-hide"));
+    expect(screen.getByTestId("post-body")).toBeInTheDocument();
+  });
+
+  // The dialog ships; the removal does not (jakob 2026-09-14 — erasure is
+  // slice 8's, whole).
+  it("opens the think-twice dialog from Remove, and removes nothing", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("acct-1", []) })),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId("post-menu-remove"));
+    const dialog = screen.getByTestId("post-remove-confirm") as HTMLDialogElement;
+    expect(dialog.open).toBe(true);
+    expect(dialog).toHaveTextContent("This is immediate and permanent.");
+
+    fireEvent.click(screen.getByTestId("post-remove-confirm-remove"));
+    expect(dialog.open).toBe(false);
+    // The post is still on the page: nothing was removed.
+    expect(screen.getByTestId("post-body")).toBeInTheDocument();
   });
 
   it("serves not-found for an unknown id", async () => {
@@ -826,7 +940,9 @@ describe("PostView", () => {
     expect(screen.getByTestId("post-topic-rust-link")).toHaveAttribute("href", "/topics/rust");
     expect(screen.queryByTestId("post-tag-input")).not.toBeInTheDocument();
     expect(screen.queryByTestId("post-topic-rust-remove")).not.toBeInTheDocument();
-    expect(screen.getByTestId("post-edit")).toHaveAttribute("href", "/compose?post=p1");
+    fireEvent.click(screen.getByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId("post-menu-edit"));
+    expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
   });
 
   it("shows read-only chips on the viewer's own COMMENT too", async () => {
@@ -1581,36 +1697,25 @@ describe("PostView — references", () => {
     expect(screen.queryByTestId("comment-c1-reference-l1-u-ada-link")).not.toBeInTheDocument();
   });
 
-  it("offers the Reference affordance on the post and on each comment", async () => {
-    // D20: the word is Reference, never "cite", and it opens the
-    // composer with the node already drafted as a chip.
+  // CITING RIDES THE MENU on every content (`_shared.jsx:165-175`), post and
+  // comment alike — it opens the composer with the node already drafted as a
+  // chip. The word is the menu's own: `Cite in a new post`.
+  it("sends the composer the node the menu's cite row was opened on", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({ data: detail("u2", [{ id: "c1", body: "First!" }]) }),
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
-
-    expect(await screen.findByTestId("post-reference")).toHaveAttribute(
-      "href",
-      "/compose?reference=p1",
-    );
-    expect(screen.getByTestId("comment-reference-c1")).toHaveAttribute(
-      "href",
-      "/compose?reference=c1",
-    );
-  });
-
-  it("hides the Reference affordance from a signed-out reader", async () => {
-    server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u2", [{ id: "c1", body: "First!" }]) }),
-      ),
-    );
-    renderWithProviders(<PostView postId="p1" />);
     await screen.findByTestId("post-body");
-    expect(screen.queryByTestId("post-reference")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("comment-reference-c1")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId("post-menu-cite"));
+    expect(routerPush).toHaveBeenCalledWith("/compose?reference=p1");
+
+    fireEvent.click(screen.getByTestId("comment-menu-c1"));
+    fireEvent.click(screen.getByTestId("comment-menu-cite-c1"));
+    expect(routerPush).toHaveBeenCalledWith("/compose?reference=c1");
   });
 
   it("asks before it prepares a comment's withdrawal, on the served cost", async () => {
@@ -1746,8 +1851,9 @@ describe("PostView — references", () => {
       expect(screen.queryByTestId("post-media")).not.toBeInTheDocument();
       // The license rode the payload, so a redacted record has none to show.
       expect(screen.queryByTestId("post-license-terms")).not.toBeInTheDocument();
-      // A removed post has no menu left — back is the whole header.
-      expect(screen.queryByTestId("post-edit")).not.toBeInTheDocument();
+      // A REMOVED POST HAS NO MENU LEFT — back is the whole header
+      // (`Removed.jsx:5-6`): no ⋮, and so none of its rows.
+      expect(screen.queryByTestId("post-menu")).not.toBeInTheDocument();
       // What survives: the author, the timestamp, and the stance a reader can
       // still take, beside the count that proves nothing was quietly deleted.
       expect(screen.getByTestId("post-author")).toBeInTheDocument();

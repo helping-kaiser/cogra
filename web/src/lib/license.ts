@@ -55,6 +55,37 @@ export function tierOf(tiers: readonly LicenseTier[], value: number): LicenseTie
 }
 
 /**
+ * What a pair obliges, IN THE AUTHOR'S OWN VOICE — the composer's running
+ * summary of the terms it is about to sign. Public Domain is the one pair that
+ * obliges nothing, so it says so instead of listing two absences; a degree
+ * between the published tiers reads as the degree itself rather than being
+ * rounded into a tier it is not.
+ *
+ * A READ SURFACE USES `licenseReadings` INSTEAD. These words address the author
+ * declaring the terms, and on a read surface they told a reuser they were owed
+ * the credit they in fact owe.
+ */
+export function licenseTerms(license: License): readonly string[] {
+  if (isPublicDomain(license)) {
+    return ["Public domain — no obligation on reuse"];
+  }
+  const terms: string[] = [];
+  if (license.attribution > 0) {
+    terms.push(
+      tierOf(ATTRIBUTION_TIERS, license.attribution)?.hint ??
+        `Credit owed to degree ${license.attribution}.`,
+    );
+  }
+  if (license.provenance > 0) {
+    terms.push(
+      tierOf(PROVENANCE_TIERS, license.provenance)?.hint ??
+        `Uses logged publicly to degree ${license.provenance}.`,
+    );
+  }
+  return terms;
+}
+
+/**
  * THE READER'S READINGS, not the author's (`LicenseChooser.jsx:36-49`;
  * copy-voice.md "The license block"). The chooser's hints address the author
  * declaring the terms — "Every use credits you" — which on a read surface told
