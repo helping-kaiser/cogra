@@ -15,8 +15,12 @@ import { isMuted, resetMuteForTests, setMuted } from "./mute";
 import { VideoPlayer } from "./video-player";
 import { MediaTile } from "./media-tile";
 import { PORTRAIT_CAP } from "./aspect";
+import { resetVideoStageForTests } from "./video-stage";
 
-afterEach(() => resetMuteForTests());
+afterEach(() => {
+  resetMuteForTests();
+  resetVideoStageForTests();
+});
 
 const CLIP = "https://media.example/clip.mp4";
 const COVER = "https://media.example/cover.webp";
@@ -45,9 +49,9 @@ describe("autoplay", () => {
     expect(video.paused).toBe(true);
   });
 
-  it("asks for half the frame before it plays, so two clips never fight", () => {
+  it("asks for 70% of the frame before it plays — android's gate, blessed", () => {
     player();
-    expect(observedThresholds()).toContain(0.5);
+    expect(observedThresholds()).toContain(0.7);
   });
 
   it("does not observe at all where the caller turned autoplay off", () => {
@@ -57,8 +61,32 @@ describe("autoplay", () => {
     expect(video.paused).toBe(true);
   });
 
-  it("carries the element's own controls — the ruling asks for real ones", () => {
-    expect(player()).toHaveAttribute("controls");
+  it("never carries the native transport — every card wears the sound disc instead", () => {
+    expect(player()).not.toHaveAttribute("controls");
+  });
+});
+
+// FE-28: one clip plays at a time. video-stage.test.ts pins the arbitration
+// module's own edge cases (re-claims, stale surrenders); this just proves the
+// wiring — a real claim through a real IntersectionObserver event pauses a
+// real sibling player, not only a mocked stage.
+describe("one clip at a time (FE-28)", () => {
+  it("claiming the stage pauses whichever clip held it before", () => {
+    render(
+      <>
+        <VideoPlayer src={CLIP} testId="first" />
+        <VideoPlayer src={CLIP} testId="second" />
+      </>,
+    );
+    const first = screen.getByTestId("first") as HTMLVideoElement;
+    const second = screen.getByTestId("second") as HTMLVideoElement;
+
+    // Both come into view in the same batch — the later-mounted clip claims
+    // last, and the newest claimant always pauses whoever it replaces.
+    act(() => intersect(true));
+
+    expect(second.paused).toBe(false);
+    expect(first.paused).toBe(true);
   });
 });
 
@@ -82,9 +110,10 @@ describe("the one global mute", () => {
     expect(two.muted).toBe(true);
   });
 
-  it("takes the reader's press on the element's own mute button", () => {
-    // The native control is the one a reader actually reaches for, so it has to
-    // be the global control: the press arrives as `volumechange`, not a click.
+  it("takes an out-of-band mute change, e.g. from picture-in-picture", () => {
+    // Nothing in this component itself changes `.muted` except the sound
+    // disc, but an external `volumechange` must still sync into the store
+    // rather than silently diverging from every other player on screen.
     const video = player();
     act(() => {
       video.muted = false;
@@ -160,6 +189,26 @@ describe("the reading surface", () => {
   });
 });
 
+// FE-26/H-04: a feed card wears the sound control and nothing else — no
+// play/pause, no duration pill, at both scales (design/readme.md, "the video
+// conform round"). The reading surface never had a transport; the full/card
+// surface loses its native one here, so both land on the same one control.
+describe("the full surface (a feed card's clip)", () => {
+  it("wears one control, and it is the sound", () => {
+    const video = player();
+    expect(video).not.toHaveAttribute("controls");
+    expect(screen.getByTestId("video-player-sound")).toHaveAttribute(
+      "aria-label",
+      "Turn sound on",
+    );
+  });
+
+  it("shows no duration, which the detail surface owns for now (W3-6)", () => {
+    player({ durationMs: 18_000 });
+    expect(screen.queryByTestId("video-player-duration")).toBeNull();
+  });
+});
+
 describe("the tile", () => {
   it("renders a player for a video and an image for a picture", () => {
     render(
@@ -172,12 +221,15 @@ describe("the tile", () => {
     render(
       <MediaTile src={CLIP} mimeType="video/mp4" testId="moving" onOpen={() => {}} />,
     );
-    expect(screen.queryByRole("button")).toBeNull();
+    // The sound disc is a real button now that native controls are gone; what
+    // must still never happen is MediaTile's own onOpen wrapper around it.
+    expect(screen.queryByRole("button", { name: /open the picture/i })).toBeNull();
+    expect(screen.getByTestId("moving").closest("button")).toBeNull();
   });
 
-  it("draws the length where the contract states one", () => {
+  it("shows no duration pill — the sound disc is the only control a tile's clip wears", () => {
     render(<MediaTile src={CLIP} mimeType="video/mp4" durationMs={42_000} testId="moving" />);
-    expect(screen.getByTestId("moving-duration")).toHaveTextContent("0:42");
+    expect(screen.queryByTestId("moving-duration")).toBeNull();
   });
 });
 
@@ -214,11 +266,13 @@ describe("a clip's shape", () => {
     expect(screen.getByTestId("moving").className).toContain("object-cover");
   });
 
-  it("leaves an unprobed clip its own shape, bounded by the height cap alone", () => {
-    // Reserving a square for a shape nobody has measured would crop a wide clip
-    // to one — the honest answer is to let the element size itself.
+  it("reserves the portrait cap for an unprobed clip, until the probe lands", () => {
+    // The media law leaves no unbounded case now that letterboxing is gone
+    // (FE-30): 4:5 is the tallest a clip is ever shown, so it is the honest
+    // reservation for "shape unknown" too — the same framing path a probed
+    // clip already takes, not a separate unbounded one.
     render(<MediaTile src={CLIP} mimeType="video/mp4" testId="moving" />);
-    expect(screen.queryByTestId("moving-frame")).toBeNull();
-    expect(screen.getByTestId("moving").className).toContain("max-h-[var(--media-max-height)]");
+    expect(screen.getByTestId("moving-frame").style.aspectRatio).toBe(`${PORTRAIT_CAP} / 1`);
+    expect(screen.getByTestId("moving").className).toContain("size-full");
   });
 });

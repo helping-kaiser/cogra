@@ -9,6 +9,7 @@
     <ID>CyclomaticComplexMethod:ReplyWizardScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun ReplyWizardScreen</ID>
     <ID>FunctionOnlyReturningConstant:RobolectricEglShim.kt:EGLContext.Companion$@JvmStatic fun getEGL: EGL?</ID>
     <ID>LargeClass:ComposePostViewModelTest.kt:ComposePostViewModelTest</ID>
+    <ID>LargeClass:ComposeWizardScreenTest.kt:ComposeWizardScreenTest</ID>
     <ID>LargeClass:ComposeWizardViewModelTest.kt:ComposeWizardViewModelTest</ID>
     <ID>LargeClass:ContentScreensTest.kt:ContentScreensTest</ID>
     <ID>LongMethod:BodyStep.kt:@Composable internal fun DraftOffer</ID>
