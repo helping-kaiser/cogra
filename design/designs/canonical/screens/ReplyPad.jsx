@@ -1,4 +1,4 @@
-/* THE STANCE PAD ON THE POST YOU ANSWER (legacy conversion, lane C): what the
+/* THE OPINION PAD ON THE POST YOU ANSWER (legacy conversion, lane C): what the
    reply seal's "Adjust" opens. The wash covers the seal; only the parked pad is
    live, which is what the board's `scanExempt` line says.
 

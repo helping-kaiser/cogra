@@ -4,8 +4,8 @@ import type { StanceBundle, StancePair } from "../stance/StanceReadout";
  * The top of a profile. Not a card — it sits on the page ground, because a card
  * would imply a second card beside it.
  *
- * The two counts say what a reader can place: how many people have taken a stance
- * on this person, and how many they have taken. Never one merged "followers"
+ * The two counts say what a reader can place: how many people have given an
+ * opinion on this person, and how many they have given. Never one merged "followers"
  * figure — there is no following here, and the repo's own word for the thing is on
  * the banned list (readme §3).
  */
@@ -21,9 +21,9 @@ export interface ProfileHeaderProps {
   website?: string;
   /** Leads the figures row. Already formatted. */
   posts?: string | number;
-  /** How many people have taken a stance on them. Already formatted. */
+  /** How many people have given an opinion on them. Already formatted. */
   stancesOn?: string | number;
-  /** How many stances they have taken. Already formatted. */
+  /** How many opinions they have given. Already formatted. */
   stancesTaken?: string | number;
   /** The viewer's own profile: no opinion to give, so the row carries edit + invites. */
   own?: boolean;
@@ -40,7 +40,7 @@ export interface ProfileHeaderProps {
   onInvites?: () => void;
   /** The viewer's own avatar only: the change badge over the monogram/photo. */
   onAvatarChange?: () => void;
-  /** Opens the figures as one tap target, both directions, on the stances page. */
+  /** Opens the figures as one tap target, both directions, on the opinions page. */
   onCounts?: () => void;
   /** The page's own overflow, closing the actions row — an `OverflowMenu` with
    *  `placement="row"`. No band carries a ⋮ (the band law), so a profile's

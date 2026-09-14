@@ -35,7 +35,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
@@ -78,14 +77,14 @@ internal fun ColumnScope.WordsStepBody(
         // box at its 44dp minimum with empty screen under it.
         modifier = Modifier.weight(1f),
         fillHeight = true,
+        cap = MAX_POST_BODY_CHARS,
+        error = if (state.bodyTooLong) {
+            stringResource(R.string.content_error_body_too_long, MAX_POST_BODY_CHARS)
+        } else {
+            null
+        },
         testTag = "wizard_body",
     )
-    if (state.bodyTooLong) {
-        ErrorLine(
-            text = stringResource(R.string.content_error_body_too_long, MAX_POST_BODY_CHARS),
-            testTag = "wizard_body_too_long",
-        )
-    }
 }
 
 /**
