@@ -114,7 +114,8 @@ export function ReplySealStep({
           <span className="min-w-0 flex-1 truncate text-body-medium" data-testid="reply-act-comment">
             {replyActLabel(state.target)}
           </span>
-          <span className="flex-none text-body-small text-on-surface-variant">1 action</span>
+          {/* The bare number the board draws — see `AddRow` below. */}
+          <span className="flex-none text-body-small text-on-surface-variant">1</span>
         </div>
 
         <AddRow
@@ -366,6 +367,11 @@ export function ReplySealStep({
 /**
  * An acts-card row that is an affordance while it is empty and a summary once
  * it is filled — the board draws the empty state, and the act it would add.
+ *
+ * THE COUNT IS A BARE NUMBER, as `ActsCard` draws it: `1 more` on an empty
+ * row, the count itself on a filled one. The word form spent the row's width
+ * on a noun the column already says, and what it spent came out of the value
+ * slot — the drawn example name ellipsised on a real device.
  */
 function AddRow({
   label,
@@ -392,7 +398,7 @@ function AddRow({
           >
             {label}
           </button>
-          <span className="flex-none text-body-small text-on-surface-variant">1 more action</span>
+          <span className="flex-none text-body-small text-on-surface-variant">1 more</span>
         </>
       ) : (
         <>
@@ -404,9 +410,7 @@ function AddRow({
           >
             {filled}
           </button>
-          <span className="flex-none text-body-small text-on-surface-variant">
-            {count === 1 ? "1 action" : `${count} actions`}
-          </span>
+          <span className="flex-none text-body-small text-on-surface-variant">{count}</span>
         </>
       )}
     </div>

@@ -153,10 +153,15 @@ internal fun ColumnScope.ReplySealActions(
  * The act block: the comment, its topics, its citations, and the total.
  *
  * The board draws the two declaring rows as **offers** while nothing is
- * declared — "+ Add a topic … 1 more action" — so the price of the
- * gesture is known before it is made, and as plain rows once something
- * is. A gallery adds no row either way: attaching media mints nothing,
- * which is why the board reads "1 signed action" beside two pictures.
+ * declared — "+ Add a topic … 1 more" — so the price of the gesture is
+ * known before it is made, and as plain rows once something is. A
+ * gallery adds no row either way: attaching media mints nothing, which
+ * is why the board reads "1 signed action" beside two pictures.
+ *
+ * EVERY TRAILING COUNT IS A BARE NUMBER, as `ActsCard` draws it. The
+ * word form spent the row's width on a noun the kind column already
+ * says, and what it spent came out of the value slot — the drawn
+ * example name ellipsised on a device.
  */
 @Composable
 private fun ReplyActBlock(
@@ -175,7 +180,7 @@ private fun ReplyActBlock(
         ActRow(
             kind = "Comment",
             detail = state.target?.actLabel.orEmpty(),
-            trailing = "1 action",
+            trailing = "1",
         )
         Hairline()
         val tags = state.tagSection.tags
@@ -189,7 +194,7 @@ private fun ReplyActBlock(
             ActRow(
                 kind = "Topics",
                 detail = tags.joinToString(" ") { "#${it.name}" },
-                trailing = if (tags.size == 1) "1 action" else "${tags.size} actions",
+                trailing = "${tags.size}",
             )
         }
         Hairline()
@@ -204,7 +209,7 @@ private fun ReplyActBlock(
             ActRow(
                 kind = "References",
                 detail = "${references.size} cited",
-                trailing = if (references.size == 1) "1 action" else "${references.size} actions",
+                trailing = "${references.size}",
             )
         }
         Hairline()
@@ -268,7 +273,7 @@ private fun OfferRow(text: String, onClick: () -> Unit, testTag: String) {
             testTag = testTag,
         )
         Text(
-            text = "1 more action",
+            text = "1 more",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

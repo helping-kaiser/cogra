@@ -245,7 +245,11 @@ private fun ActRow(kind: String, detail: String, acts: Int) {
             modifier = Modifier.weight(1f),
         )
         Text(
-            text = if (acts == 1) "1 action" else "$acts actions",
+            // THE BARE NUMBER, as the board draws it (`ActsCard`'s `count`:
+            // "1", "2"). The word form spent the row's width on a noun the
+            // kind column already says, and what it spent came out of the
+            // value slot — the drawn example name ellipsised on a device.
+            text = "$acts",
             // CW-25: both text tokens in the acts row are label-small
             // (ActsCard.jsx:27-43, LABEL and COUNT share --text-label-small);
             // the kind label above already reads it correctly.
@@ -293,7 +297,7 @@ private fun TagsActRow(tags: List<String>) {
             tags.forEach { name -> CograReadoutChip(label = "#$name") }
         }
         Text(
-            text = if (tags.size == 1) "1 action" else "${tags.size} actions",
+            text = "${tags.size}",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -347,7 +351,7 @@ private fun ReferenceActRow(references: List<ReferenceRow>) {
             )
         }
         Text(
-            text = if (references.size == 1) "1 action" else "${references.size} actions",
+            text = "${references.size}",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

@@ -348,9 +348,11 @@ function ActRow({
     <div className="flex min-h-11 items-center gap-2 border-b border-outline-variant">
       <span className="w-19 flex-none text-label-small text-on-surface-variant">{label}</span>
       <span className="min-w-0 flex-1 truncate text-body-medium">{detail}</span>
-      <span className="flex-none text-label-small text-on-surface-variant">
-        {count === 1 ? "1 action" : `${count} actions`}
-      </span>
+      {/* THE BARE NUMBER, as the board draws it (`ActsCard`'s `count`:
+          "1", "2"). The word form spent the row's width on a noun the
+          column already says, and what it spent came out of the value
+          slot — the drawn example name ellipsised on a real device. */}
+      <span className="flex-none text-label-small text-on-surface-variant">{count}</span>
     </div>
   );
 }

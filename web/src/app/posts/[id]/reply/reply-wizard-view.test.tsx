@@ -354,7 +354,9 @@ describe("the reply wizard", () => {
       await toSeal();
       expect(screen.getByTestId("reply-open-topics")).toHaveTextContent("+ Add a topic");
       expect(screen.getByTestId("reply-open-references")).toHaveTextContent("+ Cite something");
-      expect(screen.getByTestId("reply-seal")).toHaveTextContent("1 more action");
+      // The offer's price is the board's bare "1 more", not a sentence.
+      expect(screen.getByTestId("reply-seal")).toHaveTextContent("1 more");
+      expect(screen.getByTestId("reply-seal")).not.toHaveTextContent("1 more action");
     });
 
     it("steps back to the words, which are still there", async () => {
