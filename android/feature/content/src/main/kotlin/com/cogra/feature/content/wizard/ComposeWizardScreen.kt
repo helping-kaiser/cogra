@@ -422,6 +422,7 @@ internal fun ComposeWizardScreen(
                         onBack = onSealBack,
                         onRestoreKey = onRestoreKey,
                         onKeepDraft = onKeepDraft,
+                        onKeyHelp = { onOpenHelp(HelpTopic.Key) },
                     )
                 }
             }
@@ -464,6 +465,7 @@ internal fun ComposeWizardScreen(
                     onValueChange = { onAltTextChange(describing.uri, it) },
                     onDone = onCloseSheet,
                     onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
+                    video = describing.isVideo,
                     testTag = "wizard_describe_sheet",
                 )
 

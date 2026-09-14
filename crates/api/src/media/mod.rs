@@ -500,19 +500,26 @@ impl GalleryKind {
 }
 
 /// One attachment placement as the wire states it — an asset already
-/// uploaded, where it sits in the gallery, and what it is a picture of.
+/// uploaded, where it sits in the gallery, what it is a picture of, and,
+/// for a clip, which still covers it.
 ///
-/// The description is here rather than on the upload because it is a fact
-/// about *this placement*: the same asset can read differently in two
-/// parents, and correcting a description is a new version of the parent,
-/// never a re-upload (data-model.md "Media attachments"). That is what
-/// lets a client upload the moment a picture is picked.
+/// The description and the poster are here rather than on the upload
+/// because both are facts about *this placement*: the same asset can read
+/// differently in two parents, and correcting a description or naming a
+/// different cover is a new version of the parent, never a re-upload
+/// (data-model.md "Media attachments"). That is what lets a client upload
+/// the moment a picture is picked.
 #[derive(Debug, Clone)]
 pub struct AttachmentDraft {
     pub media_id: Uuid,
     pub display_order: i32,
     pub is_cover: Option<bool>,
     pub alt_text: Option<String>,
+    /// The still that stands in for this clip before playback — an asset
+    /// this author uploaded, either a frame the client cut out of the
+    /// video or a picture chosen instead. Only a video placement takes
+    /// one; a video may always go without.
+    pub cover_media_id: Option<Uuid>,
 }
 
 /// A field-level refusal carrying the path into the input that names the
@@ -589,7 +596,7 @@ fn gallery_path(index: usize, field: &str) -> Vec<String> {
 ///
 /// 5. **The body's shape.** A body is pictures or one video, so a video
 ///    sharing a gallery with anything else is refused — its cover rides
-///    the asset rather than a second entry, which is what lets "ten
+///    the placement rather than a second entry, which is what lets "ten
 ///    pictures or one video" stay one counting rule. The video's byte
 ///    cap is the parent's own, and this is the first moment it can be
 ///    applied: an asset is uploaded before it is attached, so the upload
@@ -601,6 +608,10 @@ fn gallery_path(index: usize, field: &str) -> Vec<String> {
 /// against "the viewer" even though this slice has no `actAs` and the two
 /// are always the same actor — so the Collectives slice adds a parameter
 /// rather than a rule.
+///
+/// Posters are read in the same round trip as the assets they cover: both
+/// answer to the same three rules, so splitting the read would buy a
+/// second query for nothing.
 pub async fn plan_gallery(
     pool: &PgPool,
     author: Uuid,
@@ -610,11 +621,24 @@ pub async fn plan_gallery(
     let Some(entries) = gallery_entries(kind, drafts)? else {
         return Ok(PlannedGallery::default());
     };
-    let ids: Vec<Uuid> = entries.iter().map(|(id, _)| *id).collect();
+    let ids: Vec<Uuid> = entries
+        .iter()
+        .flat_map(|entry| std::iter::once(entry.id).chain(entry.cover))
+        .collect();
     let rows = store::assets_by_ids(pool, &ids)
         .await
         .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
     resolve_gallery(author, kind, &entries, &rows)
+}
+
+/// One gallery entry as the client stated it, after the checks that need
+/// no asset row: the asset, the description it authored, and the poster it
+/// named.
+#[derive(Debug)]
+struct EntryDraft {
+    id: Uuid,
+    alt_text: Option<String>,
+    cover: Option<Uuid>,
 }
 
 /// The half of gallery planning that reads only what the client sent:
@@ -626,14 +650,14 @@ pub async fn plan_gallery(
 /// Split from the half that needs the asset rows so the rules are
 /// reachable from a unit test — the branch matrix is the thing worth
 /// testing here, and it needs no database once the rows are in hand.
-#[expect(
-    clippy::type_complexity,
-    reason = "the pair is the id and its authored description, kept together so the two lists cannot desynchronize"
-)]
+///
+/// A placement naming itself as its poster is refused here rather than
+/// left to the junction's own CHECK: a constraint violation would surface
+/// as a server error instead of the field refusal the author can act on.
 fn gallery_entries(
     kind: GalleryKind,
     drafts: &[AttachmentDraft],
-) -> Result<Option<Vec<(Uuid, Option<String>)>>, GalleryError> {
+) -> Result<Option<Vec<EntryDraft>>, GalleryError> {
     if drafts.is_empty() {
         return Ok(None);
     }
@@ -645,8 +669,7 @@ fn gallery_entries(
         ));
     }
 
-    let mut ids: Vec<Uuid> = Vec::with_capacity(drafts.len());
-    let mut alts: Vec<Option<String>> = Vec::with_capacity(drafts.len());
+    let mut entries: Vec<EntryDraft> = Vec::with_capacity(drafts.len());
     for (i, draft) in drafts.iter().enumerate() {
         if draft.display_order != i as i32 {
             return Err(GalleryError::at(
@@ -666,35 +689,43 @@ fn gallery_entries(
                 "the first attachment is the cover",
             ));
         }
-        alts.push(
-            checked_alt_text(draft.alt_text.as_deref())
-                .map_err(|message| GalleryError::at(gallery_path(i, "altText"), message))?,
-        );
-        if ids.contains(&draft.media_id) {
+        let alt_text = checked_alt_text(draft.alt_text.as_deref())
+            .map_err(|message| GalleryError::at(gallery_path(i, "altText"), message))?;
+        if entries.iter().any(|e| e.id == draft.media_id) {
             return Err(GalleryError::at(
                 gallery_path(i, "mediaId"),
                 "this asset is already in the gallery",
             ));
         }
-        ids.push(draft.media_id);
+        if draft.cover_media_id == Some(draft.media_id) {
+            return Err(GalleryError::at(
+                gallery_path(i, "coverMediaId"),
+                "an attachment cannot be its own cover",
+            ));
+        }
+        entries.push(EntryDraft {
+            id: draft.media_id,
+            alt_text,
+            cover: draft.cover_media_id,
+        });
     }
 
-    Ok(Some(ids.into_iter().zip(alts).collect()))
+    Ok(Some(entries))
 }
 
 /// The half of gallery planning that reads the asset rows: the
-/// anti-hijack rule per entry, and the body's shape.
+/// anti-hijack rule per entry, the body's shape, and the poster.
 fn resolve_gallery(
     author: Uuid,
     kind: GalleryKind,
-    entries: &[(Uuid, Option<String>)],
+    entries: &[EntryDraft],
     rows: &[store::MediaAttachment],
 ) -> Result<PlannedGallery, GalleryPlanError> {
     let mut manifest = Vec::with_capacity(entries.len());
-    for (i, (id, alt_text)) in entries.iter().enumerate() {
+    for (i, entry) in entries.iter().enumerate() {
         let path = gallery_path(i, "mediaId");
         let asset = usable_asset(
-            rows.iter().find(|a| a.id == *id),
+            rows.iter().find(|a| a.id == entry.id),
             author,
             &path,
             "an attachment must be an asset you uploaded",
@@ -714,12 +745,67 @@ fn resolve_gallery(
                 .into());
             }
         }
-        manifest.push(manifest_entry(asset, alt_text.clone())?);
+        let cover = resolve_cover(author, i, entry, asset, rows)?;
+        manifest.push(manifest_entry(asset, entry.alt_text.clone(), cover)?);
     }
     Ok(PlannedGallery {
-        attachment_ids: entries.iter().map(|(id, _)| *id).collect(),
+        attachment_ids: entries.iter().map(|entry| entry.id).collect(),
         manifest,
     })
+}
+
+/// The poster this placement names, checked against its own row.
+///
+/// The cover arrives as an ordinary uploaded asset — either a frame the
+/// client pulled out of the video or a picture the author chose instead,
+/// which the server cannot tell apart and has no reason to. There is no
+/// server-side frame extraction: that would be a decoder in the upload
+/// path, and the upload path decodes nothing it does not have to.
+///
+/// Four ways to get it wrong, each refused against the field that carried
+/// it:
+///
+/// 1. **A cover on something that is not a video.** A still is not covered
+///    by anything, so naming one is a mistake worth reporting rather than
+///    a value worth ignoring.
+/// 2. **An asset that is not there.**
+/// 3. **Someone else's asset.** The same anti-hijack rule a gallery entry
+///    runs (data-model.md "Why parents point at attachments"): a cover
+///    must be an asset this author uploaded, so a poster can never point
+///    into another account's media.
+/// 4. **A video, or a removed asset.** A poster is the still a reader sees
+///    before playback — a video cannot stand in for one, and bytes that
+///    are gone cannot either.
+///
+/// A clip that names none is not a failure: a video can always go without
+/// a cover, and then it is the clip's own first frame a player shows.
+fn resolve_cover<'a>(
+    author: Uuid,
+    index: usize,
+    entry: &EntryDraft,
+    asset: &store::MediaAttachment,
+    rows: &'a [store::MediaAttachment],
+) -> Result<Option<&'a store::MediaAttachment>, GalleryError> {
+    let Some(id) = entry.cover else {
+        return Ok(None);
+    };
+    let path = gallery_path(index, "coverMediaId");
+    if asset.mime_type != video::MIME {
+        return Err(GalleryError::at(path, "only a video takes a cover"));
+    }
+    let cover = usable_asset(
+        rows.iter().find(|a| a.id == id),
+        author,
+        &path,
+        "a cover must be an asset you uploaded",
+    )?;
+    if cover.mime_type != webp::MIME {
+        return Err(GalleryError::at(
+            path,
+            "a cover must be an image, not a video",
+        ));
+    }
+    Ok(Some(cover))
 }
 
 /// The three rules every asset reference runs before it may be used: the
@@ -749,57 +835,6 @@ fn usable_asset<'a>(
     Ok(asset)
 }
 
-/// Checks the poster named on an upload, before any bytes are stored.
-///
-/// The cover arrives as an ordinary uploaded asset and is named here —
-/// either a frame the client pulled out of the video or a picture the
-/// author chose instead, which the server cannot tell apart and has no
-/// reason to. There is no server-side frame extraction: that would be a
-/// decoder in the upload path, and the upload path decodes nothing it
-/// does not have to.
-///
-/// Four ways to get it wrong, each refused against the field that
-/// carried it:
-///
-/// 1. **A cover on something that is not a video.** A still is not
-///    covered by anything, so naming one is a mistake worth reporting
-///    rather than a value worth ignoring.
-/// 2. **An asset that is not there.**
-/// 3. **Someone else's asset.** The same anti-hijack rule a gallery runs
-///    (data-model.md "Why parents point at attachments"): a cover must be
-///    an asset this author uploaded, so a poster can never point into
-///    another account's media.
-/// 4. **A video, or a removed asset.** A poster is the still a reader
-///    sees before playback — a video cannot stand in for one, and bytes
-///    that are gone cannot either.
-pub async fn plan_cover(
-    pool: &PgPool,
-    author: Uuid,
-    uploaded_is_video: bool,
-    cover: Option<Uuid>,
-) -> Result<Option<Uuid>, GalleryPlanError> {
-    let Some(id) = cover else {
-        return Ok(None);
-    };
-    let path = vec!["coverMediaId".to_string()];
-    if !uploaded_is_video {
-        return Err(GalleryError::at(path, "only a video takes a cover").into());
-    }
-    let rows = store::assets_by_ids(pool, std::slice::from_ref(&id))
-        .await
-        .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
-    let asset = usable_asset(
-        rows.first(),
-        author,
-        &path,
-        "a cover must be an asset you uploaded",
-    )?;
-    if asset.mime_type != webp::MIME {
-        return Err(GalleryError::at(path, "a cover must be an image, not a video").into());
-    }
-    Ok(Some(id))
-}
-
 /// The description as the manifest will carry it: trimmed, length-checked,
 /// and blank folded to absent so `""` and null cannot mean two different
 /// nothings. The caller supplies the field path; the message is the same
@@ -814,26 +849,36 @@ fn checked_alt_text(raw: Option<&str>) -> Result<Option<String>, String> {
     }
 }
 
-/// One asset's manifest entry — the three facts a reader needs to render
-/// it honestly. Everything the server measured (aspect ratio, byte size,
+/// One asset's manifest entry — the facts a reader needs to render it
+/// honestly. Everything the server measured (aspect ratio, byte size,
 /// duration) stays out: an author signs what they wrote, never a
 /// measurement.
 ///
-/// The description comes from the caller rather than from the asset row,
-/// because the row holds none: alt text is a fact about this placement,
-/// and this entry is where the author's statement about it is sealed
-/// (data-model.md "Media attachments").
+/// The description and the poster come from the caller rather than from
+/// the asset row, because the row holds neither: both are facts about this
+/// placement, and this entry is where the author's statement about them is
+/// sealed (data-model.md "Media attachments"). The cover is witnessed by
+/// its digest rather than its id, the way the manifest names every asset.
 fn manifest_entry(
     asset: &store::MediaAttachment,
     alt_text: Option<String>,
+    cover: Option<&store::MediaAttachment>,
 ) -> Result<common::envelope::MediaAsset, GalleryPlanError> {
-    let digest = asset.digest.as_slice().try_into().map_err(|_| {
-        GalleryPlanError::Internal(format!("asset {} carries a mis-sized digest", asset.id))
-    })?;
     Ok(common::envelope::MediaAsset {
-        digest,
+        digest: manifest_digest(asset)?,
         mime: asset.mime_type.clone(),
         alt_text,
+        cover: cover.map(manifest_digest).transpose()?,
+    })
+}
+
+/// An asset's digest as the manifest carries it, or the internal refusal a
+/// mis-sized one is.
+fn manifest_digest(
+    asset: &store::MediaAttachment,
+) -> Result<[u8; common::envelope::MEDIA_DIGEST_LEN], GalleryPlanError> {
+    asset.digest.as_slice().try_into().map_err(|_| {
+        GalleryPlanError::Internal(format!("asset {} carries a mis-sized digest", asset.id))
     })
 }
 
@@ -902,7 +947,7 @@ fn checked_profile_image(
             GalleryError::at(path, "a profile picture must be an image, not a video").into(),
         );
     }
-    manifest_entry(asset, None)
+    manifest_entry(asset, None, None)
 }
 
 /// The asset one profile image slot's manifest entry names, resolved the
@@ -934,14 +979,20 @@ pub async fn resolve_profile_image(
 /// asset, so the record is the source the junction rows are derived from.
 /// That is what makes a gallery rebuildable: a mirror rebuild replays the
 /// payload and reconstructs the same rows without the original request.
-/// Each placement's description is read off the same entry for the same
-/// reason — the junction row caches what the version's manifest witnessed,
-/// so a gallery read never has to decode a payload.
+/// Each placement's description and poster are read off the same entry for
+/// the same reason — the junction row caches what the version's manifest
+/// witnessed, so a gallery read never has to decode a payload.
 ///
 /// A digest with no row is dropped rather than failing the promotion. The
 /// record is ordered fact whatever CoGra holds; a manifest entry whose
 /// asset is gone renders as one fewer picture, not as a post that will not
-/// load.
+/// load. A *cover* digest with no row is thinner still: the placement is
+/// written without a poster rather than dropped, because the clip is the
+/// body and the still that fronts it is not.
+///
+/// Posters are looked up in the same round trip, and by digest for the
+/// same reason the entries are: the manifest names assets by their bytes,
+/// so the record is what the junction rows are derived from.
 pub async fn resolve_manifest(
     pool: &PgPool,
     author: Uuid,
@@ -950,17 +1001,25 @@ pub async fn resolve_manifest(
     if manifest.is_empty() {
         return Ok(Vec::new());
     }
-    let digests: Vec<Vec<u8>> = manifest.iter().map(|a| a.digest.to_vec()).collect();
+    let digests: Vec<Vec<u8>> = manifest
+        .iter()
+        .flat_map(|a| std::iter::once(a.digest).chain(a.cover))
+        .map(|digest| digest.to_vec())
+        .collect();
     let rows = store::assets_by_digests(pool, author, &digests).await?;
+    let id_of = |digest: &[u8]| {
+        rows.iter()
+            .find(|row| row.digest == digest)
+            .map(|row| row.id)
+    };
     Ok(manifest
         .iter()
         .filter_map(|entry| {
-            rows.iter()
-                .find(|row| row.digest == entry.digest)
-                .map(|row| store::GalleryPlacement {
-                    attachment_id: row.id,
-                    alt_text: entry.alt_text.clone(),
-                })
+            id_of(&entry.digest).map(|attachment_id| store::GalleryPlacement {
+                attachment_id,
+                alt_text: entry.alt_text.clone(),
+                cover_media_id: entry.cover.as_ref().and_then(|c| id_of(c)),
+            })
         })
         .collect())
 }
@@ -987,28 +1046,17 @@ pub fn public_url(base_url: &str, storage_key: &str) -> String {
 /// which is what lets a picture upload the moment it is picked
 /// (data-model.md "Media attachments").
 ///
-/// The poster is stated here rather than set later because an asset row
-/// is immutable once written: the only honest moment to name what covers
-/// an asset is the moment it is created.
-///
 /// A retried upload of the same picture by the same author resolves to
 /// the row that already exists — the object written on this attempt is
 /// then an orphan, and it is deleted here rather than left for the
 /// sweeper, because the sweeper's window is a day and this is known now.
 /// Failing that delete is logged and no more: the row is correct, and an
 /// unreferenced object is exactly what the sweeper exists for.
-///
-/// The row is immutable once written, poster included, so a re-upload
-/// naming a *different* poster is refused on `coverMediaId` rather than
-/// handed back the first upload's row: silently discarding the poster
-/// the author just chose is the one outcome that leaves them with
-/// neither an error nor what they asked for.
 pub async fn store_asset(
     pool: &PgPool,
     blobs: &dyn BlobStore,
     author: Uuid,
     asset: ProcessedAsset,
-    cover_media_id: Option<Uuid>,
 ) -> Result<store::MediaAttachment, GalleryPlanError> {
     let id = Uuid::new_v4();
     let key = storage_key(id, asset.mime);
@@ -1035,22 +1083,14 @@ pub async fn store_asset(
         asset.mime,
         size_bytes,
         &options,
-        cover_media_id,
     )
     .await
     .map_err(internal)?;
 
-    let deduped = row.storage_key != key;
-    if deduped && let Err(e) = blobs.delete(&key).await {
+    if row.storage_key != key
+        && let Err(e) = blobs.delete(&key).await
+    {
         tracing::warn!(error = %e, key, "leaving a duplicate upload's object to the sweeper");
-    }
-    if deduped && cover_media_id.is_some() && row.cover_media_id != cover_media_id {
-        return Err(GalleryPlanError::BadInput(GalleryError {
-            path: vec!["coverMediaId".into()],
-            message: "these bytes are already stored under a different poster; \
-                      an asset's poster is fixed when it is created"
-                .into(),
-        }));
     }
     Ok(row)
 }
@@ -1125,7 +1165,6 @@ mod planning_tests {
             mime_type: mime.into(),
             size_bytes: Some(1024),
             options: serde_json::json!({}),
-            cover_media_id: None,
             redaction_reason: None,
             redacted_at: None,
             created_at: chrono::Utc::now(),
@@ -1138,6 +1177,15 @@ mod planning_tests {
             display_order: order,
             is_cover: None,
             alt_text: None,
+            cover_media_id: None,
+        }
+    }
+
+    fn entry(id: Uuid, cover: Option<Uuid>) -> EntryDraft {
+        EntryDraft {
+            id,
+            alt_text: None,
+            cover,
         }
     }
 
@@ -1197,6 +1245,144 @@ mod planning_tests {
                 .path,
             gallery_path(0, "isCover")
         );
+
+        let itself = Uuid::new_v4();
+        let mut self_poster = draft(itself, 0);
+        self_poster.cover_media_id = Some(itself);
+        assert_eq!(
+            gallery_entries(GalleryKind::Post, &[self_poster])
+                .expect_err("an attachment cannot be its own cover")
+                .path,
+            gallery_path(0, "coverMediaId")
+        );
+    }
+
+    /// The poster's own rules, each against the field that named it — and
+    /// the two states that are not refusals: a clip with a still over it,
+    /// and a clip with none.
+    ///
+    /// A cover is the author's own still over a video, refused at the placement's own coverMediaId.
+    /// ´claim:media:a-cover-is-the-authors-own-still-over-a-video´
+    #[test]
+    fn a_cover_is_the_authors_own_still_over_a_video() {
+        let author = Uuid::new_v4();
+        let video = asset(author, video::MIME);
+        let still = asset(author, webp::MIME);
+        let rows = [video.clone(), still.clone()];
+        let covered = [entry(video.id, Some(still.id))];
+
+        assert!(resolve_gallery(author, GalleryKind::Post, &covered, &rows).is_ok());
+        assert!(
+            resolve_gallery(
+                author,
+                GalleryKind::Post,
+                &[entry(video.id, None)],
+                std::slice::from_ref(&video),
+            )
+            .is_ok(),
+            "a video can always go without a cover"
+        );
+
+        let path = gallery_path(0, "coverMediaId");
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Post,
+                    &[entry(still.id, Some(video.id))],
+                    &rows,
+                )
+                .expect_err("only a video takes a cover")
+            ),
+            path
+        );
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Post,
+                    &covered,
+                    std::slice::from_ref(&video),
+                )
+                .expect_err("no such asset")
+            ),
+            path
+        );
+        let theirs = store::MediaAttachment {
+            author_id: Uuid::new_v4(),
+            ..still.clone()
+        };
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Post,
+                    &covered,
+                    &[video.clone(), theirs]
+                )
+                .expect_err("someone else's still")
+            ),
+            path
+        );
+        let removed = store::MediaAttachment {
+            redacted_at: Some(chrono::Utc::now()),
+            ..still.clone()
+        };
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Post,
+                    &covered,
+                    &[video.clone(), removed]
+                )
+                .expect_err("a removed still")
+            ),
+            path
+        );
+        let second_clip = asset(author, video::MIME);
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Post,
+                    &[entry(video.id, Some(second_clip.id))],
+                    &[video.clone(), second_clip],
+                )
+                .expect_err("a video cannot cover a video")
+            ),
+            path
+        );
+    }
+
+    /// The poster is witnessed by digest and written onto the placement,
+    /// and it never becomes a gallery entry of its own — the counting rule
+    /// "ten pictures or one video" depends on that.
+    ///
+    /// A witnessed poster resolves back onto the placement without ever becoming a gallery entry.
+    /// ´claim:media:a-poster-rides-the-placement-not-the-gallery´
+    #[test]
+    fn a_poster_rides_the_placement_not_the_gallery() {
+        let author = Uuid::new_v4();
+        let video = asset(author, video::MIME);
+        let still = store::MediaAttachment {
+            digest: vec![9u8; 32],
+            ..asset(author, webp::MIME)
+        };
+        let planned = resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &[entry(video.id, Some(still.id))],
+            &[video.clone(), still.clone()],
+        )
+        .expect("a covered clip");
+
+        assert_eq!(planned.attachment_ids, vec![video.id]);
+        assert_eq!(planned.manifest.len(), 1);
+        assert_eq!(
+            planned.manifest[0].cover.expect("a witnessed poster"),
+            still.digest.as_slice()
+        );
     }
 
     /// The anti-hijack rule and the body's shape, each against the entry
@@ -1209,7 +1395,7 @@ mod planning_tests {
         let author = Uuid::new_v4();
         let stranger = Uuid::new_v4();
         let mine = asset(author, webp::MIME);
-        let entries = vec![(mine.id, None)];
+        let entries = vec![entry(mine.id, None)];
 
         assert!(
             resolve_gallery(
@@ -1252,7 +1438,7 @@ mod planning_tests {
         );
 
         let video = asset(author, video::MIME);
-        let mixed = vec![(mine.id, None), (video.id, None)];
+        let mixed = vec![entry(mine.id, None), entry(video.id, None)];
         assert_eq!(
             path_of(
                 &resolve_gallery(
@@ -1275,7 +1461,7 @@ mod planning_tests {
                 &resolve_gallery(
                     author,
                     GalleryKind::Comment,
-                    &[(video.id, None)],
+                    &[entry(video.id, None)],
                     &[oversized],
                 )
                 .expect_err("past the parent's video cap")

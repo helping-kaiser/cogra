@@ -36,8 +36,8 @@ export const NO_COMMENT_MEDIA: CommentMedia = [];
  *
  * A COMMENT'S GRAMMAR IS THE POST'S AT COMMENT CAPS (design/backlog.md item
  * 31): four pictures OR one video with its cover, never both. The cover is not
- * an attachment here either — it reaches the reader through the video's own
- * `coverMedia`, so it never enters the gallery or the description count.
+ * an attachment here either — it reaches the reader through the clip's own
+ * placement, so it never enters the gallery or the description count.
  */
 export function isVideoComment(media: CommentMedia): boolean {
   const first = media[0];
@@ -174,9 +174,21 @@ export function commentGate(
   return ALLOWED;
 }
 
-/** The gallery in order, or null while any picture is still unresolved. */
-export function commentAttachmentClaims(media: CommentMedia): readonly GalleryEntryDraft[] | null {
+/**
+ * The gallery in order, or null while any picture is still unresolved.
+ *
+ * The poster rides the clip's own placement, the same way a post's does, so
+ * a cover the author chose but whose upload has not landed leaves the whole
+ * gallery unresolved rather than publishing the clip faceless.
+ */
+export function commentAttachmentClaims(
+  media: CommentMedia,
+  /** The video's face, or null on a picture comment and a faceless clip. */
+  cover: CoverAsset | null = null,
+): readonly GalleryEntryDraft[] | null {
   if (media.length === 0) return null;
+  if (cover !== null && cover.upload.kind !== "done") return null;
+  const coverMediaId = cover?.upload.kind === "done" ? cover.upload.mediaId : null;
   const claims: GalleryEntryDraft[] = [];
   for (const asset of media) {
     if (asset.upload.kind !== "done") return null;
@@ -186,6 +198,7 @@ export function commentAttachmentClaims(media: CommentMedia): readonly GalleryEn
     claims.push({
       mediaId: asset.upload.mediaId,
       altText: asset.altText.trim() === "" ? null : asset.altText.trim(),
+      coverMediaId: kindOf(asset) === "video" ? coverMediaId : null,
     });
   }
   return claims;

@@ -20,6 +20,7 @@ import { useId, useRef, useState } from "react";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
+import { useObjectUrl } from "@/lib/compose/previews";
 import type { PickRefusal } from "@/lib/compose/pick";
 import type { PickedAsset } from "@/lib/compose/wizard";
 import { kindOf, POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
@@ -231,21 +232,38 @@ function MediaBody({
 
       {assets.length > 0 && (
         <div className="flex flex-none flex-col gap-1.5 border-b border-outline-variant px-6 pb-3 pt-1">
-          <div className="flex items-baseline gap-2">
-            <span className="flex-1 text-label-medium text-on-surface-variant">
+          {/* NO "Show all" ON A CLIP (ComposePickVideo): that sheet reorders a
+              set and names its cover, and one clip is neither — its cover is
+              the next step's whole subject. Absent the button, the count is
+              the only thing on its line, so it does not need the flex row
+              that pushes Show all to the end of one. */}
+          {holdsVideo ? (
+            <span
+              data-testid="wizard-picked-count"
+              className="text-label-medium text-on-surface-variant"
+            >
               Picked · {assets.length}
             </span>
-            {/* The way into the per-picture manager: reorder (first is the
-                cover), remove, describe. The tray itself stays a summary. */}
-            <button
-              type="button"
-              data-testid="wizard-show-all"
-              onClick={onManage}
-              className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
-            >
-              Show all
-            </button>
-          </div>
+          ) : (
+            <div className="flex items-baseline gap-2">
+              <span
+                data-testid="wizard-picked-count"
+                className="flex-1 text-label-medium text-on-surface-variant"
+              >
+                Picked · {assets.length}
+              </span>
+              {/* The way into the per-picture manager: reorder (first is the
+                  cover), remove, describe. The tray itself stays a summary. */}
+              <button
+                type="button"
+                data-testid="wizard-show-all"
+                onClick={onManage}
+                className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
+              >
+                Show all
+              </button>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <ul className="m-0 flex list-none gap-2 overflow-x-auto p-0">
               {assets.map((asset, index) => (
@@ -253,16 +271,22 @@ function MediaBody({
                   <MediaThumb
                     src={previews[asset.id] ?? null}
                     crop={asset.crop}
-                    cover={index === 0}
+                    // A video is never the post's "cover" picture — that word
+                    // names a different, later choice (the video's own face,
+                    // ComposeCover) — so the badge ComposePick draws on a
+                    // picture's first tile has no video counterpart.
+                    cover={!holdsVideo && index === 0}
                     onRemove={() => onUnpick(asset.id)}
-                    removeLabel={`Remove picture ${index + 1}`}
+                    removeLabel={holdsVideo ? "Remove this video" : `Remove picture ${index + 1}`}
                     testId={`wizard-unpick-${asset.id}`}
                   />
                 </li>
               ))}
             </ul>
             <span className="flex-1 text-label-small text-on-surface-variant">
-              The first one is the cover.
+              {holdsVideo
+                ? "A video is the whole post. Its cover comes next."
+                : "The first one is the cover."}
             </span>
           </div>
         </div>
@@ -336,23 +360,23 @@ function MediaBody({
           )}
         </div>
 
-        {/* THE REFUSALS, one line each, each with its own way out — and the
-            tray above went on holding everything that was accepted. They stay
-            until dismissed: a file refused mid-batch is easy to miss, and a
-            banner that faded would leave an author wondering where their
-            picture went. No Retry: retrying cannot make a file smaller or a
-            format readable. */}
+        {/* THE REFUSALS, each a `RefusedFile` tile — the failed thumb beside
+            its own words — and the tray above went on holding everything
+            that was accepted. They stay until dismissed: a file refused
+            mid-batch is easy to miss, and a banner that faded would leave an
+            author wondering where their picture went. No Retry: retrying
+            cannot make a file smaller or a format readable
+            (ComposePickedErrors, padding "14px 24px 0", gap 10). */}
         {refusals.length > 0 && (
           <ul
             data-testid="wizard-refusals"
-            className="m-0 mt-3 flex list-none flex-col gap-1 p-0"
+            className="m-0 mt-3.5 flex list-none flex-col gap-2.5 p-0"
           >
             {refusals.map((refusal) => (
               <li key={refusal.id}>
-                <UploadErrorLine
-                  message={refusal.reason}
-                  onRemove={() => onDismissRefusal(refusal.id)}
-                  testId={`wizard-refusal-${refusal.id}`}
+                <RefusedFileRow
+                  refusal={refusal}
+                  onDismiss={() => onDismissRefusal(refusal.id)}
                 />
               </li>
             ))}
@@ -362,5 +386,38 @@ function MediaBody({
         <NextAction disabled={blocked} onNext={onNext} className="pt-4" />
       </div>
     </>
+  );
+}
+
+/**
+ * One refused file, as `RefusedFile` draws it (design/components/compose):
+ * the failed tile beside the words, `gap: var(--space-2)`.
+ *
+ * A picture's own bytes preview the tile. A video or anything else gets
+ * none — the same "omit `src` for a file nothing can read: an empty tile is
+ * the honest picture" rule the design system states, since a browser has no
+ * cheap way to pull a poster frame from a refused clip's bytes the way an
+ * `<img>` shows a picture's.
+ */
+function RefusedFileRow({
+  refusal,
+  onDismiss,
+}: {
+  refusal: PickRefusal;
+  onDismiss: () => void;
+}) {
+  const previewable = refusal.file.type.startsWith("image/");
+  const src = useObjectUrl(previewable ? refusal.file : null);
+  return (
+    <div className="flex items-center gap-2">
+      <MediaThumb src={src} failed testId={`wizard-refusal-${refusal.id}-thumb`} />
+      <div className="min-w-0 flex-1">
+        <UploadErrorLine
+          message={refusal.reason}
+          onRemove={onDismiss}
+          testId={`wizard-refusal-${refusal.id}`}
+        />
+      </div>
+    </div>
   );
 }

@@ -32,6 +32,16 @@ describe("pillClassName", () => {
     expect(pillClassName({ variant: "filled" })).not.toContain("primary-container");
   });
 
+  // CW-38: `inverse` is the filled button standing on a tonal panel, wearing
+  // the panel's own pair turned over rather than `primary` arguing with it
+  // (Button.jsx:10-17).
+  it("turns the tonal panel's own pair over, rather than filling with primary", () => {
+    const classes = pillClassName({ variant: "inverse" });
+    expect(classes).toContain("bg-on-tertiary-container");
+    expect(classes).toContain("text-tertiary-container");
+    expect(classes).not.toContain("bg-primary");
+  });
+
   it("carries the state and focus behaviour every pressable surface gets", () => {
     expect(pillClassName({})).toContain("cg-state");
     expect(pillClassName({})).toContain("cg-focus");

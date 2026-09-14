@@ -77,12 +77,12 @@ fragment MediaFields on MediaAttachment {
     aspectRatio
     durationMs
   }
-  # A video's poster: the still shown before playback and wherever
-  # autoplay does not run. Spelled out rather than spreading this
+  # The poster this placement names: the still shown before playback and
+  # wherever autoplay does not run. Spelled out rather than spreading this
   # fragment, which cannot recurse; one level is all there is, since a
   # poster is an image and never carries a poster of its own. It answers
   # with its own `status`, so a removed cover reads REDACTED here like
-  # anywhere else.
+  # anywhere else. Null outside a placement — a fresh upload names none.
   coverMedia {
     id
     url

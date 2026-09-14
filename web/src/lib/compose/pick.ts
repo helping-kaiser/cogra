@@ -35,6 +35,12 @@ export type PickRefusal = {
   /** The file's own name, so a reader can tell which of five it was. */
   readonly name: string;
   readonly reason: string;
+  /**
+   * The file itself, so a picture refusal can preview its own bytes
+   * (`RefusedFile`, `ComposePickedErrors`). Never uploaded and never read for
+   * anything else — a refused file never joins the batch.
+   */
+  readonly file: File;
 };
 
 export type PickOutcome = {
@@ -65,7 +71,7 @@ export const TOO_BIG_VIDEO_COMMENT = `That video is too big — a comment's vide
 // Undrawn, written to the board's pattern. Reported rather than presented as
 // board-backed: ComposePickedErrors draws the picture case and the
 // unknown-format case, and these are the cases the post path has beyond them.
-export const TOO_BIG_VIDEO_POST = `That video is too big — a video can be up to ${megabytes(POST_VIDEO_MAX_BYTES)}.`;
+export const TOO_BIG_VIDEO_POST = `That video is too big — a post's video can be up to ${megabytes(POST_VIDEO_MAX_BYTES)}.`;
 export const ANIMATED_GIF =
   "That GIF moves, and CoGra can't take a moving GIF here. A still one is fine.";
 export const MIXED_BODY = "A post carries pictures or one video, not both.";
@@ -121,7 +127,7 @@ export async function screenPick(
   const pictures: File[] = [];
   const videos: File[] = [];
   const refuse = (file: File, reason: string) => {
-    refusals.push({ id: newComposeId(), name: file.name, reason });
+    refusals.push({ id: newComposeId(), name: file.name, reason, file });
   };
 
   for (const file of files) {

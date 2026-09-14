@@ -6,14 +6,22 @@
 // file is fine and the server then refuses it, which is the failure this file
 // exists to make loud.
 //
-// What cannot be tested here: the probe and the frame capture, which need a
-// real decoder. Node has no video element and jsdom has no media pipeline, so
-// those are exercised by hand rather than pretended at — noted, not papered
-// over.
+// What cannot be tested here: the probe and the frame capture itself, which
+// need a real decoder. Node has no video element and jsdom has no media
+// pipeline, so those are exercised by hand rather than pretended at — noted,
+// not papered over. `frameTimes` is the one piece of the capture that is pure
+// arithmetic, so it is proven here instead.
 
 import { describe, expect, it } from "vitest";
 
-import { formatDuration, isVideoFile, looksLikeMp4, sniffMp4, VIDEO_TYPE } from "./video";
+import {
+  formatDuration,
+  frameTimes,
+  isVideoFile,
+  looksLikeMp4,
+  sniffMp4,
+  VIDEO_TYPE,
+} from "./video";
 
 /** An `ftyp` header: size, "ftyp", major brand, then compatible brands. */
 function ftyp(major: string, compatible: readonly string[] = []): Uint8Array<ArrayBuffer> {
@@ -117,5 +125,22 @@ describe("formatDuration", () => {
     expect(formatDuration(Number.POSITIVE_INFINITY)).toBe("0:00");
     expect(formatDuration(Number.NaN)).toBe("0:00");
     expect(formatDuration(-1)).toBe("0:00");
+  });
+});
+
+describe("frameTimes", () => {
+  // CW-13 (CoverRow.jsx: "FOUR FRAMES, NOT THREE: 1s, 10%, 50%, 90%"). The
+  // opening offer is a time, not a fraction, so it is computed separately
+  // from — and ahead of — the three fractional points.
+  it("leads with the 1-second opening, then the three fractional offers", () => {
+    expect(frameTimes(10)).toEqual([1, 1, 5, 9]);
+  });
+
+  it("clamps the opening to a clip shorter than a second, never past its end", () => {
+    expect(frameTimes(0.5)).toEqual([0.5, 0.05, 0.25, 0.45]);
+  });
+
+  it("collapses every offer to zero when the length is unknown", () => {
+    expect(frameTimes(0)).toEqual([0, 0, 0, 0]);
   });
 });

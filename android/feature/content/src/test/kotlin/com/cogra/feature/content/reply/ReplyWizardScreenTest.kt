@@ -206,6 +206,17 @@ class ReplyWizardScreenTest {
         assertThat(describes).isEqualTo(1)
     }
 
+    // CW-16 (2026-09-08 UI audit): a comment's clip opens the video shape of
+    // the describe sheet, the same one `ComposeDescribeVideo.jsx` draws.
+    @Test
+    fun aClipsDescribeSheetIsTheVideoShape() {
+        val state = composerWithClip().copy(describingIndex = 0)
+        compose.setContent { Wizard(state) }
+
+        compose.onNodeWithText("What's in the video").assertExists()
+        compose.onNodeWithTag("reply_describe_sheet_play_disc").assertExists()
+    }
+
     // -- `ReplySeal` --
 
     /**

@@ -51,10 +51,10 @@
         <error line="506" column="34" source="standard:class-signature" />
         <error line="507" column="5" source="standard:class-signature" />
         <error line="791" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="910" column="5" source="standard:class-signature" />
-        <error line="911" column="5" source="standard:class-signature" />
-        <error line="911" column="34" source="standard:class-signature" />
-        <error line="912" column="5" source="standard:class-signature" />
+        <error line="913" column="5" source="standard:class-signature" />
+        <error line="914" column="5" source="standard:class-signature" />
+        <error line="914" column="34" source="standard:class-signature" />
+        <error line="915" column="5" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/network/repo/Stance.kt">
         <error line="1" column="1" source="standard:filename" />

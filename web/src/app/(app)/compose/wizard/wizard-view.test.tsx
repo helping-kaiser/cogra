@@ -201,6 +201,20 @@ describe("the compose wizard", () => {
     expect(variables!.input.attachments).toBeNull();
   });
 
+  // CW-26: WizardHeader.jsx's stageLabel slot draws at --text-label-small.
+  it("labels the seal stage at the label-small role, not body-small", async () => {
+    render();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), {
+      target: { value: "Three weekends at low tide." },
+    });
+    fireEvent.click(screen.getByTestId("wizard-next"));
+    await screen.findByTestId("wizard-title");
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    expect(await screen.findByText("Last step")).toHaveClass("text-label-small");
+  });
+
   // The hand test found framing dead on everything past the first picture, so
   // what is asserted is that each one carries its OWN framing and keeps it.
   // The zoom is read off the cropper's own transform, which is the framing the
@@ -274,6 +288,7 @@ describe("the compose wizard", () => {
           displayOrder: number;
           isCover: boolean;
           altText: string | null;
+          coverMediaId: string | null;
         }[];
       };
     } | null = null;
@@ -328,10 +343,17 @@ describe("the compose wizard", () => {
 
     // The description rides the attachment, not the upload: it was typed
     // long after the bytes were already stored, and it still reaches the
-    // record that the signature covers.
+    // record that the signature covers. A picture is covered by nothing, so
+    // every placement here names a null poster rather than omitting one.
     expect(variables!.input.attachments).toEqual([
-      { mediaId: "m-a", displayOrder: 0, isCover: true, altText: "paper against the salt crust" },
-      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null },
+      {
+        mediaId: "m-a",
+        displayOrder: 0,
+        isCover: true,
+        altText: "paper against the salt crust",
+        coverMediaId: null,
+      },
+      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null, coverMediaId: null },
     ]);
   });
 
@@ -435,6 +457,25 @@ describe("the compose wizard", () => {
     expect(screen.getByTestId("wizard-keep-draft")).toBeInTheDocument();
   });
 
+  // CW-40: the graph draws ComposeKeyAbsent's keep-draft edge as a terminal
+  // `back` — it leaves the wizard, keeping the draft, rather than stepping
+  // back to the details screen the way the ordinary seal's Back does.
+  it("leaves the wizard when a keyless seal's keep-draft is pressed, rather than stepping back", async () => {
+    const drafts = fakeDrafts();
+    render(drafts, false);
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
+    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+
+    fireEvent.click(await screen.findByTestId("wizard-keep-draft"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
+    expect(drafts.held()?.words).toBe("words");
+    // Not a step back: the details screen never reappears underneath.
+    expect(screen.queryByTestId("wizard-title")).not.toBeInTheDocument();
+  });
+
   it("offers a held draft, and discarding it leaves a clean screen", async () => {
     const held: WizardState = {
       ...emptyWizard(),
@@ -449,6 +490,52 @@ describe("the compose wizard", () => {
     fireEvent.click(screen.getByTestId("wizard-draft-discard"));
     await waitFor(() => expect(drafts.held()).toBeNull());
     expect(screen.queryByTestId("wizard-draft-card")).not.toBeInTheDocument();
+  });
+
+  // CW-42 (ComposeDraft.jsx): the pick step underneath the offer is present,
+  // dimmed to 55%, and not the subject — Android's ComposeWizardScreen.kt
+  // gates the same alpha on `draftOffer != null`.
+  it("dims the pick step and makes it inert while the draft offer shows, then restores it", async () => {
+    const held: WizardState = {
+      ...emptyWizard(),
+      mode: "words",
+      words: "an unfinished thought",
+      title: "Salt maps",
+    };
+    const drafts = fakeDrafts(held);
+    render(drafts);
+
+    await screen.findByTestId("wizard-draft-card");
+    const region = screen.getByTestId("wizard-pick-region");
+    // Dimmed AND inert, not opacity alone — a stray tab or click must not
+    // land on a grid the draft's own Continue/Discard pair is meant to
+    // decide for the author.
+    expect(region).toHaveAttribute("inert");
+    expect(region).toHaveStyle({ opacity: "0.55" });
+
+    fireEvent.click(screen.getByTestId("wizard-draft-discard"));
+    await waitFor(() => expect(drafts.held()).toBeNull());
+    expect(region).not.toHaveAttribute("inert");
+    expect(region).not.toHaveStyle({ opacity: "0.55" });
+  });
+
+  // CW-43 (jakob 2026-08-31, design-session-answers q26, readme §13): the
+  // ruled short form ends on its own dash — the pick screen right below is
+  // already the rest of the sentence.
+  it("names the fresh-start route in the ruled short form", async () => {
+    const held: WizardState = {
+      ...emptyWizard(),
+      mode: "words",
+      words: "an unfinished thought",
+      title: "Salt maps",
+    };
+    render(fakeDrafts(held));
+
+    // Exact text, not a substring match: the old full sentence also started
+    // with these same words, which is exactly the regression this pins.
+    expect((await screen.findByTestId("wizard-draft-fresh")).textContent).toBe(
+      "Or start fresh —",
+    );
   });
 
   it("restores a held draft on the step it was left on", async () => {

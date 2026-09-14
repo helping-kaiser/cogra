@@ -835,6 +835,7 @@ private fun List<AttachmentClaim>.toInput(): Optional<List<AttachmentInput>?> =
                 displayOrder = index,
                 isCover = Optional.present(index == 0),
                 altText = Optional.presentIfNotNull(claim.altText),
+                coverMediaId = Optional.presentIfNotNull(claim.coverMediaId),
             )
         },
     )
@@ -857,6 +858,7 @@ private fun List<AttachmentClaim>.toEditInput(): Optional<List<AttachmentInput>?
                 displayOrder = index,
                 isCover = Optional.present(index == 0),
                 altText = Optional.presentIfNotNull(claim.altText),
+                coverMediaId = Optional.presentIfNotNull(claim.coverMediaId),
             )
         },
     )
@@ -882,6 +884,7 @@ private fun List<AttachmentClaim>.toCommentInput(): Optional<List<AttachmentInpu
                 mediaId = claim.mediaId,
                 displayOrder = index,
                 altText = Optional.presentIfNotNull(claim.altText),
+                coverMediaId = Optional.presentIfNotNull(claim.coverMediaId),
             )
         },
     )

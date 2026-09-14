@@ -38,7 +38,7 @@ import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
-import { usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
+import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { commentAttachmentClaims } from "@/lib/compose/comment-media";
 import { COMMENT_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
@@ -128,6 +128,9 @@ export function ReplyWizard({
   const video = isVideoReply(state) ? state.media[0] : undefined;
   const videoFile = video?.file ?? null;
   const cover = state.cover;
+  // The describe sheet's own preview: a clip shows its cover frame, the same
+  // face the composer's tile wears, never the clip's own undecoded bytes.
+  const coverPreview = useObjectUrl(cover?.file ?? null);
 
   // ---- the clip's length, and the faces it offers ---------------------------
 
@@ -299,7 +302,7 @@ export function ReplyWizard({
         license: state.license,
         tags: state.tags,
         references: state.references,
-        attachments: commentAttachmentClaims(state.media) ?? undefined,
+        attachments: commentAttachmentClaims(state.media, state.cover) ?? undefined,
         stance: state.stance,
         sensitive: state.sensitive,
         sensitiveReason: state.sensitiveReason,
@@ -469,12 +472,19 @@ export function ReplyWizard({
       <DescribeSheet
         open={describing !== null}
         onClose={() => setDescribing(null)}
-        src={describing === null ? null : (previews[describing] ?? null)}
+        src={
+          describing === null
+            ? null
+            : isVideoReply(state)
+              ? coverPreview
+              : (previews[describing] ?? null)
+        }
         crop={state.media.find((asset) => asset.id === describing)?.crop ?? null}
         value={state.media.find((asset) => asset.id === describing)?.altText ?? ""}
         onChange={(altText) => {
           if (describing !== null) dispatch({ type: "altText", id: describing, altText });
         }}
+        video={isVideoReply(state)}
         position={{
           index: state.media.findIndex((asset) => asset.id === describing),
           total: state.media.length,
