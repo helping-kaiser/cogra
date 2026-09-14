@@ -14,11 +14,9 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.PICTURE_MAX_BYTES
-import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.MediaRepository
-import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
 import com.cogra.domain.signing.NoActorKeyException
@@ -34,7 +32,6 @@ import com.cogra.feature.content.candidateRows
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -80,12 +77,6 @@ class ComposeWizardViewModel @Inject constructor(
     private val _state = MutableStateFlow(ComposeWizardState())
     val state = _state.asStateFlow()
 
-    /**
-     * The only thing this composer and the reply composer differ by in
-     * their media screening (`PickScale.kt`).
-     */
-    private val scale = POST_SCALE
-
     /** One job per picked asset, so a retry cancels only its own. */
     private val uploads = mutableMapOf<String, Job>()
 
@@ -106,6 +97,17 @@ class ComposeWizardViewModel @Inject constructor(
         video = video,
         processor = processor,
         deviceMedia = deviceMedia,
+    )
+
+    /** Every asset's journey onto the server (`WizardUploader`). */
+    private val uploader = WizardUploader(
+        scope = viewModelScope,
+        state = _state,
+        video = video,
+        processor = processor,
+        media = media,
+        jobs = uploads,
+        onUploadSessionStarted = { uploadSession = it },
     )
 
     private val sections = SectionsEditor(
@@ -470,7 +472,7 @@ class ComposeWizardViewModel @Inject constructor(
         // The video path spends the same stage on the wire, one stage
         // later: its face is settled on the cover step, and the cover is
         // what the clip's own upload has to name.
-        if (current.step == WizardStep.Cover) startVideoUpload()
+        if (current.step == WizardStep.Cover) uploader.startVideoUpload()
         _state.value = next
         // Entering the cover stage is what pays for the frames.
         if (next.step == WizardStep.Cover) mediaReader.loadCoverFrames()
@@ -610,145 +612,11 @@ class ComposeWizardViewModel @Inject constructor(
     private fun startUploads(crops: Map<String, CropSpec>) {
         _state.value.picked.forEach { asset ->
             if (asset.upload is AssetUpload.Done) return@forEach
-            upload(asset.uri, crops[asset.uri] ?: CropSpec(_state.value.shape.ratio()))
+            uploader.upload(asset.uri, crops[asset.uri] ?: CropSpec(_state.value.shape.ratio()))
         }
     }
 
-    /** Retries exactly one asset — the point of the one-call-per-asset shape. */
-    fun onRetryUpload(uri: String) {
-        val state = _state.value
-        val asset = state.picked.firstOrNull { it.uri == uri } ?: return
-        if (asset.upload.inFlight) return
-        if (asset.isVideo) {
-            startVideoUpload()
-            return
-        }
-        upload(uri, state.crops[uri] ?: CropSpec(state.shape.ratio()))
-    }
-
-    /**
-     * The clip's whole journey: its face first when it has one, then the
-     * bytes.
-     *
-     * Two standalone uploads where a cover was chosen, and the order is
-     * this way because the cover is the cheap leg: a refused cover is
-     * learned in a second, instead of after a minute of transcoding and
-     * a ninety-megabyte send. The placement names the poster's id at
-     * prepare, so the id has to exist by then rather than by the time
-     * the clip goes up. [CoverChoice.None] is a settled answer rather
-     * than a wait, so it skips straight to the clip's own bytes.
-     */
-    private fun startVideoUpload() {
-        val clip = _state.value.video ?: return
-        uploads.remove(clip.uri)?.cancel()
-        uploads[clip.uri] = viewModelScope.launch {
-            val coverId = when (_state.value.coverChoice) {
-                CoverChoice.None -> null
-                else -> _state.value.coverMediaId ?: uploadCover() ?: return@launch
-            }
-            _state.update { it.copy(coverMediaId = coverId) }
-
-            _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(0)) }
-            val processed = video.transcode(clip.uri, scale.videoMaxBytes) { percent ->
-                _state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(percent)) }
-            }
-            if (processed == null) {
-                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.UNREADABLE_VIDEO)) }
-                return@launch
-            }
-            // The clip's half of the shared screening (`PickScale.kt`),
-            // which is why it runs here rather than at pick time.
-            if (scale.refusesVideo(processed.byteCount)) {
-                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(scale.tooBigVideo)) }
-                runCatching { File(processed.path).delete() }
-                return@launch
-            }
-
-            _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
-            val sending = { progress: UploadProgress ->
-                uploadSession = progress.uploadId
-                _state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
-            }
-            when (val outcome = media.uploadVideo(processed, sending)) {
-                is Outcome.Success -> _state.update {
-                    it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id))
-                }
-                is Outcome.Refused -> _state.update {
-                    it.withUpload(
-                        clip.uri,
-                        AssetUpload.Failed(UploadFailure.REFUSED_VIDEO, outcome.errors.firstOrNull()?.message),
-                    )
-                }
-                is Outcome.Failed -> _state.update {
-                    it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
-                }
-            }
-            // The transcode's cache copy has served its purpose either
-            // way: the bytes are on the server, or the attempt failed
-            // and a retry re-encodes from the original.
-            runCatching { File(processed.path).delete() }
-        }
-    }
-
-    /**
-     * Uploads whatever the author chose as the face, as its own still.
-     *
-     * A frame arrives already processed — the pipeline shaped it exactly
-     * as it shapes a picked picture. A chosen picture is processed here,
-     * framed to the clip's own shape: a poster that is not the video's
-     * shape would letterbox the thing it stands in for.
-     *
-     * Never called for [CoverChoice.None] — [startVideoUpload] skips
-     * straight past it — so that branch is unreached in practice; it
-     * fails loudly rather than silently if that invariant ever breaks.
-     */
-    private suspend fun uploadCover(): String? {
-        val state = _state.value
-        val clip = state.video ?: return null
-        val picture = when (val choice = state.coverChoice) {
-            CoverChoice.None -> null
-            is CoverChoice.Frame -> state.coverFrames.getOrNull(choice.index)?.picture
-            is CoverChoice.Picture -> processor.process(
-                choice.uri,
-                CropSpec(targetRatio = clip.sourceRatio ?: 1f),
-            )
-        }
-        if (picture == null) {
-            _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.UNREADABLE_COVER)) }
-            return null
-        }
-        // A cover is an ordinary still and rides the still cap, on the
-        // encoded bytes exactly as a picture does.
-        if (picture.overPictureCap()) {
-            _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.PICTURE_TOO_BIG)) }
-            return null
-        }
-        return when (val outcome = media.uploadMedia(picture)) {
-            is Outcome.Success -> outcome.value.id
-            is Outcome.Refused -> {
-                _state.update {
-                    it.withUpload(
-                        clip.uri,
-                        AssetUpload.Failed(UploadFailure.REFUSED_COVER, outcome.errors.firstOrNull()?.message),
-                    )
-                }
-                null
-            }
-            is Outcome.Failed -> {
-                _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.TRANSPORT)) }
-                null
-            }
-        }
-    }
-
-    private fun upload(uri: String, crop: CropSpec) {
-        uploads.remove(uri)?.cancel()
-        _state.update { it.withUpload(uri, AssetUpload.Running) }
-        uploads[uri] = viewModelScope.launch {
-            val result = uploadPicture(uri, crop, processor, media)
-            _state.update { it.withUpload(uri, result) }
-        }
-    }
+    fun onRetryUpload(uri: String) = uploader.onRetryUpload(uri)
 
     // -- The seal (`ComposeSeal`) --
 
