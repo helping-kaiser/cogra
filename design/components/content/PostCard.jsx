@@ -106,6 +106,8 @@ export function PostCard({
   references = 0,
   opinions = 0,
   onOpenOpinions,
+  citedBy = 0,
+  onOpenCitedBy,
   menuItems = [],
 }) {
   const detail = variant === "detail";
@@ -346,6 +348,51 @@ export function PostCard({
           <span aria-hidden="true">
             {opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`}
           </span>
+        </button>
+      )}
+      {/* WHAT CITES THIS, on the detail surface only (the topic round,
+          2026-09-14). The MIRROR of the opinions round: the post's own
+          references line says what this post points AT, and nothing anywhere
+          said what points BACK. Inbound is a different fact and gets a
+          different line.
+
+          IT IS NOT THE REFERENCES LINE GROWN A SECOND NUMBER. That line's count
+          is the list's length and the tags-and-references sheet is that list —
+          a law this round does not touch. Inbound citations are a different
+          list, by different authors, with a different order, and folding them
+          into one count would make neither number checkable.
+
+          IT TAKES THE OPINIONS ROW'S REGISTER, directly under it, because it is
+          the same KIND of fact: a quiet count of other people's acts toward
+          this post, and the way into the list holding them. Same type, same
+          colour, same discipline.
+
+          AT ZERO THERE IS NO ROW, `SettingsHidden`'s rule again — a tap that
+          can only open an empty list is a tap spent on nothing. The comment's
+          door is its ⋮, where the row stands whatever the count is, and that is
+          where the empty sheet lives. */}
+      {!redacted && detail && citedBy > 0 && (
+        <button
+          type="button"
+          onClick={onOpenCitedBy ?? (() => {})}
+          aria-label="Cited by"
+          className="cg-state cg-focus"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            border: 0,
+            background: "none",
+            padding: 0,
+            cursor: "pointer",
+            fontFamily: "var(--font-sans)",
+            fontSize: "var(--text-body-small)",
+            lineHeight: "var(--text-body-small--line-height)",
+            color: "var(--text-secondary)",
+            textAlign: "left",
+          }}
+        >
+          <span aria-hidden="true">Cited by {citedBy}</span>
         </button>
       )}
       {edited && <EditedMarker />}

@@ -113,6 +113,16 @@ export interface PostCardProps {
   opinions?: number;
   /** Opens the opinions-on-this-post sheet. */
   onOpenOpinions?: () => void;
+  /**
+   * How many artifacts cite this one — the INBOUND mirror of `references`,
+   * which counts what this post points at. DETAIL VARIANT ONLY, and only above
+   * zero, in the opinions row's own register. Never folded into `references`:
+   * that count is the tags-and-references sheet's length, and this is a
+   * different list by different authors.
+   */
+  citedBy?: number;
+  /** Opens the "Cited by" sheet. */
+  onOpenCitedBy?: () => void;
   /** The post's media items, rendered full-bleed via `MediaGallery`. */
   media?: readonly import("../media/MediaAttachment").MediaAttachmentProps[];
   /**

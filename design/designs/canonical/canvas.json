@@ -1773,6 +1773,24 @@
       "w": 390,
       "h": 844,
       "page": "comments"
+    },
+    {
+      "file": "CitedBy.dc.html",
+      "title": "Post · what cites it",
+      "x": 3360,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "CommentCitedByEmpty.dc.html",
+      "title": "Comment · what cites it, nothing yet",
+      "x": 3360,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
     }
   ],
   "annotations": [
