@@ -266,11 +266,13 @@ describe("a clip's shape", () => {
     expect(screen.getByTestId("moving").className).toContain("object-cover");
   });
 
-  it("leaves an unprobed clip its own shape, bounded by the height cap alone", () => {
-    // Reserving a square for a shape nobody has measured would crop a wide clip
-    // to one — the honest answer is to let the element size itself.
+  it("reserves the portrait cap for an unprobed clip, until the probe lands", () => {
+    // The media law leaves no unbounded case now that letterboxing is gone
+    // (FE-30): 4:5 is the tallest a clip is ever shown, so it is the honest
+    // reservation for "shape unknown" too — the same framing path a probed
+    // clip already takes, not a separate unbounded one.
     render(<MediaTile src={CLIP} mimeType="video/mp4" testId="moving" />);
-    expect(screen.queryByTestId("moving-frame")).toBeNull();
-    expect(screen.getByTestId("moving").className).toContain("max-h-[var(--media-max-height)]");
+    expect(screen.getByTestId("moving-frame").style.aspectRatio).toBe(`${PORTRAIT_CAP} / 1`);
+    expect(screen.getByTestId("moving").className).toContain("size-full");
   });
 });
