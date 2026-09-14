@@ -386,6 +386,12 @@ DO, the way the sound toggle already does:
   value. It is api-spec's own gloss said to a reader, and the other axis
   keeps `For or against`, the words a stance already uses for that slot.
 
+**`Manage the citations`** — the seal's "N cited" row, whose whole row is
+the control and which carries no word saying so. `Manage the pictures`
+(the details stage's picked row) said for the other collection: the verb
+is what the row does, and naming it is the only way a listener learns
+that a line reading "References · 3 cited · 3" is a door at all.
+
 ## The staged-act snackbar
 
 An applicant's second tap of a kind already staged answers here instead
@@ -499,6 +505,25 @@ among the acts one signature commits:
   wizard's details stage uses. It drops the gloss listing what can be
   cited: the staged row above it now shows a citation, and an example
   beats a list.
+
+**`N cited`** — blessed 2026-09-14 (jakob), the seal's reading of two or
+more staged citations: `3 cited`, one line, where one citation is read
+back by name. The count is the whole value, because at two the name
+stops being the shortest true answer and a stack of names stops the seal
+being a read-back. `References` is the row's label there — plural,
+naming the edges staged — and the row is a door into `Cited · 3`, the
+sheet that lists them. Both seals say it, the post's and the reply's.
+
+**A seal's trailing count is bare, and it counts its own row** — `3` for
+three citations, the list's length and nothing else. One number, one
+fact: the signature's total is the card's footer and says in words what
+it counts ("6 things, signed together"). An act count dressed as
+"3 actions" in a row whose label already said what it counts is the same
+number said twice.
+
+**`Cited · 3`** — the staged-citations sheet's title, `Picked · 3`'s
+shape for the same job: a staged collection named by what it is and how
+many. `Done` closes it, as it closes the picked sheet.
 
 ## Missing and unreachable
 
