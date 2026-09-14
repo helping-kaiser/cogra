@@ -31,6 +31,7 @@ export function PinnedClip({
   altText,
   sourceRatio,
   durationMs,
+  onOpenViewer,
   testId = "pinned-clip",
 }: {
   src: string;
@@ -39,6 +40,17 @@ export function PinnedClip({
   altText?: string | null;
   sourceRatio?: number | null;
   durationMs?: number | null;
+  /**
+   * Where the clip's own tap goes (`PinnedClip.jsx:19-20` — "the tap on it is
+   * the surface's to wire: back into the stream where the reader came from it,
+   * and into the fullscreen viewer everywhere else").
+   *
+   * THE STREAM HALF IS SLICE 3's. `Reel` is not built, so the graph's other
+   * case (`PostDetailVideo` via 3 — "came from the stream — the clip expands
+   * back into it, the reader's place held") has no destination yet; the viewer
+   * half is wired and the reel half lands with the stream.
+   */
+  onOpenViewer?: () => void;
   testId?: string;
 }) {
   return (
@@ -67,6 +79,7 @@ export function PinnedClip({
         // The media meets the screen's own sides here: there is no card around
         // it to round against (`PinnedClip.jsx:28` — `radius="0px"`).
         radius="0px"
+        onOpen={onOpenViewer}
         testId={`${testId}-media`}
       />
     </div>
