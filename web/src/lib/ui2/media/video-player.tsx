@@ -38,6 +38,7 @@
 import { useEffect, useRef } from "react";
 
 import { isMuted, setMuted, useMuted } from "./mute";
+import { claim, surrender } from "./video-stage";
 
 /** Enough of the frame in view to be worth playing — android's gate, blessed
  * (design/readme.md: "One clip plays at a time, at 70% visibility or more"). */
@@ -83,6 +84,10 @@ export function VideoPlayer({
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const muted = useMuted();
+  // Identity, not value: the stage tells surfaces apart by object identity
+  // (mirroring VideoStage.kt's `token: Any`), and a stable object survives
+  // every re-render of this component.
+  const stageToken = useRef({}).current;
 
   // The store is the truth; the element follows it. Written through the
   // property rather than the attribute because the attribute is only the
@@ -106,6 +111,9 @@ export function VideoPlayer({
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
+            // Claim the stage before playing — one clip plays at a time, so
+            // claiming pauses whatever this replaces (FE-28).
+            claim(stageToken, video);
             // Muted at the moment of the call, not merely at mount: a reader
             // who left the sound on is still governed by the same store, and an
             // unmuted autoplay would simply be refused.
@@ -116,16 +124,20 @@ export function VideoPlayer({
               // refusal here is the browser's policy, not a fault the reader
               // can act on.
             });
-          } else if (!video.paused) {
-            video.pause();
+          } else {
+            if (!video.paused) video.pause();
+            surrender(stageToken);
           }
         }
       },
       { threshold: VISIBLE_ENOUGH },
     );
     observer.observe(video);
-    return () => observer.disconnect();
-  }, [autoplay, src]);
+    return () => {
+      observer.disconnect();
+      surrender(stageToken);
+    };
+  }, [autoplay, src, stageToken]);
 
   const reading = surface === "reading";
 

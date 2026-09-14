@@ -15,8 +15,12 @@ import { isMuted, resetMuteForTests, setMuted } from "./mute";
 import { VideoPlayer } from "./video-player";
 import { MediaTile } from "./media-tile";
 import { PORTRAIT_CAP } from "./aspect";
+import { resetVideoStageForTests } from "./video-stage";
 
-afterEach(() => resetMuteForTests());
+afterEach(() => {
+  resetMuteForTests();
+  resetVideoStageForTests();
+});
 
 const CLIP = "https://media.example/clip.mp4";
 const COVER = "https://media.example/cover.webp";
@@ -59,6 +63,30 @@ describe("autoplay", () => {
 
   it("never carries the native transport — every card wears the sound disc instead", () => {
     expect(player()).not.toHaveAttribute("controls");
+  });
+});
+
+// FE-28: one clip plays at a time. video-stage.test.ts pins the arbitration
+// module's own edge cases (re-claims, stale surrenders); this just proves the
+// wiring — a real claim through a real IntersectionObserver event pauses a
+// real sibling player, not only a mocked stage.
+describe("one clip at a time (FE-28)", () => {
+  it("claiming the stage pauses whichever clip held it before", () => {
+    render(
+      <>
+        <VideoPlayer src={CLIP} testId="first" />
+        <VideoPlayer src={CLIP} testId="second" />
+      </>,
+    );
+    const first = screen.getByTestId("first") as HTMLVideoElement;
+    const second = screen.getByTestId("second") as HTMLVideoElement;
+
+    // Both come into view in the same batch — the later-mounted clip claims
+    // last, and the newest claimant always pauses whoever it replaces.
+    act(() => intersect(true));
+
+    expect(second.paused).toBe(false);
+    expect(first.paused).toBe(true);
   });
 });
 
