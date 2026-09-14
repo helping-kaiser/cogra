@@ -1273,3 +1273,36 @@ having already said what was counted.
 one thing that would fill it. It never scolds and it carries no `error`
 colour; a comment nobody has answered is not a fault.
 
+## Awaiting blessing — the chats coming-soon screen
+
+`ChatsComingSoon` is the screen the band's chats icon opens until
+messaging exists (backlog item 68). Its one line is the only new copy on
+the board — the header reads `Chats`, the back arrow `Back`, both already
+in use. **Nothing here is blessed yet**; the board draws the
+recommendation and the alternates are listed so the choice is jakob's.
+
+**Drawn, and recommended**: `Chats aren't built yet. When they are, your
+conversations will be here.` Two sentences answering the reader's only
+two questions — why is this empty, and what is this screen for — and
+neither makes a promise the release order cannot keep.
+
+**The alternates.**
+
+- `Chats aren't built yet. They arrive after the first release, and this
+  is where they will be.` — the same shape with the timing named. It
+  reads better and it may not be true: chats sit third on the
+  would-like list, picked up inside the release window if the core lands
+  early and otherwise much later.
+- `Nothing to read here — chats aren't built yet. Messages will arrive on
+  this screen once they are.` — the empty-state family's own phrasing,
+  the absence first and the reason second.
+- `Chats aren't built yet.` — the bare fact. Shortest, and it leaves the
+  reader without an answer to what the screen is for.
+
+**The question under all four:** how much the copy may say about *when*.
+The register's nearest blessed line names a condition — `Inviting unlocks
+once your application is approved.` — and there is no condition to name
+here, only an order that can change. The recommendation therefore says
+nothing about when. If a timing line is wanted, the second alternate
+carries it and the roadmap has to back it.
+

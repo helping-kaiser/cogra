@@ -19,7 +19,10 @@ import { Icon } from "./Icon.jsx";
 
    CHATS RIDE THE BAND (jakob 2026-09-01): messaging must be reachable from any
    major screen, so every tab root's band carries the chats affordance built in.
-   `chats={false}` opts a band out where messaging cannot apply.
+   `chats={false}` opts a band out where messaging cannot apply. The icon stands
+   before messaging does and opens `ChatsComingSoon` until it exists (jakob
+   2026-09-14) — pulling it meanwhile would move the bell on every band and move
+   it back later, which costs a reader the same corner twice over.
 
    THE TRAILING CLUSTER IS [the screen's own control] · chats · bell (the band
    law, jakob 2026-09-11). The screen's own control sits INBOARD: the two the
