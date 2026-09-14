@@ -40,8 +40,9 @@ import { useEffect, useRef } from "react";
 import { formatDuration } from "./video";
 import { isMuted, setMuted, useMuted } from "./mute";
 
-/** Enough of the frame in view to be worth playing — half, so two clips never fight. */
-const VISIBLE_ENOUGH = 0.5;
+/** Enough of the frame in view to be worth playing — android's gate, blessed
+ * (design/readme.md: "One clip plays at a time, at 70% visibility or more"). */
+const VISIBLE_ENOUGH = 0.7;
 
 /**
  * How much of a player a surface gets.

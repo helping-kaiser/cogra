@@ -45,9 +45,9 @@ describe("autoplay", () => {
     expect(video.paused).toBe(true);
   });
 
-  it("asks for half the frame before it plays, so two clips never fight", () => {
+  it("asks for 70% of the frame before it plays — android's gate, blessed", () => {
     player();
-    expect(observedThresholds()).toContain(0.5);
+    expect(observedThresholds()).toContain(0.7);
   });
 
   it("does not observe at all where the caller turned autoplay off", () => {
