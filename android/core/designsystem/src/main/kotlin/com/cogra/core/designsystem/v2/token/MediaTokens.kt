@@ -50,12 +50,21 @@ object MediaFrame {
     /** A comment's pictures are an attachment, not a body: a tighter cap. */
     val CommentMaxHeight = 220.dp
 
-    /** The pager's dot: `width:6px; height:6px`. */
+    /** The pager's dot, and the SLOT it is centred in:
+     * `const DOT_FULL = 6` (`MediaAttachment.jsx:339`). Slot and dot share the
+     * size, which is what keeps the pitch fixed when a dot inside one shrinks. */
     val Dot = 6.dp
+
+    /** `const DOT_EDGE = 4` (`:340`) — the one smaller size, worn by a window
+     * edge with more of the set beyond it (item 67). */
+    val DotEdge = 4.dp
 
     /** `gap:6px` between dots, `padding:8px 0 0` above the row. */
     val DotGap = 6.dp
     val DotRowTopPadding = 8.dp
+
+    /** The row's ceiling: `const DOT_WINDOW = 7` (`:338`). */
+    const val DotWindow = 7
 }
 
 /**
