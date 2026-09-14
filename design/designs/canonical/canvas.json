@@ -1528,7 +1528,16 @@
       "x": 0,
       "y": 2120,
       "w": 390,
-      "h": 1280,
+      "h": 1344,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageHeld.dc.html",
+      "title": "A tag's page, the topic held",
+      "x": 960,
+      "y": 2120,
+      "w": 390,
+      "h": 1344,
       "page": "feed"
     },
     {

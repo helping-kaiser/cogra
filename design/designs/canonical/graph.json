@@ -53,6 +53,7 @@
     "ProfileMoreFailed": "the page that didn't come — exempt for `NetworkError`'s reason, cited: the failed next page is the only thing this board is about, and the band, the header, the chronicle tabs, the rows and the five nav slots are `Profile`'s controls, wired on that board"
   },
   "entries": {
+    "TagPageHeld": "the same tag page, opened by a reader whose netted Affinity on this topic is not (0, 0) — a state the record brings, not a different tap",
     "TagPageEmpty": "a tag whose authors have declared nothing — the contract guarantees every well-formed name resolves, so this is the same page any chip opens, in the state an unused name leaves it; content, not a tap",
     "FeedEntryMoved": "a post whose paths have all aged out — the same screen the score opens, in the state the dust floor leaves it once every path’s last opinion has decayed past it; content, not a tap",
     "Main": "arrival through an invite link — the inviter's borrowed view",
@@ -1017,6 +1018,23 @@
     { "from": "TagPage", "via": 12, "kind": "advance", "label": "the target pointer", "to": [{ "board": "ReplyEntry", "case": "what the comment answers — the post, its thread open" }] },
     { "from": "TagPage", "via": 13, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "board": "CommentMenu", "case": "the comment's sheet (master)" }] },
     { "from": "TagPage", "via": 14, "kind": "advance", "label": "stance face (the comment)", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }] },
+    { "from": "TagPage", "via": 15, "kind": "advance", "label": "stance face (the topic)", "to": [{ "terminal": "self", "case": "press-and-hold — a positive Affinity lands, and the topic is held" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board; the Affinity family's own four pole words are not drawn there)" }] },
+
+    { "from": "TagPageHeld", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Explore", "case": "the search surface this is a subpage of" }] },
+    { "from": "TagPageHeld", "via": 2, "kind": "advance", "label": "choose your stance (the accessible path)", "to": [{ "terminal": "self", "case": "the alternates open on whichever stance it belongs to" }, { "board": "VouchBackPad", "case": "the pad, where that is the reader's chosen input (master board)" }] },
+    { "from": "TagPageHeld", "via": 3, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
+    { "from": "TagPageHeld", "via": 4, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
+    { "from": "TagPageHeld", "via": 5, "kind": "detour", "label": "More (caption)", "to": [{ "terminal": "self", "case": "the caption unfolds" }] },
+    { "from": "TagPageHeld", "via": 6, "kind": "advance", "label": "post media", "to": [{ "board": "FeedGallery", "case": "a gallery — the pager takes the tap in place" }, { "board": "PostDetail", "case": "the post opens" }] },
+    { "from": "TagPageHeld", "via": 7, "kind": "advance", "label": "tag chip", "to": [{ "board": "TagPage", "case": "another of the post's own tags — its page" }] },
+    { "from": "TagPageHeld", "via": 8, "kind": "advance", "label": "stance face", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }] },
+    { "from": "TagPageHeld", "via": 9, "kind": "detour", "label": "Post Score", "to": [{ "board": "FeedEntry" }] },
+    { "from": "TagPageHeld", "via": 10, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
+    { "from": "TagPageHeld", "via": 11, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "TagPageHeld", "via": 12, "kind": "advance", "label": "the target pointer", "to": [{ "board": "ReplyEntry", "case": "what the comment answers — the post, its thread open" }] },
+    { "from": "TagPageHeld", "via": 13, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "board": "CommentMenu", "case": "the comment's sheet (master)" }] },
+    { "from": "TagPageHeld", "via": 14, "kind": "advance", "label": "stance face (the comment)", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }] },
+    { "from": "TagPageHeld", "via": 15, "kind": "advance", "label": "stance face (the topic, held)", "to": [{ "terminal": "self", "case": "press-and-hold — another positive Affinity joins the bundle" }, { "board": "VouchBackPad", "case": "tap — the pad blooms over the held topic (master board), and held it carries `Walk it back`: the existing severance ceremony, at this topic's own price" }] },
 
     { "from": "TagPageEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Explore", "case": "the search surface this is a subpage of" }] },
 
