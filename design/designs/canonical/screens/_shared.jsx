@@ -1369,7 +1369,9 @@ const MIRA_CLIP_POST = {
 const CLIP_CANOE = {
   kind: "video",
   src: "clip-canoe.mp4",
-  poster: "clip-canoe.jpg",
+  /* post-photo.jpg doubles as this clip's poster — it is the same frame of
+     the same lake crossing, at the same 16:9 (backlog 62). */
+  poster: "post-photo.jpg",
   ratio: "landscape",
   alt: "Two canoes crossing a mountain lake.",
 };
