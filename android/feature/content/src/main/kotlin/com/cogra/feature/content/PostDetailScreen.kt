@@ -60,6 +60,7 @@ import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
+import com.cogra.core.designsystem.v2.media.MediaViewer
 import com.cogra.core.designsystem.v2.media.PinnedClip
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Layout
@@ -436,11 +437,26 @@ private fun PostDetailBody(
     } else {
         post.attachments.firstOrNull { it.isVideo }?.toItem()
     }
+    // THE FULLSCREEN VIEWER, over one of this post's attachments (DV-01/H-25).
+    // Null is closed; the number is which attachment it opened on. It is held
+    // here rather than in the card because "it never changes the underlying
+    // route" (`MediaViewer.jsx:26`) — a layer over this screen, so this screen
+    // owns whether it is up.
+    var viewerAt by rememberSaveable { mutableStateOf<Int?>(null) }
+    val attachments = remember(post.attachments) { post.attachments.map { it.toItem() } }
+
     Column(modifier = Modifier.fillMaxSize()) {
         if (pinned != null) {
             // OUTSIDE the list, which is what "pinned" means: the body rises
             // beneath a clip that stays put.
-            PinnedClip(item = pinned)
+            PinnedClip(
+                item = pinned,
+                // The clip's two routes into the viewer — the bar's fullscreen
+                // toggle and the clip's own tap (graph.json, `PostDetailVideo`
+                // via 19 and via 3). A post carries one clip, so the viewer
+                // opens on it.
+                onOpenViewer = { viewerAt = 0 },
+            )
         }
         // The post is a card here too, edge to edge with its 8dp seam — on the
         // boards the post wears the card and the thread stands in its own sheet
@@ -458,6 +474,9 @@ private fun PostDetailBody(
                     post = post,
                     removed = removed,
                     mediaPinned = pinned != null,
+                    // THE POST'S TAP OPENS THE FRAME (graph.json, `PostDetail`
+                    // via 4), on the page the reader was looking at.
+                    onOpenMedia = { page -> viewerAt = page },
                     onReveal = onReveal,
                     onOpenActor = onOpenActor,
                     onOpenTopic = onOpenTopic,
@@ -469,6 +488,15 @@ private fun PostDetailBody(
             }
         }
     }
+
+    // Over everything, answering to nothing behind it.
+    viewerAt?.let { at ->
+        MediaViewer(
+            items = attachments,
+            index = at,
+            onClose = { viewerAt = null },
+        )
+    }
 }
 
 /** The post itself, as the card it wears on every surface. */
@@ -477,6 +505,8 @@ private fun DetailCard(
     state: PostDetailUiState,
     post: PostView,
     removed: Boolean,
+    /** The gallery's tap, handed the page under the reader's thumb. */
+    onOpenMedia: (Int) -> Unit,
     /** The clip is pinned above this card, so the body draws no gallery. */
     mediaPinned: Boolean,
     onReveal: (String, SensitiveMark) -> Unit,
@@ -527,6 +557,7 @@ private fun DetailCard(
                 modifier = Modifier.testTag("detail_body"),
                 bleed = Space.x4,
                 mediaPinned = mediaPinned,
+                onOpenMedia = onOpenMedia,
                 // The same set the feed reads: a reader who already chose to
                 // look at this post is not asked again on the way in.
                 revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),

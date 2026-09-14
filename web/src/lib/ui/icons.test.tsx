@@ -57,6 +57,9 @@ describe("icons", () => {
       "pause",
       "fast_rewind",
       "fast_forward",
+      // The bar's last control, cut from the master with the surface it opens
+      // (`VideoControls.jsx:231`, `Icon.jsx:113`; W3-7's fullscreen viewer).
+      "fullscreen",
       "volume_up",
       "volume_off",
     ];

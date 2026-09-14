@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -84,6 +85,14 @@ fun VideoTransport(
     onSeek: (Float) -> Unit,
     onSkip: (Long) -> Unit,
     onToggleMute: () -> Unit,
+    /**
+     * The way into the fullscreen viewer (`VideoControls.jsx:231-233`).
+     *
+     * Drawn only where it is handed one, which is the master's own condition
+     * (`{fullscreen && …}`): THE VIEWER DOES NOT DRAW IT, because "no
+     * fullscreen toggle — this IS the fullscreen" (`MediaViewer.jsx:153`).
+     */
+    onFullscreen: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize().testTag(TRANSPORT_TAG)) {
@@ -112,6 +121,7 @@ fun VideoTransport(
             muted = muted,
             onSeek = onSeek,
             onToggleMute = onToggleMute,
+            onFullscreen = onFullscreen,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
@@ -174,6 +184,7 @@ private fun Bar(
     muted: Boolean,
     onSeek: (Float) -> Unit,
     onToggleMute: () -> Unit,
+    onFullscreen: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -215,6 +226,19 @@ private fun Bar(
             onClick = onToggleMute,
             testTag = "video_mute",
         )
+        // THE BAR ENDS IN THE WAY INTO THE VIEWER (`VideoControls.jsx:231`).
+        // It is the transport's own route there; the clip's surface tap is the
+        // other (graph.json, `PostDetailVideo` via 19 and via 3).
+        if (onFullscreen != null) {
+            TransportButton(
+                label = stringResource(R.string.designsystem_video_fullscreen),
+                glyph = Icons.Filled.Fullscreen,
+                box = BAR_CONTROL,
+                glyphSize = BAR_GLYPH,
+                onClick = onFullscreen,
+                testTag = "video_fullscreen",
+            )
+        }
     }
 }
 

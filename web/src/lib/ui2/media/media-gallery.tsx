@@ -24,6 +24,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { tileRatio } from "./aspect";
 import { MediaTile, type MediaTileProps } from "./media-tile";
+import { PagerDots } from "./pager-dots";
 import type { PlayerSurface } from "./video-player";
 
 /**
@@ -209,24 +210,12 @@ export function MediaGallery({
         ))}
       </div>
       {/* The dots are a READOUT, not ten targets — the gesture is the swipe and
-          the keys are the route. Live, so a swipe says where it landed to a
-          reader who cannot see the dots move. */}
-      <div
-        data-testid={`${testId}-dots`}
-        aria-live="polite"
-        aria-label={`Picture ${page + 1} of ${items.length}`}
-        className="flex justify-center gap-1.5 pt-2"
-      >
-        {items.map((item, index) => (
-          <span
-            key={`${index}:${item.src ?? ""}`}
-            aria-hidden="true"
-            style={{
-              background: index === page ? "var(--primary)" : "var(--border-hairline)",
-            }}
-            className="size-1.5 rounded-full"
-          />
-        ))}
+          the keys are the route. THE ROW IS WINDOWED at seven (item 67, ruled
+          2026-09-14: "ten dots under a gallery card is too much"), and it is
+          the same row the viewer draws, in the card's tone — one marker for one
+          position, in both pagers. */}
+      <div className="flex justify-center pt-2">
+        <PagerDots count={items.length} current={page} tone="card" testId={`${testId}-dots`} />
       </div>
     </div>
   );
