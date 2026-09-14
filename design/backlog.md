@@ -2254,3 +2254,14 @@ trailing act count still totals correctly) and will render that
 undrawn case until the board exists. Needs a drawing round: how the
 row stacks, truncates, or summarizes 2–10 citations. No lane is
 blocked on it.
+
+### 71 · The pipeline outgrew its budget · *tooling*
+
+The valence-six round measured the six-stage pipeline at 33–50 s on
+a quiet machine, against the recorded 15–25 s budget — every run
+over, so this is not lane concurrency (an earlier note blamed it;
+these runs refute that). Either the budget re-sets to ~35–50 s
+(the tree grew: 190 boards, six stages) or a regression wants a
+cause (check-flows alone ran 8.2 s). Wants one quiet profiling
+pass: per-stage timings across the last few chain states, then
+either a budget commit or a fix.
