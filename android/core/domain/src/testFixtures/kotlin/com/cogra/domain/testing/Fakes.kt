@@ -521,7 +521,6 @@ open class ThrowingMediaRepository : MediaRepository {
 
     override suspend fun uploadVideo(
         video: ProcessedVideo,
-        coverMediaId: String,
         onProgress: (UploadProgress) -> Unit,
     ): Outcome<MediaAssetView> = throw UnsupportedOperationException()
 

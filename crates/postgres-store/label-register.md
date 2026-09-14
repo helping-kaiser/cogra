@@ -93,6 +93,6 @@ label.
 | `test:unit:re-pointing-keeps-the-cursors-id`                                         | re_pointing_keeps_the_cursors_id                                  |
 | `test:unit:revoked-reasons-round-trip-through-their-column-form`                     | revoked_reasons_round_trip_through_their_column_form              |
 | `test:unit:the-first-placement-holds-position-zero`                                  | the_first_placement_holds_position_zero                           |
+| `test:unit:the-four-arrays-agree-on-length-and-order`                                | the_four_arrays_agree_on_length_and_order                         |
 | `test:unit:the-landed-view-binds-no-actor`                                           | the_landed_view_binds_no_actor                                    |
 | `test:unit:the-pending-keyset-comes-only-from-a-pending-cursor`                      | the_pending_keyset_comes_only_from_a_pending_cursor               |
-| `test:unit:the-three-arrays-agree-on-length-and-order`                               | the_three_arrays_agree_on_length_and_order                        |

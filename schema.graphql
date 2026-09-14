@@ -191,6 +191,16 @@ input AttachmentInput {
 	correcting it is a new version of the parent, never a re-upload.
 	"""
 	altText: String
+	"""
+	The video's poster — an asset this author uploaded, either a frame
+	the client cut out of the clip or a picture chosen instead. Only a
+	video placement takes one, and a video may always go without.
+	
+	Authored here for the same reason `altText` is: it is a fact about
+	this placement, so changing the cover is a new version of the
+	parent rather than a re-upload of the clip.
+	"""
+	coverMediaId: UUID
 }
 
 type AuthSession {
@@ -370,12 +380,6 @@ Assembles a resumable upload into an asset.
 """
 input CompleteMediaUploadInput {
 	uploadId: UUID!
-	"""
-	The video's poster, on the same terms `uploadMedia` states: an
-	asset this account already uploaded, named as the asset is created
-	because an asset row is immutable once written.
-	"""
-	coverMediaId: UUID
 }
 
 input ConfirmEmailChangeInput {
@@ -823,15 +827,16 @@ type MediaAttachment {
 	status: FieldModerationStatus!
 	options: MediaOptions!
 	"""
-	The poster this asset is covered by — the still a video shows
+	The poster this placement is covered by — the still a video shows
 	before playback, and the frame that stands in wherever autoplay
 	does not run.
 	
-	Null unless the asset names one — only a video's upload can pass
-	`coverMediaId`, naming a still the same author already holds. It is
-	a distinct question from the gallery's `isCover`, which asks which
-	attachment *leads* a multi-asset post rather than what covers a
-	single one.
+	Resolved from the referencing version's junction row, like
+	`altText`, so an edit can name a different cover without touching
+	an immutable clip row. Null unless the placement names one, and
+	null outside a placement. It is a distinct question from the
+	gallery's `isCover`, which asks which attachment *leads* a
+	multi-asset post rather than what covers a single one.
 	
 	The poster answers with its own `status`, so a removed cover reads
 	REDACTED here exactly as it would anywhere else — the mark travels
@@ -2581,27 +2586,17 @@ type UploadKeyBackupPayload {
 }
 
 """
-Uploads one asset. Bytes and nothing authored: a description rides
-`AttachmentInput` at prepare, so a picture can upload the moment it is
-picked and be described any time before signing — nothing gates on the
-other. Aspect ratio and duration are derived from the bytes.
+Uploads one asset. Bytes and nothing authored: a description and a
+video's cover both ride `AttachmentInput` at prepare, so a picture can
+upload the moment it is picked and be described — or made a clip's
+poster — any time before signing; nothing gates on the other. Aspect
+ratio and duration are derived from the bytes.
 
 `actAs` is not here: a Collective is the only non-user actor there is
 and Collectives arrive with slice 5, so the uploader is the viewer.
 """
 input UploadMediaInput {
 	file: Upload!
-	"""
-	The video's poster — an asset this account already uploaded,
-	either a frame the client pulled out of the clip or a picture the
-	author chose instead. Only a video takes one, and it must be an
-	image rather than another video.
-	
-	It is named here because an asset row is immutable once written:
-	the cover is part of what the video *is*, so it is stated when
-	the video is created rather than attached to it afterwards.
-	"""
-	coverMediaId: UUID
 }
 
 """

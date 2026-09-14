@@ -46,8 +46,8 @@ import org.junit.Test
  * and what each way out does.
  *
  * The video path is the interesting half — the clip transcodes at pick
- * and only uploads on `Next`, with its cover going first because an
- * asset row names its cover when it is created.
+ * and only uploads on `Next`, with its cover going first because the
+ * cheap leg proves out before the expensive one.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ReplyWizardViewModelTest {
@@ -111,7 +111,6 @@ class ReplyWizardViewModelTest {
 
         override suspend fun uploadVideo(
             video: ProcessedVideo,
-            coverMediaId: String,
             onProgress: (UploadProgress) -> Unit,
         ): Outcome<MediaAssetView> {
             order += "clip"
@@ -333,9 +332,9 @@ class ReplyWizardViewModelTest {
             .isEqualTo(UploadFailure.COMMENT_VIDEO_TOO_BIG)
     }
 
-    /** An asset row names its cover when it is created, so the face goes first. */
+    /** The cover is the cheap leg, so the face goes first. */
     @Test
-    fun theCoverIsUploadedBeforeTheClipItNames() = runTest(dispatcher) {
+    fun theCoverIsUploadedBeforeTheClipItFronts() = runTest(dispatcher) {
         video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
         val vm = viewModel()
         vm.onBodyChange("Words")

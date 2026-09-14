@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -114,6 +115,12 @@ fun SheetTitle(
  *
  * **At most one per screen** (design/readme.md §13), and every one opens
  * [HelpDialog] — the house plain dialog — rather than a tooltip of its own.
+ *
+ * [tint] is the board's `inverse` for the same dot standing on a TONAL PANEL
+ * instead of the page: on the page the ring and glyph read `onSurfaceVariant`
+ * (the default), and inside a panel like the key-absent notice a caller
+ * passes the panel's own on-colour instead, so the dot doesn't argue with a
+ * second colour family (HelpDot.jsx:10-16).
  */
 @Composable
 fun HelpDot(
@@ -121,13 +128,14 @@ fun HelpDot(
     contentDescription: String,
     modifier: Modifier = Modifier,
     testTag: String? = null,
+    tint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     Box(
         modifier = modifier
             .minimumInteractiveComponentSize()
             .size(24.dp)
             .clip(CircleShape)
-            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+            .border(1.dp, tint, CircleShape)
             .clickable(role = Role.Button, onClickLabel = contentDescription, onClick = onHelp)
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         contentAlignment = Alignment.Center,
@@ -135,7 +143,7 @@ fun HelpDot(
         Text(
             text = "?",
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = tint,
         )
     }
 }

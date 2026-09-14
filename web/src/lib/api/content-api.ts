@@ -102,17 +102,24 @@ function referenceInputs(references: readonly ReferenceDraft[] | undefined) {
 }
 
 /**
- * One placement being authored: the asset, and what it is a picture of.
+ * One placement being authored: the asset, what it is a picture of, and — for
+ * a clip — the still that fronts it.
  *
- * The description travels here rather than with the upload because it is a
- * fact about this placement — the same asset can read differently in two
- * posts, and correcting a description is a new version of the post rather
- * than a re-upload. That is what lets the composer upload at pick time.
+ * Both travel here rather than with the upload because both are facts about
+ * this placement — the same asset can read differently in two posts, and
+ * correcting a description or naming another poster is a new version of the
+ * post rather than a re-upload. That is what lets the composer upload at pick
+ * time.
  */
 export type GalleryEntryDraft = {
   mediaId: string;
   /** Empty is not a description; an undescribed picture sends null. */
   altText: string | null;
+  /**
+   * The poster, on a video placement. Null on a picture and on a clip the
+   * author left faceless — going without a cover is always possible.
+   */
+  coverMediaId?: string | null;
 };
 
 /**
@@ -120,6 +127,10 @@ export type GalleryEntryDraft = {
  * `displayOrder` states each entry's own index and `isCover` is true on the
  * first and nowhere else. A value that disagrees with its position is refused
  * rather than quietly overridden, so both are derived here and never passed in.
+ *
+ * `isCover` and `coverMediaId` are two different questions and both ride the
+ * entry: the first says which attachment LEADS a multi-asset post, the second
+ * says which still covers this one clip.
  */
 export function attachmentInputs(entries: readonly GalleryEntryDraft[] | undefined) {
   if (entries === undefined || entries.length === 0) return null;
@@ -128,6 +139,7 @@ export function attachmentInputs(entries: readonly GalleryEntryDraft[] | undefin
     displayOrder: index,
     isCover: index === 0,
     altText: entry.altText === null || entry.altText.trim() === "" ? null : entry.altText.trim(),
+    coverMediaId: entry.coverMediaId ?? null,
   }));
 }
 

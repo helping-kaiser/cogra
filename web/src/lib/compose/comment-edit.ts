@@ -19,7 +19,18 @@ import type { PickedAsset } from "./wizard";
 
 export type EditPicture =
   /** Already on the server when the editor opened; its bytes never move. */
-  | { readonly kind: "kept"; readonly mediaId: string; readonly url: string; readonly altText: string }
+  | {
+      readonly kind: "kept";
+      readonly mediaId: string;
+      readonly url: string;
+      readonly altText: string;
+      /**
+       * The poster this placement already named. Carried through the editor
+       * because an edit re-states the whole gallery: dropping it here would
+       * publish a new version that quietly lost the clip's face.
+       */
+      readonly coverMediaId: string | null;
+    }
   /** Chosen in this editor; it uploads like any other comment picture. */
   | { readonly kind: "added"; readonly asset: PickedAsset };
 
@@ -36,13 +47,19 @@ export function pictureAltText(picture: EditPicture): string {
 
 /** The gallery the comment arrived with, in the author's order. */
 export function galleryOf(
-  attachments: readonly { id: string; url: string; altText?: string | null }[],
+  attachments: readonly {
+    id: string;
+    url: string;
+    altText?: string | null;
+    coverMedia?: { id: string } | null;
+  }[],
 ): EditGallery {
   return attachments.map((attachment) => ({
     kind: "kept" as const,
     mediaId: attachment.id,
     url: attachment.url,
     altText: attachment.altText ?? "",
+    coverMediaId: attachment.coverMedia?.id ?? null,
   }));
 }
 
@@ -164,6 +181,12 @@ export function describedCount(gallery: EditGallery): number {
  * The gallery the edit leaves standing, or null while an added picture is
  * still unresolved — an attachment names an asset id, so the edit cannot be
  * prepared until every id exists.
+ *
+ * A kept placement re-states the poster it already named. An edit carries the
+ * whole gallery rather than a delta, so a placement that came back without its
+ * cover would be a new version that silently dropped the clip's face. A
+ * picture added in this editor names none: a comment's added media is a
+ * picture, and a picture is not covered by anything.
  */
 export function editClaims(gallery: EditGallery): readonly GalleryEntryDraft[] | null {
   const claims: GalleryEntryDraft[] = [];
@@ -172,6 +195,7 @@ export function editClaims(gallery: EditGallery): readonly GalleryEntryDraft[] |
       claims.push({
         mediaId: picture.mediaId,
         altText: picture.altText.trim() === "" ? null : picture.altText.trim(),
+        coverMediaId: picture.coverMediaId,
       });
       continue;
     }
@@ -179,6 +203,7 @@ export function editClaims(gallery: EditGallery): readonly GalleryEntryDraft[] |
     claims.push({
       mediaId: picture.asset.upload.mediaId,
       altText: picture.asset.altText.trim() === "" ? null : picture.asset.altText.trim(),
+      coverMediaId: null,
     });
   }
   return claims;

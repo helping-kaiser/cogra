@@ -218,8 +218,8 @@ data class ReplyWizardState(
      * Every pick has an id: the gallery can be attached as it stands.
      *
      * A clip is not complete until its cover has landed too — the cover
-     * is not an attachment, but the clip cannot be uploaded at all until
-     * there is a cover id for it to name.
+     * is not an attachment, but the clip's placement cannot name an id
+     * that does not exist yet.
      */
     val uploadsComplete: Boolean
         get() = uploadedIds.size == picked.size &&

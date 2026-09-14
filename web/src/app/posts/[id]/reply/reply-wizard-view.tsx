@@ -302,7 +302,7 @@ export function ReplyWizard({
         license: state.license,
         tags: state.tags,
         references: state.references,
-        attachments: commentAttachmentClaims(state.media) ?? undefined,
+        attachments: commentAttachmentClaims(state.media, state.cover) ?? undefined,
         stance: state.stance,
         sensitive: state.sensitive,
         sensitiveReason: state.sensitiveReason,

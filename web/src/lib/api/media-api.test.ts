@@ -21,12 +21,8 @@ function client() {
   });
 }
 
-function uploadHandler(
-  body: unknown,
-  seen?: { input?: { coverMediaId?: string | null } },
-) {
-  return graphql.mutation("UploadMedia", ({ variables }) => {
-    if (seen) seen.input = (variables as { input: { coverMediaId?: string | null } }).input;
+function uploadHandler(body: unknown) {
+  return graphql.mutation("UploadMedia", () => {
     return HttpResponse.json({ data: { uploadMedia: body } });
   });
 }
@@ -73,20 +69,6 @@ describe("uploadMedia", () => {
     expect(outcome.kind).toBe("success");
     if (outcome.kind !== "success") return;
     expect(outcome.value.id).toBe("m-1");
-  });
-
-  // A cover is part of what the video IS — an asset row is immutable once
-  // written — so it is named on the call that creates the video, and omitted
-  // entirely on every other call rather than sent as null.
-  it("carries coverMediaId only when one was given", async () => {
-    const seen: { input?: { coverMediaId?: string | null } } = {};
-    server.use(uploadHandler(payload(media("m-2")), seen));
-
-    await uploadMedia(client(), { blob });
-    expect(seen.input).not.toHaveProperty("coverMediaId");
-
-    await uploadMedia(client(), { blob, coverMediaId: "cover-1" });
-    expect(seen.input?.coverMediaId).toBe("cover-1");
   });
 
   it("surfaces a refusal with its code", async () => {
@@ -148,7 +130,7 @@ describe("uploadVideo", () => {
 
   function completeHandler(
     body: unknown,
-    seen?: { uploadId?: string; coverMediaId?: string },
+    seen?: { uploadId?: string },
   ) {
     return graphql.mutation("CompleteMediaUpload", ({ variables }) => {
       if (seen) Object.assign(seen, variables);
@@ -167,7 +149,7 @@ describe("uploadVideo", () => {
     const outcome = await uploadVideo(
       client(),
       passthrough,
-      { blob: big(1024), coverMediaId: "cover-1" },
+      { blob: big(1024) },
       { uploader: parts.stub },
     );
     expect(outcome.kind).toBe("success");
@@ -180,7 +162,7 @@ describe("uploadVideo", () => {
     const outcome = await uploadVideo(
       client(),
       passthrough,
-      { blob: big(64), coverMediaId: "cover-1" },
+      { blob: big(64) },
       { uploader: parts.stub, thresholdBytes: 64 },
     );
     expect(outcome.kind).toBe("success");
@@ -200,7 +182,7 @@ describe("uploadVideo", () => {
     await uploadVideo(
       client(),
       passthrough,
-      { blob: big(64), coverMediaId: "cover-1" },
+      { blob: big(64) },
       { uploader: parts.stub, thresholdBytes: 64 },
     );
     expect(parts.seen.partSizeBytes).toBe(4 * 1024 * 1024);
@@ -213,7 +195,7 @@ describe("uploadVideo", () => {
     await uploadVideo(
       client(),
       passthrough,
-      { blob: big(4096), coverMediaId: "cover-1" },
+      { blob: big(4096) },
       { uploader: uploader().stub, thresholdBytes: 64 },
     );
     expect(seen.declaredBytes).toBe(4096);
@@ -221,17 +203,18 @@ describe("uploadVideo", () => {
     expect(seen.kind).toBe("VIDEO");
   });
 
-  it("names the cover at completion, where the asset row is made", async () => {
-    const seen: { uploadId?: string; coverMediaId?: string } = {};
+  // The clip names no poster of its own: a cover is a fact about the
+  // placement, so the id rides `AttachmentInput` at prepare instead.
+  it("completes the session by its id alone", async () => {
+    const seen: { uploadId?: string } = {};
     server.use(beginHandler(session()), completeHandler(payload(media("m")), seen));
     await uploadVideo(
       client(),
       passthrough,
-      { blob: big(4096), coverMediaId: "cover-9" },
+      { blob: big(4096) },
       { uploader: uploader().stub, thresholdBytes: 64 },
     );
     expect(seen.uploadId).toBe("sess-1");
-    expect(seen.coverMediaId).toBe("cover-9");
   });
 
   it("surfaces a refusal at begin without touching the parts", async () => {
@@ -244,7 +227,7 @@ describe("uploadVideo", () => {
     const outcome = await uploadVideo(
       client(),
       passthrough,
-      { blob: big(4096), coverMediaId: "cover-1" },
+      { blob: big(4096) },
       { uploader: parts.stub, thresholdBytes: 64 },
     );
     expect(outcome.kind).toBe("refused");
@@ -267,7 +250,7 @@ describe("uploadVideo", () => {
     const outcome = await uploadVideo(
       client(),
       passthrough,
-      { blob: big(4096), coverMediaId: "cover-1" },
+      { blob: big(4096) },
       { uploader: uploader("The server would not take that video.").stub, thresholdBytes: 64 },
     );
 
@@ -296,7 +279,7 @@ describe("uploadVideo", () => {
     await uploadVideo(
       client(),
       counting,
-      { blob: big(4096), coverMediaId: "cover-1" },
+      { blob: big(4096) },
       { uploader: uploader().stub, thresholdBytes: 64 },
     );
     expect(wrapped).toEqual(["call-0", "call-1"]);
