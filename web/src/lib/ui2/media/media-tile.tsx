@@ -19,7 +19,7 @@
 
 import Image from "next/image";
 
-import { cssRatio, fitFor, tileRatio } from "./aspect";
+import { cssRatio, fitFor, PORTRAIT_CAP, tileRatio } from "./aspect";
 import { VideoPlayer, type PlayerSurface } from "./video-player";
 
 /** Whether the asset is the moving kind, read off the contract's own field. */
@@ -64,6 +64,8 @@ export type MediaTileProps = {
   // The gallery's secondary squares override both of these; nothing else does.
   ratio?: number;
   fit?: "contain" | "cover";
+  // No default: only meaningful alongside an explicit `ratio`, and every
+  // caller that names one names this too.
   maxHeight?: string;
   sizes?: string;
   // A feed's lead tile is the largest thing on screen and worth preloading;
@@ -87,7 +89,7 @@ export function MediaTile({
   radius = "var(--radius-medium)",
   ratio,
   fit,
-  maxHeight = "var(--media-max-height)",
+  maxHeight,
   // Media runs the full width of a phone-width card, and the content column is
   // capped at 42rem — so one breakpoint describes every case the product has.
   sizes = "(max-width: 42rem) 100vw, 42rem",
@@ -95,7 +97,15 @@ export function MediaTile({
   testId,
   onOpen,
 }: MediaTileProps) {
-  const reserved = ratio ?? tileRatio(sourceRatio);
+  const probedRatio =
+    typeof sourceRatio === "number" && Number.isFinite(sourceRatio) && sourceRatio > 0;
+  const isVideo = isVideoAsset(mimeType) && !!src;
+  // An unprobed CLIP reserves the portrait cap — the only bound the media law
+  // leaves once letterboxing is gone (FE-30) — rather than tileRatio's square,
+  // which stays the honest "shape unknown" answer for a picture. Once the
+  // probe lands, the true ratio takes over through the same tileRatio path a
+  // probed clip already uses — no separate framing to keep in sync.
+  const reserved = ratio ?? (isVideo && !probedRatio ? PORTRAIT_CAP : tileRatio(sourceRatio));
   const objectFit = fit ?? fitFor(sourceRatio);
   const alt = altText ?? "";
   // AN EXPLICIT `ratio` NAMES A FIXED FRAME — the comment scale's 220px
@@ -129,24 +139,16 @@ export function MediaTile({
         borderRadius: radius,
       };
 
-  // A VIDEO IS NOT A TILE WITH A PLAY BUTTON: it carries its own controls, and
-  // it is never wrapped in the `onOpen` button below, because a control surface
-  // inside a button steals every press the reader aims at the scrubber.
+  // A VIDEO IS NOT A TILE WITH A PLAY BUTTON: it carries its own sound
+  // control, and it is never wrapped in the `onOpen` button below, because a
+  // control surface inside a button steals every press the reader aims at it.
   //
-  // IT STILL TAKES A FRAME. A clip keeps its native ratio CLAMPED TO TALL (the
-  // reel round): 16:9 and 1:1 display true, anything taller than 4:5
+  // A CLIP ALWAYS TAKES A FRAME. It keeps its native ratio CLAMPED TO TALL
+  // (the reel round): 16:9 and 1:1 display true, anything taller than 4:5
   // centre-crops to it, and letterboxing exists nowhere — which is a crop
-  // against a reserved shape, so the shape has to be reserved. A clip whose
-  // shape the server has not probed yet gets no frame to be cropped against and
-  // runs at its own, bounded by the height cap alone.
+  // against a reserved shape, so the shape has to be reserved even before the
+  // probe lands (`reserved`, above).
   if (isVideoAsset(mimeType) && src) {
-    const known =
-      // A COMMENT'S CLIP ALWAYS TAKES THE FRAME (ReplyMedia): one shape for
-      // every comment attachment, so a thread does not change rhythm when a
-      // clip lands in it — the square stands whether the shape is probed or not.
-      surface === "reading" ||
-      ratio !== undefined ||
-      (typeof sourceRatio === "number" && Number.isFinite(sourceRatio) && sourceRatio > 0);
     const player = (
       <VideoPlayer
         src={src}
@@ -155,11 +157,10 @@ export function MediaTile({
         durationMs={durationMs}
         autoplay={autoplay}
         surface={surface}
-        framed={known}
+        framed
         testId={testId}
       />
     );
-    if (!known) return player;
     return (
       <span
         data-testid={testId ? `${testId}-frame` : undefined}

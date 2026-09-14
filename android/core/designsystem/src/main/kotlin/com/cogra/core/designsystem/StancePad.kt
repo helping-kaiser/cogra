@@ -198,7 +198,7 @@ private val TARGET_MIN = 48.dp
  * be misread as a standing the reader already holds — it is the shape of
  * a face with nothing in it yet, which is exactly the state it reports.
  */
-private const val RESTING_FACE = "😐"
+private const val RESTING_FACE = "🫥"
 
 /**
  * Muted and translucent (`--opacity-resting-face`, design/readme.md §4 —

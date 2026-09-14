@@ -3,11 +3,14 @@ package com.cogra.feature.content.wizard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.filterToOne
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -471,6 +474,21 @@ class ComposeWizardScreenTest {
     }
 
     @Test
+    fun theCropStageCarriesTheQuietNoteExactlyOnce() {
+        // CW-11's audit citation ("CropStep.kt — no such note anywhere in
+        // the file") was true of this file's own text but not of what the
+        // stage renders: `MediaCrop` already defaults its `caption` param to
+        // this exact string (core/designsystem/.../media/MediaCrop.kt:62).
+        // This pins ComposeCrop's caption to appearing once, not zero times
+        // and not twice — a regression this lane's first draft introduced by
+        // adding a second, unaware of MediaCrop's own default.
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
+        compose
+            .onAllNodesWithText("One shape for the whole post. Drag to move, pinch to zoom.")
+            .assertCountEquals(1)
+    }
+
+    @Test
     fun theFilmstripAppearsOnlyWhenThereIsMoreThanOnePicture() {
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
         // Existence rather than display: whether the strip sits above
@@ -627,6 +645,21 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(state) }
         compose.onNodeWithText("Tags").assertExists()
         compose.onNodeWithText("Topics").assertDoesNotExist()
+    }
+
+    // CW-22 (the parked half): each tag draws as its own readout-tone chip
+    // (`_shared.jsx:840-845`'s `<Chip tone="readout">`), not a single
+    // joined string — and a readout is shown, not pressed.
+    @Test
+    fun theSealsTagsEachDrawAsANonInteractiveReadoutChip() {
+        val state = ComposeWizardState(
+            body = "x",
+            step = WizardStep.Seal,
+            tagSection = TagSectionState(tags = listOf(TagRow("fieldnotes"), TagRow("coastroad"))),
+        )
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithText("#fieldnotes").assertExists().assert(hasClickAction().not())
+        compose.onNodeWithText("#coastroad").assertExists().assert(hasClickAction().not())
     }
 
     // CW-21: the References act row reads the citation's own name and its
