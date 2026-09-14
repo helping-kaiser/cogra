@@ -45,7 +45,7 @@ export function Screen() {
             variant="chronicle"
             inert
             chevron={false}
-            image="ava1.jpg"
+            image="comment-camera.jpg"
             title="Ada Okonkwo"
             titleAside="@ada"
             second="Hidden 14d"
