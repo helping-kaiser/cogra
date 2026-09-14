@@ -39,7 +39,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { isMuted, setMuted, useMuted } from "./mute";
 import { formatDuration } from "./video";
-import { SKIP_SECONDS, VideoTransport } from "./video-transport";
+import { VideoTransport } from "./video-transport";
 import { claim, surrender } from "./video-stage";
 
 /** Enough of the frame in view to be worth playing — android's gate, blessed
@@ -199,6 +199,14 @@ export function VideoPlayer({
     setElapsedSec(to);
   };
 
+  // A SKIP IS RELATIVE TO THE ELEMENT, never to the rendered clock. Two taps
+  // land inside one render, so a second skip computed from state would step
+  // from where the first one started rather than from where it arrived.
+  const skipBy = (seconds: number) => {
+    const video = ref.current;
+    if (video) seekTo(video.currentTime + seconds);
+  };
+
   return (
     <span className="relative block size-full">
       <video
@@ -280,7 +288,7 @@ export function VideoPlayer({
           }}
           onToggleMute={() => setMuted(!muted)}
           onSeek={(fraction) => seekTo(fraction * (totalSec ?? 0))}
-          onSkip={(seconds) => seekTo(elapsedSec + seconds)}
+          onSkip={skipBy}
         />
       )}
 
