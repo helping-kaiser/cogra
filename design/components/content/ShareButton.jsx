@@ -14,7 +14,7 @@ import { Icon } from "../navigation/Icon.jsx";
    public tally of something the graph does not record.
 
    IT IS LAST IN THE ROW, and that is a rule rather than a layout: the row's
-   order — stance, score, comment, share — is its order of importance, and it is
+   order — opinion, score, comment, share — is its order of importance, and it is
    also the queue. On a phone too narrow to hold all four, share is the first to
    move into the ⋮ menu. `PostCard` draws it; `showShare={false}` is for a
    surface that has none to offer. */
