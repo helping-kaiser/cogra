@@ -343,7 +343,7 @@ fun VideoPlayer(
         }
 
         Row(
-            modifier = Modifier.align(Alignment.BottomEnd).padding(Space.x2),
+            modifier = Modifier.align(Alignment.BottomStart).padding(Space.x2),
         ) {
             if (controls == VideoControls.Full) {
                 durationMs?.let {
