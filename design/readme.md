@@ -1731,8 +1731,9 @@ entry first". What stands:
   trigger's own 198px text room and the band's tighter 154px against
   the total — never failing on what it finds, until item 64 rules a
   threshold to hold the tree to. Full pipeline: `node bundle.mjs &&
-  node render-screens.mjs && node gen-maps.mjs && node check-flows.mjs
-  && node check-readouts.mjs && node report-summaries.mjs`.
+  node render-screens.mjs && node gen-maps.mjs && node gen-canvases.mjs
+  && node check-flows.mjs && node check-readouts.mjs &&
+  node report-summaries.mjs`.
 - **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
   & Wallet, Feed & Search, Comments, Compose, Media + Patterns; the
   Profile page joined 2026-09-01 — 699 edges over all 93 boards, no
@@ -4713,7 +4714,79 @@ names, and the seal stops showing a value nobody set.
   draw a compose seal (`ComposeSeal`, `ComposeSealUploading`,
   `ComposeLicense`, `ComposeSensitive`, `HelpDialog`, `NetworkError`).
 
-## 14. Index
+---
+
+## 14. The canvases
+
+The tree draws one app and is graded as one thing. The editor it is
+reviewed in holds 200 files per canvas and publishes 16MB, and at 191
+boards the tree stands on both ceilings — so the *review* splits into
+four canvases while the tree itself stays whole.
+
+**The tree is the master.** The board files and
+`designs/canonical/canvas.json` are the graded truth: coordinates,
+page assignment, annotations, and the flow graph beside them. The four
+canvases are review surfaces — claude.ai artifacts seeded from that
+master, each carrying the boards of the pages it serves. Nothing is
+decided on a canvas that is not written back into the tree; a canvas
+is re-seeded from the tree, never the other way round.
+
+**Which canvas serves which pages:**
+
+| Canvas | `id` | Pages | Opens on |
+|---|---|---|---|
+| [CoGra · Feed and comments](https://claude.ai/code/artifact/012e4ee6-edd1-4cbe-98ab-b45c58aa4c34) | `feed` | Feed & Search · Comments | Feed & Search |
+| [CoGra · Profile and settings](https://claude.ai/code/artifact/1102bec0-50a9-41b2-84da-a6215afd2d2a) | `profile` | Profile | Profile |
+| [CoGra · Compose and media](https://claude.ai/code/artifact/675688a0-1365-48e0-b56a-511104712f53) | `compose` | Compose · Media | Compose |
+| [CoGra · Entry, money and maps](https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5) | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
+
+A canvas title never carries `< > & "` or a backslash — the editor
+refuses them at seed time, which is why the titles say "and". The old
+single-canvas artifact stands as a signpost to these four; its version
+picker keeps the pre-split monolith.
+
+That map is data, not a habit: `designs/canonical/canvases.json` holds
+it, hand-maintained — each entry carries its canvas's published `url`,
+the links in the table above — and `_build/gen-canvases.mjs` writes one seed
+manifest per canvas under `designs/canonical/canvases/<id>/` — the
+artboards and annotations of its pages with coordinates verbatim, the
+page bar in the order above, plus an `images.json` naming the
+photographs its boards actually reference, so seeding a canvas reads
+one directory and scans nothing. The manifests are generated and
+committed the way the maps are; the stage fails on a page no canvas
+claims or two canvases claim, a canvas over its file or byte budget,
+and on a committed manifest that regeneration no longer reproduces.
+
+**A board joins a canvas by its page.** Nothing on a board names a
+canvas — membership is read from the `page` every artboard already
+carries, so a new board lands on the canvas that serves its page the
+moment the manifests regenerate. Moving a page to another canvas is an
+edit to `canvases.json` and nothing else.
+
+**The budgets are per-canvas.** A photograph counts against the canvas
+that carries it rather than one global pool, and an image two canvases
+need is seeded into both — which is what ends the squeeze that made
+every new picture a trade against an old one. The stage prints each
+canvas's boards, images, file count, bytes and headroom, and holds the
+file count at 180, under the 200 so the margin is visible before it is
+a wall.
+
+**Implementation cites board files, never canvas URLs.** A canvas URL
+names a review surface that gets re-seeded and re-published; the board
+file is what holds still and what CI grades. Briefs, hand-test notes
+and PR bodies name `ProfileEdit.dc.html`, not the artifact it happens
+to be visible in today.
+
+**Cross-canvas edges are ordinary.** One flow graph spans all four —
+`graph.json` knows boards and pages, not canvases — so an edge from a
+compose board to a feed board is normal wiring, drawn with the same
+`⤴ page` marker the maps already use for a cross-page jump.
+Reachability, entries and gaps are checked over the whole graph; no
+canvas is ever checked alone.
+
+---
+
+## 15. Index
 
 **Root**
 - `styles.css` — the entry point consumers link. `@import` lines only.
@@ -4727,10 +4800,11 @@ names, and the seal stops showing a value nobody set.
   `_ds_manifest.json` is the claude.ai Design app's own metadata and is
   refreshed only by that app, on an explicit sync-back.
 - `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
-  `gen-maps.mjs`, `check-flows.mjs`, `check-readouts.mjs`,
-  `report-summaries.mjs` — the canonical-canvas pipeline
-  (§13, *Canvas pages and flows*): render the screens, stamp the flow
-  numbers, generate the maps, gate the result. Run all six after any
+  `gen-maps.mjs`, `gen-canvases.mjs`, `check-flows.mjs`,
+  `check-readouts.mjs`, `report-summaries.mjs` — the canonical-canvas
+  pipeline (§13, *Canvas pages and flows*): render the screens, stamp
+  the flow numbers, generate the maps, seed the per-canvas manifests
+  (§14), gate the result. Run all seven after any
   screen, component, or graph.json edit. A screen whose state is not a
   portrait phone exports `FRAME` and the shell builds that artboard
   instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
@@ -4754,3 +4828,9 @@ and `iconography.md` for the deeper dives.
 **`components/`** — see §7: `core/`, `content/`, `forms/`, `navigation/`,
 `compose/`, `media/`, `wallet/`, `people/`, `states/`, `honesty/`,
 `stance/`, `proposed/`.
+
+**`designs/canonical/`** — the drawn app itself: the rendered
+`.dc.html` boards, `canvas.json` (the master layout: coordinates,
+pages, annotations), `graph.json` and the flow layer beside it (§13),
+`canvases.json` + `canvases/<id>/` (the canvas map and per-canvas seed
+manifests, §14), and `img/` (the photographs the boards carry).
