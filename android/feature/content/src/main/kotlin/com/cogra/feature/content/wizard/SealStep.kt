@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -34,6 +35,7 @@ import com.cogra.core.designsystem.nearestStanceAnchor
 import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.CograReadoutChip
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.Hairline
@@ -173,17 +175,7 @@ private fun ActBlock(state: ComposeWizardState) {
         ActRow(kind = "Post", detail = state.sealSummary, acts = 1)
         if (state.tagSection.tags.isNotEmpty()) {
             Hairline()
-            // CW-22: the board's label is "Tags", not "Topics"
-            // (_shared.jsx:839). The value itself stays plain text here —
-            // the board draws readout-tone chips, and no such tone exists
-            // yet on the chip atom (v2/atom/Chips.kt's `CograChip` is
-            // always an interactive control, selected or not; there is no
-            // non-interactive "readout" chip to draw a signed act with).
-            ActRow(
-                kind = "Tags",
-                detail = state.tagSection.tags.joinToString(" ") { "#${it.name}" },
-                acts = state.tagSection.tags.size,
-            )
+            TagsActRow(tags = state.tagSection.tags.map { it.name })
         }
         if (state.referenceSection.references.isNotEmpty()) {
             Hairline()
@@ -231,6 +223,51 @@ private fun ActRow(kind: String, detail: String, acts: Int) {
             // CW-25: both text tokens in the acts row are label-small
             // (ActsCard.jsx:27-43, LABEL and COUNT share --text-label-small);
             // the kind label above already reads it correctly.
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * The Tags act row: unlike [ActRow]'s plain-text value, the board
+ * (`_shared.jsx:839-846`) draws each tag as a readout-tone chip — a
+ * borderless `secondaryContainer` pill, not a filter — so the value slot is
+ * a row of [CograReadoutChip]s rather than a joined string (CW-22).
+ *
+ * The board's own value wrapper is `overflow: hidden` with no `flexWrap`: a
+ * single non-wrapping row that hard-clips whatever doesn't fit at the
+ * container edge, not an ellipsis. [Modifier.clipToBounds] on the weighted
+ * row matches that measured behaviour rather than inventing a truncation
+ * rule the board doesn't draw.
+ */
+@Composable
+private fun TagsActRow(tags: List<String>) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Space.x2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        Text(
+            text = "Tags",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(76.dp),
+        )
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clipToBounds(),
+            // `_shared.jsx:841`'s wrapper: `gap: 6`.
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            tags.forEach { name -> CograReadoutChip(label = "#$name") }
+        }
+        Text(
+            text = if (tags.size == 1) "1 action" else "${tags.size} actions",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

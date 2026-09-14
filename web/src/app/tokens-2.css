@@ -42,25 +42,6 @@
   --touch-target-min: 48px;
   --bottom-bar-height: 64px;
   --top-bar-height: 48px;
-
-  /* A POST MUST FIT ON THE SCREEN. The collapsed card — author row, media,
-     text, affordances — has to sit inside the viewport minus the top safe area
-     and the bottom bar, or the reader never sees a post whole and never
-     reaches the affordance row without scrolling. Media is the only part that
-     can flex, so the cap lands on it.
-
-     The chrome figure is the WORST CASE, not the average: author row, title, a
-     two-line caption, a `More` opener, an honesty marker, the affordance row,
-     and the card's own 2x16px padding. Budgeting for the average ships a
-     layout that fits four posts in five, and the fifth is the one with
-     something to say. The floor keeps media from collapsing to a sliver on a
-     short viewport, where scrolling is the lesser evil. */
-  --safe-area-top: env(safe-area-inset-top, 44px);
-  --post-chrome-height: 360px;
-  --media-max-height: max(
-    180px,
-    calc(100dvh - var(--safe-area-top) - var(--bottom-bar-height) - var(--post-chrome-height))
-  );
 }
 
 /* ----------------------------------------------------------------- motion --
