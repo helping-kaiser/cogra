@@ -29,9 +29,12 @@ import { useGlobalMute } from "./MediaAttachment.jsx";
      is dismissed with.
    · A PICTURE PINCH-ZOOMS, and the gallery's swipe carries over: the set is
      paged here exactly as it is in the card, DOTS AND ALL — dots only, no
-     arrows and no "n of m" (item 21's pager ruling). Arrows would be a second
-     vocabulary for a gesture the reader already has, and the count belongs in
-     the accessible name rather than on the frame.
+     arrows (item 21's pager ruling). Arrows would be a second vocabulary for a
+     gesture the reader already has, and the count belongs in the accessible
+     name rather than on the frame.
+   · THE DOT ROW IS WINDOWED (item 67, ruled 2026-09-14). At most seven dots
+     are drawn; past that the row slides and its overflowing edge dot shrinks —
+     see `ViewerDots` below for why.
    · A VIDEO TAKES THE FULL TRANSPORT (`VideoTransport`) — play/pause and a real
      timeline — and ROTATING THE DEVICE fills the screen with it. Rotation is
      the device's own gesture, so there is no rotate control to draw.
@@ -44,6 +47,87 @@ import { useGlobalMute } from "./MediaAttachment.jsx";
 
    The scrim is the dialog scrim, so the viewer belongs to the same family as
    every other thing that covers the screen in this system. */
+
+/* THE WINDOWED DOT ROW (item 67, ruled 2026-09-14: "n of m dots with max dots,
+   just copy how insta does it").
+
+   A ROW THAT GROWS WITH THE SET STOPS BEING A POSITION MARKER. Ten dots at 12px
+   of pitch is a ruler, and a reader counting rungs is doing the work the marker
+   exists to save. So the row has A CEILING — seven slots, the same bound the
+   pattern this copies uses — and past it the row is a WINDOW onto the set
+   rather than a picture of it.
+
+   THE WINDOW SLIDES, CENTRED ON WHERE THE READER IS. Its start is the current
+   index less half the window, clamped to the set's two ends: the active dot
+   travels to the middle and stays there while the row moves under it, and at
+   either end the window parks so the last dot of the set can be reached.
+
+   AN EDGE DOT WITH MORE BEYOND IT IS SMALLER. That is the whole of how the row
+   admits what it is not showing: a shrunk dot at the edge reads as "the set
+   keeps going this way", where a full one reads as "this is the end". One
+   smaller size and not a ladder of them — at a 6px dot a third size is noise,
+   and with the authoring cap at ten pictures the row never hides more than
+   three. THE ACTIVE DOT IS NEVER THE SHRUNK ONE: the clamp above keeps it off
+   an overflowing edge, so the dot that says "here" is always full size.
+
+   EVERY SLOT KEEPS ITS PITCH. The dot is centred in a slot the size of a full
+   dot, so shrinking one moves nothing beside it — a row that reflowed as the
+   reader swiped would be its own kind of noise.
+
+   THE COUNT IS NOT DRAWN. The plain "Picture n of m" stays in the accessible
+   name, where it has always been: the frame carries the dots, a listener
+   carries the number. */
+const DOT_WINDOW = 7;
+const DOT_FULL = 6;
+const DOT_EDGE = 4;
+
+export function ViewerDots({ count, current }) {
+  if (count < 2) return null;
+  const window = Math.min(count, DOT_WINDOW);
+  const start = Math.max(0, Math.min(current - (window >> 1), count - window));
+  const slots = Array.from({ length: window }, (_, offset) => start + offset);
+  const moreBefore = start > 0;
+  const moreAfter = start + window < count;
+
+  return (
+    <div
+      aria-label={`Picture ${current + 1} of ${count}`}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: `${DOT_FULL}px`,
+        filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
+      }}
+    >
+      {slots.map((index, offset) => {
+        const edge =
+          (offset === 0 && moreBefore) || (offset === window - 1 && moreAfter);
+        const size = edge ? DOT_EDGE : DOT_FULL;
+        return (
+          <span
+            key={index}
+            style={{
+              width: `${DOT_FULL}px`,
+              height: `${DOT_FULL}px`,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <span
+              style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                borderRadius: "var(--radius-full)",
+                background: index === current ? "#fff" : "rgba(255,255,255,0.42)",
+              }}
+            />
+          </span>
+        );
+      })}
+    </div>
+  );
+}
 
 export function MediaViewer({
   items = [],
@@ -86,10 +170,10 @@ export function MediaViewer({
   /* THE SET IS READ THE WAY THE CARD READS IT: dots, and the swipe (item 21's
      pager ruling — dots only, never arrows and never a "1/n" pill). Arrows here
      would be a second vocabulary for a gesture the reader already has, and the
-     count belongs to the accessible name, not the frame. */
+     count belongs to the accessible name, not the frame. The row itself is
+     `ViewerDots`, windowed at seven. */
   const dots = count > 1 && (
     <div
-      aria-label={`Picture ${current + 1} of ${count}`}
       style={{
         position: "absolute",
         left: 0,
@@ -98,21 +182,9 @@ export function MediaViewer({
         zIndex: 3,
         display: "flex",
         justifyContent: "center",
-        gap: "6px",
-        filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
       }}
     >
-      {items.map((item, index) => (
-        <span
-          key={item.src ?? index}
-          style={{
-            width: "6px",
-            height: "6px",
-            borderRadius: "var(--radius-full)",
-            background: index === current ? "#fff" : "rgba(255,255,255,0.42)",
-          }}
-        />
-      ))}
+      <ViewerDots count={count} current={current} />
     </div>
   );
 
