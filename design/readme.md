@@ -4770,6 +4770,15 @@ when the thing to read back is a collection.
   slot, so the count never truncates and the ellipsis stays the single
   reading's business.
 
+### The chats-routing close — 2026-09-14
+
+Item 68 closed: every Message control routes to the coming-soon board
+instead of a gap, and the message-someone flow resolves.
+
+- **The gate**: boards hold at **194**, edges hold at **1372**, gaps
+  **20 → 15**, flows **63/60/3 → 63/61/2**, the compose canvas
+  unchanged at 75/200 files (63% headroom).
+
 ### The keyboard's own mechanism — 2026-09-14
 
 The design system said nothing about the on-screen keyboard (census
