@@ -439,23 +439,50 @@ export function signedLine(standing, records, severed, targetLabel) {
   );
 }
 
-/** Face and pair, and the words for a reader who cannot see the face (§8.3). */
-export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, style }) {
-  const readout = kind === "standing" ? bundleReadout(pair, zeroLabel) : nearestAnchor(pair);
+/* ONE LINE, WHATEVER IT READS: face, then the exact figure, then the spoken
+   twin. A one-axis readout draws a shorter number, not a different shape — so
+   the markup is written once and the two readouts differ only in what they
+   hand it. */
+function ReadoutLine({ emoji, exact, spoken, style }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)", flex: "none", ...style }}>
-      <span aria-hidden="true">{readout.emoji}</span>
+      <span aria-hidden="true">{emoji}</span>
       {/* NEVER WRAPS. This sits in the post card's affordance row, which is one
           line by rule — a pair broken across two text lines reads as a two-line
           block even when the row height has not changed. */}
       <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
-        {formatStancePair(pair)}
+        {exact}
       </span>
       {/* The spoken reading is the same in both modes: geek mode is a drawing
           setting, and a reader on a screen reader is owed the values either way. */}
-      <span style={SR_ONLY}>{`${readout.label}, ${formatStanceWords(pair)}`}</span>
+      <span style={SR_ONLY}>{spoken}</span>
     </span>
   );
+}
+
+/** Face and pair, and the words for a reader who cannot see the face (§8.3). */
+export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, style }) {
+  const readout = kind === "standing" ? bundleReadout(pair, zeroLabel) : nearestAnchor(pair);
+  return (
+    <ReadoutLine
+      emoji={readout.emoji}
+      exact={formatStancePair(pair)}
+      spoken={`${readout.label}, ${formatStanceWords(pair)}`}
+      style={style}
+    />
+  );
+}
+
+/* AN OPINION ON ONE'S OWN POST IS ONE NUMBER (jakob's ruling, 2026-09-14:
+   "the second number isn't yours to set on your own post"). A post always
+   reaches its author in full, so `pInterest` is not a value the author picks
+   and a pair would draw a second figure nobody chose. The face comes from
+   `VALENCE_SIX`, the table built for exactly this reading, and the spoken twin
+   names the one axis there is. */
+export function OwnStanceReadout({ pDirected, style }) {
+  const band = nearestValenceAnchor(pDirected);
+  const exact = formatDimension(pDirected);
+  return <ReadoutLine emoji={band.emoji} exact={exact} spoken={`${band.label}, ${DIRECTED_LABEL} ${exact}`} style={style} />;
 }
 
 /** The standing, split for rendering: either a sentence, or a readout to lay out. */
