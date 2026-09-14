@@ -232,21 +232,38 @@ function MediaBody({
 
       {assets.length > 0 && (
         <div className="flex flex-none flex-col gap-1.5 border-b border-outline-variant px-6 pb-3 pt-1">
-          <div className="flex items-baseline gap-2">
-            <span className="flex-1 text-label-medium text-on-surface-variant">
+          {/* NO "Show all" ON A CLIP (ComposePickVideo): that sheet reorders a
+              set and names its cover, and one clip is neither — its cover is
+              the next step's whole subject. Absent the button, the count is
+              the only thing on its line, so it does not need the flex row
+              that pushes Show all to the end of one. */}
+          {holdsVideo ? (
+            <span
+              data-testid="wizard-picked-count"
+              className="text-label-medium text-on-surface-variant"
+            >
               Picked · {assets.length}
             </span>
-            {/* The way into the per-picture manager: reorder (first is the
-                cover), remove, describe. The tray itself stays a summary. */}
-            <button
-              type="button"
-              data-testid="wizard-show-all"
-              onClick={onManage}
-              className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
-            >
-              Show all
-            </button>
-          </div>
+          ) : (
+            <div className="flex items-baseline gap-2">
+              <span
+                data-testid="wizard-picked-count"
+                className="flex-1 text-label-medium text-on-surface-variant"
+              >
+                Picked · {assets.length}
+              </span>
+              {/* The way into the per-picture manager: reorder (first is the
+                  cover), remove, describe. The tray itself stays a summary. */}
+              <button
+                type="button"
+                data-testid="wizard-show-all"
+                onClick={onManage}
+                className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
+              >
+                Show all
+              </button>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <ul className="m-0 flex list-none gap-2 overflow-x-auto p-0">
               {assets.map((asset, index) => (
@@ -254,16 +271,22 @@ function MediaBody({
                   <MediaThumb
                     src={previews[asset.id] ?? null}
                     crop={asset.crop}
-                    cover={index === 0}
+                    // A video is never the post's "cover" picture — that word
+                    // names a different, later choice (the video's own face,
+                    // ComposeCover) — so the badge ComposePick draws on a
+                    // picture's first tile has no video counterpart.
+                    cover={!holdsVideo && index === 0}
                     onRemove={() => onUnpick(asset.id)}
-                    removeLabel={`Remove picture ${index + 1}`}
+                    removeLabel={holdsVideo ? "Remove this video" : `Remove picture ${index + 1}`}
                     testId={`wizard-unpick-${asset.id}`}
                   />
                 </li>
               ))}
             </ul>
             <span className="flex-1 text-label-small text-on-surface-variant">
-              The first one is the cover.
+              {holdsVideo
+                ? "A video is the whole post. Its cover comes next."
+                : "The first one is the cover."}
             </span>
           </div>
         </div>

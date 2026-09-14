@@ -49,9 +49,11 @@ export function SealStep({
   onSensitiveReason,
   onHelp,
   onLicenseHelp,
+  onKeyHelp,
   onSign,
   onBack,
   onRestoreKey,
+  onKeepDraft,
 }: {
   state: WizardState;
   sheet: SealSheet;
@@ -67,9 +69,14 @@ export function SealStep({
   onSensitiveReason: (next: string) => void;
   onHelp: () => void;
   onLicenseHelp: () => void;
+  onKeyHelp: () => void;
   onSign: () => void;
   onBack: () => void;
   onRestoreKey: () => void;
+  /** Leaves the wizard with the draft kept — not a step back (graph:
+   *  `ComposeKeyAbsent`'s keep-draft edge is a terminal `back`, i.e. it
+   *  leaves; see `wizard-view.tsx`'s `leaveFlow`). */
+  onKeepDraft: () => void;
 }) {
   const acts = signedActions(state);
   // How many are still moving — the count the gate reads out. A failure is not
@@ -144,22 +151,30 @@ export function SealStep({
           action="Change"
           testId="wizard-open-license"
           onAction={() => onSheet("license")}
+          // Key absent: everything the signature would commit is still read
+          // back, but the license is the only term left changeable — the
+          // board draws one row, last (ComposeKeyAbsent.jsx:47).
+          last={keyOnDevice === false}
         />
-        <TermRow
-          label="Where you stand on it"
-          value={<StanceReadout pair={{ pDirected: state.pDirected, pInterest: 1 }} />}
-          action="Adjust"
-          testId="wizard-open-stance"
-          onAction={() => onSheet("stance")}
-        />
-        <TermRow
-          label="Sensitive"
-          value={state.sensitive ? "Marked" : "Not marked"}
-          action={state.sensitive ? "Change" : "Mark"}
-          testId="wizard-open-sensitive"
-          onAction={() => onSheet("sensitive")}
-          last
-        />
+        {keyOnDevice !== false && (
+          <>
+            <TermRow
+              label="Where you stand on it"
+              value={<StanceReadout pair={{ pDirected: state.pDirected, pInterest: 1 }} />}
+              action="Adjust"
+              testId="wizard-open-stance"
+              onAction={() => onSheet("stance")}
+            />
+            <TermRow
+              label="Sensitive"
+              value={state.sensitive ? "Marked" : "Not marked"}
+              action={state.sensitive ? "Change" : "Mark"}
+              testId="wizard-open-sensitive"
+              onAction={() => onSheet("sensitive")}
+              last
+            />
+          </>
+        )}
       </div>
 
       <div className="flex-1" />
@@ -174,18 +189,25 @@ export function SealStep({
           beside it: signing is not something this browser can do, and a disabled
           button with a banner above it invites the press anyway. */}
       {keyOnDevice === false ? (
-        <div
-          data-testid="wizard-key-absent"
-          className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
-        >
-          <h2 className="m-0 text-title-small">Your key isn&apos;t on this browser</h2>
-          <p className="m-0 text-body-medium">
-            Nothing is spent until you sign. The draft stays on this device.
-          </p>
-          <PillButton testId="wizard-restore-key" full onClick={onRestoreKey}>
-            Restore the key
-          </PillButton>
-          <PillButton testId="wizard-keep-draft" variant="text" full onClick={onBack}>
+        <div className="flex flex-col gap-3">
+          <div
+            data-testid="wizard-key-absent"
+            className="flex flex-col gap-3 rounded-medium bg-tertiary-container p-4 text-on-tertiary-container"
+          >
+            <div className="flex items-center gap-2">
+              <h2 className="m-0 flex-1 text-title-medium">Your key isn&apos;t on this browser</h2>
+              <HelpDot
+                ariaLabel="Your key"
+                variant="inverse"
+                onOpen={onKeyHelp}
+                testId="wizard-key-help"
+              />
+            </div>
+            <PillButton testId="wizard-restore-key" variant="inverse" full onClick={onRestoreKey}>
+              Restore the key
+            </PillButton>
+          </div>
+          <PillButton testId="wizard-keep-draft" variant="text" full onClick={onKeepDraft}>
             Keep the draft, restore later
           </PillButton>
         </div>

@@ -1,8 +1,9 @@
 //! ´mod:module:media´
 //!
 //! Key 5 is the media manifest: an array of per-asset maps carrying the
-//! digest of the bytes, the type they are to be read as, and the alt text
-//! describing them, with array position carrying gallery order. It commits
+//! digest of the bytes, the type they are to be read as, the alt text
+//! describing them, and — for a video — the digest of the still that
+//! covers it, with array position carrying gallery order. It commits
 //! what a reader needs to render honestly and nothing a server measured —
 //! aspect ratio, size, and duration are derived, so they stay out of what
 //! the author signs. The nested map runs the same reserved-key discipline
@@ -23,6 +24,7 @@ use crate::envelope::pce::Value;
 pub(super) const ASSET_KEY_DIGEST: u64 = 0;
 pub(super) const ASSET_KEY_MIME: u64 = 1;
 pub(super) const ASSET_KEY_ALT_TEXT: u64 = 2;
+pub(super) const ASSET_KEY_COVER: u64 = 3;
 
 /// SHA-256, the algorithm the manifest's digests are (data-model.md
 /// `media_attachments`). The length is the only place the choice appears
@@ -32,12 +34,19 @@ pub const MEDIA_DIGEST_LEN: usize = 32;
 
 /// One asset in the media manifest (guild key 5).
 ///
-/// The three fields are what a reader needs to render the asset honestly:
-/// which bytes (`digest`), what to read them as (`mime`), and what the
-/// picture is of (`alt_text`). Alt text rides here rather than staying
+/// The four fields are what a reader needs to render the asset honestly:
+/// which bytes (`digest`), what to read them as (`mime`), what the
+/// picture is of (`alt_text`), and which still stands in for a clip that
+/// is not playing (`cover`). Alt text rides here rather than staying
 /// Postgres-side because it is what a blind reader *reads* — leaving it
 /// unwitnessed while the body is witnessed would make the accessible
 /// rendering the only one a reader cannot check against the record.
+///
+/// The cover rides here for the parallel reason: the poster is the face
+/// the post wears at rest, so an author signs it as they sign the body,
+/// and an edit that names a different one is a new version saying so. It
+/// is a digest rather than an id because the manifest names assets by
+/// their bytes throughout.
 ///
 /// Everything a server measured — aspect ratio, byte size, duration —
 /// stays out: the author signs what they wrote, never a measurement.
@@ -48,6 +57,7 @@ pub struct MediaAsset {
     pub digest: [u8; MEDIA_DIGEST_LEN],
     pub mime: String,
     pub alt_text: Option<String>,
+    pub cover: Option<[u8; MEDIA_DIGEST_LEN]>,
 }
 
 impl MediaAsset {
@@ -57,6 +67,9 @@ impl MediaAsset {
         map.insert(ASSET_KEY_MIME, Value::Text(self.mime.clone()));
         if let Some(alt_text) = &self.alt_text {
             map.insert(ASSET_KEY_ALT_TEXT, Value::Text(alt_text.clone()));
+        }
+        if let Some(cover) = &self.cover {
+            map.insert(ASSET_KEY_COVER, Value::Bytes(cover.to_vec()));
         }
         Value::Map(map)
     }
@@ -70,7 +83,7 @@ impl MediaAsset {
             return Err(EnvelopeError::Guild("media entry must be a map"));
         };
         for key in map.keys() {
-            if *key > ASSET_KEY_ALT_TEXT {
+            if *key > ASSET_KEY_COVER {
                 return Err(EnvelopeError::Guild("unknown media entry field"));
             }
         }
@@ -96,10 +109,21 @@ impl MediaAsset {
             }
             Some(_) => return Err(EnvelopeError::Guild("media alt text must be text")),
         };
+        let cover = match map.get(&ASSET_KEY_COVER) {
+            None => None,
+            Some(Value::Bytes(cover)) => Some(
+                cover
+                    .as_slice()
+                    .try_into()
+                    .map_err(|_| EnvelopeError::Guild("media cover must be 32 bytes"))?,
+            ),
+            Some(_) => return Err(EnvelopeError::Guild("media cover must be a digest")),
+        };
         Ok(Self {
             digest,
             mime,
             alt_text,
+            cover,
         })
     }
 }

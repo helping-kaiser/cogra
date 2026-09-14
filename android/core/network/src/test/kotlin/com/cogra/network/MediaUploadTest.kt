@@ -164,7 +164,7 @@ class MediaUploadTest {
         failuresFor[1] = 2
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip, coverMediaId = COVER)
+        val outcome = repo.uploadVideo(clip)
 
         assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
         // Three attempts at part one, one at part two — and the upload
@@ -182,7 +182,7 @@ class MediaUploadTest {
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
         val ticks = mutableListOf<UploadProgress>()
 
-        repo.uploadVideo(clip, COVER) { ticks += it }
+        repo.uploadVideo(clip) { ticks += it }
 
         // Progress only ever moves forward — a retried part reports
         // nothing until it lands, so the bar never goes backwards.
@@ -198,7 +198,7 @@ class MediaUploadTest {
         failuresFor[1] = 99
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip, COVER)
+        val outcome = repo.uploadVideo(clip)
 
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
         // It gave up rather than looping, and never asked to complete.
@@ -216,7 +216,7 @@ class MediaUploadTest {
         refusalsFor[1] = 422
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip, COVER)
+        val outcome = repo.uploadVideo(clip)
 
         assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)
         // A refusal is not retried, and completion is never asked for.
@@ -234,7 +234,7 @@ class MediaUploadTest {
         // No token saved at all.
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip, COVER)
+        val outcome = repo.uploadVideo(clip)
 
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
         assertThat(partAttempts).isEmpty()
@@ -246,7 +246,7 @@ class MediaUploadTest {
         tokens.save(AuthTokens("access", "refresh", "acct"))
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        repo.uploadVideo(clip, COVER)
+        repo.uploadVideo(clip)
 
         val puts = generateSequence { server.takeRequest(1, MILLISECONDS) }
             .filter { it.path.orEmpty().startsWith("/media/uploads/") }
@@ -269,7 +269,7 @@ class MediaUploadTest {
         // nothing else.
         val (repo, clip) = repositoryFor(PART_SIZE - 1)
 
-        val outcome = repo.uploadVideo(clip, COVER)
+        val outcome = repo.uploadVideo(clip)
 
         assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
         assertThat(beginCalls).isEqualTo(0)
@@ -278,7 +278,6 @@ class MediaUploadTest {
 
     private companion object {
         const val SESSION = "11111111-1111-1111-1111-111111111111"
-        const val COVER = "22222222-2222-2222-2222-222222222222"
 
         /** Small enough to keep the test's bytes cheap. */
         const val PART_SIZE = 64

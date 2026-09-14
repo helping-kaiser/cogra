@@ -350,13 +350,23 @@ data class MediaAssetView(
  * refuses an entry whose stated index contradicts its array position,
  * so the list's own order decides both and the claim states neither.
  *
- * [altText] is authored here rather than at the upload because it is a
- * fact about this placement: the same asset can read differently in two
- * posts, and correcting a description is a new version of the post
- * rather than a re-upload. Blank is not a description — an undescribed
- * picture carries null.
+ * [altText] and [coverMediaId] are authored here rather than at the
+ * upload because both are facts about this placement: the same asset can
+ * read differently in two posts, and correcting a description or naming
+ * another poster is a new version of the post rather than a re-upload.
+ * Blank is not a description — an undescribed picture carries null.
+ *
+ * [coverMediaId] is the id a prior upload returned for the still that
+ * fronts a clip, never a URI and never bytes. Null on a picture and on a
+ * clip the author left faceless: going without a cover is always
+ * possible. It is a different question from the gallery's own cover,
+ * which the list's order decides.
  */
-data class AttachmentClaim(val mediaId: String, val altText: String? = null)
+data class AttachmentClaim(
+    val mediaId: String,
+    val altText: String? = null,
+    val coverMediaId: String? = null,
+)
 
 /**
  * A three-valued profile media field: omitted = untouched, explicit

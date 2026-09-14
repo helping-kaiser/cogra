@@ -273,7 +273,7 @@ impl Rig {
     async fn upload_single_shot(&self, token: &str, file: &[u8]) -> Value {
         let operations = json!({
             "query": UPLOAD_MEDIA,
-            "variables": { "input": { "file": null, "coverMediaId": null }},
+            "variables": { "input": { "file": null }},
         })
         .to_string();
 

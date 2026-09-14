@@ -1393,7 +1393,6 @@ mod galleries {
             "image/webp",
             1024,
             &serde_json::json!({ "v": 1, "aspect_ratio": "4:5" }),
-            None,
         )
         .await
         .expect("asset row");
@@ -1421,7 +1420,6 @@ mod galleries {
             "video/mp4",
             size,
             &serde_json::json!({ "v": 1, "aspect_ratio": "4:5", "duration_ms": 2500 }),
-            None,
         )
         .await
         .expect("asset row");
@@ -1440,6 +1438,7 @@ mod galleries {
                 display_order: i as i32,
                 is_cover: Some(i == 0),
                 alt_text: Some(format!("picture {}", i + 1)),
+                cover_media_id: None,
             })
             .collect()
     }
@@ -1472,6 +1471,21 @@ mod galleries {
             .expect("gallery")
             .into_iter()
             .map(|(_, entry)| entry.alt_text)
+            .collect()
+    }
+
+    /// The posters the rendered gallery names, in the same order — read
+    /// off the junction rows, which is where a placement's cover lives.
+    async fn posters(pool: &PgPool, post_id: Uuid) -> Vec<Option<Uuid>> {
+        let post = content_store::post(pool, post_id)
+            .await
+            .expect("reads")
+            .expect("post");
+        media_store::post_galleries(pool, &[post.version_id])
+            .await
+            .expect("gallery")
+            .into_iter()
+            .map(|(_, entry)| entry.cover_media_id)
             .collect()
     }
 
@@ -1823,6 +1837,7 @@ mod galleries {
                     display_order: 3,
                     is_cover: None,
                     alt_text: None,
+                    cover_media_id: None,
                 }],
                 vec!["attachments".into(), "0".into(), "displayOrder".into()],
             ),
@@ -1833,12 +1848,14 @@ mod galleries {
                         display_order: 0,
                         is_cover: None,
                         alt_text: None,
+                        cover_media_id: None,
                     },
                     AttachmentDraft {
                         media_id: mine,
                         display_order: 1,
                         is_cover: None,
                         alt_text: None,
+                        cover_media_id: None,
                     },
                 ],
                 vec!["attachments".into(), "1".into(), "mediaId".into()],
@@ -1858,12 +1875,14 @@ mod galleries {
                         display_order: 0,
                         is_cover: Some(true),
                         alt_text: Some("fine".into()),
+                        cover_media_id: None,
                     },
                     AttachmentDraft {
                         media_id: second,
                         display_order: 1,
                         is_cover: Some(false),
                         alt_text: Some("x".repeat(media::MAX_ALT_TEXT_CHARS + 1)),
+                        cover_media_id: None,
                     },
                 ],
                 vec!["attachments".into(), "1".into(), "altText".into()],
@@ -1927,8 +1946,66 @@ mod galleries {
         assert!(message.contains("at most 4"), "{message}");
     }
 
+    /// The poster's own rules, checked where the poster is now authored:
+    /// on the placement. Each is refused against the `coverMediaId` of
+    /// the entry that carried it, and a clip that names none is no
+    /// refusal at all — a video can always go without a cover.
+    ///
+    /// A poster must be a still this account uploaded and still holds, only a video placement may name one, and a clip may go without.
+    /// ´claim:content:a-poster-must-be-the-uploaders-own-still´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn a_poster_outside_the_rules_is_refused(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, key) = rig.funded_actor("alice").await;
+        let stranger = rig.funded_actor("bob").await.0;
+
+        let video = video_asset(&rig.pool, actor, 1).await;
+        let still = asset(&rig.pool, actor, 2).await;
+        let theirs = asset(&rig.pool, stranger, 3).await;
+        let second_clip = video_asset(&rig.pool, actor, 4).await;
+
+        let covered = |attachment: Uuid, cover: Option<Uuid>| {
+            vec![AttachmentDraft {
+                media_id: attachment,
+                display_order: 0,
+                is_cover: Some(true),
+                alt_text: None,
+                cover_media_id: cover,
+            }]
+        };
+
+        for (attachments, why) in [
+            (covered(still, Some(video)), "only a video takes a cover"),
+            (covered(video, Some(Uuid::new_v4())), "no such asset"),
+            (covered(video, Some(theirs)), "someone else's still"),
+            (covered(video, Some(second_clip)), "a video is not a poster"),
+        ] {
+            let e = refused(
+                content::prepare_post(&rig.pool, &rig.boundary, GC, actor, media_post(attachments))
+                    .await,
+            );
+            assert_eq!(
+                gallery_refusal(e).0,
+                vec!["attachments", "0", "coverMediaId"],
+                "{why}"
+            );
+        }
+
+        let uncovered = content::prepare_post(
+            &rig.pool,
+            &rig.boundary,
+            GC,
+            actor,
+            media_post(covered(video, None)),
+        )
+        .await
+        .expect("a video can always go without a cover");
+        rig.land(&uncovered, &key).await;
+        assert_eq!(rendered(&rig.pool, uncovered.node).await, vec![video]);
+    }
+
     /// The video composition rule: a body is ten pictures or one video,
-    /// and the video brings its cover on the asset rather than as a
+    /// and the video brings its cover on the placement rather than as a
     /// second attachment — so a video sharing a gallery with anything is
     /// refused, and a video alone is the whole body.
     ///
@@ -1969,8 +2046,71 @@ mod galleries {
         assert_eq!(
             rendered(&rig.pool, alone.node).await,
             vec![video],
-            "the video is the gallery; its cover rides the asset"
+            "the video is the gallery; its cover rides the placement"
         );
+    }
+
+    /// The poster survives the whole round trip — authored on the
+    /// placement, witnessed in the manifest, written back onto the
+    /// junction row from the record — and an edit naming a different one
+    /// is a new version of the post rather than a touch on the clip.
+    ///
+    /// A poster is authored on the placement, witnessed in the record, and swapped by an edit without the clip moving.
+    /// ´claim:content:a-poster-is-a-placement-fact-an-edit-can-swap´
+    #[sqlx::test(migrations = "../../migrations")]
+    async fn an_edit_swaps_the_poster_without_touching_the_clip(pool: PgPool) {
+        let rig = Rig::new(pool).await;
+        let (actor, key) = rig.funded_actor("alice").await;
+
+        let video = video_asset(&rig.pool, actor, 1).await;
+        let first = asset(&rig.pool, actor, 2).await;
+        let second = asset(&rig.pool, actor, 3).await;
+
+        let placement = |cover: Uuid| {
+            vec![AttachmentDraft {
+                media_id: video,
+                display_order: 0,
+                is_cover: Some(true),
+                alt_text: None,
+                cover_media_id: Some(cover),
+            }]
+        };
+
+        let created = content::prepare_post(
+            &rig.pool,
+            &rig.boundary,
+            GC,
+            actor,
+            media_post(placement(first)),
+        )
+        .await
+        .expect("a covered clip");
+        rig.land(&created, &key).await;
+        assert_eq!(posters(&rig.pool, created.node).await, vec![Some(first)]);
+
+        let edited = content::prepare_post_edit(
+            &rig.pool,
+            &rig.boundary,
+            GC,
+            actor,
+            PostEditDraft {
+                id: created.node,
+                title: Some("Look".into()),
+                description: Some("Words beside it".into()),
+                content: None,
+                attachments: placement(second),
+                sensitive: Default::default(),
+            },
+        )
+        .await
+        .expect("a new version naming another poster");
+        rig.land(&edited, &key).await;
+        assert_eq!(
+            posters(&rig.pool, created.node).await,
+            vec![Some(second)],
+            "the cover swapped without the clip's row moving"
+        );
+        assert_eq!(rendered(&rig.pool, created.node).await, vec![video]);
     }
 
     /// A comment carries a video the way a post does, at half the byte

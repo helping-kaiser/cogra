@@ -2934,15 +2934,17 @@ pub struct MediaOptions {
 /// service, verifiable against the digest committed in the referencing
 /// payload envelope.
 ///
-/// The asset row is the whole of it except `altText`, which is a fact
-/// about the *placement* rather than about the bytes: a gallery entry
-/// carries the description its version's manifest witnessed, and the same
-/// asset can read differently in two parents (data-model.md "Media
-/// attachments"). Outside a placement — a fresh upload, a profile picture
-/// — there is no description to serve.
+/// The asset row is the whole of it except `altText` and `coverMedia`,
+/// which are facts about the *placement* rather than about the bytes: a
+/// gallery entry carries the description and the poster its version's
+/// manifest witnessed, and the same asset can read differently in two
+/// parents (data-model.md "Media attachments"). Outside a placement — a
+/// fresh upload, a profile picture — there is neither a description nor a
+/// poster to serve.
 pub struct MediaAttachmentType {
     pub asset: postgres_store::media::MediaAttachment,
     pub alt_text: Option<String>,
+    pub cover_media_id: Option<Uuid>,
 }
 
 impl MediaAttachmentType {
@@ -2952,15 +2954,17 @@ impl MediaAttachmentType {
         Self {
             asset,
             alt_text: None,
+            cover_media_id: None,
         }
     }
 
-    /// One gallery entry: the asset and the description this version's
-    /// junction row cached from its manifest.
+    /// One gallery entry: the asset, and the description and poster this
+    /// version's junction row cached from its manifest.
     fn placement(entry: postgres_store::media::GalleryEntry) -> Self {
         Self {
             asset: entry.asset,
             alt_text: entry.alt_text,
+            cover_media_id: entry.cover_media_id,
         }
     }
 }
@@ -3061,15 +3065,16 @@ impl MediaAttachmentType {
         }
     }
 
-    /// The poster this asset is covered by — the still a video shows
+    /// The poster this placement is covered by — the still a video shows
     /// before playback, and the frame that stands in wherever autoplay
     /// does not run.
     ///
-    /// Null unless the asset names one — only a video's upload can pass
-    /// `coverMediaId`, naming a still the same author already holds. It is
-    /// a distinct question from the gallery's `isCover`, which asks which
-    /// attachment *leads* a multi-asset post rather than what covers a
-    /// single one.
+    /// Resolved from the referencing version's junction row, like
+    /// `altText`, so an edit can name a different cover without touching
+    /// an immutable clip row. Null unless the placement names one, and
+    /// null outside a placement. It is a distinct question from the
+    /// gallery's `isCover`, which asks which attachment *leads* a
+    /// multi-asset post rather than what covers a single one.
     ///
     /// The poster answers with its own `status`, so a removed cover reads
     /// REDACTED here exactly as it would anywhere else — the mark travels
@@ -3078,7 +3083,7 @@ impl MediaAttachmentType {
         &self,
         ctx: &Context<'_>,
     ) -> async_graphql::Result<Option<MediaAttachmentType>> {
-        let Some(id) = self.asset.cover_media_id else {
+        let Some(id) = self.cover_media_id else {
             return Ok(None);
         };
         Ok(ctx

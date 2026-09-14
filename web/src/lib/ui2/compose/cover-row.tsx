@@ -42,6 +42,11 @@ export function CoverRow({
 }) {
   const input = useRef<HTMLInputElement | null>(null);
   const ownPictureChosen = cover?.frame === COVER_FROM_PICTURE;
+  // Extraction is done — not merely not-yet-started — and came back with
+  // nothing: the codec this browser cannot decode, or a file it can read but
+  // not seek. NO_FRAMES (ComposeCoverNoFrames) is the terminal answer, never
+  // shown while `capturing` still has a chance of producing an offer.
+  const noFrames = !capturing && framePreviews.length === 0;
 
   return (
     <div className="flex flex-col gap-2">
@@ -117,7 +122,9 @@ export function CoverRow({
         </button>
       </div>
       <p className="m-0 text-body-small text-on-surface-variant">
-        A frame, or a picture of your own.
+        {noFrames
+          ? "This clip gave no frames — choose a picture of your own, or leave it without one."
+          : "A frame, or a picture of your own."}
       </p>
     </div>
   );

@@ -80,7 +80,7 @@ class MediaRepositoryImpl @Inject constructor(
             .build()
 
         client.mutation(
-            UploadMediaMutation(UploadMediaInput(file = upload, coverMediaId = Optional.absent())),
+            UploadMediaMutation(UploadMediaInput(file = upload)),
         ).payloadOutcome({ it.uploadMedia.userErrors.map { e -> e.userErrorFields } }) { data ->
             // A null asset beside empty userErrors is a server fault,
             // which is what `payload` turns it into — never a success
@@ -101,14 +101,13 @@ class MediaRepositoryImpl @Inject constructor(
      */
     override suspend fun uploadVideo(
         video: ProcessedVideo,
-        coverMediaId: String,
         onProgress: (UploadProgress) -> Unit,
     ): Outcome<MediaAssetView> {
         val file = File(video.path)
         if (video.byteCount < resumableThresholdBytes) {
-            return sendWhole(file, video.byteCount, coverMediaId)
+            return sendWhole(file, video.byteCount)
         }
-        return sendInParts(file, video.byteCount, coverMediaId, onProgress)
+        return sendInParts(file, video.byteCount, onProgress)
     }
 
     /**
@@ -122,7 +121,6 @@ class MediaRepositoryImpl @Inject constructor(
     private suspend fun sendWhole(
         file: File,
         byteCount: Long,
-        coverMediaId: String,
     ): Outcome<MediaAssetView> = guard.run {
         val upload = DefaultUpload.Builder()
             .fileName(VIDEO_FILENAME)
@@ -132,7 +130,7 @@ class MediaRepositoryImpl @Inject constructor(
             .build()
 
         client.mutation(
-            UploadMediaMutation(UploadMediaInput(file = upload, coverMediaId = Optional.present(coverMediaId))),
+            UploadMediaMutation(UploadMediaInput(file = upload)),
         ).payloadOutcome({ it.uploadMedia.userErrors.map { e -> e.userErrorFields } }) { data ->
             data.uploadMedia.media?.mediaFields?.toDomain()
         }
@@ -148,7 +146,6 @@ class MediaRepositoryImpl @Inject constructor(
     private suspend fun sendInParts(
         file: File,
         byteCount: Long,
-        coverMediaId: String,
         onProgress: (UploadProgress) -> Unit,
     ): Outcome<MediaAssetView> {
         val session = guard.run {
@@ -191,7 +188,6 @@ class MediaRepositoryImpl @Inject constructor(
             client.mutation(
                 CompleteMediaUploadMutation(
                     uploadId = opened.id,
-                    coverMediaId = Optional.present(coverMediaId),
                 ),
             ).payloadOutcome({ it.completeMediaUpload.userErrors.map { e -> e.userErrorFields } }) { data ->
                 data.completeMediaUpload.media?.mediaFields?.toDomain()

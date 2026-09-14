@@ -583,10 +583,13 @@ export function ComposeWizard({
         // the top-right corner changed meaning mid-flow and an author reaching
         // for Next hit the X instead. Every stage's forward action now sits at
         // the bottom of its own content column; `action` is left for passive
-        // trailing information, which is all "Last step" is.
+        // trailing information — `ComposeSeal` says "Last step", `ComposeCover`
+        // says "Video only" (android's `ComposeWizardScreen.kt` trailing note).
         action={
           state.step === "seal" ? (
             <span className="text-label-small text-on-surface-variant">Last step</span>
+          ) : state.step === "cover" ? (
+            <span className="text-label-small text-on-surface-variant">Video only</span>
           ) : undefined
         }
         testId="wizard-header"
@@ -740,9 +743,15 @@ export function ComposeWizard({
           }
           onHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
           onLicenseHelp={() => setHelp(HELP_TOPICS.license)}
+          onKeyHelp={() => setHelp(HELP_TOPICS.yourKey)}
           onSign={() => void submit()}
           onBack={() => dispatch({ type: "back" })}
           onRestoreKey={() => router.push("/restore")}
+          // The key-absent panel's keep-draft LEAVES the wizard (graph:
+          // ComposeKeyAbsent's keep-draft edge is a terminal `back`), not a
+          // step back to the previous stage — `leaveFlow` is the same exit
+          // the header's X already uses.
+          onKeepDraft={leaveFlow}
         />
       )}
 
