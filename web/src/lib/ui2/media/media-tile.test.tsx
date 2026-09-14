@@ -76,11 +76,11 @@ describe("MediaTile", () => {
     });
   });
 
-  it("caps a portrait frame at 4:5 and fits it whole rather than cropping it", () => {
+  it("caps a portrait frame at 4:5 and centre-crops into it — nothing is letterboxed", () => {
     render(<MediaTile src="/media/tall" sourceRatio={9 / 16} testId="tile" />);
     expect(screen.getByTestId("tile").style.aspectRatio).toBe(`${PORTRAIT_CAP} / 1`);
     const img = document.querySelector("img");
-    expect(img?.style.objectFit).toBe("contain");
+    expect(img?.style.objectFit).toBe("cover");
   });
 
   it("fills the tile when the frame already matches the shape it was cropped to", () => {

@@ -54,18 +54,12 @@ describe("tileRatio", () => {
 });
 
 describe("fitFor", () => {
-  it("fits a too-tall frame whole inside the tile, so the layout never crops it", () => {
-    expect(fitFor(9 / 16)).toBe("contain");
-    expect(fitFor(3 / 4)).toBe("contain");
-  });
-
-  it("fills the tile when the frame already matches or is wider than the cap", () => {
+  it("always fills the tile — nothing is letterboxed (FE-30, the media law)", () => {
+    expect(fitFor(9 / 16)).toBe("cover");
+    expect(fitFor(3 / 4)).toBe("cover");
     expect(fitFor(4 / 5)).toBe("cover");
     expect(fitFor(1)).toBe("cover");
     expect(fitFor(16 / 9)).toBe("cover");
-  });
-
-  it("fills when nothing is known, rather than letterboxing on a guess", () => {
     expect(fitFor(null)).toBe("cover");
     expect(fitFor(Number.NaN)).toBe("cover");
   });
