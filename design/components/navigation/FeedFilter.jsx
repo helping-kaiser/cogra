@@ -71,7 +71,7 @@ export const FEED_ALSO = [
   { value: "removed", label: "Removed" },
 ];
 
-export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: false, also: [] };
+export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: false, also: [], topic: null };
 
 const labelOf = (set, value) => (set.find((entry) => entry.value === value) || {}).label;
 
@@ -150,6 +150,19 @@ export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_C
   const also = value.also || [];
   const head = kinds.length === 0 ? "Nothing" : kinds.length === 1 ? labelOf(FEED_KINDS, kinds[0]) : kinds.length + " kinds";
   const extras = [];
+  /* THE TOPIC LEADS THE EXTRAS, AND IT IS AN EXTRA (the topic round,
+     2026-09-14). It leads because it is the loudest narrowing on the list — a
+     reader who has one on wants to read it first — and it is an extra rather
+     than the head because the head is the KINDS axis, spelling at most one kind
+     by the collapse rule, and a topic is not a kind ("Tags" already is one, and
+     means the Type as ranked content rather than a narrowing to it).
+
+     THE HEAD IS ALSO THE HALF THAT CANNOT COLLAPSE, which is the load-bearing
+     reason. A tag's name is the reader's, bounded only by the contract's 128
+     ASCII bytes (hashtag.md §2), so a name the pill cannot hold has to be able
+     to leave the pill — and the only thing that leaves is an extra. In the
+     head, one long name would draw a summary nothing could shorten. */
+  if (value.topic) extras.push(value.topic);
   if (forms.length > 0 && forms.length < FEED_FORMS.length) extras.push(forms.map((form) => labelOf(FEED_FORMS, form).toLowerCase()).join(" + "));
   if (value.order && value.order !== "ranked") extras.push(labelOf(FEED_ORDER, value.order).toLowerCase());
   if (value.seen === true) extras.push("showing seen");
@@ -221,7 +234,7 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
    only by scrolling. So the sections scroll inside the sheet and the foot is
    pinned under them, which is the anatomy `BottomSheet`'s own `height` exists
    for. A sheet with no foot is sized by its content, exactly as before. */
-export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot }) {
+export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot, topics = [], onOpenTopics }) {
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
     const list = value[key] || [];
@@ -241,6 +254,44 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
           <Chip key={form.value} label={form.label} selected={(value.forms || []).includes(form.value)} onToggle={() => toggle("forms", form.value)} disabled={!postsish} />
         ))}
       </FilterSection>
+      {/* THE TOPIC FEED IS JUST ANOTHER FEED SETTING (jakob, 2026-09-14), so it
+          is a section of this sheet and not a surface of its own. What it
+          narrows to is one topic's feed: content reaching the viewer over Tag
+          records toward that Type (hashtag.md §5), ranked by the same primitive
+          as everything else.
+
+          ONE AT A TIME, unlike the kinds. Every other axis here combines because
+          combining is what those axes mean — three kinds admit three kinds. Two
+          topics do not make a narrower feed, they make a wider one, which is the
+          opposite of what a reader reaching for this wants; and the read itself
+          is one Type's. So a second pick replaces the first, and tapping the
+          held one clears it.
+
+          ONLY THE ONES HELD *FOR* (jakob's predicate). Held is a netted bundle
+          that is not (0, 0), and that includes a topic held AGAINST — a public
+          record like any other, and listed as such on Your topics. It is absent
+          here because an association below nothing is not something to read
+          more of, and the hint says so rather than leaving a reader to wonder
+          why one of their own topics is missing.
+
+          AND THE DOOR OUT IS THE FULL LIST. This section holds what can narrow
+          the feed; Your topics holds everything held, and the page a row opens
+          is where a topic is walked back. */}
+      {topics.length > 0 && (
+        <FilterSection label="One topic" hint="Topics you hold and are for. A topic you hold against stays a record — it just never narrows a feed.">
+          {topics.map((topic) => (
+            <Chip
+              key={topic}
+              label={topic}
+              selected={value.topic === topic}
+              onToggle={() => set({ topic: value.topic === topic ? null : topic })}
+            />
+          ))}
+          <div style={{ flexBasis: "100%" }}>
+            <Button variant="text" size="sm" selfStart onClick={onOpenTopics}>All your topics</Button>
+          </div>
+        </FilterSection>
+      )}
       <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} />
       <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content.">
         {FEED_ALSO.map((entry) => (
@@ -278,13 +329,22 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
   );
 }
 
-export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows" }) {
+export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows", topics = [], onOpenTopics }) {
   const [open, setOpen] = React.useState(defaultOpen);
 
   return (
     <>
       <FilterTrigger reading={feedFilterSummary(value)} onOpen={() => setOpen(true)} expanded={open} ariaLabel={ariaLabel} />
-      <FeedFilterSheet value={value} onChange={onChange} onHelp={onHelp} open={open} onClose={() => setOpen(false)} ariaLabel={ariaLabel} />
+      <FeedFilterSheet
+        value={value}
+        onChange={onChange}
+        onHelp={onHelp}
+        open={open}
+        onClose={() => setOpen(false)}
+        ariaLabel={ariaLabel}
+        topics={topics}
+        onOpenTopics={onOpenTopics}
+      />
     </>
   );
 }
