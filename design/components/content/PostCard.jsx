@@ -90,6 +90,9 @@ export function PostCard({
   onOpen,
   targetLabel = "this post",
   showStance = true,
+  stanceOpen = false,
+  stancePadInset = 16,
+  stanceDefaultPick,
   score,
   onOpenScore,
   comments,
@@ -420,8 +423,29 @@ export function PostCard({
         <div style={{ display: "flex", flexWrap: "nowrap", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)", width: "100%", minWidth: 0 }}>
           {/* `taught` and `onCommit` belong to the SHELL, not the card: "the first
               tap ever" is a fact about the reader, and a card in a feed of twenty
-              cannot know it. Default true so a lone card teaches nothing. */}
-          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />}
+              cannot know it. Default true so a lone card teaches nothing.
+
+              `stanceOpen`, `stancePadInset` and `stanceDefaultPick` belong to
+              the shell for the same reason, and they are PASS-THROUGHS rather
+              than decisions: whether the pad is already bloomed, how far its
+              parked edge sits off the bottom, and where the knob starts are
+              facts about the screen and the moment the card is standing in —
+              a board drawing the pad open over a shell with a bottom bar clears
+              the bar, one without a bar does not. The card forwards them and
+              invents nothing; the pad it opens is `StanceControl`'s own, whole,
+              with every control the reader would really meet. */}
+          {showStance && (
+            <StanceControl
+              targetLabel={targetLabel}
+              bundle={bundle ?? undefined}
+              signedIn={signedIn}
+              taught={taught}
+              onCommit={onCommit}
+              defaultOpen={stanceOpen}
+              padInset={stancePadInset}
+              defaultPick={stanceDefaultPick}
+            />
+          )}
           {score !== undefined && (
             <ExplainableNumber glyph="graph" label="Post score" value={score} onOpenDetail={onOpenScore ?? (() => {})} />
           )}

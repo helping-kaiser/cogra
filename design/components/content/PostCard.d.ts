@@ -58,6 +58,25 @@ export interface PostCardProps {
   /** Off only where a surface deliberately carries no stance affordance. */
   showStance?: boolean;
   /**
+   * Draws the stance pad already bloomed. A shell fact, not a card one: it is
+   * for a board whose subject IS the open pad. Pure pass-through to
+   * `StanceControl`'s `defaultOpen`.
+   */
+  stanceOpen?: boolean;
+  /**
+   * How far the parked pad's bottom edge sits off the bottom of the screen.
+   * 80 clears a bottom bar; the default 16 is for a surface with nothing under
+   * it. Pass-through to `StanceControl`'s `padInset`.
+   */
+  stancePadInset?: number;
+  /**
+   * Where the pad's knob starts. Pass-through to `StanceControl`'s
+   * `defaultPick`. A board drawing an open pad gives one rather than letting
+   * the knob rest at the origin: the twenty-anchor table has no entry there,
+   * so an origin pick reads as its nearest neighbour.
+   */
+  stanceDefaultPick?: { pDirected: number; pInterest: number };
+  /**
    * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
    * explanation is item 13's Post score drill-down, still undesigned.

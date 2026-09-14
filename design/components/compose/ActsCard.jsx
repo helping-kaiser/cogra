@@ -36,7 +36,19 @@ import { SR_ONLY } from "../stance/StanceReadout.jsx";
    THE NOUN COMES FROM THE BOARD, never from the label. The References row
    counts CITATIONS, and no rule could derive that word from "References"; the
    row that knows what it staged is the row that names it. `countNoun` is the
-   singular and the card adds the regular plural. */
+   singular and the card adds the regular plural.
+
+   THE DOOR'S NAME CARRIES THE COUNT (jakob's ruling 2026-09-14, ruling 8). An
+   `aria-label` REPLACES the box it names, so on a door row the reading above
+   never reaches a listener at all: the digit is hidden, its paired reading
+   sits inside the button, and `openLabel` speaks over both. A name that drops
+   the number therefore costs a listener the very fact the row was drawn to
+   carry. `openLabel` folds it in — "Manage the 3 citations", and at one
+   "Manage the 1 citation" — and it comes from the board, which knows the
+   count and the noun, the same place `countNoun` comes from and for the same
+   reason. The plural is the regular one this card adds, said again in the
+   board's own words because the bundle hands screens components and
+   constants, never a card's helpers. */
 
 const ROW = {
   display: "flex",
