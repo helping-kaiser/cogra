@@ -945,6 +945,23 @@ describe("PostView", () => {
     expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
   });
 
+  // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published post is
+  // always a signed action changing it, so the row is a door into the edit
+  // flow — the intentioned one beside Edit's general one — never its own
+  // sheet with a commit of its own.
+  it("sends Mark as sensitive into the edit flow", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("acct-1", []) })),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId("post-menu-sensitive"));
+    expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
+  });
+
   it("shows read-only chips on the viewer's own COMMENT too", async () => {
     server.use(
       graphql.query("PostDetail", () => {

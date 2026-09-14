@@ -224,8 +224,8 @@ fun PostDetailScreen(
                         // dots would be two menus for one post.
                         CograOverflowMenu(
                             items = postMenuRows(
-                                own = viewerId != null && post!!.author?.id == viewerId,
-                                handle = post!!.author?.handle,
+                                own = viewerId != null && post.author?.id == viewerId,
+                                handle = post.author?.handle,
                                 license = post.license,
                                 onEdit = { onEdit(post.id) },
                                 onCite = { onReference(post.id) },
@@ -600,7 +600,19 @@ private fun postMenuRows(
     add(MenuRow(stringResource(R.string.content_menu_save), "detail_menu_save") {})
     if (own) {
         add(MenuRow(stringResource(R.string.content_edit), "detail_menu_edit", onEdit))
-        add(MenuRow(stringResource(R.string.content_menu_sensitive), "detail_menu_sensitive") {})
+        // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
+        // post sensitive is always a signed action changing the post — an
+        // edit — so there is no standalone commit path and this row is a
+        // door into the edit flow rather than a sheet of its own. Edit is
+        // the general door; this is the intentioned one. When the edit
+        // surface's drawn Sensitive row lands (CW-46) the link can focus it.
+        add(
+            MenuRow(
+                stringResource(R.string.content_menu_sensitive),
+                "detail_menu_sensitive",
+                onEdit,
+            ),
+        )
         add(MenuRow(stringResource(R.string.content_menu_remove), "detail_menu_remove", onRemove))
     } else {
         add(MenuRow(stringResource(R.string.content_menu_cite), "detail_menu_cite", onCite))
