@@ -5,7 +5,7 @@ Use `QuotedRow` at the top of every reply composer — the post being answered, 
   title="The long way home — @ada"
   snippet="The light does something at the third headland that I have never managed…"
   name="Ada Okonkwo"
-  src="ava1.jpg"
+  src="comment-camera.jpg"
 />
 ```
 

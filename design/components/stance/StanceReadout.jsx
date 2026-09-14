@@ -121,6 +121,44 @@ export const STANCE_ANCHORS = [
   { pDirected: -0.9, pInterest: -0.9, emoji: "💀", label: "Absolutely not" },
 ];
 
+/* THE ONE-AXIS TABLE (jakob's ruling, 2026-09-14). A pick on one's own post
+   names a valence and nothing else — a post always reaches its author in full,
+   so `pInterest` is not a thing to choose — and `nearestAnchor` cannot answer
+   for a value that names no pair. These six are the twenty's pure-valence
+   spine, the mild, middle and far face on each side, at ±0.15, ±0.55 and
+   ±0.90. Glyph, word and position are READ from `STANCE_ANCHORS`, so the six
+   are six OF the twenty and cannot drift from them.
+
+   THE BANDS ARE WRITTEN, NOT COMPUTED. They are the midpoints between
+   neighbouring anchors — ±0.35 between the mild and the middle face, ±0.725
+   between the middle and the far one — but derived at runtime the first of
+   those comes out as −0.7250000000000001, and a band edge that depends on the
+   order of a multiply is a face that depends on the platform. So the edges are
+   spelled, and every comparison below is a `<` or an `===`.
+
+   EACH ROW OWNS THE AXIS UP TO ITS `to`, and `toInclusive` says whether the
+   edge itself belongs to it. Away from the edges this is the nearest anchor by
+   distance; the asymmetry in `toInclusive` is where the two ruled tie-breaks
+   live, and it is the same rule stated twice:
+     · AT A MIDPOINT THE MILDER FACE WINS — the one nearer zero. On the
+       negative side that is the band above, so a negative row stops short of
+       its edge; on the positive side it is the band below, so a positive row
+       keeps it.
+     · EXACTLY 0.00 READS 🙂 — the 😕 row stops short of zero, so zero falls
+       into the first band above it.
+   Six monotone bands covering the closed axis, and the same face everywhere. */
+export const VALENCE_SIX = [
+  { emoji: "😠", to: -0.725, toInclusive: false },
+  { emoji: "🙁", to: -0.35, toInclusive: false },
+  { emoji: "😕", to: 0, toInclusive: false },
+  { emoji: "🙂", to: 0.35, toInclusive: true },
+  { emoji: "😊", to: 0.725, toInclusive: true },
+  { emoji: "😍", to: DIMENSION_MAX, toInclusive: true },
+].map((band) => {
+  const anchor = STANCE_ANCHORS.find((a) => a.emoji === band.emoji);
+  return { ...band, pDirected: anchor.pDirected, label: anchor.label };
+});
+
 /* THE TAG TABLE IS ITS OWN, AND IT IS DISJOINT FROM THE STANCE FACES (jakob's
    ruling, the tag pad round). Not one glyph appears in both tables, and that is
    the point rather than an accident of picking: a face that means "Like this"
@@ -208,6 +246,18 @@ export function nearestTagAnchor(pair) {
   return best;
 }
 
+/** The face a ONE-AXIS pick wears — the first `VALENCE_SIX` band the value
+ *  falls inside. The bands cover the closed axis, so every value has exactly
+ *  one; out of range is clamped in rather than refused, the way the pad
+ *  clamps. */
+export function nearestValenceAnchor(pDirected) {
+  const value = clampDimension(pDirected);
+  for (const band of VALENCE_SIX) {
+    if (value < band.to || (band.toInclusive && value === band.to)) return band;
+  }
+  return VALENCE_SIX[VALENCE_SIX.length - 1];
+}
+
 /** The readout a STANDING wears. The table never speaks for zero. */
 export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
   if (pair.pDirected === 0 && pair.pInterest === 0) return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
@@ -250,7 +300,7 @@ export function StanceValue({ pDirected, pInterest, showPair = true }) {
    can never reach a digit or a separator. */
 const MINUS_SIGN = "−";
 
-const DIMENSION_FORMAT = new Intl.NumberFormat(undefined, {
+const DIMENSION_FORMAT = new Intl.NumberFormat("en-US", {
   signDisplay: "always",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -265,7 +315,7 @@ export function formatDimension(value) {
 
 /** Unsigned, two decimals — for a value whose range has no negative half. */
 export function formatUnsigned(value) {
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
@@ -389,23 +439,50 @@ export function signedLine(standing, records, severed, targetLabel) {
   );
 }
 
-/** Face and pair, and the words for a reader who cannot see the face (§8.3). */
-export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, style }) {
-  const readout = kind === "standing" ? bundleReadout(pair, zeroLabel) : nearestAnchor(pair);
+/* ONE LINE, WHATEVER IT READS: face, then the exact figure, then the spoken
+   twin. A one-axis readout draws a shorter number, not a different shape — so
+   the markup is written once and the two readouts differ only in what they
+   hand it. */
+function ReadoutLine({ emoji, exact, spoken, style }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)", flex: "none", ...style }}>
-      <span aria-hidden="true">{readout.emoji}</span>
+      <span aria-hidden="true">{emoji}</span>
       {/* NEVER WRAPS. This sits in the post card's affordance row, which is one
           line by rule — a pair broken across two text lines reads as a two-line
           block even when the row height has not changed. */}
       <span className="cg-exact" aria-hidden="true" style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
-        {formatStancePair(pair)}
+        {exact}
       </span>
       {/* The spoken reading is the same in both modes: geek mode is a drawing
           setting, and a reader on a screen reader is owed the values either way. */}
-      <span style={SR_ONLY}>{`${readout.label}, ${formatStanceWords(pair)}`}</span>
+      <span style={SR_ONLY}>{spoken}</span>
     </span>
   );
+}
+
+/** Face and pair, and the words for a reader who cannot see the face (§8.3). */
+export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, style }) {
+  const readout = kind === "standing" ? bundleReadout(pair, zeroLabel) : nearestAnchor(pair);
+  return (
+    <ReadoutLine
+      emoji={readout.emoji}
+      exact={formatStancePair(pair)}
+      spoken={`${readout.label}, ${formatStanceWords(pair)}`}
+      style={style}
+    />
+  );
+}
+
+/* AN OPINION ON ONE'S OWN POST IS ONE NUMBER (jakob's ruling, 2026-09-14:
+   "the second number isn't yours to set on your own post"). A post always
+   reaches its author in full, so `pInterest` is not a value the author picks
+   and a pair would draw a second figure nobody chose. The face comes from
+   `VALENCE_SIX`, the table built for exactly this reading, and the spoken twin
+   names the one axis there is. */
+export function OwnStanceReadout({ pDirected, style }) {
+  const band = nearestValenceAnchor(pDirected);
+  const exact = formatDimension(pDirected);
+  return <ReadoutLine emoji={band.emoji} exact={exact} spoken={`${band.label}, ${DIRECTED_LABEL} ${exact}`} style={style} />;
 }
 
 /** The standing, split for rendering: either a sentence, or a readout to lay out. */

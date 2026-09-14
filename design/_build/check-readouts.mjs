@@ -9,9 +9,10 @@
 //
 // So the check reads the value each pad is actually set to and asks the MASTERS
 // what that value reads as — `formatStancePair` / `formatTagPair` for the pair,
-// `nearestAnchor` / `nearestTagAnchor` for the face, `padPercentOf` for where a
-// knob sits. Nothing here re-implements a rule: every expectation is a helper's
-// return value, so the day a formatter changes, these boards are told.
+// `nearestAnchor` / `nearestTagAnchor` / `nearestValenceAnchor` for the face,
+// `padPercentOf` for where a knob sits. Nothing here re-implements a rule:
+// every expectation is a helper's return value, so the day a formatter changes,
+// these boards are told.
 //
 // Run from this directory: node check-readouts.mjs   (exit 1 on any FAIL)
 
@@ -67,7 +68,6 @@ const ds = loadMasters([
 ]);
 
 const fails = [];
-const infos = [];
 
 // ---- the six hand-drawn readouts.
 // A site is named by its file and, where a file holds more than one component,
@@ -85,8 +85,8 @@ const SITES = [
   // The one-axis pad: `StancePad` is not here (a post's own `pInterest` is not
   // a choice), so the board draws its own field and there is no `value` prop to
   // read. Its number is checked against the formatter and against where the
-  // knob it draws actually sits; its face has no master lookup to check against
-  // — a one-axis pick names no pair — and is reported rather than guessed.
+  // knob it draws actually sits, and its face against `VALENCE_SIX` — the table
+  // built for a pick that names no pair.
   { file: "ComposePad.jsx", oneAxis: true },
 ];
 
@@ -153,8 +153,7 @@ for (const site of SITES) {
         fails.push(`${name}: the knob sits at ${drawn}% but ${expectedPair} is ${owed}% of the field (padPercentOf)`);
       }
     }
-    infos.push(`${name}: face ${face[1]} unchecked — a one-axis pick names no pair, so no anchor table answers for it`);
-    expectedFace = face[1];
+    expectedFace = ds.nearestValenceAnchor(parsed).emoji;
   } else {
     const pad = only(region, PAD_RE, "StancePad", name);
     if (!pad) continue;
@@ -202,7 +201,6 @@ for (const file of readdirSync(screensDir).sort()) {
   }
 }
 
-for (const i of infos) console.log(`note ${i}`);
 for (const f of fails) console.log(`FAIL ${f}`);
 console.log(`check-readouts: ${SITES.length} hand-drawn readouts · ${fails.length ? `${fails.length} failures` : "ok"} in ${Date.now() - t0} ms`);
 if (fails.length) process.exit(1);
