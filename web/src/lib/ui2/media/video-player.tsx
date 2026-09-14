@@ -1,7 +1,7 @@
 "use client";
 
-// The feed's video: autoplay muted when it comes into view, real controls, and
-// the one global mute.
+// The feed's video: autoplay muted when it comes into view, the sound disc
+// every card wears, and the one global mute.
 //
 // AUTOPLAY IS ONLY EVER MUTED, and that is a platform rule rather than a taste.
 // MDN: "Autoplay blocking is not applied to <video> elements when the source
@@ -25,11 +25,11 @@
 // pauses rather than stopping: coming back should resume where the reader was,
 // not restart.
 //
-// THE MUTE IS BOUND BOTH WAYS. The element's own controls carry a mute button,
-// so the reader's press arrives as a `volumechange` on the element rather than
-// as a click this component sees. Reading it back into the shared store is what
-// makes the native control the global control — otherwise the one affordance a
-// reader actually reaches for would be the one that does not stick.
+// THE MUTE IS BOUND BOTH WAYS. Nothing but this component's own sound disc
+// changes `.muted` today, but a `volumechange` can still arrive from outside
+// it — the browser's picture-in-picture window carries its own mute control —
+// so reading it back into the shared store is what keeps an out-of-band mute
+// from silently diverging from what every other player on screen shows.
 //
 // `prefers-reduced-motion` STOPS THE AUTOPLAY. Video that starts by itself is
 // motion the reader did not ask for, and the reduced-motion preference is the
