@@ -73,7 +73,7 @@ export const ZERO_BUNDLE_EMOJI = "🤷";
  * came to nothing is a different thing from one that was never given
  * anything, and the read tells the two apart.
  */
-export const RESTING_FACE_EMOJI = "😐";
+export const RESTING_FACE_EMOJI = "🫥";
 
 /** Just the emoji and the words — what every readout surface renders. */
 export type StanceReadout = {
