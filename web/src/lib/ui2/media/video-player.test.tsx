@@ -209,6 +209,48 @@ describe("the full surface (a feed card's clip)", () => {
   });
 });
 
+// THE CLIP-LOOP RULING (jakob 2026-09-14, via the design loop): a clip under
+// the real transport STOPS at its end and the transport stands at replay; a
+// feed clip keeps looping. Reels are the vertical scroller's grammar, videos
+// the player's, and this is where the two part.
+describe("looping", () => {
+  it("loops in a card and in a comment — a moment, not a programme", () => {
+    expect(player()).toHaveProperty("loop", true);
+    render(<VideoPlayer src={CLIP} surface="reading" testId="thread" />);
+    expect(screen.getByTestId("thread")).toHaveProperty("loop", true);
+  });
+
+  it("stops under the real transport", () => {
+    render(<VideoPlayer src={CLIP} surface="transport" testId="pinned" />);
+    expect(screen.getByTestId("pinned")).toHaveProperty("loop", false);
+  });
+
+  it("leaves the transport at Play when the clip runs out", () => {
+    render(<VideoPlayer src={CLIP} surface="transport" testId="pinned" />);
+    const video = screen.getByTestId("pinned") as HTMLVideoElement;
+    act(() => intersect(true));
+    expect(screen.getByTestId("pinned-transport-play")).toHaveAttribute("aria-label", "Pause");
+
+    act(() => {
+      video.dispatchEvent(new Event("ended"));
+    });
+    expect(screen.getByTestId("pinned-transport-play")).toHaveAttribute("aria-label", "Play");
+  });
+
+  it("replays from the start when Play is pressed on a clip that ended", () => {
+    render(<VideoPlayer src={CLIP} surface="transport" testId="pinned" />);
+    const video = screen.getByTestId("pinned") as HTMLVideoElement;
+    // The stub element reports `ended` off its own clock, so the clip is put
+    // at its end the way a finished clip sits there.
+    Object.defineProperty(video, "ended", { value: true, configurable: true });
+    video.currentTime = 30;
+
+    act(() => screen.getByTestId("pinned-transport-play").click());
+    expect(video.currentTime).toBe(0);
+    expect(screen.getByTestId("pinned-transport-elapsed").textContent).toBe("0:00");
+  });
+});
+
 describe("the tile", () => {
   it("renders a player for a video and an image for a picture", () => {
     render(

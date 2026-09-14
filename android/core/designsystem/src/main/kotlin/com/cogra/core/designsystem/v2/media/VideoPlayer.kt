@@ -238,6 +238,26 @@ fun VideoPlayer(
     LaunchedEffect(autoplay, player) { player?.playWhenReady = autoplay }
     LaunchedEffect(muted, player) { player?.volume = if (muted) 0f else 1f }
 
+    // A FEED CLIP LOOPS AND A CLIP UNDER THE REAL TRANSPORT STOPS (jakob
+    // 2026-09-14, via the design loop). It sharpens the deliberate
+    // reel-vs-video split: a clip in a card or a stream is a MOMENT, read with
+    // the scroller's grammar, and stopping it would leave a card gone still and
+    // dead under a reader still looking at it. A clip the reader opened on
+    // purpose — the detail's pinned clip, the viewer — is a PROGRAMME, read
+    // with a player's grammar, and a programme that silently restarted would be
+    // a player that never admits it finished.
+    //
+    // It rides the SURFACE rather than the stage, because one clip is both: the
+    // same player carries a card's loop and the detail's stop, and whichever
+    // surface is showing it says which. That is also what restores the loop on
+    // the way back to the feed.
+    LaunchedEffect(controls, player) {
+        player?.repeatMode = when (controls) {
+            VideoControls.Full -> Player.REPEAT_MODE_OFF
+            VideoControls.SoundOnly -> Player.REPEAT_MODE_ONE
+        }
+    }
+
     // Read for the clip's own size and nothing else. The poster asks the
     // stage instead: `PresentationState` is remembered across the player
     // being swapped, so it answers about the player that has gone.
@@ -383,7 +403,21 @@ private fun FullTransport(
         durationMs = length,
         progress = if (length > 0) position.toFloat() / length else 0f,
         muted = muted,
-        onTogglePlay = { if (playing) player.pause() else player.play() },
+        // PLAY AT THE END IS REPLAY. `play()` alone would not restart a player
+        // in `STATE_ENDED` — it "resumes playback as soon as the player is in
+        // STATE_READY" (`androidx.media3.common.Player.play`) — so the seek is
+        // what turns the stopped transport's own Play glyph into the way back
+        // to the start.
+        onTogglePlay = {
+            when {
+                playing -> player.pause()
+                player.playbackState == Player.STATE_ENDED -> {
+                    player.seekToDefaultPosition()
+                    player.play()
+                }
+                else -> player.play()
+            }
+        },
         // The PLAYER's own seek commands, so the increment it was built with
         // is the one every path uses.
         onSkip = { step -> if (step < 0) player.seekBack() else player.seekForward() },
