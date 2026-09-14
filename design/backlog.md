@@ -2338,10 +2338,12 @@ the empty-state idiom exactly — `PageHeader` with the back arrow, one
 `chats` gap edges now land on it; the three guest bands keep sending
 chats to `GuestGate`, and the graph's gap count falls 43 → 20.
 
-**Its line is a PROPOSAL, not blessed vocabulary.** Drawn: `Chats
-aren't built yet. When they are, your conversations will be here.`
-Three alternates and the timing question are in copy-voice under
-"Awaiting blessing — the chats coming-soon screen"; jakob picks.
+**Its line names the promise the way the Sky card does** (jakob
+2026-09-14): `Chats — coming soon. Your conversations will be here.`
+Both surfaces stand in for something drawn after the MVP, so one
+construction answers for both — the thing, an em dash, the promise, then
+one sentence of what will be there. Recorded in copy-voice under "The
+coming-soon surfaces".
 
 **The labelled routes followed** (jakob 2026-09-14). The *Message*
 control on another's profile (`ProfileOther`, `ProfileOtherHeld`,

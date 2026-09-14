@@ -1335,18 +1335,31 @@ having already said what was counted.
 one thing that would fill it. It never scolds and it carries no `error`
 colour; a comment nobody has answered is not a fault.
 
-## The chats coming-soon screen
+## The coming-soon surfaces
 
-`ChatsComingSoon` is the screen the band's chats icon opens until
-messaging exists (backlog item 68). Its one line is the only copy of its
-own on the board — the header reads `Chats`, the back arrow `Back`, both
-already in use. The line (blessed 2026-09-14):
+Two places stand in for something drawn after the MVP: the screen the
+band's chats icon opens (`ChatsComingSoon`, backlog item 68) and the
+hero card on Explore (backlog item 16). **Both name the promise the same
+way** — the thing, an em dash, `coming soon`, then one sentence of what
+will be there:
 
-- `Chats aren't built yet. When they are, your conversations will be
-  here.`
+- `Chats — coming soon. Your conversations will be here.`
+- `The Sky — coming soon` · `Your sky — every account a star, sized by
+  your own paths to it.`
 
-Two sentences answering the reader's only two questions — why is this
-empty, and what is this screen for. The line deliberately says nothing
-about *when*: chats sit on the would-like list and the order can change,
-so the copy promises nothing the release order cannot keep.
+One construction, because a product that says `coming soon` in one place
+and something else in another has two answers to one question, and a
+reader who meets both learns nothing from the difference. The promise
+leads and the sentence under it says what the reader gets — the two
+questions every empty surface answers, in the same order.
+
+**`Coming soon` is the whole of what is promised.** No date, no release,
+no "next": both sit on the would-like list and the order can change, so
+the words say that something is intended and nothing about when it
+lands.
+
+The card carries the promise in its heading, where its name already was;
+the screen carries it in its one line, under a header that reads
+`Chats`. Neither surface offers an action — nothing a reader can do
+fills either of them yet.
 
