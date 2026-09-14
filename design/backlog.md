@@ -2614,13 +2614,29 @@ It sits on the **patterns** page beside `PadKeyAbsent` — the other board
 where the pad's overlay is the subject and the shell beneath is only
 ground — because severance can be reached from any surface carrying a
 stance, and drawing it on one of them would make a cross-cutting gate
-look like the feed's own. Wired from `VouchBackPad/4`, the master pad's
-`Set`.
+look like the feed's own.
 
-**What it leaves standing**: the master pad board is the FIRST vouch, so
-its own fixture has no standing bundle to walk back — the severance case
-is one the master represents rather than one its own drawing could
-reach, and the explicit `Walk it back` button (which `StanceControl`
-draws only once a reader has records) is on no board at all. A pad board
-drawn with a standing opinion would close both; it was not in this
-round's scope.
+**And the pad that raises it is drawn too** (jakob 2026-09-14).
+`PadStanding` is the pad opened on something the reader has already said
+their piece about, which is the first board in this tree to carry `Walk
+it back`: `StanceControl` draws the walk-away only once there are
+records, and the master pad is a FIRST vouch with none — so every state
+past the first was represented by a board that could not reach it, and
+the one irreversible gesture in the stance flow had its confirm drawn
+and its trigger nowhere. The two boards sit side by side on the patterns
+page in flow order, and the fixture runs straight through them: @ada's
+post, one standing edge at +1.00 / +1.00, one record, so what the pad
+says is standing is exactly what the dialog offers to walk back.
+
+**Both routes now leave from the pad that has something to sever.** `Walk
+it back` is the explicit route and `Set` the pick route, and the pick
+case moved off `VouchBackPad/4` where it had been standing in — a first
+vouch has no bundle to net to nothing, so the master was carrying a case
+its own drawing could not reach.
+
+`PostCard` grew two pass-throughs for this, `stanceOpen` and
+`stancePadInset`, forwarded to `StanceControl`'s `defaultOpen` and
+`padInset`. They are shell facts in the same sense `taught` and
+`onCommit` already are — whether the pad is bloomed, and how far its
+parked edge clears a bottom bar, are facts about the screen the card
+stands on. Nothing about the pad's appearance is decided by them.
