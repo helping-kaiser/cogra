@@ -465,6 +465,33 @@ describe("the compose wizard", () => {
     expect(screen.queryByTestId("wizard-draft-card")).not.toBeInTheDocument();
   });
 
+  // CW-42 (ComposeDraft.jsx): the pick step underneath the offer is present,
+  // dimmed to 55%, and not the subject — Android's ComposeWizardScreen.kt
+  // gates the same alpha on `draftOffer != null`.
+  it("dims the pick step and makes it inert while the draft offer shows, then restores it", async () => {
+    const held: WizardState = {
+      ...emptyWizard(),
+      mode: "words",
+      words: "an unfinished thought",
+      title: "Salt maps",
+    };
+    const drafts = fakeDrafts(held);
+    render(drafts);
+
+    await screen.findByTestId("wizard-draft-card");
+    const region = screen.getByTestId("wizard-pick-region");
+    // Dimmed AND inert, not opacity alone — a stray tab or click must not
+    // land on a grid the draft's own Continue/Discard pair is meant to
+    // decide for the author.
+    expect(region).toHaveAttribute("inert");
+    expect(region).toHaveStyle({ opacity: "0.55" });
+
+    fireEvent.click(screen.getByTestId("wizard-draft-discard"));
+    await waitFor(() => expect(drafts.held()).toBeNull());
+    expect(region).not.toHaveAttribute("inert");
+    expect(region).not.toHaveStyle({ opacity: "0.55" });
+  });
+
   // CW-43 (jakob 2026-08-31, design-session-answers q26, readme §13): the
   // ruled short form ends on its own dash — the pick screen right below is
   // already the rest of the sentence.
