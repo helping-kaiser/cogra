@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
@@ -110,6 +111,54 @@ private fun Modifier.semanticsSelected(isSelected: Boolean, selectable: Boolean)
         this
     }
 
+/**
+ * [ReadoutChipMinHeight] and [ReadoutChipVerticalPadding]'s source:
+ * `design/components/core/Chip.jsx`'s `READOUT` style (lines 88-101).
+ */
+private val ReadoutChipMinHeight = 24.dp
+private val ReadoutChipVerticalPadding = 2.dp
+
+/**
+ * The readout tone (jakob's ruling, the conformance round — `Chip.jsx` lines
+ * 71-101, `Chip.d.ts`'s `tone` doc). A readout is a chip the reader is being
+ * SHOWN — a tag inside the acts card, where what a signature will carry is
+ * read back to its author — and it is not a control: no press, no state
+ * layer, no selection, and one rung only. It is the borderless
+ * `secondaryContainer` pill, drawn at [ReadoutChipMinHeight] true.
+ *
+ * The height is a minimum, not a fixed rung, and the label wraps rather than
+ * clipping (no `maxLines`/ellipsis here) — the box grows with the reader's
+ * text setting because nothing on a readout is a tap target a growing box
+ * would move.
+ *
+ * A sibling to [CograChip] rather than a `tone` parameter on it: `CograChip`'s
+ * signature is inherently interactive (`selected`, `onClick`, `onRemove`),
+ * none of which a readout takes, so folding it in would leave dangerous
+ * unused parameters instead of a clean, non-interactive contract.
+ */
+@Composable
+fun CograReadoutChip(
+    label: String,
+    modifier: Modifier = Modifier,
+    testTag: String? = null,
+) {
+    val colors = MaterialTheme.colorScheme
+    Box(
+        modifier = modifier
+            .defaultMinSize(minHeight = ReadoutChipMinHeight)
+            .background(colors.secondaryContainer, CircleShape)
+            .padding(horizontal = Space.x2, vertical = ReadoutChipVerticalPadding)
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.onSecondaryContainer,
+        )
+    }
+}
+
 @ThemePreviews
 @Composable
 private fun CograChipStates() {
@@ -130,6 +179,17 @@ private fun CograChipRemovable() {
             CograChip("#fieldnotes", selected = true, onRemove = {})
             CograChip("#coastroad", selected = true, onRemove = {})
             CograChip("Add a topic", onClick = {})
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun CograReadoutChipPreview() {
+    Cogra2PreviewTheme {
+        PreviewRow {
+            CograReadoutChip("#fieldnotes")
+            CograReadoutChip("#coastroad")
         }
     }
 }

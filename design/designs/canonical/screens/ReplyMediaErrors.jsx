@@ -29,7 +29,7 @@ export function Screen() {
           title="The long way home — @ada"
           snippet="The light does something at the third headland that I have never managed…"
           name="Ada Okonkwo"
-          src="ava1.jpg"
+          src="comment-camera.jpg"
         />
 
         <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>

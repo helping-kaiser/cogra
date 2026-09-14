@@ -2,7 +2,7 @@
 
 ```jsx
 <ReelRail
-  author={{ handle: "mira", displayName: "Mira Voss", src: "ava1.jpg" }}
+  author={{ handle: "mira", displayName: "Mira Voss", src: "inviter.jpg" }}
   score="7.40"
   comments={2}
   bottom={BAND_HEIGHT + 96}

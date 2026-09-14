@@ -15,13 +15,17 @@ function baseState(overrides: Partial<WizardState> = {}): WizardState {
   return { ...emptyWizard(), title: "Salt maps of the coast road", ...overrides };
 }
 
-function renderStep(overrides: Partial<WizardState> = {}, sheet: "none" | "license" | "stance" | "sensitive" = "none") {
+function renderStep(
+  overrides: Partial<WizardState> = {},
+  sheet: "none" | "license" | "stance" | "sensitive" = "none",
+  keyOnDevice: boolean | null = true,
+) {
   const props = {
     state: baseState(overrides),
     sheet,
     blocked: null,
     busy: false,
-    keyOnDevice: true,
+    keyOnDevice,
     refusal: null,
     onSheet: vi.fn(),
     onLicense: vi.fn(),
@@ -30,9 +34,11 @@ function renderStep(overrides: Partial<WizardState> = {}, sheet: "none" | "licen
     onSensitiveReason: vi.fn(),
     onHelp: vi.fn(),
     onLicenseHelp: vi.fn(),
+    onKeyHelp: vi.fn(),
     onSign: vi.fn(),
     onBack: vi.fn(),
     onRestoreKey: vi.fn(),
+    onKeepDraft: vi.fn(),
   };
   render(<SealStep {...props} />);
   return props;
@@ -115,5 +121,56 @@ describe("SealStep", () => {
     expect(
       screen.queryByText("Terms for anyone who reuses this — not a statement about how you made it."),
     ).not.toBeInTheDocument();
+  });
+
+  // CW-36: key absent reads back only the License term — the stance and
+  // sensitive rows a live seal still lets a reader adjust are gone.
+  it("shows only the License row when the key is absent", () => {
+    renderStep({}, "none", false);
+    expect(screen.getByTestId("wizard-open-license")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-open-stance")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-open-sensitive")).not.toBeInTheDocument();
+  });
+
+  it("shows all three terms on a live seal", () => {
+    renderStep({}, "none", true);
+    expect(screen.getByTestId("wizard-open-license")).toBeInTheDocument();
+    expect(screen.getByTestId("wizard-open-stance")).toBeInTheDocument();
+    expect(screen.getByTestId("wizard-open-sensitive")).toBeInTheDocument();
+  });
+
+  // CW-37/CW-38/CW-41: the key-absent panel carries its own inverse "?" and
+  // an inverse restore action, title-medium, no body paragraph.
+  it("draws the key-absent panel per the board: inverse help, inverse restore, title-medium, no paragraph", () => {
+    const { onKeyHelp, onRestoreKey } = renderStep({}, "none", false);
+
+    const heading = screen.getByText("Your key isn't on this browser");
+    expect(heading.className).toContain("text-title-medium");
+    expect(
+      screen.queryByText("Nothing is spent until you sign. The draft stays on this device."),
+    ).not.toBeInTheDocument();
+
+    const help = screen.getByRole("button", { name: "Your key" });
+    help.click();
+    expect(onKeyHelp).toHaveBeenCalledOnce();
+
+    const restore = screen.getByTestId("wizard-restore-key");
+    expect(restore.className).toContain("bg-on-tertiary-container");
+    restore.click();
+    expect(onRestoreKey).toHaveBeenCalledOnce();
+  });
+
+  // CW-39/CW-40: keep-draft is a sibling below the panel, wired to leave
+  // the wizard rather than to the seal's ordinary back.
+  it("keeps the draft as a sibling below the panel, distinct from Back", () => {
+    const { onKeepDraft, onBack } = renderStep({}, "none", false);
+
+    const panel = screen.getByTestId("wizard-key-absent");
+    const keepDraft = screen.getByTestId("wizard-keep-draft");
+    expect(panel.contains(keepDraft)).toBe(false);
+
+    keepDraft.click();
+    expect(onKeepDraft).toHaveBeenCalledOnce();
+    expect(onBack).not.toHaveBeenCalled();
   });
 });

@@ -30,7 +30,9 @@ vi.mock("@/lib/ui2/media/video", async (importOriginal) => {
     // The real ones need a decoder; the container sniff and the cap check are
     // left real, because those are the rules this screen is meant to apply.
     probeVideo: vi.fn(async () => ({ durationMs: 42_000, width: 1080, height: 1920 })),
-    captureFrames: vi.fn(async () => [FRAME, FRAME, FRAME]),
+    // FOUR, not three (CW-13): the 1s-clamped opening plus the three
+    // fractional offers ("FOUR FRAMES, NOT THREE: 1s, 10%, 50%, 90%").
+    captureFrames: vi.fn(async () => [FRAME, FRAME, FRAME, FRAME]),
   };
 });
 
@@ -153,6 +155,26 @@ describe("picking a video", () => {
     expect(screen.getByTestId("wizard-cover-picture")).toBeInTheDocument();
   });
 
+  // CW-13 (CoverRow.jsx: "FOUR FRAMES, NOT THREE"): the 1s-clamped opening
+  // plus the three fractional offers, wired all the way to the row.
+  it("offers four frames, not three", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+
+    expect(await screen.findByTestId("wizard-cover-frame-3")).toBeInTheDocument();
+  });
+
+  // CW-14 (ComposeCover.jsx:28 stageLabel="Video only"): the header's
+  // trailing note names the cover stage the way android's already does.
+  it("labels the cover stage 'Video only' in the header's trailing note", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+
+    expect(await screen.findByText("Video only")).toHaveClass("text-label-small");
+  });
+
   // F3-4, ruled final 2026-09-11: the preview shows the ACTUAL OUTPUT FORMAT.
   // It used to run at `w-full` under a `max-h-96` with no ratio at all, so a
   // replaced element sized itself from its own shape, the cap took the
@@ -238,12 +260,31 @@ describe("picking a video", () => {
     await pickFiles([aPicture()]);
     await pickFiles([aVideo()]);
 
-    expect(await screen.findByTestId("wizard-refusals")).toHaveTextContent(
-      "A post carries pictures or one video, not both.",
-    );
+    const list = await screen.findByTestId("wizard-refusals");
+    expect(list).toHaveTextContent("A post carries pictures or one video, not both.");
     // And nothing was taken away from the author in the process: the tray is
     // still there with the picture in it.
     expect(screen.getByTestId("wizard-show-all")).toBeInTheDocument();
+    // CW-09: the refused tile exists (`RefusedFile`'s failed thumb), but a
+    // video gets no preview image — a browser has no cheap way to pull a
+    // poster frame from a refused clip's bytes.
+    expect(list.querySelector('[data-testid$="-thumb"]')).not.toBeNull();
+    expect(list.querySelector('[data-testid$="-thumb-image"]')).toBeNull();
+  });
+
+  // CW-09 (ComposePickedErrors): a refused picture's own bytes preview its
+  // tile, the same as an accepted one's — the board draws a real thumbnail,
+  // not a bare error line.
+  it("shows a real thumbnail for a refused picture", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    await pickFiles([aPicture()]);
+
+    const list = await screen.findByTestId("wizard-refusals");
+    expect(list).toHaveTextContent("A post carries pictures or one video, not both.");
+    const image = list.querySelector('[data-testid$="-thumb-image"]');
+    expect(image).not.toBeNull();
+    expect(image).toHaveAttribute("src", "blob:preview");
   });
 
   it("refuses a container the server would refuse, before it is uploaded", async () => {
@@ -269,6 +310,9 @@ describe("picking a video", () => {
 
     const list = await screen.findByTestId("wizard-refusals");
     expect(list.querySelectorAll("li")).toHaveLength(2);
+    // Neither file is a picture CoGra can preview, so both tiles are empty —
+    // the honest picture of a file nothing can read, not a broken image.
+    expect(list.querySelector('[data-testid$="-thumb-image"]')).toBeNull();
 
     // A second pick does not wipe the first refusal away.
     await pickFiles([aPicture()]);
@@ -285,6 +329,31 @@ describe("picking a video", () => {
     // A video takes the body whole, so an add control could only be refused.
     expect(await screen.findByTestId("wizard-video-body")).toBeInTheDocument();
     expect(screen.queryByTestId("wizard-open-picker")).toBeNull();
+  });
+
+  // CW-06 (ComposePickVideo's PickTray): one clip is not a set to reorder, so
+  // the tray drops Show all and swaps the picture caption for the one this
+  // state needs — it says why nothing else can join AND what happens next.
+  it("swaps the tray for the clip's own caption, and drops Show all", async () => {
+    render();
+    await pickFiles([aVideo()]);
+
+    expect(await screen.findByTestId("wizard-picked-count")).toHaveTextContent("Picked · 1");
+    expect(
+      screen.getByText("A video is the whole post. Its cover comes next."),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-show-all")).toBeNull();
+    expect(screen.queryByText("The first one is the cover.")).toBeNull();
+  });
+
+  // CW-08 (ComposePickVideo.jsx:57): the tray's own remove control names what
+  // it removes — a video, not "picture 1".
+  it("calls the tray's remove control 'Remove this video'", async () => {
+    render();
+    await pickFiles([aVideo()]);
+
+    expect(await screen.findByLabelText("Remove this video")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Remove picture/)).toBeNull();
   });
 
   it("asks for one description of the video, and none of its cover", async () => {
@@ -337,6 +406,14 @@ describe("picking a video", () => {
     await screen.findByTestId("wizard-cover-picture");
     expect(screen.queryByTestId("wizard-cover-frame-0")).toBeNull();
     expect(screen.queryByTestId("wizard-cover-capturing")).toBeNull();
+    // NEW-2 (ComposeCoverNoFrames.jsx:44): the terminal caption says why the
+    // choice is smaller than it was, once extraction is done and came back
+    // with nothing.
+    expect(
+      screen.getByText(
+        "This clip gave no frames — choose a picture of your own, or leave it without one.",
+      ),
+    ).toBeInTheDocument();
     // Next stays open even with no face chosen — a faceless video is no
     // longer a wall (jakob, 2026-09-10, "going without a cover is always
     // possible"), so a capture failure that leaves no offers still has to

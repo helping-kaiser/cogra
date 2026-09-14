@@ -3,19 +3,19 @@
 // ComposeCover — "The video's face".
 //
 // The choices are the frames pulled off the clip and a picture of the author's
-// own. The board asks for four frames — "1s, 10%, 50%, 90%" (`CoverRow`) — and
-// this screen offers the three fractional ones; the opening offer is a time
-// rather than a fraction, which `FRAME_POINTS` has no duration to resolve.
+// own. The board asks for four frames — "1s, 10%, 50%, 90%" (`CoverRow`) —
+// and `captureFrames` takes all four: the opening second, clamped to the
+// clip's own length, then the three fractional points.
 //
 // NOT a scrubber. A timeline that lets an author land on any frame is the
 // obvious web idiom and it is NOT what the board asks for — a handful of offers
 // and a picture tile is a smaller decision to make, and the "A picture" route
 // already covers the author who wants a face the clip does not contain.
 //
-// THE COVER IS ITS OWN ASSET, never an attachment. It is uploaded first, and
-// the video names it on its own upload (`coverMediaId`), because an asset row
-// is immutable once written — so the poster is part of what the video IS rather
-// than something hung on it afterwards.
+// THE COVER IS ITS OWN ASSET, never an attachment. It goes up as an ordinary
+// upload of its own and the clip's placement names it at prepare
+// (`AttachmentInput.coverMediaId`) — which is what lets an edit put a different
+// face on a clip whose bytes never move.
 //
 // The captured frames are not held in the draft. They are derived from the clip
 // and cost one decode to rebuild, so re-capturing them when the screen opens is

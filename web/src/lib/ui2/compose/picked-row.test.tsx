@@ -50,4 +50,13 @@ describe("DescribeCounter", () => {
     fireEvent.click(screen.getByTestId("describe-counter"));
     expect(onDescribe).toHaveBeenCalled();
   });
+
+  // CW-18 (2026-09-08 UI audit): the reason rides under the row, permanently
+  // — not behind the sheet's own "?" alone.
+  it("carries the permanent reason under the row", () => {
+    render(<DescribeCounter described={0} total={1} onDescribe={vi.fn()} />);
+    expect(
+      screen.getByText("Read aloud to people who can't see it."),
+    ).toBeInTheDocument();
+  });
 });

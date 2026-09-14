@@ -279,17 +279,17 @@ interface MediaRepository {
     suspend fun uploadMedia(picture: ProcessedPicture): Outcome<MediaAssetView>
 
     /**
-     * Uploads one transcoded clip, naming the still that covers it.
+     * Uploads one transcoded clip: bytes and nothing authored, exactly as
+     * [uploadMedia] sends a picture.
      *
-     * The cover goes first and as its own asset, because an asset row is
-     * immutable once written: the poster is part of what the video *is*,
-     * so it is stated when the video is created rather than attached
-     * afterwards. [coverMediaId] is therefore the id a prior
-     * [uploadMedia] returned, never a URI and never bytes.
+     * The poster is not named here. A cover is a fact about where the clip
+     * sits rather than about its bytes, so it is an ordinary upload of its
+     * own and the id it returns rides `AttachmentClaim` at prepare — which
+     * is what lets a clip go up with no cover at all, and what lets an
+     * edit name a different one without the clip moving.
      */
     suspend fun uploadVideo(
         video: ProcessedVideo,
-        coverMediaId: String,
         onProgress: (UploadProgress) -> Unit = {},
     ): Outcome<MediaAssetView>
 

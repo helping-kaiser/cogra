@@ -105,8 +105,8 @@ describe("what the edit leaves standing", () => {
 
   it("re-states the kept pictures by their own media ids", () => {
     expect(editClaims(galleryOf(ATTACHMENTS))).toEqual([
-      { mediaId: "m1", altText: "A film camera" },
-      { mediaId: "m2", altText: null },
+      { mediaId: "m1", altText: "A film camera", coverMediaId: null },
+      { mediaId: "m2", altText: null, coverMediaId: null },
     ]);
   });
 
@@ -116,12 +116,12 @@ describe("what the edit leaves standing", () => {
 
   it("names an added picture by the id its upload came back with", () => {
     const gallery = landed(addTo(galleryOf([]), picked(1)), "new-0", "m9");
-    expect(editClaims(gallery)).toEqual([{ mediaId: "m9", altText: null }]);
+    expect(editClaims(gallery)).toEqual([{ mediaId: "m9", altText: null, coverMediaId: null }]);
   });
 
   it("sends a blank description as none, so a reader is told nothing rather than nothing-at-all", () => {
     const gallery = withAltText(landed(addTo(galleryOf([]), picked(1)), "new-0", "m9"), "new-0", "   ");
-    expect(editClaims(gallery)).toEqual([{ mediaId: "m9", altText: null }]);
+    expect(editClaims(gallery)).toEqual([{ mediaId: "m9", altText: null, coverMediaId: null }]);
   });
 });
 
