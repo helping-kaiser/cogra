@@ -1862,7 +1862,7 @@ lane's filing: the post veil face's remaining divergences, `HelpDot`'s
 geometry drifting from its board while its KDoc claims conformance,
 item 30, and four surfaces still using spinners as loading states —
 each named in PR #667's body.
-### 52 · The length caps have no affordance · *design*
+### 52 · The length caps have no affordance · *design* · **drawn 2026-09-11**
 
 Filed by the caps lane 2026-09-10 (renumbered at integration, finally 52), which enforced the title cap (100
 characters, jakob's ruling) end to end and found no drawn way to say so.
@@ -2032,7 +2032,7 @@ batch could not settle:
    screens. A check in the design gate that validates those literals
    against the format contract would close the rest.
 
-### 55 · The opinions-on-content list · *design*
+### 55 · The opinions-on-content list · *design* · **drawn 2026-09-12**
 
 jakob, 2026-09-11 (the MVP design-queue rulings): the profile's
 "opinions on you" needs its content mirror — who holds opinions on
@@ -2068,7 +2068,7 @@ specimen `SheetTitle` the live `OverflowMenu` doesn't render;
 `feed-filter.card.html:46`'s history sentence naming the replaced
 segmented row; the frozen search-ideation canvases' `3w` ages.
 
-### 58 · The vouch-back ceremony · *design*
+### 58 · The vouch-back ceremony · *design* · **drawn 2026-09-12**
 
 jakob, 2026-09-11 (the second ruling round): once a landed member
 vouches back, the moment deserves a ceremonial ending — "some
@@ -2128,6 +2128,20 @@ consolidation to ~6 fixtures (the grapes precedent) buys the visible
 horizon; canvas-splitting stays the escape hatch. Also ruled: the
 drill-down's record key stays inert until the spot-check tooling
 exists; the graph's 23 "Post Score" edge labels stay (matched keys).
+
+**Consolidated 2026-09-14:** the ten fixtures were only eight
+photographs. `clip-canoe.jpg` was `post-photo.jpg`'s own frame and
+`ava1.jpg` a square crop of `comment-camera.jpg`, so both went and the
+survivors took their roles — `post-photo.jpg` posters the wide clip
+beside its two post frames and the pick trays, `comment-camera.jpg`
+carries Ada's face beside the attachment and the avatar crop it
+already served. Eight images remain (`clip-lakeside`,
+`comment-camera`, `gallery-grapes`, `gallery-honey`, `gallery-market`,
+`gallery-veg`, `inviter`, `post-photo`) and the canvas holds 198
+files. Six needs a ruling rather than a merge: the gallery's four
+frames are four distinct foods under one crop shape, the two faces sit
+side by side on the weighted-accounts list, and `clip-lakeside` is the
+9:16 crop case the stream and viewer show whole.
 
 ### 63 · The pair formatter floats with the runtime locale · *system*
 
