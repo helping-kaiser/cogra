@@ -75,6 +75,24 @@
     <string name="stance_anchor_keep_this_away">Keep this away</string>
     <string name="stance_anchor_absolutely_not">Absolutely not</string>
 
+    <!-- The tag table (design/readme.md §13, "The tag pad"). Thirteen
+         objects, disjoint from the twenty faces above: a tag is a claim
+         about what a post is about and has no mood to wear. These are
+         the contract both clients read. -->
+    <string name="tag_anchor_had_to_look">had to look, but it\'s in there</string>
+    <string name="tag_anchor_definitely_linked">definitely linked</string>
+    <string name="tag_anchor_locked_on">locked on</string>
+    <string name="tag_anchor_exactly_this">exactly this</string>
+    <string name="tag_anchor_a_drop_of_it">a drop of it, I think</string>
+    <string name="tag_anchor_piece_of_the_picture">a piece of the picture</string>
+    <string name="tag_anchor_pulled_toward_it">pulled toward it</string>
+    <string name="tag_anchor_likely_the_key">likely the key to it</string>
+    <string name="tag_anchor_faint_maybe">faint maybe</string>
+    <string name="tag_anchor_either_way">could go either way</string>
+    <string name="tag_anchor_fishing_for_it">fishing for it</string>
+    <string name="tag_anchor_big_claim_divined">big claim, divined</string>
+    <string name="tag_anchor_all_of_it">all of it, full stop</string>
+
     <string name="stance_target">Stance</string>
     <string name="stance_target_action">Tap for a light yes, or press and hold to pick exactly</string>
     <!-- A target that already carries a standing says so first. -->

@@ -563,6 +563,7 @@ class ContentScreensTest {
         onStance: (String, String) -> Unit = { _, _ -> },
         onReference: (String) -> Unit = {},
         onShare: (String) -> Unit = {},
+        onOpenPost: (String) -> Unit = {},
     ) {
         compose.setContent {
             PostDetailScreen(
@@ -579,6 +580,7 @@ class ContentScreensTest {
                 onReplyTo = onReplyTo,
                 onEditComment = onEditComment,
                 onOpenActor = onOpenActor,
+                onOpenPost = onOpenPost,
                 onOpenTopic = onOpenTopic,
                 onReference = onReference,
                 onShare = onShare,
@@ -1588,9 +1590,28 @@ class ContentScreensTest {
             .assertDoesNotExist()
     }
 
-    /** The chips still navigate — that destination exists (readme §2). */
+    /** On a summary card the chips still navigate, beside the counts. */
     @Test
     fun aTopicChipOpensItsTopic() {
+        var opened: String? = null
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(testPost("p1").copy(topics = listOf(testTopicClaim("rust")))),
+            ),
+            onOpenTopic = { opened = it },
+        )
+        compose.onNodeWithTag("feed_post_p1_topic_rust").performClick()
+        assertThat(opened).isEqualTo("rust")
+    }
+
+    /**
+     * On the DETAIL the whole line is one control (`TopicsLine.jsx`: the
+     * chips go inert inside it), so a chip there opens what the line opens
+     * rather than swallowing the tap.
+     */
+    @Test
+    fun aChipInsideTheDetailsLineOpensTheSheetInstead() {
         var opened: String? = null
         renderDetail(
             PostDetailUiState(
@@ -1600,7 +1621,8 @@ class ContentScreensTest {
             onOpenTopic = { opened = it },
         )
         compose.onNodeWithTag("detail_post_topic_rust").performClick()
-        assertThat(opened).isEqualTo("rust")
+        assertThat(opened).isNull()
+        compose.onNodeWithTag("detail_post_refs_sheet").assertExists()
     }
 
     /** The comment card wears the same line the post does. */
@@ -1622,6 +1644,126 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_c1_topic_kotlin").assertTextEquals("#kotlin")
         compose.onNodeWithTag("comment_c1_topics_counts", useUnmergedTree = true)
             .assertTextEquals("· 1 reference")
+    }
+
+    // -- The tags-and-references sheet: the reveal the counts open --
+
+    /**
+     * A summary card's counts raise the sheet (graph.json: every `reference
+     * count` edge advances to `RefsSheet`), and the tag's pair is written
+     * with only one sign — confidence is census-bounded to [0, 1].
+     */
+    @Test
+    fun theCountsOpenTheSheetOnASummaryCard() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(
+                        topics = listOf(testTopicClaim("photography", relevance = 0.4, confidence = 0.9)),
+                        references = listOf(testReferenceClaim(testMentionTarget("mira"))),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_refs_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("feed_post_p1_refs_sheet").assertExists()
+        compose.onNodeWithTag("feed_post_p1_refs_topic_photography_pair", useUnmergedTree = true)
+            .assertTextEquals("+0.40 / 0.90")
+        compose.onNodeWithTag("feed_post_p1_refs_topic_photography_face", useUnmergedTree = true)
+            .assertTextEquals("🔗")
+    }
+
+    /**
+     * On the detail the WHOLE line is the opener, and a citation's pair keeps
+     * a sign on both axes — the difference between the two families is what
+     * the two shapes carry.
+     */
+    @Test
+    fun theWholeLineOpensTheSheetOnTheDetail() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    references = listOf(
+                        testReferenceClaim(
+                            testContentTarget("p2"),
+                            relevance = 0.55,
+                            support = 0.2,
+                        ),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topics_line").performClick()
+        compose.onNodeWithTag("detail_post_refs_sheet").assertExists()
+        compose.onNodeWithTag("detail_post_refs_reference_l1-p2_pair", useUnmergedTree = true)
+            .assertTextEquals("+0.55 / +0.20")
+        compose.onNodeWithTag("detail_post_refs_reference_l1-p2_face", useUnmergedTree = true)
+            .assertTextEquals("😊")
+    }
+
+    /**
+     * The settling mark shows HERE and only here, in both families: a
+     * settling tag and a settling citation are the same fact about two
+     * families, and it rides the pair rather than the name.
+     */
+    @Test
+    fun theSheetIsWhereASettlingActSaysSo() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    topics = listOf(testTopicClaim("coastroad", pending = true)),
+                    references = listOf(testReferenceClaim(testMentionTarget("mira"), pending = false)),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topics_line").performClick()
+        compose.onNodeWithTag("detail_post_refs_topic_coastroad_pending", useUnmergedTree = true)
+            .assertExists()
+        compose.onNodeWithTag("detail_post_refs_reference_l1-user-mira_pending", useUnmergedTree = true)
+            .assertDoesNotExist()
+    }
+
+    /**
+     * THE COUNT IS THE LIST'S LENGTH: a citation whose far end this instance
+     * cannot type still stands as a substrate fact, so it still gets a row.
+     */
+    @Test
+    fun theSheetCountsACitationItCannotType() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(references = listOf(testReferenceClaim(null))),
+            ),
+        )
+        compose.onNodeWithTag("detail_post_topics_line").performClick()
+        compose.onNodeWithTag("detail_post_refs_reference_l1-untypeable").assertExists()
+    }
+
+    /**
+     * ONE SHEET AT A TIME: a comment's line is read inside the thread's own
+     * sheet, and the board draws no sheet over a sheet — so the comment's
+     * counts stay the plain fact they were.
+     */
+    @Test
+    fun aCommentsCountsOpenNoSecondSheet() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(
+                    comment("c1").copy(
+                        references = listOf(testReferenceClaim(testMentionTarget("ada"))),
+                    ),
+                ),
+            ),
+        )
+        openComments()
+        compose.onNodeWithTag("comment_c1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("comment_c1_refs_sheet").assertDoesNotExist()
     }
 
     // -- What the composer is pinned to (graph.json `ReplyEntry` 5, 7) --

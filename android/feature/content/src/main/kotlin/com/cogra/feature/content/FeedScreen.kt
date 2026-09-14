@@ -25,7 +25,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -271,6 +274,7 @@ fun FeedScreen(
                                 PostCard(
                                     post = post,
                                     onClick = { onOpenPost(post.id) },
+                                    onOpenPost = onOpenPost,
                                     onOpenActor = onOpenActor,
                                     onOpenTopic = onOpenTopic,
                                     onShare = onShare,
@@ -407,6 +411,8 @@ private fun SummaryTitle(post: PostView) {
 private fun PostCard(
     post: PostView,
     onClick: () -> Unit,
+    /** A post cited from the tags-and-references sheet. */
+    onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     /** The platform's own share sheet, for this post. */
@@ -453,11 +459,11 @@ private fun PostCard(
             if (post.landing.isPending) {
                 PendingMarker(testTag = "feed_post_pending_${post.id}")
             }
-            TopicsLine(
-                topics = post.topics,
-                references = post.references,
+            CardTopicsLine(
+                post = post,
                 onOpenTopic = onOpenTopic,
-                testTagPrefix = "feed_post_${post.id}",
+                onOpenActor = onOpenActor,
+                onOpenPost = onOpenPost,
             )
             // Stance, comment, share — the master's row, minus the two
             // it gates (see `PostAffordanceRow`). The comment count
@@ -472,5 +478,41 @@ private fun PostCard(
                 stanceControl(post.id, "feed_post_${post.id}")
             }
         }
+    }
+}
+
+/**
+ * The card's one line for tags and citations, and the sheet its counts open.
+ *
+ * THE COUNTS ARE THE WAY IN on a summary card (graph.json: every `reference
+ * count` edge advances to `RefsSheet`), and the chips still reach the topic
+ * screen beside them — the master's own split against a detail surface, where
+ * the whole line is the opener instead.
+ */
+@Composable
+private fun CardTopicsLine(
+    post: PostView,
+    onOpenTopic: (String) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
+) {
+    var refsOpen by rememberSaveable { mutableStateOf(false) }
+    TopicsLine(
+        topics = post.topics,
+        references = post.references,
+        onOpenTopic = onOpenTopic,
+        testTagPrefix = "feed_post_${post.id}",
+        onOpenReferences = { refsOpen = true },
+    )
+    if (refsOpen) {
+        RefsSheet(
+            topics = post.topics,
+            references = post.references,
+            onDismiss = { refsOpen = false },
+            onOpenTopic = onOpenTopic,
+            onOpenActor = onOpenActor,
+            onOpenPost = onOpenPost,
+            testTagPrefix = "feed_post_${post.id}",
+        )
     }
 }
