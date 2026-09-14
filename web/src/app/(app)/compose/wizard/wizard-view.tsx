@@ -740,9 +740,15 @@ export function ComposeWizard({
           }
           onHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
           onLicenseHelp={() => setHelp(HELP_TOPICS.license)}
+          onKeyHelp={() => setHelp(HELP_TOPICS.yourKey)}
           onSign={() => void submit()}
           onBack={() => dispatch({ type: "back" })}
           onRestoreKey={() => router.push("/restore")}
+          // The key-absent panel's keep-draft LEAVES the wizard (graph:
+          // ComposeKeyAbsent's keep-draft edge is a terminal `back`), not a
+          // step back to the previous stage — `leaveFlow` is the same exit
+          // the header's X already uses.
+          onKeepDraft={leaveFlow}
         />
       )}
 
