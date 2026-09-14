@@ -138,6 +138,7 @@ export function PostCard({
   commentsHref,
   onOpenComments,
   onLinkCopied,
+  mediaPinned = false,
 }: {
   post: PostView;
   /** `detail` is the read surface: nothing clamps, and the title leads at `headline-small`. */
@@ -156,6 +157,18 @@ export function PostCard({
   onOpenComments?: () => void;
   /** Says `Link copied` where the browser has no platform share sheet. */
   onLinkCopied: () => void;
+  /**
+   * The surface is already showing this post's media above the card, so the
+   * card draws none — the video detail, where "THE CLIP IS PINNED ABOVE THE
+   * CARD, not inside it, which is why the author chip leads the card rather
+   * than the screen" (`screens/PostDetailVideo.jsx:7-10`).
+   *
+   * It moves the GALLERY only. Whether the post bears media is still what
+   * decides everything else the card reads off it — words xor media above all:
+   * the clip is the body wherever it is drawn, so pinning it out of the card
+   * cannot turn a caption into one.
+   */
+  mediaPinned?: boolean;
 }) {
   const detail = variant === "detail";
   const [open, setOpen] = useState(false);
@@ -164,6 +177,8 @@ export function PostCard({
 
   const redacted = payloadIsRedacted(post);
   const media = !redacted && hasMedia(post);
+  // What the card DRAWS, as distinct from what the post bears.
+  const drawsMedia = media && !mediaPinned;
   const veiled = !redacted && bodyIsSensitive(post);
   const title = redacted ? null : (post.title.value ?? null);
   // WORDS XOR MEDIA: the picture is the body, so a media post draws no
@@ -258,7 +273,7 @@ export function PostCard({
         >
           {detail ? (
             <>
-              {media && <PostMedia node={post} testId={`${testId}-media`} preloadLead />}
+              {drawsMedia && <PostMedia node={post} testId={`${testId}-media`} preloadLead />}
               {bodyText}
             </>
           ) : (
@@ -267,7 +282,7 @@ export function PostCard({
                same destination. Anything with its own meaning (the author chip,
                the affordance row, the opener) stands outside it. */
             <Link href={href} data-testid={`${testId}-link`} className="flex flex-col gap-2">
-              {media && <PostMedia node={post} testId={`${testId}-media`} />}
+              {drawsMedia && <PostMedia node={post} testId={`${testId}-media`} />}
               {bodyText}
             </Link>
           )}

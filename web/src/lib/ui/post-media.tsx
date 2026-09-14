@@ -102,7 +102,7 @@ export function removalReason(node: Bearer): RemovalReason {
 }
 
 /** Whether a node's gallery is the moving kind — one clip rather than pictures. */
-export function commentHasVideo(node: Bearer): boolean {
+export function hasVideo(node: Bearer): boolean {
   return node.attachments.some((attachment) => attachment.mimeType.startsWith("video/"));
 }
 

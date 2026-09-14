@@ -14,6 +14,7 @@ import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -30,6 +31,7 @@ import com.cogra.domain.Landing
 import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.MediaAssetView
+import com.cogra.core.designsystem.v2.media.PINNED_CLIP_TAG
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.testing.testComment
 import com.cogra.domain.testing.testContentTarget
@@ -886,6 +888,70 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_menu_hide").performClick()
         compose.onNodeWithTag("detail_card").assertExists()
     }
+
+    // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
+    // the clip is pinned ABOVE the card, wearing the full transport, and the
+    // card beneath it is the post as it always reads. DV-02/DV-03/DV-05.
+    @Test
+    fun aVideoPostsDetailPinsTheClipAboveTheCardAndNotInsideIt() {
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1").copy(attachments = listOf(clip()))),
+        )
+
+        val pinned = compose.onNodeWithTag(PINNED_CLIP_TAG).getUnclippedBoundsInRoot()
+        val card = compose.onNodeWithTag("detail_card").getUnclippedBoundsInRoot()
+        assertThat(pinned.bottom.value).isAtMost(card.top.value)
+        // The clip LEFT the card: the body has no gallery left to draw.
+        compose.onNodeWithTag("detail_gallery").assertDoesNotExist()
+        // The card is still the post as it always reads.
+        compose.onNodeWithTag("detail_title").assertExists()
+    }
+
+    @Test
+    fun aPostOfPicturesKeepsItsGalleryInTheCard() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    attachments = listOf(
+                        MediaAssetView("m1", "https://media/m1", null, FieldStatus.NORMAL, 1f),
+                    ),
+                ),
+            ),
+        )
+
+        compose.onNodeWithTag(PINNED_CLIP_TAG).assertDoesNotExist()
+        compose.onNodeWithTag("detail_gallery").assertExists()
+    }
+
+    /** A removed record is the skeleton: there is no clip left to pin. */
+    @Test
+    fun aRemovedVideoPostPinsNothing() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1").copy(
+                    attachments = listOf(clip(status = FieldStatus.REDACTED)),
+                    attachmentsStatus = FieldStatus.REDACTED,
+                ),
+            ),
+        )
+
+        compose.onNodeWithTag(PINNED_CLIP_TAG).assertDoesNotExist()
+        compose.onNodeWithTag("detail_gallery").assertDoesNotExist()
+        // The skeleton says so where the body was.
+        compose.onNodeWithText("Removed by its author").assertExists()
+    }
+
+    private fun clip(status: FieldStatus = FieldStatus.NORMAL) = MediaAssetView(
+        id = "m1",
+        url = "https://media/clip.mp4",
+        altText = null,
+        status = status,
+        aspectRatio = 0.5625f,
+        mimeType = "video/mp4",
+        durationMs = 41_000,
+    )
 
     /** The dialog ships; the removal is slice 8's, whole (jakob 2026-09-14). */
     @Test
