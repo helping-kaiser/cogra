@@ -2,25 +2,29 @@
   "canvases": [
     {
       "id": "feed",
-      "title": "CoGra · Feed & comments",
+      "title": "CoGra · Feed and comments",
+      "url": "https://claude.ai/code/artifact/012e4ee6-edd1-4cbe-98ab-b45c58aa4c34",
       "pages": ["feed", "comments"],
       "launch": "feed"
     },
     {
       "id": "profile",
-      "title": "CoGra · Profile & settings",
+      "title": "CoGra · Profile and settings",
+      "url": "https://claude.ai/code/artifact/1102bec0-50a9-41b2-84da-a6215afd2d2a",
       "pages": ["profile"],
       "launch": "profile"
     },
     {
       "id": "compose",
-      "title": "CoGra · Compose & media",
+      "title": "CoGra · Compose and media",
+      "url": "https://claude.ai/code/artifact/675688a0-1365-48e0-b56a-511104712f53",
       "pages": ["compose", "media"],
       "launch": "compose"
     },
     {
       "id": "entry",
-      "title": "CoGra · Entry, money & maps",
+      "title": "CoGra · Entry, money and maps",
+      "url": "https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5",
       "pages": ["overview", "entry", "money", "patterns"],
       "launch": "overview"
     }

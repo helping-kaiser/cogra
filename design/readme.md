@@ -4735,13 +4735,19 @@ is re-seeded from the tree, never the other way round.
 
 | Canvas | `id` | Pages | Opens on |
 |---|---|---|---|
-| CoGra · Feed & comments | `feed` | Feed & Search · Comments | Feed & Search |
-| CoGra · Profile & settings | `profile` | Profile | Profile |
-| CoGra · Compose & media | `compose` | Compose · Media | Compose |
-| CoGra · Entry, money & maps | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
+| [CoGra · Feed and comments](https://claude.ai/code/artifact/012e4ee6-edd1-4cbe-98ab-b45c58aa4c34) | `feed` | Feed & Search · Comments | Feed & Search |
+| [CoGra · Profile and settings](https://claude.ai/code/artifact/1102bec0-50a9-41b2-84da-a6215afd2d2a) | `profile` | Profile | Profile |
+| [CoGra · Compose and media](https://claude.ai/code/artifact/675688a0-1365-48e0-b56a-511104712f53) | `compose` | Compose · Media | Compose |
+| [CoGra · Entry, money and maps](https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5) | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
+
+A canvas title never carries `< > & "` or a backslash — the editor
+refuses them at seed time, which is why the titles say "and". The old
+single-canvas artifact stands as a signpost to these four; its version
+picker keeps the pre-split monolith.
 
 That map is data, not a habit: `designs/canonical/canvases.json` holds
-it, hand-maintained, and `_build/gen-canvases.mjs` writes one seed
+it, hand-maintained — each entry carries its canvas's published `url`,
+the links in the table above — and `_build/gen-canvases.mjs` writes one seed
 manifest per canvas under `designs/canonical/canvases/<id>/` — the
 artboards and annotations of its pages with coordinates verbatim, the
 page bar in the order above, plus an `images.json` naming the
@@ -4822,3 +4828,9 @@ and `iconography.md` for the deeper dives.
 **`components/`** — see §7: `core/`, `content/`, `forms/`, `navigation/`,
 `compose/`, `media/`, `wallet/`, `people/`, `states/`, `honesty/`,
 `stance/`, `proposed/`.
+
+**`designs/canonical/`** — the drawn app itself: the rendered
+`.dc.html` boards, `canvas.json` (the master layout: coordinates,
+pages, annotations), `graph.json` and the flow layer beside it (§13),
+`canvases.json` + `canvases/<id>/` (the canvas map and per-canvas seed
+manifests, §14), and `img/` (the photographs the boards carry).
