@@ -832,7 +832,7 @@
     {
       "file": "FeedTopic.dc.html",
       "title": "The feed, narrowed to one topic",
-      "x": 4800,
+      "x": 5280,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1281,9 +1281,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -3610,
+      "x": -3900,
       "y": 0,
-      "w": 3190,
+      "w": 3480,
       "h": 2563,
       "page": "feed",
       "title": "Feed & Search · flow map"
