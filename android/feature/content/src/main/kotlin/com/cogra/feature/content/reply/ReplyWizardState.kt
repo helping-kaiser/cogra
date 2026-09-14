@@ -133,7 +133,19 @@ data class ReplyWizardState(
      * stage.
      */
     val coverFrames: List<VideoFrame> = emptyList(),
-    val coverChoice: CoverChoice = CoverChoice.Frame(0),
+    /**
+     * Which cover the author settled on.
+     *
+     * Starts at [CoverChoice.None]: extraction may still be running, may
+     * come back with nothing to offer, or the author may simply move on
+     * to the seal before it resolves — every one of those is a settled
+     * "no cover" rather than a wait, so `Next` never blocks on this
+     * (jakob 2026-09-10, the video-cover round). Frame extraction
+     * auto-settles [CoverChoice.None] on the first offered frame once it
+     * succeeds, while the author is still on the composer and has not
+     * chosen otherwise.
+     */
+    val coverChoice: CoverChoice = CoverChoice.None,
     val coverMediaId: String? = null,
 
     /**
@@ -217,13 +229,14 @@ data class ReplyWizardState(
     /**
      * Every pick has an id: the gallery can be attached as it stands.
      *
-     * A clip is not complete until its cover has landed too — the cover
-     * is not an attachment, but the clip's placement cannot name an id
-     * that does not exist yet.
+     * A clip's face is optional, but a face that was chosen still has to
+     * land before the clip counts as complete: the placement cannot
+     * name an id that does not exist yet. [CoverChoice.None] carries no
+     * such id to wait for, so it never holds this up.
      */
     val uploadsComplete: Boolean
         get() = uploadedIds.size == picked.size &&
-            (!isVideoComment || coverMediaId != null)
+            (!isVideoComment || coverChoice is CoverChoice.None || coverMediaId != null)
 
     /**
      * The stance pad is parked over the page, not a drawer.
@@ -357,7 +370,7 @@ fun ReplyWizardState.pickedPictures(): List<PickedPicture> = picked.pickedPictur
  */
 fun ReplyWizardState.clearedCover(): ReplyWizardState = copy(
     coverFrames = emptyList(),
-    coverChoice = CoverChoice.Frame(0),
+    coverChoice = CoverChoice.None,
     coverMediaId = null,
 )
 
