@@ -19,7 +19,7 @@ import { BottomSheet } from "../bottom-sheet";
 import { HelpDialog, HELP_TOPICS } from "../help-dialog";
 import { PillButton } from "../pill-button";
 import { TextField } from "../text-field";
-import { altTextProblem } from "../media/caps";
+import { ALT_TEXT_MAX_CHARS, altTextProblem } from "../media/caps";
 import { cropAspect, cropPreviewStyle } from "../media/crop-preview";
 import type { Crop } from "../media/crop";
 
@@ -131,6 +131,7 @@ export function DescribeSheet({
           value={value}
           onChange={onChange}
           testId={`${testId}-field`}
+          cap={ALT_TEXT_MAX_CHARS}
           error={altTextProblem(value) ?? undefined}
         />
         <div className="flex justify-end">

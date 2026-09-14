@@ -261,6 +261,18 @@ data class UploadProgress(
 const val RESUMABLE_THRESHOLD_BYTES = 8L * 1024 * 1024
 
 /**
+ * Client mirror of the server's `MAX_ALT_TEXT_CHARS` — the ruled cap on a
+ * picture or clip's authored description (design/backlog.md, the caps-2
+ * lane's 2026-09-11 ruling). Unicode scalar values, the same unit every
+ * other ruled cap counts in.
+ */
+const val MAX_ALT_TEXT_CHARS = 1000
+
+/** Whether [text] is longer than a description's ruled cap. */
+fun isAltTextTooLong(text: String): Boolean =
+    com.cogra.domain.content.authoredLength(text) > MAX_ALT_TEXT_CHARS
+
+/**
  * The upload verb (api-spec.md `uploadMedia`; D5).
  *
  * One asset per call, by design: a ten-picture post is ten calls the
