@@ -39,7 +39,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
@@ -238,14 +237,14 @@ internal fun CommentEditScreen(
                 singleLine = false,
                 minLines = 3,
                 modifier = Modifier.fillMaxWidth(),
+                cap = MAX_COMMENT_BODY_CHARS,
+                error = if (state.bodyTooLong) {
+                    stringResource(R.string.content_error_comment_body_too_long, MAX_COMMENT_BODY_CHARS)
+                } else {
+                    null
+                },
                 testTag = "comment_edit_body",
             )
-            if (state.bodyTooLong) {
-                ErrorLine(
-                    text = stringResource(R.string.content_error_comment_body_too_long, MAX_COMMENT_BODY_CHARS),
-                    testTag = "comment_edit_body_too_long",
-                )
-            }
 
             FieldGroup(label = "Pictures") {
                 Row(

@@ -23,7 +23,14 @@ import { TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
-import { descriptionProblem, kindOf, titleProblem, type PickedAsset } from "@/lib/compose/wizard";
+import {
+  DESCRIPTION_MAX_CHARS,
+  descriptionProblem,
+  kindOf,
+  TITLE_MAX_CHARS,
+  titleProblem,
+  type PickedAsset,
+} from "@/lib/compose/wizard";
 
 export function DetailsStep({
   mode,
@@ -46,6 +53,7 @@ export function DetailsStep({
   onRetry,
   onRemove,
   onNext,
+  blocked,
 }: {
   mode: "words" | "media";
   assets: readonly PickedAsset[];
@@ -69,6 +77,8 @@ export function DetailsStep({
   onRetry: (id: string) => void;
   onRemove: (id: string) => void;
   onNext: () => void;
+  /** A title or description over its cap — the same law PickStep and CoverStep already draw. */
+  blocked: boolean;
 }) {
   return (
     <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto px-6 pb-4 pt-3">
@@ -91,6 +101,7 @@ export function DetailsStep({
         value={title}
         onChange={onTitle}
         testId="wizard-title"
+        cap={TITLE_MAX_CHARS}
         error={titleProblem(title) ?? undefined}
       />
       <TextField
@@ -101,6 +112,7 @@ export function DetailsStep({
         value={description}
         onChange={onDescription}
         testId="wizard-description"
+        cap={DESCRIPTION_MAX_CHARS}
         error={descriptionProblem(description) ?? undefined}
       />
 
@@ -130,7 +142,7 @@ export function DetailsStep({
           Pictures upload while you write — signing waits for them.
         </p>
       )}
-      <PillButton testId="wizard-next" full onClick={onNext}>
+      <PillButton testId="wizard-next" full disabled={blocked} onClick={onNext}>
         Next
       </PillButton>
     </div>
