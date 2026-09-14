@@ -1404,8 +1404,7 @@ sign being coherence and never a standing vouch; *Away / Toward* is what
 attraction is, and deliberately borrows neither the opinion's
 `Less / More` (which names reach, a different question) nor its
 `Against / For` (which names a verdict this record does not carry).
-Alternatives worth weighing: `Not my thing / My thing` for the first,
-`Push away / Draw closer` for the second.
+Blessed 2026-09-15.
 
 **What the pad still calls its axes is the opinion's, and that is a
 known mismatch.** Above the alternate sliders the two tracks are still

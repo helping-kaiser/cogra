@@ -2673,8 +2673,8 @@ The tag pad's precedent is what the answer looks like: `TagPad` names
 its two axes `How much it is about this` and `How sure you are`, in the
 reader's words, beside its own poles. Association and attraction want
 the same treatment. It is a copy ruling, which is why the round flagged
-it rather than inventing one — and it is the same shape of change as the
-poles, so the two want blessing together.
+it rather than inventing one. The poles themselves were blessed
+2026-09-15; the axis names are the half still owed.
 
 ### 80 · `readme.md` §3 says the stance parameters have two labels and nothing else · *design*
 
