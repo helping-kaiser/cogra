@@ -57,6 +57,38 @@ const moderated = (value: string | null, status = "NORMAL") => ({
   status,
 });
 
+/**
+ * A post carrying one signed act of each family — enough for the line to state
+ * a count, which is the control that raises the sheet.
+ */
+const tagged = () => ({
+  topics: [
+    {
+      __typename: "TopicClaim",
+      hashtag: { __typename: "Hashtag", id: "h1", name: moderated("photography") },
+      relevance: 0.4,
+      confidence: 0.9,
+      pending: false,
+    },
+  ],
+  references: [
+    {
+      __typename: "ReferenceClaim",
+      targetId: "l1-mira",
+      relevance: 0.1,
+      support: 0.1,
+      withdrawalCost: 1,
+      pending: false,
+      target: {
+        __typename: "User",
+        id: "u2",
+        handle: "mira",
+        displayName: moderated("Mira Voss"),
+      },
+    },
+  ],
+});
+
 function mount(node: PostView, over: Record<string, unknown> = {}) {
   return renderWithProviders(
     <PostCard
@@ -174,6 +206,26 @@ describe("PostCard", () => {
     expect(screen.getByTestId("card-author")).toBeInTheDocument();
     expect(screen.getByTestId("card-timestamp")).toBeInTheDocument();
     expect(screen.getByTestId("card-stance")).toBeInTheDocument();
+  });
+
+  // THE COUNTS ARE THE WAY IN (graph.json: every `reference count` edge
+  // advances to `RefsSheet`), and which control opens it is the master's own
+  // split between a summary card and a detail surface.
+  it("opens the tags-and-references sheet from the counts on a summary card", () => {
+    mount(post(tagged()));
+    expect(screen.getByTestId("card-refs-sheet")).not.toHaveAttribute("open");
+    fireEvent.click(screen.getByTestId("card-topics-counts"));
+    expect(screen.getByTestId("card-refs-sheet")).toHaveAttribute("open");
+    expect(screen.getByText("Tags")).toBeInTheDocument();
+    expect(screen.getByTestId("card-refs-sheet-topic-photography-pair")).toHaveTextContent(
+      "+0.40 / 0.90",
+    );
+  });
+
+  it("makes the whole line the opener on the detail surface", () => {
+    mount(post(tagged()), { variant: "detail" });
+    fireEvent.click(screen.getByTestId("card-topics"));
+    expect(screen.getByTestId("card-refs-sheet")).toHaveAttribute("open");
   });
 
   it("keeps the affordance row on one line, in the ruled order", () => {

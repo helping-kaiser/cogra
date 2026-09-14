@@ -4,11 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import { RefsSheet, type TopicClaimNode } from "./refs-sheet";
 import type { ReferenceClaimNode } from "@/lib/references/claims";
 
-const push = vi.fn();
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push }),
-}));
-
 function topic(
   name: string,
   relevance: number,
@@ -128,15 +123,20 @@ describe("RefsSheet", () => {
 
   it("sends a tag row to the tag's page", () => {
     open();
-    screen.getByRole("button", { name: /photography/ }).click();
-    expect(push).toHaveBeenCalledWith("/topics/photography");
+    expect(screen.getByRole("link", { name: /photography/ })).toHaveAttribute(
+      "href",
+      "/topics/photography",
+    );
   });
 
   it("sends a reference row to the node it points at", () => {
     open();
     // A mention reads as the handle, which is what the chip already calls it.
-    screen.getByRole("button", { name: /@mira/ }).click();
-    expect(push).toHaveBeenCalledWith("/u/mira");
+    expect(screen.getByRole("link", { name: /@mira/ })).toHaveAttribute("href", "/u/mira");
+    // A comment has no permalink, so it opens the post carrying it.
+    expect(
+      screen.getByRole("link", { name: /second bend/ }),
+    ).toHaveAttribute("href", "/posts/p1");
   });
 
   it("counts a citation it cannot type, and leaves it pointing nowhere", () => {
@@ -147,7 +147,7 @@ describe("RefsSheet", () => {
     expect(screen.getByTestId("refs-sheet-reference-l1-unknown")).toHaveTextContent(
       "l1-unknown",
     );
-    expect(screen.queryByRole("button", { name: /l1-unknown/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /l1-unknown/ })).toBeNull();
   });
 
   it("draws no caption over a group with nothing in it", () => {

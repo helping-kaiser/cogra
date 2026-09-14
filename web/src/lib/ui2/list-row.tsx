@@ -11,6 +11,7 @@
 // `aria-hidden` and the kind is carried in text instead — a glyph alone is not
 // a label.
 
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 export function ListRow({
@@ -19,6 +20,7 @@ export function ListRow({
   // The kind, in words. Read by everyone; it is also what makes the leading
   // mark decorative rather than load-bearing.
   kind,
+  href,
   trailing,
   testId,
   onOpen,
@@ -28,6 +30,14 @@ export function ListRow({
   mark: ReactNode;
   title: string;
   kind: string;
+  /**
+   * Where the row leads, when what it opens is a PAGE — the references
+   * sheet's rows, which go to the cited node's own surface. The master draws
+   * one button either way, but on the web a destination is a link: it opens
+   * in a new tab, it carries a real href on hover, and it needs no router.
+   * `onOpen` stays for a row that acts rather than navigates.
+   */
+  href?: string;
   trailing?: ReactNode;
   testId?: string;
   onOpen?: () => void;
@@ -52,7 +62,14 @@ export function ListRow({
       data-testid={testId}
       className="flex min-h-12 items-center gap-2 rounded-small bg-surface-container-highest px-3 py-2"
     >
-      {onOpen ? (
+      {href !== undefined ? (
+        <Link
+          href={href}
+          className="cg-state cg-focus flex min-w-0 flex-1 items-center gap-2 rounded-small text-left"
+        >
+          {body}
+        </Link>
+      ) : onOpen ? (
         <button
           type="button"
           onClick={onOpen}

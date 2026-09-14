@@ -30,7 +30,6 @@
 // that quietly dropped a kind would tell a reader the sheet holds less than it
 // does, and this sheet is the only place the number can be checked.
 
-import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { nearestAnchor } from "@/lib/stance/anchors";
@@ -182,8 +181,6 @@ export function RefsSheet({
   references: readonly ReferenceClaimNode[];
   testId?: string;
 }) {
-  const router = useRouter();
-
   return (
     <BottomSheet open={open} onClose={onClose} title={TITLE} testId={testId}>
       {topics.length > 0 && <SectionLabel>{TAGS_LABEL}</SectionLabel>}
@@ -200,7 +197,7 @@ export function RefsSheet({
             kind="Tag"
             // `RefsSheet` 1: a tag row goes to the tag's page, the one
             // destination a chip's tap already has on every other surface.
-            onOpen={() => router.push(`/topics/${name}`)}
+            href={`/topics/${name}`}
             trailing={
               <PairReadout
                 emoji={anchor.emoji}
@@ -236,7 +233,7 @@ export function RefsSheet({
             // `RefsSheet` 2: the referenced node's own surface. The two this
             // client can address are the profile and the post; a citation whose
             // far end it cannot type has no destination and stays a plain row.
-            onOpen={href === null ? undefined : () => router.push(href)}
+            href={href ?? undefined}
             trailing={
               <PairReadout
                 emoji={anchor.emoji}
