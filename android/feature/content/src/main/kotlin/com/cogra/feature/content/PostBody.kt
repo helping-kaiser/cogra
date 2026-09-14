@@ -103,6 +103,16 @@ internal fun PostBody(
      */
     bleed: Dp = 0.dp,
     onOpenMedia: (() -> Unit)? = null,
+    /**
+     * The surface is already showing this body's media above the card, so the
+     * body draws none — the video detail, where "THE CLIP IS PINNED ABOVE THE
+     * CARD, not inside it" (`screens/PostDetailVideo.jsx:7-10`).
+     *
+     * It moves the GALLERY only: whether the record bears media still decides
+     * everything else, words xor media above all, because the clip is the body
+     * wherever it is drawn.
+     */
+    mediaPinned: Boolean = false,
     surface: BodySurface = BodySurface.Post,
     revealed: Boolean = false,
     onReveal: () -> Unit = {},
@@ -140,7 +150,7 @@ internal fun PostBody(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             val gallery: @Composable () -> Unit = {
-                if (attachments.isNotEmpty()) {
+                if (attachments.isNotEmpty() && !mediaPinned) {
                     Gallery(attachments, surface, onOpenMedia, bleed, "${testTagPrefix}_gallery")
                 }
             }
