@@ -484,7 +484,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton`, `NodeMark` |
 | `components/forms/` | `TextField`, `FieldLabel`, `FieldSupport`, `FieldCount`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
 | `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `DeletionBand`, `CograBand`, `BandIcon` |
-| `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `StagedReference`, `TopicRemovable`, `Caret` |
+| `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `CitedSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `StagedReference`, `TopicRemovable`, `Caret` |
 | `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
 | `components/states/` | `EmptyState`, `LoadingState` |
@@ -4719,6 +4719,55 @@ names, and the seal stops showing a value nobody set.
   re-rendered behind the two readouts — `ComposePad` and the six that
   draw a compose seal (`ComposeSeal`, `ComposeSealUploading`,
   `ComposeLicense`, `ComposeSensitive`, `HelpDialog`, `NetworkError`).
+
+### The cited round — 2026-09-14
+
+jakob's rulings on the seal's References row, which drew exactly one
+staged citation while the composer let an author stage ten. What a
+seal owes is a read-back, and the round is about what a read-back does
+when the thing to read back is a collection.
+
+- **ONE CITATION IS READ BACK AS ITSELF**, unchanged: the name, and
+  under it the pair signing it. One thing read back is the thing.
+- **TWO OR MORE ARE READ BACK AS THEIR COUNT** — `N cited`, one line,
+  blessed vocabulary. Three names stacked in an act row push the
+  license, the stance and the sensitive rows off the screen at the
+  moment the author is deciding whether to sign; ten make the seal a
+  scroller. The threshold is two because two is where a name stops
+  being the shortest true answer.
+- **AND THE COUNTING ROW IS A DOOR.** A count nobody can open is a
+  number the reader cannot check, which is the one thing this product's
+  numbers may never be. `ActsCard` grew the door row — a FACT row
+  (label, value, count) whose whole box is the control, `PickedRow`'s
+  rule said for the acts card: no chevron, no trailing word, the
+  accessible name (`Manage the citations`) saying what opens.
+- **THE TRAILING COUNT IS THE CITATIONS, BARE** — `3` for three, the
+  list's length and nothing else. The signature's own total is the
+  card's footer and already says in words what it counts. The
+  implementation's two improvisations conform to this: not a first
+  citation's name standing in for the rest, and not "N actions" beside
+  a label that already named what was counted.
+- **THE SHEET IS `PickedSheet`'S SHAPE, NOT `RefsSheet`'S.**
+  `RefsSheet` is the reading side, each row a way IN to what was cited;
+  this is the authoring side, a staged collection managed in one place.
+  `CitedSheet` is the new master — `StagedReference` rows whole, each
+  control naming its own citation, `Cited · 3` as the title, `Done` as
+  the way out. **It adds nothing**: a post's seal carries no add-rows
+  by design, and a door out of it that grew a "+ Cite something" would
+  hand the seal a stage's job.
+- **THE SAME RULE GOVERNS THE REPLY SEAL.** It is about citations, not
+  about which composer staged them, so the comment's seal counts at two
+  and its door opens the same sheet — the way its License and Sensitive
+  rows already open the compose page's masters. `ReplyCited`'s own
+  single reading is untouched, and that board now renders
+  `ReplySealBody` at one citation: the reply's seal is one markup in
+  three states, byte-identical where it was already drawn.
+- **The gate**: boards **191 → 194**, edges **1342 → 1372**, gaps hold
+  at **20**, flows at **63/60/3**, the compose canvas at **75/200
+  files** (63% headroom). `cite-something` reblessed — the control now
+  stands on ten boards. `10 cited` measures 51.7px against a 205.5px
+  slot, so the count never truncates and the ellipsis stays the single
+  reading's business.
 
 ---
 

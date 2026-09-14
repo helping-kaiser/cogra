@@ -14,7 +14,17 @@ export interface ActsCardRow {
    */
   action?: React.ReactNode;
   onAct?: () => void;
-  /** This row's act count, a bare number — e.g. "1". */
+  /**
+   * A fact row that counts a collection is a DOOR to what it counts: given
+   * this, the whole row becomes the control and keeps its three slots. No
+   * chevron and no trailing word, so `openLabel` is the only thing that tells
+   * a listener a row reading "References · 3 cited · 3" opens anything. Fact
+   * rows only — an action row is already a button.
+   */
+  onOpen?: () => void;
+  /** The door's accessible name — e.g. "Manage the citations". */
+  openLabel?: string;
+  /** This row's own count, a bare number — e.g. "1". */
   count?: string;
 }
 
