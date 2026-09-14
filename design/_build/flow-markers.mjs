@@ -1537,6 +1537,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: `class="cg-scrim-in"`, tag: "div", all: true },
   ],
   NotificationsEmpty: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  /* The chats coming-soon screen (item 68) numbers like the bell's empty list:
+     the same back-plus-nav anatomy, because it is the same list surface with
+     nothing in it. */
+  ChatsComingSoon: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
   FeedUnread: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),

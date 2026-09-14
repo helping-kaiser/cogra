@@ -2207,7 +2207,7 @@ alone:
   face reads soft there. A higher-resolution source for the same
   face would fix it — one file swap, no reference changes.
 
-### 67 · The viewer's dots get a window · *design* · **ruled 2026-09-14**
+### 67 · The viewer's dots get a window · *design* · **drawn 2026-09-14**
 
 jakob, via the implementation loop: the fullscreen viewer's position
 marker is n-of-m dots with a MAX dot count, Instagram-style — a
@@ -2219,7 +2219,22 @@ count stays in the accessible name. Redraw the master + conform the
 prose; implementation's W3-7 viewer lane grades against the updated
 master (not yet dispatched — the W3 window is the deadline).
 
-### 68 · The chats icon needs its coming-soon screen · *design* · **ruled 2026-09-14**
+Drawn as `ViewerDots` in `MediaViewer.jsx`: **seven slots**, the window
+sliding centred on the current index and clamped to the set's two ends,
+the edge dot on a side with more beyond it drawn at 4px against the
+6px full dot. One smaller size and not a ladder of them, the active dot
+never the shrunk one, and every slot keeping its pitch so nothing
+reflows under a swipe. `ViewerPicture` is byte-different and
+pixel-identical: four pictures fit the window whole. The windowed case
+has no board — none of the three viewer boards carries a set past four
+— so it is drawn in the Media card's specimen at m=4, 7 and 10.
+
+**The card's own pager is deliberately untouched.** Item 21's ruling
+governs it and item 67 names the viewer only, so a gallery card still
+draws its set whole — up to the ten-picture authoring cap. Whether the
+window belongs there too is jakob's call, not this round's.
+
+### 68 · The chats icon needs its coming-soon screen · *design* · **drawn 2026-09-14**
 
 jakob, via the implementation loop: chats moved to would-like #3, but
 the band law is unchanged — the trailing-cluster chats icon STAYS on
@@ -2227,6 +2242,24 @@ every root band and taps into a coming-soon state. That screen has no
 board. Draw it; the W1 shell lanes wire the icon to it and grade
 against the board once drawn. New board = one canvas slot; its copy
 needs blessing in copy-voice.
+
+Drawn as `ChatsComingSoon` (canvas "Chats · not here yet", page Feed):
+the empty-state idiom exactly — `PageHeader` with the back arrow, one
+`EmptyState` line, the nav beneath — no new master. The band's 23
+`chats` gap edges now land on it; the three guest bands keep sending
+chats to `GuestGate`, and the graph's gap count falls 43 → 20.
+
+**Its line is a PROPOSAL, not blessed vocabulary.** Drawn: `Chats
+aren't built yet. When they are, your conversations will be here.`
+Three alternates and the timing question are in copy-voice under
+"Awaiting blessing — the chats coming-soon screen"; jakob picks.
+
+**Still owed, deliberately left:** the *Message* control on another's
+profile (`ProfileOther`, `ProfileOtherHeld`, `ProfilePosts`,
+`ProfileComments`) and the message row in search results still carry
+the chat-surface gap. Ruling 68 names the band icon, and routing a
+labelled *Message* into a coming-soon screen is a separate decision.
+`message-someone` stays blocked on it.
 
 ### 69 · The canvas splits by domain · *tooling* · **ruled 2026-09-14**
 

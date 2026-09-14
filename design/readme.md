@@ -2950,11 +2950,17 @@ whole canvas rather than a fix to one board.
   label saying what the code does not do. The statement lives in §2, and
   the Newest ruling above is the same principle read from the label's
   end.
-- **The chats affordance is end-state truth.** `CograBand`'s line and
-  the graph's gap were never in conflict. The band carries chats because
-  messaging belongs on every tab root; the apps draw it the release a
-  chat surface exists to receive the tap. Nothing is redrawn — the edges
-  stay as they are, and the docblock says which half is the end state.
+- **The chats affordance ships before messaging does**, and taps into
+  `ChatsComingSoon` (ruled 2026-09-14). The band carries chats because
+  messaging belongs on every tab root, and that corner is the same
+  corner on every root — pulling the icon until a chat surface exists
+  would move the bell on every band and move it back later, costing
+  every reader the muscle memory twice to save one screen. So the icon
+  stands and the tap lands on a screen that says what is behind the
+  door. A guest's band still gates instead: `Main`, `FeedBare` and
+  `WalletGuest` send chats to `GuestGate`, because a guest has no chats
+  to come back to. The *Message* control on another's profile is a
+  different affordance and still owes its own destination.
 - **The guest and applicant bands ship now; the rank waits.** A band
   that names whose view this is tells the truth the moment it is drawn,
   and the vantage it names — the genesis moderator for a bare arrival,
