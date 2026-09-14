@@ -16,7 +16,7 @@ export function Screen() {
         <ReferenceRow kind="comment" name="The wax-stick ones read like weather charts…" sub="on Salt flats at first light" value="2.10" onOpen={() => {}} />
         <Seam />
         <ReferenceRow kind="offer" name="An offer by @sol" sub="on Salt shaker, glazed ceramic" value="2d" onOpen={() => {}} />
-        <ReferenceRow kind="chat" name="Crust held all the way past the slipway today." sub="in Coast walkers" value="1w" onOpen={() => {}} />
+        <ReferenceRow kind="chat" name="Crust held all the way past the slipway today." sub="in Coast walkers" value="7d" onOpen={() => {}} />
       </Column>
       <BottomNav active="search" slots={ALL_SLOTS} inline />
     </>
