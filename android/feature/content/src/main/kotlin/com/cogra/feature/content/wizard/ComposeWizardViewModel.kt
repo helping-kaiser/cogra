@@ -99,6 +99,15 @@ class ComposeWizardViewModel @Inject constructor(
      */
     private var uploadSession: String? = null
 
+    /** Everything the wizard reads off the device (`WizardMediaReader`). */
+    private val mediaReader = WizardMediaReader(
+        scope = viewModelScope,
+        state = _state,
+        video = video,
+        processor = processor,
+        deviceMedia = deviceMedia,
+    )
+
     private val sections = SectionsEditor(
         scope = viewModelScope,
         references = references,
@@ -166,11 +175,11 @@ class ComposeWizardViewModel @Inject constructor(
         armed = true
         // A restored media draft re-reads every asset's shape: the crop
         // preview needs it, and the URIs may no longer resolve.
-        _state.value.picked.forEach { readSourceRatio(it.uri) }
-        restoreClipKind()
+        _state.value.picked.forEach { mediaReader.readSourceRatio(it.uri) }
+        mediaReader.restoreClipKind()
         // A draft can be days old and the library has moved on since;
         // one query is cheaper than showing a stale roll.
-        refreshDeviceMedia()
+        mediaReader.refreshDeviceMedia()
     }
 
     fun onDiscardDraft() {
@@ -302,7 +311,7 @@ class ComposeWizardViewModel @Inject constructor(
             when {
                 // A picture's own ratio is read from its header for the
                 // crop preview; a clip already stated its shape above.
-                after > before && clip == null -> readSourceRatio(uri)
+                after > before && clip == null -> mediaReader.readSourceRatio(uri)
                 // Replaced rather than added: whatever the previous body
                 // was uploading is no longer part of this post.
                 after <= before -> cancelUploadsExcept(uri)
@@ -333,42 +342,6 @@ class ComposeWizardViewModel @Inject constructor(
 
     // -- The video's face (`ComposeCover`) --
 
-    /**
-     * Lifts the offered frames out of the clip.
-     *
-     * Called on entering the stage rather than at pick time: extracting
-     * frames costs a decode per frame, and an author who picked a clip
-     * and then changed their mind should not have paid for it.
-     *
-     * A successful extraction settles [CoverChoice.None] on the first
-     * offered frame — but only while the author is still on the cover
-     * stage and has not chosen anything else. An author who moved on
-     * before extraction finished meant to go without a face, and this
-     * must not reach back and give them one after the fact; an author
-     * who tapped a frame or a picture already has their own answer to
-     * keep. Extraction coming back empty leaves [CoverChoice.None]
-     * standing — there is nothing here to settle it on.
-     */
-    private fun loadCoverFrames() {
-        val clip = _state.value.video ?: return
-        if (_state.value.coverFrames.isNotEmpty()) return
-        viewModelScope.launch {
-            val frames = video.coverFrames(clip.uri, COVER_FRAME_COUNT)
-            _state.update { current ->
-                val settledChoice = if (
-                    current.step == WizardStep.Cover &&
-                    current.coverChoice is CoverChoice.None &&
-                    frames.isNotEmpty()
-                ) {
-                    CoverChoice.Frame(0)
-                } else {
-                    current.coverChoice
-                }
-                current.copy(coverFrames = frames, coverChoice = settledChoice)
-            }
-        }
-    }
-
     fun onPickCoverFrame(index: Int) =
         _state.update { it.copy(coverChoice = CoverChoice.Frame(index), coverMediaId = null) }
 
@@ -391,53 +364,7 @@ class ComposeWizardViewModel @Inject constructor(
      * granted — including a re-grant, since a partial grant may have
      * gained pictures since the last look.
      */
-    fun onMediaPermissionGranted() = refreshDeviceMedia()
-
-    /**
-     * Re-reads the roll into the grid.
-     *
-     * Safe to call without a permission: the source answers an empty list
-     * rather than throwing, so a caller never has to ask first.
-     */
-    private fun refreshDeviceMedia() {
-        viewModelScope.launch {
-            _state.update { it.copy(deviceMedia = deviceMedia.newestMedia(DEVICE_MEDIA_PAGE)) }
-        }
-    }
-
-    /**
-     * Re-reads whether a restored single pick is a clip.
-     *
-     * A held draft stores a URI and its words, not what kind of thing
-     * the URI is — so a restored video would otherwise come back as a
-     * one-picture gallery and be sent to the crop stage it never had.
-     * Only a lone pick can be a clip, which is the same rule the toggle
-     * enforces, so nothing else needs asking.
-     */
-    private fun restoreClipKind() {
-        val only = _state.value.picked.singleOrNull() ?: return
-        viewModelScope.launch {
-            val clip = video.info(only.uri) ?: return@launch
-            _state.update { state ->
-                state.copy(
-                    picked = state.picked.map {
-                        if (it.uri == only.uri) {
-                            it.copy(durationMs = clip.durationMs, sourceRatio = clip.aspectRatio)
-                        } else {
-                            it
-                        }
-                    },
-                )
-            }
-        }
-    }
-
-    private fun readSourceRatio(uri: String) {
-        viewModelScope.launch {
-            val ratio = processor.aspectRatio(uri) ?: return@launch
-            _state.update { it.withSourceRatio(uri, ratio) }
-        }
-    }
+    fun onMediaPermissionGranted() = mediaReader.refreshDeviceMedia()
 
     // -- Details (`ComposeDetails`) --
 
@@ -546,7 +473,7 @@ class ComposeWizardViewModel @Inject constructor(
         if (current.step == WizardStep.Cover) startVideoUpload()
         _state.value = next
         // Entering the cover stage is what pays for the frames.
-        if (next.step == WizardStep.Cover) loadCoverFrames()
+        if (next.step == WizardStep.Cover) mediaReader.loadCoverFrames()
     }
 
     /**
@@ -603,7 +530,17 @@ class ComposeWizardViewModel @Inject constructor(
     fun onSensitiveReasonChange(reason: String) =
         _state.update { it.copy(sensitiveReason = reason) }
 
-    fun onOpenSheet(sheet: SealSheet) = _state.update { it.copy(sheet = sheet) }
+    /**
+     * Opening the pad starts it from the stance that is standing, so
+     * Cancel can put it back exactly.
+     */
+    fun onOpenSheet(sheet: SealSheet) = _state.update {
+        if (sheet == SealSheet.Stance) {
+            it.copy(sheet = sheet, stagedPDirected = it.pDirected)
+        } else {
+            it.copy(sheet = sheet)
+        }
+    }
 
     fun onCloseSheet() = _state.update { it.closedSheets() }
 
@@ -642,7 +579,11 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onLicenseChange(license: LicenseChoice) = _state.update { it.copy(license = license) }
 
-    fun onPDirectedChange(value: Double) = _state.update { it.copy(pDirected = value) }
+    /** A drag on the pad's field: staged, not set (`ComposePad`). */
+    fun onPDirectedChange(value: Double) = _state.update { it.copy(stagedPDirected = value) }
+
+    /** The pad's Set — the one gesture that moves the stance the seal reads. */
+    fun onSetStance() = _state.update { it.copy(pDirected = it.stagedPDirected).closedSheets() }
 
     // -- Uploads (D5: one call per asset, concurrent, retryable) --
 

@@ -12,7 +12,7 @@ export declare const STANCE_EXPLANATION: string;
 
 /**
  * What the pad's `?` opens: what the field means, what commits, why the pick and
- * the resulting stance are different numbers, and what severing costs. It replaces
+ * the resulting opinion are different numbers, and what severing costs. It replaces
  * the pad's body rather than growing below it — the pad is parked, and a panel
  * that pushes Set away from the thumb defeats the parking.
  */

@@ -121,6 +121,36 @@ export function padPairFrom(
 }
 
 /**
+ * THE SAME TRAVEL RULE WITH ONE AXIS IN IT — the one-axis field an
+ * author's opinion on their own post is picked on (`ComposePad.jsx`).
+ *
+ * Half the span the knob's centre can travel, measured across the field
+ * rather than on its shorter side: a 260×72 line has no second axis to
+ * be limited by, and taking the minimum would scale the whole pick to
+ * the field's height.
+ */
+export function valenceTravelHalfExtent(rect: PadRect, inset: number): number {
+  return Math.max(0, rect.width / 2 - inset);
+}
+
+/**
+ * The value this much horizontal travel picks STARTING FROM `base`, by
+ * the same accumulated-travel rule the square uses — so one pad's finger
+ * and the other's move their knobs alike. Clamped once, on the sum; a
+ * field with no travel in it keeps the base rather than dividing by zero.
+ */
+export function valenceFrom(
+  base: number,
+  rect: PadRect,
+  dx: number,
+  inset: number,
+): number {
+  const halfExtent = valenceTravelHalfExtent(rect, inset);
+  if (halfExtent === 0) return clampDimension(base);
+  return clampDimension(base + dx / halfExtent);
+}
+
+/**
  * Where the knob for this pair sits, as a percentage of the TRAVEL BOX —
  * the inset box the component draws inside the field — so the component
  * positions it in CSS without re-measuring on resize. `(±1, ±1)` is that

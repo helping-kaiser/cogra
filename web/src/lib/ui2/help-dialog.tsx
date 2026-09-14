@@ -115,6 +115,20 @@ export const HELP_TOPICS = {
       "The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.",
     ],
   },
+  // The post's one-axis pad. Its own topic, not the reply pad's: a
+  // reply's stance is toward somebody else's post, where both axes are
+  // the author's to pick, and this text says the opposite.
+  //
+  // The parenthesised number and the two faces are copy-voice's own —
+  // the guideline italicises `(+0.10)` as a `cg-exact` span, and neither
+  // app draws geek mode yet, so the text carries it as written.
+  yourOpinionOnYourPost: {
+    title: "Your opinion on your post",
+    paragraphs: [
+      "Publishing also signs your opinion on your own post — for or against, from a gentle 🙂 (+0.10) by default.",
+      "Your own post always reaches you in full, so only for-or-against is yours to set. The face is the reading: six of them run from 😠 at one end to 😍 at the other, and the one you see is wherever your number lands. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.",
+    ],
+  },
   yourKey: {
     title: "Your key",
     paragraphs: [

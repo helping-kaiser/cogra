@@ -109,8 +109,8 @@ export function SensitiveVeil({
        thing and a second wash over the other. The whole body is replaced by ONE
        block instead: words and pictures together, at the scale of the card it
        sits in. What stays outside it is the comment's answer to the title
-       staying readable on a post — the author, the timestamp, and the stance a
-       reader can still take, so choosing to look is informed.
+       staying readable on a post — the author, the timestamp, and the opinion a
+       reader can still give, so choosing to look is informed.
 
        The wash is the veil's own, but the type is the THEME's rather than the
        media face's fixed white: that white is legible because the wash lies over

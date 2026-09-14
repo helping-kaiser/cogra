@@ -50,11 +50,16 @@ an unstated domain, so the exclusions are adoption data. They live in
 their own section rather than inside Ω, where they could only appear as
 owner-less path rules pretending to be a partition.
 
-Four sub-lists, because the calculus treats the four differently:
-`exclude_trees` leaves the carrier entirely; `generated_files` stay in
-the carrier in full — under ``inv:labels:generated-compliance`` their
-occurrences mint and cite like any others, excluded only from what the
-region presents, and their bytes stay exactness-checked, which is what
+Five sub-lists, because the calculus treats the four leaving the carrier
+outright differently from one another, plus one more added by R28:
+`exclude_trees` leaves the carrier entirely by literal path prefix;
+`exclude_build_dirs` also leaves the carrier entirely, by literal
+directory name recurring beneath a literal root, for the one shape a
+flat prefix list cannot express without enumerating every module (R28);
+`generated_files` stay in the carrier in full — under
+``inv:labels:generated-compliance`` their occurrences mint and cite like
+any others, excluded only from what the region presents, and their
+bytes stay exactness-checked, which is what
 ``rule:linter:register-freshness`` needs; `vendored_trees` is reserved
 for the generated Kotlin parser of ``dec:linter:kotlin-tree-sitter``;
 `vendored_files` holds `docs/primitive/layer1-interface.md` (R2).
@@ -713,6 +718,29 @@ differ. The pilot wave closed over `pkg.cogra-linter` alone — its own
 discipline's tests — and the other five owners with covered assets are
 counted in `report` and reported nowhere until their waves land.
 
+**R28 — Per-module build output is excluded by literal directory name,
+never by enumerating modules.** Lane L13 found (2026-09-14) that
+`exclude_trees` named only `android/build/` and `android/app/build/` by
+hand, so any other Gradle module's own `build/` tree — one per module,
+15 modules deep — stayed inside the carrier. A local `detekt` run over
+an uncaught module left generated report files (`detekt.md` and
+siblings) for `cogra-lint check` to trip on, invisibly to CI, whose
+checkouts are always clean. The fix keeps the conventions section's own
+rule that path prefixes carry no pattern dialect (``dec:linter:no-regex``
+extended to configuration) and the carrier module's refusal of a
+directory-walking dependency (``dec:lint:refused-dependencies``): a new
+`[[carrier.exclude_build_dirs]]` row names one literal root and one
+literal directory-component name, matched by exact, per-component string
+equality against every path beneath that root — no wildcard, no `**`, no
+glob crate, and no new dependency. `android/build/` and
+`android/app/build/` are removed from `exclude_trees` as redundant, both
+being instances of the one new row (`root = "android/"`,
+`name = "build"`); the corpus's source count is unchanged on a clean
+checkout, where no directory named `build` exists anywhere to begin
+with — verified empirically, not only by construction, against the
+pre-fix code on an identical tree (2265 sources either way; see
+Measurements).
+
 ---
 
 ## Measurements
@@ -751,3 +779,4 @@ corpus: a slice that adds Rust sources re-measures them.
 | Covered tests, whole corpus (2026-08-31) | 1859, by the claim census: `pkg.cogra-linter` 842, `pkg.cogra-interchange` 474, `pkg.api` 348, `pkg.common` 118, `pkg.postgres-store` 62, `pkg.l1-standin` 15 |
 | Claims after the pilot wave (2026-08-31) | 842 tests claimed, 685 minting and 157 citing a sibling's, over 37 thematic areas; `pkg.cogra-linter` at 0 unclaimed, the other five owners counted and reported nowhere |
 | Claim areas in live use (2026-08-31) | 37, the largest `grammar` 84, `markdown` 73, `lexer` 71, `adoption` 67; the vocabulary is free and censused rather than declared |
+| Corpus source count, clean checkout (2026-09-14) | 2265, identical before and after R28's fix — measured against the pre-fix code on the same pristine tree, not inferred; with a local `:core:crypto:detekt` run's generated reports present under three separate `build/` trees (`android/build`, `android/build-logic/build`, `android/core/crypto/build`), the pre-fix count rose to 2384 with 1 finding and the post-fix count returned to 2265 with 0 |

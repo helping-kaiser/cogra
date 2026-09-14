@@ -5,7 +5,7 @@
  *
  * Glyph only, and no number: a share count would be a public tally of something
  * the graph does not record. `PostCard` draws it last in the action row, whose
- * order — stance, score, comment, share — is both its order of importance and
+ * order — opinion, score, comment, share — is both its order of importance and
  * the queue by which it gives way: share moves into the ⋮ menu first.
  */
 export interface ShareButtonProps {

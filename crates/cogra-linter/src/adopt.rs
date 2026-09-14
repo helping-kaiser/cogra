@@ -142,6 +142,76 @@ impl fmt::Display for PathPrefix {
     }
 }
 
+/// A literal directory name excluded wherever it recurs beneath a literal
+/// root tree.
+///
+/// This introduces no pattern dialect and no regular-expression engine, in
+/// keeping with the fixed constraints the linter's own architecture states
+/// for recognition generally, extended here to adoption data. `root` is an
+/// ordinary [`PathPrefix`] tree, `name` is one literal path component
+/// compared for byte-exact equality against every component of a candidate
+/// path taken after `root`, and matching is a plain walk over components an
+/// ordinary path split already gives — no wildcard, no double-star, no glob
+/// syntax anywhere in the adoption data. A build tool that nests its output
+/// one module deeper needs no new row at all: `name` already matches at
+/// every depth.
+///
+/// This is the literal-only answer to the one shape [`PathPrefix`] alone
+/// cannot express without enumeration: a per-module build directory, created
+/// by a build system this corpus does not control, at a depth the adoption
+/// data would otherwise have to name once per module.
+///
+/// ```
+/// use cogra_linter::{BuildDirExclusion, PathPrefix};
+/// use std::path::Path;
+///
+/// let exclusion = BuildDirExclusion::new(PathPrefix::new("android/"), "build");
+/// assert!(exclusion.matches(Path::new("android/core/crypto/build/reports/detekt.md")));
+/// assert!(exclusion.matches(Path::new("android/build/outputs/apk/debug.apk")));
+/// assert!(!exclusion.matches(Path::new("android/core/crypto/src/main/Crypto.kt")));
+/// assert!(!exclusion.matches(Path::new("web/build/index.html")));
+/// ```
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+pub struct BuildDirExclusion {
+    root: PathPrefix,
+    name: Box<str>,
+}
+
+impl BuildDirExclusion {
+    /// An exclusion of every directory literally named `name`, anywhere
+    /// beneath `root`.
+    #[must_use]
+    pub fn new(root: PathPrefix, name: &str) -> BuildDirExclusion {
+        BuildDirExclusion {
+            root,
+            name: Box::from(name),
+        }
+    }
+
+    /// Whether `path`, taken relative to the corpus root, lies under a
+    /// directory named `name` somewhere beneath `root`.
+    ///
+    /// `path` itself matches when its own final component is `name` — the
+    /// excluded directory is excluded as a tree, not merely its contents —
+    /// exactly as `PathPrefix`'s own tree semantics already work.
+    #[must_use]
+    pub fn matches(&self, path: &Path) -> bool {
+        let relative = relative_str(path);
+        let Some(under_root) = relative.strip_prefix(self.root.as_str()) else {
+            return false;
+        };
+        under_root
+            .split('/')
+            .any(|component| component == &*self.name)
+    }
+}
+
+impl fmt::Display for BuildDirExclusion {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "any {} directory beneath {}", self.name, self.root)
+    }
+}
+
 /// A path as the adoption data spells paths: relative, `/`-separated.
 ///
 /// The corpus is described in one spelling whatever filesystem carries it,
@@ -501,6 +571,12 @@ pub struct Meta {
 pub struct Carrier {
     /// Version-control internals, build outputs, dependency trees.
     pub exclude_trees: Vec<PathPrefix>,
+    /// Build-tool output directories excluded by literal name, recurring at
+    /// any depth beneath a literal root — the one shape a per-module build
+    /// (one directory per Gradle module, say) needs that a flat list of
+    /// [`PathPrefix`] trees could otherwise only express by enumerating
+    /// every module. See `docs/adoption-notes.md`, ruling R28.
+    pub exclude_build_dirs: Vec<BuildDirExclusion>,
     /// Committed generated files: in the carrier in full.
     pub generated_files: Vec<PathPrefix>,
     /// Third-party trees kept in-repo.
@@ -519,6 +595,10 @@ impl Carrier {
             .chain(&self.vendored_trees)
             .chain(&self.vendored_files)
             .any(|prefix| prefix.matches_str(&relative))
+            || self
+                .exclude_build_dirs
+                .iter()
+                .any(|exclusion| exclusion.matches(path))
     }
 
     /// Whether `path` is a committed generated file.
@@ -1618,9 +1698,20 @@ impl RawMeta {
 #[derive(serde::Deserialize)]
 struct RawCarrier {
     exclude_trees: Vec<Spanned<PathPrefix>>,
+    #[serde(default)]
+    exclude_build_dirs: Vec<RawBuildDirExclusion>,
     generated_files: Vec<Spanned<PathPrefix>>,
     vendored_trees: Vec<Spanned<PathPrefix>>,
     vendored_files: Vec<Spanned<PathPrefix>>,
+}
+
+/// One `[[carrier.exclude_build_dirs]]` row, with both fields kept spanned:
+/// `root` joins the ordinary spelling check like any other configured path,
+/// and `name` carries its own row for `AdoptionError::MalformedBuildDirName`.
+#[derive(serde::Deserialize)]
+struct RawBuildDirExclusion {
+    root: Spanned<PathPrefix>,
+    name: Spanned<Box<str>>,
 }
 
 /// `[enforcement]`, likewise.
@@ -1773,6 +1864,24 @@ impl RawAdoption {
                 keep(&mut configured, section, prefix, source, origin);
             }
         }
+        let mut exclude_build_dirs = Vec::with_capacity(self.carrier.exclude_build_dirs.len());
+        for raw in self.carrier.exclude_build_dirs {
+            keep(
+                &mut configured,
+                "[carrier] exclude_build_dirs root",
+                &raw.root,
+                source,
+                origin,
+            );
+            let name = raw.name.as_ref();
+            if name.is_empty() || name.contains('/') {
+                return Err(AdoptionError::MalformedBuildDirName {
+                    at: row(&raw.name, source, origin),
+                    name: name.to_string(),
+                });
+            }
+            exclude_build_dirs.push(BuildDirExclusion::new(raw.root.into_inner(), name));
+        }
         configured.push(ConfiguredPath {
             path: PathPrefix::new(self.kinds.registry.as_ref()),
             section: "[kinds] registry",
@@ -1782,6 +1891,7 @@ impl RawAdoption {
             meta,
             carrier: Carrier {
                 exclude_trees: inner(self.carrier.exclude_trees),
+                exclude_build_dirs,
                 generated_files: inner(self.carrier.generated_files),
                 vendored_trees: inner(self.carrier.vendored_trees),
                 vendored_files: inner(self.carrier.vendored_files),
@@ -2248,5 +2358,46 @@ mod tests {
             relative_str(&Path::new("crates").join("api").join("src")),
             "crates/api/src"
         );
+    }
+
+    /// A build-dir exclusion matches its named directory at any depth
+    /// beneath its root, and matches the directory itself as a tree.
+    /// ´claim:paths:a-build-dir-exclusion-matches-at-any-depth´
+    #[test]
+    fn a_build_dir_exclusion_matches_at_any_depth_beneath_its_root() {
+        let exclusion = BuildDirExclusion::new(PathPrefix::new("android/"), "build");
+        assert!(exclusion.matches(Path::new("android/build/outputs/apk/debug.apk")));
+        assert!(exclusion.matches(Path::new(
+            "android/core/crypto/build/reports/detekt/detekt.md"
+        )));
+        assert!(exclusion.matches(Path::new(
+            "android/feature/auth/build/reports/detekt/detekt.md"
+        )));
+    }
+
+    /// A build-dir exclusion matches nothing outside its root, and matches
+    /// neither a sibling directory carrying its name as a substring nor a
+    /// file or directory that merely contains its name as one path segment
+    /// among an unrelated name.
+    /// ´claim:paths:a-build-dir-exclusion-is-scoped-to-its-root´
+    #[test]
+    fn a_build_dir_exclusion_is_scoped_to_its_root_and_component() {
+        let exclusion = BuildDirExclusion::new(PathPrefix::new("android/"), "build");
+        assert!(!exclusion.matches(Path::new("web/build/index.html")));
+        assert!(!exclusion.matches(Path::new("crates/api/build/notes.md")));
+        assert!(!exclusion.matches(Path::new("android/core/crypto/src/main/kotlin/Crypto.kt")));
+        assert!(!exclusion.matches(Path::new("android/build-logic/src/Plugin.kt")));
+    }
+
+    /// A build-dir exclusion's `name` is one literal component, never a
+    /// pattern: a name written with a wildcard character matches only a
+    /// directory spelled with that literal character, exactly as an
+    /// ordinary path prefix carries no pattern dialect.
+    /// ´claim:paths:a-build-dir-exclusion-carries-no-pattern-dialect´
+    #[test]
+    fn a_build_dir_exclusion_carries_no_pattern_dialect() {
+        let exclusion = BuildDirExclusion::new(PathPrefix::new("android/"), "*");
+        assert!(!exclusion.matches(Path::new("android/core/crypto/build/reports/detekt.md")));
+        assert!(exclusion.matches(Path::new("android/*/reports/detekt.md")));
     }
 }
