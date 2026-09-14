@@ -2192,7 +2192,13 @@ Pin the locale (`en-US` or an explicit numbering contract) in both
 formatters and re-render; the U+2212 substitution (item 59, ruled)
 is unaffected.
 
-### 66 · What the image round found out of scope · *design + system*
+### 66 · What the image round found out of scope · *design + system* · **fixed 2026-09-14**
+
+Both fixed same day: `designs/search/img/` now carries `post-photo.jpg`
+(byte-identical to canonical's), and `inviter.jpg` was swapped for a
+640×640 re-crop of its own source photograph
+(`assets/photos/06-portrait-3x4.jpg`, the exact original crop found by
+pixel match) — same face, no reference changes.
 
 Two fixture defects the 2026-09-14 consolidation surfaced and left
 alone:
