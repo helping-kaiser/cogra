@@ -2274,7 +2274,7 @@ count stays in the accessible name. Redraw the master + conform the
 prose; implementation's W3-7 viewer lane grades against the updated
 master (not yet dispatched — the W3 window is the deadline).
 
-Drawn as `ViewerDots` in `MediaViewer.jsx`: **seven slots**, the window
+Drawn as `PagerDots`: **seven slots**, the window
 sliding centred on the current index and clamped to the set's two ends,
 the edge dot on a side with more beyond it drawn at 4px against the
 6px full dot. One smaller size and not a ladder of them, the active dot
@@ -2284,10 +2284,22 @@ pixel-identical: four pictures fit the window whole. The windowed case
 has no board — none of the three viewer boards carries a set past four
 — so it is drawn in the Media card's specimen at m=4, 7 and 10.
 
-**The card's own pager is deliberately untouched.** Item 21's ruling
-governs it and item 67 names the viewer only, so a gallery card still
-draws its set whole — up to the ten-picture authoring cap. Whether the
-window belongs there too is jakob's call, not this round's.
+**The card's pager windows too** (jakob 2026-09-14, "do the same insta
+has done": ten dots under a gallery card is too much). The card and the
+viewer page the same set with the same gesture, so a marker that
+windowed in one and ran long in the other would be two vocabularies for
+one position — the card now draws the identical row, and the reason the
+viewer's row has a ceiling is the reason the card's has one.
+
+One implementation serves both, as `PagerDots`. It lives in
+`MediaAttachment.jsx` rather than the viewer, because the viewer already
+imports `useGlobalMute` from there and the bundler fails on an import
+cycle; the windowing math has one home and neither pager restates it.
+What differs is a `tone`: the page's own ink on a card — `primary` for
+here, the hairline for the rest — and white with a drop shadow over the
+viewer's scrim, where a 6px dot has an unknown photograph behind it.
+The specimen draws both tones at m=4, 7 and 10, since no board carries a
+set past seven.
 
 ### 68 · The chats icon needs its coming-soon screen · *design* · **drawn 2026-09-14**
 
