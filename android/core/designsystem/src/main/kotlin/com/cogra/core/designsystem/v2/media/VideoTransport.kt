@@ -99,80 +99,122 @@ fun VideoTransport(
                     ),
                 ),
         )
-        Row(
+        CentreCluster(
+            playing = playing,
+            onTogglePlay = onTogglePlay,
+            onSkip = onSkip,
             modifier = Modifier.align(Alignment.Center),
-            horizontalArrangement = Arrangement.spacedBy(Space.x6),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            TransportButton(
-                label = stringResource(R.string.designsystem_video_rewind),
-                glyph = Icons.Filled.FastRewind,
-                box = SKIP_DIAMETER,
-                glyphSize = SKIP_GLYPH,
-                onClick = { onSkip(-VideoStage.SKIP_MS) },
-                testTag = "video_rewind",
-            )
-            TransportButton(
-                label = stringResource(
-                    if (playing) R.string.designsystem_video_pause else R.string.designsystem_video_play,
-                ),
-                glyph = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                box = PLAY_DIAMETER,
-                glyphSize = PLAY_GLYPH,
-                plate = MediaOverlay.TransportPlate,
-                onClick = onTogglePlay,
-                testTag = "video_play_pause",
-            )
-            TransportButton(
-                label = stringResource(R.string.designsystem_video_forward),
-                glyph = Icons.Filled.FastForward,
-                box = SKIP_DIAMETER,
-                glyphSize = SKIP_GLYPH,
-                onClick = { onSkip(VideoStage.SKIP_MS) },
-                testTag = "video_forward",
-            )
-        }
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = Space.x3)
-                .padding(bottom = GESTURE_ZONE),
-            horizontalArrangement = Arrangement.spacedBy(Space.x2),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = formatRunningTime(elapsedMs.toInt()),
-                style = MaterialTheme.typography.labelSmall,
-                color = MediaOverlay.BadgeInk,
-                modifier = Modifier.testTag("video_elapsed"),
-            )
-            Timeline(
-                progress = progress,
-                onSeek = onSeek,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = formatRunningTime(durationMs.toInt()),
-                style = MaterialTheme.typography.labelSmall,
-                color = MediaOverlay.BadgeInk.copy(alpha = TOTAL_ALPHA),
-                modifier = Modifier.testTag("video_duration"),
-            )
-            TransportButton(
-                label = stringResource(
-                    if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute,
-                ),
-                glyph = if (muted) {
-                    Icons.AutoMirrored.Filled.VolumeOff
-                } else {
-                    Icons.AutoMirrored.Filled.VolumeUp
-                },
-                box = BAR_CONTROL,
-                glyphSize = BAR_GLYPH,
-                onClick = onToggleMute,
-                testTag = "video_mute",
-            )
-        }
+        )
+        Bar(
+            elapsedMs = elapsedMs,
+            durationMs = durationMs,
+            progress = progress,
+            muted = muted,
+            onSeek = onSeek,
+            onToggleMute = onToggleMute,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
+    }
+}
+
+/**
+ * The big centred play/pause, flanked by the skips.
+ *
+ * Centred, "because the thumb that reaches for it is not aiming at a corner,
+ * and it is the control the reader wants most often" (`VideoControls.jsx:19`).
+ */
+@Composable
+private fun CentreCluster(
+    playing: Boolean,
+    onTogglePlay: () -> Unit,
+    onSkip: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(Space.x6),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        TransportButton(
+            label = stringResource(R.string.designsystem_video_rewind),
+            glyph = Icons.Filled.FastRewind,
+            box = SKIP_DIAMETER,
+            glyphSize = SKIP_GLYPH,
+            onClick = { onSkip(-VideoStage.SKIP_MS) },
+            testTag = "video_rewind",
+        )
+        TransportButton(
+            label = stringResource(
+                if (playing) R.string.designsystem_video_pause else R.string.designsystem_video_play,
+            ),
+            glyph = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+            box = PLAY_DIAMETER,
+            glyphSize = PLAY_GLYPH,
+            plate = MediaOverlay.TransportPlate,
+            onClick = onTogglePlay,
+            testTag = "video_play_pause",
+        )
+        TransportButton(
+            label = stringResource(R.string.designsystem_video_forward),
+            glyph = Icons.Filled.FastForward,
+            box = SKIP_DIAMETER,
+            glyphSize = SKIP_GLYPH,
+            onClick = { onSkip(VideoStage.SKIP_MS) },
+            testTag = "video_forward",
+        )
+    }
+}
+
+/** Elapsed · the timeline · total · the sound, held clear of the gesture zone. */
+@Composable
+private fun Bar(
+    elapsedMs: Long,
+    durationMs: Long,
+    progress: Float,
+    muted: Boolean,
+    onSeek: (Float) -> Unit,
+    onToggleMute: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = Space.x3)
+            .padding(bottom = GESTURE_ZONE),
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = formatRunningTime(elapsedMs.toInt()),
+            style = MaterialTheme.typography.labelSmall,
+            color = MediaOverlay.BadgeInk,
+            modifier = Modifier.testTag("video_elapsed"),
+        )
+        Timeline(
+            progress = progress,
+            onSeek = onSeek,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = formatRunningTime(durationMs.toInt()),
+            style = MaterialTheme.typography.labelSmall,
+            color = MediaOverlay.BadgeInk.copy(alpha = TOTAL_ALPHA),
+            modifier = Modifier.testTag("video_duration"),
+        )
+        TransportButton(
+            label = stringResource(
+                if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute,
+            ),
+            glyph = if (muted) {
+                Icons.AutoMirrored.Filled.VolumeOff
+            } else {
+                Icons.AutoMirrored.Filled.VolumeUp
+            },
+            box = BAR_CONTROL,
+            glyphSize = BAR_GLYPH,
+            onClick = onToggleMute,
+            testTag = "video_mute",
+        )
     }
 }
 

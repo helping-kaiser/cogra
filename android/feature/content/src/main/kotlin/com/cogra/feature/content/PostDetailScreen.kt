@@ -453,68 +453,95 @@ private fun PostDetailBody(
             verticalArrangement = Arrangement.spacedBy(Space.x2),
         ) {
             item {
-                Card(modifier = Modifier.fillMaxWidth().testTag("detail_card")) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(Space.x4),
-                        verticalArrangement = Arrangement.spacedBy(Space.x1),
-                    ) {
-                        // PEOPLE FIRST: the author leads, above the content
-                        // and never below it as a byline — including on a
-                        // media post. On the video detail the clip is above
-                        // the CARD, so the chip leads the card rather than
-                        // the screen.
-                        ContentCardHeader(
-                            author = post.author,
-                            at = post.createdAt,
-                            onOpenActor = onOpenActor,
-                            testTagPrefix = "detail",
-                        )
-                        // The title titles the thing, so it stands above the
-                        // media rather than in the bar: below the picture it
-                        // would read as a caption, and the caption as a
-                        // second one. The detail is the read surface, so it
-                        // never clamps.
-                        post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.headlineSmall,
-                                modifier = Modifier.testTag("detail_title"),
-                            )
-                        }
-                        // Media, words and description are one region because
-                        // the veil covers them as one state (D12); the title
-                        // stays outside it.
-                        PostBody(
-                            content = post.content,
-                            description = post.description,
-                            attachments = post.attachments,
-                            attachmentsStatus = post.attachmentsStatus,
-                            moderation = post.moderation,
-                            testTagPrefix = "detail",
-                            modifier = Modifier.testTag("detail_body"),
-                            bleed = Space.x4,
-                            mediaPinned = pinned != null,
-                            // The same set the feed reads: a reader who
-                            // already chose to look at this post is not asked
-                            // again on the way in.
-                            revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
-                            onReveal = { onReveal(post.id, post.sensitiveMark()) },
-                        )
-                        DetailCardFoot(
-                            post = post,
-                            removed = removed,
-                            onOpenTopic = onOpenTopic,
-                            onOpenActor = onOpenActor,
-                            onOpenPost = onOpenPost,
-                            onOpenComments = onOpenComments,
-                            onShare = onShare,
-                            stanceControl = stanceControl,
-                        )
-                    }
-                }
+                DetailCard(
+                    state = state,
+                    post = post,
+                    removed = removed,
+                    mediaPinned = pinned != null,
+                    onReveal = onReveal,
+                    onOpenActor = onOpenActor,
+                    onOpenTopic = onOpenTopic,
+                    onOpenPost = onOpenPost,
+                    onOpenComments = onOpenComments,
+                    onShare = onShare,
+                    stanceControl = stanceControl,
+                )
             }
+        }
+    }
+}
+
+/** The post itself, as the card it wears on every surface. */
+@Composable
+private fun DetailCard(
+    state: PostDetailUiState,
+    post: PostView,
+    removed: Boolean,
+    /** The clip is pinned above this card, so the body draws no gallery. */
+    mediaPinned: Boolean,
+    onReveal: (String, SensitiveMark) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
+    onOpenPost: (String) -> Unit,
+    onOpenComments: () -> Unit,
+    onShare: (String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth().testTag("detail_card")) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Space.x4),
+            verticalArrangement = Arrangement.spacedBy(Space.x1),
+        ) {
+            // PEOPLE FIRST: the author leads, above the content and never
+            // below it as a byline — including on a media post. On the video
+            // detail the clip is above the CARD, so the chip leads the card
+            // rather than the screen.
+            ContentCardHeader(
+                author = post.author,
+                at = post.createdAt,
+                onOpenActor = onOpenActor,
+                testTagPrefix = "detail",
+            )
+            // The title titles the thing, so it stands above the media rather
+            // than in the bar: below the picture it would read as a caption,
+            // and the caption as a second one. The detail is the read surface,
+            // so it never clamps.
+            post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.testTag("detail_title"),
+                )
+            }
+            // Media, words and description are one region because the veil
+            // covers them as one state (D12); the title stays outside it.
+            PostBody(
+                content = post.content,
+                description = post.description,
+                attachments = post.attachments,
+                attachmentsStatus = post.attachmentsStatus,
+                moderation = post.moderation,
+                testTagPrefix = "detail",
+                modifier = Modifier.testTag("detail_body"),
+                bleed = Space.x4,
+                mediaPinned = mediaPinned,
+                // The same set the feed reads: a reader who already chose to
+                // look at this post is not asked again on the way in.
+                revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
+                onReveal = { onReveal(post.id, post.sensitiveMark()) },
+            )
+            DetailCardFoot(
+                post = post,
+                removed = removed,
+                onOpenTopic = onOpenTopic,
+                onOpenActor = onOpenActor,
+                onOpenPost = onOpenPost,
+                onOpenComments = onOpenComments,
+                onShare = onShare,
+                stanceControl = stanceControl,
+            )
         }
     }
 }

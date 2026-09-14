@@ -334,27 +334,11 @@ fun VideoPlayer(
         // rather than joining it: the sound decision rides the bar, because a
         // disc beside a bar is two pieces of chrome for one clip.
         if (controls == VideoControls.Full && player != null) {
-            // Media3's own progress holder rather than a hand-rolled ticker:
-            // it polls the player on an interval and stops when the
-            // composition leaves, which is exactly the loop a timeline needs
-            // and the one every player writes wrong.
-            val progressState = rememberProgressStateWithTickInterval(player, TICK_MS)
-            val length = progressState.durationMs.takeIf { it > 0 }
-                ?: durationMs?.toLong()
-                ?: 0L
-            val position = progressState.currentPositionMs.coerceAtLeast(0L)
-            VideoTransport(
+            FullTransport(
+                player = player,
                 playing = playing,
-                elapsedMs = position,
-                durationMs = length,
-                progress = if (length > 0) position.toFloat() / length else 0f,
                 muted = muted,
-                onTogglePlay = { if (playing) player.pause() else player.play() },
-                // The player's own seek commands, so the increment it was
-                // built with is the one every path uses.
-                onSkip = { step -> if (step < 0) player.seekBack() else player.seekForward() },
-                onSeek = { at -> if (length > 0) player.seekTo((at * length).toLong()) },
-                onToggleMute = VideoSound::toggle,
+                recordDurationMs = durationMs,
                 modifier = Modifier.align(Alignment.Center),
             )
         }
@@ -367,6 +351,46 @@ fun VideoPlayer(
             }
         }
     }
+}
+
+/**
+ * The transport, bound to the clip on stage.
+ *
+ * Media3's own progress holder rather than a hand-rolled ticker: it polls the
+ * player on an interval and stops when the composition leaves, which is
+ * exactly the loop a timeline needs and the one every player writes wrong
+ * (`androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval`).
+ *
+ * @param recordDurationMs the length the record states, which stands until the
+ *   player has read one off the file — a bar reading `0:00` over a clip the
+ *   reader can see is longer says something false.
+ */
+@OptIn(UnstableApi::class)
+@Composable
+private fun FullTransport(
+    player: Player,
+    playing: Boolean,
+    muted: Boolean,
+    recordDurationMs: Int?,
+    modifier: Modifier = Modifier,
+) {
+    val progress = rememberProgressStateWithTickInterval(player, TICK_MS)
+    val length = progress.durationMs.takeIf { it > 0 } ?: recordDurationMs?.toLong() ?: 0L
+    val position = progress.currentPositionMs.coerceAtLeast(0L)
+    VideoTransport(
+        playing = playing,
+        elapsedMs = position,
+        durationMs = length,
+        progress = if (length > 0) position.toFloat() / length else 0f,
+        muted = muted,
+        onTogglePlay = { if (playing) player.pause() else player.play() },
+        // The PLAYER's own seek commands, so the increment it was built with
+        // is the one every path uses.
+        onSkip = { step -> if (step < 0) player.seekBack() else player.seekForward() },
+        onSeek = { at -> if (length > 0) player.seekTo((at * length).toLong()) },
+        onToggleMute = VideoSound::toggle,
+        modifier = modifier,
+    )
 }
 
 /**

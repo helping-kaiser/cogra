@@ -105,14 +105,15 @@ object VideoStage {
                 // (developer.android.com/media/media3/exoplayer/listening-to-player-events).
                 .setSeekBackIncrementMs(SKIP_MS)
                 .setSeekForwardIncrementMs(SKIP_MS)
-                .build().apply {
-                setMediaItem(Media3Item.fromUri(url))
-                // A clip on a card loops: it is a moment rather than a
-                // programme, and the alternative is a card that goes
-                // still and dead while the reader is still looking.
-                repeatMode = Player.REPEAT_MODE_ONE
-                prepare()
-            },
+                .build()
+                .apply {
+                    setMediaItem(Media3Item.fromUri(url))
+                    // A clip on a card loops: it is a moment rather than a
+                    // programme, and the alternative is a card that goes
+                    // still and dead while the reader is still looking.
+                    repeatMode = Player.REPEAT_MODE_ONE
+                    prepare()
+                },
             owner = token,
         )
     }
