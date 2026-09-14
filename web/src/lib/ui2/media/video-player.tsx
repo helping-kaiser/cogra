@@ -38,6 +38,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { isMuted, setMuted, useMuted } from "./mute";
+import { formatDuration } from "./video";
+import { SKIP_SECONDS, VideoTransport } from "./video-transport";
 import { claim, surrender } from "./video-stage";
 
 /** Enough of the frame in view to be worth playing — android's gate, blessed
@@ -45,7 +47,8 @@ import { claim, surrender } from "./video-stage";
 const VISIBLE_ENOUGH = 0.7;
 
 /**
- * How much of a player a surface gets.
+ * How much of a player a surface gets — the control ladder, as a type
+ * (design/readme.md, "The control ladder").
  *
  * `reading` is the comment's form (design/backlog.md item 31, round 2 point 2,
  * drawn by ReplyMedia): the clip wears ONE control — the sound — and no
@@ -53,8 +56,23 @@ const VISIBLE_ENOUGH = 0.7;
  * player you operate, and a transport bar on a 220px square inside a thread is
  * more chrome than content. The sound still has to be reachable, because
  * autoplay is muted and a reader must be able to hear what was posted.
+ *
+ * `full` is the feed card's, and it wears the same one control: "a feed card
+ * wears the sound control and nothing else — no play/pause, no duration pill,
+ * at both scales". Presence on screen is the whole policy there.
+ *
+ * `transport` is the ladder's second rung — the post detail's pinned clip, and
+ * the fullscreen viewer after it. The reader opened this clip on purpose, so
+ * the transport is real: play/pause, the skips, and a timeline that takes a tap
+ * anywhere or a drag along it. The sound moves INTO the bar there, which is why
+ * the disc is not drawn beside it.
  */
-export type PlayerSurface = "full" | "reading";
+export type PlayerSurface = "full" | "reading" | "transport";
+
+/** How long the chrome stays up after the reader last touched it. The board
+ * draws the revealed state because "a board of the hidden state is a board of a
+ * video" (`VideoControls.jsx:35-37`); this is the hide it auto-hides on. */
+const CHROME_LINGER_MS = 3_000;
 
 export function VideoPlayer({
   src,
@@ -64,13 +82,15 @@ export function VideoPlayer({
   autoplay = true,
   surface = "full",
   framed = false,
+  durationMs,
 }: {
   src: string;
   /** The video's face. Null when there is none, or when it was redacted. */
   poster?: string | null;
   altText?: string | null;
-  /** Not rendered — no surface wears a duration pill. Kept so a caller can
-   * still pass the contract's field through without a type error. */
+  /** The record's own running time. No surface wears a duration PILL; the
+   * transport's bar draws the total, and this is what it shows until the
+   * element's own metadata lands with the authoritative number. */
   durationMs?: number | null;
   testId?: string;
   autoplay?: boolean;
@@ -84,6 +104,16 @@ export function VideoPlayer({
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const muted = useMuted();
+  const transport = surface === "transport";
+  // The clip's own clock, read off the element rather than held beside it: the
+  // element is the truth about where playback is, and a second copy ticking on
+  // its own would disagree with it the moment a seek or a stall happened.
+  const [playing, setPlaying] = useState(false);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [lengthSec, setLengthSec] = useState<number | null>(null);
+  // The chrome is drawn revealed and hides itself; a tap on the video brings it
+  // back (`design/designs/canonical/screens/PostDetailVideo.jsx:13-15`).
+  const [chromeShown, setChromeShown] = useState(true);
   // Identity, not value: the stage tells surfaces apart by object identity
   // (mirroring VideoStage.kt's `token: Any`). `useState`'s lazy initializer
   // runs once and its result is stable across re-renders — unlike
@@ -141,7 +171,33 @@ export function VideoPlayer({
     };
   }, [autoplay, src, stageToken]);
 
+  // The chrome only hides over a clip that is RUNNING. Hiding it over a paused
+  // clip would leave the reader with a still picture and no way back to the
+  // controls short of guessing that the picture is tappable.
+  useEffect(() => {
+    if (!transport || !chromeShown || !playing) return;
+    const timer = window.setTimeout(() => setChromeShown(false), CHROME_LINGER_MS);
+    return () => window.clearTimeout(timer);
+  }, [transport, chromeShown, playing]);
+
   const reading = surface === "reading";
+  // The element's own metadata is authoritative — it is what a seek lands
+  // against — and the record's number stands in until it arrives, so the bar
+  // does not read "0:00" over a clip the reader can see is longer than that.
+  const totalSec = lengthSec ?? (durationMs != null ? durationMs / 1000 : null);
+  const progress = totalSec && totalSec > 0 ? elapsedSec / totalSec : 0;
+
+  const seekTo = (seconds: number) => {
+    const video = ref.current;
+    if (!video) return;
+    const end = Number.isFinite(video.duration) ? video.duration : (totalSec ?? 0);
+    const to = Math.max(0, Math.min(end, seconds));
+    video.currentTime = to;
+    // Read back at once rather than waiting for `timeupdate`: the event fires
+    // a few times a second, and a knob that lags the thumb dragging it reads
+    // as a broken control.
+    setElapsedSec(to);
+  };
 
   return (
     <span className="relative block size-full">
@@ -161,6 +217,24 @@ export function VideoPlayer({
         aria-label={altText ?? undefined}
         data-testid={testId}
         onVolumeChange={(event) => setMuted(event.currentTarget.muted)}
+        // The transport's whole state comes off these: what the element is
+        // doing IS what the controls report, so a play that the browser
+        // refused shows as paused rather than as a lying pause glyph.
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onTimeUpdate={(event) => setElapsedSec(event.currentTarget.currentTime)}
+        onDurationChange={(event) => {
+          const length = event.currentTarget.duration;
+          // A stream whose length the browser does not know answers `Infinity`
+          // or `NaN`, and a timeline against an unknown end is a knob that
+          // cannot mean anything — the record's own number stands instead.
+          if (Number.isFinite(length)) setLengthSec(length);
+        }}
+        // A TAP ON THE VIDEO REVEALS THE CHROME. It is the player's own
+        // gesture rather than the surface's: the surface's tap (back to the
+        // stream, or into the viewer) is wired over the frame by the screen
+        // that owns it, and reaching the controls must not depend on it.
+        onClick={transport ? () => setChromeShown((shown) => !shown) : undefined}
         // `object-cover` IS THE RULING, not a taste: a clip keeps its native
         // ratio clamped to tall — 16:9 and 1:1 display true, anything taller
         // than 4:5 centre-crops to it, and letterboxing exists nowhere (the
@@ -174,27 +248,64 @@ export function VideoPlayer({
         }
       />
 
+      {/* THE LADDER'S SECOND RUNG, and it REPLACES the disc rather than
+          joining it: the sound decision moves into the bar, because "a disc
+          beside a bar is two pieces of chrome for one clip"
+          (`design/components/media/MediaAttachment.jsx:281-294`). */}
+      {transport && chromeShown && (
+        <VideoTransport
+          playing={playing}
+          elapsed={formatDuration(Math.floor(elapsedSec) * 1000)}
+          duration={formatDuration((totalSec ?? 0) * 1000)}
+          progress={progress}
+          muted={muted}
+          testId={`${testId}-transport`}
+          onTogglePlay={() => {
+            const video = ref.current;
+            if (!video) return;
+            if (video.paused) {
+              // A press claims the stage the same way arriving in view does:
+              // one clip plays at a time however it was started, so pressing
+              // play here pauses whatever was running (FE-28).
+              claim(stageToken, video);
+              video.muted = isMuted();
+              void video.play().catch(() => {});
+            } else {
+              video.pause();
+            }
+            // The press is also touching the chrome, so it stays up: a control
+            // that vanishes the moment it is used is one the reader has to
+            // re-summon to press twice.
+            setChromeShown(true);
+          }}
+          onToggleMute={() => setMuted(!muted)}
+          onSeek={(fraction) => seekTo(fraction * (totalSec ?? 0))}
+          onSkip={(seconds) => seekTo(elapsedSec + seconds)}
+        />
+      )}
+
       {/* THE ONE CONTROL EVERY CARD'S CLIP WEARS — no play/pause, no duration
           pill, at both scales (design/readme.md, "the video conform round").
           It carries the sticky decision every video shares, so pressing it
           here changes the sound for the whole session — which is why it
           reads the shared store rather than the element. */}
-      <button
-        type="button"
-        data-testid={`${testId}-sound`}
-        aria-label={muted ? "Turn sound on" : "Turn sound off"}
-        aria-pressed={!muted}
-        onClick={() => setMuted(!muted)}
-        className="cg-state cg-focus absolute bottom-2 left-2 grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-surface-snackbar p-0 text-on-surface-snackbar"
-      >
-        <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
-          {muted ? (
-            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-          ) : (
-            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-          )}
-        </svg>
-      </button>
+      {!transport && (
+            type="button"
+          data-testid={`${testId}-sound`}
+          aria-label={muted ? "Turn sound on" : "Turn sound off"}
+          aria-pressed={!muted}
+          onClick={() => setMuted(!muted)}
+          className="cg-state cg-focus absolute bottom-2 left-2 grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-surface-snackbar p-0 text-on-surface-snackbar"
+        >
+          <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
+            {muted ? (
+              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+            ) : (
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+            )}
+          </svg>
+        </button>
+      )}
     </span>
   );
 }
