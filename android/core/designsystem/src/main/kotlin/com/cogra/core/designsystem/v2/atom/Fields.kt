@@ -5,9 +5,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -16,7 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error as markError
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
@@ -24,6 +29,37 @@ import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+import kotlin.math.roundToInt
+
+/**
+ * THE LATE COUNTER (jakob's ruling, the caps-affordance round,
+ * `design/components/forms/TextField.jsx:32-93`). A capped field is silent
+ * until the writer is within the last tenth of it, never fewer than the
+ * last 20 scalar values — the count appears at
+ * `remaining <= max(20, round(cap / 10))`, reading "N left" with room left
+ * and "N over" past it. The unit is the Unicode scalar value
+ * (`codePointCount`), which is what every ruled cap counts in — `.length`
+ * counts UTF-16 code units, and would tell a writer of emoji they had spent
+ * twice what they had.
+ *
+ * [used] overrides the arithmetic for a fixture drawing only a tail of a
+ * longer value; every live field passes null and is counted whole.
+ */
+private const val COUNT_WINDOW_MINIMUM = 20
+
+internal data class FieldCountReading(val text: String, val over: Boolean)
+
+internal fun fieldCountReading(value: String, cap: Int?, used: Int? = null): FieldCountReading? {
+    if (cap == null) return null
+    val spent = used ?: value.codePointCount(0, value.length)
+    val remaining = cap - spent
+    if (remaining > maxOf(COUNT_WINDOW_MINIMUM, (cap / 10f).roundToInt())) return null
+    return if (remaining < 0) {
+        FieldCountReading("${-remaining} over", over = true)
+    } else {
+        FieldCountReading("$remaining left", over = false)
+    }
+}
 
 /**
  * The 2.0 text field, as `ComposeDetails` draws it: a label row carrying an
@@ -39,6 +75,12 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * The `Optional` marker is folded into the field's accessible name rather
  * than left as a floating word, so a screen reader hears "Title, optional"
  * instead of two unrelated fragments.
+ *
+ * **The field atom's one error state** (the caps-affordance round, closing
+ * the web/Android divergence design/backlog.md item 52 named: the outline
+ * and label take `error`, and the message renders below, replacing a house
+ * `ErrorLine` a caller used to draw separately. [cap]/[used] drive the late
+ * counter in the same row, beside the message when both are live.
  */
 @Composable
 fun CograTextField(
@@ -69,9 +111,26 @@ fun CograTextField(
      * whose contents would be thrown away.
      */
     enabled: Boolean = true,
+    /** The field's ruled length cap, in Unicode scalar values — drives the late counter. */
+    cap: Int? = null,
+    /** Overrides the counter's own count, for a fixture drawing only a tail of the value. */
+    used: Int? = null,
+    /** The field's one refusal, worded by the caller — replaces the hint were there one. */
+    error: String? = null,
     testTag: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
+    val reading = fieldCountReading(value, cap, used)
+    val outlineColor = when {
+        error != null -> colors.error
+        !enabled -> colors.outline.copy(alpha = DISABLED)
+        else -> colors.outline
+    }
+    val labelColor = when {
+        error != null -> colors.error
+        !enabled -> colors.onSurface.copy(alpha = DISABLED)
+        else -> colors.onSurface
+    }
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Space.x1),
@@ -84,7 +143,7 @@ fun CograTextField(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
-                color = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = DISABLED),
+                color = labelColor,
                 modifier = Modifier.weight(1f),
             )
             if (optional) {
@@ -111,20 +170,49 @@ fun CograTextField(
                 .fillMaxWidth()
                 .then(if (fillHeight) Modifier.weight(1f) else Modifier)
                 .defaultMinSize(minHeight = Layout.FieldHeight)
-                .border(
-                    BorderStroke(
-                        1.dp,
-                        if (enabled) colors.outline else colors.outline.copy(alpha = DISABLED),
-                    ),
-                    MaterialTheme.shapes.extraSmall,
-                )
+                .border(BorderStroke(1.dp, outlineColor), MaterialTheme.shapes.extraSmall)
                 .padding(horizontal = Space.x3, vertical = 10.dp)
                 .semantics {
                     contentDescription =
                         if (optional) "$label, ${optionalLabel.lowercase()}" else label
+                    if (error != null) markError(error)
                 }
                 .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         )
+        // The count is a third element in this row, never a third state of
+        // it — it sits beside the message when both are live, or alone at
+        // the row's far end (the spacer standing in for the message).
+        if (error != null || reading != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(Space.x2),
+            ) {
+                if (error != null) {
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.error,
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { liveRegion = LiveRegionMode.Polite }
+                            .then(if (testTag != null) Modifier.testTag("${testTag}_error") else Modifier),
+                    )
+                } else {
+                    Spacer(Modifier.weight(1f))
+                }
+                if (reading != null) {
+                    Text(
+                        text = reading.text,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (reading.over) colors.error else colors.onSurfaceVariant,
+                        modifier = Modifier
+                            .semantics { liveRegion = LiveRegionMode.Polite }
+                            .then(if (testTag != null) Modifier.testTag("${testTag}_count") else Modifier),
+                    )
+                }
+            }
+        }
     }
 }
 
