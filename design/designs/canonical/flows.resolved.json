@@ -1240,15 +1240,15 @@
     },
     {
       "name": "message-someone",
-      "description": "Message on someone's profile opens the conversation with them — the chat surface is still owed.",
-      "status": "blocked by gap",
-      "blockedBy": "the chat surface (not designed)",
+      "description": "Message on someone's profile lands on the chats screen, which says the surface is not here yet — the conversation itself is still owed.",
+      "status": "resolved",
       "steps": [
         "start · ProfileOther",
-        "end · ProfileOther · 5 «Message» → gap: the chat surface (not designed)"
+        "end · ProfileOther · 5 «Message» → ChatsComingSoon"
       ],
       "boards": [
-        "ProfileOther"
+        "ProfileOther",
+        "ChatsComingSoon"
       ]
     },
     {
@@ -1714,12 +1714,15 @@
     },
     "ChatsComingSoon": {
       "flows": [
+        "message-someone",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "message-someone"
+      ]
     },
     "CommentEdit": {
       "flows": [
@@ -2958,13 +2961,8 @@
   "gapsOnFlows": [
     "Explore/2: the Sky (backlog item 16 — last on purpose)",
     "ExploreSearch/5: the item's surface (not designed)",
-    "ExploreSearch/7: the chat surface (not designed)",
     "ExploreSearch/8: the offer's surface (not designed)",
     "Profile/7: the invites screen (not designed)",
-    "ProfileComments/5: the chat surface (not designed)",
-    "ProfileOther/5: the chat surface (not designed)",
-    "ProfileOtherHeld/5: the chat surface (not designed)",
-    "ProfilePosts/5: the chat surface (not designed)",
     "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
     "Wallet/2: the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)",
     "Wallet/3: the settlement's public record view (not boarded — the traceability promise)",

@@ -22,6 +22,7 @@
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { CitedSheet } from "@/lib/ui2/compose/cited-sheet";
 import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { StancePad } from "@/lib/ui2/compose/stance-pad";
@@ -52,6 +53,7 @@ export type ReplySheet =
   | "stance"
   | "topics"
   | "references"
+  | "cited"
   | "sensitive";
 
 export function ReplySealStep({
@@ -108,27 +110,63 @@ export function ReplySealStep({
     <div data-testid="reply-seal" className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 pb-6 pt-2">
       <p className="m-0 text-body-small text-on-surface-variant">{replySummary(state)}</p>
 
-      <div className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1">
+      <div
+        data-testid="reply-seal-acts"
+        className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1"
+      >
         <div className="flex min-h-11 items-center gap-2 border-b border-outline-variant">
           <span className="w-19 flex-none text-label-medium text-on-surface-variant">Comment</span>
           <span className="min-w-0 flex-1 truncate text-body-medium" data-testid="reply-act-comment">
             {replyActLabel(state.target)}
           </span>
-          {/* The bare number the board draws — see `AddRow` below. */}
-          <span className="flex-none text-body-small text-on-surface-variant">1</span>
+          <ActsCount count={1} noun="comment" />
         </div>
 
         <AddRow
           label="+ Add a topic"
           filled={state.tags.map((tag) => `#${tag.name}`).join("  ")}
           count={state.tags.length}
+          countNoun="tag"
           testId="reply-open-topics"
           onOpen={() => onSheet("topics")}
         />
-        <AddRow
-          label="+ Cite something — a post, a person, a comment, an item"
-          filled={state.references.length === 1 ? "1 cited" : `${state.references.length} cited`}
-          count={state.references.length}
+        {/* THE SAME THREE READINGS THE POST'S SEAL TAKES (jakob's ruling
+            2026-09-14, design backlog item 70): the rule is about citations,
+            not about which composer staged them. One reads back as itself,
+            two or more read back as their count behind a door — and the
+            add-row stays in every state, because a comment's seal IS its
+            details stage and counting the citations takes away no way to add
+            another (`ReplyCitedMany.jsx:12-16`). */}
+        {state.references.length === 1 && (
+          <ReplyCitedRow
+            // Singular: the label names the EDGE staged rather than the block
+            // it sits in, and one edge is a reference (`_shared.jsx:1046-1052`).
+            label="Reference"
+            name={state.references[0].target.label}
+            onRepair={() => onSheet("references")}
+            onRemove={() =>
+              onReferences(
+                state.references.filter(
+                  (reference) => reference.targetId !== state.references[0].targetId,
+                ),
+              )
+            }
+          />
+        )}
+        {state.references.length > 1 && (
+          <CitedRow
+            count={state.references.length}
+            testId="reply-open-cited"
+            onOpen={() => onSheet("cited")}
+          />
+        )}
+        {/* "+ Cite something", the short form: the hand board spelled the
+            kinds out while the staged twin said the short form, so one
+            surface said two things depending on whether a reference had
+            landed. The picker's own screen is where the kinds are enumerated
+            (`ReplySeal.jsx:14-17`). */}
+        <OfferRow
+          label="+ Cite something"
           testId="reply-open-references"
           onOpen={() => onSheet("references")}
         />
@@ -348,6 +386,26 @@ export function ReplySealStep({
         </div>
       </BottomSheet>
 
+      {/* The post seal's own sheet, opened from this seal's door: one surface,
+          drawn once, wherever a staged collection is managed. It adds nothing —
+          the add-row above it is where another citation is staged. */}
+      <CitedSheet
+        open={sheet === "cited"}
+        onClose={() => onSheet("none")}
+        items={state.references}
+        onRemove={(targetId) =>
+          onReferences(state.references.filter((reference) => reference.targetId !== targetId))
+        }
+        onRepair={(targetId, next) =>
+          onReferences(
+            state.references.map((reference) =>
+              reference.targetId === targetId ? { ...reference, ...next } : reference,
+            ),
+          )
+        }
+        testId="reply-cited-sheet"
+      />
+
       {/* The same sheet the post seal and the comment editor open — one mark,
           explained one way (design/backlog.md item 42). */}
       <SensitiveSheet
@@ -377,43 +435,155 @@ function AddRow({
   label,
   filled,
   count,
+  countNoun,
   testId,
   onOpen,
 }: {
   label: string;
   filled: string;
   count: number;
+  countNoun: string;
+  testId: string;
+  onOpen: () => void;
+}) {
+  if (count === 0) return <OfferRow label={label} testId={testId} onOpen={onOpen} />;
+  return (
+    <div className="flex min-h-[38px] items-center gap-2 border-b border-outline-variant">
+      <button
+        type="button"
+        data-testid={testId}
+        onClick={onOpen}
+        className="cg-state cg-focus min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-body-medium"
+      >
+        {filled}
+      </button>
+      <ActsCount count={count} noun={countNoun} />
+    </div>
+  );
+}
+
+/**
+ * THE COUNT IS SEEN BARE AND HEARD WHOLE (jakob's ruling 2026-09-14, design
+ * backlog item 73; `ActsCard.jsx:27-39`). The digit is what the board draws;
+ * an ear given the number alone gets nothing, so the digit leaves the
+ * accessibility tree and a paired reading says "2 citations". The noun is the
+ * row's own — the References row counts CITATIONS — never its label's.
+ *
+ * A count already made of words ("1 more", on a row that still offers an act)
+ * keeps them and says itself.
+ */
+function ActsCount({ count, noun }: { count: number; noun: string }) {
+  return (
+    <span className="flex-none text-body-small text-on-surface-variant">
+      <span aria-hidden="true">{count}</span>
+      <span className="sr-only">
+        {count} {count === 1 ? noun : `${noun}s`}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * A row that is still an offer: the gesture, and what it would cost.
+ *
+ * The citations' offer stays an offer in every state — the board's add-rows
+ * ride along whether or not something is staged (`_shared.jsx:1076-1099`),
+ * because the reply's seal is also the stage where its citations are named.
+ */
+function OfferRow({
+  label,
+  testId,
+  onOpen,
+}: {
+  label: string;
   testId: string;
   onOpen: () => void;
 }) {
   return (
     <div className="flex min-h-[38px] items-center gap-2 border-b border-outline-variant">
-      {count === 0 ? (
-        <>
-          <button
-            type="button"
-            data-testid={testId}
-            onClick={onOpen}
-            className="cg-state cg-focus min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-label-medium text-primary"
-          >
-            {label}
-          </button>
-          <span className="flex-none text-body-small text-on-surface-variant">1 more</span>
-        </>
-      ) : (
-        <>
-          <button
-            type="button"
-            data-testid={testId}
-            onClick={onOpen}
-            className="cg-state cg-focus min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-body-medium"
-          >
-            {filled}
-          </button>
-          <span className="flex-none text-body-small text-on-surface-variant">{count}</span>
-        </>
-      )}
+      <button
+        type="button"
+        data-testid={testId}
+        onClick={onOpen}
+        className="cg-state cg-focus min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-label-medium text-primary"
+      >
+        {label}
+      </button>
+      <span className="flex-none text-body-small text-on-surface-variant">1 more</span>
     </div>
+  );
+}
+
+/**
+ * The reply's ONE staged citation, read back as itself: the name that opens
+ * the citation's pair, and the × that drops it, each naming the citation it
+ * acts on (`StagedReference`'s rule, jakob 2026-09-10).
+ */
+function ReplyCitedRow({
+  label,
+  name,
+  onRepair,
+  onRemove,
+}: {
+  label: string;
+  name: string;
+  onRepair: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="flex min-h-[38px] items-center gap-2 border-b border-outline-variant">
+      <span className="w-19 flex-none text-label-medium text-on-surface-variant">{label}</span>
+      <button
+        type="button"
+        aria-label={`${name} — set how it relates`}
+        data-testid="reply-cited-repair"
+        onClick={onRepair}
+        className="cg-state cg-focus min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-body-medium"
+      >
+        {name}
+      </button>
+      <button
+        type="button"
+        aria-label={`Remove ${name}`}
+        data-testid="reply-cited-remove"
+        onClick={onRemove}
+        className="cg-state cg-focus flex h-8 w-8 flex-none cursor-pointer items-center justify-center rounded-full text-on-surface-variant"
+      >
+        <span aria-hidden="true">×</span>
+      </button>
+      <ActsCount count={1} noun="citation" />
+    </div>
+  );
+}
+
+/**
+ * The References row once it counts: "N cited", the bare count, and the whole
+ * row as the control — the post seal's own door, said on this seal, opening
+ * the one sheet both seals open (`ReplyCitedMany.jsx:17-20`). No chevron and
+ * no trailing word, so the accessible name is what tells a listener the line
+ * is a door ("Manage the citations", copy-voice).
+ */
+function CitedRow({
+  count,
+  testId,
+  onOpen,
+}: {
+  count: number;
+  testId: string;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      onClick={onOpen}
+      aria-label="Manage the citations"
+      className="cg-state cg-focus flex min-h-[38px] w-full cursor-pointer items-center gap-2 border-0 border-b border-solid border-outline-variant bg-transparent p-0 text-left text-on-surface"
+    >
+      <span className="w-19 flex-none text-label-medium text-on-surface-variant">References</span>
+      <span className="min-w-0 flex-1 truncate text-body-medium">{count} cited</span>
+      <ActsCount count={count} noun="citation" />
+    </button>
   );
 }
 
