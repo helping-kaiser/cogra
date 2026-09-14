@@ -477,7 +477,12 @@ internal fun ComposeWizardScreen(
                 )
 
                 state.sheet == SealSheet.License ->
-                    LicenseSheet(state.license, onLicenseChange, onCloseSheet)
+                    LicenseSheet(
+                        state.license,
+                        onLicenseChange,
+                        onCloseSheet,
+                        onHelp = { onOpenHelp(HelpTopic.License) },
+                    )
 
                 state.sheet == SealSheet.Stance -> StanceSheet(
                     pDirected = state.pDirected,
