@@ -22,7 +22,11 @@ export interface ActsCardRow {
    * rows only — an action row is already a button.
    */
   onOpen?: () => void;
-  /** The door's accessible name — e.g. "Manage the citations". */
+  /**
+   * The door's accessible name. It REPLACES everything inside the row, the
+   * hidden count's reading included, so it carries the count itself —
+   * "Manage the 3 citations", and at one "Manage the 1 citation".
+   */
   openLabel?: string;
   /** This row's own count, a bare number — e.g. "1". */
   count?: string;
