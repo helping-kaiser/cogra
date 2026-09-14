@@ -35,6 +35,12 @@ export type PickRefusal = {
   /** The file's own name, so a reader can tell which of five it was. */
   readonly name: string;
   readonly reason: string;
+  /**
+   * The file itself, so a picture refusal can preview its own bytes
+   * (`RefusedFile`, `ComposePickedErrors`). Never uploaded and never read for
+   * anything else — a refused file never joins the batch.
+   */
+  readonly file: File;
 };
 
 export type PickOutcome = {
@@ -121,7 +127,7 @@ export async function screenPick(
   const pictures: File[] = [];
   const videos: File[] = [];
   const refuse = (file: File, reason: string) => {
-    refusals.push({ id: newComposeId(), name: file.name, reason });
+    refusals.push({ id: newComposeId(), name: file.name, reason, file });
   };
 
   for (const file of files) {

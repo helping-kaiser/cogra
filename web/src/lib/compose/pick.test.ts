@@ -94,6 +94,9 @@ describe("screenPick", () => {
     expect(outcome.refusals.map((r) => [r.name, r.reason])).toEqual([
       ["notes.txt", UNREADABLE],
     ]);
+    // CW-09: a refusal carries the file itself, so the pick step can preview
+    // a refused picture's own bytes rather than showing a bare line.
+    expect(outcome.refusals[0]!.file.name).toBe("notes.txt");
   });
 
   // HT-17: a phone camera's photo is bigger than the upload cap and smaller
