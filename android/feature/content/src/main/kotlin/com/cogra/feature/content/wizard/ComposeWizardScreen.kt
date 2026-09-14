@@ -422,6 +422,7 @@ internal fun ComposeWizardScreen(
                         onBack = onSealBack,
                         onRestoreKey = onRestoreKey,
                         onKeepDraft = onKeepDraft,
+                        onKeyHelp = { onOpenHelp(HelpTopic.Key) },
                     )
                 }
             }
