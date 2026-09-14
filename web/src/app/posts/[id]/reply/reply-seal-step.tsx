@@ -110,7 +110,10 @@ export function ReplySealStep({
     <div data-testid="reply-seal" className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 pb-6 pt-2">
       <p className="m-0 text-body-small text-on-surface-variant">{replySummary(state)}</p>
 
-      <div className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1">
+      <div
+        data-testid="reply-seal-acts"
+        className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1"
+      >
         <div className="flex min-h-11 items-center gap-2 border-b border-outline-variant">
           <span className="w-19 flex-none text-label-medium text-on-surface-variant">Comment</span>
           <span className="min-w-0 flex-1 truncate text-body-medium" data-testid="reply-act-comment">

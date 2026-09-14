@@ -121,7 +121,10 @@ export function SealStep({
         {heading} — {bodyLine}.
       </p>
 
-      <div className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1">
+      <div
+        data-testid="wizard-seal-acts"
+        className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1"
+      >
         <ActRow label="Post" detail={heading} count={1} />
         {state.tags.length > 0 && (
           <ActRow
