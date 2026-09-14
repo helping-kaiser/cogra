@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error as markError
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
@@ -47,13 +48,17 @@ import kotlin.math.roundToInt
  */
 private const val COUNT_WINDOW_MINIMUM = 20
 
+/** The late counter's window is the last TENTH of the cap, at minimum. */
+private const val COUNT_WINDOW_DIVISOR = 10f
+
 internal data class FieldCountReading(val text: String, val over: Boolean)
 
 internal fun fieldCountReading(value: String, cap: Int?, used: Int? = null): FieldCountReading? {
     if (cap == null) return null
     val spent = used ?: value.codePointCount(0, value.length)
     val remaining = cap - spent
-    if (remaining > maxOf(COUNT_WINDOW_MINIMUM, (cap / 10f).roundToInt())) return null
+    val window = maxOf(COUNT_WINDOW_MINIMUM, (cap / COUNT_WINDOW_DIVISOR).roundToInt())
+    if (remaining > window) return null
     return if (remaining < 0) {
         FieldCountReading("${-remaining} over", over = true)
     } else {
@@ -121,39 +126,12 @@ fun CograTextField(
 ) {
     val colors = MaterialTheme.colorScheme
     val reading = fieldCountReading(value, cap, used)
-    val outlineColor = when {
-        error != null -> colors.error
-        !enabled -> colors.outline.copy(alpha = DISABLED)
-        else -> colors.outline
-    }
-    val labelColor = when {
-        error != null -> colors.error
-        !enabled -> colors.onSurface.copy(alpha = DISABLED)
-        else -> colors.onSurface
-    }
+    val hasError = error != null
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Space.x1),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(Space.x2),
-        ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                color = labelColor,
-                modifier = Modifier.weight(1f),
-            )
-            if (optional) {
-                Text(
-                    text = optionalLabel,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.onSurfaceVariant,
-                )
-            }
-        }
+        FieldLabelRow(label, optional, optionalLabel, fieldLabelColor(colors, hasError, enabled))
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
@@ -170,7 +148,10 @@ fun CograTextField(
                 .fillMaxWidth()
                 .then(if (fillHeight) Modifier.weight(1f) else Modifier)
                 .defaultMinSize(minHeight = Layout.FieldHeight)
-                .border(BorderStroke(1.dp, outlineColor), MaterialTheme.shapes.extraSmall)
+                .border(
+                    BorderStroke(1.dp, fieldOutlineColor(colors, hasError, enabled)),
+                    MaterialTheme.shapes.extraSmall,
+                )
                 .padding(horizontal = Space.x3, vertical = 10.dp)
                 .semantics {
                     contentDescription =
@@ -179,39 +160,84 @@ fun CograTextField(
                 }
                 .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         )
-        // The count is a third element in this row, never a third state of
-        // it — it sits beside the message when both are live, or alone at
-        // the row's far end (the spacer standing in for the message).
-        if (error != null || reading != null) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(Space.x2),
-            ) {
-                if (error != null) {
-                    Text(
-                        text = error,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.error,
-                        modifier = Modifier
-                            .weight(1f)
-                            .semantics { liveRegion = LiveRegionMode.Polite }
-                            .then(if (testTag != null) Modifier.testTag("${testTag}_error") else Modifier),
-                    )
-                } else {
-                    Spacer(Modifier.weight(1f))
-                }
-                if (reading != null) {
-                    Text(
-                        text = reading.text,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (reading.over) colors.error else colors.onSurfaceVariant,
-                        modifier = Modifier
-                            .semantics { liveRegion = LiveRegionMode.Polite }
-                            .then(if (testTag != null) Modifier.testTag("${testTag}_count") else Modifier),
-                    )
-                }
-            }
+        FieldSupportRow(error, reading, testTag)
+    }
+}
+
+/** [error] takes the outline over the disabled state, which takes it over rest. */
+private fun fieldOutlineColor(colors: ColorScheme, hasError: Boolean, enabled: Boolean): Color = when {
+    hasError -> colors.error
+    !enabled -> colors.outline.copy(alpha = DISABLED)
+    else -> colors.outline
+}
+
+/** The label follows the same precedence as the outline. */
+private fun fieldLabelColor(colors: ColorScheme, hasError: Boolean, enabled: Boolean): Color = when {
+    hasError -> colors.error
+    !enabled -> colors.onSurface.copy(alpha = DISABLED)
+    else -> colors.onSurface
+}
+
+@Composable
+private fun FieldLabelRow(label: String, optional: Boolean, optionalLabel: String, labelColor: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = labelColor,
+            modifier = Modifier.weight(1f),
+        )
+        if (optional) {
+            Text(
+                text = optionalLabel,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/**
+ * The supporting row below the field: the caller's own error message and the
+ * late counter, which is a third element in this row rather than a third
+ * state of it — it sits beside the message when both are live, or alone at
+ * the row's far end (the spacer standing in for an absent message).
+ */
+@Composable
+private fun FieldSupportRow(error: String?, reading: FieldCountReading?, testTag: String?) {
+    if (error == null && reading == null) return
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        if (error != null) {
+            Text(
+                text = error,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.error,
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { liveRegion = LiveRegionMode.Polite }
+                    .then(if (testTag != null) Modifier.testTag("${testTag}_error") else Modifier),
+            )
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
+        if (reading != null) {
+            Text(
+                text = reading.text,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (reading.over) colors.error else colors.onSurfaceVariant,
+                modifier = Modifier
+                    .semantics { liveRegion = LiveRegionMode.Polite }
+                    .then(if (testTag != null) Modifier.testTag("${testTag}_count") else Modifier),
+            )
         }
     }
 }
