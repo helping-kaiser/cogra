@@ -22,6 +22,7 @@
     <ID>LongMethod:ComposeWizardScreen.kt:@Composable fun ComposeWizardRoute</ID>
     <ID>LongMethod:ComposeWizardScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun ComposeWizardScreen</ID>
     <ID>LongMethod:ComposeWizardScreenTest.kt:ComposeWizardScreenTest$@Composable private fun Wizard</ID>
+    <ID>LongMethod:ComposeWizardVideoDescribeTest.kt:ComposeWizardVideoDescribeTest$@Composable private fun Wizard</ID>
     <ID>LongMethod:ComposeWizardViewModel.kt:ComposeWizardViewModel$fun onSign</ID>
     <ID>LongMethod:FeedScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun FeedScreen</ID>
     <ID>LongMethod:PostDetailScreen.kt:@Composable private fun CommentThread</ID>

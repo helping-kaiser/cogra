@@ -612,10 +612,18 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(state) }
 
         compose.onNodeWithTag("wizard_describe_sheet_field").assertExists()
-        compose.onNodeWithText(
-            "Read aloud to people who can't see it, and shown if the picture can't load.",
-        ).assertExists()
+        // CW-15 (2026-09-08 UI audit): the reason rides under the title,
+        // permanently — not an extended trailing line near the field. Two
+        // matches are expected: the sheet's own line and the counter's
+        // (CW-18), both still on screen behind the open sheet.
+        compose.onAllNodesWithText("Read aloud to people who can't see it.")
+            .assertCountEquals(2)
+        compose.onNodeWithTag("wizard_describe_sheet_play_disc").assertDoesNotExist()
     }
+
+    // The video body's describe shape (CW-16, CW-17) has its own tests in
+    // ComposeWizardVideoDescribeTest — this class is already at detekt's
+    // LargeClass edge.
 
     // -- The seal --
 
