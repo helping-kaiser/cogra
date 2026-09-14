@@ -1,3 +1,4 @@
+import type { PadAxes } from "./StancePad";
 import type { StancePair } from "./StanceReadout";
 
 /** The alternate — and accessible — stance inputs: paired sliders, direct entry. */
@@ -27,6 +28,12 @@ export interface StanceAlternatesProps {
    * `helpLabel` through unchanged.
    */
   helpLabel?: string;
+  /**
+   * The two tracks' pole words, defaulting to `STANCE_AXES` — the same prop the
+   * field takes, so a record family that names its own ends names them on both
+   * routes. The axis names above the tracks are still the stance family's.
+   */
+  axes?: PadAxes;
 }
 
 export declare function StanceAlternates(props: StanceAlternatesProps): JSX.Element;
