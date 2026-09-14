@@ -30,6 +30,14 @@
 #     sig:linter:adoption-data, honoring ARCH dec:linter:no-regex
 #     even in configuration. A prefix ending in "/" matches a tree;
 #     a prefix naming a file matches that file.
+#   * [carrier] exclude_build_dirs rows are also literal, not an
+#     exception to the rule above: each names a literal root and one
+#     literal directory-component name, and a candidate path matches
+#     by exact, per-component string equality against everything
+#     under that root — never by wildcard or pattern syntax. This is
+#     the one construct that spans depth without enumeration, for a
+#     build tool's per-module output directories; see
+#     crates/cogra-linter/docs/adoption-notes.md, ruling R28.
 #   * Every value here is a recorded decision. Where a value carries a
 #     cost or a consequence, its section states it; the reasoning,
 #     the findings behind it, and the measurements that fixed it live
@@ -89,8 +97,6 @@ exclude_trees = [
   ".git/",
   ".claude/worktrees/",         # agent git worktrees: further checkouts
   "target/",                    # cargo, workspace-level
-  "android/build/",
-  "android/app/build/",
   "android/.gradle/",
   "android/gradle/wrapper/",    # vendored wrapper jar + properties
   "web/node_modules/",
@@ -172,6 +178,21 @@ vendored_trees = [
 vendored_files = [
   "docs/primitive/layer1-interface.md",
 ]
+
+# Per-module build output, excluded by literal directory name rather than
+# by enumerating android/build/, android/app/build/, android/core/*/build/,
+# android/feature/*/build/ one row per module (found by lane L13,
+# 2026-09-14: the literal-prefix list above missed every module but the
+# two named by hand, so a LOCAL Gradle/detekt run — never a clean CI
+# checkout — left generated report files under an uncaught module's
+# build/ tree for `cogra-lint check` to trip on). android/.gitignore's
+# own "Per-module build output" rule already reads `**/build/`; this is
+# the literal-only shape of the same fact, scoped to the one tree it is
+# true of. See docs/adoption-notes.md, ruling R28, for why this is not a
+# pattern dialect.
+[[carrier.exclude_build_dirs]]
+root = "android/"
+name = "build"
 
 
 ####################################################################
