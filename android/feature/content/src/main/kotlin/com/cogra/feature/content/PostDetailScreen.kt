@@ -224,31 +224,14 @@ fun PostDetailScreen(
                     }
                 },
                 actions = {
-                    val post = state.post
-                    // A REMOVED POST HAS NO MENU LEFT — back is the whole
-                    // header (`Removed.jsx:5-6`). There is nothing of it to
-                    // edit, cite or license, and the skeleton that holds the
-                    // thread's place is not a thing a reader keeps.
-                    val live = post != null &&
-                        !isRemoved(post.content, post.attachments, post.attachmentsStatus)
-                    if (live) {
-                        // ON A DETAIL SURFACE THE MENU LIVES UP HERE and the
-                        // card's own dot yields (`_shared.jsx:337-341`): two
-                        // dots would be two menus for one post.
-                        CograOverflowMenu(
-                            items = postMenuRows(
-                                own = viewerId != null && post.author?.id == viewerId,
-                                handle = post.author?.handle,
-                                license = post.license,
-                                onEdit = { onEdit(post.id) },
-                                onCite = { onReference(post.id) },
-                                onRemove = { removeOpen = true },
-                                onLicense = { licenseShown = post.license },
-                            ),
-                            contentDescription = stringResource(R.string.content_menu_post),
-                            testTag = "detail_menu",
-                        )
-                    }
+                    DetailMenu(
+                        post = state.post,
+                        viewerId = viewerId,
+                        onEdit = onEdit,
+                        onCite = onReference,
+                        onRemove = { removeOpen = true },
+                        onLicense = { licenseShown = it },
+                    )
                 },
             )
         },
@@ -349,7 +332,7 @@ fun PostDetailScreen(
         }
     }
 
-    if (commentsOpen && state.post != null) {
+    if (commentsOpen) {
         CommentsSheet(
             state = state,
             viewerId = viewerId,
@@ -382,6 +365,40 @@ fun PostDetailScreen(
             onRemove = { removeOpen = false },
         )
     }
+}
+
+/**
+ * ON A DETAIL SURFACE THE MENU LIVES UP HERE and the card's own dot yields
+ * (`_shared.jsx:337-341`): two dots would be two menus for one post.
+ *
+ * A REMOVED POST HAS NO MENU LEFT — back is the whole header
+ * (`Removed.jsx:5-6`). There is nothing of it to edit, cite or license, and
+ * the skeleton that holds the thread's place is not a thing a reader keeps.
+ */
+@Composable
+private fun DetailMenu(
+    post: PostView?,
+    viewerId: String?,
+    onEdit: (String) -> Unit,
+    onCite: (String) -> Unit,
+    onRemove: () -> Unit,
+    onLicense: (LicenseChoice) -> Unit,
+) {
+    if (post == null) return
+    if (isRemoved(post.content, post.attachments, post.attachmentsStatus)) return
+    CograOverflowMenu(
+        items = postMenuRows(
+            own = viewerId != null && post.author?.id == viewerId,
+            handle = post.author?.handle,
+            license = post.license,
+            onEdit = { onEdit(post.id) },
+            onCite = { onCite(post.id) },
+            onRemove = onRemove,
+            onLicense = { onLicense(post.license) },
+        ),
+        contentDescription = stringResource(R.string.content_menu_post),
+        testTag = "detail_menu",
+    )
 }
 
 @Composable
@@ -458,35 +475,57 @@ private fun PostDetailBody(
                         revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
                         onReveal = { onReveal(post.id, post.sensitiveMark()) },
                     )
-                    if (post.landing.isPending) {
-                        PendingMarker(testTag = "detail_pending")
-                    }
-                    if (!removed) {
-                        TopicsLine(
-                            topics = post.topics,
-                            references = post.references,
-                            onOpenTopic = onOpenTopic,
-                            testTagPrefix = "detail_post",
-                        )
-                    }
-                    // The same row the card wears (`PostCard.jsx`):
-                    // stance, comment, share — the skeleton a removal
-                    // leaves standing, because no record leaves the graph
-                    // and no removal is silent. The count RAISES THE
-                    // THREAD (graph.json: every `comment count` edge
-                    // advances to `ReplyEntry`), here as on every other
-                    // board that carries it.
-                    PostAffordanceRow(
-                        commentCount = post.commentCount,
+                    DetailCardFoot(
+                        post = post,
+                        removed = removed,
+                        onOpenTopic = onOpenTopic,
                         onOpenComments = onOpenComments,
-                        onShare = { onShare(post.id) },
-                        testTagPrefix = "detail_post",
-                    ) {
-                        stanceControl(post.id, "detail_post")
-                    }
+                        onShare = onShare,
+                        stanceControl = stanceControl,
+                    )
                 }
             }
         }
+    }
+}
+
+/**
+ * What closes the detail's card: the markers, the one topics line, and the
+ * row of acts.
+ *
+ * The row is the same one the card wears (`PostCard.jsx`) — stance, comment,
+ * share — and it is the skeleton a removal leaves standing, because no record
+ * leaves the graph and no removal is silent.
+ */
+@Composable
+private fun DetailCardFoot(
+    post: PostView,
+    removed: Boolean,
+    onOpenTopic: (String) -> Unit,
+    /** `ReplyEntry`: the affordance row's count raises the thread. */
+    onOpenComments: () -> Unit,
+    onShare: (String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+) {
+    if (post.landing.isPending) {
+        PendingMarker(testTag = "detail_pending")
+    }
+    // The license, the topics and the citations rode the payload away.
+    if (!removed) {
+        TopicsLine(
+            topics = post.topics,
+            references = post.references,
+            onOpenTopic = onOpenTopic,
+            testTagPrefix = "detail_post",
+        )
+    }
+    PostAffordanceRow(
+        commentCount = post.commentCount,
+        onOpenComments = onOpenComments,
+        onShare = { onShare(post.id) },
+        testTagPrefix = "detail_post",
+    ) {
+        stanceControl(post.id, "detail_post")
     }
 }
 
