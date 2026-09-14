@@ -171,10 +171,10 @@ data class RefusedPick(
 
 /**
  * Which sheet is open over the seal (`ComposeLicense`, `ComposePad`,
- * `ComposeSensitive`). One at a time: each is a drawer the reader opened
- * over the same screen.
+ * `ComposeSensitive`, `ComposeCitations`). One at a time: each is a drawer the
+ * reader opened over the same screen.
  */
-enum class SealSheet { None, License, Stance, Sensitive }
+enum class SealSheet { None, License, Stance, Sensitive, Cited }
 
 /**
  * How the wizard ended.

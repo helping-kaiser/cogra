@@ -1,6 +1,7 @@
 package com.cogra.feature.content.wizard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -87,7 +88,7 @@ internal fun ColumnScope.SealStepBody(
         modifier = Modifier.testTag("wizard_seal_summary"),
     )
 
-    ActBlock(state)
+    ActBlock(state = state, onOpenSheet = onOpenSheet)
 
     Column(Modifier.fillMaxWidth()) {
         SettingRow(
@@ -188,7 +189,7 @@ internal fun ColumnScope.SealStepBody(
  * gesture that costs nothing.
  */
 @Composable
-private fun ActBlock(state: ComposeWizardState) {
+private fun ActBlock(state: ComposeWizardState, onOpenSheet: (SealSheet) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -202,9 +203,22 @@ private fun ActBlock(state: ComposeWizardState) {
             Hairline()
             TagsActRow(tags = state.tagSection.tags.map { it.name })
         }
-        if (state.referenceSection.references.isNotEmpty()) {
+        // THE REFERENCES ROW IN ITS THREE READINGS (jakob's rulings
+        // 2026-09-14, design backlog item 70): nothing staged draws no row,
+        // ONE reads back as itself, TWO OR MORE read back as their count with
+        // the whole row a door to the sheet that lists them
+        // (`_shared.jsx:864-889`).
+        val references = state.referenceSection.references
+        if (references.size == 1) {
             Hairline()
-            ReferenceActRow(references = state.referenceSection.references)
+            ReferenceActRow(reference = references.first())
+        } else if (references.size > 1) {
+            Hairline()
+            CitedDoorRow(
+                count = references.size,
+                onOpen = { onOpenSheet(SealSheet.Cited) },
+                testTag = "wizard_seal_cited",
+            )
         }
         Hairline()
         val acts = state.signedActionCount
@@ -304,24 +318,19 @@ private fun TagsActRow(tags: List<String>) {
 }
 
 /**
- * The References act row: unlike [ActRow]'s single-line value, the board
- * (`_shared.jsx:848-860`) draws the citation's name over its own stance
- * readout — the staged citation carries the stance that rides with it, so
- * the row is two lines: what is cited, and what signing it says about the
- * citer.
+ * The References act row at ONE staged citation: unlike [ActRow]'s
+ * single-line value, the board (`_shared.jsx:943-955`) draws the citation's
+ * name over its own stance readout — the staged citation carries the stance
+ * that rides with it, so the row is two lines: what is cited, and what signing
+ * it says about the citer.
  *
- * **A named reading of the undrawn case.** The board's only example
- * carries one citation; the section allows up to ten staged at once, and
- * no board draws what the row does with more than one. This reads the
- * first — the common case, and the one the board actually shows — and
- * leaves the rest to the trailing count, the same way the count already
- * tells the reader there is more than the value line spells out. Flagged
- * rather than silently generalized: a multi-citation layout is a board
- * question, not a technical one.
+ * A seal is a read-back, and one thing read back is the thing. The threshold
+ * is two, because two is where a name stops being the shortest true answer —
+ * past it the row counts instead, and [CitedDoorRow] takes over.
  */
 @Composable
-private fun ReferenceActRow(references: List<ReferenceRow>) {
-    val primary = references.first()
+private fun ReferenceActRow(reference: ReferenceRow) {
+    val primary = reference
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -350,7 +359,58 @@ private fun ReferenceActRow(references: List<ReferenceRow>) {
             )
         }
         Text(
-            text = "${references.size}",
+            text = "1",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * The References row once it COUNTS: "N cited", the bare count, and the whole
+ * row as the control (`ActsCard.jsx:99-104`, `_shared.jsx:883-889`).
+ *
+ * It keeps the fact row's three slots and stays a fact row rather than
+ * becoming an action row, because what it opens is what it already says. No
+ * chevron and no trailing word — `PickedRow`'s rule for the picked pictures,
+ * said here — so the label on the gesture is what tells a listener the line is
+ * a door at all ("Manage the citations", copy-voice).
+ *
+ * THE TRAILING COUNT IS THE CITATIONS, BARE: the list's length and nothing
+ * else. The signature's own total is the block's footer and already says in
+ * words what it counts.
+ */
+@Composable
+private fun CitedDoorRow(count: Int, onOpen: () -> Unit, testTag: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                role = Role.Button,
+                onClickLabel = "Manage the citations",
+                onClick = onOpen,
+            )
+            .padding(vertical = Space.x2)
+            .testTag(testTag),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        Text(
+            text = "References",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(76.dp),
+        )
+        Text(
+            text = "$count cited",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = "$count",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

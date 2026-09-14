@@ -23,6 +23,7 @@ import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
 import { HelpDot } from "@/lib/ui2/help-dot";
 import { ReadoutChip } from "@/lib/ui2/chip";
+import { CitedSheet } from "@/lib/ui2/compose/cited-sheet";
 import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
@@ -33,10 +34,11 @@ import { nearestAnchor } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
 import { licenseTerms, PUBLIC_DOMAIN, type License } from "@/lib/license";
+import type { ReferenceDraft } from "@/lib/references/draft";
 import type { WizardState } from "@/lib/compose/wizard";
 import { signedActions } from "@/lib/compose/wizard";
 
-export type SealSheet = "none" | "license" | "stance" | "sensitive";
+export type SealSheet = "none" | "license" | "stance" | "sensitive" | "cited";
 
 export function SealStep({
   state,
@@ -48,6 +50,7 @@ export function SealStep({
   refusal,
   onSheet,
   onLicense,
+  onReferences,
   onStagedPDirected,
   onSetStance,
   onStanceHelp,
@@ -72,6 +75,13 @@ export function SealStep({
   refusal: string | null;
   onSheet: (next: SealSheet) => void;
   onLicense: (next: License) => void;
+  /**
+   * The staged citations, after a removal or a re-pair made in the cited
+   * sheet. It is the details step's own set and the details step's own
+   * setter — the seal manages what was staged there, it does not keep a
+   * second copy of it.
+   */
+  onReferences: (next: readonly ReferenceDraft[]) => void;
   onStagedPDirected: (next: number) => void;
   onSetStance: () => void;
   onStanceHelp: () => void;
@@ -126,20 +136,37 @@ export function SealStep({
             count={state.tags.length}
           />
         )}
-        {state.references.length > 0 && (
+        {/* THE REFERENCES ROW IN ITS THREE READINGS (jakob's rulings
+            2026-09-14, design backlog item 70). Nothing staged draws no row;
+            ONE staged citation reads back as itself, because a seal is a
+            read-back and one thing read back is the thing; TWO OR MORE read
+            back as their count and the row becomes a door. Ten names stacked
+            in an act row is a seal that scrolls, and a seal that scrolls has
+            stopped being a read-back — while a count with no way through to
+            what it counts is a number the reader cannot check
+            (`_shared.jsx:864-889`). */}
+        {state.references.length === 1 && (
           <ActRow
             label="References"
             detail={
-              <span className="flex flex-col gap-1 py-1.5">
-                {state.references.map((reference) => (
-                  <span key={reference.targetId} className="flex min-w-0 flex-col">
-                    <span className="truncate">{reference.target.label}</span>
-                    <StanceReadout pair={{ pDirected: reference.relevance, pInterest: reference.support }} />
-                  </span>
-                ))}
+              <span className="flex min-w-0 flex-col py-1.5">
+                <span className="truncate">{state.references[0].target.label}</span>
+                <StanceReadout
+                  pair={{
+                    pDirected: state.references[0].relevance,
+                    pInterest: state.references[0].support,
+                  }}
+                />
               </span>
             }
+            count={1}
+          />
+        )}
+        {state.references.length > 1 && (
+          <CitedRow
             count={state.references.length}
+            testId="wizard-open-cited"
+            onOpen={() => onSheet("cited")}
           />
         )}
         <div className="flex min-h-12 flex-col justify-center gap-0.5 py-1.5">
@@ -331,6 +358,26 @@ export function SealStep({
         onHelp={() => onHelp()}
         testIdPrefix="wizard"
       />
+
+      {/* What the counting row opens. It manages the staged set and never
+          offers another pick: a post's seal carries no add-rows by design, and
+          a door out of it that grew one would hand the seal a stage's job. */}
+      <CitedSheet
+        open={sheet === "cited"}
+        onClose={() => onSheet("none")}
+        items={state.references}
+        onRemove={(targetId) =>
+          onReferences(state.references.filter((reference) => reference.targetId !== targetId))
+        }
+        onRepair={(targetId, next) =>
+          onReferences(
+            state.references.map((reference) =>
+              reference.targetId === targetId ? { ...reference, ...next } : reference,
+            ),
+          )
+        }
+        testId="wizard-cited-sheet"
+      />
     </div>
   );
 }
@@ -354,6 +401,44 @@ function ActRow({
           slot — the drawn example name ellipsised on a real device. */}
       <span className="flex-none text-label-small text-on-surface-variant">{count}</span>
     </div>
+  );
+}
+
+/**
+ * The References row once it counts: "N cited", the bare count, and the WHOLE
+ * ROW as the control (`ActsCard.jsx:99-104`, `_shared.jsx:883-889`).
+ *
+ * It keeps the fact row's three slots and stays a fact row rather than
+ * becoming an action row, because what it opens is what it already says. It
+ * carries no chevron and no trailing word — `PickedRow`'s rule for the picked
+ * pictures, said here — so the accessible name is the only thing that tells a
+ * listener the line is a door at all ("Manage the citations", copy-voice).
+ *
+ * THE TRAILING COUNT IS THE CITATIONS, BARE — the list's length and nothing
+ * else. The signature's own total is the card's footer and already says in
+ * words what it counts.
+ */
+function CitedRow({
+  count,
+  testId,
+  onOpen,
+}: {
+  count: number;
+  testId: string;
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      data-testid={testId}
+      onClick={onOpen}
+      aria-label="Manage the citations"
+      className="cg-state cg-focus flex min-h-11 w-full cursor-pointer items-center gap-2 border-0 border-b border-solid border-outline-variant bg-transparent p-0 text-left text-on-surface"
+    >
+      <span className="w-19 flex-none text-label-small text-on-surface-variant">References</span>
+      <span className="min-w-0 flex-1 truncate text-body-medium">{count} cited</span>
+      <span className="flex-none text-label-small text-on-surface-variant">{count}</span>
+    </button>
   );
 }
 
