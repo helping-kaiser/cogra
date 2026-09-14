@@ -13,6 +13,7 @@
 
 import { sensitiveReasonProblem } from "@/lib/compose/wizard";
 import { BottomSheet } from "../bottom-sheet";
+import { HelpDot } from "../help-dot";
 import { PillButton } from "../pill-button";
 import { TextField } from "../text-field";
 
@@ -40,20 +41,13 @@ export function SensitiveSheet({
       open={open}
       onClose={onClose}
       title="Mark as sensitive"
-      testId={`${testIdPrefix}-sensitive-sheet`}
-    >
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <span className="flex-1" />
-          <button
-            type="button"
-            data-testid={`${testIdPrefix}-sensitive-help`}
-            aria-label="Marking as sensitive"
-            onClick={onHelp}
-            className="cg-state cg-focus flex size-8 flex-none items-center justify-center rounded-full border border-outline-variant text-label-large text-primary"
-          >
-            ?
-          </button>
+      titleTrailing={
+        <>
+          <HelpDot
+            ariaLabel="Marking as sensitive"
+            onOpen={onHelp}
+            testId={`${testIdPrefix}-sensitive-help`}
+          />
           <button
             type="button"
             role="switch"
@@ -72,7 +66,11 @@ export function SensitiveSheet({
               }`}
             />
           </button>
-        </div>
+        </>
+      }
+      testId={`${testIdPrefix}-sensitive-sheet`}
+    >
+      <div className="flex flex-col gap-3">
         <p className="m-0 text-body-medium">
           Veils the pictures and the words until a reader chooses to look.
         </p>

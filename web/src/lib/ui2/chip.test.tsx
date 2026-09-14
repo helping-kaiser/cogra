@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { Chip } from "./chip";
+import { Chip, ReadoutChip } from "./chip";
 
 describe("Chip", () => {
   it("shows selection in colour, and reports it rather than relying on the colour", () => {
@@ -71,5 +71,13 @@ describe("Chip", () => {
   it("reports no pressed state when it is not a toggle", () => {
     render(<Chip testId="c">Add a topic</Chip>);
     expect(screen.getByTestId("c")).not.toHaveAttribute("aria-pressed");
+  });
+});
+
+describe("ReadoutChip", () => {
+  it("is a plain readout, not a control", () => {
+    render(<ReadoutChip>#coastroad</ReadoutChip>);
+    expect(screen.getByText("#coastroad").tagName).toBe("SPAN");
+    expect(screen.queryByRole("button")).toBeNull();
   });
 });

@@ -739,6 +739,7 @@ export function ComposeWizard({
             dispatch({ type: "sensitiveReason", sensitiveReason })
           }
           onHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
+          onLicenseHelp={() => setHelp(HELP_TOPICS.license)}
           onSign={() => void submit()}
           onBack={() => dispatch({ type: "back" })}
           onRestoreKey={() => router.push("/restore")}
