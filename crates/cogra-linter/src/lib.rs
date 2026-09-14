@@ -64,9 +64,9 @@ pub mod scan;
 pub mod timing;
 
 pub use adopt::{
-    Activation, Adoption, Area, BannedToken, BannedTokens, Carrier, Census, CitationIndexes,
-    Claims, Classification, Collision, ConfiguredPath, EnforcementPartition, HeadForm,
-    HeadMatching, HeadRecognition, HeadlessLanguages, Kind, KindEvidence, KindExtensions,
+    Activation, Adoption, Area, BannedToken, BannedTokens, BuildDirExclusion, Carrier, Census,
+    CitationIndexes, Claims, Classification, Collision, ConfiguredPath, EnforcementPartition,
+    HeadForm, HeadMatching, HeadRecognition, HeadlessLanguages, Kind, KindEvidence, KindExtensions,
     KindGenerator, KindRegister, KindStatuses, KindsAdoption, Language, Matrix, Meta,
     NameTransformation, OwnerId, Partition, PartitionRule, PathPrefix, Place, PrefixFamily,
     Profile, ProfileId, ProfileStatus, Profiles, Reach, ReachRow, ReservedKinds, ScannedLanguage,

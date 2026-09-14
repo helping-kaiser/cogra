@@ -77,6 +77,42 @@ fn the_walk_takes_the_carrier_and_leaves_the_exclusions() {
     assert_eq!(paths.len(), 8);
 }
 
+/// A build directory recurs under every module without a row per module:
+/// the walk excludes it wherever it appears beneath android/, and leaves a
+/// real module source right beside it untouched. This is the fixture-tree
+/// form of the gap lane L13 found (2026-09-14) — the old exclude_trees list
+/// named `android/build/` and `android/app/build/` by hand and missed every
+/// other module, so a local Gradle build left generated report files in the
+/// carrier for the corpus linter's check to trip on.
+/// ´claim:walk:per-module-build-output-is-excluded-without-enumeration´
+#[test]
+fn a_build_directory_is_excluded_at_any_depth_beneath_android() {
+    let root = tree(
+        "android-build-dirs",
+        &[
+            "android/core/crypto/build/reports/detekt/detekt.md",
+            "android/core/crypto/src/main/kotlin/Crypto.kt",
+            "android/feature/auth/build/reports/detekt/detekt.md",
+            "android/feature/auth/src/main/kotlin/Auth.kt",
+        ],
+    );
+    let adoption = ruled();
+    let sources = Walk::new(&adoption, &root)
+        .sources()
+        .expect("a readable tree");
+    let paths: Vec<String> = sources
+        .iter()
+        .map(|source| source.path.to_string_lossy().into_owned())
+        .collect();
+    assert!(!paths.iter().any(|path| path.contains("/build/")));
+    assert!(paths.contains(&String::from(
+        "android/core/crypto/src/main/kotlin/Crypto.kt"
+    )));
+    assert!(paths.contains(&String::from(
+        "android/feature/auth/src/main/kotlin/Auth.kt"
+    )));
+}
+
 /// The walked sources are ordered by path and never by the directory's own order.
 /// ´claim:walk:sources-are-ordered-by-path´
 #[test]

@@ -20,6 +20,8 @@ import {
   padPairFromTravel,
   padPercentOf,
   padTravelHalfExtent,
+  valenceFrom,
+  valenceTravelHalfExtent,
   type PadRect,
 } from "./pad-geometry";
 import { TAP_DEFAULT, type StancePair } from "./model";
@@ -264,5 +266,50 @@ describe("travel from a pick already standing", () => {
         }
       }
     }
+  });
+});
+
+// The one-axis field: the same travel rule with one axis in it, on the
+// board's own 260×72 line. What it must not do is scale the pick to the
+// field's HEIGHT, which is what the square's shorter-side rule would do
+// to a field that is not square.
+describe("the one-axis field's travel", () => {
+  const LINE: PadRect = { left: 0, top: 0, width: 260, height: 72 };
+  const LINE_INSET = knobTravelInset(undefined, 24);
+  const LINE_HALF = 260 / 2 - LINE_INSET;
+
+  it("measures one unit across the field, not across its shorter side", () => {
+    expect(valenceTravelHalfExtent(LINE, LINE_INSET)).toBeCloseTo(LINE_HALF, 10);
+    expect(valenceTravelHalfExtent(LINE, LINE_INSET)).not.toBeCloseTo(
+      padTravelHalfExtent(LINE, LINE_INSET),
+      10,
+    );
+  });
+
+  it("carries one unit of value for one half-extent of travel", () => {
+    close(valenceFrom(0, LINE, LINE_HALF, LINE_INSET), 1);
+    close(valenceFrom(0, LINE, -LINE_HALF, LINE_INSET), -1);
+    close(valenceFrom(0, LINE, LINE_HALF / 2, LINE_INSET), 0.5);
+  });
+
+  it("adjusts the value already standing rather than starting over", () => {
+    close(valenceFrom(-0.5, LINE, LINE_HALF / 2, LINE_INSET), 0);
+  });
+
+  it("clamps on the sum, so a base off centre still reaches the end", () => {
+    expect(valenceFrom(0.9, LINE, LINE_HALF * 10, LINE_INSET)).toBe(1);
+    expect(valenceFrom(-0.9, LINE, -LINE_HALF * 10, LINE_INSET)).toBe(-1);
+  });
+
+  it("keeps the base when the field has no travel in it", () => {
+    expect(valenceFrom(0.4, { left: 0, top: 0, width: 0, height: 0 }, 99, LINE_INSET)).toBe(0.4);
+  });
+
+  it("places the knob where the value's own percentage puts it", () => {
+    // The board draws +0.10 at 55% of the travel box, and the design gate
+    // checks its knob against this same function.
+    expect(padPercentOf({ pDirected: 0.1, pInterest: 0 }).x).toBe(55);
+    expect(padPercentOf({ pDirected: -1, pInterest: 0 }).x).toBe(0);
+    expect(padPercentOf({ pDirected: 1, pInterest: 0 }).x).toBe(100);
   });
 });

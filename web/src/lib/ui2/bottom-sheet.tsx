@@ -165,7 +165,7 @@ export function SheetItem({
       data-testid={testId}
       onClick={onSelect}
       aria-pressed={selected || undefined}
-      className={`cg-state cg-focus flex min-h-12 w-full items-center gap-3 rounded-small px-2 text-left text-body-large ${
+      className={`cg-state cg-focus flex min-h-12 w-full items-center gap-3 rounded-small px-2 text-left text-label-large ${
         selected ? "text-primary" : "text-on-surface"
       }`}
     >

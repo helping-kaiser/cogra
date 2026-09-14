@@ -4,6 +4,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +21,8 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
@@ -151,6 +157,7 @@ fun ComposeWizardRoute(
         onCloseSheet = viewModel::onCloseSheet,
         onLicenseChange = viewModel::onLicenseChange,
         onPDirectedChange = viewModel::onPDirectedChange,
+        onSetStance = viewModel::onSetStance,
         onSensitiveChange = viewModel::onSensitiveChange,
         onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
         onNext = viewModel::onNext,
@@ -221,6 +228,7 @@ internal fun ComposeWizardScreen(
     onCloseSheet: () -> Unit,
     onLicenseChange: (LicenseChoice) -> Unit,
     onPDirectedChange: (Double) -> Unit,
+    onSetStance: () -> Unit,
     onSensitiveChange: (Boolean) -> Unit,
     onSensitiveReasonChange: (String) -> Unit,
     onNext: () -> Unit,
@@ -264,189 +272,223 @@ internal fun ComposeWizardScreen(
     // survives either way, being written continuously rather than on exit.
     BackHandler(onBack = onBack)
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag("compose_wizard"),
-    ) {
-        WizardHeader(
-            title = state.headerTitle(),
-            onBack = onBack,
-            // The X leaves from any stage, draft kept, nothing to confirm.
-            onLeave = onLeave,
-            // `ComposeSeal` says "Last step"; `ComposeCover` says
-            // "Video only" — each board's own trailing note.
-            trailingNote = when (state.step) {
-                WizardStep.Seal -> "Last step"
-                WizardStep.Cover -> "Video only"
-                else -> null
-            },
-            // The seal's one `?`. On the key-absent seal it belongs to the
-            // key notice instead — the key story outranks the seal story
-            // there, and a screen carries only one (design/readme.md §13).
-            onHelp = if (state.step == WizardStep.Seal && !state.keyAbsent) {
-                { onOpenHelp(HelpTopic.SignedActions) }
-            } else {
-                null
-            },
-            helpContentDescription = HelpTopic.SignedActions.title,
-            testTag = "wizard_header",
-        )
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().testTag("compose_wizard")) {
+            WizardHeader(
+                title = state.headerTitle(),
+                onBack = onBack,
+                // The X leaves from any stage, draft kept, nothing to confirm.
+                onLeave = onLeave,
+                // `ComposeSeal` says "Last step"; `ComposeCover` says
+                // "Video only" — each board's own trailing note.
+                trailingNote = when (state.step) {
+                    WizardStep.Seal -> "Last step"
+                    WizardStep.Cover -> "Video only"
+                    else -> null
+                },
+                // The seal's one `?`. On the key-absent seal it belongs to the
+                // key notice instead — the key story outranks the seal story
+                // there, and a screen carries only one (design/readme.md §13).
+                onHelp = if (state.step == WizardStep.Seal && !state.keyAbsent) {
+                    { onOpenHelp(HelpTopic.SignedActions) }
+                } else {
+                    null
+                },
+                helpContentDescription = HelpTopic.SignedActions.title,
+                testTag = "wizard_header",
+            )
 
-        keyBanner()
+            keyBanner()
 
-        state.draftOffer?.let { held ->
-            DraftOffer(draft = held, onContinue = onContinueDraft, onDiscard = onDiscardDraft)
+            state.draftOffer?.let { held ->
+                DraftOffer(draft = held, onContinue = onContinueDraft, onDiscard = onDiscardDraft)
+            }
+
+            // The board dims what is behind the offer: the offer is the
+            // question to answer first.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .alpha(if (state.draftOffer != null) DIMMED else 1f),
+            ) {
+                when (state.step) {
+                    WizardStep.Body -> BodyStage(
+                        state = state,
+                        permission = permission,
+                        onBodyChange = onBodyChange,
+                        onModeChange = onModeChange,
+                        onOpenPicker = onOpenPicker,
+                        onTogglePick = onTogglePick,
+                        onManagePictures = onManagePictures,
+                        onDismissRefusal = onDismissRefusal,
+                        onNext = onNext,
+                    )
+
+                    WizardStep.Crop -> {
+                        WizardBody(scrollable = true, bottom = 0.dp) {
+                            CropStepBody(
+                                state = state,
+                                onShapeChange = onShapeChange,
+                                onFrameAsset = onFrameAsset,
+                                onCropsChanged = onCropsChanged,
+                            )
+                        }
+                        // `ComposeCrop` ends on the pill. It sits below the
+                        // scrolling body rather than inside it: the stage
+                        // scrolls so the crop's required non-drag route stays
+                        // reachable (D17), and a weighted spacer cannot push
+                        // anything to the bottom of a column of unbounded
+                        // height. Where the stage fits, this is the board.
+                        WizardFooter {
+                            CograButton(
+                                text = "Next",
+                                onClick = onNext,
+                                modifier = Modifier.fillMaxWidth(),
+                                testTag = "wizard_crop_next",
+                            )
+                        }
+                    }
+
+                    WizardStep.Cover -> {
+                        WizardBody(scrollable = true, bottom = 0.dp) {
+                            CoverStepBody(
+                                state = state,
+                                onPickFrame = onPickCoverFrame,
+                                onPickPicture = onOpenCoverPicker,
+                            )
+                        }
+                        // `ComposeCover` ends on the pill, below the body for
+                        // the same reason the crop stage does.
+                        WizardFooter {
+                            CograButton(
+                                text = "Next",
+                                onClick = onNext,
+                                modifier = Modifier.fillMaxWidth(),
+                                testTag = "wizard_cover_next",
+                            )
+                        }
+                    }
+
+                    WizardStep.Details -> WizardBody(top = Space.x3, bottom = Space.x4) {
+                        DetailsStepBody(
+                            state = state,
+                            onTitleChange = onTitleChange,
+                            onDescriptionChange = onDescriptionChange,
+                            onRetryUpload = onRetryUpload,
+                            onRemovePick = onRemovePickAt,
+                            onManagePictures = onManagePictures,
+                            onDescribePictures = onDescribePictures,
+                            topics = {
+                                // The 2.3 section, embedded rather than
+                                // rebuilt: only its surroundings changed.
+                                TopicEntry(
+                                    section = state.tagSection,
+                                    testTagPrefix = "wizard",
+                                    onTagInputChange = onTagInputChange,
+                                    onAddTag = onAddTag,
+                                    onRemoveTag = onRemoveTag,
+                                    onTuneTag = onTuneTag,
+                                    onDoneTuningTag = onDoneTuningTag,
+                                    onTagRelevanceChange = onTagRelevanceChange,
+                                    onTagConfidenceChange = onTagConfidenceChange,
+                                )
+                            },
+                            references = {
+                                ReferenceEntry(
+                                    section = state.referenceSection,
+                                    testTagPrefix = "wizard",
+                                    onOpenFinder = onOpenFinder,
+                                    onCloseFinder = onCloseFinder,
+                                    onFinderQueryChange = onFinderQueryChange,
+                                    onPickReference = onPickReference,
+                                    onRemoveReference = onRemoveReference,
+                                    onTuneReference = onTuneReference,
+                                    onDoneTuningReference = onDoneTuningReference,
+                                    onReferenceRelevanceChange = onReferenceRelevanceChange,
+                                    onReferenceSupportChange = onReferenceSupportChange,
+                                )
+                            },
+                        )
+                        CograButton(
+                            text = "Next",
+                            onClick = onNext,
+                            enabled = !state.titleTooLong && !state.descriptionTooLong,
+                            modifier = Modifier.fillMaxWidth(),
+                            testTag = "wizard_details_next",
+                        )
+                    }
+
+                    WizardStep.Seal -> WizardBody(gap = Space.x4) {
+                        SealStepBody(
+                            state = state,
+                            onOpenSheet = onOpenSheet,
+                            onSign = onSign,
+                            onBack = onSealBack,
+                            onRestoreKey = onRestoreKey,
+                            onKeepDraft = onKeepDraft,
+                            onKeyHelp = { onOpenHelp(HelpTopic.Key) },
+                        )
+                    }
+                }
+
+                state.problem()?.let { message ->
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Layout.ScreenGutter, vertical = Space.x2)
+                            .testTag("wizard_problem")
+                            // A refusal has to reach a reader who is not
+                            // looking at the bottom of the screen.
+                            .semantics { liveRegion = LiveRegionMode.Assertive },
+                    )
+                }
+            }
         }
 
-        // The board dims what is behind the offer: the offer is the
-        // question to answer first.
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .alpha(if (state.draftOffer != null) DIMMED else 1f),
-        ) {
-            when (state.step) {
-                WizardStep.Body -> BodyStage(
-                    state = state,
-                    permission = permission,
-                    onBodyChange = onBodyChange,
-                    onModeChange = onModeChange,
-                    onOpenPicker = onOpenPicker,
-                    onTogglePick = onTogglePick,
-                    onManagePictures = onManagePictures,
-                    onDismissRefusal = onDismissRefusal,
-                    onNext = onNext,
-                )
-
-                WizardStep.Crop -> {
-                    WizardBody(scrollable = true, bottom = 0.dp) {
-                        CropStepBody(
-                            state = state,
-                            onShapeChange = onShapeChange,
-                            onFrameAsset = onFrameAsset,
-                            onCropsChanged = onCropsChanged,
-                        )
-                    }
-                    // `ComposeCrop` ends on the pill. It sits below the
-                    // scrolling body rather than inside it: the stage
-                    // scrolls so the crop's required non-drag route stays
-                    // reachable (D17), and a weighted spacer cannot push
-                    // anything to the bottom of a column of unbounded
-                    // height. Where the stage fits, this is the board.
-                    WizardFooter {
-                        CograButton(
-                            text = "Next",
-                            onClick = onNext,
-                            modifier = Modifier.fillMaxWidth(),
-                            testTag = "wizard_crop_next",
-                        )
-                    }
-                }
-
-                WizardStep.Cover -> {
-                    WizardBody(scrollable = true, bottom = 0.dp) {
-                        CoverStepBody(
-                            state = state,
-                            onPickFrame = onPickCoverFrame,
-                            onPickPicture = onOpenCoverPicker,
-                        )
-                    }
-                    // `ComposeCover` ends on the pill, below the body for
-                    // the same reason the crop stage does.
-                    WizardFooter {
-                        CograButton(
-                            text = "Next",
-                            onClick = onNext,
-                            modifier = Modifier.fillMaxWidth(),
-                            testTag = "wizard_cover_next",
-                        )
-                    }
-                }
-
-                WizardStep.Details -> WizardBody(top = Space.x3, bottom = Space.x4) {
-                    DetailsStepBody(
-                        state = state,
-                        onTitleChange = onTitleChange,
-                        onDescriptionChange = onDescriptionChange,
-                        onRetryUpload = onRetryUpload,
-                        onRemovePick = onRemovePickAt,
-                        onManagePictures = onManagePictures,
-                        onDescribePictures = onDescribePictures,
-                        topics = {
-                            // The 2.3 section, embedded rather than
-                            // rebuilt: only its surroundings changed.
-                            TopicEntry(
-                                section = state.tagSection,
-                                testTagPrefix = "wizard",
-                                onTagInputChange = onTagInputChange,
-                                onAddTag = onAddTag,
-                                onRemoveTag = onRemoveTag,
-                                onTuneTag = onTuneTag,
-                                onDoneTuningTag = onDoneTuningTag,
-                                onTagRelevanceChange = onTagRelevanceChange,
-                                onTagConfidenceChange = onTagConfidenceChange,
-                            )
-                        },
-                        references = {
-                            ReferenceEntry(
-                                section = state.referenceSection,
-                                testTagPrefix = "wizard",
-                                onOpenFinder = onOpenFinder,
-                                onCloseFinder = onCloseFinder,
-                                onFinderQueryChange = onFinderQueryChange,
-                                onPickReference = onPickReference,
-                                onRemoveReference = onRemoveReference,
-                                onTuneReference = onTuneReference,
-                                onDoneTuningReference = onDoneTuningReference,
-                                onReferenceRelevanceChange = onReferenceRelevanceChange,
-                                onReferenceSupportChange = onReferenceSupportChange,
-                            )
-                        },
+        // THE PAD PARKS OVER THE PAGE, and the wash covers the seal
+        // beneath it — `ComposePad.jsx:31-47`, under the rule
+        // design/readme.md §"Fixed elements" gives every pad in the
+        // product: the lower centre of the viewport, the same place every
+        // time, because muscle memory is part of the control.
+        //
+        // It is deliberately NOT in the sheet host: a drawer would draw a
+        // second sheet chrome around it (F2-10) and would park it wherever
+        // the drawer happened to stop. The reply seal's pad already works
+        // this way.
+        if (state.padOpen) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = PAD_WASH_ALPHA))
+                    // The wash is the outside press: it stages nothing.
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onCloseSheet,
                     )
-                    CograButton(
-                        text = "Next",
-                        onClick = onNext,
-                        enabled = !state.titleTooLong && !state.descriptionTooLong,
-                        modifier = Modifier.fillMaxWidth(),
-                        testTag = "wizard_details_next",
-                    )
-                }
-
-                WizardStep.Seal -> WizardBody(gap = Space.x4) {
-                    SealStepBody(
-                        state = state,
-                        onOpenSheet = onOpenSheet,
-                        onSign = onSign,
-                        onBack = onSealBack,
-                        onRestoreKey = onRestoreKey,
-                        onKeepDraft = onKeepDraft,
-                        onKeyHelp = { onOpenHelp(HelpTopic.Key) },
-                    )
-                }
-            }
-
-            state.problem()?.let { message ->
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Layout.ScreenGutter, vertical = Space.x2)
-                        .testTag("wizard_problem")
-                        // A refusal has to reach a reader who is not
-                        // looking at the bottom of the screen.
-                        .semantics { liveRegion = LiveRegionMode.Assertive },
-                )
-            }
+                    .testTag("wizard_pad_wash"),
+            )
+            ComposePad(
+                pDirected = state.stagedPDirected,
+                onChange = onPDirectedChange,
+                onSet = onSetStance,
+                onCancel = onCloseSheet,
+                onHelp = { onOpenHelp(HelpTopic.YourOpinionOnYourPost) },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = PAD_SIDE_INSET)
+                    .padding(bottom = PAD_BOTTOM_INSET),
+            )
         }
     }
 
     // Every drawer over the wizard, one at a time. `PickedSheet` and
     // `DescribeSheet` open over the pick and details stages; the license
-    // and stance sheets over the seal.
+    // and the sensitive mark over the seal.
     if (state.anySheetOpen) {
         val sheetState = rememberModalBottomSheetState()
         ModalBottomSheet(onDismissRequest = onCloseSheet, sheetState = sheetState) {
@@ -485,13 +527,6 @@ internal fun ComposeWizardScreen(
                         onCloseSheet,
                         onHelp = { onOpenHelp(HelpTopic.License) },
                     )
-
-                state.sheet == SealSheet.Stance -> StanceSheet(
-                    pDirected = state.pDirected,
-                    onChange = onPDirectedChange,
-                    onDone = onCloseSheet,
-                    onCancel = onCloseSheet,
-                )
 
                 state.sheet == SealSheet.Sensitive -> SensitiveSheet(
                     marked = state.sensitive,
@@ -628,6 +663,19 @@ internal fun ComposeWizardState.forwardEnabled(): Boolean = when (step) {
     WizardStep.Details -> !titleTooLong && !descriptionTooLong
     else -> true
 }
+
+/**
+ * How far the wash dims the seal under the parked pad — the same 50%
+ * `--scrim-dialog` the boards wash with, and the value the reply seal's
+ * pad already parks over.
+ */
+private const val PAD_WASH_ALPHA = 0.5f
+
+/** The board's inset from each edge (`ComposePad.jsx:35`). */
+private val PAD_SIDE_INSET = 30.dp
+
+/** And its standoff from the bottom, which is the thumb's reach. */
+private val PAD_BOTTOM_INSET = 24.dp
 
 /**
  * The one problem line the stage shows, if any. A refusal that named a

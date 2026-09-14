@@ -38,7 +38,7 @@ export interface PostCardProps {
   bundle?: StanceBundle | null;
   signedIn?: boolean;
   /**
-   * Whether this reader has already met the stance gesture. Owned by the SHELL:
+   * Whether this reader has already met the gesture. Owned by the SHELL:
    * "the first tap ever" is a fact about the reader, and a card in a feed of
    * twenty cannot know it. Defaults to true, so a card on its own teaches nothing.
    */

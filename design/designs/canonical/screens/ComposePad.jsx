@@ -1,4 +1,4 @@
-/* THE STANCE PAD ON YOUR OWN POST (legacy conversion, the conformance round):
+/* THE OPINION PAD ON YOUR OWN POST (legacy conversion, the conformance round):
    what the seal's "Adjust" opens. The wash covers the seal; only the parked
    pad is live, which is what the board's `scanExempt` line says.
 

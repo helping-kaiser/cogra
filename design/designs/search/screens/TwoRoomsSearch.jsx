@@ -19,7 +19,7 @@ export function Screen() {
         <SectionLabel>Items</SectionLabel>
         <ReferenceRow kind="item" name="Salt-crust rubbing, framed" value="4.30" onOpen={() => {}} />
         <Seam />
-        <ReferenceRow kind="post" name="Grain of the flats" value="3w" onOpen={() => {}} />
+        <ReferenceRow kind="post" name="Grain of the flats" value="21d" onOpen={() => {}} />
       </Column>
       <BottomNav active="search" slots={ALL_SLOTS} inline />
     </>
