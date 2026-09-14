@@ -8,7 +8,9 @@
  * close it, and the route never changes.
  *
  * A picture pinch-zooms and the gallery's swipe and dots carry over — dots only,
- * no arrows and no "n of m", the count riding their accessible name; a video takes the
+ * no arrows, the count riding their accessible name. The row is windowed at seven
+ * (`ViewerDots`): past that it slides with the reader and its overflowing edge dot
+ * shrinks. A video takes the
  * full transport, and rotating the device fills the screen with it. No acts, and
  * the description is not shown — alt text is for the people who cannot see the
  * frame, not a caption the author never wrote.
@@ -34,3 +36,18 @@ export interface MediaViewerProps {
 }
 
 export declare function MediaViewer(props: MediaViewerProps): JSX.Element | null;
+
+export interface ViewerDotsProps {
+  /** How many pictures the set holds. Under two, nothing is drawn. */
+  count: number;
+  /** Which one the reader is on, zero-based. */
+  current: number;
+}
+
+/**
+ * The viewer's position marker: at most seven dots, the window sliding centred on
+ * `current` and clamped to the set's ends, an edge dot shrunk where the set keeps
+ * going beyond it. The active dot is always full size, every slot keeps its pitch,
+ * and the plain "Picture n of m" rides the row's accessible name.
+ */
+export declare function ViewerDots(props: ViewerDotsProps): JSX.Element | null;

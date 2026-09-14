@@ -821,6 +821,15 @@
       "page": "feed"
     },
     {
+      "file": "ChatsComingSoon.dc.html",
+      "title": "Chats · not here yet",
+      "x": 4320,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "Money.dc.html",
       "title": "Money · the CGT figure",
       "x": 0,
@@ -1191,10 +1200,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -3030,
+      "x": -3320,
       "y": 0,
-      "w": 2610,
-      "h": 2442,
+      "w": 2900,
+      "h": 2429,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1263,7 +1272,7 @@
     },
     {
       "file": "ProfileStances.dc.html",
-      "title": "Profile · the stances page",
+      "title": "Profile · the opinions page",
       "x": 960,
       "y": 0,
       "w": 390,
@@ -1328,6 +1337,15 @@
       "file": "ProfileDeleted.dc.html",
       "title": "Profile · deleted by the person whose account it was",
       "x": 2400,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ProfileDeletedMenu.dc.html",
+      "title": "Profile · a deleted account's menu",
+      "x": 2880,
       "y": 964,
       "w": 390,
       "h": 844,

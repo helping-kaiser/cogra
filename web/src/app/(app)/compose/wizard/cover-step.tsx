@@ -3,9 +3,9 @@
 // ComposeCover — "The video's face".
 //
 // The choices are the frames pulled off the clip and a picture of the author's
-// own. The board asks for four frames — "1s, 10%, 50%, 90%" (`CoverRow`) — and
-// this screen offers the three fractional ones; the opening offer is a time
-// rather than a fraction, which `FRAME_POINTS` has no duration to resolve.
+// own. The board asks for four frames — "1s, 10%, 50%, 90%" (`CoverRow`) —
+// and `captureFrames` takes all four: the opening second, clamped to the
+// clip's own length, then the three fractional points.
 //
 // NOT a scrubber. A timeline that lets an author land on any frame is the
 // obvious web idiom and it is NOT what the board asks for — a handful of offers

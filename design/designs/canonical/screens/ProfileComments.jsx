@@ -13,7 +13,7 @@ export function Screen() {
           <ProfileHeader
             handle="ada"
             displayName="Ada Okonkwo"
-            avatarSrc="ava1.jpg"
+            avatarSrc="comment-camera.jpg"
             bio="A dozen tries at the third headland light and counting."
             posts={12}
             stancesOn={48}
