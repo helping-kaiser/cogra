@@ -257,8 +257,11 @@ class CograNavGraphTest {
         waitForTag("feed_post_p1")
 
         compose.onNodeWithTag("feed_post_p1").performClick()
-        waitForTag("detail_post_reference_action")
-        compose.onNodeWithTag("detail_post_reference_action").performClick()
+        // Citing rides the ⋮ now (`_shared.jsx:165-175`), not a button on the
+        // affordance row.
+        waitForTag("detail_menu")
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_cite").performClick()
         compose.waitForIdle()
 
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>())
