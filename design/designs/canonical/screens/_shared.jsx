@@ -879,14 +879,24 @@ const ADD_ROWS = [
    THE SAME RULE GOVERNS BOTH SEALS. It is about citations, not about which
    composer staged them — so the reply's seal counts at two exactly as the
    post's does, and both doors open the one sheet. What differs is the single
-   reading each seal was drawn with, which this round does not touch. */
+   reading each seal was drawn with, which this round does not touch.
+
+   THE DOOR'S NAME CARRIES THE COUNT (jakob's ruling 2026-09-14, ruling 8). An
+   `aria-label` REPLACES what it names, so the row's whole reading — the hidden
+   digit and the "3 citations" paired with it — went unheard behind "Manage the
+   citations": a listener was given the verb at the price of the number, which
+   is the one thing the row exists to say. The name carries it, bare count and
+   the row's own noun, the regular plural the card adds to `countNoun` said
+   here in the same words. ONE FACTORY WRITES BOTH SEALS' ROW, so the compose
+   seal and the reply seal changed together and cannot disagree. Nothing is
+   drawn differently. */
 const citedRow = (count) => ({
   label: "References",
   value: `${count} cited`,
   count: String(count),
   countNoun: "citation",
   onOpen: () => {},
-  openLabel: "Manage the citations",
+  openLabel: `Manage the ${count} ${count === 1 ? "citation" : "citations"}`,
 });
 
 /* The post's staged set past the first, written once: the seal that COUNTS

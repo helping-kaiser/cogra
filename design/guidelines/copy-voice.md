@@ -390,11 +390,17 @@ DO, the way the sound toggle already does:
   value. It is api-spec's own gloss said to a reader, and the other axis
   keeps `For or against`, the words a stance already uses for that slot.
 
-**`Manage the citations`** — the seal's "N cited" row, whose whole row is
-the control and which carries no word saying so. `Manage the pictures`
+**`Manage the N citations`** — the seal's "N cited" row, whose whole row
+is the control and which carries no word saying so. `Manage the pictures`
 (the details stage's picked row) said for the other collection: the verb
 is what the row does, and naming it is the only way a listener learns
-that a line reading "References · 3 cited · 3" is a door at all.
+that a line reading "References · 3 cited · 3" is a door at all. **The
+count rides inside the name**, because a door's name replaces everything
+in it: a listener who hears "Manage the citations" has been given the
+verb at the price of the number, and the number is the whole reason the
+row exists. The count is bare and the noun is the row's — "Manage the 3
+citations", and at one "Manage the 1 citation", the plural the acts
+card's own reading spells.
 
 **The acts card's count — `N <the row's noun>`** (jakob's ruling
 2026-09-14). The seal's rows end in a bare digit, which an eye reads

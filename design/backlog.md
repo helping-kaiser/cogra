@@ -2499,3 +2499,16 @@ Recorded in copy-voice under Accessible names. The two wallet seals'
 Address rows are the one place still bare: the wallet surfaces are held
 for another lane, and an absent noun renders exactly as before, so they
 adopt it when that lane next opens them.
+
+The reading reached one row that could not hear it. A door row's
+`openLabel` becomes an `aria-label`, which REPLACES the box's contents —
+so the References row drew a count, hid the digit, paired it with
+"3 citations", and then "Manage the citations" spoke over all of it.
+jakob ruled 2026-09-14 (ruling 8) that the name folds the count in:
+"Manage the 3 citations", the bare count and the row's own noun, at one
+"Manage the 1 citation". Both seals share the one `citedRow` factory, so
+both doors changed together and cannot disagree. The plural is the
+regular one `countNoun` already gets, said in the board's own words: the
+bundle exposes components and constants to screens, never a card's
+helpers, so the rule is tied by the docblocks rather than by an import.
+Nothing is drawn differently.
