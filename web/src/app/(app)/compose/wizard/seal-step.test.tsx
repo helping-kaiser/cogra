@@ -5,7 +5,15 @@ import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { newReferenceDraft } from "@/lib/references/draft";
 import { DEFAULT_CONFIDENCE, DEFAULT_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
 import { PUBLIC_DOMAIN } from "@/lib/license";
-import { SealStep } from "./seal-step";
+import { SealStep, type SealSheet } from "./seal-step";
+
+function citation(id: string, label: string, relevance = 0.1, support = 0.1) {
+  return {
+    ...newReferenceDraft(id, { kind: "Post" as const, label, href: `/p/${id}` }),
+    relevance,
+    support,
+  };
+}
 
 function tag(name: string): TagDraft {
   return { name, relevance: DEFAULT_RELEVANCE, confidence: DEFAULT_CONFIDENCE };
@@ -17,7 +25,7 @@ function baseState(overrides: Partial<WizardState> = {}): WizardState {
 
 function renderStep(
   overrides: Partial<WizardState> = {},
-  sheet: "none" | "license" | "stance" | "sensitive" = "none",
+  sheet: SealSheet = "none",
   keyOnDevice: boolean | null = true,
   staged = 0.1,
 ) {
@@ -31,6 +39,7 @@ function renderStep(
     stagedPDirected: staged,
     onSheet: vi.fn(),
     onLicense: vi.fn(),
+    onReferences: vi.fn(),
     onStagedPDirected: vi.fn(),
     onSetStance: vi.fn(),
     onStanceHelp: vi.fn(),
@@ -74,9 +83,116 @@ describe("SealStep", () => {
       support: 0.1,
     };
     renderStep({ references: [reference] });
-    expect(screen.getByText("The long way home — @ada")).toBeInTheDocument();
-    expect(screen.queryByText("1 cited")).not.toBeInTheDocument();
-    expect(screen.getAllByText("+0.10 / +0.10").length).toBeGreaterThan(0);
+    // Scoped to the acts card: the cited sheet renders behind the seal as a
+    // closed `<dialog>`, so the citation it lists is in the document too.
+    const acts = within(screen.getByTestId("wizard-seal-acts"));
+    expect(acts.getByText("The long way home — @ada")).toBeInTheDocument();
+    expect(acts.queryByText("1 cited")).not.toBeInTheDocument();
+    expect(acts.getAllByText("+0.10 / +0.10").length).toBeGreaterThan(0);
+  });
+
+  // The N-cited round (jakob's rulings 2026-09-14, design backlog item 70):
+  // one citation reads back as itself, two or more read back as their count
+  // and the whole row becomes the door to the sheet that lists them.
+  describe("the References row's three readings", () => {
+    it("draws no row at all with nothing staged", () => {
+      renderStep();
+      expect(screen.queryByText("References")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("wizard-open-cited")).not.toBeInTheDocument();
+    });
+
+    it("counts instead of naming from two, with the count bare", () => {
+      renderStep({
+        references: [citation("p-1", "The long way home — @ada"), citation("p-2", "Mira Voss")],
+      });
+      const door = screen.getByTestId("wizard-open-cited");
+      expect(door).toHaveTextContent("2 cited");
+      // The trailing count is the citations, BARE — the list's length and
+      // nothing else, never the signature's own act total.
+      expect(door.lastElementChild?.textContent).toBe("2");
+      expect(door).not.toHaveTextContent("2 actions");
+      // Two or more is where the name stops being the shortest true answer,
+      // so no citation is named on the card any more.
+      expect(
+        within(screen.getByTestId("wizard-seal-acts")).queryByText("The long way home — @ada"),
+      ).not.toBeInTheDocument();
+    });
+
+    it("makes the whole counting row the control, named for what it opens", () => {
+      const { onSheet } = renderStep({
+        references: [citation("p-1", "One"), citation("p-2", "Two"), citation("p-3", "Three")],
+      });
+      const door = screen.getByRole("button", { name: "Manage the citations" });
+      expect(door).toBe(screen.getByTestId("wizard-open-cited"));
+      // No chevron, no trailing word: the accessible name is the only thing
+      // that says the line is a door (copy-voice, `PickedRow`'s rule).
+      expect(door).not.toHaveTextContent("Manage");
+      door.click();
+      expect(onSheet).toHaveBeenCalledWith("cited");
+    });
+  });
+
+  describe("the cited sheet", () => {
+    const two = [
+      citation("p-1", "The long way home — @ada"),
+      citation("p-2", "Tide tables and the third headland", -0.2, 0.1),
+    ];
+
+    it("titles itself by what it holds and how many", () => {
+      renderStep({ references: two }, "cited");
+      expect(screen.getByText("Cited · 2")).toBeInTheDocument();
+      expect(screen.getByTestId("wizard-cited-sheet-row-0")).toHaveTextContent(
+        "The long way home — @ada",
+      );
+      expect(screen.getByTestId("wizard-cited-sheet-row-1")).toHaveTextContent(
+        "Tide tables and the third headland",
+      );
+    });
+
+    it("names every control for its own citation", () => {
+      renderStep({ references: two }, "cited");
+      expect(
+        screen.getByRole("button", { name: "Remove The long way home — @ada" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", {
+          name: "The long way home — @ada — set how it relates",
+        }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Remove Tide tables and the third headland" }),
+      ).toBeInTheDocument();
+    });
+
+    it("adds nothing — citations are staged where they are staged", () => {
+      renderStep({ references: two }, "cited");
+      const sheet = screen.getByTestId("wizard-cited-sheet");
+      expect(within(sheet).queryByText(/Cite something/)).not.toBeInTheDocument();
+      expect(within(sheet).queryByText(/Add a reference/)).not.toBeInTheDocument();
+    });
+
+    it("removes into the staged set the details stage owns", () => {
+      const { onReferences } = renderStep({ references: two }, "cited");
+      screen.getByTestId("wizard-cited-sheet-remove-0").click();
+      expect(onReferences).toHaveBeenCalledWith([two[1]]);
+    });
+
+    it("re-pairs one citation without touching the others", () => {
+      const { onReferences } = renderStep({ references: two }, "cited");
+      fireEvent.click(screen.getByTestId("wizard-cited-sheet-repair-1"));
+      const relevance = screen.getByTestId("wizard-cited-sheet-1-relevance");
+      fireEvent.change(relevance, { target: { value: "0.5" } });
+      expect(onReferences).toHaveBeenCalledWith([
+        two[0],
+        { ...two[1], relevance: 0.5, support: 0.1 },
+      ]);
+    });
+
+    it("closes on Done", () => {
+      const { onSheet } = renderStep({ references: two }, "cited");
+      screen.getByTestId("wizard-cited-sheet-done").click();
+      expect(onSheet).toHaveBeenCalledWith("none");
+    });
   });
 
   // An opinion on one's own post is ONE number (jakob, 2026-09-14): the
@@ -113,7 +229,9 @@ describe("SealStep", () => {
       support: 0.1,
     };
     renderStep({ references: [reference], pDirected: 0.1 });
-    expect(screen.getByText("+0.10 / +0.10")).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId("wizard-seal-acts")).getByText("+0.10 / +0.10"),
+    ).toBeInTheDocument();
   });
 
   // CW-31/CW-32/CW-33/CW-34/CW-35 + backlog item 30: the pad is a parked
