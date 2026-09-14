@@ -12,9 +12,6 @@
          body XOR"). -->
     <string name="content_edit_media_heading">Pictures</string>
     <string name="content_edit_media_body_xor">A post\'s body is words or media, never both.</string>
-    <!-- ComposeCrop's quiet note: one shape for the whole post, chosen on
-         this stage and applied to every picture in it. -->
-    <string name="content_crop_note">One shape for the whole post. Drag to move, pinch to zoom.</string>
 
     <!-- The tags section, on the composer and the edit screen
          (hashtag.md; D15: no autocomplete). -->

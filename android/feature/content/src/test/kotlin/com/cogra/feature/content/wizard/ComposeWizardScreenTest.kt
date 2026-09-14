@@ -3,12 +3,14 @@ package com.cogra.feature.content.wizard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -464,13 +466,18 @@ class ComposeWizardScreenTest {
     }
 
     @Test
-    fun theCropStageCarriesTheQuietNote() {
-        // ComposeCrop's caption, the same words the web crop step already
-        // shows (CW-11).
+    fun theCropStageCarriesTheQuietNoteExactlyOnce() {
+        // CW-11's audit citation ("CropStep.kt — no such note anywhere in
+        // the file") was true of this file's own text but not of what the
+        // stage renders: `MediaCrop` already defaults its `caption` param to
+        // this exact string (core/designsystem/.../media/MediaCrop.kt:62).
+        // This pins ComposeCrop's caption to appearing once, not zero times
+        // and not twice — a regression this lane's first draft introduced by
+        // adding a second, unaware of MediaCrop's own default.
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
-        compose.onNodeWithTag("wizard_crop_note").assertIsDisplayed()
-        compose.onNodeWithText("One shape for the whole post. Drag to move, pinch to zoom.")
-            .assertIsDisplayed()
+        compose
+            .onAllNodesWithText("One shape for the whole post. Drag to move, pinch to zoom.")
+            .assertCountEquals(1)
     }
 
     @Test
