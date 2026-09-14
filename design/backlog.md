@@ -557,11 +557,11 @@ Two follow-ups the round surfaces, still open:
   - **`PickPrompt` requires an escape.** The draft board's
     fresh-start line is the same caption with nothing to escape to;
     it is spelled at the master's values instead of taking it.
-  - **No one-axis stance pad exists.** `ComposePad` draws its own
-    and `ReplyPad` will want the same one. Its readout now reads the
-    table — 🙂 "Nice", the nearest anchor at +0.30 — so what is left
-    is the field itself: a master for the line, or two boards
-    drawing one.
+  - **No one-axis stance pad exists.** `ComposePad` draws its own,
+    and it is the only board that wants one — `ReplyPad` reads the
+    master square. Its readout reads `VALENCE_SIX`, so what is left
+    is the field itself: a master for the line, or one board
+    drawing it.
   - **A flow badge on a field never paints.** The badge's `::after`
     generates no box on a replaced element, and the composer boards
     stamp the `<input>`/`<textarea>` itself (`ComposeCited`,
@@ -2123,16 +2123,15 @@ lives in the unboarded combinations. Needs a design ruling: shorter
 kind labels, a tighter collapse rule, or a wider trigger — then item
 60's guard can gate absolutely.
 
-### 65 · ComposePad's face claims a derivation that doesn't answer · *design*
+### 65 · ComposePad's face claims a derivation that doesn't answer · *design* · **drawn 2026-09-14**
 
-Found by `check-readouts`: `ComposePad.jsx` explains its 🙂 face as
-"nearest anchor at +0.30", but `nearestAnchor` takes a pair and a
-one-axis pick names none — with `pInterest: 1` (your own post reaches
-you in full) the nearest is 🍿, and a 1-D nearest on `pDirected`
-alone also answers 🍿. Either the one-axis pads get a ruled 1-D face
-rule (then the gate can check the face and the board may change), or
-the face is ruled hand-picked and the docblock says so. The check
-reports the face as an unverifiable note until ruled.
+Found by `check-readouts`: the board explained its 🙂 face as "nearest
+anchor at +0.30", a derivation a one-axis pick cannot make —
+`nearestAnchor` takes a pair, and with `pInterest: 1` (your own post
+reaches you in full) the nearest is 🍿. Closed by the valence-six
+ruling: the ruled six become `VALENCE_SIX` and `nearestValenceAnchor`
+in `StanceReadout.jsx`, the pad re-draws at its +0.10 default reading
+🙂, and the gate checks the face against the table.
 
 ### 61 · The sky's dark points read backwards · *design* · **drawn 2026-09-14**
 
