@@ -6,6 +6,7 @@
       "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
       "status": "resolved",
       "startsOn": [
+        "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
@@ -53,7 +54,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 45 boards → ComposePick",
+        "start · «nav · New post» on 46 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -65,6 +66,7 @@
         "ComposeDetails",
         "ComposeSeal",
         "ComposeLanded",
+        "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
@@ -656,6 +658,7 @@
       "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
       "status": "resolved",
       "startsOn": [
+        "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
@@ -703,7 +706,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 45 boards → ComposePick",
+        "start · «nav · New post» on 46 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -715,6 +718,7 @@
         "ComposeDetails",
         "ComposeSeal",
         "ComposeLanded",
+        "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
@@ -766,6 +770,7 @@
       "description": "A horizontal or square clip takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
       "status": "resolved",
       "startsOn": [
+        "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
@@ -813,7 +818,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 45 boards → ComposePick",
+        "start · «nav · New post» on 46 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -825,6 +830,7 @@
         "ComposeDetailsVideo",
         "ComposeSeal",
         "ComposeLanded",
+        "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
@@ -876,6 +882,7 @@
       "description": "A vertical clip meets no cover step at all: it plays the moment it is on screen, so its face is its first frame and the wizard runs pick to details, where an optional door offers a cover to anyone who wants one.",
       "status": "resolved",
       "startsOn": [
+        "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
@@ -923,7 +930,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 45 boards → ComposePick",
+        "start · «nav · New post» on 46 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -933,6 +940,7 @@
         "ComposeDetailsVideo",
         "ComposeSeal",
         "ComposeLanded",
+        "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
@@ -1701,6 +1709,15 @@
       "endpoint": [
         "edit-avatar-standalone"
       ]
+    },
+    "ChatsComingSoon": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
+      ],
+      "endpoint": []
     },
     "CommentEdit": {
       "flows": [
@@ -2931,35 +2948,16 @@
     }
   },
   "gapsOnFlows": [
-    "ApplicantFeed/18: the chat surface (not designed)",
-    "ApplicantWaiting/15: the chat surface (not designed)",
-    "ComposeExpired/18: the chat surface (not designed)",
-    "DeleteAccountCanceled/16: the chat surface (not designed)",
     "Explore/2: the Sky (backlog item 16 — last on purpose)",
-    "Explore/9: the chat surface (not designed)",
     "ExploreSearch/5: the item's surface (not designed)",
     "ExploreSearch/7: the chat surface (not designed)",
     "ExploreSearch/8: the offer's surface (not designed)",
-    "Feed/16: the chat surface (not designed)",
-    "FeedCover/17: the chat surface (not designed)",
-    "FeedDeleting/16: the chat surface (not designed)",
-    "FeedFar/16: the chat surface (not designed)",
-    "FeedGallery/15: the chat surface (not designed)",
-    "FeedHidden/15: the chat surface (not designed)",
-    "FeedNarrowed/16: the chat surface (not designed)",
-    "FeedNothing/8: the chat surface (not designed)",
-    "FeedUnread/16: the chat surface (not designed)",
-    "KeyElsewhere/17: the chat surface (not designed)",
-    "Profile/1: the chat surface (not designed)",
     "Profile/7: the invites screen (not designed)",
-    "ProfileApplicant/1: the chat surface (not designed)",
     "ProfileComments/5: the chat surface (not designed)",
     "ProfileOther/5: the chat surface (not designed)",
     "ProfileOtherHeld/5: the chat surface (not designed)",
     "ProfilePosts/5: the chat surface (not designed)",
     "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
-    "VouchBack/18: the chat surface (not designed)",
-    "Wallet/14: the chat surface (not designed)",
     "Wallet/2: the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)",
     "Wallet/3: the settlement's public record view (not boarded — the traceability promise)",
     "Wallet/5: the paying settlement's view (not boarded — every line opens what paid it)",
@@ -2968,10 +2966,7 @@
     "WalletCampaign/2: the rail record's view (not boarded — the traceability promise)",
     "WalletCampaigns/2: the campaign creation flow (future item — the console stays out of the wallet)",
     "WalletEmpty/3: the new-address input stage (not boarded)",
-    "WalletEmpty/9: the chat surface (not designed)",
-    "WalletKeyAbsent/10: the chat surface (not designed)",
     "WalletKeyAbsent/3: the paying settlement's view (not boarded — every line opens what paid it)",
-    "WalletKeyAbsent/4: the tipping act's view (not boarded — every line opens what paid it)",
-    "WalletSetup/8: the chat surface (not designed)"
+    "WalletKeyAbsent/4: the tipping act's view (not boarded — every line opens what paid it)"
   ]
 }

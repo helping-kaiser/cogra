@@ -2203,9 +2203,13 @@ item 33, jakob's rulings the same day).
   through is not full screen. Nothing is cut there —
   it is the surface every crop in the product is measured against — a
   picture pinch-zooms and **the gallery's swipe and its dots** carry
-  over, dots only, no arrows and no "n of m" (the pager ruling holds
-  here too: arrows would be a second vocabulary for a gesture the
-  reader already has). And a clip
+  over, dots only, no arrows (the pager ruling holds here too: arrows
+  would be a second vocabulary for a gesture the reader already has),
+  the count spoken in the row's accessible name rather than drawn.
+  **The row is windowed at seven**: past seven pictures it slides
+  centred on where the reader is, and the edge dot on the side the set
+  keeps going is drawn smaller — a marker with a ceiling, where a row
+  that grew with the set would be a ruler to count. And a clip
   whose shape is not the device's keeps its shape and takes the ground
   beside it rather than being cropped to the edges. **No acts** on the
   viewer, and **the description is not shown**: alt text is read aloud
@@ -2946,11 +2950,17 @@ whole canvas rather than a fix to one board.
   label saying what the code does not do. The statement lives in §2, and
   the Newest ruling above is the same principle read from the label's
   end.
-- **The chats affordance is end-state truth.** `CograBand`'s line and
-  the graph's gap were never in conflict. The band carries chats because
-  messaging belongs on every tab root; the apps draw it the release a
-  chat surface exists to receive the tap. Nothing is redrawn — the edges
-  stay as they are, and the docblock says which half is the end state.
+- **The chats affordance ships before messaging does**, and taps into
+  `ChatsComingSoon` (ruled 2026-09-14). The band carries chats because
+  messaging belongs on every tab root, and that corner is the same
+  corner on every root — pulling the icon until a chat surface exists
+  would move the bell on every band and move it back later, costing
+  every reader the muscle memory twice to save one screen. So the icon
+  stands and the tap lands on a screen that says what is behind the
+  door. A guest's band still gates instead: `Main`, `FeedBare` and
+  `WalletGuest` send chats to `GuestGate`, because a guest has no chats
+  to come back to. The *Message* control on another's profile is a
+  different affordance and still owes its own destination.
 - **The guest and applicant bands ship now; the rank waits.** A band
   that names whose view this is tells the truth the moment it is drawn,
   and the vantage it names — the genesis moderator for a bare arrival,
