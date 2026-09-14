@@ -88,6 +88,28 @@ export interface MediaDiscProps {
 
 export declare function MediaDisc(props: MediaDiscProps): JSX.Element;
 
+export interface PagerDotsProps {
+  /** How many pictures the set holds. Under two, nothing is drawn. */
+  count: number;
+  /** Which one the reader is on, zero-based. */
+  current: number;
+  /**
+   * Which surface the row sits on. `card` (the default) is the page's own ink;
+   * `viewer` is white over the scrim, with the drop shadow a 6px dot needs to
+   * survive an unknown photograph.
+   */
+  tone?: "card" | "viewer";
+}
+
+/**
+ * The pager's position marker, shared by the card's gallery and the viewer: at
+ * most seven dots, the window sliding centred on `current` and clamped to the
+ * set's ends, an edge dot shrunk where the set keeps going beyond it. The active
+ * dot is always full size, every slot keeps its pitch, and the plain
+ * "Picture n of m" rides the row's accessible name.
+ */
+export declare function PagerDots(props: PagerDotsProps): JSX.Element | null;
+
 /**
  * A swipeable pager: one frame at the post's one crop shape, dots below —
  * dots only, never a "1/n" count. Every frame renders at the shared ratio

@@ -187,7 +187,7 @@ before it is signed, and anything half-finished says who acts next.
 - `Just looking? Browse the feed →`
 
 **Emoji: yes, in exactly one place.** The twenty-anchor stance readout
-(§8) plus 🤷 for a zero standing and 🫥 for a control at rest. These are
+(§8) plus 🤷 for a zero bundle and 🫥 for a control at rest. These are
 *system* emoji rendering a value, not decoration. Emoji never appear in
 headings, buttons, marketing copy, or empty states. The single arrow in
 `Browse the feed →` is the only other glyph used as punctuation.
@@ -292,7 +292,7 @@ them, stay soft and never manufacture urgency.
 
 Transparency and blur are almost absent by policy: the dialog scrim is
 `scrim` at 50%, and the only other translucency is the resting stance
-face at 40% opacity + grayscale, which means "no standing yet". Blur is
+face at 40% opacity + grayscale, which means "no opinion yet". Blur is
 reserved for the sensitive-content veil of §9 (gentle, tap to reveal) —
 not yet built. No frosted glass, no protection gradients: type sits on a
 solid role, so it never needs a gradient to survive.
@@ -686,7 +686,7 @@ four quadrants are legitimate.
   with the **landing** ("Resulting opinion …") below the field — two
   different numbers, never merged into one line, each labelled above its
   own value.
-- **The control never prevents a choice.** A pick that nets a standing to
+- **The control never prevents a choice.** A pick that nets a bundle to
   `(0, 0)` is *severance*: confirmed with its cost stated, never
   refused.
 - The emoji face is a **lossy readout of the pick**, nearest of twenty
@@ -730,8 +730,8 @@ Nothing vanishes silently, and none of these use `error` colouring.
 
   **What remains is the skeleton, and the skeleton is the point:** the
   structural record, its witness, and everything it does on L1 — author,
-  timestamp, thread position, standing, the stance a reader can still
-  take, the score, the comments. No record ever leaves the graph and
+  timestamp, thread position, the opinion a reader can still give, the
+  score, the comments. No record ever leaves the graph and
   every redaction leaves a visible mark, so a reader is never left
   wondering whether something was quietly deleted. **Two reasons, two
   wordings** — removed for cause by proposal, or removed by the author's

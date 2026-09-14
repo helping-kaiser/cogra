@@ -357,7 +357,7 @@
     },
     {
       "name": "message-someone",
-      "description": "Message on someone's profile opens the conversation with them — the chat surface is still owed.",
+      "description": "Message on someone's profile lands on the chats screen, which says the surface is not here yet — the conversation itself is still owed.",
       "start": { "board": "ProfileOther" },
       "end": { "board": "ProfileOther", "via": 5 }
     },

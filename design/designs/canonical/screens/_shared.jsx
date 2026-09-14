@@ -884,6 +884,7 @@ const citedRow = (count) => ({
   label: "References",
   value: `${count} cited`,
   count: String(count),
+  countNoun: "citation",
   onOpen: () => {},
   openLabel: "Manage the citations",
 });
@@ -927,7 +928,7 @@ function ComposeSealBody({ cited = 1 }) {
 
         <ActsCard
           rows={[
-            { label: "Post", value: "Salt maps of the coast road", count: "1" },
+            { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
             {
               label: "Tags",
               value: (
@@ -937,14 +938,16 @@ function ComposeSealBody({ cited = 1 }) {
                 </span>
               ),
               count: "2",
+              countNoun: "tag",
             },
             cited > 1
               ? citedRow(cited)
               : {
                   label: "References",
-                  /* The staged citation carries the stance that rides with it,
-                     so the row is two lines: what is cited, and what signing it
-                     says about the citer. */
+                  countNoun: "citation",
+                  /* The staged citation carries its own pair, so the row is two
+                     lines: what is cited, and what signing it says about the
+                     citer. */
                   value: (
                     <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
                       <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
@@ -1050,6 +1053,7 @@ function ReplyPadBody() {
    sits in (copy-voice), and one edge is a reference. */
 const replyCitedRow = () => ({
   label: "Reference",
+  countNoun: "citation",
   value: (
     <span style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
       <button
@@ -1094,7 +1098,7 @@ function ReplySealBody({ cited = 0 }) {
             one act signed — draws neither it nor the plural total. */}
         <ActsCard
           rows={[
-            { label: "Comment", value: "Reply to @ada's post", count: "1" },
+            { label: "Comment", value: "Reply to @ada's post", count: "1", countNoun: "comment" },
             ...(cited === 1 ? [replyCitedRow()] : cited > 1 ? [citedRow(cited)] : []),
             ...ADD_ROWS,
           ]}
