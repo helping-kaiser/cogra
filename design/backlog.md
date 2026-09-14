@@ -2321,12 +2321,16 @@ aren't built yet. When they are, your conversations will be here.`
 Three alternates and the timing question are in copy-voice under
 "Awaiting blessing — the chats coming-soon screen"; jakob picks.
 
-**Still owed, deliberately left:** the *Message* control on another's
-profile (`ProfileOther`, `ProfileOtherHeld`, `ProfilePosts`,
-`ProfileComments`) and the message row in search results still carry
-the chat-surface gap. Ruling 68 names the band icon, and routing a
-labelled *Message* into a coming-soon screen is a separate decision.
-`message-someone` stays blocked on it.
+**The labelled routes followed** (jakob 2026-09-14). The *Message*
+control on another's profile (`ProfileOther`, `ProfileOtherHeld`,
+`ProfilePosts`, `ProfileComments`) and the message row in search results
+land on `ChatsComingSoon` too: one missing surface answers in one place,
+and a labelled control that went nowhere while the band's icon explained
+itself was the same gap told twice. All five are signed-in boards, so
+none needs the guest bands' `GuestGate` detour — the rule that decides
+between the two is who is reading, not which control was tapped. The
+graph's gap count falls 20 → 15, `message-someone` resolves (61 of 63
+flows), and the witness is reblessed on that one step.
 
 ### 69 · The canvas splits by domain · *tooling* · **done 2026-09-14**
 
