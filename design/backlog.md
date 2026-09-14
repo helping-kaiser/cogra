@@ -2402,3 +2402,16 @@ Three leftovers from item 57's judgment pass (2026-09-14):
   kept-list) or a rename to rule. Riding along: `_shared.jsx`'s "the
   staged citation carries the stance that rides with it" is a model
   question (a citation carries its own pair), not a naming one.
+
+### 73 · The acts count has no accessible reading · *design*
+
+Surfaced by implementation's bare-count conform (their PR #730,
+2026-09-14): `ActsCard`'s trailing count span carries no aria on any
+row, so a screen reader hears a bare "1" / "3" with no unit — on the
+Post and Tags rows as much as References. The system's own law says
+visual compression never strips the accessible reading (the
+StanceReadout docblock's paired sr-reading, the band icons' full
+aria names, the viewer dots' "Picture n of m"), so the master wants
+an accessible count reading; the exact wording is jakob's
+(implementation's suggested shape: "3 signed actions"). Visually the
+bare number stays — that part is ruled.
