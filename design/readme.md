@@ -1731,8 +1731,9 @@ entry first". What stands:
   trigger's own 198px text room and the band's tighter 154px against
   the total — never failing on what it finds, until item 64 rules a
   threshold to hold the tree to. Full pipeline: `node bundle.mjs &&
-  node render-screens.mjs && node gen-maps.mjs && node check-flows.mjs
-  && node check-readouts.mjs && node report-summaries.mjs`.
+  node render-screens.mjs && node gen-maps.mjs && node gen-canvases.mjs
+  && node check-flows.mjs && node check-readouts.mjs &&
+  node report-summaries.mjs`.
 - **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
   & Wallet, Feed & Search, Comments, Compose, Media + Patterns; the
   Profile page joined 2026-09-01 — 699 edges over all 93 boards, no
