@@ -85,6 +85,20 @@ object MediaOverlay {
 
     /** The unselected picker tile's ring. */
     val PickerRing = Color(0xFFFFFFFF)
+
+    /**
+     * The transport's own three values
+     * (`design/components/media/VideoControls.jsx`).
+     *
+     * The play/pause plate is `rgba(0,0,0,0.35)` — the same scrim the upload
+     * ring rides, named separately because the two would not move together.
+     * The timeline's unplayed track is `rgba(255,255,255,0.32)` (`:122`), and
+     * the wash under the bar is a gradient to `rgba(0,0,0,0.6)` (`:178`)
+     * rather than a bar, "so nothing cuts the frame".
+     */
+    val TransportPlate = Color(0x59000000)
+    val TimelineTrack = Color(0x52FFFFFF)
+    val TransportWash = Color(0x99000000)
 }
 
 /**

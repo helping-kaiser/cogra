@@ -416,6 +416,24 @@
       "page": "patterns"
     },
     {
+      "file": "PadStanding.dc.html",
+      "title": "Pad · an opinion already standing",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SeveranceConfirm.dc.html",
+      "title": "Severance · walk it all back",
+      "x": 2400,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "ComposeWords.dc.html",
       "title": "Compose · words body",
       "x": 0,
@@ -884,6 +902,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedScrolled.dc.html",
+      "title": "Feed · deep in the list",
+      "x": 4800,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "Money.dc.html",
       "title": "Money · the CGT figure",
       "x": 0,
@@ -1257,7 +1284,7 @@
       "x": -3610,
       "y": 0,
       "w": 3190,
-      "h": 2537,
+      "h": 2563,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1281,10 +1308,10 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -1580,
+      "x": -2160,
       "y": 0,
-      "w": 1160,
-      "h": 343,
+      "w": 1740,
+      "h": 533,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
@@ -1772,6 +1799,15 @@
       "y": 2120,
       "w": 390,
       "h": 844,
+      "page": "media"
+    },
+    {
+      "file": "ReaderPostMenuNarrow.dc.html",
+      "title": "Post · the reader's menu, narrow phone",
+      "x": 3360,
+      "y": 2120,
+      "w": 320,
+      "h": 568,
       "page": "media"
     },
     {

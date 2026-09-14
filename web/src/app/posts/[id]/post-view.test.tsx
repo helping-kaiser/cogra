@@ -1926,10 +1926,75 @@ describe("PostView — references", () => {
       coverMedia: null,
     });
 
+    const clip = (id: string, status = "NORMAL") => ({
+      __typename: "MediaAttachment",
+      id,
+      url: `https://media.test/${id}.mp4`,
+      altText: null,
+      status,
+      mimeType: "video/mp4",
+      options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 41_000 },
+      coverMedia: null,
+    });
+
     const withBody = (body: Parameters<typeof detail>[6]) =>
       graphql.query("PostDetail", () =>
         HttpResponse.json({ data: detail("u1", [], undefined, false, [], [], body) }),
       );
+
+    // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
+    // the clip is PINNED ABOVE THE CARD, not inside it, and it wears the full
+    // transport. A post of pictures keeps the gallery in its body.
+    describe("a video post", () => {
+      it("pins the clip above the card and leaves the card without it", async () => {
+        server.use(withBody({ content: null, attachments: [clip("m1")] }));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        const pinned = await screen.findByTestId("post-pinned-clip");
+        const card = screen.getByTestId("post");
+        expect(card).not.toContainElement(pinned);
+        // ABOVE it, which is the whole of why the author chip leads the card
+        // rather than the screen.
+        expect(pinned.compareDocumentPosition(card)).toBe(
+          Node.DOCUMENT_POSITION_FOLLOWING,
+        );
+        expect(screen.queryByTestId("post-media")).not.toBeInTheDocument();
+        // The title still leads the card: it titles the thing.
+        expect(screen.getByTestId("post-title")).toHaveTextContent("The title");
+      });
+
+      it("gives the pinned clip the transport, not the disc", async () => {
+        server.use(withBody({ content: null, attachments: [clip("m1")] }));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        await screen.findByTestId("post-pinned-clip");
+        expect(screen.getByTestId("post-pinned-clip-media-transport")).toBeInTheDocument();
+        expect(screen.queryByTestId("post-pinned-clip-media-sound")).toBeNull();
+      });
+
+      it("leaves a post of pictures exactly where it was", async () => {
+        server.use(withBody({ content: null, attachments: [picture("m1", null)] }));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        expect(await screen.findByTestId("post-media")).toBeInTheDocument();
+        expect(screen.queryByTestId("post-pinned-clip")).toBeNull();
+      });
+
+      // REDACTION IS RECORD-GRANULAR: a removed clip removes the payload, so
+      // the card is the skeleton and there is nothing left to pin above it.
+      it("pins nothing when the clip was removed", async () => {
+        server.use(
+          withBody({
+            content: null,
+            attachments: [clip("m1", "REDACTED")],
+          }),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        expect(await screen.findByTestId("post-removed")).toBeInTheDocument();
+        expect(screen.queryByTestId("post-pinned-clip")).toBeNull();
+      });
+    });
 
     it("renders a media post's gallery and no words body", async () => {
       server.use(
