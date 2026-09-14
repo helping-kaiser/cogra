@@ -2044,14 +2044,19 @@ jakob's word — recommended: a bottom sheet from a row on the detail
 (the tags-&-references sheet's pattern) plus the comment ⋮ menu.
 Contract implication: a per-node opinion-holders query, ungated.
 
-### 56 · The design linter walks the build's node_modules · *tooling*
+### 56 · The design linter walks the build's node_modules · *tooling* · **done 2026-09-14**
 
 Found by the viewer-state round: a worktree needs its own `npm ci` in
-`design/_build`, and the linter then reports `markdown-title-unminted`
-advisories on the vendored readmes (6 in the round's run — all from
+`design/_build`, and the linter then reported `markdown-title-unminted`
+advisories on the vendored readmes (6, all from
 `design/_build/node_modules/*/README.md`, zero from authored content).
-The linter should skip gitignored trees; until it does, every lane
-reading the advisory count must check where the advisories come from.
+Resolved the architecture's own way: the carrier's curated
+`exclude_trees` list in `corpus-adoption.toml` now carries
+`design/_build/node_modules/` beside `web/node_modules/`. A wholesale
+gitignore-aware walk was considered and rejected — the linter's
+recorded `dec:lint:refused-dependencies` decision deliberately keeps
+pattern dialects out of the carrier walk; new vendored trees get a
+literal exclude row. Baseline is 0 advisories again.
 
 ### 57 · The masters' prose still says "standing" off-screen · *design*
 
