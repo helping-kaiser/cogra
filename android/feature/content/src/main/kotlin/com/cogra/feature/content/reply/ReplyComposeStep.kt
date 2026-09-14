@@ -20,7 +20,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.compose.CommentPictureTray
@@ -93,14 +92,14 @@ internal fun ColumnScope.ReplyComposeStepBody(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (wordsFill) Modifier.weight(1f) else Modifier),
+        cap = MAX_COMMENT_BODY_CHARS,
+        error = if (state.bodyTooLong) {
+            stringResource(R.string.content_error_comment_body_too_long, MAX_COMMENT_BODY_CHARS)
+        } else {
+            null
+        },
         testTag = "reply_body",
     )
-    if (state.bodyTooLong) {
-        ErrorLine(
-            text = stringResource(R.string.content_error_comment_body_too_long, MAX_COMMENT_BODY_CHARS),
-            testTag = "reply_body_too_long",
-        )
-    }
 
     if (state.hasPictures) {
         CommentPictureTray(

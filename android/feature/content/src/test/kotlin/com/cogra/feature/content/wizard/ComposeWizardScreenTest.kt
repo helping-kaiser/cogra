@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -90,6 +91,8 @@ class ComposeWizardScreenTest {
     private var dismissedRefusals = mutableListOf<Int>()
     private var restoreKeys = 0
     private var keepDrafts = 0
+    private var stanceDrags = mutableListOf<Double>()
+    private var stanceSets = 0
 
     @Composable
     private fun Wizard(
@@ -121,7 +124,8 @@ class ComposeWizardScreenTest {
             onOpenSheet = { sheets += it },
             onCloseSheet = {},
             onLicenseChange = {},
-            onPDirectedChange = {},
+            onPDirectedChange = { stanceDrags += it },
+            onSetStance = { stanceSets += 1 },
             onSensitiveChange = {},
             onSensitiveReasonChange = {},
             onNext = { nexts += 1 },
@@ -724,15 +728,59 @@ class ComposeWizardScreenTest {
         compose.onNodeWithText("1 cited").assertDoesNotExist()
     }
 
-    // CW-23: the stance row reads the fixed pair through the same
-    // face-plus-numbers readout the reply seal already uses for its own
-    // pick, not a raw "+0.10".
+    // An opinion on one's own post is ONE number (jakob, 2026-09-14): the
+    // second is census-fixed rather than picked, so the row that read back
+    // a pair was showing a figure nobody chose. The face is the one-axis
+    // table's — 🙂 at +0.10 — and the number beside it is the one number.
     @Test
-    fun theSealsStanceRowReadsTheReadoutNotARawNumber() {
+    fun theSealsStanceRowReadsOneNumberNotAPair() {
         val state = ComposeWizardState(body = "x", step = WizardStep.Seal, pDirected = 0.1)
         compose.setContent { Wizard(state) }
         compose.onNodeWithTag("wizard_seal_stance").assertIsDisplayed()
-        compose.onNodeWithText("+0.10").assertDoesNotExist()
+        compose.onNodeWithText("🙂 +0.10", substring = true).assertExists()
+        compose.onNodeWithText("+0.10 / +1.00", substring = true).assertDoesNotExist()
+    }
+
+    // CW-31/CW-32/CW-33/CW-34: the pad parks over the page with its own
+    // wash, carries the blessed "?" and a drawn one-axis field, and only
+    // Set moves the stance the seal reads.
+    @Test
+    fun theStancePadParksOverThePageRatherThanRidingTheSheetHost() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, sheet = SealSheet.Stance)
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithTag("wizard_pad_wash").assertExists()
+        compose.onNodeWithTag("wizard_stance_pad").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_stance_field").assertIsDisplayed()
+        // The drawer host draws nothing for the pad any more.
+        compose.onNodeWithTag("wizard_stance_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_stance_slider").assertDoesNotExist()
+    }
+
+    @Test
+    fun thePadsHelpDotOpensTheOpinionTopic() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, sheet = SealSheet.Stance)
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithTag("wizard_stance_help").performClick()
+        assertThat(helps).containsExactly(HelpTopic.YourOpinionOnYourPost)
+    }
+
+    @Test
+    fun thePadReadsTheStagedValueAndCommitsOnlyOnSet() {
+        val state = ComposeWizardState(
+            body = "x",
+            step = WizardStep.Seal,
+            sheet = SealSheet.Stance,
+            pDirected = 0.1,
+            stagedPDirected = 0.6,
+        )
+        compose.setContent { Wizard(state) }
+        // The pad shows what the finger has, not what the seal is holding.
+        compose.onNodeWithTag("wizard_stance_reading")
+            .assertContentDescriptionContains("Like this, For or against +0.60")
+        assertThat(stanceSets).isEqualTo(0)
+
+        compose.onNodeWithTag("wizard_stance_set").performClick()
+        assertThat(stanceSets).isEqualTo(1)
     }
 
     // CW-27: the license sheet's "?" opens the same house explanation the

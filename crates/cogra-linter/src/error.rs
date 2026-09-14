@@ -294,6 +294,21 @@ pub enum AdoptionError {
         /// The prefix R-PKG′ would derive for it.
         derived_prefix: String,
     },
+    /// A `[[carrier.exclude_build_dirs]]` row's `name` is not one literal
+    /// path component.
+    ///
+    /// `name` is compared against a single path component at a time, the
+    /// same no-pattern-dialect discipline as every other configured path
+    /// (´sig:lint:adoption-api´), so a value carrying a `/` could never
+    /// match anything under that rule and is refused at load rather than
+    /// silently matching nothing.
+    #[error("carrier exclude_build_dirs name {name} is not one literal path component")]
+    MalformedBuildDirName {
+        /// The row the name sits in.
+        at: Location,
+        /// The name as written.
+        name: String,
+    },
     /// The file's schema major version is not the one this build reads.
     #[error(
         "adoption data states schema major version {found}, and this build reads major version {expected}"
@@ -323,6 +338,7 @@ impl AdoptionError {
             | AdoptionError::PartitionNotTotal { at }
             | AdoptionError::RuleOrderMismatch { at, .. }
             | AdoptionError::PathSpelling { at, .. }
+            | AdoptionError::MalformedBuildDirName { at, .. }
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
             | AdoptionError::ActivationScopeUnknown { at, .. }
@@ -434,6 +450,10 @@ mod tests {
                 at: row(),
                 configured: String::from("Docs/"),
                 found: String::from("docs/"),
+            },
+            AdoptionError::MalformedBuildDirName {
+                at: row(),
+                name: String::from("core/build"),
             },
             AdoptionError::ProfileIncomplete {
                 at: row(),

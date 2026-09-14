@@ -17,12 +17,17 @@
 
 import { MonogramAvatar } from "@/lib/ui2/monogram-avatar";
 import { PillButton } from "@/lib/ui2/pill-button";
-import { FIELD_BOX } from "@/lib/ui2/text-field";
+import { countReading, FIELD_BOX, FieldCount } from "@/lib/ui2/text-field";
 import {
   CommentAttachments,
   commentDropHandlers,
 } from "@/lib/ui2/compose/comment-attachments";
-import { isVideoReply, type ReplyState, type ReplyTarget } from "@/lib/compose/reply-wizard";
+import {
+  COMMENT_BODY_MAX_CHARS,
+  isVideoReply,
+  type ReplyState,
+  type ReplyTarget,
+} from "@/lib/compose/reply-wizard";
 import type { PickRefusal } from "@/lib/compose/pick";
 
 /** What the reply answers, pinned above the words so it stays in sight. */
@@ -60,6 +65,7 @@ export function ReplyComposeStep({
   onPickCover,
   onDismissRefusal,
   onNext,
+  blocked,
 }: {
   state: ReplyState;
   previews: Readonly<Record<string, string>>;
@@ -78,6 +84,8 @@ export function ReplyComposeStep({
   onPickCover: (file: File) => void;
   onDismissRefusal: (id: string) => void;
   onNext: () => void;
+  /** A body over its cap — the same law the post wizard's steps already draw. */
+  blocked: boolean;
 }) {
   const video = isVideoReply(state);
   const hasPictures = !video && state.media.length > 0;
@@ -115,10 +123,19 @@ export function ReplyComposeStep({
         }`}
         placeholder="Your reply"
       />
-      {bodyError && (
-        <p role="alert" data-testid="reply-body-error" className="m-0 text-body-medium text-error">
-          {bodyError}
-        </p>
+      {/* The composer's own textarea is not a `TextField`, so it draws the
+          same supporting-row geometry directly
+          (design/components/forms/TextField.jsx:117-122): the error and the
+          late counter share one row, the count pushed to its far end. */}
+      {(bodyError || countReading(state.words, COMMENT_BODY_MAX_CHARS)) && (
+        <div className="flex items-baseline gap-2">
+          {bodyError && (
+            <p role="alert" data-testid="reply-body-error" className="m-0 text-body-medium text-error">
+              {bodyError}
+            </p>
+          )}
+          <FieldCount value={state.words} cap={COMMENT_BODY_MAX_CHARS} />
+        </div>
       )}
 
       <CommentAttachments
@@ -156,7 +173,7 @@ export function ReplyComposeStep({
             : "Words first — pictures can join them."}
       </p>
 
-      <PillButton testId="reply-next" full onClick={onNext}>
+      <PillButton testId="reply-next" full disabled={blocked} onClick={onNext}>
         Next
       </PillButton>
     </div>

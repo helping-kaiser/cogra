@@ -12,8 +12,8 @@
 use std::path::{Path, PathBuf};
 
 use cogra_linter::{
-    Activation, Adoption, AdoptionError, Enforcement, HeadMatching, Kind, Language, OwnerId,
-    PathPrefix, Prefix, ProfileId, ProfileStatus,
+    Activation, Adoption, AdoptionError, BuildDirExclusion, Enforcement, HeadMatching, Kind,
+    Language, OwnerId, PathPrefix, Prefix, ProfileId, ProfileStatus,
 };
 
 fn corpus_adoption_path() -> PathBuf {
@@ -489,6 +489,53 @@ fn the_carrier_decides_what_is_excluded_and_what_is_generated() {
     assert!(!carrier.excludes(Path::new("docs/primitive/layers.md")));
     assert!(carrier.is_generated(Path::new("Cargo.lock")));
     assert!(!carrier.is_generated(Path::new("Cargo.toml")));
+}
+
+/// A per-module Gradle build directory is excluded wherever it recurs
+/// beneath android/, with no row naming the module — the gap lane L13
+/// found (2026-09-14): the old literal list caught only the two build
+/// directories named by hand, so any other module's build output leaked
+/// into the carrier after a local build. A real module source stays in
+/// the carrier, and a `build/` tree outside android/ altogether stays in
+/// the carrier too: the exclusion is scoped to its configured root, not a
+/// blanket ban on the name.
+/// ´claim:adoption:build-dirs-recur-without-enumeration´
+#[test]
+fn the_carrier_excludes_a_build_directory_at_any_depth_beneath_android() {
+    let carrier = ruled().carrier;
+    assert!(carrier.excludes(Path::new(
+        "android/core/crypto/build/reports/detekt/detekt.md"
+    )));
+    assert!(carrier.excludes(Path::new(
+        "android/feature/auth/build/reports/detekt/detekt.md"
+    )));
+    assert!(carrier.excludes(Path::new("android/build/outputs/apk/debug.apk")));
+    assert!(!carrier.excludes(Path::new("android/core/crypto/src/main/kotlin/Crypto.kt")));
+    assert!(!carrier.excludes(Path::new("crates/api/build/notes.md")));
+}
+
+/// The carrier's exclude_build_dirs rows arrive as the file states them.
+/// ´claim:adoption:exclude-build-dirs-round-trips´
+#[test]
+fn exclude_build_dirs_round_trips() {
+    let carrier = ruled().carrier;
+    assert_eq!(carrier.exclude_build_dirs.len(), 1);
+    let android_build = BuildDirExclusion::new(PathPrefix::new("android/"), "build");
+    assert_eq!(carrier.exclude_build_dirs, vec![android_build]);
+}
+
+/// An `exclude_build_dirs` `name` carrying a `/` is not one path component,
+/// so it is refused at load rather than silently matching nothing.
+/// ´claim:adoption:a-build-dir-name-with-a-slash-is-refused´
+#[test]
+fn a_build_dir_exclusion_name_carrying_a_slash_is_refused() {
+    let source = format!(
+        "{}\n[[carrier.exclude_build_dirs]]\nroot = \"android/\"\nname = \"core/build\"\n",
+        document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+    );
+    let error = load(&source).expect_err("a name carrying a slash names no single path component");
+    assert!(matches!(error, AdoptionError::MalformedBuildDirName { .. }));
+    assert_eq!(row(&source, &error), "name = \"core/build\"");
 }
 
 /// The signature section arrives with the values it states.

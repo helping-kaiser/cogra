@@ -39,7 +39,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
@@ -61,6 +60,8 @@ import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.content.MAX_COMMENT_BODY_CHARS
+import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
+import com.cogra.domain.media.isAltTextTooLong
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
 import com.cogra.feature.content.ReferenceEntry
@@ -238,14 +239,14 @@ internal fun CommentEditScreen(
                 singleLine = false,
                 minLines = 3,
                 modifier = Modifier.fillMaxWidth(),
+                cap = MAX_COMMENT_BODY_CHARS,
+                error = if (state.bodyTooLong) {
+                    stringResource(R.string.content_error_comment_body_too_long, MAX_COMMENT_BODY_CHARS)
+                } else {
+                    null
+                },
                 testTag = "comment_edit_body",
             )
-            if (state.bodyTooLong) {
-                ErrorLine(
-                    text = stringResource(R.string.content_error_comment_body_too_long, MAX_COMMENT_BODY_CHARS),
-                    testTag = "comment_edit_body_too_long",
-                )
-            }
 
             FieldGroup(label = "Pictures") {
                 Row(
@@ -403,6 +404,12 @@ private fun CommentEditSheets(
                 onValueChange = { onAltTextChange(describing.uri, it) },
                 onDone = onCloseSheet,
                 onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
+                cap = MAX_ALT_TEXT_CHARS,
+                error = if (isAltTextTooLong(describing.altText)) {
+                    stringResource(R.string.content_error_alt_text_too_long, MAX_ALT_TEXT_CHARS)
+                } else {
+                    null
+                },
                 testTag = "comment_edit_describe_sheet",
             )
 
