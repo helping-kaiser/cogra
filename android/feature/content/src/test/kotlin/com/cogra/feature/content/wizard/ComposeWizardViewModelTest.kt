@@ -121,17 +121,13 @@ class ComposeWizardViewModelTest {
         /** Every upload in the order it was made — stills and clips alike. */
         val order = mutableListOf<String>()
 
-        /** The cover id the clip named, so the pairing can be asserted. */
-        var namedCover: String? = null
         var videoRefused = false
 
         override suspend fun uploadVideo(
             video: ProcessedVideo,
-            coverMediaId: String,
             onProgress: (UploadProgress) -> Unit,
         ): Outcome<MediaAssetView> {
             order += "video"
-            namedCover = coverMediaId
             // One tick, so the composer learns the session it would
             // have to abort if the author walked away.
             onProgress(UploadProgress(uploadId = "session-1", sentParts = 1, partCount = 2))
@@ -962,14 +958,14 @@ class ComposeWizardViewModelTest {
     }
 
     @Test
-    fun theCoverGoesUpBeforeTheClipThatNamesIt() = runTest(dispatcher) {
+    fun theCoverGoesUpBeforeTheClipItFronts() = runTest(dispatcher) {
         val vm = viewModel()
         vm.toDetailsWithVideo()
 
-        // The order is the contract's: an asset row is immutable once
-        // written, so the clip cannot gain a poster afterwards.
+        // The cheap leg first: a refused cover is learned in a second
+        // rather than after the whole clip has gone up.
         assertThat(media.order).containsExactly("still", "video").inOrder()
-        assertThat(media.namedCover).isEqualTo(vm.state.value.coverMediaId)
+        assertThat(vm.state.value.coverMediaId).isNotNull()
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
@@ -1201,7 +1197,10 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         // One attachment, and it is the video — the cover rides the
-        // asset row rather than the gallery.
+        // clip's own placement rather than the gallery, which is what
+        // keeps "ten pictures or one video" one counting rule.
         assertThat(content.lastAttachments.map { it.mediaId }).containsExactly("v1")
+        assertThat(content.lastAttachments.single().coverMediaId)
+            .isEqualTo(vm.state.value.coverMediaId)
     }
 }
