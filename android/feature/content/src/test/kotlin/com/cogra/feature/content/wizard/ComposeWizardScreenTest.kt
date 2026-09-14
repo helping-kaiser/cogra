@@ -3,12 +3,14 @@ package com.cogra.feature.content.wizard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.filterToOne
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -643,6 +645,21 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(state) }
         compose.onNodeWithText("Tags").assertExists()
         compose.onNodeWithText("Topics").assertDoesNotExist()
+    }
+
+    // CW-22 (the parked half): each tag draws as its own readout-tone chip
+    // (`_shared.jsx:840-845`'s `<Chip tone="readout">`), not a single
+    // joined string — and a readout is shown, not pressed.
+    @Test
+    fun theSealsTagsEachDrawAsANonInteractiveReadoutChip() {
+        val state = ComposeWizardState(
+            body = "x",
+            step = WizardStep.Seal,
+            tagSection = TagSectionState(tags = listOf(TagRow("fieldnotes"), TagRow("coastroad"))),
+        )
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithText("#fieldnotes").assertExists().assert(hasClickAction().not())
+        compose.onNodeWithText("#coastroad").assertExists().assert(hasClickAction().not())
     }
 
     // CW-21: the References act row reads the citation's own name and its
