@@ -2419,7 +2419,7 @@ at the design-ci target: 25–35 s quiet, render-screens ~two-thirds,
 regressions judged from quiet runs only. bundle and render-screens
 now print their own ms like every other stage.
 
-### 72 · What the standing-prose pass left for rulings · *design*
+### 72 · What the standing-prose pass left for rulings · *design* · **closed 2026-09-14**
 
 Three leftovers from item 57's judgment pass (2026-09-14):
 
@@ -2439,6 +2439,21 @@ Three leftovers from item 57's judgment pass (2026-09-14):
   kept-list) or a rename to rule. Riding along: `_shared.jsx`'s "the
   staged citation carries the stance that rides with it" is a model
   question (a citation carries its own pair), not a naming one.
+
+Closed 2026-09-14, all three ruled together. The readme's four
+narrative sites took item 57's rule — 🤷 reads a zero BUNDLE, the
+resting face means "no opinion yet", a pick nets a BUNDLE to `(0, 0)`
+(`stance-control.md`'s own wording), and the redacted skeleton keeps
+"the opinion a reader can still give"; the L1 term α_i and every
+model-voice "stance" stayed, as did the ordinary English "standing" the
+readme uses a dozen times for a rule that still stands. The core-loop
+harness conformed both rendered strings and nothing else: backlog item
+1's title is the item's name, not a surface. The law's kept-list now
+enumerates the identifiers rather than the families alone, which was
+the gap — the code keeps the retired word exactly as it keeps `topics`,
+and `NO_STANDING_LABEL = "No opinion yet"` is that pairing in one line.
+The rider was plain imprecision, not a model question: the comment now
+says the staged citation carries its own pair.
 
 ### 73 · The acts count has no accessible reading · *design* · **closed 2026-09-14**
 

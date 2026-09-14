@@ -945,9 +945,9 @@ function ComposeSealBody({ cited = 1 }) {
               : {
                   label: "References",
                   countNoun: "citation",
-                  /* The staged citation carries the stance that rides with it,
-                     so the row is two lines: what is cited, and what signing it
-                     says about the citer. */
+                  /* The staged citation carries its own pair, so the row is two
+                     lines: what is cited, and what signing it says about the
+                     citer. */
                   value: (
                     <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
                       <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
