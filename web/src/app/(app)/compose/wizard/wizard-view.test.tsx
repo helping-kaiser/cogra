@@ -449,6 +449,25 @@ describe("the compose wizard", () => {
     expect(screen.getByTestId("wizard-keep-draft")).toBeInTheDocument();
   });
 
+  // CW-40: the graph draws ComposeKeyAbsent's keep-draft edge as a terminal
+  // `back` — it leaves the wizard, keeping the draft, rather than stepping
+  // back to the details screen the way the ordinary seal's Back does.
+  it("leaves the wizard when a keyless seal's keep-draft is pressed, rather than stepping back", async () => {
+    const drafts = fakeDrafts();
+    render(drafts, false);
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
+    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+
+    fireEvent.click(await screen.findByTestId("wizard-keep-draft"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
+    expect(drafts.held()?.words).toBe("words");
+    // Not a step back: the details screen never reappears underneath.
+    expect(screen.queryByTestId("wizard-title")).not.toBeInTheDocument();
+  });
+
   it("offers a held draft, and discarding it leaves a clean screen", async () => {
     const held: WizardState = {
       ...emptyWizard(),
