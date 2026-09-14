@@ -1493,6 +1493,29 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
   ],
+  /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
+     control that stops being one. The acts footer is a plain span at zero, so
+     it carries no number and has no edge; the Sign is still a button, disabled,
+     and its edge says out loud that it goes nowhere. */
+  EditComposeUnchanged: [
+    { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Editing"', tag: "button" },
+    { n: 4, find: 'aria-label="Manage the pictures"', tag: "button" },
+    { n: 5, find: 'data-field="Title"', tag: "div" },
+    { n: 6, find: 'data-field="Description"', tag: "div" },
+    { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 8, find: "+ Add a tag", tag: "button" },
+    { n: 9, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 10, find: "+ Cite something", tag: "button" },
+    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    { n: 13, find: ">Mark</button>", tag: "button" },
+    { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+    { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
+  ],
   // Show all over the edit. The sheet is the same `PickedSheet` ComposePicked
   // draws, so the markers are its markers — but the REMOVE anchors are spelled
   // exactly rather than by the "Remove" prefix, because the edit beneath this
