@@ -184,17 +184,21 @@ for (const site of SITES) {
 
 // ---- nothing hand-spells a number outside the six.
 // The table above is a list of sites, not of files, so a seventh hand-drawn
-// readout added anywhere in the screens would be checked by nobody. This finds
-// them: a `cg-exact` span whose content is a spelled number rather than an
-// expression the render already computed.
-const declared = new Set(SITES.map((s) => s.file));
+// readout would be checked by nobody — including one added to a file already
+// on the list, which is why this counts per file rather than asking whether the
+// file is declared at all. What it counts: a `cg-exact` span whose content is a
+// spelled number rather than an expression the render already computed.
+const declaredPerFile = new Map();
+for (const site of SITES) declaredPerFile.set(site.file, (declaredPerFile.get(site.file) ?? 0) + 1);
 for (const file of readdirSync(screensDir).sort()) {
   if (!file.endsWith(".jsx")) continue;
   const source = readFileSync(join(screensDir, file), "utf8");
-  for (const [, content] of source.matchAll(EXACT_RE)) {
-    if (!/^[+−-]?\d/.test(content)) continue; // `{exact}` and other computed readouts
-    if (declared.has(file)) continue;
-    fails.push(`${file}: hand-spells "${content}" in a cg-exact span and no site in check-readouts.mjs checks it`);
+  const spelled = [...source.matchAll(EXACT_RE)].map(([, content]) => content).filter((c) => /^[+−-]?\d/.test(c));
+  const owed = declaredPerFile.get(file) ?? 0;
+  if (spelled.length > owed) {
+    fails.push(
+      `${file}: hand-spells ${spelled.length} number${spelled.length === 1 ? "" : "s"} in cg-exact spans (${spelled.map((c) => `"${c}"`).join(", ")}) where check-readouts.mjs declares ${owed} — an unchecked literal is not a state a readout gets to be in`,
+    );
   }
 }
 
