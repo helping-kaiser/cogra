@@ -783,10 +783,7 @@ export function ComposeWizard({
         onChange={(altText) => {
           if (describing !== null) dispatch({ type: "altText", id: describing, altText });
         }}
-        position={{
-          index: state.assets.findIndex((asset) => asset.id === describing),
-          total: state.assets.length,
-        }}
+        video={isVideoPost(state)}
         testId="wizard-describe-sheet"
       />
 
