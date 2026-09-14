@@ -2513,3 +2513,15 @@ About page, and privacy/terms. Per-control coach marks stay as they are;
 the seen-flag is server-side.
 
 Status: open, awaiting the Round C drawing round.
+
+### 75 · The keyboard's own mechanism · *design* · **ruled + recorded**
+
+The design system said nothing about the on-screen keyboard — a census
+gap surfaced 2026-09-14. Ruled by jakob the same day: readme §13 (*The
+keyboard's own mechanism*) carries the ruling, and the parked-pad rule
+(§13 *The entry flow*) gains the keyboard as a third parking edge at
+the same 16px. No boards are drawn — the ruling names a platform
+mechanism already built (ime insets on Android, scroll-into-view on
+the web) rather than anything new to specimen. The design work is
+done; what is left is conformance where a surface still reimplements
+its own avoidance.
