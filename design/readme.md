@@ -4733,12 +4733,12 @@ is re-seeded from the tree, never the other way round.
 
 **Which canvas serves which pages:**
 
-| Canvas | Pages | Opens on |
-|---|---|---|
-| CoGra · Feed & comments | Feed & Search · Comments | Feed & Search |
-| CoGra · Profile & settings | Profile | Profile |
-| CoGra · Compose & media | Compose · Media | Compose |
-| CoGra · Entry, money & maps | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
+| Canvas | `id` | Pages | Opens on |
+|---|---|---|---|
+| CoGra · Feed & comments | `feed` | Feed & Search · Comments | Feed & Search |
+| CoGra · Profile & settings | `profile` | Profile | Profile |
+| CoGra · Compose & media | `compose` | Compose · Media | Compose |
+| CoGra · Entry, money & maps | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
 
 That map is data, not a habit: `designs/canonical/canvases.json` holds
 it, hand-maintained, and `_build/gen-canvases.mjs` writes one seed
