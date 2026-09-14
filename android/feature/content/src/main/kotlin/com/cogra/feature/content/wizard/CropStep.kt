@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.key
@@ -97,13 +95,13 @@ internal fun ColumnScope.CropStepBody(
     // step is no place for a keyboard
     // (`design/components/compose/DescribeSheet.prompt.md`). Descriptions
     // are authored on the details stage, in `DescribeSheet`.
-
-    Text(
-        text = stringResource(R.string.content_crop_note),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.testTag("wizard_crop_note"),
-    )
+    //
+    // CW-11's own note ("One shape for the whole post. Drag to move, pinch
+    // to zoom.") is NOT missing here — `MediaCrop` above already draws it,
+    // defaulting its own `caption` parameter to this exact string
+    // (core/designsystem/.../media/MediaCrop.kt:62,79-83). The audit's "no
+    // such note anywhere in the file" was true of CropStep.kt's own text,
+    // not of what the stage renders; a second `Text` here only doubled it.
 
     if (state.picked.size > 1) {
         Row(
