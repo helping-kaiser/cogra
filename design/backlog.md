@@ -2166,3 +2166,24 @@ alone:
   192×192 but fills the 390px square frame of `SOL_POST`; Mira's
   face reads soft there. A higher-resolution source for the same
   face would fix it — one file swap, no reference changes.
+
+### 67 · The viewer's dots get a window · *design* · **ruled 2026-09-14**
+
+jakob, via the implementation loop: the fullscreen viewer's position
+marker is n-of-m dots with a MAX dot count, Instagram-style — a
+bounded window of dots, small edge dots implying more beyond it
+("just copy how insta does it"). Supersedes the MediaViewer master's
+dots-only-no-count stance and resolves ViewerPicture's "plain n-of-m"
+prose line in favor of the windowed dots; the plain "Picture n of m"
+count stays in the accessible name. Redraw the master + conform the
+prose; implementation's W3-7 viewer lane grades against the updated
+master (not yet dispatched — the W3 window is the deadline).
+
+### 68 · The chats icon needs its coming-soon screen · *design* · **ruled 2026-09-14**
+
+jakob, via the implementation loop: chats moved to would-like #3, but
+the band law is unchanged — the trailing-cluster chats icon STAYS on
+every root band and taps into a coming-soon state. That screen has no
+board. Draw it; the W1 shell lanes wire the icon to it and grade
+against the board once drawn. New board = one canvas slot; its copy
+needs blessing in copy-voice.
