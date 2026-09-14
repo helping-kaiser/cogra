@@ -322,6 +322,19 @@ weight. Mostly its own thing and mostly outside this system — last on
 purpose. **It lands with slice 2.7's search backend** (ruled 2026-09-09):
 no surface is built against the exact-match lookup before then.
 
+**The hero card announces it, and opens nothing** (jakob 2026-09-14). The
+Sky is drawn after the MVP, so `Explore`'s hero holds the door's place
+and says what is behind it: the heading reads `The Sky — coming soon`,
+the "Enter the Sky" button is gone, and the graph's `Explore/2` gap went
+with it — an announcement owes no design, and the tab's last undrawn
+promise stopped counting as one. The card itself stays, because pulling
+it would rebuild Explore's first screen twice and lose the one drawing
+that says the Sky is this tab's biggest idea. It is `ChatsComingSoon`'s
+precedent taken as a card rather than a screen: chats had an icon whose
+tap needed somewhere to land, and this affordance sits inside a card
+that can answer in place. When the Sky is drawn, the heading returns to
+`The Sky`, the CTA comes back, and the edge is written again.
+
 ### 20 · Settings — the whole surface · *design* · **drawn 2026-09-09**
 Three shipped "?" texts promised it: "Your default lives in
 settings" (the license, and now the filter), and "Swap the input in

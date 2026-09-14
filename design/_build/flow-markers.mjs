@@ -215,13 +215,14 @@ const searchShell = (fieldText, nRow) => [
 ];
 
 Object.assign(FLOW_MARKERS, {
+  // The Sky hero carries no number: it announces rather than opens (jakob
+  // 2026-09-14), and a board's numbers are its controls.
   Explore: [
     { n: 1, find: "Search people, posts, tags", tag: "div" },
-    { n: 2, find: ">Enter the Sky</button>", tag: "button" },
-    { n: 3, find: ">@sol salt</span>", tag: "button" },
-    { n: 3, find: ">#saltmaps</span>", tag: "button" },
-    { n: 3, find: ">coast road</span>", tag: "button" },
-    ...nav(4),
+    { n: 2, find: ">@sol salt</span>", tag: "button" },
+    { n: 2, find: ">#saltmaps</span>", tag: "button" },
+    { n: 2, find: ">coast road</span>", tag: "button" },
+    ...nav(3),
   ],
   ExploreSearch: [
     { n: 14, find: ">saltmaps<", tag: "button" },
@@ -1656,7 +1657,7 @@ Object.assign(FLOW_MARKERS, {
    surface's gap (guest boards: the guest gate's). */
 const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
-  VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 9,
+  VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 8,
   Feed: 16, FeedUnread: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15,
   FeedGallery: 15, FeedCover: 17,
@@ -1675,7 +1676,7 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
    name and carries its marker in its own list above. */
 const BAND_BELL = {
   ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
-  ComposeExpired: 20, Explore: 10,
+  ComposeExpired: 20, Explore: 9,
   Feed: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17,
   FeedCover: 19,
