@@ -96,6 +96,7 @@ exclude_trees = [
   "web/node_modules/",
   "web/.next/",
   "web/out/",
+  "design/_build/node_modules/",
 ]
 
 # Committed generated files: in the carrier in full. Under LBL

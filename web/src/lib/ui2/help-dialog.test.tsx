@@ -16,6 +16,12 @@ describe("HelpDialog", () => {
     ).toBeInTheDocument();
   });
 
+  it("names the license terms, not the picture you made it with", () => {
+    render(<HelpDialog open onClose={vi.fn()} topic={HELP_TOPICS.license} />);
+    expect(screen.getByTestId("help-dialog")).toHaveAttribute("aria-label", "License");
+    expect(screen.getByText(/can never change, not even by an edit/)).toBeInTheDocument();
+  });
+
   it("says at most two things, per the copy rule", () => {
     for (const topic of Object.values(HELP_TOPICS)) {
       expect(topic.paragraphs.length).toBeLessThanOrEqual(2);
