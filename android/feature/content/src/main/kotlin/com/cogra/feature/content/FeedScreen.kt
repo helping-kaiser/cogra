@@ -451,8 +451,11 @@ private fun PostCard(
                 bleed = Space.x4,
                 // The whole gallery is one target opening the post: a
                 // reader scrolling the feed is choosing between posts,
-                // not looking at one picture.
-                onOpenMedia = onClick,
+                // not looking at one picture. Which page they were on is
+                // the DETAIL's question — "the card's tap opens the post,
+                // the post's tap opens the frame"
+                // (`ViewerPicture.jsx:2-3`) — so it is dropped here.
+                onOpenMedia = { onClick() },
                 revealed = revealed,
                 onReveal = onReveal,
             )

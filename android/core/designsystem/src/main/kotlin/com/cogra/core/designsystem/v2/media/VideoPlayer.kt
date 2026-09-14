@@ -146,6 +146,18 @@ fun VideoPlayer(
     contentScale: ContentScale = ContentScale.Crop,
     videoAspectRatio: Float? = null,
     contentDescription: String? = null,
+    /**
+     * The way into the fullscreen viewer, where the surface has one.
+     *
+     * The graph draws TWO routes there from the video detail — "the transport's
+     * own way into the viewer — the clip tap is the other" (graph.json,
+     * `PostDetailVideo` via 19 and via 3) — and both land here: the bar grows
+     * its fullscreen toggle, and the frame itself takes the tap. Only a
+     * full-transport surface is offered one; the viewer passes none, because
+     * "no fullscreen toggle — this IS the fullscreen"
+     * (`MediaViewer.jsx:153`).
+     */
+    onOpenViewer: (() -> Unit)? = null,
     testTag: String? = null,
 ) {
     val context = LocalContext.current
@@ -238,6 +250,21 @@ fun VideoPlayer(
     LaunchedEffect(autoplay, player) { player?.playWhenReady = autoplay }
     LaunchedEffect(muted, player) { player?.volume = if (muted) 0f else 1f }
 
+    // A FEED CLIP LOOPS AND A CLIP UNDER THE REAL TRANSPORT STOPS (jakob
+    // 2026-09-14, via the design loop). It sharpens the deliberate
+    // reel-vs-video split: a clip in a card or a stream is a MOMENT, read with
+    // the scroller's grammar, and stopping it would leave a card gone still and
+    // dead under a reader still looking at it. A clip the reader opened on
+    // purpose — the detail's pinned clip, the viewer — is a PROGRAMME, read
+    // with a player's grammar, and a programme that silently restarted would be
+    // a player that never admits it finished.
+    //
+    // It rides the SURFACE rather than the stage, because one clip is both: the
+    // same player carries a card's loop and the detail's stop, and whichever
+    // surface is showing it says which. That is also what restores the loop on
+    // the way back to the feed.
+    LaunchedEffect(controls, player) { player?.repeatMode = controls.repeatMode() }
+
     // Read for the clip's own size and nothing else. The poster asks the
     // stage instead: `PresentationState` is remembered across the player
     // being swapped, so it answers about the player that has gone.
@@ -279,7 +306,8 @@ fun VideoPlayer(
             // The box the frame actually measured. If this changes
             // between the cover and the video, jakob's relayout is real
             // and the log says so in two lines.
-            .onSizeChanged { VideoTrace.surface(traced, "measured", it.width, it.height) },
+            .onSizeChanged { VideoTrace.surface(traced, "measured", it.width, it.height) }
+            .surfaceTap(onOpenViewer),
         contentAlignment = Alignment.Center,
     ) {
         // Sized once, from a number known before composition. A clip
@@ -339,6 +367,7 @@ fun VideoPlayer(
                 playing = playing,
                 muted = muted,
                 recordDurationMs = durationMs,
+                onFullscreen = onOpenViewer,
                 modifier = Modifier.align(Alignment.Center),
             )
         }
@@ -352,6 +381,30 @@ fun VideoPlayer(
         }
     }
 }
+
+/**
+ * Whether a clip on this surface loops.
+ *
+ * THE CLIP-LOOP RULING (jakob 2026-09-14, via the design loop): a reading
+ * surface's clip is a MOMENT and keeps going round; a clip under the full
+ * transport is a PROGRAMME the reader opened on purpose, and it stops so the
+ * transport can stand at replay.
+ */
+private fun VideoControls.repeatMode(): Int = when (this) {
+    VideoControls.Full -> Player.REPEAT_MODE_OFF
+    VideoControls.SoundOnly -> Player.REPEAT_MODE_ONE
+}
+
+/**
+ * THE TAP ON THE CLIP, where the surface has somewhere for it to go — the other
+ * way into the fullscreen viewer beside the transport's own toggle
+ * (graph.json, `PostDetailVideo` via 3).
+ *
+ * It sits UNDER the transport, so every press aimed at play, seek or sound is
+ * that control's and only the frame around them is the frame's.
+ */
+private fun Modifier.surfaceTap(onTap: (() -> Unit)?): Modifier =
+    if (onTap != null) clickable(onClick = onTap) else this
 
 /**
  * The transport, bound to the clip on stage.
@@ -372,6 +425,7 @@ private fun FullTransport(
     playing: Boolean,
     muted: Boolean,
     recordDurationMs: Int?,
+    onFullscreen: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val progress = rememberProgressStateWithTickInterval(player, TICK_MS)
@@ -383,12 +437,27 @@ private fun FullTransport(
         durationMs = length,
         progress = if (length > 0) position.toFloat() / length else 0f,
         muted = muted,
-        onTogglePlay = { if (playing) player.pause() else player.play() },
+        // PLAY AT THE END IS REPLAY. `play()` alone would not restart a player
+        // in `STATE_ENDED` — it "resumes playback as soon as the player is in
+        // STATE_READY" (`androidx.media3.common.Player.play`) — so the seek is
+        // what turns the stopped transport's own Play glyph into the way back
+        // to the start.
+        onTogglePlay = {
+            when {
+                playing -> player.pause()
+                player.playbackState == Player.STATE_ENDED -> {
+                    player.seekToDefaultPosition()
+                    player.play()
+                }
+                else -> player.play()
+            }
+        },
         // The PLAYER's own seek commands, so the increment it was built with
         // is the one every path uses.
         onSkip = { step -> if (step < 0) player.seekBack() else player.seekForward() },
         onSeek = { at -> if (length > 0) player.seekTo((at * length).toLong()) },
         onToggleMute = VideoSound::toggle,
+        onFullscreen = onFullscreen,
         modifier = modifier,
     )
 }

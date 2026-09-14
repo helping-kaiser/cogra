@@ -139,6 +139,7 @@ export function PostCard({
   onOpenComments,
   onLinkCopied,
   mediaPinned = false,
+  onOpenMedia,
 }: {
   post: PostView;
   /** `detail` is the read surface: nothing clamps, and the title leads at `headline-small`. */
@@ -169,6 +170,17 @@ export function PostCard({
    * cannot turn a caption into one.
    */
   mediaPinned?: boolean;
+  /**
+   * Opens the fullscreen viewer on one attachment of this post.
+   *
+   * THE DETAIL'S ALONE. The graph draws exactly one edge from a card's media to
+   * the viewer and it starts at `PostDetail` — "detail media → the frame, whole
+   * and full-screen" (graph.json, `PostDetail` via 4). On the FEED the tap
+   * already means something else and the card's own link owns it: "the card's
+   * tap opens the post, the post's tap opens the frame"
+   * (`ViewerPicture.jsx:2-3`). So a summary card is handed none.
+   */
+  onOpenMedia?: (index: number) => void;
 }) {
   const detail = variant === "detail";
   const [open, setOpen] = useState(false);
@@ -273,7 +285,15 @@ export function PostCard({
         >
           {detail ? (
             <>
-              {drawsMedia && <PostMedia node={post} testId={`${testId}-media`} preloadLead />}
+              {drawsMedia && (
+                <PostMedia
+                  node={post}
+                  testId={`${testId}-media`}
+                  preloadLead
+                  // THE POST'S TAP OPENS THE FRAME (`ViewerPicture.jsx:2-3`).
+                  onOpen={onOpenMedia}
+                />
+              )}
               {bodyText}
             </>
           ) : (

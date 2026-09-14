@@ -110,7 +110,11 @@ object VideoStage {
                     setMediaItem(Media3Item.fromUri(url))
                     // A clip on a card loops: it is a moment rather than a
                     // programme, and the alternative is a card that goes
-                    // still and dead while the reader is still looking.
+                    // still and dead while the reader is still looking. The
+                    // surface showing the clip settles it from here — a clip
+                    // under the full transport stops at its end — and this is
+                    // the reading surfaces' answer, which is every surface a
+                    // clip starts on.
                     repeatMode = Player.REPEAT_MODE_ONE
                     prepare()
                 },

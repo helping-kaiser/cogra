@@ -2,20 +2,16 @@ package com.cogra.core.designsystem.v2.media
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
@@ -31,13 +26,11 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.MediaFrame
@@ -59,9 +52,12 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * badge anywhere, and the dot row states the position to a screen reader
  * instead.
  *
- * The whole gallery is one tap target opening the post — a reader scrolling
- * is choosing between posts, not looking at one picture — so [onOpen] is a
- * single callback and the pages below it are not individually focusable.
+ * The whole gallery is one tap target — a reader scrolling is choosing between
+ * posts, not looking at one picture — so [onOpen] is a single callback and the
+ * pages below it are not individually focusable. It is handed the page the
+ * reader is on, because the two surfaces that wire it want different halves of
+ * that: the feed opens the POST and ignores it, the detail opens the FULLSCREEN
+ * VIEWER on the very frame under the thumb (graph.json, `PostDetail` via 4).
  *
  * @param frameRatio the shape every page takes. The composer crops a post's
  *   whole set to one shape, so this is the set's shape; it defaults to the
@@ -77,7 +73,7 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 fun MediaGallery(
     items: List<MediaItem>,
     modifier: Modifier = Modifier,
-    onOpen: (() -> Unit)? = null,
+    onOpen: ((page: Int) -> Unit)? = null,
     frameRatio: Float = items.firstOrNull()?.aspectRatio?.cappedToTallestTile() ?: 1f,
     fit: ContentScale = ContentScale.Crop,
     maxHeight: Dp = mediaMaxHeight(),
@@ -90,7 +86,13 @@ fun MediaGallery(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier)
+            .then(
+                if (onOpen != null) {
+                    Modifier.clickable { onOpen(pagerState.currentPage) }
+                } else {
+                    Modifier
+                },
+            )
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
     ) {
         HorizontalPager(
@@ -111,13 +113,19 @@ fun MediaGallery(
             )
         }
 
-        if (items.size > 1) {
-            PageDots(
-                count = items.size,
-                current = pagerState.currentPage,
-                testTag = testTag?.let { "${it}_dots" },
-            )
-        }
+        // THE ROW IS WINDOWED at seven (item 67, ruled 2026-09-14: "ten dots
+        // under a gallery card is too much"), and it is the same row the
+        // fullscreen viewer draws — one marker for one position, the card's
+        // tone here and the viewer's there.
+        PagerDots(
+            count = items.size,
+            current = pagerState.currentPage,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = MediaFrame.DotRowTopPadding),
+            tone = DotTone.Card,
+            testTag = testTag?.let { "${it}_dots" },
+        )
     }
 }
 
@@ -218,44 +226,6 @@ private fun GalleryFrame(
  * is looking at this one" has to be more than half a card.
  */
 private const val AUTOPLAY_VISIBLE_FRACTION = 0.7f
-
-/**
- * The pager's position, below the media and never over it.
- *
- * The row carries the position in words for a screen reader; the dots
- * themselves are decorative, which is why they are cleared from the tree
- * rather than announced one by one.
- */
-@Composable
-private fun PageDots(count: Int, current: Int, testTag: String?) {
-    val position = stringResource(R.string.designsystem_gallery_position, current + 1, count)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = MediaFrame.DotRowTopPadding)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
-            .clearAndSetSemantics {
-                contentDescription = position
-            },
-        horizontalArrangement = Arrangement.spacedBy(MediaFrame.DotGap, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        repeat(count) { index ->
-            Box(
-                modifier = Modifier
-                    .size(MediaFrame.Dot)
-                    .clip(CircleShape)
-                    .background(
-                        if (index == current) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.outlineVariant
-                        },
-                    ),
-            )
-        }
-    }
-}
 
 /**
  * `--media-max-height`: the viewport, less the top safe area, the bottom
