@@ -73,6 +73,7 @@ const {
   WashCard,
   StancePad,
   StanceReadout,
+  OwnStanceReadout,
   StanceValue,
   StanceSlider,
   TAG_RANGES,
@@ -912,9 +913,11 @@ function ComposeSealBody() {
 
         <div style={{ display: "flex", flexDirection: "column" }}>
           <FactRow label="License" value="Public domain — your default" action="Change" />
+          {/* One number: what reaches you about your own post is not a choice,
+              so the row states the one value the author set. */}
           <FactRow
             label="Your opinion"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
+            value={<OwnStanceReadout pDirected={0.1} />}
             action="Adjust"
           />
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
