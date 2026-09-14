@@ -3,8 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { newReferenceDraft } from "@/lib/references/draft";
+import { DEFAULT_CONFIDENCE, DEFAULT_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
 import { PUBLIC_DOMAIN } from "@/lib/license";
 import { SealStep } from "./seal-step";
+
+function tag(name: string): TagDraft {
+  return { name, relevance: DEFAULT_RELEVANCE, confidence: DEFAULT_CONFIDENCE };
+}
 
 function baseState(overrides: Partial<WizardState> = {}): WizardState {
   return { ...emptyWizard(), title: "Salt maps of the coast road", ...overrides };
@@ -37,7 +42,7 @@ describe("SealStep", () => {
   // CW-22: the label is "Tags", and each one reads back as a readout chip —
   // never a joined string.
   it("reads tags back as chips under the label 'Tags'", () => {
-    renderStep({ tags: [{ name: "fieldnotes" }, { name: "coastroad" }] });
+    renderStep({ tags: [tag("fieldnotes"), tag("coastroad")] });
     expect(screen.getByText("Tags")).toBeInTheDocument();
     expect(screen.queryByText("Topics")).not.toBeInTheDocument();
     expect(screen.getByText("#fieldnotes")).toBeInTheDocument();
@@ -76,7 +81,7 @@ describe("SealStep", () => {
   // all-or-nothing note stacked), and the per-act rows both read at
   // text-label-small.
   it("stacks the signed-actions total over its all-or-nothing note", () => {
-    renderStep({ tags: [{ name: "fieldnotes" }] });
+    renderStep({ tags: [tag("fieldnotes")] });
     const total = screen.getByTestId("wizard-signed-actions");
     const row = total.parentElement;
     expect(row?.className).toContain("flex-col");
@@ -85,7 +90,7 @@ describe("SealStep", () => {
   });
 
   it("reads act-card labels and counts at the same small type role", () => {
-    renderStep({ tags: [{ name: "fieldnotes" }] });
+    renderStep({ tags: [tag("fieldnotes")] });
     const label = screen.getByText("Tags");
     const row = label.parentElement as HTMLElement;
     const count = row.lastElementChild as HTMLElement;
