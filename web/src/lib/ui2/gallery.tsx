@@ -60,7 +60,7 @@ export function ComponentGallery() {
           help={<HelpButton onOpen={() => {}} label="About the crop" />}
           // The trailing slot is for passive information — a stage label. The
           // screen's forward action lives at the bottom of its content.
-          action={<span className="text-body-small text-on-surface-variant">Last step</span>}
+          action={<span className="text-label-small text-on-surface-variant">Last step</span>}
         />
         <HeaderBar title="Recovery code" />
       </Section>

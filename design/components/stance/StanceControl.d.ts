@@ -7,22 +7,21 @@ import type { StanceBundle, StancePair } from "./StanceReadout";
 export interface StanceControlProps {
   /**
    * Already in the reader's words — "this post", "this comment", "@ada". Names
-   * the face's aria-label and, since backlog item 46.1, the visually-hidden
-   * "Choose your stance on {targetLabel}" skip-link beside it — the fix for a
-   * page (e.g. TagPage) carrying more than one stance control, where every
-   * skip-link once read the same unnamed "Choose your stance".
+   * the face's aria-label and the visually-hidden "Choose your opinion on
+   * {targetLabel}" skip-link beside it, so a page (e.g. TagPage) carrying more
+   * than one stance control names each of them (backlog item 46.1).
    */
   targetLabel?: string;
   /**
-   * The standing the hosting read already carried. Leave it out and the control
-   * starts from no standing and keeps its own.
+   * The bundle the hosting read already carried. Leave it out and the control
+   * starts from nothing and keeps its own.
    */
   bundle?: StanceBundle;
   /** An anonymous tap opens the join prompt rather than signing anything. */
   signedIn?: boolean;
   /** Whether this reader has already met the gesture. False shows the coach mark. */
   taught?: boolean;
-  /** Fires with the picked pair and the new standing once a gesture completes. */
+  /** Fires with the picked pair and the new bundle once a gesture completes. */
   onCommit?: (pick: StancePair, bundle: StanceBundle) => void;
   /**
    * Render the pad already parked — for statically rendered boards showing a

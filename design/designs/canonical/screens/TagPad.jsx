@@ -65,7 +65,7 @@
    control speaks the reader's word (api-spec's own noun for the r-0 record is
    "the un-tag") and the record-speak stays the register's. An act of that
    weight is asked for by a control that says what it does, never by dragging
-   a claim down to nothing. It takes `Walk it back`'s place on the stance pad — the
+   a claim down to nothing. It takes `Walk it back`'s place on the opinion pad — the
    walk-away pushed left, the decisions kept right — and its restraint
    with it: a text button and no colour of its own, because a withdrawal is a
    deliberate act and not a failure (§2.4). THE CHIP'S × DOES THE SAME AT AN
@@ -134,7 +134,7 @@ export function Screen() {
           {/* The line carries both outcomes — a pair set and a tag withdrawn
               are each signed with the post, as their own action — so it stands
               over the row rather than beside `Done`, leaving the left slot for
-              the walk-away the stance pad's action row puts there. */}
+              the walk-away the opinion pad's action row puts there. */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
             <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
               Signed with the post, as its own action.

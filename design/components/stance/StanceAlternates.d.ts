@@ -15,7 +15,7 @@ export interface StanceAlternatesProps {
   /** Severance is findable here for anyone whose input is an alternate. */
   onSever?: () => void;
   busy?: boolean;
-  /** The standing block, rendered above the inputs as it sits above the pad. */
+  /** The current-opinion block, rendered above the inputs as it sits above the pad. */
   children?: React.ReactNode;
   /** The landing line, below the inputs as it sits below the field. */
   landing?: React.ReactNode;

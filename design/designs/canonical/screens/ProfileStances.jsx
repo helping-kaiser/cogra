@@ -1,4 +1,4 @@
-/* The stances page (profile round, item 23 — jakob: "kinda similar to the way
+/* The opinions page (profile round, item 23 — jakob: "kinda similar to the way
    insta handles their followers/following page"). Opened from any profile's
    figures row: two text tabs, both directions SEPARATED — never one merged
    list — and each row is a person with the public stance the row is about,
