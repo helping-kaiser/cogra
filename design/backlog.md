@@ -2525,3 +2525,85 @@ mechanism already built (ime insets on Android, scroll-into-view on
 the web) rather than anything new to specimen. The design work is
 done; what is left is conformance where a surface still reimplements
 its own avoidance.
+
+### 78 · The Affinity pad is never drawn · *design*
+
+Filed by the topic round 2026-09-14. The round gave the Affinity family
+its own four pole words — `Not mine` / `Mine` for association,
+`Away` / `Toward` for attraction — and the mechanism to carry them
+(`StanceControl`'s `axes`, through to the field and the alternates
+alike). No board draws that pad. `TagPage` and `TagPageHeld` draw the
+ROW; the tap's edge points at `VouchBackPad`, the pad's master board,
+and says in its own `case` that the Affinity family's poles are not
+drawn there.
+
+So the words are recorded (copy-voice, *the topic round*) and reviewable
+as prose, but not as a drawing, which is the weaker half of a canvas
+review. Once jakob blesses the poles, the family wants a parked-pad
+board of its own — `VouchBackPad`'s anatomy over the tag page, with
+`Walk it back` standing, which is also the only place the severance door
+from a held topic could be seen.
+
+### 79 · The Affinity pad's axis NAMES are still the opinion's · *design*
+
+Filed by the topic round 2026-09-14, and named in the round's own
+copy-voice entry. The poles travel with the record family now; the two
+AXIS names above the alternates' sliders do not — they are still
+`For or against` and `How much reaches you` (`DIRECTED_LABEL`,
+`INTEREST_LABEL`), which name the Opinion family's parameters on a
+record that is not one. A screen reader on the accessible route hears
+the wrong question.
+
+The tag pad's precedent is what the answer looks like: `TagPad` names
+its two axes `How much it is about this` and `How sure you are`, in the
+reader's words, beside its own poles. Association and attraction want
+the same treatment. It is a copy ruling, which is why the round flagged
+it rather than inventing one — and it is the same shape of change as the
+poles, so the two want blessing together.
+
+### 80 · `readme.md` §3 says the stance parameters have two labels and nothing else · *design*
+
+Surfaced by the topic round 2026-09-14 while giving the Affinity family
+its pole words. §3 reads: "The two stance parameters are labelled **For
+or against** and **How much reaches you** on screen, and nothing else."
+Taken at face value that forbids what three record families already do —
+a tag's pair editor says `How much it is about this` / `How sure you
+are`, a citation's field says `Barely` / `Entirely`, and now an
+Affinity's says `Not mine` / `Mine`.
+
+The rule is not wrong, it is scoped to the wrong noun: what may not be
+renamed is the OPINION's two parameters, and what a different record
+family fills the same two slots with is that family's to name
+(`StancePad`'s own contract says exactly this). §3 wants one clause
+saying so, and copy-voice's *vocabulary that stays off the screen*
+probably wants the same clause. A tightening pass, not a decision.
+
+### 81 · A guest on a tag page has no ruled outcome · *design*
+
+Surfaced by the topic round 2026-09-14. `TagPage`'s three stance faces
+(two posts, a comment) carry no guest outcome in `graph.json`, and the
+topic's new fourth face was given none either, for consistency — the
+page is not declared guest-reachable anywhere. But a tag chip stands on
+the guest boards (`Main`, `FeedBare` both link `/t/`), so a guest can
+plainly arrive here, and round 2's rule says a control start on a guest
+origin starts a gate.
+
+Either the page's faces gain the `GuestGate` outcome its siblings have,
+or the guest boards' tag chips are ruled not to reach it. `StanceControl`
+already answers correctly whatever the graph says (`signedIn=false`
+opens `JoinPrompt`); what is missing is the wiring, and the edges cannot
+be half-right on one face and silent on three.
+
+### 82 · A tag page reached from Your topics goes back to the wrong place · *design*
+
+Surfaced by the topic round 2026-09-14. The tag round ruled the page a
+subpage of search, so its arrow is a LINK back to Explore rather than
+history — `Back to Explore`, always. Your topics is now a second route
+to it, one level further out, so a reader who opens `#saltmaps` from
+their own list and presses back lands on Explore rather than on the list
+they came from.
+
+Three ways out, each a ruling: the arrow becomes history after all (and
+the label with it), the page carries the label its route gives it, or
+the skip is accepted as the cost of a link. The tag round's reasoning
+for a link is real and this round did not disturb it.
