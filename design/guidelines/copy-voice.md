@@ -314,6 +314,15 @@ used to be, once a clip is staged:
 
 - `A video is the whole post. Its cover comes next.`
 - `A video is the whole comment. Give it a cover below.`
+- `A video is the whole post.` — the edit's trim of the staging
+  line: the cover sits on the edit's own screen, so the second
+  sentence goes (blessed 2026-09-14).
+
+**The add control carries the cap** — the established add grammar
+gains the post scale's count (the comment scale already draws its
+`· 1 of 4` twin; blessed 2026-09-14):
+
+- `+ Add pictures · 2 of 10`
 
 **A clip that didn't upload** — a fault, not a refusal, so it keeps
 Retry (`UploadErrorLine` with both ways out):
