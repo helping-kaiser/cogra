@@ -1166,8 +1166,12 @@ fun StancePoint.pair(): String =
  * The sign carries the direction, so it is shown even at zero — but a
  * value that ROUNDS to zero has no direction to report, and `-0.00`
  * reads as a broken control rather than as a precise one.
+ *
+ * Public for the same reason [pair] is: the references sheet spells the
+ * same numbers in its rows' spoken readings, and one formatter is what
+ * keeps two surfaces writing one number.
  */
-internal fun twoPlaces(value: Double): String {
+fun twoPlaces(value: Double): String {
     val rounded = (value * 100).roundToInt() / 100.0
     return String.format(Locale.getDefault(), "%+.2f", if (rounded == 0.0) 0.0 else rounded)
 }
