@@ -161,16 +161,16 @@ event-driven and is not an MVP dependency.
 - **Slice 2.5.3's remainder** — the fullscreen viewers, edit as one
   batch, the default-license setting, and the comment-video edit
   surface (share already shipped).
-- **Slice 2.6 — private viewer state.** Design first: bookmarks,
-  hidden actors, and view history have no boards yet.
+- **Slice 2.6 — private viewer state.** Boards drawn for bookmarks,
+  hidden actors, and view history; implementation outstanding.
 - **Slice 2.7 — search**, with the Explore surface that waits on it
   (the Explore boards are drawn).
 - **Slice 3 — the ranked feed, backend-direct only**, the Reel
   stream included. The miner-container and on-device stages stay on
   the contract and ship after the MVP; so do the feed's L1-view /
   L2-view toggle and the quick-pad variant.
-- **Slice 3.1 — notifications, the minimal cut**: the design doc and
-  an in-app notifications list; no push channel.
+- **Slice 3.1 — notifications, the minimal cut**: implementing the
+  drawn notifications list; no push channel.
 - **Slice 8's erasure half** — self-deletion of content and account
   ([erasure.md](../instances/erasure.md)). Play's account-deletion
   policy mandates it; the moderation half waits.
@@ -205,8 +205,8 @@ only if the core lands early, in this order:
    squash-merged the day it was cut (PRs #618–#632), so nothing
    remained to salvage; the held refs were stale local branches.
 1. W3 and W4 (slice 2.5.3's remainder rides them), then W5–W7.
-2. Slice 2.6 (design first), then slice 2.7.
-3. Slice 3 (feed + Reel), then slice 3.1 (design first).
+2. Slice 2.6, then slice 2.7.
+3. Slice 3 (feed + Reel), then slice 3.1.
 4. Slice 8's erasure half.
 5. W8, the copy sweep, once the structure settles.
 6. Slice 9, then the closed test through slice 10.
@@ -505,7 +505,10 @@ from the media path and carrying their own doc write-back:
 
 - Bookmarks, hidden actors, `markSeen` / view history, and
   cross-device preferences ([api-spec.md](api-spec.md) "Private
-  viewer state") — L2-only rows, no graph records.
+  viewer state") — L2-only rows, no graph records. Theme and Reading
+  preferences stay on the device; every other preference is
+  server-stored, including a has-seen-the-onboarding flag so the
+  intro shows once per account.
 - Sequenced before slice 3: `markSeen` feeds the ranked feed's
   de-duplication.
 - **Hand test:** bookmark on the phone, find it on the web;
