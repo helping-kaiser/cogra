@@ -220,7 +220,16 @@ export function VideoPlayer({
         // videos down before any of them is on screen.
         muted
         playsInline
-        loop
+        // A FEED CLIP LOOPS AND A CLIP UNDER THE REAL TRANSPORT STOPS (jakob
+        // 2026-09-14, via the design loop). It sharpens the deliberate
+        // reel-vs-video split: a clip in a card or a stream is a MOMENT, read
+        // with the scroller's grammar, and stopping it would leave a card gone
+        // still and dead under a reader still looking at it. A clip the reader
+        // opened on purpose — the detail's pinned clip, the viewer — is a
+        // PROGRAMME, read with a player's grammar, and a programme that silently
+        // restarted would be a player that never admits it finished. The
+        // transport then stands at its Play glyph, and pressing it replays.
+        loop={!transport}
         preload="metadata"
         aria-label={altText ?? undefined}
         data-testid={testId}
@@ -230,6 +239,13 @@ export function VideoPlayer({
         // refused shows as paused rather than as a lying pause glyph.
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
+        // A clip that runs out is a clip at rest, and the transport has to say
+        // so. The HTML spec fires `pause` before `ended` for a non-looping
+        // element, but only "if the media element's paused attribute is false"
+        // (html.spec.whatwg.org, "playback has ended"), so the state is taken
+        // from the event that is guaranteed rather than from the one that is
+        // conditional.
+        onEnded={() => setPlaying(false)}
         onTimeUpdate={(event) => setElapsedSec(event.currentTarget.currentTime)}
         onDurationChange={(event) => {
           const length = event.currentTarget.duration;
@@ -277,6 +293,15 @@ export function VideoPlayer({
               // play here pauses whatever was running (FE-28).
               claim(stageToken, video);
               video.muted = isMuted();
+              // PLAY AT THE END IS REPLAY. `play()` on an ended element seeks
+              // to the start itself — "if the playback position is the end of
+              // the media resource… seek to the earliest possible position"
+              // (html.spec.whatwg.org, the play() algorithm) — but only when
+              // the direction of playback is forwards and the element is not
+              // looping, so the seek is stated rather than relied on: it is
+              // also what puts the rendered clock back to 0:00 in the same
+              // frame, instead of a tick later.
+              if (video.ended) seekTo(0);
               void video.play().catch(() => {});
             } else {
               video.pause();
