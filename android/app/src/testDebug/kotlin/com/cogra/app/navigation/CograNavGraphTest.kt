@@ -19,7 +19,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.performTextInput
@@ -206,6 +205,10 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
 
         compose.onNodeWithTag("feed_post_p1").performClick()
+        // The thread stands in its own sheet, which the affordance row's
+        // count raises (`ReplyEntry`).
+        waitForTag("detail_post_comments")
+        compose.onNodeWithTag("detail_post_comments").performClick()
         waitForTag("detail_comment_c1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
 
@@ -523,15 +526,7 @@ class CograNavGraphTest {
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
         waitForTag("feed_post_p1")
         compose.onNodeWithTag("feed_post_p1").performClick()
-        // The thread is a lazy list, so the prompt below it is composed
-        // only once scrolled to.
-        waitForTag("detail_list")
-        compose.onNodeWithTag("detail_list")
-            .performScrollToNode(hasTestTag("detail_comment_signin"))
-        waitForTag("detail_comment_signin")
-        // The composer is absent for the anonymous reader, swapped —
-        // never merely disabled.
-        assertThat(compose.onAllNodesWithTag("detail_comment_input").fetchSemanticsNodes()).isEmpty()
+        waitForTag("detail_post_comments")
 
         // The frame rides the drill-in for the guest too, its gated
         // slots still asking in place rather than bouncing the read.
@@ -544,9 +539,17 @@ class CograNavGraphTest {
             compose.onAllNodesWithTag("join_prompt").fetchSemanticsNodes().isEmpty()
         }
 
+        // The prompt rides the foot of the comments sheet, so it arrives with
+        // the thread the count raises.
+        compose.onNodeWithTag("detail_post_comments").performClick()
+        waitForTag("detail_comment_signin")
+        // The composer is absent for the anonymous reader, swapped —
+        // never merely disabled.
+        assertThat(compose.onAllNodesWithTag("detail_comment_input").fetchSemanticsNodes()).isEmpty()
+
         // The join entry pushes the login screen, so back returns to the
         // post (web parity: the guest entries link to /login).
-        compose.onNodeWithTag("detail_comment_signin").performScrollTo().performClick()
+        compose.onNodeWithTag("detail_comment_signin").performClick()
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Login>()).isTrue()
         assertThat(navController.previousBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()

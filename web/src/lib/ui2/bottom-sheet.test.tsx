@@ -104,6 +104,42 @@ describe("BottomSheet", () => {
     expect(screen.getByRole("button", { name: "?" })).toBeInTheDocument();
     expect(screen.getByLabelText("Mark as sensitive")).toBeInTheDocument();
   });
+
+  // The comments sheet's height is drawn rather than content-sized
+  // (`_shared.jsx:1249`), because the row pinned at its foot needs the surface
+  // itself to own the height.
+  it("takes the drawn full height instead of sizing to its content", () => {
+    const { rerender } = render(
+      <BottomSheet open onClose={() => {}} title="Comments">
+        <p>A comment</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByTestId("bottom-sheet").className).toContain("max-h-[92dvh]");
+
+    rerender(
+      <BottomSheet open onClose={() => {}} title="Comments" height="full">
+        <p>A comment</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByTestId("bottom-sheet").className).toContain("h-[calc(100dvh-72px)]");
+  });
+
+  it("pins the foot below the body, outside what scrolls", () => {
+    render(
+      <BottomSheet
+        open
+        onClose={() => {}}
+        title="Comments"
+        height="full"
+        foot={<button type="button">Add a comment</button>}
+      >
+        <p>A comment</p>
+      </BottomSheet>,
+    );
+    const body = screen.getByText("A comment").parentElement;
+    expect(body?.className).toContain("overflow-y-auto");
+    expect(body).not.toContainElement(screen.getByRole("button", { name: "Add a comment" }));
+  });
 });
 
 describe("SheetItem", () => {
