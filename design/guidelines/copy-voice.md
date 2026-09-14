@@ -1273,3 +1273,18 @@ having already said what was counted.
 one thing that would fill it. It never scolds and it carries no `error`
 colour; a comment nobody has answered is not a fault.
 
+## The chats coming-soon screen
+
+`ChatsComingSoon` is the screen the band's chats icon opens until
+messaging exists (backlog item 68). Its one line is the only copy of its
+own on the board — the header reads `Chats`, the back arrow `Back`, both
+already in use. The line (blessed 2026-09-14):
+
+- `Chats aren't built yet. When they are, your conversations will be
+  here.`
+
+Two sentences answering the reader's only two questions — why is this
+empty, and what is this screen for. The line deliberately says nothing
+about *when*: chats sit on the would-like list and the order can change,
+so the copy promises nothing the release order cannot keep.
+
