@@ -47,6 +47,13 @@ a date. The removal mark's `when` speaks this vocabulary like any
 other timestamp — it is the redaction's own moment, not the content's
 age.
 
+Forward-looking moments read the same ladder forward (ruled
+2026-09-14): the relative form — `in 6 days`, `in 1 day`, then `in 5
+hours` on the last day — is the future vocabulary. A far date, where
+one is also shown, spells `dd.mm.yyyy` (`08.09.2026`), never an
+abbreviated month. Blessed instances: `WalletCampaign`'s `Ends in 6
+days · 08.09.2026`, `WalletCampaigns`' `In escrow · ends in 6 days`.
+
 ## Register
 
 Write from the reader's side. Active voice. **A control says what will
@@ -192,8 +199,11 @@ title, at most two short paragraphs, Close. The texts, verbatim
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
-  full, so only for-or-against is yours to set. Nothing is signed until
-  Set. Prefer sliders or exact numbers? Swap the input in settings.
+  full, so only for-or-against is yours to set. The face is the
+  reading: six of them run from 😠 at one end to 😍 at the other, and
+  the one you see is wherever your number lands. Nothing is signed
+  until Set. Prefer sliders or exact numbers? Swap the input in
+  settings.
 - **Toward what you answer** (the reply's two-axis pad): Replying also
   signs your opinion on the post you answer — for or against, and
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
@@ -304,6 +314,15 @@ used to be, once a clip is staged:
 
 - `A video is the whole post. Its cover comes next.`
 - `A video is the whole comment. Give it a cover below.`
+- `A video is the whole post.` — the edit's trim of the staging
+  line: the cover sits on the edit's own screen, so the second
+  sentence goes (blessed 2026-09-14).
+
+**The add control carries the cap** — the established add grammar
+gains the post scale's count (the comment scale already draws its
+`· 1 of 4` twin; blessed 2026-09-14):
+
+- `+ Add pictures · 2 of 10`
 
 **A clip that didn't upload** — a fault, not a refusal, so it keeps
 Retry (`UploadErrorLine` with both ways out):
@@ -1076,26 +1095,6 @@ Drawn on `Settings`, `DeleteAccount`, `DeleteAccountMail`,
 flow's words carry the product's erasure ethic, so the register is held
 tighter here than anywhere: honest, quiet, no drama, and nothing that
 argues with a decision the reader has made.
-
-**THE ONE WORD NOT YET RULED — how a FUTURE moment is said.** The ages
-ladder above is a vocabulary for how long ago something happened; the
-deletion band counts FORWARD, and no ruling covers that (backlog 54.1).
-Three candidates:
-
-1. `Deleted in 6d` — the ladder read forward, one vocabulary for every
-   duration on screen. Cheapest to hold, and the one place the ladder's
-   compression can genuinely mislead: `6d` means *ago* everywhere else
-   in the product, so a reader scanning a band could read the account as
-   already gone.
-2. `Deleted in 6 days` — spelled out. **Recommended, and what is
-   drawn.** The ladder's compression buys room in lists where many ages
-   compete for it; this is one sentence in a band with room to spare, so
-   the compression buys nothing and costs the ambiguity above. Running
-   down: `in 1 day`, then `in 5 hours` on the last day.
-3. `Deleted on 17.09.2026` — the ladder's own past-30-days branch, a
-   fixed date. Exact and needs no arithmetic, but a date does not shrink,
-   and a window whose whole point is that it is closing should read as
-   closing.
 
 **The settings row is two words and a footnote.** `Delete account` on a
 navigating row, and under the group: `Nothing is deleted here. The next
