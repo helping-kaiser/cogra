@@ -43,6 +43,17 @@ fun PinnedClip(
     item: MediaItem,
     modifier: Modifier = Modifier,
     maxHeight: Dp = mediaMaxHeight(),
+    /**
+     * Where the clip's own tap goes (`:19-20` — "the tap on it is the surface's
+     * to wire: back into the stream where the reader came from it, and into the
+     * fullscreen viewer everywhere else").
+     *
+     * THE STREAM HALF IS SLICE 3's. `Reel` is not built, so the graph's other
+     * case (`PostDetailVideo` via 3 — "came from the stream — the clip expands
+     * back into it, the reader's place held") has no destination yet; the
+     * viewer half is wired and the reel half lands with the stream.
+     */
+    onOpenViewer: (() -> Unit)? = null,
     testTag: String = PINNED_CLIP_TAG,
 ) {
     val videoUrl = item.videoUrl ?: return
@@ -69,6 +80,7 @@ fun PinnedClip(
             // shape this surface invents.
             videoAspectRatio = item.aspectRatio?.cappedToTallestTile(),
             contentDescription = item.altText,
+            onOpenViewer = onOpenViewer,
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(item.aspectRatio?.cappedToTallestTile() ?: 1f)

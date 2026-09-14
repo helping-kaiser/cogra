@@ -158,6 +158,11 @@ export function MediaTile({
         autoplay={autoplay}
         surface={surface}
         framed
+        // A CLIP'S `onOpen` IS THE PLAYER'S, not a button around it: the frame
+        // carries its own controls, and the route into the viewer is the bar's
+        // fullscreen toggle and the clip's own tap — never a wrapper that eats
+        // every press aimed at play or seek.
+        onOpenViewer={onOpen}
         testId={testId}
       />
     );

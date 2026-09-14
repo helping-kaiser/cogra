@@ -23,11 +23,10 @@
 // off the board rather than chosen here.
 //
 // IT IS BUILT SHAREABLE: the fullscreen viewer is the ladder's other
-// full-transport surface and consumes this same component. The board's bar also
-// ends in a FULLSCREEN TOGGLE (`VideoControls.jsx:231-233`), which is not drawn
-// here — there is no viewer for it to open yet and the product's glyph set
-// carries no `fullscreen` cut, so it lands with the surface it opens rather
-// than shipping as a control that goes nowhere.
+// full-transport surface and consumes this same component. The bar ends in a
+// FULLSCREEN TOGGLE (`VideoControls.jsx:231-233`) wherever it is handed one to
+// open — which is every full-transport surface but the viewer itself, where
+// "this IS the fullscreen".
 
 import { useRef } from "react";
 
@@ -232,6 +231,7 @@ export function VideoTransport({
   onToggleMute,
   onSeek,
   onSkip,
+  onFullscreen,
   inset = GESTURE_ZONE,
   testId = "video-transport",
 }: {
@@ -244,6 +244,14 @@ export function VideoTransport({
   onToggleMute: () => void;
   onSeek: (fraction: number) => void;
   onSkip: (seconds: number) => void;
+  /**
+   * The way into the fullscreen viewer (`VideoControls.jsx:231-233`).
+   *
+   * Drawn only where it is handed one, which is the master's own condition
+   * (`{fullscreen && …}`): THE VIEWER DOES NOT DRAW IT, because "no fullscreen
+   * toggle — this IS the fullscreen" (`MediaViewer.jsx:153`).
+   */
+  onFullscreen?: () => void;
   inset?: number;
   testId?: string;
 }) {
@@ -325,6 +333,19 @@ export function VideoTransport({
           onClick={onToggleMute}
           testId={`${testId}-sound`}
         />
+        {/* THE BAR ENDS IN THE WAY INTO THE VIEWER (`VideoControls.jsx:231`).
+            It is the transport's own route there; the clip's surface tap is
+            the other (graph.json, `PostDetailVideo` via 19 and via 3). */}
+        {onFullscreen && (
+          <TransportButton
+            label="Full screen"
+            glyph="fullscreen"
+            size={20}
+            box={28}
+            onClick={onFullscreen}
+            testId={`${testId}-fullscreen`}
+          />
+        )}
       </div>
     </div>
   );

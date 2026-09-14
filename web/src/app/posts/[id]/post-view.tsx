@@ -66,6 +66,7 @@ import {
   payloadIsRedacted,
   sensitiveSignature,
 } from "@/lib/ui/post-media";
+import { MediaViewer } from "@/lib/ui2/media/media-viewer";
 import { PinnedClip } from "@/lib/ui2/media/pinned-clip";
 import { PostCard } from "@/lib/ui/post-card";
 import { LINK_COPIED } from "@/lib/ui/share";
@@ -216,6 +217,12 @@ export function PostView({
   // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): one
   // sheet for the page, raised by whichever menu row asked for it. The license
   // it shows outlives the `open` flag so the block does not blank out mid-exit.
+  // THE FULLSCREEN VIEWER, over one of this post's attachments (DV-01/H-25).
+  // Null is closed; the number is which attachment it opened on. Held here
+  // rather than in the card, because "it never changes the underlying route"
+  // (`MediaViewer.jsx:26-27`) — the viewer is a layer over this page, so the
+  // page is what owns whether it is up.
+  const [viewerAt, setViewerAt] = useState<number | null>(null);
   const [licenseShown, setLicenseShown] = useState<License | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
@@ -1081,6 +1088,11 @@ export function PostView({
             altText={pinned.altText}
             sourceRatio={pinned.sourceRatio}
             durationMs={pinned.durationMs}
+            // The pinned clip's two routes into the viewer — the bar's
+            // fullscreen toggle and the clip's own tap (graph.json,
+            // `PostDetailVideo` via 19 and via 3). The clip is the post's one
+            // attachment, so the viewer opens on it.
+            onOpenViewer={() => setViewerAt(0)}
             testId="post-pinned-clip"
           />
         </div>
@@ -1090,6 +1102,11 @@ export function PostView({
           post={post}
           variant="detail"
           mediaPinned={pinned !== undefined}
+          // THE POST'S TAP OPENS THE FRAME (graph.json, `PostDetail` via 4 —
+          // "detail media → the frame, whole and full-screen"). The feed card's
+          // tap opens the post instead, which is why only this variant is
+          // handed the route.
+          onOpenMedia={(at) => setViewerAt(at)}
           href={`/posts/${postId}`}
           testId="post"
           authorTestId="post-author"
@@ -1321,6 +1338,17 @@ export function PostView({
             testId="comment-edit-help-dialog"
           />
         </>
+      )}
+      {/* THE VIEWER, over everything and answering to nothing behind it. Last
+          in the tree because it covers the screen: the layer drawn last is the
+          layer on top, and it takes no part in the page's own layout. */}
+      {viewerAt !== null && (
+        <MediaViewer
+          items={galleryItems(post)}
+          index={viewerAt}
+          onClose={() => setViewerAt(null)}
+          testId="post-media-viewer"
+        />
       )}
       {confirming !== null && (
         <MultiActionConfirm
