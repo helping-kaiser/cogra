@@ -192,8 +192,11 @@ title, at most two short paragraphs, Close. The texts, verbatim
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
-  full, so only for-or-against is yours to set. Nothing is signed until
-  Set. Prefer sliders or exact numbers? Swap the input in settings.
+  full, so only for-or-against is yours to set. The face is the
+  reading: six of them run from 😠 at one end to 😍 at the other, and
+  the one you see is wherever your number lands. Nothing is signed
+  until Set. Prefer sliders or exact numbers? Swap the input in
+  settings.
 - **Toward what you answer** (the reply's two-axis pad): Replying also
   signs your opinion on the post you answer — for or against, and
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
