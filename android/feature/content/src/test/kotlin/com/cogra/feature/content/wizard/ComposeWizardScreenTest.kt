@@ -576,37 +576,17 @@ class ComposeWizardScreenTest {
 
         compose.onNodeWithTag("wizard_describe_sheet_field").assertExists()
         // CW-15 (2026-09-08 UI audit): the reason rides under the title,
-        // permanently — not an extended trailing line near the field.
-        compose.onNodeWithText("Read aloud to people who can't see it.").assertExists()
+        // permanently — not an extended trailing line near the field. Two
+        // matches are expected: the sheet's own line and the counter's
+        // (CW-18), both still on screen behind the open sheet.
+        compose.onAllNodesWithText("Read aloud to people who can't see it.")
+            .assertCountEquals(2)
         compose.onNodeWithTag("wizard_describe_sheet_play_disc").assertDoesNotExist()
     }
 
-    // -- The video body's describe shape (CW-16, CW-17) --
-
-    private val onVideoDetails = ComposeWizardState(
-        mode = BodyMode.Media,
-        step = WizardStep.Details,
-        picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
-    )
-
-    @Test
-    fun theVideoBodysCounterAsksForOneDescriptionOfTheClip() {
-        compose.setContent { Wizard(onVideoDetails) }
-
-        compose.onNodeWithText("Describe the video").performScrollTo().assertExists()
-        compose.onNodeWithText("· 0 of 1 described").performScrollTo().assertExists()
-    }
-
-    @Test
-    fun theVideoBodysDescribeSheetIsTheVideoShape() {
-        val state = onVideoDetails.copy(describingIndex = 0)
-        compose.setContent { Wizard(state) }
-
-        // Unique to the sheet — the counter behind it also reads "Describe
-        // the video", so the field label and the disc are what disambiguate.
-        compose.onNodeWithText("What's in the video").assertExists()
-        compose.onNodeWithTag("wizard_describe_sheet_play_disc").assertExists()
-    }
+    // The video body's describe shape (CW-16, CW-17) has its own tests in
+    // ComposeWizardVideoDescribeTest — this class is already at detekt's
+    // LargeClass edge.
 
     // -- The seal --
 
