@@ -188,7 +188,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Start a campaign</button>", tag: "button" },
     { n: 3, find: ">Yours</button>", tag: "button" },
     { n: 4, find: ">You took part</button>", tag: "button" },
-    { n: 5, find: "In escrow · runs 6 more days", tag: "button" },
+    { n: 5, find: "In escrow · ends in 6 days", tag: "button" },
     { n: 6, find: "Settled 3d", tag: "button" },
     { n: 6, find: "Settled 12.07.2026", tag: "button" },
   ],
