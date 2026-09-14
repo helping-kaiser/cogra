@@ -3393,7 +3393,17 @@ four-rung ladder.
   and the root's scroll is wherever it was left — a pop is not a
   reload.
 - **At the root, scrolled, the tap goes to the top**, animated, so the
-  jump reads as travel over a list the reader still owns.
+  jump reads as travel over a list the reader still owns. **The feed
+  says this rung out loud** (jakob 2026-09-14): deep in the list, a
+  `Back to top` pill rides in with the returning collapsing band,
+  centred under it, and does exactly what the re-tap does. The two are
+  one outcome reached two ways — a rung a reader has to be told about,
+  and a control that tells them. The pill is the feed's alone, because
+  the feed is the only root with a top the reader is trying to get back
+  to; it needs about three screens of depth, since shallower the
+  returning band has already brought the top within a flick; and it is
+  drawn OUTSIDE the collapsing block, because height added to that block
+  moves the band's own threshold and re-clamps the list (item 45.3).
 - **At the top, only the feed answers.** It refreshes and loads what is
   new; Explore, Wallet and Profile do nothing, having nothing the
   reader is waiting on.

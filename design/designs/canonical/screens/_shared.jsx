@@ -8,6 +8,7 @@ const {
   ReferenceRow,
   CograBand,
   BandIcon,
+  BackToTop,
   BottomNav,
   ALL_SLOTS,
   PageHeader,
