@@ -26,6 +26,7 @@
     "CommentOpinionsEmpty": "the opinions sheet covers the thread, which covers the post detail — two sheets deep, the thread dimmed under the sheet’s own wash, and only that wash is live",
     "RemoveMenu": "the own-post sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "RemoveConfirm": "the think-twice dialog covers the post detail — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "SeveranceConfirm": "the walk-it-all-back dialog covers the feed and the pad it was picked on — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
     "ComposePicked": "the Show-all sheet covers the pick — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposeDescribe": "the describe sheet covers the details — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposeDescribeVideo": "the describe sheet covers the reply's video state — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
@@ -212,7 +213,7 @@
     { "from": "VouchBackPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog" }] },
     { "from": "VouchBackPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
     { "from": "VouchBackPad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "VouchBack", "case": "nothing staged" }] },
-    { "from": "VouchBackPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "VouchedIn", "case": "the vouch-back — signed, the ceremony opens" }, { "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }] },
+    { "from": "VouchBackPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "VouchedIn", "case": "the vouch-back — signed, the ceremony opens" }, { "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }, { "board": "SeveranceConfirm", "case": "the pick nets a standing bundle to nothing — severance, confirmed with its cost and never refused" }] },
 
     { "from": "VouchedIn", "via": 1, "kind": "advance", "label": "Go to your feed", "to": [{ "board": "Feed" }] },
 
@@ -1125,6 +1126,10 @@
     { "from": "RemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "Removed", "case": "the visible mark — never silent" }] },
     { "from": "RemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes" }] },
     { "from": "RemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
+
+    { "from": "SeveranceConfirm", "via": 1, "kind": "advance", "label": "Walk it back", "to": [{ "terminal": "back", "case": "signed — the bundle goes to nothing, and the signed line names where it left the reader" }] },
+    { "from": "SeveranceConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the pick is still parked on the pad beneath it" }] },
+    { "from": "SeveranceConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing signed" }] },
 
     { "from": "Removed", "via": 1, "kind": "back", "label": "back — to feed", "to": [{ "board": "Feed" }] },
     { "from": "Removed", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },

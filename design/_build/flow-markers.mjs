@@ -1517,6 +1517,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Restore the key</button>", tag: "button", all: true },
     { n: 3, find: ">Keep it pending, restore later</button>", tag: "button" },
   ],
+  // The pad's one irreversible gesture. scanExempt like every dialog board, so
+  // only the dialog's own pair and the scrim it sits on carry numbers.
+  SeveranceConfirm: [
+    { n: 1, find: ">Walk it back</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
   HelpDialog: [
     { n: 1, find: ">Close</button>", tag: "button" },
     { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },

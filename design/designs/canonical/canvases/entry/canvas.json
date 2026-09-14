@@ -290,6 +290,15 @@
       "page": "patterns"
     },
     {
+      "file": "SeveranceConfirm.dc.html",
+      "title": "Severance · walk it all back",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "Money.dc.html",
       "title": "Money · the CGT figure",
       "x": 0,
@@ -417,10 +426,10 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -1580,
+      "x": -1870,
       "y": 0,
-      "w": 1160,
-      "h": 343,
+      "w": 1450,
+      "h": 369,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     }
