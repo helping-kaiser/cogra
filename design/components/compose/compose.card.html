@@ -1,4 +1,4 @@
-<!-- @dsCard group="Compose" viewport="1180x980" name="Composing media" subtitle="The authoring-side media pieces: the thumb's upload states, the pick tray, the crop window, the cover strip, the picked row (no crop/edit links — the row opens the manager), Show all, Describe, the seal's gate and acts card." -->
+<!-- @dsCard group="Compose" viewport="1180x980" name="Composing media" subtitle="The authoring-side media pieces: the thumb's upload states, the pick tray, the crop window, the cover strip, the picked row (no crop/edit links — the row opens the manager), Show all and the staged citations' own sheet, Describe, the seal's gate and acts card." -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -8,7 +8,7 @@
 <style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:360px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { MediaThumb, PickPrompt, PickTray, PickedRow, DescribeCounter, PickedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, WizardFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot, InlineAction } = window.CoGraDesignSystem_9084ba;
+const { MediaThumb, PickPrompt, PickTray, PickedRow, DescribeCounter, PickedSheet, CitedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, WizardFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot, InlineAction } = window.CoGraDesignSystem_9084ba;
 const P = "../../assets/photos/";
 
 function Demo(){return (
@@ -59,6 +59,8 @@ function Demo(){return (
     <RefusedFile message="That file isn't a picture or a video CoGra can read."/>
     <span className="lbl">ActsCard — what one signature commits, where the surface has room</span>
     <ActsCard rows={[{label:"Post",value:"Sunday at the tide market",count:"1"},{label:"Picture",value:"A new profile picture",count:"1"}]} total="2 things, signed together"/>
+    <span className="lbl">ActsCard's door row — a fact that counts a collection opens what it counts; the count is the collection, bare</span>
+    <ActsCard rows={[{label:"Post",value:"Sunday at the tide market",count:"1"},{label:"References",value:"3 cited",count:"3",onOpen:()=>{},openLabel:"Manage the citations"}]} total="4 things, signed together" note="They land together, or none does."/>
     <span className="lbl">ActsFooter + SealFooter — the same fact on one line, and the pair every seal ends with</span>
     <ActsFooter count={2}/>
     <SealFooter signLabel="Sign the edit"/>
@@ -71,6 +73,8 @@ function Demo(){return (
   <div className="col" style={{width:400}}>
     <span className="lbl">PickedSheet — Show all, the per-picture manager (reorder, cover, remove, describe)</span>
     <PickedSheet inline open items={[{src:P+"01-landscape-4x3.jpg",alt:"Strawberries",described:true},{src:P+"04-square-1x1.jpg",alt:"Honey",onDescribe:()=>{},onRemove:()=>{}},{src:P+"10-square-1x1.jpg",alt:"Grapes",onDescribe:()=>{},onRemove:()=>{}}]}/>
+    <span className="lbl">CitedSheet — the same shape for a staged collection of citations; it manages, it never adds</span>
+    <CitedSheet inline open items={[{kind:"post",name:"The long way home — @ada",sub:"Post",src:P+"01-landscape-4x3.jpg",pair:{pDirected:0.1,pInterest:0.1},onRemove:()=>{},onEdit:()=>{}},{kind:"person",name:"Mira Voss",sub:"Person",pair:{pDirected:0.4,pInterest:0.3},onRemove:()=>{},onEdit:()=>{}},{kind:"post",name:"Tide tables and the third headland — @juno",sub:"Post",pair:{pDirected:-0.2,pInterest:0.1},onRemove:()=>{},onEdit:()=>{}}]}/>
   </div>
   <div className="col" style={{width:400}}>
     <span className="lbl">CropViewport — the shape is locked to how the result will be seen; circle for a face, the clip's ratio for a cover</span>
