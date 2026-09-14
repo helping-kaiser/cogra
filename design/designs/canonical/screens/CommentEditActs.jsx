@@ -58,8 +58,8 @@ export function Screen() {
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px 16px" }}>
           <ActsCard
             rows={[
-              { label: "Edit", value: "The glovebox camera earns its keep — this is the print…", count: "1" },
-              { label: "Tag added", value: "#glovebox", count: "1" },
+              { label: "Edit", value: "The glovebox camera earns its keep — this is the print…", count: "1", countNoun: "edit" },
+              { label: "Tag added", value: "#glovebox", count: "1", countNoun: "tag" },
             ]}
             note="They land together, or none does."
           />

@@ -26,6 +26,15 @@ export interface ActsCardRow {
   openLabel?: string;
   /** This row's own count, a bare number — e.g. "1". */
   count?: string;
+  /**
+   * The singular noun the count counts, for the reading a listener gets in
+   * place of the bare digit — "citation" on the References row, "tag" on
+   * Tags, "post" on Post. The card hides the digit and speaks
+   * `${count} ${noun}`, adding the regular plural above one. It comes from
+   * the board because no rule derives "citation" from the label
+   * "References". Omit it where the count is already words ("1 more").
+   */
+  countNoun?: string;
 }
 
 export interface ActsCardProps {

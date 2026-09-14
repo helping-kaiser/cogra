@@ -9,10 +9,12 @@
 .open{font-size:12px;color:var(--text-secondary);line-height:1.55;width:420px}.open b{color:var(--on-surface);font-weight:500}.open p{margin:0 0 10px}.open ul{margin:0 0 10px;padding-left:16px}
 .dots{background:#000;border-radius:var(--radius-md);padding:16px;display:flex;flex-direction:column;gap:14px}
 .dotrow{display:flex;flex-direction:column;align-items:center;gap:6px}
-.dotlbl{font-size:11px;color:rgba(255,255,255,0.55)}</style>
+.dotlbl{font-size:11px;color:rgba(255,255,255,0.55)}
+.dots.cardtone{background:var(--surface-container);border:1px solid var(--border-hairline)}
+.dots.cardtone .dotlbl{color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { PostCard, ViewerDots } = window.CoGraDesignSystem_9084ba;
+const { PostCard, PagerDots } = window.CoGraDesignSystem_9084ba;
 const ada = { handle: "ada", displayName: "Ada Okonkwo" };
 const mira = { handle: "mira_l", displayName: "Mira Lindqvist" };
 const b = (d,i,n) => ({current:{pDirected:d,pInterest:i},rawSum:{pDirected:d,pInterest:i},records:n,severed:false,severance:{records:n}});
@@ -44,11 +46,20 @@ function Demo(){return (
     <PostCard author={ada} timestamp="3d" score="2" menuItems={menuFor(ada.handle)} comments={4}
       content="A tile with no source reserves its space and says what belongs there."
       media={[{label:"Photo",ratio:"wide"}]}/>
-    <span className="lbl">The viewer's dot row, windowed at seven — no board carries a set this long, so it is drawn here</span>
+    <span className="lbl">The dot row, windowed at seven — one row, two tones. Over the viewer's scrim:</span>
     <div className="dots">
       {[[4,1],[7,3],[10,0],[10,4],[10,9]].map(([count,current])=>(
         <div className="dotrow" key={count+"-"+current}>
-          <ViewerDots count={count} current={current}/>
+          <PagerDots count={count} current={current} tone="viewer"/>
+          <span className="dotlbl">{"picture "+(current+1)+" of "+count}</span>
+        </div>
+      ))}
+    </div>
+    <span className="lbl">…and the same row under a card, in the page's own ink — no board carries a set this long, so both are drawn here</span>
+    <div className="dots cardtone">
+      {[[4,1],[7,3],[10,0],[10,4],[10,9]].map(([count,current])=>(
+        <div className="dotrow" key={count+"-"+current}>
+          <PagerDots count={count} current={current}/>
           <span className="dotlbl">{"picture "+(current+1)+" of "+count}</span>
         </div>
       ))}
@@ -82,7 +93,7 @@ function Demo(){return (
     <ul>
       <li><b><code>PinnedClip</code></b> — the top of a video post's detail view, and what the stream's squish morph leaves behind: the clip above the card, still playing, carrying the full transport on black. The post goes into <code>PostCard</code> beneath it <i>without</i> its media.</li>
       <li><b><code>MediaViewer</code></b> — the whole surface on black with nothing behind it, its stage positioned so the frame is bounded by the screen whatever shape it is. Dots for a set (never arrows; the count is spoken, not drawn), the X top-left, no acts, no description.</li>
-      <li><b>The viewer's dot row is windowed at seven</b> (2026-09-14, drawn on the black tile above). Up to seven pictures the row is the set. Past that it is a window onto it: the window slides centred on where the reader is and clamps at the set's two ends, and <b>the edge dot on a side the set keeps going is drawn smaller</b> — that shrunk dot is the whole of how the row admits what it is not showing. One smaller size and not a ladder of them: at a 6px dot a third size is noise, and the ten-picture authoring cap never hides more than three. The active dot is never the shrunk one, and every slot keeps its pitch so nothing reflows under a swipe. A row that grew with the set would stop being a position marker and become a ruler to count. The card's own pager is not windowed — it draws its set whole.</li>
+      <li><b>The dot row is windowed at seven</b> (2026-09-14, drawn on the two tiles above). Both pagers draw it — the card's gallery and the viewer page the same set with the same gesture, so one marker serves both, in the page's ink on a card and in white over the scrim. Up to seven pictures the row is the set. Past that it is a window onto it: the window slides centred on where the reader is and clamps at the set's two ends, and <b>the edge dot on a side the set keeps going is drawn smaller</b> — that shrunk dot is the whole of how the row admits what it is not showing. One smaller size and not a ladder of them: at a 6px dot a third size is noise, and the ten-picture authoring cap never hides more than three. The active dot is never the shrunk one, and every slot keeps its pitch so nothing reflows under a swipe. A row that grew with the set would stop being a position marker and become a ruler to count.</li>
       <li><b><code>VideoTransport</code> / <code>SeekLine</code></b> — the ladder above the card's sound disc, at the platform player's anatomy: centred play/pause flanked by the skips, the bar inset from the bottom edge with elapsed, total and the fullscreen toggle. <b>Nothing touches the bottom edge</b> — the system gesture zone lives there, and a control in it is a swipe that closes the app.</li>
       <li><b><code>ReelRail</code> / <code>ReelCaption</code></b> — the stream's chrome: the action row turned on its side (author · stance · comments · share · score, the score last because it is the way out) and the post's words in the card's own budget. White at 28px with a shadow, never a token colour and never a plate — on photography "quiet" and "invisible" are the same thing.</li>
     </ul>

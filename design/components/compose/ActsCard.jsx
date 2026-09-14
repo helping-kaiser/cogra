@@ -1,5 +1,6 @@
 import React from "react";
 import { InlineAction, BUTTON_CLASS } from "../core/Button.jsx";
+import { SR_ONLY } from "../stance/StanceReadout.jsx";
 
 /* The seal's acts card (media slice, 2026-08-31 — extracted the moment a
    second seal needed it: the profile-picture seal joined the post's and the
@@ -23,7 +24,19 @@ import { InlineAction, BUTTON_CLASS } from "../core/Button.jsx";
    value, count — and the whole row becomes the control, `PickedRow`'s rule for
    the picked pictures said for the acts card: no chevron, no trailing word,
    the accessible name saying what opens. It stays a FACT row and not an action
-   row, because what it opens is what it already says. */
+   row, because what it opens is what it already says.
+
+   THE COUNT IS SEEN BARE AND HEARD WHOLE (jakob's ruling 2026-09-14, backlog
+   item 73). A trailing "3" beside "References" is unambiguous to an eye that
+   has the label in the same line, and meaningless to an ear that gets the
+   number alone. So the digit is `aria-hidden` and a paired sr reading says
+   "3 citations" — the system's own law that visual compression never strips
+   the accessible reading, in `StanceReadout`'s `SR_ONLY` and no other way.
+
+   THE NOUN COMES FROM THE BOARD, never from the label. The References row
+   counts CITATIONS, and no rule could derive that word from "References"; the
+   row that knows what it staged is the row that names it. `countNoun` is the
+   singular and the card adds the regular plural. */
 
 const ROW = {
   display: "flex",
@@ -78,6 +91,18 @@ const DOOR = {
   textAlign: "left",
 };
 
+/* The count slot. Without a noun it is what it always was — an action row's
+   "1 more" is already words, and says itself. */
+function Count({ count, noun }) {
+  if (!noun) return <span style={COUNT}>{count}</span>;
+  return (
+    <span style={COUNT}>
+      <span aria-hidden="true">{count}</span>
+      <span style={SR_ONLY}>{`${count} ${count === "1" ? noun : `${noun}s`}`}</span>
+    </span>
+  );
+}
+
 export function ActsCard({ rows = [], total, note }) {
   return (
     <div
@@ -94,19 +119,19 @@ export function ActsCard({ rows = [], total, note }) {
           <InlineAction key={index} size="sm" onClick={row.onAct} style={{ ...ROW, textAlign: "left" }}>
             <span style={LABEL}>{row.label}</span>
             <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap" }}>{row.action}</span>
-            <span style={COUNT}>{row.count}</span>
+            <Count count={row.count} noun={row.countNoun} />
           </InlineAction>
         ) : row.onOpen ? (
           <button key={index} type="button" onClick={row.onOpen} aria-label={row.openLabel} className={BUTTON_CLASS} style={DOOR}>
             <span style={LABEL}>{row.label}</span>
             <span style={VALUE}>{row.value}</span>
-            <span style={COUNT}>{row.count}</span>
+            <Count count={row.count} noun={row.countNoun} />
           </button>
         ) : (
           <div key={index} style={ROW}>
             <span style={LABEL}>{row.label}</span>
             <span style={VALUE}>{row.value}</span>
-            <span style={COUNT}>{row.count}</span>
+            <Count count={row.count} noun={row.countNoun} />
           </div>
         )
       )}
