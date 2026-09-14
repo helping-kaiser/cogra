@@ -73,6 +73,7 @@ const {
   EarnedChart,
   WashCard,
   StancePad,
+  SeveranceConfirm,
   StanceReadout,
   OwnStanceReadout,
   StanceValue,
