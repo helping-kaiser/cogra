@@ -82,6 +82,8 @@ export function VideoPlayer({
   autoplay = true,
   surface = "full",
   framed = false,
+  fit = "cover",
+  onOpenViewer,
   durationMs,
 }: {
   src: string;
@@ -101,6 +103,34 @@ export function VideoPlayer({
    * width, at whatever height its own ratio gives it.
    */
   framed?: boolean;
+  /**
+   * How the clip meets its frame.
+   *
+   * `cover` is the media law and the default: a clip keeps its native ratio
+   * clamped to tall and "letterboxing exists nowhere" (the reel round). THE
+   * FULLSCREEN VIEWER IS THE ONE EXCEPTION, and it is the rule's other half —
+   * "the frame is never cut here… this is the surface the feed card's 4:5 clamp
+   * exists against" (`MediaViewer.jsx:15-17`). `ViewerLandscape.jsx:5-9` states
+   * the contrast outright: a 16:9 clip fills the height and leaves ground at
+   * the sides, because "a card is a layout, and this is the frame itself".
+   */
+  fit?: "cover" | "contain";
+  /**
+   * The way into the fullscreen viewer, where the surface has one.
+   *
+   * The graph draws TWO routes there from the video detail — "the transport's
+   * own way into the viewer — the clip tap is the other" (graph.json,
+   * `PostDetailVideo` via 19 and via 3) — and both land here: the bar grows its
+   * fullscreen toggle, and a tap on the clip WHILE THE CHROME IS UP opens the
+   * viewer instead of hiding it.
+   *
+   * That second half is a reading of two drawn edges onto one gesture. The
+   * chrome hides itself after three seconds over a running clip, so binding the
+   * clip tap to the viewer outright would strand the transport with no way
+   * back; binding it only once the controls are already visible keeps the
+   * reveal tap intact and still gives the clip its own route in.
+   */
+  onOpenViewer?: () => void;
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const muted = useMuted();
@@ -258,18 +288,29 @@ export function VideoPlayer({
         // gesture rather than the surface's: the surface's tap (back to the
         // stream, or into the viewer) is wired over the frame by the screen
         // that owns it, and reaching the controls must not depend on it.
-        onClick={transport ? () => setChromeShown((shown) => !shown) : undefined}
+        onClick={
+          transport
+            ? () => {
+                if (chromeShown && onOpenViewer) onOpenViewer();
+                else setChromeShown((shown) => !shown);
+              }
+            : undefined
+        }
         // `object-cover` IS THE RULING, not a taste: a clip keeps its native
         // ratio clamped to tall — 16:9 and 1:1 display true, anything taller
         // than 4:5 centre-crops to it, and letterboxing exists nowhere (the
         // reel round, review 1). Without it the element takes the CSS default
         // `object-fit: fill`, so the moment a caller's reserved box didn't
         // match the clip's own ratio the picture was squeezed to fit it.
-        className={
-          reading || framed
-            ? "block size-full bg-surface-container-high object-cover"
-            : "block w-full bg-surface-container-high object-cover"
-        }
+        // THE GROUND BEHIND A FITTED FRAME IS THE VIEWER'S OWN BLACK. Every
+        // other surface FILLS its box, so the reserved surface only ever shows
+        // before the bytes land; the viewer fits, so what sits beside a 16:9
+        // clip is ground the reader looks at — and a theme-coloured band there
+        // would be a light strip down a black screen.
+        className={[
+          reading || framed ? "block size-full" : "block w-full",
+          fit === "contain" ? "object-contain" : "bg-surface-container-high object-cover",
+        ].join(" ")}
       />
 
       {/* THE LADDER'S SECOND RUNG, and it REPLACES the disc rather than
@@ -314,6 +355,7 @@ export function VideoPlayer({
           onToggleMute={() => setMuted(!muted)}
           onSeek={(fraction) => seekTo(fraction * (totalSec ?? 0))}
           onSkip={skipBy}
+          onFullscreen={onOpenViewer}
         />
       )}
 
