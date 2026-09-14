@@ -11,7 +11,7 @@
 // is only ever sent WITH the mark, because a reason on an unmarked post is a
 // field-level refusal, which is why the field greys out when the switch is off.
 
-import { sensitiveReasonProblem } from "@/lib/compose/wizard";
+import { SENSITIVE_REASON_MAX_CHARS, sensitiveReasonProblem } from "@/lib/compose/wizard";
 import { BottomSheet } from "../bottom-sheet";
 import { HelpDot } from "../help-dot";
 import { PillButton } from "../pill-button";
@@ -84,6 +84,7 @@ export function SensitiveSheet({
           optionalLabel="Optional — shown on the veil"
           optional
           disabled={!marked}
+          cap={SENSITIVE_REASON_MAX_CHARS}
           error={sensitiveReasonProblem(reason) ?? undefined}
         />
         <div className="flex justify-end">

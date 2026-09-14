@@ -20,10 +20,11 @@ import { useId, useRef, useState } from "react";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
+import { countReading, FieldCount } from "@/lib/ui2/text-field";
 import { useObjectUrl } from "@/lib/compose/previews";
 import type { PickRefusal } from "@/lib/compose/pick";
 import type { PickedAsset } from "@/lib/compose/wizard";
-import { kindOf, POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
+import { BODY_MAX_CHARS, kindOf, POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
 
 /**
  * What the picker accepts. Pictures are re-written to WebP by the encoder
@@ -169,10 +170,19 @@ function WordsBody({
           onChange={(event) => onWords(event.target.value)}
           className="flex-1 resize-none rounded-extra-small border border-outline p-3 text-body-large"
         />
-        {error && (
-          <p role="alert" data-testid="wizard-body-error" className="text-body-medium text-error">
-            {error}
-          </p>
+        {/* The composer's growing body box is not a `TextField`, so it draws
+            the same supporting-row geometry directly rather than its own
+            (design/components/forms/TextField.jsx:117-122): the error and the
+            late counter share one row, the count pushed to its far end. */}
+        {(error || countReading(words, BODY_MAX_CHARS)) && (
+          <div className="flex items-baseline gap-2">
+            {error && (
+              <p role="alert" data-testid="wizard-body-error" className="m-0 text-body-medium text-error">
+                {error}
+              </p>
+            )}
+            <FieldCount value={words} cap={BODY_MAX_CHARS} />
+          </div>
         )}
         {/* ComposeWords puts it right under the body, 12px down. */}
         <NextAction disabled={blocked} onNext={onNext} className="pt-3" />
