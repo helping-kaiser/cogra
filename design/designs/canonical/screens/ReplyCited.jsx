@@ -18,78 +18,13 @@
    IT IS AN ENTRY, NOT A DESTINATION: the picker's result row lands back in the
    composer it was opened from, so nothing navigates here. `PostLicense` is the
    same shape — a state of a surface, drawn because it is designed, declared as
-   an entry because no tap reaches it. */
+   an entry because no tap reaches it.
 
-/* The card's own affordance rows are `_shared.jsx`'s `ADD_ROWS` — `ReplySeal`
-   draws the same pair without the staged reference, and the two are one
-   surface in two states. */
-
+   THE BODY IS `_shared.jsx`'s `ReplySealBody` AT ONE CITATION (item 70). The
+   reply's seal is one surface in three states — nothing staged, this one, and
+   the count with its door — and three sketches of one seal are three chances to
+   disagree about it. The states differ in the acts card's middle row and in
+   what the total says; everything else is the same markup. */
 export function Screen() {
-  return (
-    <>
-      <WizardHeader
-        title="What you sign"
-        leaveLabel="Leave — the reply is discarded"
-        stageLabel="Last step"
-        help="How signing works"
-      />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
-
-        <ActsCard
-          rows={[
-            { label: "Comment", value: "Reply to @ada's post", count: "1" },
-            {
-              label: "Reference",
-              value: (
-                <span style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
-                  {/* The citation's own pair opens from the name, as it does on
-                      every composer that stages one — the × keeps its own name
-                      beside it (`StagedReference`'s rule, jakob 2026-09-10). */}
-                  <button
-                    type="button"
-                    aria-label="Tide tables and the third headland — set how it relates"
-                    className="cg-state cg-focus"
-                    style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
-                  >
-                    Tide tables and the third headland — @juno
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Remove Tide tables and the third headland"
-                    className="cg-state cg-focus"
-                    style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
-                  >
-                    <Icon name="close" size={18} />
-                  </button>
-                </span>
-              ),
-              count: "1",
-            },
-            ...ADD_ROWS,
-          ]}
-          total="2 things, signed together"
-          note="They land together, or none does."
-        />
-
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow
-            label="Toward what you answer"
-            value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
-            action="Adjust"
-          />
-          <FactRow label="License" value="Public domain — your default" action="Change" />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
-        </div>
-
-        {/* `ReplySeal` carries the same line: the two are one surface in two
-            states, and a note on one of them only is a disagreement. */}
-        <QuietNote>Replying also signs your opinion on the post it answers.</QuietNote>
-
-        <div style={{ flex: 1 }} />
-
-        <SealFooter signLabel="Sign comment" />
-      </div>
-    </>
-  );
+  return <ReplySealBody cited={1} />;
 }

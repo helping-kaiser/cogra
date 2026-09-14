@@ -1017,10 +1017,11 @@
         "ComposeDetailsVideo",
         "EditCompose",
         "ReplyCited",
+        "ReplyCitedMany",
         "ReplySeal"
       ],
       "steps": [
-        "start · «+ Cite something» on 9 boards → ReferencePicker",
+        "start · «+ Cite something» on 10 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → back — the pick lands in the composer's references"
       ],
       "boards": [
@@ -1033,6 +1034,7 @@
         "ComposeDetailsVideo",
         "EditCompose",
         "ReplyCited",
+        "ReplyCitedMany",
         "ReplySeal"
       ]
     },
@@ -2635,6 +2637,12 @@
       ]
     },
     "ReplyCited": {
+      "flows": [
+        "cite-something"
+      ],
+      "endpoint": []
+    },
+    "ReplyCitedMany": {
       "flows": [
         "cite-something"
       ],
