@@ -65,6 +65,11 @@ describe("the board's own words", () => {
     // refuse a file the product would have taken.
     expect(TOO_BIG_PICTURE).toBe("That picture is too big — a picture can be up to 10 MB.");
     expect(UNREADABLE).toBe("That file isn't a picture or a video CoGra can read.");
+    // CW-10: the post's own video, not the bare "a video" ComposePickedErrors
+    // used to say before the conformance round.
+    expect(TOO_BIG_VIDEO_POST).toBe(
+      "That video is too big — a post's video can be up to 100 MB.",
+    );
     expect(megabytes(POST_VIDEO_MAX_BYTES)).toBe("100 MB");
     // …and the enforced figure is the larger, mebibyte one.
     expect(POST_VIDEO_MAX_BYTES).toBe(100 * 1024 * 1024);
