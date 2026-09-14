@@ -173,8 +173,9 @@ internal fun coverPreviewRatio(sourceRatio: Float?): Float =
     (sourceRatio?.takeIf { it.isFinite() && it > 0f } ?: MediaShape.Square.ratio)
         .cappedToTallestTile()
 
-/** What the preview draws: the chosen frame's bytes, or the chosen picture. */
+/** What the preview draws: the chosen frame's bytes, the chosen picture, or nothing. */
 private fun ComposeWizardState.coverModel(): Any? = when (val choice = coverChoice) {
+    CoverChoice.None -> null
     is CoverChoice.Frame -> coverFrames.getOrNull(choice.index)?.picture?.bytes
     is CoverChoice.Picture -> choice.uri
 }
@@ -185,8 +186,15 @@ private fun ComposeWizardState.coverModel(): Any? = when (val choice = coverChoi
  * [CoverChoice] carries the picked picture's URI because the composer
  * has to upload it; the row only has to draw it, so the two shapes stay
  * separate and this is the seam between them.
+ *
+ * [CoverRow] has no "nothing chosen" ring of its own, but it never
+ * needs one: [CoverChoice.None] only stands while [ComposeWizardState]
+ * offers no frames to ring (loading, or extraction came back empty) or
+ * once the author has moved past this stage — either way there is no
+ * tile here that this sentinel could wrongly light up.
  */
 internal fun CoverChoice.toPick(): CoverPick = when (this) {
+    CoverChoice.None -> CoverPick.Frame(0)
     is CoverChoice.Frame -> CoverPick.Frame(index)
     is CoverChoice.Picture -> CoverPick.OwnPicture
 }
