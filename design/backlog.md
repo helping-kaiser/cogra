@@ -2095,12 +2095,44 @@ and re-render.
 
 ### 60 · The gate should catch a truncating filter summary · *tooling*
 
-Ruled 2026-09-11: the filter trigger fits its longest summaries at
-exactly 0px of slack (the 40px band icons), and the guard belongs in
-the GATE, not in a character budget — a check that warns when any
-feed-filter summary renders with an ellipsis, so vocabulary growth is
-caught at build time instead of on a phone. Sibling of 54.2's
-pair-format guard.
+Ruled 2026-09-11: the guard belongs in the GATE, not in a character
+budget. The gate-guards round (2026-09-14) built the measurement —
+real `figtree.ttf` advance summing, zero dependencies, validated
+against the longest drawn summary's known 0px of slack — and found
+the ruling's premise false: truncation is reachable TODAY, not a
+future vocabulary-growth risk. Of the 775 reachable filter summaries,
+26 exceed the trigger's own declared ceiling (`maxWidth: 14rem` →
+~198px of text room) and 277 exceed the band's actual ~154px — both
+lower bounds (measured at wght 300; the trigger renders at 500). An
+absolute guard is red on an untouched tree, so nothing shipped;
+awaiting jakob's ruling between a report-only census stage (becomes
+the gate once a threshold is ruled), gating only the drawn boards'
+summaries, or fixing the vocabulary first (item 64). Sibling of
+54.2's pair-format guard (shipped as `check-readouts`, the gate's
+fifth stage).
+
+### 64 · The filter summaries outgrow their trigger · *design*
+
+Found by the gate-guards round (2026-09-14) while building item 60's
+check: the feed-filter vocabulary already composes summaries wider
+than the trigger can show — widest reachable is "Comments, campaigns
+· 4 changes" at 220.5px against ~154px of band room, and 26 of the
+775 reachable summaries exceed even the trigger's own `maxWidth`.
+The drawn boards' five summaries all fit (≤148.6px); the overflow
+lives in the unboarded combinations. Needs a design ruling: shorter
+kind labels, a tighter collapse rule, or a wider trigger — then item
+60's guard can gate absolutely.
+
+### 65 · ComposePad's face claims a derivation that doesn't answer · *design*
+
+Found by `check-readouts`: `ComposePad.jsx` explains its 🙂 face as
+"nearest anchor at +0.30", but `nearestAnchor` takes a pair and a
+one-axis pick names none — with `pInterest: 1` (your own post reaches
+you in full) the nearest is 🍿, and a 1-D nearest on `pDirected`
+alone also answers 🍿. Either the one-axis pads get a ruled 1-D face
+rule (then the gate can check the face and the board may change), or
+the face is ruled hand-picked and the docblock says so. The check
+reports the face as an unverifiable note until ruled.
 
 ### 61 · The sky's dark points read backwards · *design* · **ruled: its own pass**
 
