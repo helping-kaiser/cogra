@@ -33,6 +33,7 @@ import { useState } from "react";
 
 import { isPending, type PostView } from "@/lib/api/content-api";
 import { RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
+import { RefsSheet } from "@/lib/ui2/refs-sheet";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
 import { Icon } from "./icons";
@@ -158,6 +159,8 @@ export function PostCard({
 }) {
   const detail = variant === "detail";
   const [open, setOpen] = useState(false);
+  // The tags-and-references sheet, raised by the line that counts them.
+  const [refsOpen, setRefsOpen] = useState(false);
 
   const redacted = payloadIsRedacted(post);
   const media = !redacted && hasMedia(post);
@@ -283,18 +286,34 @@ export function PostCard({
           {open ? "Less" : "More"}
         </button>
       )}
-      {/* ONE LINE for topics and citations on both variants. Its handlers open
-          the topics-and-references sheet, which is undrawn here yet — so the
-          counts state the fact and open nothing. */}
+      {/* ONE LINE for topics and citations on both variants, and its handlers
+          open the sheet the counts have always pointed at (graph.json: every
+          `reference count` edge advances to `RefsSheet`). Which handler is the
+          master's own split: on a detail surface the WHOLE line opens it, on a
+          summary card the counts do and the chips still navigate. */}
       {!redacted && (
-        <TopicsLine
-          topics={post.topics.map((claim) => ({
-            name: claim.hashtag.name.value ?? "",
-            pending: claim.pending,
-          }))}
-          references={post.references.length}
-          testIdPrefix={testId}
-        />
+        <>
+          <TopicsLine
+            topics={post.topics.map((claim) => ({
+              name: claim.hashtag.name.value ?? "",
+              pending: claim.pending,
+            }))}
+            references={post.references.length}
+            testIdPrefix={testId}
+            onOpen={detail ? () => setRefsOpen(true) : undefined}
+            onOpenReferences={detail ? undefined : () => setRefsOpen(true)}
+          />
+          {/* THE SHEET RIDES THE CARD, not the page: the same card is the feed's
+              summary, the profile's and the detail's, and every one of them
+              carries the line that opens it. */}
+          <RefsSheet
+            open={refsOpen}
+            onClose={() => setRefsOpen(false)}
+            topics={post.topics}
+            references={post.references}
+            testId={`${testId}-refs-sheet`}
+          />
+        </>
       )}
       {/* Shown in full, marked quietly (design.md §9) — a pending post is real
           content whose place in the order is not yet fixed. */}
