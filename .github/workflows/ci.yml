@@ -399,10 +399,10 @@ jobs:
       # the review surfaces are published from and holds them to their file
       # and byte budgets, check-flows walks the rendered tree, and
       # check-readouts holds the hand-drawn pad literals to the masters'
-      # format contract. Each of the three exits nonzero on a failure, and
-      # that exit is the gate. report-summaries is report-only (item 60,
-      # option A) — it always exits 0, printing the filter-trigger truncation
-      # census rather than failing on it. `make design-ci` runs the same
+      # format contract, and report-summaries holds every reachable
+      # filter-trigger summary to the band's 154px (items 60 + 64), printing
+      # the truncation census either way. Each of the four exits nonzero on a
+      # failure, and that exit is the gate. `make design-ci` runs the same
       # seven and the same diff.
       - name: Render the design tree
         run: node bundle.mjs && node render-screens.mjs && node gen-maps.mjs && node gen-canvases.mjs && node check-flows.mjs && node check-readouts.mjs && node report-summaries.mjs
