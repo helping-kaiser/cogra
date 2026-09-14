@@ -24,7 +24,7 @@ export function Screen() {
           <div style={{ display: "flex", flexDirection: "column" }}>
             <FactRow emphasis="ledger" label="Deposit" value={<MoneyFigure amount={12500} />} />
             <FactRow emphasis="ledger" label="Where it sits" value="In escrow" />
-            <FactRow emphasis="ledger" label="Window" value="Runs 6 more days · ends 8 Sep" />
+            <FactRow emphasis="ledger" label="Window" value="Ends in 6 days · 08.09.2026" />
             <FactRow emphasis="ledger" label="When it settles" value="One public record" last />
           </div>
           <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
