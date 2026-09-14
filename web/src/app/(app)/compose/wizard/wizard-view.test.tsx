@@ -201,6 +201,20 @@ describe("the compose wizard", () => {
     expect(variables!.input.attachments).toBeNull();
   });
 
+  // CW-26: WizardHeader.jsx's stageLabel slot draws at --text-label-small.
+  it("labels the seal stage at the label-small role, not body-small", async () => {
+    render();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), {
+      target: { value: "Three weekends at low tide." },
+    });
+    fireEvent.click(screen.getByTestId("wizard-next"));
+    await screen.findByTestId("wizard-title");
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    expect(await screen.findByText("Last step")).toHaveClass("text-label-small");
+  });
+
   // The hand test found framing dead on everything past the first picture, so
   // what is asserted is that each one carries its OWN framing and keeps it.
   // The zoom is read off the cropper's own transform, which is the framing the

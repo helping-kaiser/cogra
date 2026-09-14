@@ -586,7 +586,7 @@ export function ComposeWizard({
         // trailing information, which is all "Last step" is.
         action={
           state.step === "seal" ? (
-            <span className="text-body-small text-on-surface-variant">Last step</span>
+            <span className="text-label-small text-on-surface-variant">Last step</span>
           ) : undefined
         }
         testId="wizard-header"
