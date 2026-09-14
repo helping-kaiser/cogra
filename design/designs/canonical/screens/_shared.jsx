@@ -2206,3 +2206,9 @@ const HELD_TOPICS = [
   { name: "#tidetables", pair: { pDirected: 0.15, pInterest: 0.5 } },
   { name: "#wellness", pair: { pDirected: -0.65, pInterest: -0.3 } },
 ];
+
+/* WHAT THE FEED FILTER MAY NARROW TO — derived, never listed twice. The topic
+   feed admits POSITIVE association only (jakob's predicate), so the section's
+   chips are the held set minus the ones held against; deriving it here means
+   the filter and Your topics can never disagree about who is missing and why. */
+const FEED_TOPICS = HELD_TOPICS.filter((topic) => topic.pair.pDirected > 0).map((topic) => topic.name);

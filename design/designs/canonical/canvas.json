@@ -803,6 +803,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedTopic.dc.html",
+      "title": "The feed, narrowed to one topic",
+      "x": 4800,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
