@@ -194,7 +194,10 @@ describe("SealStep", () => {
     const row = label.parentElement as HTMLElement;
     const count = row.lastElementChild as HTMLElement;
     expect(label.className).toContain("text-label-small");
-    expect(count.textContent).toBe("1 action");
+    // The trailing count is the BARE NUMBER the board draws: the word
+    // form spent the row's width on a noun the label column already says,
+    // and what it spent came out of the value slot.
+    expect(count.textContent).toBe("1");
     expect(count.className).toContain("text-label-small");
   });
 
