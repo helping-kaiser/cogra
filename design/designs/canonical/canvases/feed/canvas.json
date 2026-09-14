@@ -298,6 +298,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedScrolled.dc.html",
+      "title": "Feed · deep in the list",
+      "x": 4800,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "MapComments.dc.html",
       "x": -4190,
       "y": 0,
@@ -308,10 +317,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -3320,
+      "x": -3610,
       "y": 0,
-      "w": 2900,
-      "h": 2416,
+      "w": 3190,
+      "h": 2442,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },

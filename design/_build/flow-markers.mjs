@@ -111,6 +111,18 @@ export const FLOW_MARKERS = {
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
   ],
+  // The same pad with a history behind it, so `StanceControl` draws the
+  // walk-away as well: it takes the third number and the two decisions shift
+  // past it. The help label is the ordinary feed card's default, because that
+  // is what this is — a named pad belongs to a board that named it.
+  PadStanding: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 2, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 3, find: ">Walk it back</button>", tag: "button" },
+    { n: 4, find: ">Cancel</button>", tag: "button" },
+    { n: 5, find: ">Set</button>", tag: "button" },
+  ],
   /* The ceremony has exactly one control, which is the whole point of it. */
   VouchedIn: [{ n: 1, find: ">Go to your feed</button>", tag: "button" }],
   KeyElsewhere: [
@@ -215,13 +227,14 @@ const searchShell = (fieldText, nRow) => [
 ];
 
 Object.assign(FLOW_MARKERS, {
+  // The Sky hero carries no number: it announces rather than opens (jakob
+  // 2026-09-14), and a board's numbers are its controls.
   Explore: [
     { n: 1, find: "Search people, posts, tags", tag: "div" },
-    { n: 2, find: ">Enter the Sky</button>", tag: "button" },
-    { n: 3, find: ">@sol salt</span>", tag: "button" },
-    { n: 3, find: ">#saltmaps</span>", tag: "button" },
-    { n: 3, find: ">coast road</span>", tag: "button" },
-    ...nav(4),
+    { n: 2, find: ">@sol salt</span>", tag: "button" },
+    { n: 2, find: ">#saltmaps</span>", tag: "button" },
+    { n: 2, find: ">coast road</span>", tag: "button" },
+    ...nav(3),
   ],
   ExploreSearch: [
     { n: 14, find: ">saltmaps<", tag: "button" },
@@ -266,6 +279,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: ">· 1 reference<", tag: "span" },
     { n: 10, find: 'aria-label="3 comments"', tag: "button" },
     { n: 10, find: 'aria-label="2 comments"', tag: "button" },
+    ...nav(11),
+  ],
+  // The feed three screens down, the band scrolled back and the pill under it.
+  // The same pair `FeedNarrowed` draws, so the same numbering — the pill takes
+  // the next free number after the band's own.
+  FeedScrolled: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 19, find: ">Back to top</button>", tag: "button" },
     ...nav(11),
   ],
   // The feed a moment after Hide @ada: her card gone, the ranker's next posts
@@ -436,6 +463,16 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Hide @ada</button>", tag: "button" },
     { n: 4, find: ">License terms</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The same sheet on a phone too narrow for four actions: share has moved in
+  // from the action row and leads, so every number below it shifts by one.
+  ReaderPostMenuNarrow: [
+    { n: 1, find: ">Share</button>", tag: "button" },
+    { n: 2, find: ">Save</button>", tag: "button" },
+    { n: 3, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 4, find: ">Hide @ada</button>", tag: "button" },
+    { n: 5, find: ">License terms</button>", tag: "button" },
+    { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // TWO WASHES on this board — the thread's, and the menu's stacked over the
   // thread it dims — and both take the same number: the edge is "tap outside",
@@ -613,7 +650,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Mark</button>", tag: "button" },
     { n: 7, find: ">Sign and publish</button>", tag: "button" },
     { n: 8, find: ">Back</button>", tag: "button" },
-    { n: 9, find: 'aria-label="Manage the citations"', tag: "button" },
+    { n: 9, find: 'aria-label="Manage the 3 citations"', tag: "button" },
   ],
   // What that door opens. The board is scanExempt, so only the sheet's own
   // controls and its scrim carry numbers; the three rows' name-buttons share
@@ -820,7 +857,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Mark</button>", tag: "button" },
     { n: 9, find: ">Sign comment</button>", tag: "button" },
     { n: 10, find: ">Back</button>", tag: "button" },
-    { n: 11, find: 'aria-label="Manage the citations"', tag: "button" },
+    { n: 11, find: 'aria-label="Manage the 3 citations"', tag: "button" },
   ],
   ComposeSealUploading: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -1506,6 +1543,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Restore the key</button>", tag: "button", all: true },
     { n: 3, find: ">Keep it pending, restore later</button>", tag: "button" },
   ],
+  // The pad's one irreversible gesture. scanExempt like every dialog board, so
+  // only the dialog's own pair and the scrim it sits on carry numbers.
+  SeveranceConfirm: [
+    { n: 1, find: ">Walk it back</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
   HelpDialog: [
     { n: 1, find: ">Close</button>", tag: "button" },
     { n: 2, find: "background:var(--scrim-dialog)", tag: "div" },
@@ -1656,8 +1700,8 @@ Object.assign(FLOW_MARKERS, {
    surface's gap (guest boards: the guest gate's). */
 const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
-  VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 9,
-  Feed: 16, FeedUnread: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
+  VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 8,
+  Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15,
   FeedGallery: 15, FeedCover: 17,
   Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
@@ -1675,8 +1719,8 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
    name and carries its marker in its own list above. */
 const BAND_BELL = {
   ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
-  ComposeExpired: 20, Explore: 10,
-  Feed: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
+  ComposeExpired: 20, Explore: 9,
+  Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17,
   FeedCover: 19,
   Wallet: 15, WalletEmpty: 10, WalletSetup: 9, WalletKeyAbsent: 11,
@@ -1694,7 +1738,7 @@ for (const [board, n] of Object.entries(BAND_BELL)) {
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
   KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
-  FeedNarrowed: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16,
+  FeedNarrowed: 17, FeedScrolled: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
 };
 for (const [board, n] of Object.entries(CARD_SHARE)) {
