@@ -931,7 +931,13 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     expect(await screen.findByTestId("post-topic-rust")).toBeInTheDocument();
-    expect(screen.getByTestId("post-topic-rust-link")).toHaveAttribute("href", "/topics/rust");
+    // TWO TAP MODELS, NEVER MIXED (`TopicsLine.jsx:22-24`): on a detail
+    // surface the WHOLE LINE is one control opening the tags-and-references
+    // sheet, the chips inert inside it. The chip's own link belongs to the
+    // summary card, where the counts are the opener instead.
+    expect(screen.queryByTestId("post-topic-rust-link")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("post-topics"));
+    expect(screen.getByTestId("post-refs-sheet-topic-rust")).toBeInTheDocument();
     // Not the viewer's own post — no add/remove affordance.
     expect(screen.queryByTestId("post-tag-input")).not.toBeInTheDocument();
   });
@@ -964,7 +970,14 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     expect(await screen.findByTestId("post-topic-rust")).toBeInTheDocument();
-    expect(screen.getByTestId("post-topic-rust-link")).toHaveAttribute("href", "/topics/rust");
+    // THE REVEAL HAS NO OWNERSHIP CASE: `graph.json:1197` carries one
+    // `tags and references` edge off `PostDetail`, where the edge that does
+    // split by ownership says so (`:1194`, the ⋮'s "the reader's sheet").
+    // So an own post's line reads exactly like anyone else's — one control,
+    // the chips inert, the sheet behind it.
+    expect(screen.queryByTestId("post-topic-rust-link")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("post-topics"));
+    expect(screen.getByTestId("post-refs-sheet-topic-rust")).toBeInTheDocument();
     expect(screen.queryByTestId("post-tag-input")).not.toBeInTheDocument();
     expect(screen.queryByTestId("post-topic-rust-remove")).not.toBeInTheDocument();
     fireEvent.click(screen.getByTestId("post-menu"));
