@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.crypto.ActorKey
+import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
@@ -93,6 +94,8 @@ class ComposeWizardScreenTest {
     private var keepDrafts = 0
     private var stanceDrags = mutableListOf<Double>()
     private var stanceSets = 0
+    private var referenceRemovals = mutableListOf<String>()
+    private var referenceTunings = mutableListOf<String>()
 
     @Composable
     private fun Wizard(
@@ -155,8 +158,8 @@ class ComposeWizardScreenTest {
             onCloseFinder = {},
             onFinderQueryChange = {},
             onPickReference = {},
-            onRemoveReference = {},
-            onTuneReference = {},
+            onRemoveReference = { referenceRemovals += it },
+            onTuneReference = { referenceTunings += it },
             onDoneTuningReference = {},
             onReferenceRelevanceChange = { _, _ -> },
             onReferenceSupportChange = { _, _ -> },
@@ -727,6 +730,74 @@ class ComposeWizardScreenTest {
         compose.onNodeWithText("@ada").assertExists()
         compose.onNodeWithText("1 cited").assertDoesNotExist()
     }
+
+    // The N-cited round (jakob's rulings 2026-09-14, design backlog item 70):
+    // at two the name stops being the shortest true answer, so the row counts
+    // and the whole row becomes the door to the sheet that lists them.
+    @Test
+    fun theSealsReferencesRowCountsFromTwoAndTheWholeRowOpensTheSheet() {
+        compose.setContent { Wizard(sealWithTwoCitations()) }
+
+        val door = compose.onNodeWithTag("wizard_seal_cited")
+        door.assertExists()
+        compose.onNodeWithText("2 cited").assertExists()
+        // The name it stopped saying is not said anywhere on the seal.
+        compose.onNodeWithText("@ada").assertDoesNotExist()
+        // No chevron and no trailing word: the label on the gesture is what
+        // says the line is a door at all.
+        assertThat(door.fetchSemanticsNode().config[SemanticsActions.OnClick].label)
+            .isEqualTo("Manage the citations")
+
+        door.performClick()
+        assertThat(sheets).containsExactly(SealSheet.Cited)
+    }
+
+    // `ComposeCitations`: the count opens the list, each control names its own
+    // citation, and the sheet adds nothing — citations are staged where they
+    // are staged.
+    @Test
+    fun theCitedSheetListsWhatTheRowCountsAndOffersNoSecondPick() {
+        compose.setContent { Wizard(sealWithTwoCitations().copy(sheet = SealSheet.Cited)) }
+
+        compose.onNodeWithTag("wizard_cited_sheet").assertExists()
+        compose.onNodeWithText("Cited · 2").assertExists()
+        compose.onNodeWithTag("wizard_cited_sheet_row_0").assertExists()
+        compose.onNodeWithTag("wizard_cited_sheet_row_1").assertExists()
+        compose.onNodeWithText("+ Cite something", substring = true).assertDoesNotExist()
+
+        compose.onNodeWithTag("wizard_cited_sheet_row_0_remove").performClick()
+        assertThat(referenceRemovals).containsExactly("u1")
+        compose.onNodeWithTag("wizard_cited_sheet_row_1_repair").performClick()
+        assertThat(referenceTunings).containsExactly("p2")
+    }
+
+    private fun sealWithTwoCitations() = ComposeWizardState(
+        body = "x",
+        step = WizardStep.Seal,
+        referenceSection = ReferenceSectionState(
+            references = listOf(
+                ReferenceRow(
+                    "u1",
+                    ReferenceTargetView.Profile(id = "u1", handle = "ada", displayName = "Ada"),
+                    relevance = 0.1,
+                    support = 0.1,
+                ),
+                ReferenceRow(
+                    "p2",
+                    ReferenceTargetView.Content(
+                        kind = ReferenceContentKind.POST,
+                        id = "p2",
+                        title = "Tide tables",
+                        snippet = null,
+                        authorHandle = "juno",
+                        authorDisplayName = null,
+                    ),
+                    relevance = -0.2,
+                    support = 0.1,
+                ),
+            ),
+        ),
+    )
 
     // An opinion on one's own post is ONE number (jakob, 2026-09-14): the
     // second is census-fixed rather than picked, so the row that read back
