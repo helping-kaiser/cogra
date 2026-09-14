@@ -691,8 +691,11 @@ class ContentScreensTest {
     // Enforcement inside CoGra reduces to honest display
     // (platform-guidelines.md §5), so the qualifiers ride the post and
     // every comment on the read surface.
+    // THE TERMS ARE NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`):
+    // the license is a rare read, so it arrives from the menu in a sheet over
+    // the surface the reader asked from.
     @Test
-    fun theLicenseTermsRideThePostAndEveryComment() {
+    fun theLicenseLeavesThePostAndEveryCommentForTheMenusSheet() {
         renderDetail(
             PostDetailUiState(
                 loading = false,
@@ -700,29 +703,146 @@ class ContentScreensTest {
                 comments = listOf(testComment("c1")),
             ),
         )
-        compose.onNodeWithTag("detail_license_terms").assertExists()
-        compose.onNodeWithTag("comment_license_terms_c1").assertExists()
+        compose.onNodeWithTag("detail_license_terms").assertDoesNotExist()
+        compose.onNodeWithTag("comment_license_terms_c1").assertDoesNotExist()
+
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_license").performClick()
+        compose.onNodeWithTag("license_sheet_terms").assertExists()
     }
 
+    // THE READER'S READINGS, not the author's (`LicenseChooser.jsx:36-49`).
+    // The chooser's hints told a reuser they were owed the credit they in fact
+    // owe; the block addresses the reuser, and both axes always stand.
     @Test
-    fun theEditAffordanceHidesForNonCreators() {
+    fun theLicenseBlockSpeaksToTheReuserOnBothAxes() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1", license = LicenseChoice(attribution = 1.0, provenance = 0.0)),
+            ),
+        )
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_license").performClick()
+
+        compose.onNodeWithText("Credit").assertExists()
+        compose.onNodeWithText("Required for every use").assertExists()
+        // The zero axis still stands: a dropped row would read as a shorter
+        // license rather than a term that obliges nothing.
+        compose.onNodeWithText("Public record of use").assertExists()
+        compose.onNodeWithText("Not logged").assertExists()
+        // Never the author's voice.
+        compose.onNodeWithText("Every use credits the maker.").assertDoesNotExist()
+    }
+
+    /** Both axes at zero is the one reading readers have a word for. */
+    @Test
+    fun theBothAxesZeroPairIsNamedOnTheCaptionLine() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1", license = LicenseChoice(attribution = 0.0, provenance = 0.0)),
+            ),
+        )
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_license").performClick()
+        compose.onNodeWithTag("license_sheet_terms_public_domain").assertExists()
+        // The rows below still spell what it means.
+        compose.onNodeWithText("Not required").assertExists()
+        compose.onNodeWithText("Not logged").assertExists()
+    }
+
+    /** The rows are `READER_POST_MENU` (`_shared.jsx:376`). */
+    @Test
+    fun aNonCreatorGetsTheReaderMenuAndNoEditRow() {
         renderDetail(
             PostDetailUiState(loading = false, post = testPost("p1")),
             viewerId = "someone-else",
         )
-        compose.onNodeWithTag("detail_edit").assertDoesNotExist()
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_save").assertExists()
+        compose.onNodeWithTag("detail_menu_cite").assertExists()
+        compose.onNodeWithTag("detail_menu_hide").assertExists()
+        compose.onNodeWithTag("detail_menu_license").assertExists()
+        compose.onNodeWithTag("detail_menu_edit").assertDoesNotExist()
+        compose.onNodeWithTag("detail_menu_remove").assertDoesNotExist()
     }
 
+    /** The rows are `OWN_POST_MENU` (`_shared.jsx:369-375`). */
     @Test
-    fun theEditAffordanceOpensForTheCreator() {
+    fun theCreatorGetsTheOwnPostMenuAndEditOpensFromIt() {
         var editing: String? = null
         renderDetail(
             PostDetailUiState(loading = false, post = testPost("p1")),
             viewerId = "author-1",
             onEdit = { editing = it },
         )
-        compose.onNodeWithTag("detail_edit").performClick()
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_save").assertExists()
+        compose.onNodeWithTag("detail_menu_sensitive").assertExists()
+        compose.onNodeWithTag("detail_menu_remove").assertExists()
+        compose.onNodeWithTag("detail_menu_license").assertExists()
+        // A reader's rows are not on an author's menu.
+        compose.onNodeWithTag("detail_menu_hide").assertDoesNotExist()
+        compose.onNodeWithTag("detail_menu_cite").assertDoesNotExist()
+
+        compose.onNodeWithTag("detail_menu_edit").performClick()
         assertThat(editing).isEqualTo("p1")
+    }
+
+    // THE COMMENT'S ROWS (`_shared.jsx:392`), and the missing Hide row is
+    // RULED (jakob 2026-09-12): hiding names an actor, reached from the
+    // commenter's own profile.
+    @Test
+    fun aCommentCarriesSaveCiteOpinionsAndLicenseButNoHide() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comment_menu_save_c1").assertExists()
+        compose.onNodeWithTag("comment_menu_cite_c1").assertExists()
+        compose.onNodeWithTag("comment_menu_opinions_c1").assertExists()
+        compose.onNodeWithTag("comment_menu_license_c1").assertExists()
+        compose.onNodeWithTag("comment_menu_hide_c1").assertDoesNotExist()
+    }
+
+    // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination
+    // is not built yet stands and does nothing.
+    @Test
+    fun theRowsWithoutDestinationsStandAndDoNothing() {
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1")),
+            viewerId = "someone-else",
+        )
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_save").performClick()
+        // The screen is where it was: the row acted on nothing.
+        compose.onNodeWithTag("detail_card").assertExists()
+
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_hide").performClick()
+        compose.onNodeWithTag("detail_card").assertExists()
+    }
+
+    /** The dialog ships; the removal is slice 8's, whole (jakob 2026-09-14). */
+    @Test
+    fun removeOpensTheThinkTwiceDialogAndRemovesNothing() {
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1")),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_remove").performClick()
+        compose.onNodeWithTag("post_remove_confirm").assertExists()
+
+        compose.onNodeWithTag("post_remove_confirm_remove").performClick()
+        compose.onNodeWithTag("post_remove_confirm").assertDoesNotExist()
+        // The post is still on the screen: nothing was removed.
+        compose.onNodeWithTag("detail_card").assertExists()
     }
 
     /**
@@ -1060,14 +1180,17 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_post_topics_line", useUnmergedTree = true).assertDoesNotExist()
     }
 
-    /** A removed post has no menu left — back is the whole header. */
+    /**
+     * A REMOVED POST HAS NO MENU LEFT — back is the whole header
+     * (`Removed.jsx:5-6`): no ⋮, and so none of its rows.
+     */
     @Test
-    fun aRemovedOwnPostLosesItsEditAction() {
+    fun aRemovedOwnPostLosesItsWholeMenu() {
         renderDetail(
             PostDetailUiState(loading = false, post = removedPost()),
             viewerId = "author-1",
         )
-        compose.onNodeWithTag("detail_edit").assertDoesNotExist()
+        compose.onNodeWithTag("detail_menu").assertDoesNotExist()
     }
 
     /** The skeleton survives: author, age, stance, comments, share. */
@@ -1562,7 +1685,10 @@ class ContentScreensTest {
     @Test
     fun tappingAChipReportsItForTuning() {
         var tuned: String? = null
-        renderComposer(ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust"))), onTuneTag = { tuned = it })
+        renderComposer(
+            ComposePostUiState(tagSection = TagSectionState(tags = tagRows("rust"))),
+            onTuneTag = { tuned = it },
+        )
         compose.onNodeWithTag("compose_tag_rust_open").performScrollTo().performClick()
         assertThat(tuned).isEqualTo("rust")
     }
@@ -1641,19 +1767,23 @@ class ContentScreensTest {
 
     // -- The Reference affordance and the finder (D20) --
 
+    // CITING RIDES THE MENU on every content (`_shared.jsx:165-175`), post and
+    // comment alike — its drawn home is the ⋮'s `Cite in a new post` row.
     @Test
-    fun thePostDetailOffersTheReferenceAffordance() {
+    fun thePostsMenuCitesThePostItWasOpenedOn() {
         val referenced = mutableListOf<String>()
         renderDetail(
             PostDetailUiState(loading = false, post = testPost("p1"), comments = emptyList()),
+            viewerId = "someone-else",
             onReference = { referenced += it },
         )
-        compose.onNodeWithTag("detail_post_reference_action").performClick()
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_cite").performClick()
         assertThat(referenced).containsExactly("p1")
     }
 
     @Test
-    fun aCommentOffersTheReferenceAffordanceToo() {
+    fun aCommentsMenuCitesTheCommentItWasOpenedOn() {
         val referenced = mutableListOf<String>()
         renderDetail(
             PostDetailUiState(
@@ -1664,7 +1794,8 @@ class ContentScreensTest {
             signedIn = true,
             onReference = { referenced += it },
         )
-        compose.onNodeWithTag("comment_reference_c1").performClick()
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comment_menu_cite_c1").performClick()
         assertThat(referenced).containsExactly("c1")
     }
 

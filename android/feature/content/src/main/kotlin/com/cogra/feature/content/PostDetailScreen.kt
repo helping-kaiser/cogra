@@ -548,25 +548,27 @@ private fun PostWithThread(
         // `ReplyEntry` 7: the thread's foot is the way *into* the
         // composer, not the composer itself. The full-focus wizard is
         // where a comment is written, so this row only opens it.
-        if (signedIn == true) item {
-            // It looks like the field the board draws and behaves like
-            // the button it is: a real text field would take focus and
-            // raise a keyboard for words that are typed on the next
-            // screen.
-            Surface(
-                onClick = onAddComment,
-                shape = MaterialTheme.shapes.extraLarge,
-                color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("detail_add_comment"),
-            ) {
-                Text(
-                    text = stringResource(R.string.content_comment_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                )
+        if (signedIn == true) {
+            item {
+                // It looks like the field the board draws and behaves like
+                // the button it is: a real text field would take focus and
+                // raise a keyboard for words that are typed on the next
+                // screen.
+                Surface(
+                    onClick = onAddComment,
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("detail_add_comment"),
+                ) {
+                    Text(
+                        text = stringResource(R.string.content_comment_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                    )
+                }
             }
         }
     }

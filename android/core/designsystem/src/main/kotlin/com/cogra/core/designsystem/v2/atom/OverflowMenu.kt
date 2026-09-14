@@ -26,13 +26,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Space
 
-/** One row of an overflow menu: the words, and what selecting them does. */
-data class MenuRow(
-    val label: String,
-    val testTag: String,
-    val onSelect: () -> Unit,
-)
-
 /**
  * The overflow menu on a piece of content
  * (design/components/content/OverflowMenu.jsx).
