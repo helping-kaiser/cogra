@@ -152,6 +152,22 @@ nothing. The retired word survives in identifiers for the same reason
 `topics` does — `NO_STANDING_LABEL`'s own value is `No opinion yet`, and
 that pairing is the law in one line.
 
+## The feed's way back up
+
+**`Back to top`** — the pill that rides in with the returning collapsing
+band when the reader is deep in the feed (jakob's ruling 2026-09-14). It
+names the DESTINATION and, in the same two words, the direction: a
+reader three screens down knows both what they will get and which way
+the list is about to move. `Top` alone names a place with no promise
+attached, and `Scroll to top` spends a word on the mechanism, which is
+the one thing the reader can already see happening.
+
+Plain words and no glyph, which is a decision and not an omission: the
+inlined icon set carries no arrow that points up and §5 forbids drawing
+one, but the words would win anyway — an arrow alone reaches a listener
+as "button" and a reader as a guess, for a control that exists to be
+obvious.
+
 ## Platform nouns
 
 The key lives on a device, and the device is named as the reader sees
