@@ -1,3 +1,4 @@
+import type { PadAxes } from "./StancePad";
 import type { StanceBundle, StancePair } from "./StanceReadout";
 
 /**
@@ -48,6 +49,15 @@ export interface StanceControlProps {
    * control's name. Passed through to `StanceAlternates` unchanged.
    */
   helpLabel?: string;
+  /**
+   * What the four poles are called, for a record family that is not the
+   * stance's — an Affinity toward a Type fills the same two signed slots with
+   * association and attraction. Defaults to `STANCE_AXES`; passed through
+   * unchanged to the field AND to the alternates, so the dragged route and the
+   * accessible one never name one axis two ways. The two axis NAMES above the
+   * alternates' tracks are still the stance family's.
+   */
+  axes?: PadAxes;
 }
 
 export declare function StanceControl(props: StanceControlProps): JSX.Element;
