@@ -1730,11 +1730,12 @@ whose last picture just left), the add control and the blessed body line
 on `EditCompose`, the whole-body line on `EditComposeVideo`, and both
 removal edges pointed at `EditWords`.
 
-**Two lines await blessing.** `A video is the whole post.` is the
-staging line with the wizard's "Its cover comes next" trimmed, because
-the cover is on the edit's own screen. `+ Add pictures · 2 of 10` is the
-established add grammar carrying the post's cap for the first time; the
-comment scale already draws its `· 1 of 4` twin.
+**Both lines are blessed (2026-09-14).** `A video is the whole post.`
+is the staging line with the wizard's "Its cover comes next" trimmed,
+because the cover is on the edit's own screen. `+ Add pictures · 2 of
+10` is the established add grammar carrying the post's cap; the
+comment scale already draws its `· 1 of 4` twin. Both live in
+copy-voice's staging-a-video section.
 
 **What the implementation owes.** Both apps draw the edit's media as a
 readout. The add path, the manager over the edit, and the kind flip are
@@ -2015,10 +2016,11 @@ canvas slot un-clipped. What is left:
 Side findings of the 2026-09-11 numbers census that the small-fix
 batch could not settle:
 
-1. **Future dates have no vocabulary.** The ages ladder rules the
-   past ("recency is a feeling, history is a date"); a campaign's
-   "Runs 6 more days · ends 8 Sep" (WalletCampaign, WalletCampaigns)
-   is unruled — needs jakob's word on how a future moment is spelled.
+1. ~~**Future dates have no vocabulary.**~~ Ruled 2026-09-14: the
+   relative form is the future vocabulary — `in N days` / `in N
+   hours` — read the same ladder forward, and a far date spells
+   `dd.mm.yyyy`. `copy-voice.md`'s Ages section carries it blessed;
+   `WalletCampaign` and `WalletCampaigns` are conformed.
 2. **Pair-string format has no drift guard where a pair is still
    hand-written.** The list masters no longer take one: `TaggedRow`,
    `ReferenceRow` and `StagedReference` take `{ pDirected, pInterest }`

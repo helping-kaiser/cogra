@@ -65,7 +65,7 @@ export function Screen() {
             variant="campaign"
             image="gallery-market.jpg"
             title="Sunday at the tide market"
-            second="In escrow · runs 6 more days"
+            second="In escrow · ends in 6 days"
             trailing={<MoneyFigure amount={12500} />}
             onOpen={() => {}}
           />
