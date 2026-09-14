@@ -314,11 +314,17 @@ class ReplyWizardViewModel @Inject constructor(
      * as it shapes a picked picture. A chosen picture is processed here,
      * framed to the clip's own shape: a poster that is not the video's
      * shape would letterbox the thing it stands in for.
+     *
+     * [CoverChoice.None] is handled only for exhaustiveness: the reply
+     * composer's own default stays [CoverChoice.Frame] (W4/L4B left the
+     * comment path's cover unchanged; see the lane's own report for the
+     * open item on carrying it there too), so this is never reached.
      */
     private suspend fun uploadCover(): String? {
         val state = _state.value
         val clip = state.video ?: return null
         val picture = when (val choice = state.coverChoice) {
+            CoverChoice.None -> null
             is CoverChoice.Frame -> state.coverFrames.getOrNull(choice.index)?.picture
             is CoverChoice.Picture -> processor.process(
                 choice.uri,

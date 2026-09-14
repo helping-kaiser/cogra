@@ -590,6 +590,6 @@ internal fun CommentEditState.problem(): String? = when {
     transportFailed -> "That could not reach the server. Try again."
     signingFailed -> "That could not be signed. Try again."
     uploadsFailed -> "A picture did not upload. Remove it, or try again."
-    keyAbsent -> "Your key isn't on this device, so nothing was signed."
+    keyAbsent -> "Your key isn't in this app, so nothing was signed."
     else -> null
 }

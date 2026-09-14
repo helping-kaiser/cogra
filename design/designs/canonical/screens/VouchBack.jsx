@@ -1,4 +1,4 @@
-/* Landed — approved, and the first stance (the vouch-back) opens the way. */
+/* Landed — approved, and the first opinion (the vouch-back) opens the way. */
 export function Screen() {
   return (
     <>

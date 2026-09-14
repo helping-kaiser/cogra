@@ -19,7 +19,7 @@
    past (`ViewerDots`, item 67). The count itself is spoken, not drawn — the
    row's accessible name reads "Picture 2 of 4".
 
-   NO ACTS AND NO DESCRIPTION. The stance, the count and the share stay on the
+   NO ACTS AND NO DESCRIPTION. The opinion, the count and the share stay on the
    detail view — a viewer that grows a toolbar is a viewer nobody trusts to
    close. The description is read aloud to people who cannot see the frame;
    printed here it would become a caption its author never wrote.

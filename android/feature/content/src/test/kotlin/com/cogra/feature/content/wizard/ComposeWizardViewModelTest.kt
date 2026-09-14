@@ -211,6 +211,9 @@ class ComposeWizardViewModelTest {
         /** The cap the pipeline was told to encode for. */
         var capAskedFor: Long? = null
 
+        /** A device that could not lift a single frame out of the clip. */
+        var noFrames = false
+
         override suspend fun transcode(
             uri: String,
             capBytes: Long,
@@ -227,7 +230,11 @@ class ComposeWizardViewModelTest {
         }
 
         override suspend fun coverFrames(uri: String, count: Int): List<VideoFrame> =
-            List(count) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 100, 125)) }
+            if (noFrames) {
+                emptyList()
+            } else {
+                List(count) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 100, 125)) }
+            }
 
         override suspend fun info(uri: String): VideoInfo? =
             if (uri.startsWith("clip")) VideoInfo(42_000, 0.5625f) else null
@@ -984,6 +991,83 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.step).isEqualTo(WizardStep.Cover)
         assertThat(vm.state.value.coverFrames)
             .hasSize(ComposeWizardViewModel.COVER_FRAME_COUNT)
+    }
+
+    /**
+     * A clip whose extraction never gets a chance to settle anything —
+     * this is deliberately racy: `onNext` is called twice back to back
+     * with no `advanceUntilIdle` between them, so the cover stage is
+     * left before `loadCoverFrames`'s coroutine has run at all.
+     * Going without a cover is always possible (jakob 2026-09-10), so
+     * this must publish rather than hang on a face that was never
+     * going to be chosen.
+     */
+    @Test
+    fun aClipWithFramesPublishesBareWhenNothingIsPicked() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> cover: frame extraction is only queued.
+        vm.onNext() // cover -> details, before extraction resolves anything.
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(vm.state.value.coverMediaId).isNull()
+        // No "still" in the order: the cover leg never ran.
+        assertThat(media.order).containsExactly("video")
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    /**
+     * A clip the device could not lift a single frame out of
+     * (`CoverRow`'s no-frames caption, "…or leave it without one" —
+     * PR #721). With nothing to auto-settle on, the choice stays
+     * [CoverChoice.None] for good, and the clip still publishes.
+     */
+    @Test
+    fun aClipWithNoFramesPublishesBare() = runTest(dispatcher) {
+        video.noFrames = true
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        assertThat(vm.state.value.coverFrames).isEmpty()
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(media.order).containsExactly("video")
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    /**
+     * The author's own choice is never second-guessed by the coverless
+     * path: a deliberately picked cover still uploads before the clip
+     * and rides the same placement at the seal.
+     */
+    @Test
+    fun aDeliberatelyChosenCoverStillUploadsThenAttaches() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> cover
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onPickCoverPicture("my-own.jpg")
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.Picture("my-own.jpg"))
+
+        vm.onNext() // cover -> details, uploads start
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // details -> seal
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+        assertThat(content.lastAttachments.single().coverMediaId)
+            .isEqualTo(vm.state.value.coverMediaId)
     }
 
     @Test

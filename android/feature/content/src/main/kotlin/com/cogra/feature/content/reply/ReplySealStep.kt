@@ -300,7 +300,7 @@ private fun ReplyKeyAbsentCard(onRestoreKey: () -> Unit, onLeave: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
         Text(
-            text = "Your key isn't on this device",
+            text = "Your key isn't in this app",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onTertiaryContainer,
         )

@@ -13,6 +13,8 @@ import { readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve, relative, posix } from "node:path";
 import { fileURLToPath } from "node:url";
 
+const t0 = Date.now();
+
 const require = createRequire(import.meta.url);
 const Babel = require("@babel/standalone");
 
@@ -147,6 +149,6 @@ ${expose}
 
 writeFileSync(join(root, "_ds_bundle.js"), bundle);
 console.log(
-  `wrote _ds_bundle.js: ${order.length} files, ${exposed.length} exposed, ${unexposed.length} helpers, ${bundle.length} bytes`
+  `wrote _ds_bundle.js: ${order.length} files, ${exposed.length} exposed, ${unexposed.length} helpers, ${bundle.length} bytes in ${Date.now() - t0} ms`
 );
 void posix;

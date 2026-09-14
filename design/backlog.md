@@ -2060,7 +2060,7 @@ recorded `dec:lint:refused-dependencies` decision deliberately keeps
 pattern dialects out of the carrier walk; new vendored trees get a
 literal exclude row. Baseline is 0 advisories again.
 
-### 57 · The masters' prose still says "standing" off-screen · *design*
+### 57 · The masters' prose still says "standing" off-screen · *design* · **done 2026-09-14**
 
 The sweep (2026-09-11) conformed every reader-visible string and every
 self-contradicting doc, but ~151 sites of `standing`/`stance` prose
@@ -2074,6 +2074,17 @@ the same sweep: `Post Score` in prose and in the graph's gap names
 specimen `SheetTitle` the live `OverflowMenu` doesn't render;
 `feed-filter.card.html:46`'s history sentence naming the replaced
 segmented row; the frozen search-ideation canvases' `3w` ages.
+
+Done 2026-09-14: 131 prose lines conformed across 53 files under one
+rule — "standing" is two words, and only the retired UI sense goes.
+The L1 term (α_i, the inbound-derived admission scalar) and every
+model-voice "stance" (the record, the fold, the anchor tables, the
+pads' value-space prose) KEPT; reader-facing prose conformed to
+"opinion"/"give". All four smalls landed (Post Score was already
+clean; the sheet specimen's two menu titles cut; the filter card's
+history paragraph deleted and FeedFilter's docblock rewritten to
+current state; the frozen boards' ages onto the ladder, `1w` → `7d`
+included). Leftovers filed as item 72.
 
 ### 58 · The vouch-back ceremony · *design* · **drawn 2026-09-12**
 
@@ -2192,7 +2203,13 @@ Pin the locale (`en-US` or an explicit numbering contract) in both
 formatters and re-render; the U+2212 substitution (item 59, ruled)
 is unaffected.
 
-### 66 · What the image round found out of scope · *design + system*
+### 66 · What the image round found out of scope · *design + system* · **fixed 2026-09-14**
+
+Both fixed same day: `designs/search/img/` now carries `post-photo.jpg`
+(byte-identical to canonical's), and `inviter.jpg` was swapped for a
+640×640 re-crop of its own source photograph
+(`assets/photos/06-portrait-3x4.jpg`, the exact original crop found by
+pixel match) — same face, no reference changes.
 
 Two fixture defects the 2026-09-14 consolidation surfaced and left
 alone:
@@ -2261,7 +2278,7 @@ the chat-surface gap. Ruling 68 names the band icon, and routing a
 labelled *Message* into a coming-soon screen is a separate decision.
 `message-someone` stays blocked on it.
 
-### 69 · The canvas splits by domain · *tooling* · **ruled 2026-09-14**
+### 69 · The canvas splits by domain · *tooling* · **done 2026-09-14**
 
 jakob: the canvas must support ~500 screens; the editor's 200-file
 cap is per canvas, so the canonical canvas splits into per-domain
@@ -2277,6 +2294,16 @@ item-62 pressure). Boards themselves do not change. Implementation
 is unaffected — their lanes grade against board files, not canvas
 URLs (confirmed 2026-09-14).
 
+Done same day: readme §14 pins the working model, `canvases.json`
+holds the map (with each canvas's published url), `gen-canvases.mjs`
+seeds and gates the manifests as the pipeline's fourth stage. The four
+canvases published — feed 50 files · profile 42 · compose 73 · entry
+51, all ≥64% headroom — and the old single-canvas artifact republished
+as a signpost to them (its version picker keeps the monolith). Ruled
+grouping mapped onto the real page ids: comments ride with feed,
+patterns with the maps. Canvas titles say "and" — the editor refuses
+`&` in a title, and the stage now gates that.
+
 ### 70 · The seal's References row only draws one citation · *design*
 
 Surfaced by implementation's W4 seal lane (PR #706, 2026-09-14): the
@@ -2290,7 +2317,7 @@ undrawn case until the board exists. Needs a drawing round: how the
 row stacks, truncates, or summarizes 2–10 citations. No lane is
 blocked on it.
 
-### 71 · The pipeline outgrew its budget · *tooling*
+### 71 · The pipeline outgrew its budget · *tooling* · **closed 2026-09-14**
 
 The valence-six round measured the six-stage pipeline at 33–50 s on
 a quiet machine, against the recorded 15–25 s budget — every run
@@ -2300,3 +2327,35 @@ these runs refute that). Either the budget re-sets to ~35–50 s
 cause (check-flows alone ran 8.2 s). Wants one quiet profiling
 pass: per-stage timings across the last few chain states, then
 either a budget commit or a fix.
+
+Closed by the split fabric's data: two quiet seven-stage runs at
+25.2 s and 27.4 s, per-stage — render-screens 17.6 · bundle 2.7 ·
+check-flows 2.4 · gen-canvases 1.9 · check-readouts 1.8 ·
+report-summaries 0.9 · gen-maps 0.2 — with check-flows back at ~2 s
+against the 33–50/8.2 readings, which did not reproduce quiet after
+all (that day ran eight lanes). No regression; the honest growth is
+render-screens scaling with the tree (~190 boards). Budget recorded
+at the design-ci target: 25–35 s quiet, render-screens ~two-thirds,
+regressions judged from quiet runs only. bundle and render-screens
+now print their own ms like every other stage.
+
+### 72 · What the standing-prose pass left for rulings · *design*
+
+Three leftovers from item 57's judgment pass (2026-09-14):
+
+- `design/readme.md` still carries the retired sense in narrative
+  prose (~:190/:295 "a zero standing"/"no standing yet", :688 "nets
+  a standing to", :732 "standing, the stance a reader can still
+  take") — the readme was outside the pass's file scope; wants the
+  same one-rule bite.
+- `design/designs/core-loop/app.jsx:198,200` renders harness chrome
+  reading "Core loop — feed, post, stance" / "Tap a stance target" —
+  reviewer-facing, but a RENDERED surface, and backlog item 1's own
+  title says "stance"; conforming either is jakob's call.
+- The naming law's kept-list names the Stance* component families
+  but not the exported identifiers `standingLine`, `standingParts`,
+  `StanceStanding`, `NO_STANDING_LABEL`, or the `kind="standing"`
+  prop value — the law has a gap to close (add them to the
+  kept-list) or a rename to rule. Riding along: `_shared.jsx`'s "the
+  staged citation carries the stance that rides with it" is a model
+  question (a citation carries its own pair), not a naming one.
