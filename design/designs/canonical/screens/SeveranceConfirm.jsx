@@ -36,6 +36,14 @@
    the destructive-dialog rule, and severance is still one tap away. No `error`
    colour anywhere: walking back is a deliberate choice, not a fault.
 
+   IT NAMES WHAT THE PAD NAMES. `StanceControl` hands the dialog its own
+   `targetLabel`, and the pad on a feed card carries the card's — `this post`,
+   which is what every board in this tree draws. A dialog saying `@ada` over a
+   card whose own face says `this post` would have a reader believe that
+   walking back an opinion on a post severs its author. `PadStanding`, beside
+   this board, is the pad that raises it, and the two say the same words about
+   the same thing.
+
    THE PAD IS STILL OPEN BEHIND THE WASH. `StanceControl` raises this dialog
    without closing the pad it was picked on, so `Keep it` returns to a pick that
    is still parked. The wash covers it, as the dialog's own scrim covers
@@ -53,7 +61,7 @@ export function Screen() {
 
       <SeveranceConfirm
         pick={{ pDirected: -1, pInterest: -1 }}
-        targetLabel="@ada"
+        targetLabel="this post"
         bundle={mkBundle(1, 1)}
         records={1}
       />

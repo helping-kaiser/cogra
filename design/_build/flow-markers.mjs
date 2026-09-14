@@ -111,6 +111,18 @@ export const FLOW_MARKERS = {
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
   ],
+  // The same pad with a history behind it, so `StanceControl` draws the
+  // walk-away as well: it takes the third number and the two decisions shift
+  // past it. The help label is the ordinary feed card's default, because that
+  // is what this is — a named pad belongs to a board that named it.
+  PadStanding: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 2, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 3, find: ">Walk it back</button>", tag: "button" },
+    { n: 4, find: ">Cancel</button>", tag: "button" },
+    { n: 5, find: ">Set</button>", tag: "button" },
+  ],
   /* The ceremony has exactly one control, which is the whole point of it. */
   VouchedIn: [{ n: 1, find: ">Go to your feed</button>", tag: "button" }],
   KeyElsewhere: [

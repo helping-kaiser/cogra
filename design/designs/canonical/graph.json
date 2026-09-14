@@ -14,6 +14,7 @@
     "KeyConfirm": "the record-your-code dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
     "KeyDecline": "the without-a-backup dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
     "VouchBackPad": "the scrim wash covers the shell — its semantic elements (band, nav, the vouch card's own controls) are inactive in this state; only the parked pad is live",
+    "PadStanding": "the scrim wash covers the shell — the band, the post card's own controls and the nav are inactive in this state; only the parked pad is live",
     "FeedSheet": "the filter sheet covers the feed — the trigger, post cards, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "SettingsLicense": "the license sheet covers the settings page — every row beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "SettingsReading": "the filter sheet covers the settings page — every row beneath the scrim is inactive in this state, the theme pill among them; only the sheet (and its scrim) is live",
@@ -75,6 +76,7 @@
     "FeedUnread": "the same feed with something waiting in the notifications list — the dot is a state the account arrives in, not a tap",
     "FeedGallery": "a feed whose post carries several pictures — content, not a tap",
     "FeedScrolled": "the feed three screens down, scrolled back up far enough to summon the band — scrolling, not a tap",
+    "PadStanding": "the pad opened on something the reader has already said their piece about — the same face from the same place, and what they have said is what decides which state the pad is in; history, not a tap",
     "FeedCover": "a feed whose posts carry clips, one before its first play and one the device will not autoplay — content and device, not a tap",
     "ViewerLandscape": "the viewer with the device turned — rotation, not a tap",
     "ReaderPostMenuNarrow": "the reader's menu on a phone too narrow to hold four actions, so the action row's queue has moved share into it — width, not a tap",
@@ -214,7 +216,13 @@
     { "from": "VouchBackPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog" }] },
     { "from": "VouchBackPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
     { "from": "VouchBackPad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "VouchBack", "case": "nothing staged" }] },
-    { "from": "VouchBackPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "VouchedIn", "case": "the vouch-back — signed, the ceremony opens" }, { "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }, { "board": "SeveranceConfirm", "case": "the pick nets a standing bundle to nothing — severance, confirmed with its cost and never refused" }] },
+    { "from": "VouchBackPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "VouchedIn", "case": "the vouch-back — signed, the ceremony opens" }, { "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }] },
+
+    { "from": "PadStanding", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
+    { "from": "PadStanding", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick, and the landing line reads what it would come to" }] },
+    { "from": "PadStanding", "via": 3, "kind": "advance", "label": "Walk it back", "to": [{ "board": "SeveranceConfirm", "case": "the explicit route — the same dialog the pick route raises, without the pick line, since nothing was picked" }] },
+    { "from": "PadStanding", "via": 4, "kind": "cancel", "label": "Cancel", "to": [{ "terminal": "back", "case": "the pad closes — nothing staged, the standing opinion is what it was" }] },
+    { "from": "PadStanding", "via": 5, "kind": "advance", "label": "Set", "to": [{ "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }, { "board": "SeveranceConfirm", "case": "the pick nets the standing bundle to nothing — severance, confirmed with its cost and never refused" }] },
 
     { "from": "VouchedIn", "via": 1, "kind": "advance", "label": "Go to your feed", "to": [{ "board": "Feed" }] },
 

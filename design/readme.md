@@ -4870,6 +4870,25 @@ closes a place where the canvas knew a rule and had never drawn it.
   It sits on the patterns page beside `PadKeyAbsent`, the other board
   where the pad's overlay is the subject and the shell beneath is
   ground.
+- **AND THE PAD THAT RAISES IT IS DRAWN.** `PadStanding` is the pad
+  opened on something the reader has already said their piece about, and
+  the first board in this tree to carry `Walk it back` — `StanceControl`
+  draws the walk-away only once there are records, and the master pad is
+  a first vouch with none, so every state past the first was represented
+  by a board that could not reach it. The two boards sit side by side in
+  flow order and share one fixture, so what the pad says is standing is
+  exactly what the dialog offers to walk back. Both routes now leave from
+  the pad that has something to sever: the pick case moved off
+  `VouchBackPad/4`, which had been standing in for a case a first vouch
+  cannot reach.
+- **BOTH COMING-SOON SURFACES NAME THE PROMISE THE SAME WAY.** The chats
+  screen read `Chats aren't built yet…` while the Sky card read `The Sky
+  — coming soon`, and a product with two answers to one question teaches
+  a reader nothing by the difference. The chats line becomes `Chats —
+  coming soon. Your conversations will be here.` — the thing, an em dash,
+  the promise, then one sentence of what will be there. `Coming soon` is
+  the whole of what either promises: no date, no release, because both
+  sit on the would-like list and the order can change.
 - **THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK.** The reel round
   ruled that share is the first act to leave the action row when a phone
   cannot hold four, and no board drew the menu it moves into.
@@ -4886,10 +4905,10 @@ closes a place where the canvas knew a rule and had never drawn it.
   citations`, and at one `Manage the 1 citation`. One `citedRow` factory
   writes both seals' row, so the compose seal and the reply seal changed
   together and cannot disagree. Nothing is drawn differently.
-- **The gate**: boards **194 → 197**, edges **1372 → 1399**, gaps
-  **15 → 14**, flows hold at **63/61/2**. Eleven flows reblessed, every
-  one of them a start that now stands on one more board and lands where
-  it always did; the feed canvas at **52/200 files** (74% headroom).
+- **The gate**: boards **194 → 198**, edges **1372 → 1404**, gaps
+  **15 → 14**, flows hold at **63/61/2**. The reblessed flows are all of
+  one kind — a start that now stands on one more board and lands where it
+  always did.
 
 ---
 
