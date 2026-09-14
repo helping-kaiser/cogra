@@ -30,7 +30,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.ValenceField
 import com.cogra.core.designsystem.nearestStanceAnchor
@@ -481,17 +480,14 @@ internal fun SensitiveSheet(
             // field is only live once the switch is on: offering a box
             // that would be refused is worse than not offering it.
             enabled = marked,
+            cap = MAX_SENSITIVE_REASON_CHARS,
+            error = if (marked && isSensitiveReasonTooLong(reason)) {
+                stringResource(R.string.content_error_sensitive_reason_too_long, MAX_SENSITIVE_REASON_CHARS)
+            } else {
+                null
+            },
             testTag = "${testTagPrefix}_sensitive_reason",
         )
-        if (marked && isSensitiveReasonTooLong(reason)) {
-            ErrorLine(
-                text = stringResource(
-                    R.string.content_error_sensitive_reason_too_long,
-                    MAX_SENSITIVE_REASON_CHARS,
-                ),
-                testTag = "${testTagPrefix}_sensitive_reason_too_long",
-            )
-        }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             CograButton("Done", onDone, testTag = "${testTagPrefix}_sensitive_done")
         }

@@ -57,13 +57,6 @@ describe("DescribeSheet", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/too long/i);
   });
 
-  // CW-15 (2026-09-08 UI audit): the board never drew a running count, so
-  // the sheet stays quiet about it regardless of what a caller passes.
-  it("never shows a running count — the board draws no such line", () => {
-    open({ position: { index: 1, total: 3 } });
-    expect(screen.queryByText(/Picture \d+ of \d+/)).toBeNull();
-  });
-
   // CW-15: the reason sits directly under the title on both shapes, not as
   // an extended trailing line near the field.
   it("carries the reason under the title, not as an extended trailing line", () => {

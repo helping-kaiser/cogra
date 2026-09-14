@@ -70,10 +70,8 @@ export function parseAspectRatio(text: string | null | undefined): number | null
 /**
  * The tile's `object-fit`. Always `cover` — nothing is letterboxed
  * (design/components/media/MediaAttachment.jsx:34, jakob 2026-09-03: the
- * media law). `sourceRatio` stays in the signature so call sites need no
- * change; the fit itself is unconditional now.
+ * media law).
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for a stable signature, per the doc comment above.
-export function fitFor(sourceRatio: number | null | undefined): "contain" | "cover" {
+export function fitFor(): "contain" | "cover" {
   return "cover";
 }

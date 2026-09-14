@@ -19,7 +19,7 @@ import { BottomSheet } from "../bottom-sheet";
 import { HelpDialog, HELP_TOPICS } from "../help-dialog";
 import { PillButton } from "../pill-button";
 import { TextField } from "../text-field";
-import { altTextProblem } from "../media/caps";
+import { ALT_TEXT_MAX_CHARS, altTextProblem } from "../media/caps";
 import { cropAspect, cropPreviewStyle } from "../media/crop-preview";
 import type { Crop } from "../media/crop";
 
@@ -43,12 +43,6 @@ export function DescribeSheet({
   crop?: Crop | null;
   value: string;
   onChange: (next: string) => void;
-  /**
-   * "2 of 3" — retired by CW-15 (jakob 2026-09-03): the board never drew this
-   * count, so the sheet no longer renders it. The prop stays accepted, unused,
-   * because a caller outside this lane's scope still passes it.
-   */
-  position?: { index: number; total: number };
   /** A clip is ONE thing to describe, never a per-picture walk. */
   video?: boolean;
   testId?: string;
@@ -131,6 +125,7 @@ export function DescribeSheet({
           value={value}
           onChange={onChange}
           testId={`${testId}-field`}
+          cap={ALT_TEXT_MAX_CHARS}
           error={altTextProblem(value) ?? undefined}
         />
         <div className="flex justify-end">
