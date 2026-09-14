@@ -12,6 +12,12 @@
 //
 // `label-large` at every size (Material's button role); the pill is Material's
 // button shape at every size — `rounded-full`, not a rung of the shape scale.
+//
+// `inverse` is the board's fourth vocabulary, and not a fourth emphasis: the
+// filled button standing on a TONAL PANEL instead of the page, wearing the
+// panel's own pair turned over (`onTertiaryContainer` as the fill,
+// `tertiaryContainer` as the label) rather than `primary` arguing with it
+// (Button.jsx:10-17). Use it only inside such a panel.
 
 import type { ReactNode } from "react";
 
@@ -19,6 +25,7 @@ const VARIANTS = {
   filled: "bg-primary text-on-primary",
   outlined: "border border-outline text-primary",
   text: "text-primary",
+  inverse: "bg-on-tertiary-container text-tertiary-container",
 } as const;
 
 // Heights are `min-h` on a border-box element, so the border of the outlined
