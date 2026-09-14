@@ -15,7 +15,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.DescribeSubject
@@ -99,11 +98,9 @@ internal fun ColumnScope.DetailsStepBody(
 
 /**
  * The title and the one refusal it can earn — the field's own cap
- * (post.md §1).
- *
- * The house error line rather than a slot inside the field: the 2.0 field
- * atom draws no error state, and inventing one is a design decision this
- * surface does not get to make (design/backlog.md item 47).
+ * (post.md §1). The atom carries its own error state and late counter now
+ * (the caps-affordance round, closing design/backlog.md item 52's
+ * web/Android divergence), so this no longer draws a house line beside it.
  */
 @Composable
 private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) -> Unit) {
@@ -112,20 +109,19 @@ private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) 
         onValueChange = onValueChange,
         label = "Title",
         optional = true,
+        cap = MAX_TITLE_CHARS,
+        error = if (tooLong) {
+            stringResource(R.string.content_error_title_too_long, MAX_TITLE_CHARS)
+        } else {
+            null
+        },
         testTag = "wizard_title",
     )
-    if (tooLong) {
-        ErrorLine(
-            text = stringResource(R.string.content_error_title_too_long, MAX_TITLE_CHARS),
-            testTag = "wizard_title_too_long",
-        )
-    }
 }
 
 /**
- * The description and the one refusal it can earn — the same house error
- * line the title wears, for the same reason: the 2.0 field atom draws no
- * error state of its own.
+ * The description and the one refusal it can earn — the same atom-drawn
+ * error state and counter the title wears.
  */
 @Composable
 private fun DescriptionField(value: String, tooLong: Boolean, onValueChange: (String) -> Unit) {
@@ -136,14 +132,14 @@ private fun DescriptionField(value: String, tooLong: Boolean, onValueChange: (St
         optional = true,
         singleLine = false,
         minLines = 3,
+        cap = MAX_DESCRIPTION_CHARS,
+        error = if (tooLong) {
+            stringResource(R.string.content_error_description_too_long, MAX_DESCRIPTION_CHARS)
+        } else {
+            null
+        },
         testTag = "wizard_description",
     )
-    if (tooLong) {
-        ErrorLine(
-            text = stringResource(R.string.content_error_description_too_long, MAX_DESCRIPTION_CHARS),
-            testTag = "wizard_description_too_long",
-        )
-    }
 }
 
 /**
