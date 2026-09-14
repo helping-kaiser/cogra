@@ -41,4 +41,15 @@ describe("SensitiveSheet", () => {
     open({ reason: "🧂".repeat(SENSITIVE_REASON_MAX_CHARS) });
     expect(screen.queryByRole("alert")).toBeNull();
   });
+
+  // The "?" and the switch ride the sheet's own title row (board
+  // ComposeSensitive.jsx:21-39), rather than sitting in the body below it.
+  it("carries the help dot and the switch on the title row, not in the body", () => {
+    open();
+    const heading = screen.getByRole("heading", { name: "Mark as sensitive" });
+    const titleRow = heading.parentElement;
+    expect(titleRow).not.toBeNull();
+    expect(titleRow).toContainElement(screen.getByTestId("test-sensitive-help"));
+    expect(titleRow).toContainElement(screen.getByTestId("test-sensitive-switch"));
+  });
 });
