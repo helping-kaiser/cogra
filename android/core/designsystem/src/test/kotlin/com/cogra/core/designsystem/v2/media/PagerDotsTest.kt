@@ -96,7 +96,7 @@ class PagerDotsTest {
         compose.setContent { Cogra2PreviewTheme { PagerDots(count = 10, current = 0, testTag = "dots") } }
         // Seven slots, not ten — and the same width as a seven-set, because a
         // shrunk edge dot stays centred in a full-size slot.
-        compose.onNodeWithTag("dots").assertWidthIsEqualTo(rowWidth(MediaFrame.DotWindow))
+        compose.onNodeWithTag("dots").assertWidthIsEqualTo(rowWidth(MediaFrame.DOT_WINDOW))
     }
 
     @Test
@@ -104,7 +104,7 @@ class PagerDotsTest {
         compose.setContent { Cogra2PreviewTheme { PagerDots(count = 10, current = 5, testTag = "dots") } }
         // Two shrunk dots and the row is still exactly seven pitches wide:
         // nothing reflows under a swipe.
-        compose.onNodeWithTag("dots").assertWidthIsEqualTo(rowWidth(MediaFrame.DotWindow))
+        compose.onNodeWithTag("dots").assertWidthIsEqualTo(rowWidth(MediaFrame.DOT_WINDOW))
     }
 
     @Test
@@ -114,7 +114,7 @@ class PagerDotsTest {
                 PagerDots(count = 10, current = 5, tone = DotTone.Viewer, testTag = "dots")
             }
         }
-        compose.onNodeWithTag("dots").assertWidthIsEqualTo(rowWidth(MediaFrame.DotWindow))
+        compose.onNodeWithTag("dots").assertWidthIsEqualTo(rowWidth(MediaFrame.DOT_WINDOW))
         compose.onNodeWithContentDescription("Picture 6 of 10").assertExists()
     }
 }

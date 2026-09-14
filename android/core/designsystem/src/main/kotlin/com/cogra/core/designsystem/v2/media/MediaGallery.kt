@@ -52,9 +52,12 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * badge anywhere, and the dot row states the position to a screen reader
  * instead.
  *
- * The whole gallery is one tap target opening the post — a reader scrolling
- * is choosing between posts, not looking at one picture — so [onOpen] is a
- * single callback and the pages below it are not individually focusable.
+ * The whole gallery is one tap target — a reader scrolling is choosing between
+ * posts, not looking at one picture — so [onOpen] is a single callback and the
+ * pages below it are not individually focusable. It is handed the page the
+ * reader is on, because the two surfaces that wire it want different halves of
+ * that: the feed opens the POST and ignores it, the detail opens the FULLSCREEN
+ * VIEWER on the very frame under the thumb (graph.json, `PostDetail` via 4).
  *
  * @param frameRatio the shape every page takes. The composer crops a post's
  *   whole set to one shape, so this is the set's shape; it defaults to the
@@ -70,7 +73,7 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 fun MediaGallery(
     items: List<MediaItem>,
     modifier: Modifier = Modifier,
-    onOpen: (() -> Unit)? = null,
+    onOpen: ((page: Int) -> Unit)? = null,
     frameRatio: Float = items.firstOrNull()?.aspectRatio?.cappedToTallestTile() ?: 1f,
     fit: ContentScale = ContentScale.Crop,
     maxHeight: Dp = mediaMaxHeight(),
@@ -83,7 +86,13 @@ fun MediaGallery(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier)
+            .then(
+                if (onOpen != null) {
+                    Modifier.clickable { onOpen(pagerState.currentPage) }
+                } else {
+                    Modifier
+                },
+            )
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
     ) {
         HorizontalPager(

@@ -206,11 +206,19 @@
     <string name="designsystem_video_rewind">Back ten seconds</string>
     <string name="designsystem_video_forward">Forward ten seconds</string>
     <string name="designsystem_video_seek">Seek</string>
+    <!-- The bar's last control: the way into the fullscreen viewer
+         (design/components/media/VideoControls.jsx:231). -->
+    <string name="designsystem_video_fullscreen">Full screen</string>
 
     <!-- The gallery's dot row, read as a position. Positional arguments
          because the order of the two numbers is a property of the
          language, not of the layout. -->
     <string name="designsystem_gallery_position">Picture %1$d of %2$d</string>
+
+    <!-- The fullscreen viewer's one control. An X rather than a back arrow,
+         "because the reader is dismissing a layer, not walking a step of a
+         journey" (design/components/media/MediaViewer.jsx:26-27). -->
+    <string name="designsystem_viewer_close">Close</string>
 
     <!-- The sensitive veil (design/components/honesty/SensitiveVeil.jsx).
          The veil names its source unconditionally: an author's own warning

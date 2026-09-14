@@ -64,7 +64,7 @@ object MediaFrame {
     val DotRowTopPadding = 8.dp
 
     /** The row's ceiling: `const DOT_WINDOW = 7` (`:338`). */
-    const val DotWindow = 7
+    const val DOT_WINDOW = 7
 }
 
 /**

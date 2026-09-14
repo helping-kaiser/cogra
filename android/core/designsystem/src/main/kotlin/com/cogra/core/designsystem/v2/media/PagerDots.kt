@@ -31,14 +31,9 @@ import com.cogra.core.designsystem.v2.token.MediaOverlay
  *
  * @param start the first index the row draws.
  * @param window how many slots it draws — the set, capped at
- *   [MediaFrame.DotWindow].
+ *   [MediaFrame.DOT_WINDOW].
  */
-data class DotWindow(
-    val start: Int,
-    val window: Int,
-    val moreBefore: Boolean,
-    val moreAfter: Boolean,
-) {
+data class DotWindow(val start: Int, val window: Int, val moreBefore: Boolean, val moreAfter: Boolean) {
     /** The indices this row draws, in order. */
     val slots: IntRange get() = start until (start + window)
 }
@@ -52,7 +47,7 @@ data class DotWindow(
  * reached.
  */
 fun dotWindow(count: Int, current: Int): DotWindow {
-    val window = minOf(count, MediaFrame.DotWindow)
+    val window = minOf(count, MediaFrame.DOT_WINDOW)
     // `window shr 1` is the master's own half (`:351`): three for a seven-slot
     // row, which puts the active dot in the middle slot.
     val start = (current - (window shr 1)).coerceIn(0, maxOf(0, count - window))
@@ -86,7 +81,7 @@ enum class DotTone { Card, Viewer }
  * **A row that grows with the set stops being a position marker** (`:307-311`):
  * ten dots at 12dp of pitch is a ruler, and a reader counting rungs is doing
  * the work the marker exists to save. So the row has a ceiling of
- * [MediaFrame.DotWindow] slots and past it is a window onto the set.
+ * [MediaFrame.DOT_WINDOW] slots and past it is a window onto the set.
  *
  * **An edge dot with more beyond it is smaller** (`:318-324`) — one smaller
  * size and not a ladder of them, and the active dot is never the shrunk one.
