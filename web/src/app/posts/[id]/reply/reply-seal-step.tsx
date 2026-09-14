@@ -17,15 +17,16 @@
 // each with the act it would add. Both boarded destinations are gaps — the
 // topic picker is not boarded at all, and ReferencePicker has no web
 // implementation — so pressing a row opens the entry field this product
-// already ships, in the sheet idiom the seal already uses for licence and
-// stance. Nothing here invents the picker.
+// already ships, in the sheet idiom the seal already uses for the licence and
+// the sensitive mark. Nothing here invents the picker.
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { ParkedPad } from "@/lib/ui2/compose/parked-pad";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { StancePad } from "@/lib/ui2/compose/stance-pad";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
-import { LicenseChooser } from "@/lib/ui/license-fields";
+import { LicenseRows } from "@/lib/ui/license-rows";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { ReferenceEntryField } from "@/lib/ui/reference-entry-field";
 import { nearestAnchor } from "@/lib/stance/anchors";
@@ -245,7 +246,13 @@ export function ReplySealStep({
         <p className="m-0 text-label-small text-on-surface-variant">
           Terms for anyone who reuses this.
         </p>
-        <LicenseChooser value={state.license} onChange={onLicense} testIdPrefix="reply" />
+        {/* The board's own row anatomy — a dot, the reading, its hint —
+            rather than `LicenseChooser`'s settings-page fieldset, which
+            drew a second "License" legend and a second note inside a
+            sheet already titled and noted (`ComposeLicense.jsx:5-11`).
+            The post seal's license sheet was corrected first; this is
+            the same component, not a second copy of it. */}
+        <LicenseRows value={state.license} onChange={onLicense} testIdPrefix="reply" />
         <div className="flex items-center gap-2 border-t border-outline-variant pt-2.5">
           <span className="flex-1 text-label-small text-on-surface-variant">
             {licenseTerms(state.license).join(" ")}
@@ -256,41 +263,45 @@ export function ReplySealStep({
         </div>
       </BottomSheet>
 
-      {/* ReplyPad. Cancel and the scrim stage nothing; only Set moves the
-          stance the seal reads — which is why the pad works on its own staged
-          pair rather than writing through on every drag. */}
-      <BottomSheet
+      {/* ReplyPad. It PARKS over the page rather than riding a drawer
+          (`ReplyPadBody`, design/readme.md §"Fixed elements"): the same
+          place every time, because muscle memory is part of the control —
+          which is also what android's reply pad already does.
+
+          Cancel and the wash stage nothing; only Set moves the stance the
+          seal reads, which is why the pad works on its own staged pair
+          rather than writing through on every drag. */}
+      <ParkedPad
         open={sheet === "stance"}
         onClose={() => onSheet("none")}
-        title="Toward what you answer"
-        testId="reply-stance-sheet"
+        ariaLabel="Toward what you answer"
+        standoff="reply"
+        testId="reply-stance-pad-panel"
       >
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col">
-            <span className="text-label-small text-on-surface-variant">
-              Toward &ldquo;{state.target.label}&rdquo;
-            </span>
-            <StanceValue pair={stagedStance} large testId="reply-stance-staged" />
-          </div>
-          <StancePad
-            value={stagedStance}
-            onChange={onStagedStance}
-            ariaLabel={`Your stance toward ${state.target.label}`}
-            testId="reply-stance-pad"
-          />
-          <p className="m-0 text-body-small text-on-surface-variant">
-            Replying also signs where you stand on what it answers.
-          </p>
-          <div className="flex justify-end gap-2">
-            <PillButton variant="text" testId="reply-stance-cancel" onClick={() => onSheet("none")}>
-              Cancel
-            </PillButton>
-            <PillButton testId="reply-stance-set" onClick={onSetStance}>
-              Set
-            </PillButton>
-          </div>
+        <div className="flex flex-col">
+          <span className="text-label-small text-on-surface-variant">
+            Toward &ldquo;{state.target.label}&rdquo;
+          </span>
+          <StanceValue pair={stagedStance} large testId="reply-stance-staged" />
         </div>
-      </BottomSheet>
+        <StancePad
+          value={stagedStance}
+          onChange={onStagedStance}
+          ariaLabel={`Your stance toward ${state.target.label}`}
+          testId="reply-stance-pad"
+        />
+        <p className="m-0 text-body-small text-on-surface-variant">
+          Replying also signs where you stand on what it answers.
+        </p>
+        <div className="flex justify-end gap-2">
+          <PillButton variant="text" testId="reply-stance-cancel" onClick={() => onSheet("none")}>
+            Cancel
+          </PillButton>
+          <PillButton testId="reply-stance-set" onClick={onSetStance}>
+            Set
+          </PillButton>
+        </div>
+      </ParkedPad>
 
       <BottomSheet
         open={sheet === "topics"}

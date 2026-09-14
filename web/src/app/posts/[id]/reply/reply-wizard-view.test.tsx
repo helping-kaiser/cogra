@@ -313,6 +313,20 @@ describe("the reply wizard", () => {
       expect(screen.getByTestId("reply-open-license")).toBeInTheDocument();
     });
 
+    // CW-28's web twin: the license sheet draws the board's row anatomy,
+    // not `LicenseChooser`'s settings-page fieldset — which put a second
+    // "License" legend and a second note inside a sheet already titled and
+    // noted. The post seal was corrected first; this is the same component.
+    it("opens the license sheet with the boarded rows, not a second legend", async () => {
+      draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-open-license"));
+      expect(await screen.findByTestId("reply-license-rows")).toBeInTheDocument();
+      expect(screen.getByRole("radiogroup", { name: "Credit" })).toBeInTheDocument();
+      expect(screen.getByRole("radiogroup", { name: "Public record of use" })).toBeInTheDocument();
+      expect(screen.queryByRole("group", { name: "License" })).not.toBeInTheDocument();
+    });
+
     // The board's third term row, held back only while a marked comment had
     // no veil to promise. Design backlog item 25.4 built that on 2026-09-02.
     it("carries the mark row the board draws, unmarked to begin with", async () => {
@@ -352,6 +366,20 @@ describe("the reply wizard", () => {
   });
 
   describe("the pad", () => {
+    // CR-18: the pad PARKS over the page, as android's already does and as
+    // `ReplyPadBody` draws it — not in the drawer host, which would wrap a
+    // control that has its own chrome in a second one.
+    it("parks as its own panel rather than riding a bottom sheet", async () => {
+      draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-open-stance"));
+      const pad = await screen.findByTestId("reply-stance-pad-panel");
+      expect(pad.tagName).toBe("DIALOG");
+      expect(pad.className).toContain("mt-auto");
+      expect(pad.className).not.toContain("rounded-t-extra-large");
+      expect(screen.queryByTestId("reply-stance-sheet")).not.toBeInTheDocument();
+    });
+
     it("stages nothing when it is cancelled", async () => {
       draw();
       await toSeal();
