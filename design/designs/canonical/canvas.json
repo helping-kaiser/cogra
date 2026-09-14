@@ -362,6 +362,24 @@
       "page": "compose"
     },
     {
+      "file": "ComposeSealCited.dc.html",
+      "title": "Seal · three citations",
+      "x": 2400,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "ComposeCitations.dc.html",
+      "title": "Seal · citations sheet",
+      "x": 2880,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "HelpDialog.dc.html",
       "title": "The ? dialog",
       "x": 0,
@@ -563,6 +581,15 @@
       "file": "ReplyCited.dc.html",
       "title": "Reply · what you sign, a reference staged",
       "x": 3360,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "ReplyCitedMany.dc.html",
+      "title": "Reply · what you sign, three references staged",
+      "x": 5760,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1185,15 +1212,15 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 2809,
+      "h": 2819,
       "page": "compose",
       "title": "Compose · flow map"
     },
     {
       "file": "MapComments.dc.html",
-      "x": -3900,
+      "x": -4190,
       "y": 0,
-      "w": 3480,
+      "w": 3770,
       "h": 1524,
       "page": "comments",
       "title": "Comments · flow map"

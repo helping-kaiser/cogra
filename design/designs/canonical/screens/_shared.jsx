@@ -60,6 +60,7 @@ const {
   PickedRow,
   DescribeCounter,
   PickedSheet,
+  CitedSheet,
   DescribeSheet,
   UploadStatusLine,
   UploadErrorLine,
@@ -860,6 +861,50 @@ const ADD_ROWS = [
   { label: "", action: "+ Cite something", count: "1 more" },
 ];
 
+/* ── THE SEAL'S REFERENCES ROW, IN ITS TWO READINGS (jakob's rulings
+   2026-09-14, backlog item 70) ───────────────────────────────────────────────
+   ONE staged citation reads back as itself — the name, and the pair that rides
+   with it — because a seal is a read-back and one thing read back is the thing.
+   TWO OR MORE read back as their COUNT: "3 cited", one line, and the row is a
+   DOOR to `CitedSheet`. Ten names stacked in an act row is a seal that scrolls,
+   and a seal that scrolls has stopped being a read-back; a count with no way
+   through to what it counts is a number the reader cannot check. The row flat
+   and the list one tap behind it is what keeps both promises.
+
+   THE TRAILING COUNT IS THE CITATIONS, BARE. The list's length and nothing else
+   — one number, one fact, which is `RefsSheet`'s ruling said again on this side
+   of the composer. It is not the signature's act total: that number is the
+   card's own footer and already says what it counts.
+
+   THE SAME RULE GOVERNS BOTH SEALS. It is about citations, not about which
+   composer staged them — so the reply's seal counts at two exactly as the
+   post's does, and both doors open the one sheet. What differs is the single
+   reading each seal was drawn with, which this round does not touch. */
+const citedRow = (count) => ({
+  label: "References",
+  value: `${count} cited`,
+  count: String(count),
+  onOpen: () => {},
+  openLabel: "Manage the citations",
+});
+
+/* The post's staged set past the first, written once: the seal that COUNTS
+   these and the sheet that LISTS them are two boards of one moment, and a
+   count drawn beside a list it disagreed with would be the very defect this
+   round closes. A post and a person among them on purpose — a cite stages a
+   post and a mention stages a person, and the block cannot tell them apart
+   because there is nothing to tell apart. */
+const SEAL_CITATIONS = [
+  { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 }, onRemove: () => {}, onEdit: () => {} },
+  { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.4, pInterest: 0.3 }, onRemove: () => {}, onEdit: () => {} },
+  { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.2, pInterest: 0.1 }, onRemove: () => {}, onEdit: () => {} },
+];
+
+/* The one citation the reply's seal was drawn holding. It is a constant rather
+   than a board's literal because two states of that seal name it — the one
+   that reads it back and the × that drops it. */
+const REPLY_CITATION = "Tide tables and the third headland";
+
 /* ── WHAT AN OVERLAY SITS ON (jakob's ruling, 2026-09-08) ──────────────────
    A sheet, a dialog or a wash covers the surface the reader came from, and
    that surface is the real one — not a shortened stand-in of it. An overlay
@@ -873,7 +918,7 @@ const ADD_ROWS = [
 
 /* THE POST'S SEAL, whole — `ComposeSeal` itself, and what the stance pad, the
    license sheet, the sensitive sheet and the "?" dialog stand on. */
-function ComposeSealBody() {
+function ComposeSealBody({ cited = 1 }) {
   return (
     <>
       <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
@@ -893,21 +938,23 @@ function ComposeSealBody() {
               ),
               count: "2",
             },
-            {
-              label: "References",
-              /* The staged citation carries the stance that rides with it, so
-                 the row is two lines: what is cited, and what signing it says
-                 about the citer. */
-              value: (
-                <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
-                  <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
-                </span>
-              ),
-              count: "1",
-            },
+            cited > 1
+              ? citedRow(cited)
+              : {
+                  label: "References",
+                  /* The staged citation carries the stance that rides with it,
+                     so the row is two lines: what is cited, and what signing it
+                     says about the citer. */
+                  value: (
+                    <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
+                      <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
+                    </span>
+                  ),
+                  count: "1",
+                },
           ]}
-          total="4 things, signed together"
+          total={`${3 + cited} things, signed together`}
           note="They land together, or none does."
         />
 
@@ -996,7 +1043,41 @@ function ReplyPadBody() {
   );
 }
 
-function ReplySealBody() {
+/* THE REPLY'S ONE STAGED CITATION, as the comment's seal was drawn holding it:
+   the name that opens the citation's pair, and the × that drops it, each naming
+   the citation it acts on (`StagedReference`'s rule, jakob 2026-09-10). The
+   label is singular here — it names the EDGE staged rather than the block it
+   sits in (copy-voice), and one edge is a reference. */
+const replyCitedRow = () => ({
+  label: "Reference",
+  value: (
+    <span style={{ display: "flex", alignItems: "center", gap: 4, minWidth: 0 }}>
+      <button
+        type="button"
+        aria-label={`${REPLY_CITATION} — set how it relates`}
+        className="cg-state cg-focus"
+        style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
+      >
+        {REPLY_CITATION} — @juno
+      </button>
+      <button
+        type="button"
+        aria-label={`Remove ${REPLY_CITATION}`}
+        className="cg-state cg-focus"
+        style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
+      >
+        <Icon name="close" size={18} />
+      </button>
+    </span>
+  ),
+  count: "1",
+});
+
+/* THE REPLY'S SEAL IS ONE SURFACE IN THREE STATES, and `cited` is which one:
+   nothing staged, the one citation read back, or the count and its door. A
+   comment's seal is also its details stage, so the add-rows ride along in every
+   state — what could still be added, lined up with what has been. */
+function ReplySealBody({ cited = 0 }) {
   return (
     <>
       <WizardHeader
@@ -1008,14 +1089,17 @@ function ReplySealBody() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
 
-        {/* One act signed, so no all-or-nothing subline: it appears the moment a
-            signature carries more than one thing (`ActsCard`'s rule). */}
+        {/* The all-or-nothing subline appears the moment a signature carries
+            more than one thing (`ActsCard`'s rule), so the bare comment —
+            one act signed — draws neither it nor the plural total. */}
         <ActsCard
           rows={[
             { label: "Comment", value: "Reply to @ada's post", count: "1" },
+            ...(cited === 1 ? [replyCitedRow()] : cited > 1 ? [citedRow(cited)] : []),
             ...ADD_ROWS,
           ]}
-          total="1 thing, signed"
+          total={cited ? `${1 + cited} things, signed together` : "1 thing, signed"}
+          note={cited ? "They land together, or none does." : undefined}
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>

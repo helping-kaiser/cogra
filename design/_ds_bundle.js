@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"ViewerDots","sourcePath":"components/media/MediaViewer.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"60be373be4f6","components/compose/ActsFooter.jsx":"4d474d1463db","components/compose/Caret.jsx":"7c8616dba407","components/compose/CoverRow.jsx":"c52618a34fe5","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"7a4e260a43ac","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"947836ad201f","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"570f672e033c","components/compose/TopicRemovable.jsx":"e36e24c12cfb","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f1ad3e7f28e4","components/content/CommentCard.jsx":"22cd54aabc3a","components/content/OverflowMenu.jsx":"47a53e5d0285","components/content/PostCard.jsx":"1ab2c898a870","components/content/ReferenceRow.jsx":"64219e74ca21","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6b9e07b63f21","components/core/BottomSheet.jsx":"7887a3ccf45b","components/core/Button.jsx":"49115256e31e","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"c0fe5f63cbb7","components/core/ContentRow.jsx":"7712c0cd74b3","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"8815966734db","components/honesty/PendingMarker.jsx":"7428662f343f","components/honesty/SensitiveVeil.jsx":"a5deb1a3edb7","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"4c4de225c963","components/media/MediaViewer.jsx":"de7c737f73b2","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"e1407898f8fb","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"1eb54848dfa9","components/navigation/BottomNav.jsx":"97b7b37b3100","components/navigation/CograBand.jsx":"b56086c8634f","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"4e54abd8cbc0","components/navigation/Icon.jsx":"53861f55d66a","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"8f609947a202","components/navigation/TabBar.jsx":"2d2f44c5a698","components/people/ActorChip.jsx":"ea02237eb500","components/people/ProfileHeader.jsx":"b3ff7024cbb5","components/people/StanceRow.jsx":"6296d2136f98","components/proposed/ExplainableNumber.jsx":"cd6488b3817c","components/stance/SeveranceConfirm.jsx":"22409f34d548","components/stance/StanceAlternates.jsx":"5fd873421d0d","components/stance/StanceCoachMark.jsx":"66ebe4394049","components/stance/StanceControl.jsx":"fb6372a11e64","components/stance/StancePad.jsx":"be49bf0f663c","components/stance/StanceReadout.jsx":"b0f263d7d535","components/stance/StanceSlider.jsx":"57078ae91304","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"b41a5971e24e","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"87ec0347bfe3","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"ViewerDots","sourcePath":"components/media/MediaViewer.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"4c2c556498fa","components/compose/ActsFooter.jsx":"4d474d1463db","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"c52618a34fe5","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"7a4e260a43ac","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"947836ad201f","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"570f672e033c","components/compose/TopicRemovable.jsx":"e36e24c12cfb","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f1ad3e7f28e4","components/content/CommentCard.jsx":"22cd54aabc3a","components/content/OverflowMenu.jsx":"47a53e5d0285","components/content/PostCard.jsx":"1ab2c898a870","components/content/ReferenceRow.jsx":"64219e74ca21","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6b9e07b63f21","components/core/BottomSheet.jsx":"7887a3ccf45b","components/core/Button.jsx":"49115256e31e","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"c0fe5f63cbb7","components/core/ContentRow.jsx":"7712c0cd74b3","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"8815966734db","components/honesty/PendingMarker.jsx":"7428662f343f","components/honesty/SensitiveVeil.jsx":"a5deb1a3edb7","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"4c4de225c963","components/media/MediaViewer.jsx":"de7c737f73b2","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"e1407898f8fb","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"1eb54848dfa9","components/navigation/BottomNav.jsx":"97b7b37b3100","components/navigation/CograBand.jsx":"b56086c8634f","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"4e54abd8cbc0","components/navigation/Icon.jsx":"53861f55d66a","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"8f609947a202","components/navigation/TabBar.jsx":"2d2f44c5a698","components/people/ActorChip.jsx":"ea02237eb500","components/people/ProfileHeader.jsx":"b3ff7024cbb5","components/people/StanceRow.jsx":"6296d2136f98","components/proposed/ExplainableNumber.jsx":"cd6488b3817c","components/stance/SeveranceConfirm.jsx":"22409f34d548","components/stance/StanceAlternates.jsx":"5fd873421d0d","components/stance/StanceCoachMark.jsx":"66ebe4394049","components/stance/StanceControl.jsx":"fb6372a11e64","components/stance/StancePad.jsx":"be49bf0f663c","components/stance/StanceReadout.jsx":"b0f263d7d535","components/stance/StanceSlider.jsx":"57078ae91304","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"b41a5971e24e","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"87ec0347bfe3","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -218,7 +218,7 @@ __ds_scope.Button = Button;
 
 // components/compose/ActsCard.jsx
 try { (() => {
-const { InlineAction } = __ds_scope;
+const { InlineAction, BUTTON_CLASS } = __ds_scope;
 /* The seal's acts card (media slice, 2026-08-31 — extracted the moment a
    second seal needed it: the profile-picture seal joined the post's and the
    reply's). The container-highest card listing what one signature commits:
@@ -232,7 +232,16 @@ const { InlineAction } = __ds_scope;
    an `action` is a control — what could still be added, lined up with what has
    been — and there the whole row is the button. Truncation belongs to the value
    slot alone: an action row has no slot to clip, so the 48px target the word
-   promises reaches the row's own edges instead of being cut back to the ink. */
+   promises reaches the row's own edges instead of being cut back to the ink.
+
+   A FACT ROW IS A DOOR WHEN THE FACT IS A COLLECTION (`onOpen`, jakob's ruling
+   2026-09-14, backlog item 70). One staged citation reads back as itself; two
+   or more read back as their count, and the count is only honest if the reader
+   can go and see what it counts. So the row keeps its three slots — label,
+   value, count — and the whole row becomes the control, `PickedRow`'s rule for
+   the picked pictures said for the acts card: no chevron, no trailing word,
+   the accessible name saying what opens. It stays a FACT row and not an action
+   row, because what it opens is what it already says. */
 
 const ROW = {
   display: "flex",
@@ -256,6 +265,32 @@ const COUNT = {
   lineHeight: "var(--text-label-small--line-height)",
   letterSpacing: "var(--text-label-small--letter-spacing)",
   color: "var(--text-secondary)"
+};
+const VALUE = {
+  flex: 1,
+  minWidth: 0,
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap"
+};
+
+/* The door's own box is the row's box: no border, no background, no padding,
+   the page's ink — so the card reads as the card it always was and only the
+   state layer, the focus ring and the 48px target arrive with `BUTTON_CLASS`. */
+const DOOR = {
+  /* `border: 0` leads, so the row's own hairline — spread in after it — is not
+     wiped by the shorthand it would otherwise follow. */
+  border: 0,
+  ...ROW,
+  width: "100%",
+  background: "none",
+  padding: 0,
+  cursor: "pointer",
+  fontFamily: "var(--font-sans)",
+  color: "var(--on-surface)",
+  textAlign: "left"
 };
 function ActsCard({
   rows = [],
@@ -288,21 +323,26 @@ function ActsCard({
     }
   }, row.action), /*#__PURE__*/React.createElement("span", {
     style: COUNT
+  }, row.count)) : row.onOpen ? /*#__PURE__*/React.createElement("button", {
+    key: index,
+    type: "button",
+    onClick: row.onOpen,
+    "aria-label": row.openLabel,
+    className: BUTTON_CLASS,
+    style: DOOR
+  }, /*#__PURE__*/React.createElement("span", {
+    style: LABEL
+  }, row.label), /*#__PURE__*/React.createElement("span", {
+    style: VALUE
+  }, row.value), /*#__PURE__*/React.createElement("span", {
+    style: COUNT
   }, row.count)) : /*#__PURE__*/React.createElement("div", {
     key: index,
     style: ROW
   }, /*#__PURE__*/React.createElement("span", {
     style: LABEL
   }, row.label), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      minWidth: 0,
-      fontSize: "var(--text-body-medium)",
-      lineHeight: "var(--text-body-medium--line-height)",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
-    }
+    style: VALUE
   }, row.value), /*#__PURE__*/React.createElement("span", {
     style: COUNT
   }, row.count))), /*#__PURE__*/React.createElement("div", {
@@ -637,205 +677,6 @@ function Caret() {
 __ds_scope.Caret = Caret;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/Caret.jsx", error: String((e && e.message) || e) }); }
 
-// components/compose/CoverRow.jsx
-try { (() => {
-const { Icon } = __ds_scope;
-/* The video's face (item 17, the conformance round): the strip of frames cut
-   from the clip, plus the one tile that is not a frame at all.
-
-   FOUR FRAMES, NOT THREE (jakob 2026-09-03): 1s, 10%, 50%, 90% of the clip. 1s
-   clears the fade-in black that t=0 so often is, and the three ratios spread
-   the rest. On a clip short enough that two samples land on the same frame they
-   collapse and fewer tiles show — offering the same picture twice is a choice
-   that isn't one, so the strip takes the frames it is given and draws no
-   placeholder for a fifth.
-
-   THE CHOSEN FRAME IS OUTLINED, THE REST ARE DIMMED. Selection is the primary
-   outline offset off the tile, not a check badge — the tiles are 56px and a
-   badge at that size covers the thing being chosen. The unchosen frames sit at
-   65% so the strip reads as one picture framed several ways, which is what it
-   is.
-
-   THE LAST TILE IS A DIFFERENT KIND OF THING and says so by not being a
-   photograph: a dashed square with the picture glyph, the same shape as the
-   frames so the row still scans as one strip. It is the way out to the gallery,
-   and a picture chosen there goes through `CropViewport` first, because a
-   picture of your own is the only cover that can disagree with the clip's
-   shape.
-
-   THE ROW IS THE WHOLE CLUSTER — the "Cover" field label, the strip, and the
-   line underneath — because those three only ever appear together. The comment
-   composer inlines it at 56px and the post's cover stage draws it larger; both
-   want the label and the line.
-
-   NO FRAMES IS A STATE THE ROW HOLDS (video-cover round, 2026-09-10): hand it
-   an empty `frames` and what remains is the way out to the gallery, alone,
-   under a `caption` that says why. Extraction can come back with nothing, and
-   a strip of blank tiles would offer pictures that do not exist. The row shrinks
-   to the one path that still works rather than growing a state of its own.
-
-   THE ROW IS NOT ALWAYS THERE (same round). A vertical clip's default is no
-   cover, so at comment scale the row gives way to an "Add a cover" door and
-   appears when the door is opened; a horizontal or square clip wears it from
-   the start. The row draws the choosing, never the decision to choose. */
-
-const TILE = {
-  width: 56,
-  height: 56,
-  borderRadius: "var(--radius-small)",
-  overflow: "hidden",
-  flex: "none"
-};
-const FILL = {
-  width: "100%",
-  height: "100%",
-  objectFit: "cover",
-  display: "block"
-};
-function CoverRow({
-  label = "Cover",
-  frames = [],
-  selected = 0,
-  caption = "A frame, or a picture of your own."
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      letterSpacing: "var(--text-label-large--letter-spacing)"
-    }
-  }, label), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 8
-    }
-  }, frames.map((frame, index) => /*#__PURE__*/React.createElement("div", {
-    key: frame.src ? `${frame.src}-${index}` : index,
-    className: "cg-cover-frame",
-    style: index === selected ? {
-      ...TILE,
-      outline: "2px solid var(--primary)",
-      outlineOffset: 1
-    } : {
-      ...TILE,
-      opacity: 0.65
-    }
-  }, /*#__PURE__*/React.createElement("img", {
-    src: frame.src,
-    alt: "",
-    style: frame.transform ? {
-      ...FILL,
-      transform: frame.transform
-    } : FILL
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "cg-cover-own",
-    style: {
-      width: 56,
-      height: 56,
-      borderRadius: "var(--radius-small)",
-      border: "1px dashed var(--border-field)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "var(--text-secondary)",
-      boxSizing: "border-box",
-      flex: "none"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "image",
-    size: 20
-  }))), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)",
-      color: "var(--text-secondary)"
-    }
-  }, caption));
-}
-__ds_scope.CoverRow = CoverRow;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/CoverRow.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/CropViewport.jsx
-try { (() => {
-/* The crop surface (item 17, the conformance round): the picture at the size
-   it will be cut, with everything outside the cut darkened.
-
-   THE MASK IS ONE BOX SHADOW, not four dimming panels. `0 0 0 400px` spreads a
-   45% black outward from the window's own edges, so the darkened region is
-   whatever the frame has left over — no arithmetic, nothing to keep in sync
-   when the window moves, and the hairline that marks the cut is the same box's
-   border. 400px is simply larger than the frame's own 390.
-
-   THE SHAPE IS LOCKED TO WHAT THE PICTURE WILL BE. A profile picture is shown
-   in a circle everywhere it appears, so it is cut in a circle; a video's cover
-   is shown at the clip's ratio, so it is cut at that ratio. There are no shape
-   chips on either — choosing a shape here would let the result disagree with
-   the thing it is the face of.
-
-   THE WINDOW IS ALWAYS CENTRED, and that is why it takes a height and not a
-   position: it is inset `inset` from each side, and the leftover height splits
-   evenly above and below. The circle's 342 square lands at top 24, the cover's
-   342×192 at top 99, and neither board has to state a coordinate. */
-
-function CropViewport({
-  src,
-  alt = "",
-  shape = "circle",
-  scale = 1,
-  origin = "50% 50%",
-  size = 390,
-  inset = 24,
-  height
-}) {
-  const width = size - inset * 2;
-  const windowHeight = height ?? width;
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative",
-      width: size,
-      height: size,
-      margin: `0 -${inset}px`,
-      overflow: "hidden",
-      flex: "none"
-    }
-  }, /*#__PURE__*/React.createElement("img", {
-    src: src,
-    alt: alt,
-    style: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      display: "block",
-      transform: `scale(${scale})`,
-      transformOrigin: origin
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    "aria-hidden": "true",
-    style: {
-      position: "absolute",
-      left: inset,
-      top: (size - windowHeight) / 2,
-      width,
-      height: windowHeight,
-      borderRadius: shape === "circle" ? "var(--radius-full)" : "var(--radius-small)",
-      boxShadow: "0 0 0 400px rgba(0,0,0,0.45)",
-      border: "1px solid rgba(255,255,255,0.7)",
-      boxSizing: "border-box"
-    }
-  }));
-}
-__ds_scope.CropViewport = CropViewport;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/CropViewport.jsx", error: String((e && e.message) || e) }); }
-
 // components/core/BottomSheet.jsx
 try { (() => {
 /* The bottom sheet (backlog item 3). `design.md` §6 lists sheets in the
@@ -1052,1337 +893,6 @@ __ds_scope.BottomSheet = BottomSheet;
 __ds_scope.SheetItem = SheetItem;
 __ds_scope.SheetTitle = SheetTitle;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/BottomSheet.jsx", error: String((e && e.message) || e) }); }
-
-// components/core/HelpDot.jsx
-try { (() => {
-/* The "?" affordance — the one-per-screen door to a plain dialog (readme §13:
-   captions stay to one short line; the full explanation lives behind a small
-   "?", at most one per screen, top-right of the header or of the sheet/card it
-   explains). A 32px ring inside the 48px target. It began as a screen helper
-   on the search boards and moved into the system when the filter sheet — a
-   master — needed to carry one. */
-
-/* `inverse` is `Button`'s word for the same situation: the component standing on
-   a TONAL PANEL instead of the page's ground. On the page the ring is
-   `--border-hairline` and the glyph `--primary`; inside a `tertiary-container`
-   block that pair is a second colour family arguing with the panel's own, so
-   there the dot takes the panel's `currentColor` for both. The geometry is the
-   same either way — 32px of ring inside the 48px target. Use it only inside such
-   a panel. */
-const RINGS = {
-  page: {
-    border: "1px solid var(--border-hairline)",
-    color: "var(--primary)"
-  },
-  inverse: {
-    border: "1px solid currentColor"
-  }
-};
-function HelpDot({
-  ariaLabel = "What is this?",
-  onOpen,
-  variant = "page"
-}) {
-  const ring = RINGS[variant] ?? RINGS.page;
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": ariaLabel,
-    onClick: onOpen,
-    className: "cg-focus",
-    style: {
-      display: "grid",
-      placeItems: "center",
-      height: "var(--touch-target-min)",
-      width: "var(--touch-target-min)",
-      border: 0,
-      background: "none",
-      borderRadius: "var(--radius-full)",
-      cursor: "pointer",
-      flex: "none",
-      color: variant === "inverse" ? "inherit" : undefined
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      display: "grid",
-      placeItems: "center",
-      height: "32px",
-      width: "32px",
-      borderRadius: "var(--radius-full)",
-      ...ring,
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-label-large)",
-      fontWeight: "var(--text-label-large--font-weight)"
-    }
-  }, "?"));
-}
-__ds_scope.HelpDot = HelpDot;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/HelpDot.jsx", error: String((e && e.message) || e) }); }
-
-// components/forms/TextField.jsx
-try { (() => {
-/* The house labeled text input. `label-large` label above a field on the
-   EXTRA-SMALL rung (4px) — Material's text-field corner — with a 1px `outline`
-   border and a transparent fill. `mono` dresses codes and identifiers in the
-   platform monospace: the one exception to Figtree (design.md §3), a legibility
-   device for strings read character by character.
-
-   SUPPORTING TEXT IS ONE SLOT WITH TWO STATES, which is Material 3's own
-   arrangement rather than two independent lines. `hint` is the base: the
-   body-small line in `--text-secondary` that says what the field will accept
-   ("3–30 characters: a–z, 0–9, _"). `error` is that same line in its error
-   state — the outline and the label switch to `--error` with it, and the
-   message replaces the hint rather than joining it. A field never carries both
-   at once: the rule the reader broke is the rule they needed to read, and two
-   lines under one input is where the eye stops knowing which one is live.
-
-   The message is always words (direction-by-words) — this component renders it
-   verbatim, no icon.
-
-   THE SUPPORTING LINE IS WIRED TO THE FIELD (jakob's ruling, the slice-2.5
-   round), the way the W3C's own forms tutorial wires one: the line carries an
-   id and the control names it in `aria-describedby`, so the rule a field will
-   accept is read out with the field rather than sitting beside it unreachable.
-   In the error state the control adds `aria-invalid` (WCAG technique ARIA21)
-   and the line takes `role="alert"`, because a message that appears in answer
-   to something the reader just did has to announce itself — a screen reader
-   that has moved on never comes back to look. Announcing is uniform: every
-   field error, not a judgement per field about which ones would be noticed
-   anyway. None of it draws a pixel. */
-
-/* THE LATE COUNTER (jakob's ruling, the caps-affordance round). A capped field
-   says NOTHING about its cap while the writer is nowhere near it, and then a
-   quiet remaining count appears at the end of the supporting row. It is not a
-   persistent counter and it is never a meter: a number that sits under an empty
-   field all day turns the act of writing into a budget, and a bar turns a
-   sentence into a progress indicator. What the writer needs is a warning in
-   time to finish the thought — nothing before that is information, it is
-   pressure.
-
-   THE THRESHOLD IS THE LAST TENTH, NEVER FEWER THAN THE LAST 20. The count
-   appears once `remaining <= max(20, round(cap / 10))`. The tenth is what makes
-   the warning proportional — 500 characters of description warn at 450, 5,000
-   of a body at 4,500 — and the floor of 20 is what keeps a short cap from
-   warning too late to act on: a tenth of the 50-character display name is five,
-   which arrives after the writer has already written the word that will be cut.
-   Both halves are drawn in the round: the title (100 → window 20) and the
-   display name (50 → window 20) are floor-driven, the description (500 → 50)
-   and the body (5,000 → 500) are tenth-driven.
-
-   THE UNIT IS THE UNICODE SCALAR VALUE, which is what every one of the ruled
-   caps counts in, and what `[...string]` iterates — never `.length`, which
-   counts UTF-16 code units and would tell a writer of emoji or of anything
-   outside the BMP that they had spent twice what they had.
-
-   IT IS A THIRD ELEMENT IN THE SUPPORTING ROW, NOT A THIRD STATE OF THE
-   SUPPORTING SLOT. Material 3's text field puts supporting text at the start of
-   the row under the field and the character count at its end; the slot's own
-   two states (hint, error) are untouched by this, and the count sits beside
-   whichever one is live. The count is the only thing in the product allowed to
-   share that row.
-
-   OVER THE CAP THE COUNT TAKES `--error`, AND THE MESSAGE IS THE SURFACE'S.
-   `FieldCount` colours itself from the arithmetic, because the arithmetic is
-   the atom's; the words under the field are the board's own `error`, because a
-   field error is worded per field and per surface (copy-voice, *Field errors*)
-   and an atom that wrote them would flatten "A title is at most 100 characters."
-   into one house sentence for every field in the product.
-
-   A SCREEN READER IS TOLD POLITELY, ONCE IT MATTERS. The count carries
-   `aria-live="polite"` and joins the field's `aria-describedby`: it appears in
-   answer to typing, so a reader who has moved on would otherwise never learn it
-   exists, and polite is the right register because the count is never the whole
-   message — the error line above it is what takes `role="alert"`. The
-   implementation debounces the live region (a count read out on every keystroke
-   is unusable); the drawing cannot show a debounce, so it is stated here.
-
-   `used` OVERRIDES THE ARITHMETIC FOR A FIELD DRAWN AS A TAIL. A board showing
-   the last fifteen lines of a 5,000-character body cannot carry the other four
-   thousand in its fixture, and a count computed from what is drawn would then
-   be a lie about what is written. Such a board passes `used` — the whole
-   length — and the drawn paragraphs stay the visible tail. Every field whose
-   fixture IS its whole content passes nothing and is counted. */
-
-const COUNT_WINDOW_MINIMUM = 20;
-function countReading(value, cap, used) {
-  if (!cap) return null;
-  const spent = used ?? [...String(value ?? "")].length;
-  const remaining = cap - spent;
-  if (remaining > Math.max(COUNT_WINDOW_MINIMUM, Math.round(cap / 10))) return null;
-  return remaining < 0 ? {
-    text: `${-remaining} over`,
-    over: true
-  } : {
-    text: `${remaining} left`,
-    over: false
-  };
-}
-function FieldCount({
-  value,
-  cap,
-  used,
-  id
-}) {
-  const reading = countReading(value, cap, used);
-  if (!reading) return null;
-  return /*#__PURE__*/React.createElement("span", {
-    id: id,
-    "aria-live": "polite",
-    style: {
-      marginInlineStart: "auto",
-      flex: "none",
-      whiteSpace: "nowrap",
-      fontSize: "var(--text-body-small)",
-      lineHeight: "var(--text-body-small--line-height)",
-      letterSpacing: "var(--text-body-small--letter-spacing)",
-      color: reading.over ? "var(--error)" : "var(--text-secondary)"
-    }
-  }, reading.text);
-}
-
-/* THE SUPPORTING ROW, ASSIGNED ONCE — `FieldLabel`'s counterpart under the
-   field. `TextField` renders it for its own field, and a capped field that is
-   NOT a `TextField` (the composer's growing body box) renders it directly, so
-   the two cannot drift about where the message sits or where the count sits
-   beside it. It renders nothing at all when there is nothing to say, which is
-   the state every field in the product is in at rest. */
-
-function FieldSupport({
-  id,
-  countId,
-  hint,
-  error,
-  value,
-  cap,
-  used
-}) {
-  const reading = countReading(value, cap, used);
-  if (!error && !hint && !reading) return null;
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "baseline",
-      gap: "var(--space-2)",
-      flex: "none"
-    }
-  }, (error || hint) && /*#__PURE__*/React.createElement("span", {
-    id: id,
-    role: error ? "alert" : undefined,
-    style: {
-      fontSize: "var(--text-body-small)",
-      lineHeight: "var(--text-body-small--line-height)",
-      letterSpacing: "var(--text-body-small--letter-spacing)",
-      color: error ? "var(--error)" : "var(--text-secondary)"
-    }
-  }, error || hint), /*#__PURE__*/React.createElement(FieldCount, {
-    id: countId,
-    value: value,
-    cap: cap,
-    used: used
-  }));
-}
-
-/* THE LABEL ROW, ASSIGNED ONCE. `TextField` renders it over its own field, and
-   the composer's captions over sections that are NOT fields — Pictures, Video,
-   Cover, Topics, References — render it over a tray or a list. Those captions
-   have always been dressed as field labels; assigning that anatomy here is what
-   keeps them from drifting apart. A caption whose section IS a field belongs in
-   `TextField`'s `label` and `corner` instead, and every one of them is written
-   that way.
-
-   `htmlFor` CHOOSES THE ELEMENT. With one, the word names a control and the row
-   is a `<label>`. Without one there is no control to name, so it is a `<span>`:
-   a `<label>` with no `for` is a label in name only (HTML Living Standard
-   §4.10.4), and a topic tray is not a labelable control. */
-
-function FieldLabel({
-  children,
-  htmlFor,
-  corner,
-  error
-}) {
-  const Name = htmlFor ? "label" : "span";
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "baseline",
-      gap: "var(--space-2)"
-    }
-  }, /*#__PURE__*/React.createElement(Name, {
-    htmlFor: htmlFor,
-    style: {
-      flex: 1,
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      letterSpacing: "var(--text-label-large--letter-spacing)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      color: error ? "var(--error)" : undefined
-    }
-  }, children), corner && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      color: "var(--text-secondary)"
-    }
-  }, corner));
-}
-function TextField({
-  label,
-  corner,
-  value,
-  onChange,
-  type = "text",
-  autoComplete,
-  mono = false,
-  placeholder,
-  rows,
-  id,
-  hint,
-  error,
-  cap,
-  used
-}) {
-  const generated = React.useId();
-  const fieldId = id ?? generated;
-  const supportId = `${fieldId}-support`;
-  const countId = `${fieldId}-count`;
-  const reading = countReading(value, cap, used);
-  const described = [error || hint ? supportId : null, reading ? countId : null].filter(Boolean).join(" ") || undefined;
-  const shared = {
-    borderRadius: "var(--radius-extra-small)",
-    border: error ? "1px solid var(--error)" : "1px solid var(--border-field)",
-    background: "transparent",
-    color: "var(--on-surface)",
-    padding: rows ? "8px" : "8px 12px",
-    fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)",
-    fontSize: "var(--text-body-large)",
-    lineHeight: "var(--text-body-large--line-height)",
-    minWidth: 0,
-    width: "100%",
-    boxSizing: "border-box"
-  };
-  return (
-    /*#__PURE__*/
-    // A REPLACED ELEMENT CANNOT HOST THE FLOW BADGE'S ::after (shell.mjs) — an
-    // <input>/<textarea> paints nothing for a `data-flow` it carries directly,
-    // so the badge belongs on the field as a whole instead. `data-field` names
-    // that whole for flow-markers.mjs to find and stamp (jakob's ruling A9,
-    // backlog item 40), the same way `data-axis` lets it stamp `LicenseAxis`'s
-    // row rather than its own hidden radio.
-    React.createElement("div", {
-      "data-field": label,
-      style: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "var(--space-1)"
-      }
-    }, /*#__PURE__*/React.createElement(FieldLabel, {
-      htmlFor: fieldId,
-      corner: corner,
-      error: error
-    }, label), rows ? /*#__PURE__*/React.createElement("textarea", {
-      id: fieldId,
-      rows: rows,
-      value: value,
-      placeholder: placeholder,
-      "aria-describedby": described,
-      "aria-invalid": error ? "true" : undefined,
-      onChange: event => onChange && onChange(event.target.value),
-      style: shared
-    }) : /*#__PURE__*/React.createElement("input", {
-      id: fieldId,
-      type: type,
-      value: value,
-      placeholder: placeholder,
-      autoComplete: autoComplete,
-      "aria-describedby": described,
-      "aria-invalid": error ? "true" : undefined,
-      onChange: event => onChange && onChange(event.target.value),
-      style: shared
-    }), /*#__PURE__*/React.createElement(FieldSupport, {
-      id: supportId,
-      countId: countId,
-      hint: hint,
-      error: error,
-      value: value,
-      cap: cap,
-      used: used
-    }))
-  );
-}
-__ds_scope.FieldCount = FieldCount;
-__ds_scope.FieldSupport = FieldSupport;
-__ds_scope.FieldLabel = FieldLabel;
-__ds_scope.TextField = TextField;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/TextField.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/DescribeSheet.jsx
-try { (() => {
-const { BottomSheet, Button, HelpDot, TextField, Icon } = __ds_scope;
-/* Describe this picture (media slice, 2026-08-31): where alt text is written —
-   reached per picture from the details step's counter and from the Show all
-   sheet, NEVER from the crop step (a geometry step is no place for a
-   keyboard). The rule it makes enterable is the component rule: a description
-   is authored, optional, and never invented — a picture without one is
-   skipped by screen readers, not guessed at. The "?" carries the full
-   explanation (copy-voice: "Describing pictures").
-
-   TWO SHAPES, ONE SHEET (jakob 2026-09-03). `video` swaps the subject: the
-   title reads "Describe the video", the field asks what's in the video, and
-   the preview shows the clip's own frame. A clip is ONE thing to describe —
-   there is no per-picture walk through the sheet and the cover is never
-   offered, because the cover is the video's face, not a second picture.
-
-   THE REASON IS PERMANENT, NOT BEHIND THE "?" — the sub-line under the title
-   says who the words are for on both shapes. Someone deciding whether to
-   write a description needs the reason at the moment of deciding; the "?"
-   is for the reader who wants the rest of it. */
-
-function DescribeSheet({
-  open = false,
-  onClose,
-  src,
-  alt = "",
-  value,
-  onChange,
-  onDone,
-  inline = false,
-  video = false
-}) {
-  const subject = video ? "video" : "picture";
-  return /*#__PURE__*/React.createElement(BottomSheet, {
-    open: open,
-    onClose: onClose,
-    ariaLabel: `Describe this ${subject}`,
-    inline: inline,
-    maxHeight: "88%"
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "var(--space-3)",
-      padding: "0 var(--space-6)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-2)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      display: "flex",
-      flexDirection: "column",
-      gap: "var(--space-1)"
-    }
-  }, /*#__PURE__*/React.createElement("h2", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-title-large)",
-      lineHeight: "var(--text-title-large--line-height)",
-      fontWeight: "var(--text-title-large--font-weight)"
-    }
-  }, video ? "Describe the video" : "Describe this picture"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)",
-      color: "var(--text-secondary)"
-    }
-  }, "Read aloud to people who can't see it.")), /*#__PURE__*/React.createElement(HelpDot, {
-    ariaLabel: "Describing pictures"
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative",
-      height: "180px",
-      borderRadius: "var(--radius-medium)",
-      background: "var(--surface-container-high)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      overflow: "hidden"
-    }
-  }, src && /*#__PURE__*/React.createElement("img", {
-    src: src,
-    alt: alt,
-    "aria-hidden": alt ? undefined : "true",
-    style: {
-      maxWidth: "100%",
-      maxHeight: "100%",
-      display: "block"
-    }
-  }), video && /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      position: "absolute",
-      left: "50%",
-      top: "50%",
-      transform: "translate(-50%, -50%)",
-      width: "48px",
-      height: "48px",
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
-      color: "var(--on-surface-snackbar, #ffffff)",
-      display: "grid",
-      placeItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "play_arrow",
-    size: 28
-  }))), /*#__PURE__*/React.createElement(TextField, {
-    label: `What's in the ${subject}`,
-    corner: "Optional",
-    rows: 2,
-    cap: 1000,
-    value: value,
-    onChange: onChange
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "flex-end",
-      padding: "0 0 var(--space-2)"
-    }
-  }, /*#__PURE__*/React.createElement(Button, {
-    variant: "text",
-    onClick: onDone ?? onClose
-  }, "Done"))));
-}
-__ds_scope.DescribeSheet = DescribeSheet;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/DescribeSheet.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/MediaThumb.jsx
-try { (() => {
-const { Icon } = __ds_scope;
-/* The authoring-side picture tile (media slice, 2026-08-31): one thumbnail
-   anatomy for every composer surface — the pick tray, the details row, the
-   Show all sheet, the reply composer, the comment edit. The states it can
-   wear are the whole upload story:
-
-   · `cover` — the "Cover" badge, bottom-left. The first picture is the cover;
-     the badge travels with reorder, never with a separate control.
-   · `progress` — the upload ring on a scrim. Upload starts AFTER the crop:
-     the crop happens on the device and only the cropped export is ever
-     uploaded (jakob 2026-08-31 — the original frame can hold what the author
-     never meant to share). Crop-less comment pictures upload at pick.
-   · `failed` — the picture dims and wears the error badge; the words and the
-     Retry · Remove affordances live beside the row (`UploadErrorLine`), not
-     crammed into 48px.
-   · `onRemove` — the X, top-right, its target grown by cg-hit.
-   · `video` — the composer's video preview: the play disc on a scrim and the
-     duration on the trailing corner, the anatomy `ComposeCover` drew for the
-     post's video (the disc and pill only appear where the tile is big enough
-     to carry them). AUTHORING-SIDE ONLY: a reading surface never draws
-     play/pause — there, presence on screen is the policy.
-
-   Uncropped tiles (a reply's pictures) pass `width`/`height` and
-   `fit="contain"` so the whole frame shows inside the tile.
-
-   THE NEUTRAL TILE (video-cover round, 2026-09-10) is the sourceless state:
-   where a clip yields no still at all — extraction came back with nothing —
-   the tile reserves its space and `label` says what belongs there, the way
-   `MediaAttachment`'s reserved region does. Never invent imagery: a clip with
-   no face shows the absence rather than a borrowed picture. */
-
-function Ring({
-  progress,
-  size = 26
-}) {
-  const r = 12;
-  const c = 2 * Math.PI * r;
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 28 28",
-    width: size,
-    height: size,
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("circle", {
-    cx: "14",
-    cy: "14",
-    r: r,
-    fill: "none",
-    stroke: "rgba(255,255,255,0.35)",
-    strokeWidth: "3"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "14",
-    cy: "14",
-    r: r,
-    fill: "none",
-    stroke: "#ffffff",
-    strokeWidth: "3",
-    strokeLinecap: "round",
-    strokeDasharray: `${Math.max(0.02, Math.min(1, progress)) * c} ${c}`,
-    transform: "rotate(-90 14 14)"
-  }));
-}
-function MediaThumb({
-  src,
-  alt = "",
-  size = 48,
-  width,
-  height,
-  fit = "cover",
-  radius = "var(--radius-small)",
-  cover = false,
-  progress,
-  failed = false,
-  video = false,
-  duration,
-  label,
-  onRemove,
-  removeLabel = "Remove this picture"
-}) {
-  const w = width ?? size;
-  const h = height ?? size;
-  const edge = Math.min(w, h);
-  const disc = Math.max(20, Math.min(56, Math.round(edge * 0.26)));
-  /* The disc rides a scrim over a frame. With no frame the tile IS the
-     absence, and a play control drawn on nothing reads as chrome — the
-     duration stays, because the clip's length is known either way. */
-  const playable = video && src && !failed && typeof progress !== "number";
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: "relative",
-      width: `${w}px`,
-      height: `${h}px`,
-      borderRadius: radius,
-      overflow: "hidden",
-      flex: "none",
-      background: "var(--surface-container-high)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    }
-  }, src && /*#__PURE__*/React.createElement("img", {
-    src: src,
-    alt: alt,
-    "aria-hidden": alt ? undefined : "true",
-    style: fit === "contain" ? {
-      maxWidth: "100%",
-      maxHeight: "100%",
-      display: "block",
-      opacity: failed ? 0.5 : 1
-    } : {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      display: "block",
-      opacity: failed ? 0.5 : 1
-    }
-  }), !src && label && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)",
-      color: "var(--text-secondary)",
-      padding: "0 var(--space-2)",
-      textAlign: "center"
-    }
-  }, label), playable && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      left: "50%",
-      top: "50%",
-      transform: "translate(-50%, -50%)",
-      width: `${disc}px`,
-      height: `${disc}px`,
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
-      color: "var(--on-surface-snackbar, #ffffff)",
-      display: "grid",
-      placeItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "play_arrow",
-    size: Math.round(disc * 0.57)
-  })), video && duration && edge >= 80 && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      right: "6px",
-      bottom: "6px",
-      padding: "0 6px",
-      borderRadius: "var(--radius-small)",
-      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
-      color: "var(--on-surface-snackbar, #ffffff)",
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      fontWeight: "var(--text-label-small--font-weight)",
-      letterSpacing: "var(--text-label-small--letter-spacing)"
-    }
-  }, duration), cover && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      left: "3px",
-      bottom: "3px",
-      padding: "0 5px",
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
-      color: "var(--on-surface-snackbar, #ffffff)",
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      fontWeight: "var(--text-label-small--font-weight)",
-      letterSpacing: "var(--text-label-small--letter-spacing)"
-    }
-  }, "Cover"), typeof progress === "number" && !failed && /*#__PURE__*/React.createElement("span", {
-    style: {
-      position: "absolute",
-      inset: 0,
-      background: "rgba(0,0,0,0.35)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    },
-    "aria-label": `Uploading, ${Math.round(progress * 100)}%`
-  }, /*#__PURE__*/React.createElement(Ring, {
-    progress: progress
-  })), failed && /*#__PURE__*/React.createElement("span", {
-    "aria-label": "Didn't upload",
-    style: {
-      position: "absolute",
-      right: "3px",
-      top: "3px",
-      width: "18px",
-      height: "18px",
-      borderRadius: "var(--radius-full)",
-      background: "var(--error)",
-      color: "var(--on-error)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "var(--text-label-medium)",
-      lineHeight: "var(--text-label-medium--line-height)",
-      fontWeight: 700
-    }
-  }, "!"), onRemove && !failed && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": removeLabel,
-    onClick: onRemove,
-    className: "cg-state cg-focus cg-hit",
-    style: {
-      position: "absolute",
-      right: "3px",
-      top: "3px",
-      width: "16px",
-      height: "16px",
-      border: 0,
-      padding: 0,
-      borderRadius: "var(--radius-full)",
-      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
-      color: "var(--on-surface-snackbar, #ffffff)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "close",
-    size: 10
-  })));
-}
-__ds_scope.MediaThumb = MediaThumb;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/MediaThumb.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/PickPrompt.jsx
-try { (() => {
-const { Button } = __ds_scope;
-/* The pick step's prompt (item 17, the conformance round): the line above the
-   tray that says what may be picked, with the way out of the media path beside
-   it.
-
-   THE ESCAPE RIDES THE INSTRUCTION, not the header and not the tray. An author
-   who opened the picker by mistake — or who came for a photo and decided the
-   words are the post — must be able to leave the media path at the moment they
-   read what it wants, which is this line. Putting it in the header would make
-   it compete with the X that leaves the whole composer; putting it under the
-   tray would make it the thing you find only after failing to pick.
-
-   IT IS A TEXT BUTTON, at `sm`, deliberately quieter than anything in the tray
-   below. Picking is what this step is for; writing instead is the alternative,
-   offered without being urged. */
-
-function PickPrompt({
-  caption,
-  escapeLabel,
-  onEscape
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      padding: "8px 24px"
-    }
-  }, /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      flex: 1,
-      fontSize: "var(--text-body-medium)",
-      lineHeight: "var(--text-body-medium--line-height)",
-      color: "var(--text-secondary)"
-    }
-  }, caption), /*#__PURE__*/React.createElement(Button, {
-    variant: "text",
-    size: "sm",
-    onClick: onEscape
-  }, escapeLabel));
-}
-__ds_scope.PickPrompt = PickPrompt;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickPrompt.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/PickTray.jsx
-try { (() => {
-const { InlineAction } = __ds_scope;
-/* The pick step's tray (item 17, the conformance round): the band under the
-   caption that says what has been picked so far — "Picked · N", the way into
-   the Show all sheet, and the thumbnails themselves.
-
-   IT IS THE PART OF THE STEP THAT DOES NOT CHANGE. Below the tray's hairline
-   the four pick boards diverge completely — the device gallery grid on the
-   phone, a dashed drop region on the web, an inert grid once a clip is staged,
-   a list of refusals when files were turned away. Above it they are the same
-   band to the pixel. So the tray ends where its own `borderBottom` ends, and
-   what follows is the board's business, not the master's.
-
-   THE THUMBNAILS ARE CHILDREN, not a prop. Every board tiles the same
-   `MediaThumb` but asks it for something different — a cover badge, a remove
-   X, a 114×64 video frame with its own remove label — and a tray that took an
-   items array would have to grow a prop for each. The tray owns the band; the
-   caller owns the pictures.
-
-   "SHOW ALL" IS A REAL BUTTON (jakob, ruling D). It was drawn as a span, which
-   is a link that cannot be reached by keyboard, cannot be pressed, and tells a
-   screen reader nothing — the one control on the band, and the only inert
-   thing on it. It is the bare primary word at the size the band is set in, so
-   `InlineAction size="sm"` IS its resting look, value for value: the state
-   layer, the focus ring and the 48px target arrive with it and nothing on the
-   band moves.
-
-   NO "Show all" WHEN THERE IS NOTHING TO SHOW: one staged clip is not a set to
-   reorder, so the video board omits `onShowAll` and the count stops being a
-   flex row — it is the only thing on its line, so it does not need to push
-   anything to the end of one. */
-
-const COUNT = {
-  fontSize: "var(--text-label-small)",
-  lineHeight: "var(--text-label-small--line-height)",
-  fontWeight: "var(--text-label-small--font-weight)",
-  letterSpacing: "var(--text-label-small--letter-spacing)",
-  color: "var(--text-secondary)"
-};
-function PickTray({
-  count,
-  onShowAll,
-  showAllLabel = "Show all",
-  caption,
-  clip = false,
-  children
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 6,
-      padding: "4px 24px 12px",
-      borderBottom: "1px solid var(--border-hairline)"
-    }
-  }, onShowAll ? /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "baseline",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      ...COUNT
-    }
-  }, "Picked \xB7 ", count), /*#__PURE__*/React.createElement(InlineAction, {
-    size: "sm",
-    onClick: onShowAll
-  }, showAllLabel)) : /*#__PURE__*/React.createElement("span", {
-    style: COUNT
-  }, "Picked \xB7 ", count), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      overflow: clip ? "hidden" : undefined
-    }
-  }, children, caption && /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)",
-      color: "var(--text-secondary)"
-    }
-  }, caption)));
-}
-__ds_scope.PickTray = PickTray;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickTray.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/PickedRow.jsx
-try { (() => {
-const { InlineAction, MediaThumb } = __ds_scope;
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-/* The picked-pictures row (media slice, 2026-08-31): the composer's summary of
-   the body — thumbnails and the count, one tappable row.
-
-   THE ROW CARRIES NO "Crop" OR "Edit" LINKS (jakob 2026-08-31: "none"). The
-   whole row is the affordance and it opens the Show all sheet — the
-   per-picture manager (`PickedSheet`: reorder, first = cover, remove,
-   describe). The crop step needs no second entrance: the wizard is linear and
-   Back reaches it, and a duplicate entrance to the same step is the two-menus
-   pattern the system refuses elsewhere. */
-
-function PickedRow({
-  items = [],
-  caption,
-  onManage,
-  manageLabel = "Manage the pictures"
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onManage,
-    "aria-label": manageLabel,
-    className: "cg-state cg-focus",
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-2)",
-      border: 0,
-      background: "none",
-      padding: 0,
-      minHeight: "48px",
-      width: "100%",
-      cursor: "pointer",
-      fontFamily: "var(--font-sans)",
-      color: "var(--on-surface)",
-      textAlign: "left"
-    }
-  }, items.map((item, index) => /*#__PURE__*/React.createElement(MediaThumb, _extends({
-    key: item.src ?? index
-  }, item, {
-    size: 48
-  }))), caption && /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)",
-      color: "var(--text-secondary)"
-    }
-  }, caption));
-}
-
-/* "Describe the pictures · 1 of 3 described" — the details step's entry into
-   per-picture descriptions, with the quiet count beside it. Alt text is
-   authored, optional, never invented; a described set is a choice made
-   visible, not a chore bar.
-
-   A VIDEO TAKES ONE DESCRIPTION for the whole clip (jakob 2026-09-02), so the
-   row reads "Describe the video · 0 of 1 described" — same anatomy, `subject`
-   naming what is being described. The cover takes none of its own: it is the
-   video's face, not a second picture.
-
-   THE REASON RIDES UNDER THE ROW (jakob 2026-09-03), permanently: an optional
-   field with no stated purpose reads as a chore, and the one thing that makes
-   it worth writing — someone is listening to it — was behind a "?" nobody
-   opens. Same words as the sheet's own sub-line, so the row and the sheet it
-   opens say one thing.
-
-   The word takes its size from the sentence rather than re-declaring it: the
-   paragraph is already set in `label-small`, which is exactly the `sm` rung's
-   own type, so `inherit` and the rung's tokens are the same measurement said
-   two ways. The counting half of the line is a plain span — it is not
-   pressable, and only the verb is. */
-function DescribeCounter({
-  described,
-  total,
-  onDescribe,
-  subject = "pictures"
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "var(--space-1)"
-    }
-  }, /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)"
-    }
-  }, /*#__PURE__*/React.createElement(InlineAction, {
-    size: "sm",
-    onClick: onDescribe,
-    style: {
-      fontSize: "inherit",
-      lineHeight: "inherit"
-    }
-  }, "Describe the ", subject), " ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, "\xB7 ", described, " of ", total, " described")), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)",
-      color: "var(--text-secondary)"
-    }
-  }, "Read aloud to people who can't see it."));
-}
-__ds_scope.PickedRow = PickedRow;
-__ds_scope.DescribeCounter = DescribeCounter;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickedRow.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/PickedSheet.jsx
-try { (() => {
-const { BottomSheet, SheetTitle, Button, InlineAction, Icon, MediaThumb } = __ds_scope;
-/* Show all — the per-picture manager (media slice, 2026-08-31): opened by the
-   pick step's "Show all" and by the details step's picked row. One home for
-   every per-picture concern:
-
-   · ORDER — drag by the handle; the FIRST one is the cover and the badge
-     travels with it. No separate cover control exists.
-   · REMOVE — the X on each row.
-   · DESCRIBE — the per-picture entry into `DescribeSheet`; a described
-     picture shows the quiet word "Described" instead of the link.
-
-   Rows are 56px thumbs with a name ("Cover — shown first", "Picture 2") so a
-   screen-reader pass reads as a list of pictures, not a list of buttons. */
-
-function PickedSheet({
-  open = false,
-  onClose,
-  items = [],
-  onDone,
-  inline = false
-}) {
-  return /*#__PURE__*/React.createElement(BottomSheet, {
-    open: open,
-    onClose: onClose,
-    ariaLabel: `Picked · ${items.length}`,
-    inline: inline,
-    maxHeight: "88%"
-  }, /*#__PURE__*/React.createElement(SheetTitle, null, "Picked \xB7 ", items.length), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      padding: "0 var(--space-6)",
-      borderTop: "1px solid var(--border-hairline)"
-    }
-  }, items.map((item, index) => /*#__PURE__*/React.createElement("div", {
-    key: item.src ?? index,
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-4)",
-      minHeight: "68px",
-      borderBottom: "1px solid var(--border-hairline)"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    style: {
-      color: "var(--text-secondary)",
-      flex: "none",
-      display: "inline-flex",
-      cursor: "grab"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "drag_indicator",
-    size: 20
-  })), /*#__PURE__*/React.createElement(MediaThumb, {
-    src: item.src,
-    alt: item.alt,
-    size: 56,
-    cover: index === 0
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      display: "flex",
-      flexDirection: "column",
-      gap: "2px"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-large)",
-      lineHeight: "var(--text-label-large--line-height)",
-      fontWeight: "var(--text-label-large--font-weight)",
-      letterSpacing: "var(--text-label-large--letter-spacing)"
-    }
-  }, index === 0 ? "Cover — shown first" : `Picture ${index + 1}`), item.described ? /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      color: "var(--text-secondary)"
-    }
-  }, "Described") : /*#__PURE__*/React.createElement(InlineAction, {
-    size: "sm",
-    selfStart: true,
-    onClick: item.onDescribe
-  }, "Describe")), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": `Remove ${index === 0 ? "the cover" : `picture ${index + 1}`}`,
-    onClick: item.onRemove,
-    className: "cg-state cg-focus cg-hit",
-    style: {
-      border: 0,
-      background: "none",
-      padding: 0,
-      cursor: "pointer",
-      color: "var(--text-secondary)",
-      display: "inline-flex",
-      flex: "none"
-    }
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "close",
-    size: 18
-  }))))), /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      padding: "var(--space-3) var(--space-6) 0",
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)",
-      color: "var(--text-secondary)"
-    }
-  }, "The first one is the cover \u2014 drag to reorder."), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      justifyContent: "flex-end",
-      padding: "var(--space-2) var(--space-4) var(--space-2)"
-    }
-  }, /*#__PURE__*/React.createElement(Button, {
-    variant: "text",
-    onClick: onDone ?? onClose
-  }, "Done")));
-}
-__ds_scope.PickedSheet = PickedSheet;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickedSheet.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/UploadNotice.jsx
-try { (() => {
-const { InlineAction } = __ds_scope;
-/* The two upload notices (media slice, 2026-08-31). Upload runs in the
-   background from the moment a picture has its crop (the crop happens on the
-   device; only the cropped export is uploaded), so most posts never see
-   either — these appear only when the author outruns the network.
-
-   `UploadStatusLine` is THE SEAL'S GATE: while it shows, the sign button is
-   disabled, because nothing signs until the content it signs exists.
-   `UploadErrorLine` is the failure's words — the tile wears the badge
-   (`MediaThumb failed`), this line carries Retry and Remove, in error colour
-   for the fact and primary for the ways out. Direction-by-words, as always.
-
-   THE WAYS OUT FOLLOW THE FAILURE. A network failure can be retried, so it
-   offers both. A file the surface refuses — too big for its cap, or a format
-   nothing here can read — cannot be retried into working, so it offers only
-   Remove it: `onRetry` omitted drops the link rather than dangling a control
-   that would fail the same way twice. */
-
-function Ring({
-  progress = 0.55,
-  size = 18
-}) {
-  const r = 11;
-  const c = 2 * Math.PI * r;
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 28 28",
-    width: size,
-    height: size,
-    "aria-hidden": "true",
-    style: {
-      flex: "none"
-    }
-  }, /*#__PURE__*/React.createElement("circle", {
-    cx: "14",
-    cy: "14",
-    r: r,
-    fill: "none",
-    stroke: "var(--border-hairline)",
-    strokeWidth: "3"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "14",
-    cy: "14",
-    r: r,
-    fill: "none",
-    stroke: "var(--primary)",
-    strokeWidth: "3",
-    strokeLinecap: "round",
-    strokeDasharray: `${Math.max(0.02, Math.min(1, progress)) * c} ${c}`,
-    transform: "rotate(-90 14 14)"
-  }));
-}
-function UploadStatusLine({
-  done,
-  total,
-  progress
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "var(--space-2)"
-    }
-  }, /*#__PURE__*/React.createElement(Ring, {
-    progress: progress ?? (total ? done / total : 0.5)
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-medium)",
-      lineHeight: "var(--text-body-medium--line-height)",
-      color: "var(--text-secondary)"
-    }
-  }, "Uploading ", done, " of ", total, " \u2014 signing waits for the pictures."));
-}
-function UploadErrorLine({
-  message = "One picture didn't upload.",
-  onRetry,
-  onRemove
-}) {
-  return /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--error)"
-    }
-  }, message), " ", onRetry && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(InlineAction, {
-    size: "sm",
-    onClick: onRetry
-  }, "Retry"), " ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, "\xB7"), " "), /*#__PURE__*/React.createElement(InlineAction, {
-    size: "sm",
-    onClick: onRemove
-  }, "Remove it"));
-}
-__ds_scope.UploadStatusLine = UploadStatusLine;
-__ds_scope.UploadErrorLine = UploadErrorLine;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/UploadNotice.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/RefusedFile.jsx
-try { (() => {
-const { MediaThumb, UploadErrorLine } = __ds_scope;
-/* A file the surface turned away (item 17, the conformance round): the tile
-   wearing `MediaThumb`'s failed badge, and beside it the words saying which
-   rule the file broke.
-
-   THE REFUSAL IS DRAWN WHERE THE FILE WAS OFFERED — never in a dialog, never
-   in a snackbar. The author is looking at the pick step; the answer belongs on
-   it, under the tray that took the rest.
-
-   REMOVE IT IS THE ONLY WAY OUT, so no Retry is offered. Retrying cannot make
-   a file smaller or a format readable — a control that would fail the same way
-   twice is worse than no control, and `UploadErrorLine` drops the link when no
-   `onRetry` is given. That is the difference between this and an upload that
-   failed: one is a refusal, the other is a network.
-
-   A FILE NOTHING CAN READ HAS NO PREVIEW, so the tile is empty on purpose
-   rather than carrying a stand-in glyph. The empty square is the honest
-   picture of a file the surface could not open.
-
-   ONE FILE, ONE LINE, THE NEAREST REASON (jakob 2026-09-03): a file is judged
-   on its own — size and format — before it is judged against the body it wants
-   to join. So an oversized clip is refused by its cap, not by the mixed-kind
-   rule it also breaks. */
-
-function RefusedFile({
-  src,
-  alt = "",
-  video = false,
-  message,
-  onRemove
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-2)"
-    }
-  }, /*#__PURE__*/React.createElement(MediaThumb, {
-    src: src,
-    alt: alt,
-    video: video,
-    failed: true
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1,
-      minWidth: 0
-    }
-  }, /*#__PURE__*/React.createElement(UploadErrorLine, {
-    message: message,
-    onRemove: onRemove
-  })));
-}
-__ds_scope.RefusedFile = RefusedFile;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/RefusedFile.jsx", error: String((e && e.message) || e) }); }
-
-// components/compose/SealFooter.jsx
-try { (() => {
-const { Button } = __ds_scope;
-/* The seal's foot (item 17, the conformance round, jakob's ruling G): the pair
-   of full-width buttons that ends every signing surface in the system — the
-   post's seal, the reply's, the profile picture's, the profile's, the payout
-   address's, the wallet change's.
-
-   THE PAIR IS THE GRAMMAR OF A SEAL. Commit is filled and first; the way back
-   is the text button under it, full width so the two read as one block rather
-   than a button with a link stuck beneath. Back goes UP one stage — it is the
-   header arrow said again at the bottom, where the thumb is — and it never
-   leaves the flow. Leaving is the header's X, and that separation is the whole
-   reason the seal can afford a Back at all.
-
-   ONLY THE VERB CHANGES. "Sign and publish", "Sign the change", "Sign
-   comment" — the label names what is being signed, because a seal that says
-   only "Sign" makes the author scroll up to find out what for. Back is the
-   same word on all six, and takes no argument.
-
-   `disabled` IS THE UPLOAD'S GATE, not a validation state. Nothing signs until
-   the content it signs exists, so the seal that is still uploading wears it
-   and the words above the pair say why. A disabled button with no line
-   explaining it is the one shape this must never take. */
-
-function SealFooter({
-  signLabel,
-  backLabel = "Back",
-  disabled = false,
-  onSign,
-  onBack
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 8
-    }
-  }, /*#__PURE__*/React.createElement(Button, {
-    disabled: disabled,
-    onClick: onSign,
-    style: {
-      width: "100%"
-    }
-  }, signLabel), /*#__PURE__*/React.createElement(Button, {
-    variant: "text",
-    onClick: onBack,
-    style: {
-      width: "100%"
-    }
-  }, backLabel));
-}
-__ds_scope.SealFooter = SealFooter;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/SealFooter.jsx", error: String((e && e.message) || e) }); }
 
 // components/people/ActorChip.jsx
 try { (() => {
@@ -3901,6 +2411,1600 @@ function StagedReference({
 }
 __ds_scope.StagedReference = StagedReference;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/StagedReference.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/CitedSheet.jsx
+try { (() => {
+const { BottomSheet, SheetTitle, Button, StagedReference } = __ds_scope;
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+/* The staged citations, managed (jakob's ruling 2026-09-14, backlog item 70):
+   the sheet the seal's References row opens once it counts instead of naming.
+   One staged citation reads back as itself on the seal; two or more read back
+   as "N cited", and this is where the N is.
+
+   IT IS `PickedSheet`'S SHAPE, for the reason that sheet has its shape: a
+   collection staged by an author, managed in one place rather than in as many
+   places as the collection appears. Rows, then the word that closes the sheet —
+   no scrim button, no second way out.
+
+   THE ROWS ARE `StagedReference`, whole. The composer already draws a staged
+   citation — the kind's mark, what it points at, the pair signed on the act,
+   the × that takes it back out, and the name that opens the pair — and a sheet
+   that drew its own version of that row would be the second drawing of one
+   fact. Each control names its own citation ("Remove <name>", "<name> — set how
+   it relates"), which is the master's own rule and the reason a block of these
+   is readable at all.
+
+   IT ADDS NOTHING. `PickedSheet` manages what was picked and never offers
+   another pick; the same holds here. A post's seal carries no add-rows by
+   design (`ReplySeal`'s note says so from the other side), and a door out of it
+   that grew a "+ Cite something" would hand the seal a stage's job. Citations
+   are staged where they are staged — the details step, the reply's own card. */
+
+function CitedSheet({
+  open = false,
+  onClose,
+  items = [],
+  onDone,
+  inline = false
+}) {
+  return /*#__PURE__*/React.createElement(BottomSheet, {
+    open: open,
+    onClose: onClose,
+    ariaLabel: `Cited · ${items.length}`,
+    inline: inline,
+    maxHeight: "88%"
+  }, /*#__PURE__*/React.createElement(SheetTitle, null, "Cited \xB7 ", items.length), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+      padding: "var(--space-2) var(--space-6) 0"
+    }
+  }, items.map((item, index) => /*#__PURE__*/React.createElement(StagedReference, _extends({
+    key: item.name ?? index
+  }, item)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "flex-end",
+      padding: "var(--space-2) var(--space-4) var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement(Button, {
+    variant: "text",
+    onClick: onDone ?? onClose
+  }, "Done")));
+}
+__ds_scope.CitedSheet = CitedSheet;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/CitedSheet.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/CoverRow.jsx
+try { (() => {
+const { Icon } = __ds_scope;
+/* The video's face (item 17, the conformance round): the strip of frames cut
+   from the clip, plus the one tile that is not a frame at all.
+
+   FOUR FRAMES, NOT THREE (jakob 2026-09-03): 1s, 10%, 50%, 90% of the clip. 1s
+   clears the fade-in black that t=0 so often is, and the three ratios spread
+   the rest. On a clip short enough that two samples land on the same frame they
+   collapse and fewer tiles show — offering the same picture twice is a choice
+   that isn't one, so the strip takes the frames it is given and draws no
+   placeholder for a fifth.
+
+   THE CHOSEN FRAME IS OUTLINED, THE REST ARE DIMMED. Selection is the primary
+   outline offset off the tile, not a check badge — the tiles are 56px and a
+   badge at that size covers the thing being chosen. The unchosen frames sit at
+   65% so the strip reads as one picture framed several ways, which is what it
+   is.
+
+   THE LAST TILE IS A DIFFERENT KIND OF THING and says so by not being a
+   photograph: a dashed square with the picture glyph, the same shape as the
+   frames so the row still scans as one strip. It is the way out to the gallery,
+   and a picture chosen there goes through `CropViewport` first, because a
+   picture of your own is the only cover that can disagree with the clip's
+   shape.
+
+   THE ROW IS THE WHOLE CLUSTER — the "Cover" field label, the strip, and the
+   line underneath — because those three only ever appear together. The comment
+   composer inlines it at 56px and the post's cover stage draws it larger; both
+   want the label and the line.
+
+   NO FRAMES IS A STATE THE ROW HOLDS (video-cover round, 2026-09-10): hand it
+   an empty `frames` and what remains is the way out to the gallery, alone,
+   under a `caption` that says why. Extraction can come back with nothing, and
+   a strip of blank tiles would offer pictures that do not exist. The row shrinks
+   to the one path that still works rather than growing a state of its own.
+
+   THE ROW IS NOT ALWAYS THERE (same round). A vertical clip's default is no
+   cover, so at comment scale the row gives way to an "Add a cover" door and
+   appears when the door is opened; a horizontal or square clip wears it from
+   the start. The row draws the choosing, never the decision to choose. */
+
+const TILE = {
+  width: 56,
+  height: 56,
+  borderRadius: "var(--radius-small)",
+  overflow: "hidden",
+  flex: "none"
+};
+const FILL = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  display: "block"
+};
+function CoverRow({
+  label = "Cover",
+  frames = [],
+  selected = 0,
+  caption = "A frame, or a picture of your own."
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      letterSpacing: "var(--text-label-large--letter-spacing)"
+    }
+  }, label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8
+    }
+  }, frames.map((frame, index) => /*#__PURE__*/React.createElement("div", {
+    key: frame.src ? `${frame.src}-${index}` : index,
+    className: "cg-cover-frame",
+    style: index === selected ? {
+      ...TILE,
+      outline: "2px solid var(--primary)",
+      outlineOffset: 1
+    } : {
+      ...TILE,
+      opacity: 0.65
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    src: frame.src,
+    alt: "",
+    style: frame.transform ? {
+      ...FILL,
+      transform: frame.transform
+    } : FILL
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "cg-cover-own",
+    style: {
+      width: 56,
+      height: 56,
+      borderRadius: "var(--radius-small)",
+      border: "1px dashed var(--border-field)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: "var(--text-secondary)",
+      boxSizing: "border-box",
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "image",
+    size: 20
+  }))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, caption));
+}
+__ds_scope.CoverRow = CoverRow;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/CoverRow.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/CropViewport.jsx
+try { (() => {
+/* The crop surface (item 17, the conformance round): the picture at the size
+   it will be cut, with everything outside the cut darkened.
+
+   THE MASK IS ONE BOX SHADOW, not four dimming panels. `0 0 0 400px` spreads a
+   45% black outward from the window's own edges, so the darkened region is
+   whatever the frame has left over — no arithmetic, nothing to keep in sync
+   when the window moves, and the hairline that marks the cut is the same box's
+   border. 400px is simply larger than the frame's own 390.
+
+   THE SHAPE IS LOCKED TO WHAT THE PICTURE WILL BE. A profile picture is shown
+   in a circle everywhere it appears, so it is cut in a circle; a video's cover
+   is shown at the clip's ratio, so it is cut at that ratio. There are no shape
+   chips on either — choosing a shape here would let the result disagree with
+   the thing it is the face of.
+
+   THE WINDOW IS ALWAYS CENTRED, and that is why it takes a height and not a
+   position: it is inset `inset` from each side, and the leftover height splits
+   evenly above and below. The circle's 342 square lands at top 24, the cover's
+   342×192 at top 99, and neither board has to state a coordinate. */
+
+function CropViewport({
+  src,
+  alt = "",
+  shape = "circle",
+  scale = 1,
+  origin = "50% 50%",
+  size = 390,
+  inset = 24,
+  height
+}) {
+  const width = size - inset * 2;
+  const windowHeight = height ?? width;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      width: size,
+      height: size,
+      margin: `0 -${inset}px`,
+      overflow: "hidden",
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: alt,
+    style: {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      display: "block",
+      transform: `scale(${scale})`,
+      transformOrigin: origin
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      left: inset,
+      top: (size - windowHeight) / 2,
+      width,
+      height: windowHeight,
+      borderRadius: shape === "circle" ? "var(--radius-full)" : "var(--radius-small)",
+      boxShadow: "0 0 0 400px rgba(0,0,0,0.45)",
+      border: "1px solid rgba(255,255,255,0.7)",
+      boxSizing: "border-box"
+    }
+  }));
+}
+__ds_scope.CropViewport = CropViewport;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/CropViewport.jsx", error: String((e && e.message) || e) }); }
+
+// components/core/HelpDot.jsx
+try { (() => {
+/* The "?" affordance — the one-per-screen door to a plain dialog (readme §13:
+   captions stay to one short line; the full explanation lives behind a small
+   "?", at most one per screen, top-right of the header or of the sheet/card it
+   explains). A 32px ring inside the 48px target. It began as a screen helper
+   on the search boards and moved into the system when the filter sheet — a
+   master — needed to carry one. */
+
+/* `inverse` is `Button`'s word for the same situation: the component standing on
+   a TONAL PANEL instead of the page's ground. On the page the ring is
+   `--border-hairline` and the glyph `--primary`; inside a `tertiary-container`
+   block that pair is a second colour family arguing with the panel's own, so
+   there the dot takes the panel's `currentColor` for both. The geometry is the
+   same either way — 32px of ring inside the 48px target. Use it only inside such
+   a panel. */
+const RINGS = {
+  page: {
+    border: "1px solid var(--border-hairline)",
+    color: "var(--primary)"
+  },
+  inverse: {
+    border: "1px solid currentColor"
+  }
+};
+function HelpDot({
+  ariaLabel = "What is this?",
+  onOpen,
+  variant = "page"
+}) {
+  const ring = RINGS[variant] ?? RINGS.page;
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": ariaLabel,
+    onClick: onOpen,
+    className: "cg-focus",
+    style: {
+      display: "grid",
+      placeItems: "center",
+      height: "var(--touch-target-min)",
+      width: "var(--touch-target-min)",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      cursor: "pointer",
+      flex: "none",
+      color: variant === "inverse" ? "inherit" : undefined
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      display: "grid",
+      placeItems: "center",
+      height: "32px",
+      width: "32px",
+      borderRadius: "var(--radius-full)",
+      ...ring,
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-label-large)",
+      fontWeight: "var(--text-label-large--font-weight)"
+    }
+  }, "?"));
+}
+__ds_scope.HelpDot = HelpDot;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/core/HelpDot.jsx", error: String((e && e.message) || e) }); }
+
+// components/forms/TextField.jsx
+try { (() => {
+/* The house labeled text input. `label-large` label above a field on the
+   EXTRA-SMALL rung (4px) — Material's text-field corner — with a 1px `outline`
+   border and a transparent fill. `mono` dresses codes and identifiers in the
+   platform monospace: the one exception to Figtree (design.md §3), a legibility
+   device for strings read character by character.
+
+   SUPPORTING TEXT IS ONE SLOT WITH TWO STATES, which is Material 3's own
+   arrangement rather than two independent lines. `hint` is the base: the
+   body-small line in `--text-secondary` that says what the field will accept
+   ("3–30 characters: a–z, 0–9, _"). `error` is that same line in its error
+   state — the outline and the label switch to `--error` with it, and the
+   message replaces the hint rather than joining it. A field never carries both
+   at once: the rule the reader broke is the rule they needed to read, and two
+   lines under one input is where the eye stops knowing which one is live.
+
+   The message is always words (direction-by-words) — this component renders it
+   verbatim, no icon.
+
+   THE SUPPORTING LINE IS WIRED TO THE FIELD (jakob's ruling, the slice-2.5
+   round), the way the W3C's own forms tutorial wires one: the line carries an
+   id and the control names it in `aria-describedby`, so the rule a field will
+   accept is read out with the field rather than sitting beside it unreachable.
+   In the error state the control adds `aria-invalid` (WCAG technique ARIA21)
+   and the line takes `role="alert"`, because a message that appears in answer
+   to something the reader just did has to announce itself — a screen reader
+   that has moved on never comes back to look. Announcing is uniform: every
+   field error, not a judgement per field about which ones would be noticed
+   anyway. None of it draws a pixel. */
+
+/* THE LATE COUNTER (jakob's ruling, the caps-affordance round). A capped field
+   says NOTHING about its cap while the writer is nowhere near it, and then a
+   quiet remaining count appears at the end of the supporting row. It is not a
+   persistent counter and it is never a meter: a number that sits under an empty
+   field all day turns the act of writing into a budget, and a bar turns a
+   sentence into a progress indicator. What the writer needs is a warning in
+   time to finish the thought — nothing before that is information, it is
+   pressure.
+
+   THE THRESHOLD IS THE LAST TENTH, NEVER FEWER THAN THE LAST 20. The count
+   appears once `remaining <= max(20, round(cap / 10))`. The tenth is what makes
+   the warning proportional — 500 characters of description warn at 450, 5,000
+   of a body at 4,500 — and the floor of 20 is what keeps a short cap from
+   warning too late to act on: a tenth of the 50-character display name is five,
+   which arrives after the writer has already written the word that will be cut.
+   Both halves are drawn in the round: the title (100 → window 20) and the
+   display name (50 → window 20) are floor-driven, the description (500 → 50)
+   and the body (5,000 → 500) are tenth-driven.
+
+   THE UNIT IS THE UNICODE SCALAR VALUE, which is what every one of the ruled
+   caps counts in, and what `[...string]` iterates — never `.length`, which
+   counts UTF-16 code units and would tell a writer of emoji or of anything
+   outside the BMP that they had spent twice what they had.
+
+   IT IS A THIRD ELEMENT IN THE SUPPORTING ROW, NOT A THIRD STATE OF THE
+   SUPPORTING SLOT. Material 3's text field puts supporting text at the start of
+   the row under the field and the character count at its end; the slot's own
+   two states (hint, error) are untouched by this, and the count sits beside
+   whichever one is live. The count is the only thing in the product allowed to
+   share that row.
+
+   OVER THE CAP THE COUNT TAKES `--error`, AND THE MESSAGE IS THE SURFACE'S.
+   `FieldCount` colours itself from the arithmetic, because the arithmetic is
+   the atom's; the words under the field are the board's own `error`, because a
+   field error is worded per field and per surface (copy-voice, *Field errors*)
+   and an atom that wrote them would flatten "A title is at most 100 characters."
+   into one house sentence for every field in the product.
+
+   A SCREEN READER IS TOLD POLITELY, ONCE IT MATTERS. The count carries
+   `aria-live="polite"` and joins the field's `aria-describedby`: it appears in
+   answer to typing, so a reader who has moved on would otherwise never learn it
+   exists, and polite is the right register because the count is never the whole
+   message — the error line above it is what takes `role="alert"`. The
+   implementation debounces the live region (a count read out on every keystroke
+   is unusable); the drawing cannot show a debounce, so it is stated here.
+
+   `used` OVERRIDES THE ARITHMETIC FOR A FIELD DRAWN AS A TAIL. A board showing
+   the last fifteen lines of a 5,000-character body cannot carry the other four
+   thousand in its fixture, and a count computed from what is drawn would then
+   be a lie about what is written. Such a board passes `used` — the whole
+   length — and the drawn paragraphs stay the visible tail. Every field whose
+   fixture IS its whole content passes nothing and is counted. */
+
+const COUNT_WINDOW_MINIMUM = 20;
+function countReading(value, cap, used) {
+  if (!cap) return null;
+  const spent = used ?? [...String(value ?? "")].length;
+  const remaining = cap - spent;
+  if (remaining > Math.max(COUNT_WINDOW_MINIMUM, Math.round(cap / 10))) return null;
+  return remaining < 0 ? {
+    text: `${-remaining} over`,
+    over: true
+  } : {
+    text: `${remaining} left`,
+    over: false
+  };
+}
+function FieldCount({
+  value,
+  cap,
+  used,
+  id
+}) {
+  const reading = countReading(value, cap, used);
+  if (!reading) return null;
+  return /*#__PURE__*/React.createElement("span", {
+    id: id,
+    "aria-live": "polite",
+    style: {
+      marginInlineStart: "auto",
+      flex: "none",
+      whiteSpace: "nowrap",
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      letterSpacing: "var(--text-body-small--letter-spacing)",
+      color: reading.over ? "var(--error)" : "var(--text-secondary)"
+    }
+  }, reading.text);
+}
+
+/* THE SUPPORTING ROW, ASSIGNED ONCE — `FieldLabel`'s counterpart under the
+   field. `TextField` renders it for its own field, and a capped field that is
+   NOT a `TextField` (the composer's growing body box) renders it directly, so
+   the two cannot drift about where the message sits or where the count sits
+   beside it. It renders nothing at all when there is nothing to say, which is
+   the state every field in the product is in at rest. */
+
+function FieldSupport({
+  id,
+  countId,
+  hint,
+  error,
+  value,
+  cap,
+  used
+}) {
+  const reading = countReading(value, cap, used);
+  if (!error && !hint && !reading) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: "var(--space-2)",
+      flex: "none"
+    }
+  }, (error || hint) && /*#__PURE__*/React.createElement("span", {
+    id: id,
+    role: error ? "alert" : undefined,
+    style: {
+      fontSize: "var(--text-body-small)",
+      lineHeight: "var(--text-body-small--line-height)",
+      letterSpacing: "var(--text-body-small--letter-spacing)",
+      color: error ? "var(--error)" : "var(--text-secondary)"
+    }
+  }, error || hint), /*#__PURE__*/React.createElement(FieldCount, {
+    id: countId,
+    value: value,
+    cap: cap,
+    used: used
+  }));
+}
+
+/* THE LABEL ROW, ASSIGNED ONCE. `TextField` renders it over its own field, and
+   the composer's captions over sections that are NOT fields — Pictures, Video,
+   Cover, Topics, References — render it over a tray or a list. Those captions
+   have always been dressed as field labels; assigning that anatomy here is what
+   keeps them from drifting apart. A caption whose section IS a field belongs in
+   `TextField`'s `label` and `corner` instead, and every one of them is written
+   that way.
+
+   `htmlFor` CHOOSES THE ELEMENT. With one, the word names a control and the row
+   is a `<label>`. Without one there is no control to name, so it is a `<span>`:
+   a `<label>` with no `for` is a label in name only (HTML Living Standard
+   §4.10.4), and a topic tray is not a labelable control. */
+
+function FieldLabel({
+  children,
+  htmlFor,
+  corner,
+  error
+}) {
+  const Name = htmlFor ? "label" : "span";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: "var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement(Name, {
+    htmlFor: htmlFor,
+    style: {
+      flex: 1,
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      letterSpacing: "var(--text-label-large--letter-spacing)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      color: error ? "var(--error)" : undefined
+    }
+  }, children), corner && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      color: "var(--text-secondary)"
+    }
+  }, corner));
+}
+function TextField({
+  label,
+  corner,
+  value,
+  onChange,
+  type = "text",
+  autoComplete,
+  mono = false,
+  placeholder,
+  rows,
+  id,
+  hint,
+  error,
+  cap,
+  used
+}) {
+  const generated = React.useId();
+  const fieldId = id ?? generated;
+  const supportId = `${fieldId}-support`;
+  const countId = `${fieldId}-count`;
+  const reading = countReading(value, cap, used);
+  const described = [error || hint ? supportId : null, reading ? countId : null].filter(Boolean).join(" ") || undefined;
+  const shared = {
+    borderRadius: "var(--radius-extra-small)",
+    border: error ? "1px solid var(--error)" : "1px solid var(--border-field)",
+    background: "transparent",
+    color: "var(--on-surface)",
+    padding: rows ? "8px" : "8px 12px",
+    fontFamily: mono ? "var(--font-mono)" : "var(--font-sans)",
+    fontSize: "var(--text-body-large)",
+    lineHeight: "var(--text-body-large--line-height)",
+    minWidth: 0,
+    width: "100%",
+    boxSizing: "border-box"
+  };
+  return (
+    /*#__PURE__*/
+    // A REPLACED ELEMENT CANNOT HOST THE FLOW BADGE'S ::after (shell.mjs) — an
+    // <input>/<textarea> paints nothing for a `data-flow` it carries directly,
+    // so the badge belongs on the field as a whole instead. `data-field` names
+    // that whole for flow-markers.mjs to find and stamp (jakob's ruling A9,
+    // backlog item 40), the same way `data-axis` lets it stamp `LicenseAxis`'s
+    // row rather than its own hidden radio.
+    React.createElement("div", {
+      "data-field": label,
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "var(--space-1)"
+      }
+    }, /*#__PURE__*/React.createElement(FieldLabel, {
+      htmlFor: fieldId,
+      corner: corner,
+      error: error
+    }, label), rows ? /*#__PURE__*/React.createElement("textarea", {
+      id: fieldId,
+      rows: rows,
+      value: value,
+      placeholder: placeholder,
+      "aria-describedby": described,
+      "aria-invalid": error ? "true" : undefined,
+      onChange: event => onChange && onChange(event.target.value),
+      style: shared
+    }) : /*#__PURE__*/React.createElement("input", {
+      id: fieldId,
+      type: type,
+      value: value,
+      placeholder: placeholder,
+      autoComplete: autoComplete,
+      "aria-describedby": described,
+      "aria-invalid": error ? "true" : undefined,
+      onChange: event => onChange && onChange(event.target.value),
+      style: shared
+    }), /*#__PURE__*/React.createElement(FieldSupport, {
+      id: supportId,
+      countId: countId,
+      hint: hint,
+      error: error,
+      value: value,
+      cap: cap,
+      used: used
+    }))
+  );
+}
+__ds_scope.FieldCount = FieldCount;
+__ds_scope.FieldSupport = FieldSupport;
+__ds_scope.FieldLabel = FieldLabel;
+__ds_scope.TextField = TextField;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/TextField.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/DescribeSheet.jsx
+try { (() => {
+const { BottomSheet, Button, HelpDot, TextField, Icon } = __ds_scope;
+/* Describe this picture (media slice, 2026-08-31): where alt text is written —
+   reached per picture from the details step's counter and from the Show all
+   sheet, NEVER from the crop step (a geometry step is no place for a
+   keyboard). The rule it makes enterable is the component rule: a description
+   is authored, optional, and never invented — a picture without one is
+   skipped by screen readers, not guessed at. The "?" carries the full
+   explanation (copy-voice: "Describing pictures").
+
+   TWO SHAPES, ONE SHEET (jakob 2026-09-03). `video` swaps the subject: the
+   title reads "Describe the video", the field asks what's in the video, and
+   the preview shows the clip's own frame. A clip is ONE thing to describe —
+   there is no per-picture walk through the sheet and the cover is never
+   offered, because the cover is the video's face, not a second picture.
+
+   THE REASON IS PERMANENT, NOT BEHIND THE "?" — the sub-line under the title
+   says who the words are for on both shapes. Someone deciding whether to
+   write a description needs the reason at the moment of deciding; the "?"
+   is for the reader who wants the rest of it. */
+
+function DescribeSheet({
+  open = false,
+  onClose,
+  src,
+  alt = "",
+  value,
+  onChange,
+  onDone,
+  inline = false,
+  video = false
+}) {
+  const subject = video ? "video" : "picture";
+  return /*#__PURE__*/React.createElement(BottomSheet, {
+    open: open,
+    onClose: onClose,
+    ariaLabel: `Describe this ${subject}`,
+    inline: inline,
+    maxHeight: "88%"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-3)",
+      padding: "0 var(--space-6)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-1)"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-title-large)",
+      lineHeight: "var(--text-title-large--line-height)",
+      fontWeight: "var(--text-title-large--font-weight)"
+    }
+  }, video ? "Describe the video" : "Describe this picture"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, "Read aloud to people who can't see it.")), /*#__PURE__*/React.createElement(HelpDot, {
+    ariaLabel: "Describing pictures"
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      height: "180px",
+      borderRadius: "var(--radius-medium)",
+      background: "var(--surface-container-high)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden"
+    }
+  }, src && /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: alt,
+    "aria-hidden": alt ? undefined : "true",
+    style: {
+      maxWidth: "100%",
+      maxHeight: "100%",
+      display: "block"
+    }
+  }), video && /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      position: "absolute",
+      left: "50%",
+      top: "50%",
+      transform: "translate(-50%, -50%)",
+      width: "48px",
+      height: "48px",
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+      color: "var(--on-surface-snackbar, #ffffff)",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "play_arrow",
+    size: 28
+  }))), /*#__PURE__*/React.createElement(TextField, {
+    label: `What's in the ${subject}`,
+    corner: "Optional",
+    rows: 2,
+    cap: 1000,
+    value: value,
+    onChange: onChange
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "flex-end",
+      padding: "0 0 var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement(Button, {
+    variant: "text",
+    onClick: onDone ?? onClose
+  }, "Done"))));
+}
+__ds_scope.DescribeSheet = DescribeSheet;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/DescribeSheet.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/MediaThumb.jsx
+try { (() => {
+const { Icon } = __ds_scope;
+/* The authoring-side picture tile (media slice, 2026-08-31): one thumbnail
+   anatomy for every composer surface — the pick tray, the details row, the
+   Show all sheet, the reply composer, the comment edit. The states it can
+   wear are the whole upload story:
+
+   · `cover` — the "Cover" badge, bottom-left. The first picture is the cover;
+     the badge travels with reorder, never with a separate control.
+   · `progress` — the upload ring on a scrim. Upload starts AFTER the crop:
+     the crop happens on the device and only the cropped export is ever
+     uploaded (jakob 2026-08-31 — the original frame can hold what the author
+     never meant to share). Crop-less comment pictures upload at pick.
+   · `failed` — the picture dims and wears the error badge; the words and the
+     Retry · Remove affordances live beside the row (`UploadErrorLine`), not
+     crammed into 48px.
+   · `onRemove` — the X, top-right, its target grown by cg-hit.
+   · `video` — the composer's video preview: the play disc on a scrim and the
+     duration on the trailing corner, the anatomy `ComposeCover` drew for the
+     post's video (the disc and pill only appear where the tile is big enough
+     to carry them). AUTHORING-SIDE ONLY: a reading surface never draws
+     play/pause — there, presence on screen is the policy.
+
+   Uncropped tiles (a reply's pictures) pass `width`/`height` and
+   `fit="contain"` so the whole frame shows inside the tile.
+
+   THE NEUTRAL TILE (video-cover round, 2026-09-10) is the sourceless state:
+   where a clip yields no still at all — extraction came back with nothing —
+   the tile reserves its space and `label` says what belongs there, the way
+   `MediaAttachment`'s reserved region does. Never invent imagery: a clip with
+   no face shows the absence rather than a borrowed picture. */
+
+function Ring({
+  progress,
+  size = 26
+}) {
+  const r = 12;
+  const c = 2 * Math.PI * r;
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 28 28",
+    width: size,
+    height: size,
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "14",
+    cy: "14",
+    r: r,
+    fill: "none",
+    stroke: "rgba(255,255,255,0.35)",
+    strokeWidth: "3"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "14",
+    cy: "14",
+    r: r,
+    fill: "none",
+    stroke: "#ffffff",
+    strokeWidth: "3",
+    strokeLinecap: "round",
+    strokeDasharray: `${Math.max(0.02, Math.min(1, progress)) * c} ${c}`,
+    transform: "rotate(-90 14 14)"
+  }));
+}
+function MediaThumb({
+  src,
+  alt = "",
+  size = 48,
+  width,
+  height,
+  fit = "cover",
+  radius = "var(--radius-small)",
+  cover = false,
+  progress,
+  failed = false,
+  video = false,
+  duration,
+  label,
+  onRemove,
+  removeLabel = "Remove this picture"
+}) {
+  const w = width ?? size;
+  const h = height ?? size;
+  const edge = Math.min(w, h);
+  const disc = Math.max(20, Math.min(56, Math.round(edge * 0.26)));
+  /* The disc rides a scrim over a frame. With no frame the tile IS the
+     absence, and a play control drawn on nothing reads as chrome — the
+     duration stays, because the clip's length is known either way. */
+  const playable = video && src && !failed && typeof progress !== "number";
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      width: `${w}px`,
+      height: `${h}px`,
+      borderRadius: radius,
+      overflow: "hidden",
+      flex: "none",
+      background: "var(--surface-container-high)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    }
+  }, src && /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: alt,
+    "aria-hidden": alt ? undefined : "true",
+    style: fit === "contain" ? {
+      maxWidth: "100%",
+      maxHeight: "100%",
+      display: "block",
+      opacity: failed ? 0.5 : 1
+    } : {
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      display: "block",
+      opacity: failed ? 0.5 : 1
+    }
+  }), !src && label && /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)",
+      padding: "0 var(--space-2)",
+      textAlign: "center"
+    }
+  }, label), playable && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: "50%",
+      top: "50%",
+      transform: "translate(-50%, -50%)",
+      width: `${disc}px`,
+      height: `${disc}px`,
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+      color: "var(--on-surface-snackbar, #ffffff)",
+      display: "grid",
+      placeItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "play_arrow",
+    size: Math.round(disc * 0.57)
+  })), video && duration && edge >= 80 && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      right: "6px",
+      bottom: "6px",
+      padding: "0 6px",
+      borderRadius: "var(--radius-small)",
+      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+      color: "var(--on-surface-snackbar, #ffffff)",
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      fontWeight: "var(--text-label-small--font-weight)",
+      letterSpacing: "var(--text-label-small--letter-spacing)"
+    }
+  }, duration), cover && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      left: "3px",
+      bottom: "3px",
+      padding: "0 5px",
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+      color: "var(--on-surface-snackbar, #ffffff)",
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      fontWeight: "var(--text-label-small--font-weight)",
+      letterSpacing: "var(--text-label-small--letter-spacing)"
+    }
+  }, "Cover"), typeof progress === "number" && !failed && /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      inset: 0,
+      background: "rgba(0,0,0,0.35)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    },
+    "aria-label": `Uploading, ${Math.round(progress * 100)}%`
+  }, /*#__PURE__*/React.createElement(Ring, {
+    progress: progress
+  })), failed && /*#__PURE__*/React.createElement("span", {
+    "aria-label": "Didn't upload",
+    style: {
+      position: "absolute",
+      right: "3px",
+      top: "3px",
+      width: "18px",
+      height: "18px",
+      borderRadius: "var(--radius-full)",
+      background: "var(--error)",
+      color: "var(--on-error)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: "var(--text-label-medium)",
+      lineHeight: "var(--text-label-medium--line-height)",
+      fontWeight: 700
+    }
+  }, "!"), onRemove && !failed && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": removeLabel,
+    onClick: onRemove,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      position: "absolute",
+      right: "3px",
+      top: "3px",
+      width: "16px",
+      height: "16px",
+      border: 0,
+      padding: 0,
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-snackbar, rgba(0,0,0,0.55))",
+      color: "var(--on-surface-snackbar, #ffffff)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "close",
+    size: 10
+  })));
+}
+__ds_scope.MediaThumb = MediaThumb;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/MediaThumb.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/PickPrompt.jsx
+try { (() => {
+const { Button } = __ds_scope;
+/* The pick step's prompt (item 17, the conformance round): the line above the
+   tray that says what may be picked, with the way out of the media path beside
+   it.
+
+   THE ESCAPE RIDES THE INSTRUCTION, not the header and not the tray. An author
+   who opened the picker by mistake — or who came for a photo and decided the
+   words are the post — must be able to leave the media path at the moment they
+   read what it wants, which is this line. Putting it in the header would make
+   it compete with the X that leaves the whole composer; putting it under the
+   tray would make it the thing you find only after failing to pick.
+
+   IT IS A TEXT BUTTON, at `sm`, deliberately quieter than anything in the tray
+   below. Picking is what this step is for; writing instead is the alternative,
+   offered without being urged. */
+
+function PickPrompt({
+  caption,
+  escapeLabel,
+  onEscape
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      padding: "8px 24px"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      flex: 1,
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      color: "var(--text-secondary)"
+    }
+  }, caption), /*#__PURE__*/React.createElement(Button, {
+    variant: "text",
+    size: "sm",
+    onClick: onEscape
+  }, escapeLabel));
+}
+__ds_scope.PickPrompt = PickPrompt;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickPrompt.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/PickTray.jsx
+try { (() => {
+const { InlineAction } = __ds_scope;
+/* The pick step's tray (item 17, the conformance round): the band under the
+   caption that says what has been picked so far — "Picked · N", the way into
+   the Show all sheet, and the thumbnails themselves.
+
+   IT IS THE PART OF THE STEP THAT DOES NOT CHANGE. Below the tray's hairline
+   the four pick boards diverge completely — the device gallery grid on the
+   phone, a dashed drop region on the web, an inert grid once a clip is staged,
+   a list of refusals when files were turned away. Above it they are the same
+   band to the pixel. So the tray ends where its own `borderBottom` ends, and
+   what follows is the board's business, not the master's.
+
+   THE THUMBNAILS ARE CHILDREN, not a prop. Every board tiles the same
+   `MediaThumb` but asks it for something different — a cover badge, a remove
+   X, a 114×64 video frame with its own remove label — and a tray that took an
+   items array would have to grow a prop for each. The tray owns the band; the
+   caller owns the pictures.
+
+   "SHOW ALL" IS A REAL BUTTON (jakob, ruling D). It was drawn as a span, which
+   is a link that cannot be reached by keyboard, cannot be pressed, and tells a
+   screen reader nothing — the one control on the band, and the only inert
+   thing on it. It is the bare primary word at the size the band is set in, so
+   `InlineAction size="sm"` IS its resting look, value for value: the state
+   layer, the focus ring and the 48px target arrive with it and nothing on the
+   band moves.
+
+   NO "Show all" WHEN THERE IS NOTHING TO SHOW: one staged clip is not a set to
+   reorder, so the video board omits `onShowAll` and the count stops being a
+   flex row — it is the only thing on its line, so it does not need to push
+   anything to the end of one. */
+
+const COUNT = {
+  fontSize: "var(--text-label-small)",
+  lineHeight: "var(--text-label-small--line-height)",
+  fontWeight: "var(--text-label-small--font-weight)",
+  letterSpacing: "var(--text-label-small--letter-spacing)",
+  color: "var(--text-secondary)"
+};
+function PickTray({
+  count,
+  onShowAll,
+  showAllLabel = "Show all",
+  caption,
+  clip = false,
+  children
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 6,
+      padding: "4px 24px 12px",
+      borderBottom: "1px solid var(--border-hairline)"
+    }
+  }, onShowAll ? /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      ...COUNT
+    }
+  }, "Picked \xB7 ", count), /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    onClick: onShowAll
+  }, showAllLabel)) : /*#__PURE__*/React.createElement("span", {
+    style: COUNT
+  }, "Picked \xB7 ", count), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      overflow: clip ? "hidden" : undefined
+    }
+  }, children, caption && /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, caption)));
+}
+__ds_scope.PickTray = PickTray;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickTray.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/PickedRow.jsx
+try { (() => {
+const { InlineAction, MediaThumb } = __ds_scope;
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+/* The picked-pictures row (media slice, 2026-08-31): the composer's summary of
+   the body — thumbnails and the count, one tappable row.
+
+   THE ROW CARRIES NO "Crop" OR "Edit" LINKS (jakob 2026-08-31: "none"). The
+   whole row is the affordance and it opens the Show all sheet — the
+   per-picture manager (`PickedSheet`: reorder, first = cover, remove,
+   describe). The crop step needs no second entrance: the wizard is linear and
+   Back reaches it, and a duplicate entrance to the same step is the two-menus
+   pattern the system refuses elsewhere. */
+
+function PickedRow({
+  items = [],
+  caption,
+  onManage,
+  manageLabel = "Manage the pictures"
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onManage,
+    "aria-label": manageLabel,
+    className: "cg-state cg-focus",
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)",
+      border: 0,
+      background: "none",
+      padding: 0,
+      minHeight: "48px",
+      width: "100%",
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      color: "var(--on-surface)",
+      textAlign: "left"
+    }
+  }, items.map((item, index) => /*#__PURE__*/React.createElement(MediaThumb, _extends({
+    key: item.src ?? index
+  }, item, {
+    size: 48
+  }))), caption && /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, caption));
+}
+
+/* "Describe the pictures · 1 of 3 described" — the details step's entry into
+   per-picture descriptions, with the quiet count beside it. Alt text is
+   authored, optional, never invented; a described set is a choice made
+   visible, not a chore bar.
+
+   A VIDEO TAKES ONE DESCRIPTION for the whole clip (jakob 2026-09-02), so the
+   row reads "Describe the video · 0 of 1 described" — same anatomy, `subject`
+   naming what is being described. The cover takes none of its own: it is the
+   video's face, not a second picture.
+
+   THE REASON RIDES UNDER THE ROW (jakob 2026-09-03), permanently: an optional
+   field with no stated purpose reads as a chore, and the one thing that makes
+   it worth writing — someone is listening to it — was behind a "?" nobody
+   opens. Same words as the sheet's own sub-line, so the row and the sheet it
+   opens say one thing.
+
+   The word takes its size from the sentence rather than re-declaring it: the
+   paragraph is already set in `label-small`, which is exactly the `sm` rung's
+   own type, so `inherit` and the rung's tokens are the same measurement said
+   two ways. The counting half of the line is a plain span — it is not
+   pressable, and only the verb is. */
+function DescribeCounter({
+  described,
+  total,
+  onDescribe,
+  subject = "pictures"
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "var(--space-1)"
+    }
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)"
+    }
+  }, /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    onClick: onDescribe,
+    style: {
+      fontSize: "inherit",
+      lineHeight: "inherit"
+    }
+  }, "Describe the ", subject), " ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--text-secondary)"
+    }
+  }, "\xB7 ", described, " of ", total, " described")), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, "Read aloud to people who can't see it."));
+}
+__ds_scope.PickedRow = PickedRow;
+__ds_scope.DescribeCounter = DescribeCounter;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickedRow.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/PickedSheet.jsx
+try { (() => {
+const { BottomSheet, SheetTitle, Button, InlineAction, Icon, MediaThumb } = __ds_scope;
+/* Show all — the per-picture manager (media slice, 2026-08-31): opened by the
+   pick step's "Show all" and by the details step's picked row. One home for
+   every per-picture concern:
+
+   · ORDER — drag by the handle; the FIRST one is the cover and the badge
+     travels with it. No separate cover control exists.
+   · REMOVE — the X on each row.
+   · DESCRIBE — the per-picture entry into `DescribeSheet`; a described
+     picture shows the quiet word "Described" instead of the link.
+
+   Rows are 56px thumbs with a name ("Cover — shown first", "Picture 2") so a
+   screen-reader pass reads as a list of pictures, not a list of buttons. */
+
+function PickedSheet({
+  open = false,
+  onClose,
+  items = [],
+  onDone,
+  inline = false
+}) {
+  return /*#__PURE__*/React.createElement(BottomSheet, {
+    open: open,
+    onClose: onClose,
+    ariaLabel: `Picked · ${items.length}`,
+    inline: inline,
+    maxHeight: "88%"
+  }, /*#__PURE__*/React.createElement(SheetTitle, null, "Picked \xB7 ", items.length), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      padding: "0 var(--space-6)",
+      borderTop: "1px solid var(--border-hairline)"
+    }
+  }, items.map((item, index) => /*#__PURE__*/React.createElement("div", {
+    key: item.src ?? index,
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-4)",
+      minHeight: "68px",
+      borderBottom: "1px solid var(--border-hairline)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    style: {
+      color: "var(--text-secondary)",
+      flex: "none",
+      display: "inline-flex",
+      cursor: "grab"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "drag_indicator",
+    size: 20
+  })), /*#__PURE__*/React.createElement(MediaThumb, {
+    src: item.src,
+    alt: item.alt,
+    size: 56,
+    cover: index === 0
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      gap: "2px"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-large)",
+      lineHeight: "var(--text-label-large--line-height)",
+      fontWeight: "var(--text-label-large--font-weight)",
+      letterSpacing: "var(--text-label-large--letter-spacing)"
+    }
+  }, index === 0 ? "Cover — shown first" : `Picture ${index + 1}`), item.described ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      color: "var(--text-secondary)"
+    }
+  }, "Described") : /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    selfStart: true,
+    onClick: item.onDescribe
+  }, "Describe")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": `Remove ${index === 0 ? "the cover" : `picture ${index + 1}`}`,
+    onClick: item.onRemove,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      border: 0,
+      background: "none",
+      padding: 0,
+      cursor: "pointer",
+      color: "var(--text-secondary)",
+      display: "inline-flex",
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "close",
+    size: 18
+  }))))), /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      padding: "var(--space-3) var(--space-6) 0",
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)",
+      color: "var(--text-secondary)"
+    }
+  }, "The first one is the cover \u2014 drag to reorder."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "flex-end",
+      padding: "var(--space-2) var(--space-4) var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement(Button, {
+    variant: "text",
+    onClick: onDone ?? onClose
+  }, "Done")));
+}
+__ds_scope.PickedSheet = PickedSheet;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickedSheet.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/UploadNotice.jsx
+try { (() => {
+const { InlineAction } = __ds_scope;
+/* The two upload notices (media slice, 2026-08-31). Upload runs in the
+   background from the moment a picture has its crop (the crop happens on the
+   device; only the cropped export is uploaded), so most posts never see
+   either — these appear only when the author outruns the network.
+
+   `UploadStatusLine` is THE SEAL'S GATE: while it shows, the sign button is
+   disabled, because nothing signs until the content it signs exists.
+   `UploadErrorLine` is the failure's words — the tile wears the badge
+   (`MediaThumb failed`), this line carries Retry and Remove, in error colour
+   for the fact and primary for the ways out. Direction-by-words, as always.
+
+   THE WAYS OUT FOLLOW THE FAILURE. A network failure can be retried, so it
+   offers both. A file the surface refuses — too big for its cap, or a format
+   nothing here can read — cannot be retried into working, so it offers only
+   Remove it: `onRetry` omitted drops the link rather than dangling a control
+   that would fail the same way twice. */
+
+function Ring({
+  progress = 0.55,
+  size = 18
+}) {
+  const r = 11;
+  const c = 2 * Math.PI * r;
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 28 28",
+    width: size,
+    height: size,
+    "aria-hidden": "true",
+    style: {
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "14",
+    cy: "14",
+    r: r,
+    fill: "none",
+    stroke: "var(--border-hairline)",
+    strokeWidth: "3"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "14",
+    cy: "14",
+    r: r,
+    fill: "none",
+    stroke: "var(--primary)",
+    strokeWidth: "3",
+    strokeLinecap: "round",
+    strokeDasharray: `${Math.max(0.02, Math.min(1, progress)) * c} ${c}`,
+    transform: "rotate(-90 14 14)"
+  }));
+}
+function UploadStatusLine({
+  done,
+  total,
+  progress
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement(Ring, {
+    progress: progress ?? (total ? done / total : 0.5)
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      color: "var(--text-secondary)"
+    }
+  }, "Uploading ", done, " of ", total, " \u2014 signing waits for the pictures."));
+}
+function UploadErrorLine({
+  message = "One picture didn't upload.",
+  onRetry,
+  onRemove
+}) {
+  return /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--error)"
+    }
+  }, message), " ", onRetry && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    onClick: onRetry
+  }, "Retry"), " ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--text-secondary)"
+    }
+  }, "\xB7"), " "), /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    onClick: onRemove
+  }, "Remove it"));
+}
+__ds_scope.UploadStatusLine = UploadStatusLine;
+__ds_scope.UploadErrorLine = UploadErrorLine;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/UploadNotice.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/RefusedFile.jsx
+try { (() => {
+const { MediaThumb, UploadErrorLine } = __ds_scope;
+/* A file the surface turned away (item 17, the conformance round): the tile
+   wearing `MediaThumb`'s failed badge, and beside it the words saying which
+   rule the file broke.
+
+   THE REFUSAL IS DRAWN WHERE THE FILE WAS OFFERED — never in a dialog, never
+   in a snackbar. The author is looking at the pick step; the answer belongs on
+   it, under the tray that took the rest.
+
+   REMOVE IT IS THE ONLY WAY OUT, so no Retry is offered. Retrying cannot make
+   a file smaller or a format readable — a control that would fail the same way
+   twice is worse than no control, and `UploadErrorLine` drops the link when no
+   `onRetry` is given. That is the difference between this and an upload that
+   failed: one is a refusal, the other is a network.
+
+   A FILE NOTHING CAN READ HAS NO PREVIEW, so the tile is empty on purpose
+   rather than carrying a stand-in glyph. The empty square is the honest
+   picture of a file the surface could not open.
+
+   ONE FILE, ONE LINE, THE NEAREST REASON (jakob 2026-09-03): a file is judged
+   on its own — size and format — before it is judged against the body it wants
+   to join. So an oversized clip is refused by its cap, not by the mixed-kind
+   rule it also breaks. */
+
+function RefusedFile({
+  src,
+  alt = "",
+  video = false,
+  message,
+  onRemove
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement(MediaThumb, {
+    src: src,
+    alt: alt,
+    video: video,
+    failed: true
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0
+    }
+  }, /*#__PURE__*/React.createElement(UploadErrorLine, {
+    message: message,
+    onRemove: onRemove
+  })));
+}
+__ds_scope.RefusedFile = RefusedFile;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/RefusedFile.jsx", error: String((e && e.message) || e) }); }
+
+// components/compose/SealFooter.jsx
+try { (() => {
+const { Button } = __ds_scope;
+/* The seal's foot (item 17, the conformance round, jakob's ruling G): the pair
+   of full-width buttons that ends every signing surface in the system — the
+   post's seal, the reply's, the profile picture's, the profile's, the payout
+   address's, the wallet change's.
+
+   THE PAIR IS THE GRAMMAR OF A SEAL. Commit is filled and first; the way back
+   is the text button under it, full width so the two read as one block rather
+   than a button with a link stuck beneath. Back goes UP one stage — it is the
+   header arrow said again at the bottom, where the thumb is — and it never
+   leaves the flow. Leaving is the header's X, and that separation is the whole
+   reason the seal can afford a Back at all.
+
+   ONLY THE VERB CHANGES. "Sign and publish", "Sign the change", "Sign
+   comment" — the label names what is being signed, because a seal that says
+   only "Sign" makes the author scroll up to find out what for. Back is the
+   same word on all six, and takes no argument.
+
+   `disabled` IS THE UPLOAD'S GATE, not a validation state. Nothing signs until
+   the content it signs exists, so the seal that is still uploading wears it
+   and the words above the pair say why. A disabled button with no line
+   explaining it is the one shape this must never take. */
+
+function SealFooter({
+  signLabel,
+  backLabel = "Back",
+  disabled = false,
+  onSign,
+  onBack
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement(Button, {
+    disabled: disabled,
+    onClick: onSign,
+    style: {
+      width: "100%"
+    }
+  }, signLabel), /*#__PURE__*/React.createElement(Button, {
+    variant: "text",
+    onClick: onBack,
+    style: {
+      width: "100%"
+    }
+  }, backLabel));
+}
+__ds_scope.SealFooter = SealFooter;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/SealFooter.jsx", error: String((e && e.message) || e) }); }
 
 // components/compose/TopicRemovable.jsx
 try { (() => {
@@ -12373,6 +12477,8 @@ __ds_ns.ActsCard = __ds_scope.ActsCard;
 __ds_ns.ActsFooter = __ds_scope.ActsFooter;
 
 __ds_ns.Caret = __ds_scope.Caret;
+
+__ds_ns.CitedSheet = __ds_scope.CitedSheet;
 
 __ds_ns.CoverRow = __ds_scope.CoverRow;
 

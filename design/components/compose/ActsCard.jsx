@@ -65,9 +65,11 @@ const VALUE = {
    the page's ink — so the card reads as the card it always was and only the
    state layer, the focus ring and the 48px target arrive with `BUTTON_CLASS`. */
 const DOOR = {
+  /* `border: 0` leads, so the row's own hairline — spread in after it — is not
+     wiped by the shorthand it would otherwise follow. */
+  border: 0,
   ...ROW,
   width: "100%",
-  border: 0,
   background: "none",
   padding: 0,
   cursor: "pointer",
