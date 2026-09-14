@@ -2044,14 +2044,19 @@ jakob's word — recommended: a bottom sheet from a row on the detail
 (the tags-&-references sheet's pattern) plus the comment ⋮ menu.
 Contract implication: a per-node opinion-holders query, ungated.
 
-### 56 · The design linter walks the build's node_modules · *tooling*
+### 56 · The design linter walks the build's node_modules · *tooling* · **done 2026-09-14**
 
 Found by the viewer-state round: a worktree needs its own `npm ci` in
-`design/_build`, and the linter then reports `markdown-title-unminted`
-advisories on the vendored readmes (6 in the round's run — all from
+`design/_build`, and the linter then reported `markdown-title-unminted`
+advisories on the vendored readmes (6, all from
 `design/_build/node_modules/*/README.md`, zero from authored content).
-The linter should skip gitignored trees; until it does, every lane
-reading the advisory count must check where the advisories come from.
+Resolved the architecture's own way: the carrier's curated
+`exclude_trees` list in `corpus-adoption.toml` now carries
+`design/_build/node_modules/` beside `web/node_modules/`. A wholesale
+gitignore-aware walk was considered and rejected — the linter's
+recorded `dec:lint:refused-dependencies` decision deliberately keeps
+pattern dialects out of the carrier walk; new vendored trees get a
+literal exclude row. Baseline is 0 advisories again.
 
 ### 57 · The masters' prose still says "standing" off-screen · *design*
 
@@ -2090,12 +2095,44 @@ and re-render.
 
 ### 60 · The gate should catch a truncating filter summary · *tooling*
 
-Ruled 2026-09-11: the filter trigger fits its longest summaries at
-exactly 0px of slack (the 40px band icons), and the guard belongs in
-the GATE, not in a character budget — a check that warns when any
-feed-filter summary renders with an ellipsis, so vocabulary growth is
-caught at build time instead of on a phone. Sibling of 54.2's
-pair-format guard.
+Ruled 2026-09-11: the guard belongs in the GATE, not in a character
+budget. The gate-guards round (2026-09-14) built the measurement —
+real `figtree.ttf` advance summing, zero dependencies, validated
+against the longest drawn summary's known 0px of slack — and found
+the ruling's premise false: truncation is reachable TODAY, not a
+future vocabulary-growth risk. Of the 775 reachable filter summaries,
+26 exceed the trigger's own declared ceiling (`maxWidth: 14rem` →
+~198px of text room) and 277 exceed the band's actual ~154px — both
+lower bounds (measured at wght 300; the trigger renders at 500). An
+absolute guard is red on an untouched tree, so nothing shipped;
+awaiting jakob's ruling between a report-only census stage (becomes
+the gate once a threshold is ruled), gating only the drawn boards'
+summaries, or fixing the vocabulary first (item 64). Sibling of
+54.2's pair-format guard (shipped as `check-readouts`, the gate's
+fifth stage).
+
+### 64 · The filter summaries outgrow their trigger · *design*
+
+Found by the gate-guards round (2026-09-14) while building item 60's
+check: the feed-filter vocabulary already composes summaries wider
+than the trigger can show — widest reachable is "Comments, campaigns
+· 4 changes" at 220.5px against ~154px of band room, and 26 of the
+775 reachable summaries exceed even the trigger's own `maxWidth`.
+The drawn boards' five summaries all fit (≤148.6px); the overflow
+lives in the unboarded combinations. Needs a design ruling: shorter
+kind labels, a tighter collapse rule, or a wider trigger — then item
+60's guard can gate absolutely.
+
+### 65 · ComposePad's face claims a derivation that doesn't answer · *design*
+
+Found by `check-readouts`: `ComposePad.jsx` explains its 🙂 face as
+"nearest anchor at +0.30", but `nearestAnchor` takes a pair and a
+one-axis pick names none — with `pInterest: 1` (your own post reaches
+you in full) the nearest is 🍿, and a 1-D nearest on `pDirected`
+alone also answers 🍿. Either the one-axis pads get a ruled 1-D face
+rule (then the gate can check the face and the board may change), or
+the face is ruled hand-picked and the docblock says so. The check
+reports the face as an unverifiable note until ruled.
 
 ### 61 · The sky's dark points read backwards · *design* · **drawn 2026-09-14**
 
@@ -2168,3 +2205,40 @@ alone:
   192×192 but fills the 390px square frame of `SOL_POST`; Mira's
   face reads soft there. A higher-resolution source for the same
   face would fix it — one file swap, no reference changes.
+
+### 67 · The viewer's dots get a window · *design* · **ruled 2026-09-14**
+
+jakob, via the implementation loop: the fullscreen viewer's position
+marker is n-of-m dots with a MAX dot count, Instagram-style — a
+bounded window of dots, small edge dots implying more beyond it
+("just copy how insta does it"). Supersedes the MediaViewer master's
+dots-only-no-count stance and resolves ViewerPicture's "plain n-of-m"
+prose line in favor of the windowed dots; the plain "Picture n of m"
+count stays in the accessible name. Redraw the master + conform the
+prose; implementation's W3-7 viewer lane grades against the updated
+master (not yet dispatched — the W3 window is the deadline).
+
+### 68 · The chats icon needs its coming-soon screen · *design* · **ruled 2026-09-14**
+
+jakob, via the implementation loop: chats moved to would-like #3, but
+the band law is unchanged — the trailing-cluster chats icon STAYS on
+every root band and taps into a coming-soon state. That screen has no
+board. Draw it; the W1 shell lanes wire the icon to it and grade
+against the board once drawn. New board = one canvas slot; its copy
+needs blessing in copy-voice.
+
+### 69 · The canvas splits by domain · *tooling* · **ruled 2026-09-14**
+
+jakob: the canvas must support ~500 screens; the editor's 200-file
+cap is per canvas, so the canonical canvas splits into per-domain
+canvases along the `page` field (proposed grouping: Feed+Reel ·
+Profile+Settings · Compose+Media · Entry+Money+Maps — each opened
+with ≥25% headroom). "As long as the handoff gives me the link, the
+page, the screens tile and what to look at we can create as many
+boards as we want." The tooling round: canvas membership derived
+from the page field, one seed manifest per canvas, check-flows
+learns per-canvas membership, the handoff protocol carries per-
+canvas links. Per-canvas image budgets end the image squeeze (the
+item-62 pressure). Boards themselves do not change. Implementation
+is unaffected — their lanes grade against board files, not canvas
+URLs (confirmed 2026-09-14).

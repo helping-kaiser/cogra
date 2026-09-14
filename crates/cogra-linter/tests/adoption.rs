@@ -458,6 +458,11 @@ fn the_carrier_section_round_trips() {
     assert!(carrier.exclude_trees.contains(&PathPrefix::new("target/")));
     assert!(
         carrier
+            .exclude_trees
+            .contains(&PathPrefix::new("design/_build/node_modules/"))
+    );
+    assert!(
+        carrier
             .generated_files
             .contains(&PathPrefix::new("schema.graphql"))
     );
@@ -479,6 +484,7 @@ fn the_carrier_section_round_trips() {
 fn the_carrier_decides_what_is_excluded_and_what_is_generated() {
     let carrier = ruled().carrier;
     assert!(carrier.excludes(Path::new("target/debug/build.rs")));
+    assert!(carrier.excludes(Path::new("design/_build/node_modules/react/README.md")));
     assert!(carrier.excludes(Path::new("docs/primitive/layer1-interface.md")));
     assert!(!carrier.excludes(Path::new("docs/primitive/layers.md")));
     assert!(carrier.is_generated(Path::new("Cargo.lock")));

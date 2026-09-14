@@ -1707,9 +1707,20 @@ entry first". What stands:
   lies — an edge to a missing board or undeclared terminal, a
   number without an edge, an edge without its number, an untagged
   semantic element on a wired page, a screen nothing reaches — and
-  reports gaps without failing. Full pipeline:
-  `node bundle.mjs && node render-screens.mjs && node gen-maps.mjs
-  && node check-flows.mjs`.
+  reports gaps without failing.
+- **`_build/check-readouts.mjs` is the gate's second half**: the six
+  pads that draw their own readout (`RefPair`, `ComposePad`, `TagPad`,
+  `TagPadCompose`, `PadKeyAbsent`, the shared `ReplyPadBody`) spell
+  face and pair as literals, because the formatters and the anchor
+  lookups stay off the bundle's namespace. The check reads each pad's
+  own `value` and asks the masters what it reads as —
+  `formatStancePair` / `formatTagPair`, `nearestAnchor` /
+  `nearestTagAnchor`, `padPercentOf` — so a moved value, a hyphen
+  where §3 rules U+2212, or a spoken reading left behind is a
+  failure. A seventh hand-spelled readout anywhere in `screens/` fails
+  too: unchecked is not a state a literal gets to be in. Full
+  pipeline: `node bundle.mjs && node render-screens.mjs &&
+  node gen-maps.mjs && node check-flows.mjs && node check-readouts.mjs`.
 - **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
   & Wallet, Feed & Search, Comments, Compose, Media + Patterns; the
   Profile page joined 2026-09-01 — 699 edges over all 93 boards, no
@@ -4652,9 +4663,10 @@ recorded rather than drawn.
   `_ds_manifest.json` is the claude.ai Design app's own metadata and is
   refreshed only by that app, on an explicit sync-back.
 - `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
-  `gen-maps.mjs`, `check-flows.mjs` — the canonical-canvas pipeline
+  `gen-maps.mjs`, `check-flows.mjs`, `check-readouts.mjs` — the
+  canonical-canvas pipeline
   (§13, *Canvas pages and flows*): render the screens, stamp the flow
-  numbers, generate the maps, gate the result. Run all four after any
+  numbers, generate the maps, gate the result. Run all five after any
   screen, component, or graph.json edit. A screen whose state is not a
   portrait phone exports `FRAME` and the shell builds that artboard
   instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
