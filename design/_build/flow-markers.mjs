@@ -1711,26 +1711,42 @@ for (const [board, n] of Object.entries(CARD_SHARE)) {
    posts, one comment) no longer share one anonymous "Choose your opinion". The
    VIA NUMBERING ITSELF is unchanged here: it is still one edge for all three,
    where each FACE keeps its own (a post's, a comment's). Splitting the via to
-   match is a graph.json call, left standing for jakob to rule on. */
+   match is a graph.json call, left standing for jakob to rule on. THE TOPIC'S
+   OWN skip-link (the topic round, 2026-09-14) joins via 2 under that same
+   convention \u2014 it is the page's accessible path, and the page has one; its
+   FACE takes the next free number, 15, because every other face on the page
+   has its own.
+
+   BOTH STATES OF THE PAGE READ THE SAME LIST. The body is one helper
+   (`TagPageBody`), so the markers are one list too: `topicStance` is the only
+   thing the held state changes, since an anchor with a bundle behind it says so
+   in its accessible name. */
+const tagPageBody = ({ topicStance }) => [
+  { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
+  { n: 2, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
+  { n: 2, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+  { n: 2, find: ">Choose your opinion on this comment</button>", tag: "button" },
+  { n: 3, find: '<a href="/u/', tag: "a", all: true },
+  { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
+  { n: 5, find: ">More</button>", tag: "button", all: true },
+  { n: 6, find: "scroll-snap-type:x mandatory", tag: "div" },
+  { n: 7, find: '<a href="/t/', tag: "a", all: true },
+  { n: 8, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+  { n: 9, find: ">Post score</span>", tag: "button", all: true },
+  { n: 10, find: 'aria-label="2 comments"', tag: "button" },
+  { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+  { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
+  { n: 12, find: ">On \u201c", tag: "button", all: true },
+  { n: 13, find: 'aria-label="More on this comment"', tag: "button" },
+  { n: 14, find: 'aria-label="Your opinion on this comment', tag: "button" },
+  { n: 15, find: topicStance, tag: "button" },
+];
+
 Object.assign(FLOW_MARKERS, {
-  TagPage: [
-    { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
-    { n: 2, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
-    { n: 2, find: ">Choose your opinion on this comment</button>", tag: "button" },
-    { n: 3, find: '<a href="/u/', tag: "a", all: true },
-    { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
-    { n: 5, find: ">More</button>", tag: "button", all: true },
-    { n: 6, find: "scroll-snap-type:x mandatory", tag: "div" },
-    { n: 7, find: '<a href="/t/', tag: "a", all: true },
-    { n: 8, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
-    { n: 9, find: ">Post score</span>", tag: "button", all: true },
-    { n: 10, find: 'aria-label="2 comments"', tag: "button" },
-    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
-    { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
-    { n: 12, find: ">On \u201c", tag: "button", all: true },
-    { n: 13, find: 'aria-label="More on this comment"', tag: "button" },
-    { n: 14, find: 'aria-label="Your opinion on this comment', tag: "button" },
-  ],
+  TagPage: tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }),
+  /* The same page with the topic held \u2014 the same markers, one find apart: an
+     anchor with a bundle behind it says so in its own accessible name. */
+  TagPageHeld: tagPageBody({ topicStance: 'aria-label="Your opinion on #saltmaps' }),
   TagPageEmpty: [
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
   ],

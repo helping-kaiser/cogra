@@ -2131,3 +2131,62 @@ const POST_OPINION_HOLDERS = [
   { name: JUNO.displayName, handle: JUNO.handle, pDirected: -0.55, pInterest: 0.25 },
 ];
 
+
+/* ── THE TAG PAGE, WHOLE (the topic round, 2026-09-14) ─────────────────────
+   Shared for `ProfileOtherBody`'s reason: the held state is a STATE of this
+   page, not a second page, and a body drawn twice would drift. One prop, one
+   difference — the bundle the row's anchor reads.
+
+   THE ROW IS THE PAGE'S ONE ACTION, so it wears the profile's one-primary-
+   action idiom: `StanceControl` `wide`, stretched to the column, under the
+   title and above the list. Item 46.5 is what it closes — the tag round drew
+   this gesture on the header's trailing edge and jakob's review removed it,
+   because beside the entrance post's context it read as that post's stance
+   readout. A row of its own, below the title and above anything belonging to
+   a post, cannot be read as any post's anything.
+
+   AND IT NAMES WHAT IT STANCES. `targetLabel` is the tag itself, hash and all
+   — the mechanism backlog item 46.1 added for exactly this page, where more
+   than one stance control stands. The face's accessible name and the skip-link
+   beside it both read it, so the three on the page say which is which.
+
+   THE POLES ARE THE AFFINITY FAMILY'S, NOT THE STANCE'S. Following a topic IS
+   the stance gesture (jakob, 2026-09-14) — one gesture, one ceremony, one face
+   table — but the two slots it fills are association and attraction
+   (`layer1-interface.md` §9.5), and their ends are not "Against / For". They
+   are proposed here and NOT YET BLESSED; copy-voice carries them with that
+   mark. */
+const AFFINITY_AXES = { left: "Not mine", right: "Mine", bottom: "Away", top: "Toward" };
+
+function TagPageBody({ bundle } = {}) {
+  return (
+    <>
+      <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
+      <div style={{ padding: "4px 16px 8px" }}>
+        <StanceControl wide targetLabel="#saltmaps" axes={AFFINITY_AXES} bundle={bundle} onCommit={() => {}} />
+      </div>
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
+        <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
+          <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
+        </TaggedRow>
+
+        <TaggedRow pair={{ pDirected: 0.55, pInterest: 1 }}>
+          <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
+        </TaggedRow>
+
+        <TaggedRow pair={{ pDirected: 0.4, pInterest: 0.9 }}>
+          <CommentCard
+            attach
+            author={ADA}
+            content="Low tide is kinder to the rubbings than noon ever was."
+            timestamp="4d"
+            license={{ attribution: 0, provenance: 0 }}
+            bundle={mkBundle(0.1, 0.1)}
+            target="“Salt maps of the coast road” — @sol"
+            onOpenTarget={() => {}}
+          />
+        </TaggedRow>
+      </div>
+    </>
+  );
+}
