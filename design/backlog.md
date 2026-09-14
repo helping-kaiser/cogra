@@ -2015,10 +2015,11 @@ canvas slot un-clipped. What is left:
 Side findings of the 2026-09-11 numbers census that the small-fix
 batch could not settle:
 
-1. **Future dates have no vocabulary.** The ages ladder rules the
-   past ("recency is a feeling, history is a date"); a campaign's
-   "Runs 6 more days · ends 8 Sep" (WalletCampaign, WalletCampaigns)
-   is unruled — needs jakob's word on how a future moment is spelled.
+1. ~~**Future dates have no vocabulary.**~~ Ruled 2026-09-14: the
+   relative form is the future vocabulary — `in N days` / `in N
+   hours` — read the same ladder forward, and a far date spells
+   `dd.mm.yyyy`. `copy-voice.md`'s Ages section carries it blessed;
+   `WalletCampaign` and `WalletCampaigns` are conformed.
 2. **Pair-string format has no drift guard where a pair is still
    hand-written.** The list masters no longer take one: `TaggedRow`,
    `ReferenceRow` and `StagedReference` take `{ pDirected, pInterest }`
