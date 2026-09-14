@@ -55,12 +55,20 @@ export interface FeedFilterSheetProps {
 
 export declare function FeedFilterSheet(props: FeedFilterSheetProps): JSX.Element;
 
-/** The trigger's words, within a pill's budget: the kinds always, then either the
- *  exceptions spelled out ("newest", "showing seen") or a count of them. Past
- *  `budget` characters the detail collapses — "far from the default" is the
- *  useful fact, and which ways is what the sheet is for. Deviations only: the
- *  default state is silence. */
-export declare function feedFilterSummary(value?: FeedFilterValue, budget?: number): string;
+/** The trigger's words, within a pill's budget: one kind by name or a count of
+ *  them, then either the exceptions spelled out ("newest", "showing seen") or a
+ *  count of those. Past `budgetPx` of rendered width the detail collapses —
+ *  "far from the default" is the useful fact, and which ways is what the sheet
+ *  is for. Deviations only: the default state is silence. */
+export declare function feedFilterSummary(value?: FeedFilterValue, budgetPx?: number): string;
+
+/** The width of `text` in the trigger's own type (Figtree at
+ *  `--text-label-large`, wght 500), in px — the budget's measuring stick, and
+ *  the gate's. */
+export declare function measureTriggerText(text: string): number;
+
+/** The room the `CograBand` leaves the trigger's words, in px. */
+export declare const BAND_CEILING_PX: number;
 
 /** The worded trigger alone, for surfaces that own their sheet (search) but
  *  wear the same pill. */
