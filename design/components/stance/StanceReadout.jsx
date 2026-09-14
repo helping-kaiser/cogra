@@ -250,7 +250,7 @@ export function StanceValue({ pDirected, pInterest, showPair = true }) {
    can never reach a digit or a separator. */
 const MINUS_SIGN = "−";
 
-const DIMENSION_FORMAT = new Intl.NumberFormat(undefined, {
+const DIMENSION_FORMAT = new Intl.NumberFormat("en-US", {
   signDisplay: "always",
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -265,7 +265,7 @@ export function formatDimension(value) {
 
 /** Unsigned, two decimals — for a value whose range has no negative half. */
 export function formatUnsigned(value) {
-  return new Intl.NumberFormat(undefined, {
+  return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);
