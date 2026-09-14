@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.PathEffect
@@ -124,6 +125,12 @@ internal fun ColumnScope.PickStage(
 
     RefusedFiles(refused = state.refused, onDismiss = onDismissRefusal)
 
+    // DEAD, NOT GONE (`ComposePickVideo`'s `DeadGrid`). A post carries
+    // pictures OR one video, so once a clip is staged the grid has nothing
+    // left to offer: it dims to 45% and stops taking picks, escape to the
+    // photos app included, rather than disappearing — which would read as
+    // the step itself failing rather than as "nothing else can join".
+    val gridLive = !state.isVideoPost
     val picks = state.picked.map { it.uri }
     LazyVerticalGrid(
         // Three columns is the board's own grid: at its 390dp width a
@@ -135,12 +142,15 @@ internal fun ColumnScope.PickStage(
         modifier = Modifier
             .fillMaxWidth()
             .weight(1f)
+            .alpha(if (gridLive) 1f else DeadGridAlpha)
             .testTag("wizard_pick_grid"),
         contentPadding = PaddingValues(start = GridEdge, end = GridEdge, top = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(GridSeam),
         verticalArrangement = Arrangement.spacedBy(GridSeam),
     ) {
-        item(key = "photos_app") { PhotosAppTile(onClick = onOpenPicker) }
+        item(key = "photos_app") {
+            PhotosAppTile(onClick = onOpenPicker, enabled = gridLive)
+        }
 
         if (permission is MediaPermission.Granted) {
             items(state.deviceMedia, key = { it.uri }) { item ->
@@ -156,7 +166,11 @@ internal fun ColumnScope.PickStage(
                     // A clip says how long it is, under a play glyph, at
                     // the opposite corner — `ComposePick`'s video tile.
                     duration = item.durationMs?.let { formatDuration(it) },
-                    onClick = { onTogglePick(item.uri) },
+                    // `null` is how `MediaThumb` itself goes inert — it skips
+                    // the `clickable` modifier entirely rather than merely
+                    // ignoring taps, which is what keeps a dead tile out of
+                    // focus order and off a screen reader's action list too.
+                    onClick = { onTogglePick(item.uri) }.takeIf { gridLive },
                     contentDescription = if (order == null) {
                         "A $noun. Activate to pick it."
                     } else {
@@ -183,6 +197,13 @@ internal fun ColumnScope.PickStage(
  * all live in `PickedSheet`, which `Show all` opens — so the tray carries
  * no badges and no per-thumbnail controls, and the cover rule is stated
  * where it can be acted on rather than here.
+ *
+ * **A STAGED CLIP IS THE ONE EXCEPTION** (`ComposePickVideo`). A video takes
+ * the body whole, so there is no set left for `Show all` to reorder — the
+ * button drops and the count is the only thing on its line. In its place the
+ * tray carries the line the picture case leaves to the sheet: "A video is the
+ * whole post. Its cover comes next." An absent control explains nothing on
+ * its own, so the tray says why nothing else can join and what happens next.
  */
 @Composable
 private fun PickedTray(
@@ -196,24 +217,33 @@ private fun PickedTray(
             .padding(start = Layout.ScreenGutter, end = Layout.ScreenGutter, top = 4.dp, bottom = Space.x3),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Space.x2),
-        ) {
+        if (state.isVideoPost) {
             Text(
                 text = "Picked · ${state.picked.size}",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("wizard_picked_count"),
+                modifier = Modifier.testTag("wizard_picked_count"),
             )
-            InlineAction(
-                text = "Show all",
-                onClick = onShowAll,
-                testTag = "wizard_show_all",
-            )
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.x2),
+            ) {
+                Text(
+                    text = "Picked · ${state.picked.size}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("wizard_picked_count"),
+                )
+                InlineAction(
+                    text = "Show all",
+                    onClick = onShowAll,
+                    testTag = "wizard_show_all",
+                )
+            }
         }
         Row(
             modifier = Modifier
@@ -237,6 +267,14 @@ private fun PickedTray(
                     testTag = "wizard_tray_$index",
                 )
             }
+        }
+        if (state.isVideoPost) {
+            Text(
+                text = "A video is the whole post. Its cover comes next.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.testTag("wizard_video_body_caption"),
+            )
         }
     }
 }
@@ -288,7 +326,7 @@ private fun RefusedFiles(refused: List<RefusedPick>, onDismiss: (Int) -> Unit) {
 }
 
 @Composable
-private fun PhotosAppTile(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun PhotosAppTile(onClick: () -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier) {
     val outline = MaterialTheme.colorScheme.outline
     val dash = with(LocalDensity.current) {
         Stroke(
@@ -301,7 +339,7 @@ private fun PhotosAppTile(onClick: () -> Unit, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .aspectRatio(1f)
             .drawBehind { drawRect(color = outline, style = dash) }
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .testTag("wizard_open_picker"),
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -326,6 +364,9 @@ private fun PhotosAppTile(onClick: () -> Unit, modifier: Modifier = Modifier) {
 private val GridEdge = 4.dp
 
 private const val GRID_COLUMNS = 3
+
+/** `ComposePickVideo`'s `DeadGrid` opacity for the inert grid under a staged clip. */
+private const val DeadGridAlpha = 0.45f
 
 /**
  * `ComposeDraft` — the held draft, offered back before the picker takes
