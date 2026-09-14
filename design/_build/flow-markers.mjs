@@ -222,6 +222,21 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">#saltmaps</span>", tag: "button" },
     { n: 3, find: ">coast road</span>", tag: "button" },
     ...nav(4),
+    /* The topics door takes the board's next free number, the way the band's
+       chats and bell and the card's share all did — the page's numbering is
+       append-only, so a row added above the recents does not renumber them. */
+    { n: 11, find: ">Your topics</span>", tag: "button" },
+  ],
+  /* Every row on Your topics opens the same page, so they share one via —
+       the tag page in its HELD state, because a row on this list is held by
+       definition. */
+  YourTopics: [
+    { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
+    { n: 2, find: ">#saltmaps<", tag: "button" },
+    { n: 2, find: ">#coastroad<", tag: "button" },
+    { n: 2, find: ">#fieldnotes<", tag: "button" },
+    { n: 2, find: ">#tidetables<", tag: "button" },
+    { n: 2, find: ">#wellness<", tag: "button" },
   ],
   ExploreSearch: [
     { n: 14, find: ">saltmaps<", tag: "button" },

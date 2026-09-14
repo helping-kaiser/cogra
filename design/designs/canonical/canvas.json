@@ -758,6 +758,15 @@
       "page": "feed"
     },
     {
+      "file": "YourTopics.dc.html",
+      "title": "Your topics",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "ExploreNone.dc.html",
       "title": "Explore · nothing found",
       "x": 1440,

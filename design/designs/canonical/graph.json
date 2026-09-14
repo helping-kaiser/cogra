@@ -434,6 +434,7 @@
     { "from": "Explore", "via": 8, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "Explore", "via": 9, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
     { "from": "Explore", "via": 10, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
+    { "from": "Explore", "via": 11, "kind": "advance", "label": "Your topics (the door)", "to": [{ "board": "YourTopics" }] },
 
     { "from": "ExploreSearch", "via": 1, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing refines" }, { "board": "ExploreNone", "case": "nothing carries that name" }] },
     { "from": "ExploreSearch", "via": 2, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "ExploreFilter" }] },
@@ -1037,6 +1038,9 @@
     { "from": "TagPageHeld", "via": 15, "kind": "advance", "label": "stance face (the topic, held)", "to": [{ "terminal": "self", "case": "press-and-hold — another positive Affinity joins the bundle" }, { "board": "VouchBackPad", "case": "tap — the pad blooms over the held topic (master board), and held it carries `Walk it back`: the existing severance ceremony, at this topic's own price" }] },
 
     { "from": "TagPageEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Explore", "case": "the search surface this is a subpage of" }] },
+
+    { "from": "YourTopics", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Explore", "case": "the search surface this is a subpage of" }] },
+    { "from": "YourTopics", "via": 2, "kind": "advance", "label": "topic rows", "to": [{ "board": "TagPageHeld", "case": "the topic's own page — held, which every row on this list is" }] },
 
     { "from": "RefsSheet", "via": 1, "kind": "advance", "label": "tag rows", "to": [{ "board": "TagPage" }] },
     { "from": "RefsSheet", "via": 2, "kind": "advance", "label": "reference rows", "to": [{ "gap": "the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)" }] },
