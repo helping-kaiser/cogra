@@ -617,7 +617,7 @@ export function ComposeWizard({
             data-testid="wizard-draft-fresh"
             className="m-0 flex-1 text-body-medium text-on-surface-variant"
           >
-            Or start fresh — pick one picture, several, or one video.
+            Or start fresh —
           </p>
         </div>
       )}

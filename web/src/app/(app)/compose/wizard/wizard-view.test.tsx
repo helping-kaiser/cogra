@@ -465,6 +465,25 @@ describe("the compose wizard", () => {
     expect(screen.queryByTestId("wizard-draft-card")).not.toBeInTheDocument();
   });
 
+  // CW-43 (jakob 2026-08-31, design-session-answers q26, readme §13): the
+  // ruled short form ends on its own dash — the pick screen right below is
+  // already the rest of the sentence.
+  it("names the fresh-start route in the ruled short form", async () => {
+    const held: WizardState = {
+      ...emptyWizard(),
+      mode: "words",
+      words: "an unfinished thought",
+      title: "Salt maps",
+    };
+    render(fakeDrafts(held));
+
+    // Exact text, not a substring match: the old full sentence also started
+    // with these same words, which is exactly the regression this pins.
+    expect((await screen.findByTestId("wizard-draft-fresh")).textContent).toBe(
+      "Or start fresh —",
+    );
+  });
+
   it("restores a held draft on the step it was left on", async () => {
     const held: WizardState = {
       ...emptyWizard(),
