@@ -2534,3 +2534,65 @@ regular one `countNoun` already gets, said in the board's own words: the
 bundle exposes components and constants to screens, never a card's
 helpers, so the rule is tied by the docblocks rather than by an import.
 Nothing is drawn differently.
+
+### 76 · The feed's scroll-to-top pill · *design* · **drawn 2026-09-14**
+
+The re-tap ladder's third rung — at a scrolled root, the tab's own slot
+goes to the top, animated — is a gesture nobody is told about. Ruled by
+jakob 2026-09-14: the feed gets a control that says it. `BackToTop` is a
+`Back to top` pill that rides in with the returning collapsing band,
+centred under it, and performs exactly that rung; the two coexist, and
+the graph gives them one destination because they are one outcome
+reached two ways.
+
+Feed only — it is the one root with a top the reader is trying to get
+back to, since it is the one root that loads what is new there. It wants
+about three screens of depth: shallower, the returning band has already
+brought the top within a flick, and a control that saves one flick is a
+control in the way. It leaves when the band hides or the top is reached.
+
+**The pill is drawn OUTSIDE the collapsing block, and that is the rule
+to keep.** The region hides once half its own slot has scrolled past, so
+its threshold is a function of its own height — a pill among the band's
+children would move the band's collapse point on the feed alone, and a
+taller block is what re-clamps the list (item 45.3). It is positioned
+against the screen, takes no layout space, and sits at `zIndex` 19 to
+the region's 20 so it slides under the band rather than over it. The
+same trap eats the pill's own depth reading: a list that re-clamps
+reports a scroll it does not have, so the pill would blink out at the
+moment it was most useful. Recorded in `BackToTop.prompt.md`.
+
+**Drawn**: `FeedScrolled`, the tree's first mid-scroll board — a feed
+drawn from its first card is a feed at rest whatever else is on it, so
+the list is pulled up and both cards are cut. `Back to top` is recorded
+in copy-voice; the ladder's rung 3 in readme §13 now names the pill.
+
+### 77 · The severance confirm had no board · *design* · **drawn 2026-09-14**
+
+`SeveranceConfirm` has been a component and a card since the stance
+work, and no canonical board ever raised it: the one act in this product
+that takes a relationship to nothing existed on the canvas as a specimen
+and not as a moment.
+
+Drawn 2026-09-14 on the PICK route — an ordinary pick that happens to
+net the bundle to (0, 0), confirmed and never refused, which is the rule
+the dialog exists for and the one a reader can reach without meaning to.
+The arithmetic is the component card's and it was forced: a raw sum past
+the clip cannot be walked back by one pick when the field stops at ±1,
+so the capped aside belongs to the explicit route and this board states
+the raw total with no cap line under it.
+
+It sits on the **patterns** page beside `PadKeyAbsent` — the other board
+where the pad's overlay is the subject and the shell beneath is only
+ground — because severance can be reached from any surface carrying a
+stance, and drawing it on one of them would make a cross-cutting gate
+look like the feed's own. Wired from `VouchBackPad/4`, the master pad's
+`Set`.
+
+**What it leaves standing**: the master pad board is the FIRST vouch, so
+its own fixture has no standing bundle to walk back — the severance case
+is one the master represents rather than one its own drawing could
+reach, and the explicit `Walk it back` button (which `StanceControl`
+draws only once a reader has records) is on no board at all. A pad board
+drawn with a standing opinion would close both; it was not in this
+round's scope.
