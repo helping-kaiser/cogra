@@ -597,7 +597,17 @@ export function PostView({
           onSelect: () => router.push(`/compose?post=${postId}`),
           testId: "post-menu-edit",
         },
-        { label: "Mark as sensitive", onSelect: () => {}, testId: "post-menu-sensitive" },
+        {
+          // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
+          // post sensitive is always a signed action changing the post — an
+          // edit — so there is no standalone commit path and this row is a
+          // door into the edit flow rather than a sheet of its own. Edit is
+          // the general door; this is the intentioned one. When the edit
+          // surface's drawn Sensitive row lands (CW-46) the link can focus it.
+          label: "Mark as sensitive",
+          onSelect: () => router.push(`/compose?post=${postId}`),
+          testId: "post-menu-sensitive",
+        },
         { label: "Remove", onSelect: () => setRemoveOpen(true), testId: "post-menu-remove" },
       );
     } else {

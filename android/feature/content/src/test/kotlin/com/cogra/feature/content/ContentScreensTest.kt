@@ -790,6 +790,22 @@ class ContentScreensTest {
         assertThat(editing).isEqualTo("p1")
     }
 
+    // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published post is
+    // always a signed action changing it, so the row is a door into the edit
+    // flow — the intentioned one beside Edit's general one.
+    @Test
+    fun markAsSensitiveIsADoorIntoTheEditFlow() {
+        var editing: String? = null
+        renderDetail(
+            PostDetailUiState(loading = false, post = testPost("p1")),
+            viewerId = "author-1",
+            onEdit = { editing = it },
+        )
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_sensitive").performClick()
+        assertThat(editing).isEqualTo("p1")
+    }
+
     // THE COMMENT'S ROWS (`_shared.jsx:392`), and the missing Hide row is
     // RULED (jakob 2026-09-12): hiding names an actor, reached from the
     // commenter's own profile.
