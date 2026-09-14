@@ -49,11 +49,15 @@ class VideoControlsPlacementTest {
         val frame = compose.onNodeWithTag(FRAME_TAG).getUnclippedBoundsInRoot()
         val mute = compose.onNodeWithTag("video_mute").getUnclippedBoundsInRoot()
 
-        // Bottom-left, at the same inset the Row's own padding sets —
-        // not bottom-right, which is what FE-31 reported.
-        assertThat((mute.left - frame.left).value).isWithin(TOLERANCE).of(Space.x2.value)
+        // Bottom-left, not bottom-right (what FE-31 reported). The left
+        // inset stacks two paddings: the Row's own edge padding, plus
+        // MuteButton's own `start` padding — the gap it reserves before
+        // itself for a duration badge, which lands as a left inset here
+        // since no badge is showing.
+        val leftInset = Space.x2.value * 2
+        assertThat((mute.left - frame.left).value).isWithin(TOLERANCE).of(leftInset)
         assertThat((frame.bottom - mute.bottom).value).isWithin(TOLERANCE).of(Space.x2.value)
-        assertThat((frame.right - mute.right).value).isGreaterThan(Space.x2.value)
+        assertThat((frame.right - mute.right).value).isGreaterThan(leftInset)
     }
 
     @Composable
