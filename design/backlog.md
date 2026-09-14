@@ -295,7 +295,7 @@ comment rows confused): one unified Comments section — the
 thread row + the reply-composer row, each with its own note; no
 board deleted (none were duplicates — distinct states).
 
-### 13 · Post Score drill-down · *design*
+### 13 · Post Score drill-down · *design* · **drawn 2026-09-12**
 Four screens — FeedEntry → RankPath → RankHop → raw records — each
 carrying a small cover of the post it came from. The register is graph,
 paths, connections; never statistics, never a chart. Its five parts
@@ -2499,3 +2499,17 @@ Recorded in copy-voice under Accessible names. The two wallet seals'
 Address rows are the one place still bare: the wallet surfaces are held
 for another lane, and an absent noun renders exactly as before, so they
 adopt it when that lane next opens them.
+
+### 74 · The onboarding intro amends the per-control rule · *design*
+
+jakob's ruling (2026-09-14) amends §13's per-control rule
+(design/readme.md §13, "First-time onboarding is per-control, never a
+tour"): a skippable 3-5 card first-entry intro joins the per-control
+coach marks, re-watchable from Settings. A static About page carries the
+fuller version of the differences — all-public, including future chats,
+the graph, the pad, money/pull marketing, and why a not-yet-vouched user
+cannot fully act. A new Settings group hosts the re-watch entry, the
+About page, and privacy/terms. Per-control coach marks stay as they are;
+the seen-flag is server-side.
+
+Status: open, awaiting the Round C drawing round.
