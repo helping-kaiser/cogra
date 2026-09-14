@@ -21,11 +21,7 @@
 
 import type React from "react";
 
-import {
-  fitFor,
-  parseAspectRatio,
-  tileRatio,
-} from "@/lib/ui2/media/aspect";
+import { parseAspectRatio, tileRatio } from "@/lib/ui2/media/aspect";
 import { BodyVeil } from "@/lib/ui2/media/body-veil";
 import { MediaGallery, type GalleryItem, type PlayerSurface } from "@/lib/ui2/media/media-gallery";
 import { RemovedPlaceholder, type RemovalReason } from "@/lib/ui2/media/removed-placeholder";
@@ -298,4 +294,4 @@ function SharedVeil({
 }
 
 /** Re-exported so a caller reading one attachment does not import three modules. */
-export { fitFor, tileRatio, sensitiveSignature };
+export { tileRatio, sensitiveSignature };
