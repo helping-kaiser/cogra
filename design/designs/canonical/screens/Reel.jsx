@@ -44,7 +44,7 @@ export function Screen() {
       <MediaDisc label="Turn sound on" glyph="volume_off" corner="top-right" pressed={false} onClick={() => {}} />
 
       <ReelRail
-        author={{ handle: MIRA.handle, displayName: MIRA.displayName, src: "ava1.jpg" }}
+        author={{ handle: MIRA.handle, displayName: MIRA.displayName, src: "inviter.jpg" }}
         score={MIRA_CLIP_POST.score}
         comments={MIRA_CLIP_POST.comments}
         bottom={BAND_HEIGHT + 96}

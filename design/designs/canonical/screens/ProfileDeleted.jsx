@@ -66,33 +66,5 @@
    the actor — an author chip on a post they wrote, a comment's author, a name
    in someone's chronicle. Those point at an actor, and the actor is there. */
 export function Screen() {
-  return (
-    <>
-      <PageHeader backHref="#" backLabel="Back" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <div style={{ padding: "0 16px" }}>
-          <ProfileHeader
-            handle="marlow"
-            redacted
-            bio={<RedactedContent reason="account" when="3d" />}
-            posts={7}
-            stancesOn={22}
-            stancesTaken={19}
-            onCounts={() => {}}
-            onCommit={() => {}}
-            menu={deletedProfileMenu()}
-            showHandle={false}
-          />
-        </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
-        <ChronicleList>
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="9d" second="Three mornings on the wall, watching the tide come in over the flats." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="12d" second="The tunnel is faster; the coast road is the reason to drive at all." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.5, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @sol" trailing="14d" inert />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} />
-        </ChronicleList>
-      </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
-    </>
-  );
+  return <ProfileDeletedBody />;
 }

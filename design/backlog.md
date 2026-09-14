@@ -557,11 +557,11 @@ Two follow-ups the round surfaces, still open:
   - **`PickPrompt` requires an escape.** The draft board's
     fresh-start line is the same caption with nothing to escape to;
     it is spelled at the master's values instead of taking it.
-  - **No one-axis stance pad exists.** `ComposePad` draws its own
-    and `ReplyPad` will want the same one. Its readout now reads the
-    table — 🙂 "Nice", the nearest anchor at +0.30 — so what is left
-    is the field itself: a master for the line, or two boards
-    drawing one.
+  - **No one-axis stance pad exists.** `ComposePad` draws its own,
+    and it is the only board that wants one — `ReplyPad` reads the
+    master square. Its readout reads `VALENCE_SIX`, so what is left
+    is the field itself: a master for the line, or one board
+    drawing it.
   - **A flow badge on a field never paints.** The badge's `::after`
     generates no box on a replaced element, and the composer boards
     stamp the `<input>`/`<textarea>` itself (`ComposeCited`,
@@ -1862,7 +1862,7 @@ lane's filing: the post veil face's remaining divergences, `HelpDot`'s
 geometry drifting from its board while its KDoc claims conformance,
 item 30, and four surfaces still using spinners as loading states —
 each named in PR #667's body.
-### 52 · The length caps have no affordance · *design*
+### 52 · The length caps have no affordance · *design* · **drawn 2026-09-11**
 
 Filed by the caps lane 2026-09-10 (renumbered at integration, finally 52), which enforced the title cap (100
 characters, jakob's ruling) end to end and found no drawn way to say so.
@@ -2032,7 +2032,7 @@ batch could not settle:
    screens. A check in the design gate that validates those literals
    against the format contract would close the rest.
 
-### 55 · The opinions-on-content list · *design*
+### 55 · The opinions-on-content list · *design* · **drawn 2026-09-12**
 
 jakob, 2026-09-11 (the MVP design-queue rulings): the profile's
 "opinions on you" needs its content mirror — who holds opinions on
@@ -2073,7 +2073,7 @@ specimen `SheetTitle` the live `OverflowMenu` doesn't render;
 `feed-filter.card.html:46`'s history sentence naming the replaced
 segmented row; the frozen search-ideation canvases' `3w` ages.
 
-### 58 · The vouch-back ceremony · *design*
+### 58 · The vouch-back ceremony · *design* · **drawn 2026-09-12**
 
 jakob, 2026-09-11 (the second ruling round): once a landed member
 vouches back, the moment deserves a ceremonial ending — "some
@@ -2123,26 +2123,26 @@ lives in the unboarded combinations. Needs a design ruling: shorter
 kind labels, a tighter collapse rule, or a wider trigger — then item
 60's guard can gate absolutely.
 
-### 65 · ComposePad's face claims a derivation that doesn't answer · *design*
+### 65 · ComposePad's face claims a derivation that doesn't answer · *design* · **drawn 2026-09-14**
 
-Found by `check-readouts`: `ComposePad.jsx` explains its 🙂 face as
-"nearest anchor at +0.30", but `nearestAnchor` takes a pair and a
-one-axis pick names none — with `pInterest: 1` (your own post reaches
-you in full) the nearest is 🍿, and a 1-D nearest on `pDirected`
-alone also answers 🍿. Either the one-axis pads get a ruled 1-D face
-rule (then the gate can check the face and the board may change), or
-the face is ruled hand-picked and the docblock says so. The check
-reports the face as an unverifiable note until ruled.
+Found by `check-readouts`: the board explained its 🙂 face as "nearest
+anchor at +0.30", a derivation a one-axis pick cannot make —
+`nearestAnchor` takes a pair, and with `pInterest: 1` (your own post
+reaches you in full) the nearest is 🍿. Closed by the valence-six
+ruling: the ruled six become `VALENCE_SIX` and `nearestValenceAnchor`
+in `StanceReadout.jsx`, the pad re-draws at its +0.10 default reading
+🙂, and the gate checks the face against the table.
 
-### 61 · The sky's dark points read backwards · *design* · **ruled: its own pass**
+### 61 · The sky's dark points read backwards · *design* · **drawn 2026-09-14**
 
 Found by the ceremony round: dark `secondaryContainer` is `#743918`,
 which sinks into the near-black ground — on the Explore hero's
-`SkyField` the LARGEST points (the most-weighted accounts) come out
-the DIMMEST, so the weight reading runs backwards in the dark theme.
-`VouchedIn` avoided it by dropping to two rungs (`outline` /
-`primaryContainer`); the hero needs the same treatment or a dark-side
-token fix. Moves the Explore board — its own pass.
+`SkyField` the mid-weight points came out dimmer than the small ones,
+so the weight reading ran backwards in the dark theme. Closed with the
+ceremony's own fix rather than a token change: `SkyField`'s two
+`secondaryContainer` points now take `primaryContainer`, leaving the
+field on `outline` (far) / `primaryContainer` (near) plus `primary`,
+the three values `VouchedIn` already proved on both grounds.
 
 ### 62 · The canvas sits at the editor's file ceiling · *tooling* · **strategy ruled**
 
@@ -2166,6 +2166,21 @@ horizon; canvas-splitting stays the escape hatch. Also ruled: the
 drill-down's record key stays inert until the spot-check tooling
 exists; the graph's 23 "Post Score" edge labels stay (matched keys).
 
+**Consolidated 2026-09-14:** the ten fixtures were only eight
+photographs. `clip-canoe.jpg` was `post-photo.jpg`'s own frame and
+`ava1.jpg` a square crop of `comment-camera.jpg`, so both went and the
+survivors took their roles — `post-photo.jpg` posters the wide clip
+beside its two post frames and the pick trays, `comment-camera.jpg`
+carries Ada's face beside the attachment and the avatar crop it
+already served. Eight images remain (`clip-lakeside`,
+`comment-camera`, `gallery-grapes`, `gallery-honey`, `gallery-market`,
+`gallery-veg`, `inviter`, `post-photo`) and the canvas holds 198
+files — 199 once `ProfileDeletedMenu` took the slot that freed, one
+under the ceiling. Six needs a ruling rather than a merge: the gallery's four
+frames are four distinct foods under one crop shape, the two faces sit
+side by side on the weighted-accounts list, and `clip-lakeside` is the
+9:16 crop case the stream and viewer show whole.
+
 ### 63 · The pair formatter floats with the runtime locale · *system*
 
 Found by the close-out round: `formatDimension` and `formatUnsigned`
@@ -2174,3 +2189,79 @@ render `+0,40` where §3's fixed `+0.40 / +0.20` allows only the dot.
 Pin the locale (`en-US` or an explicit numbering contract) in both
 formatters and re-render; the U+2212 substitution (item 59, ruled)
 is unaffected.
+
+### 66 · What the image round found out of scope · *design + system*
+
+Two fixture defects the 2026-09-14 consolidation surfaced and left
+alone:
+
+- **The search boards ship a broken image.** Three
+  `design/designs/search/screens/*.jsx` reference `post-photo.jpg`,
+  but `design/designs/search/` has no `img/` directory — the frozen
+  search-ideation canvas renders a broken image where the post photo
+  should sit.
+- **`inviter.jpg` upscales ~2× in a post frame.** The file is
+  192×192 but fills the 390px square frame of `SOL_POST`; Mira's
+  face reads soft there. A higher-resolution source for the same
+  face would fix it — one file swap, no reference changes.
+
+### 67 · The viewer's dots get a window · *design* · **ruled 2026-09-14**
+
+jakob, via the implementation loop: the fullscreen viewer's position
+marker is n-of-m dots with a MAX dot count, Instagram-style — a
+bounded window of dots, small edge dots implying more beyond it
+("just copy how insta does it"). Supersedes the MediaViewer master's
+dots-only-no-count stance and resolves ViewerPicture's "plain n-of-m"
+prose line in favor of the windowed dots; the plain "Picture n of m"
+count stays in the accessible name. Redraw the master + conform the
+prose; implementation's W3-7 viewer lane grades against the updated
+master (not yet dispatched — the W3 window is the deadline).
+
+### 68 · The chats icon needs its coming-soon screen · *design* · **ruled 2026-09-14**
+
+jakob, via the implementation loop: chats moved to would-like #3, but
+the band law is unchanged — the trailing-cluster chats icon STAYS on
+every root band and taps into a coming-soon state. That screen has no
+board. Draw it; the W1 shell lanes wire the icon to it and grade
+against the board once drawn. New board = one canvas slot; its copy
+needs blessing in copy-voice.
+
+### 69 · The canvas splits by domain · *tooling* · **ruled 2026-09-14**
+
+jakob: the canvas must support ~500 screens; the editor's 200-file
+cap is per canvas, so the canonical canvas splits into per-domain
+canvases along the `page` field (proposed grouping: Feed+Reel ·
+Profile+Settings · Compose+Media · Entry+Money+Maps — each opened
+with ≥25% headroom). "As long as the handoff gives me the link, the
+page, the screens tile and what to look at we can create as many
+boards as we want." The tooling round: canvas membership derived
+from the page field, one seed manifest per canvas, check-flows
+learns per-canvas membership, the handoff protocol carries per-
+canvas links. Per-canvas image budgets end the image squeeze (the
+item-62 pressure). Boards themselves do not change. Implementation
+is unaffected — their lanes grade against board files, not canvas
+URLs (confirmed 2026-09-14).
+
+### 70 · The seal's References row only draws one citation · *design*
+
+Surfaced by implementation's W4 seal lane (PR #706, 2026-09-14): the
+seal's References act row (`_shared.jsx`) draws exactly one staged
+citation — name over its stance readout — but the compose section
+allows up to ten staged at once, and no board draws the
+multi-citation case. Implementation shipped the drawn
+single-citation reading (first citation's name + readout, the
+trailing act count still totals correctly) and will render that
+undrawn case until the board exists. Needs a drawing round: how the
+row stacks, truncates, or summarizes 2–10 citations. No lane is
+blocked on it.
+
+### 71 · The pipeline outgrew its budget · *tooling*
+
+The valence-six round measured the six-stage pipeline at 33–50 s on
+a quiet machine, against the recorded 15–25 s budget — every run
+over, so this is not lane concurrency (an earlier note blamed it;
+these runs refute that). Either the budget re-sets to ~35–50 s
+(the tree grew: 190 boards, six stages) or a regression wants a
+cause (check-flows alone ran 8.2 s). Wants one quiet profiling
+pass: per-stage timings across the last few chain states, then
+either a budget commit or a fix.

@@ -1334,6 +1334,15 @@
       "page": "profile"
     },
     {
+      "file": "ProfileDeletedMenu.dc.html",
+      "title": "Profile · a deleted account's menu",
+      "x": 2880,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ProfilePosts.dc.html",
       "title": "Profile · the posts view",
       "x": 1920,
