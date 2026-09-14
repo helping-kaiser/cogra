@@ -2261,7 +2261,7 @@ the chat-surface gap. Ruling 68 names the band icon, and routing a
 labelled *Message* into a coming-soon screen is a separate decision.
 `message-someone` stays blocked on it.
 
-### 69 · The canvas splits by domain · *tooling* · **ruled 2026-09-14**
+### 69 · The canvas splits by domain · *tooling* · **done 2026-09-14**
 
 jakob: the canvas must support ~500 screens; the editor's 200-file
 cap is per canvas, so the canonical canvas splits into per-domain
@@ -2276,6 +2276,16 @@ canvas links. Per-canvas image budgets end the image squeeze (the
 item-62 pressure). Boards themselves do not change. Implementation
 is unaffected — their lanes grade against board files, not canvas
 URLs (confirmed 2026-09-14).
+
+Done same day: readme §14 pins the working model, `canvases.json`
+holds the map (with each canvas's published url), `gen-canvases.mjs`
+seeds and gates the manifests as the pipeline's fourth stage. The four
+canvases published — feed 50 files · profile 42 · compose 73 · entry
+51, all ≥64% headroom — and the old single-canvas artifact republished
+as a signpost to them (its version picker keeps the monolith). Ruled
+grouping mapped onto the real page ids: comments ride with feed,
+patterns with the maps. Canvas titles say "and" — the editor refuses
+`&` in a title, and the stage now gates that.
 
 ### 70 · The seal's References row only draws one citation · *design*
 
