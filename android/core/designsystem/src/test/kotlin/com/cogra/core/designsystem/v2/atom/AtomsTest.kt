@@ -2,6 +2,10 @@ package com.cogra.core.designsystem.v2.atom
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertTouchHeightIsEqualTo
@@ -10,6 +14,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
@@ -18,6 +23,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.google.common.truth.Truth.assertThat
@@ -312,6 +318,99 @@ class AtomsTest {
         // "Title, optional" rather than two unrelated fragments.
         compose.onNodeWithTag("title").assertExists()
         compose.onNodeWithText("Optional").assertExists()
+    }
+
+    // THE LATE COUNTER (design/components/forms/TextField.jsx:85-92): silent
+    // outside the window, "N left" at the boundary, "N over" past the cap.
+    @Test
+    fun aFieldsCounterIsSilentOutsideItsWindow() {
+        // Title's cap is 100, floor-driven: max(20, round(100/10)) = 20.
+        assertThat(fieldCountReading("a".repeat(79), cap = 100)).isNull()
+        // Description's cap is 500, tenth-driven: max(20, round(500/10)) = 50.
+        assertThat(fieldCountReading("a".repeat(449), cap = 500)).isNull()
+    }
+
+    @Test
+    fun aFieldsCounterAppearsAtTheExactWindowBoundary() {
+        assertThat(fieldCountReading("a".repeat(80), cap = 100))
+            .isEqualTo(FieldCountReading("20 left", over = false))
+        assertThat(fieldCountReading("a".repeat(450), cap = 500))
+            .isEqualTo(FieldCountReading("50 left", over = false))
+    }
+
+    @Test
+    fun aFieldsCounterFlipsToOverPastItsCap() {
+        // The board's own fixture: 507 of 500 reads "7 over"
+        // (design/designs/canonical/screens/ComposeDetailsCaps.jsx:14-19).
+        assertThat(fieldCountReading("a".repeat(507), cap = 500))
+            .isEqualTo(FieldCountReading("7 over", over = true))
+    }
+
+    @Test
+    fun aFieldsCounterCountsScalarValuesNotCodeUnits() {
+        // An astral emoji is two UTF-16 code units and one scalar value.
+        val value = "🎉".repeat(96) // 96 scalar values, cap 100 -> 4 left
+        assertThat(value.length).isEqualTo(192)
+        assertThat(fieldCountReading(value, cap = 100))
+            .isEqualTo(FieldCountReading("4 left", over = false))
+    }
+
+    @Test
+    fun usedOverridesTheArithmeticForATailFixture() {
+        assertThat(fieldCountReading("only the tail", cap = 500, used = 507))
+            .isEqualTo(FieldCountReading("7 over", over = true))
+    }
+
+    @Test
+    fun aFieldWithNoCapShowsNoCounter() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                CograTextField(value = "anything", onValueChange = {}, label = "Title", testTag = "title")
+            }
+        }
+
+        compose.onNodeWithTag("title_count").assertDoesNotExist()
+    }
+
+    @Test
+    fun aFieldOverItsCapShowsTheCountAndTheAtomsOwnErrorState() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                CograTextField(
+                    value = "a".repeat(105),
+                    onValueChange = {},
+                    label = "Title",
+                    cap = 100,
+                    error = "Too long — at most 100 characters.",
+                    testTag = "title",
+                )
+            }
+        }
+
+        compose.onNodeWithTag("title_count").assertTextEquals("5 over")
+        compose.onNodeWithTag("title_error").assertTextEquals("Too long — at most 100 characters.")
+    }
+
+    @Test
+    fun aFieldCarriesNoLengthLimitSoTypingPastTheCapIsNeverTruncated() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                var value by remember { mutableStateOf("") }
+                CograTextField(
+                    value = value,
+                    onValueChange = { value = it },
+                    label = "Title",
+                    cap = 100,
+                    testTag = "title",
+                )
+            }
+        }
+
+        compose.onNodeWithTag("title").performTextInput("a".repeat(105))
+        // De-truncation: nothing in the atom bounds the value's length, so
+        // the drawn "N over" state is reachable rather than unreachable
+        // behind a native input limit.
+        compose.onNodeWithTag("title_count").assertTextEquals("5 over")
     }
 
     @Test
