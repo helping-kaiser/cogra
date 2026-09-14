@@ -39,6 +39,7 @@ import com.cogra.core.designsystem.v2.atom.CograReadoutChip
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.Hairline
+import com.cogra.core.designsystem.v2.atom.HelpDot
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
@@ -73,6 +74,7 @@ internal fun ColumnScope.SealStepBody(
     onBack: () -> Unit,
     onRestoreKey: () -> Unit,
     onKeepDraft: () -> Unit,
+    onKeyHelp: () -> Unit,
 ) {
     Text(
         text = "${state.sealSummary}.",
@@ -91,35 +93,54 @@ internal fun ColumnScope.SealStepBody(
             onAction = { onOpenSheet(SealSheet.License) },
             testTag = "wizard_seal_license",
         )
-        SettingRow(
-            label = "Where you stand on it",
-            // A publish's own stance is one axis (pDirected); pInterest is
-            // census-fixed at 1 here — "your own post always reaches you
-            // in full" (StanceSheet's doc, below) — so the readout reads
-            // the real fixed pair, the same shape the reply seal already
-            // reads its own two-axis pick through (ReplySealStep.kt).
-            value = stanceRowReading(StancePoint(state.pDirected, 1.0)),
-            actionText = "Adjust",
-            onAction = { onOpenSheet(SealSheet.Stance) },
-            testTag = "wizard_seal_stance",
-        )
-        // The author's own mark. The row says where it stands and the
-        // sheet is where it is set — the same shape License and the
-        // stance pad take, so the seal reads as one list of choices.
-        SettingRow(
-            label = "Sensitive",
-            value = if (state.sensitive) "Marked" else "Not marked",
-            actionText = if (state.sensitive) "Change" else "Mark",
-            onAction = { onOpenSheet(SealSheet.Sensitive) },
-            testTag = "wizard_seal_sensitive",
-        )
+        // Key absent: everything the signature would commit is still read
+        // back, but the license is the only term left changeable — the
+        // board draws one row (ComposeKeyAbsent.jsx:47).
+        if (!state.keyAbsent) {
+            SettingRow(
+                label = "Where you stand on it",
+                // A publish's own stance is one axis (pDirected); pInterest is
+                // census-fixed at 1 here — "your own post always reaches you
+                // in full" (StanceSheet's doc, below) — so the readout reads
+                // the real fixed pair, the same shape the reply seal already
+                // reads its own two-axis pick through (ReplySealStep.kt).
+                value = stanceRowReading(StancePoint(state.pDirected, 1.0)),
+                actionText = "Adjust",
+                onAction = { onOpenSheet(SealSheet.Stance) },
+                testTag = "wizard_seal_stance",
+            )
+            // The author's own mark. The row says where it stands and the
+            // sheet is where it is set — the same shape License and the
+            // stance pad take, so the seal reads as one list of choices.
+            SettingRow(
+                label = "Sensitive",
+                value = if (state.sensitive) "Marked" else "Not marked",
+                actionText = if (state.sensitive) "Change" else "Mark",
+                onAction = { onOpenSheet(SealSheet.Sensitive) },
+                testTag = "wizard_seal_sensitive",
+            )
+        }
         Hairline()
     }
 
     Spacer(Modifier.weight(1f))
 
     if (state.keyAbsent) {
-        KeyAbsentCard(onRestoreKey = onRestoreKey, onKeepDraft = onKeepDraft)
+        // The keep-draft way out is a SIBLING below the panel, full width —
+        // not nested inside it (ComposeKeyAbsent.jsx:62).
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
+        ) {
+            KeyAbsentPanel(onRestoreKey = onRestoreKey, onKeyHelp = onKeyHelp)
+            CograButton(
+                text = "Keep the draft, restore later",
+                onClick = onKeepDraft,
+                kind = ButtonKind.Text,
+                modifier = Modifier.fillMaxWidth(),
+                testTag = "wizard_keep_draft",
+            )
+        }
     } else {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -338,16 +359,19 @@ private fun stanceRowReading(pick: StancePoint): String =
     "${nearestStanceAnchor(pick).emoji} ${pick.pair()}"
 
 /**
- * `ComposeKeyAbsent` — this device holds no actor key, so nothing can
- * be signed here.
+ * `ComposeKeyAbsent` — this app holds no actor key, so nothing can be
+ * signed here. The panel itself; the keep-draft way out is a sibling
+ * below it ([SealStepBody]), not drawn inside — the board's own layout
+ * (ComposeKeyAbsent.jsx:46-62).
  *
- * The wording follows the board with one honest change: the board says
- * "browser", and this is the app. The draft is already kept by the time
- * this shows, so "keep the draft, restore later" is a statement of what
- * happened rather than a promise.
+ * The heading carries copy-voice's platform noun ("this app", not a bare
+ * "device" — copy-voice.md §Platform nouns) and its own inverse `?`,
+ * opening [HelpTopic.Key]; the restore action is `Inverse`, the filled
+ * button turned over on the panel's own pair rather than `primary`
+ * arguing with it.
  */
 @Composable
-private fun KeyAbsentCard(onRestoreKey: () -> Unit, onKeepDraft: () -> Unit) {
+private fun KeyAbsentPanel(onRestoreKey: () -> Unit, onKeyHelp: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -357,23 +381,30 @@ private fun KeyAbsentCard(onRestoreKey: () -> Unit, onKeepDraft: () -> Unit) {
             .testTag("wizard_key_absent"),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
     ) {
-        Text(
-            text = "Your key isn't on this device",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onTertiaryContainer,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        ) {
+            Text(
+                text = "Your key isn't in this app",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                modifier = Modifier.weight(1f),
+            )
+            HelpDot(
+                onHelp = onKeyHelp,
+                contentDescription = HelpTopic.Key.title,
+                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                testTag = "wizard_key_help",
+            )
+        }
         CograButton(
             text = "Restore the key",
             onClick = onRestoreKey,
+            kind = ButtonKind.Inverse,
             modifier = Modifier.fillMaxWidth(),
             testTag = "wizard_restore_key",
-        )
-        CograButton(
-            text = "Keep the draft, restore later",
-            onClick = onKeepDraft,
-            kind = ButtonKind.Text,
-            modifier = Modifier.fillMaxWidth(),
-            testTag = "wizard_keep_draft",
         )
     }
 }

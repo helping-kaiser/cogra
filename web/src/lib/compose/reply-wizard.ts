@@ -79,7 +79,7 @@ export type ReplyState = {
    * The video's face — ReplyVideo's cover row. Null on a pictures comment, and
    * on a video whose cover has not been settled yet. It is NOT an attachment:
    * the gallery carries the clip alone and the cover reaches the reader through
-   * the video's own `coverMedia`, which is also why it takes no description.
+   * the clip's own placement, which is also why it takes no description.
    */
   readonly cover: CoverAsset | null;
   readonly tags: readonly TagDraft[];

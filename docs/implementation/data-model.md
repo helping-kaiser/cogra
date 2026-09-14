@@ -941,6 +941,18 @@ CREATE INDEX post_attachments_attachment_idx
 CREATE INDEX comment_attachments_attachment_idx
     ON comment_attachments (attachment_id);
 
+-- The poster's own reverse direction — "which placement uses this asset
+-- as its cover?" — which the orphan sweep probes and which every
+-- media_attachments delete performs as its foreign-key check. Partial
+-- because the column is null on every placement that is not a covered
+-- clip, and both only ever look for a value.
+CREATE INDEX post_attachments_cover_media_idx
+    ON post_attachments (cover_media_id)
+    WHERE cover_media_id IS NOT NULL;
+CREATE INDEX comment_attachments_cover_media_idx
+    ON comment_attachments (cover_media_id)
+    WHERE cover_media_id IS NOT NULL;
+
 -- Junction: chat messages → attachments (ordered).
 CREATE TABLE chat_message_attachments (
     chat_message_id UUID     NOT NULL REFERENCES chat_messages(id),
@@ -1440,10 +1452,10 @@ video and the removal cascade can see the link. The junction-side
 `is_cover` is a different concern: it selects which attachment leads
 a multi-asset parent.
 
-The orphan sweep counts that link as a reference like any other, so
-a poster survives as long as a version naming it — without that
-probe the sweep would collect the cover of a clip that is still
-there.
+The orphan sweep counts both junctions' cover columns as references
+like any other, so a poster survives as long as a version naming it
+— without those probes the sweep would collect the cover of a clip
+that is still there.
 
 ### User-scoped FKs are defense-in-depth, not deletion mechanics
 

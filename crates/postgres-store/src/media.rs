@@ -9,14 +9,15 @@
 //!
 //! An asset row is **immutable after upload**: there is no update surface
 //! for one, the digest names the bytes permanently, and the object is
-//! cacheable forever. A description is not the asset's to hold — alt text
-//! rides the payload envelope and the junction row caches it per version,
-//! so writing or correcting one is a new version of the parent and the
-//! bytes never move again (data-model.md "Media attachments").
+//! cacheable forever. Neither a description nor a poster is the asset's to
+//! hold — both ride the payload envelope and the junction row caches them
+//! per version, so writing a description or naming a different cover is a
+//! new version of the parent and the bytes never move again (data-model.md
+//! "Media attachments").
 //!
 //! That is also why the same asset can read differently in two parents:
-//! the description belongs to the placement, and each version's junction
-//! row carries what that version's manifest witnessed.
+//! the description and the poster belong to the placement, and each
+//! version's junction row carries what that version's manifest witnessed.
 //!
 //! `author_id` here is Postgres-native truth rather than a cached
 //! derivation — media is not a graph node, so there is no graph-side
@@ -37,15 +38,6 @@ pub struct MediaAttachment {
     pub mime_type: String,
     pub size_bytes: Option<i64>,
     pub options: serde_json::Value,
-    /// The poster this asset is covered by — an asset pointing at another
-    /// asset, which is what lets a video's poster be redacted with it and
-    /// what makes the link visible to the removal cascade. Null on
-    /// everything that is not a covered video.
-    ///
-    /// Distinct from the junction's `is_cover`, which answers which
-    /// attachment leads a multi-asset parent (data-model.md
-    /// "media_attachments.options shape").
-    pub cover_media_id: Option<Uuid>,
     /// The erasure slice's columns. Nothing in the repo writes them yet —
     /// the slice is unbuilt, deliberately, and the read surfaces that
     /// branch on them are ahead of it rather than dead. The direction
@@ -92,12 +84,6 @@ pub struct SweptAsset {
 /// asset. That is the intended answer under the direction recorded in
 /// docs/open-questions.md: redaction marks the usage, not the bytes, so
 /// the row is still a perfectly good asset to attach somewhere else.
-///
-/// The poster rides the insert rather than a later update because an asset
-/// row is immutable after upload — there is no update surface for one
-/// (data-model.md "Why parents point at attachments"), so the only honest
-/// moment to state which asset covers this one is the moment it is
-/// written.
 #[allow(clippy::too_many_arguments)]
 pub async fn insert(
     pool: &PgPool,
@@ -109,21 +95,19 @@ pub async fn insert(
     mime_type: &str,
     size_bytes: i64,
     options: &serde_json::Value,
-    cover_media_id: Option<Uuid>,
 ) -> Result<MediaAttachment, sqlx::Error> {
     sqlx::query_as!(
         MediaAttachment,
         r#"
         INSERT INTO media_attachments
             (id, author_id, digest, digest_algo, storage_key,
-             mime_type, size_bytes, options, cover_media_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             mime_type, size_bytes, options)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT (author_id, digest)
             DO UPDATE SET author_id = media_attachments.author_id
         RETURNING id, author_id, digest, digest_algo, storage_key,
                   mime_type, size_bytes,
                   options AS "options!: serde_json::Value",
-                  cover_media_id,
                   redaction_reason, redacted_at, created_at
         "#,
         id,
@@ -134,7 +118,6 @@ pub async fn insert(
         mime_type,
         size_bytes,
         options,
-        cover_media_id,
     )
     .fetch_one(pool)
     .await
@@ -153,19 +136,29 @@ pub struct GalleryEntry {
     /// placement — a fact about the parent–asset relationship, which is
     /// why the same asset can read differently in two parents.
     pub alt_text: Option<String>,
+    /// The poster this version's manifest witnessed for this placement —
+    /// the still a video shows before playback. A placement fact for the
+    /// same reason `alt_text` is, which is what lets an edit name a
+    /// different cover without touching an immutable clip row.
+    ///
+    /// Distinct from `is_cover`, which answers which attachment *leads* a
+    /// multi-asset parent rather than what covers a single one.
+    pub cover_media_id: Option<Uuid>,
 }
 
-/// One entry of a gallery as it is written: the asset, and the
-/// description the record witnessed for it.
+/// One entry of a gallery as it is written: the asset, the description the
+/// record witnessed for it, and the poster it named.
 ///
-/// Both come out of the payload envelope's manifest at promotion, never
-/// out of the request that produced it — the digest names the asset and
-/// per-asset map key 2 names the description (data-model.md "The payload
-/// envelope"). That is what makes a gallery rebuildable from the record.
+/// All three come out of the payload envelope's manifest at promotion,
+/// never out of the request that produced it — the digest names the asset,
+/// per-asset map key 2 names the description and key 3 the cover
+/// (data-model.md "The payload envelope"). That is what makes a gallery
+/// rebuildable from the record.
 #[derive(Debug, Clone)]
 pub struct GalleryPlacement {
     pub attachment_id: Uuid,
     pub alt_text: Option<String>,
+    pub cover_media_id: Option<Uuid>,
 }
 
 /// Writes one version's gallery, in order.
@@ -177,7 +170,8 @@ pub struct GalleryPlacement {
 /// witnessed record disagree about what a reader sees. `alt_text` is the
 /// same fact said twice for the same reason — the row caches what the
 /// manifest entry carried, so a read serves the version's own description
-/// without decoding a payload.
+/// without decoding a payload. `cover_media_id` rides along on the same
+/// terms, from per-asset map key 3.
 ///
 /// Idempotent on re-running the write that produced it: a retried
 /// pre-sign re-inserts the same rows onto the same version.
@@ -189,17 +183,20 @@ pub async fn attach_to_post_version(
     if gallery.is_empty() {
         return Ok(());
     }
-    let (ids, orders, alts) = split_placements(gallery)?;
+    let (ids, orders, alts, covers) = split_placements(gallery)?;
     sqlx::query!(
         "INSERT INTO post_attachments
-             (post_version_id, attachment_id, display_order, is_cover, alt_text)
-         SELECT $1, a.id, a.ord, a.ord = 0, a.alt
-         FROM unnest($2::uuid[], $3::smallint[], $4::text[]) AS a(id, ord, alt)
+             (post_version_id, attachment_id, display_order, is_cover, alt_text,
+              cover_media_id)
+         SELECT $1, a.id, a.ord, a.ord = 0, a.alt, a.cover
+         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[])
+              AS a(id, ord, alt, cover)
          ON CONFLICT (post_version_id, attachment_id) DO NOTHING",
         post_version_id,
         &ids,
         &orders,
         &alts as &[Option<String>],
+        &covers as &[Option<Uuid>],
     )
     .execute(&mut **tx)
     .await?;
@@ -217,32 +214,35 @@ pub async fn attach_to_comment_version(
     if gallery.is_empty() {
         return Ok(());
     }
-    let (ids, orders, alts) = split_placements(gallery)?;
+    let (ids, orders, alts, covers) = split_placements(gallery)?;
     sqlx::query!(
         "INSERT INTO comment_attachments
-             (comment_version_id, attachment_id, display_order, alt_text)
-         SELECT $1, a.id, a.ord, a.alt
-         FROM unnest($2::uuid[], $3::smallint[], $4::text[]) AS a(id, ord, alt)
+             (comment_version_id, attachment_id, display_order, alt_text,
+              cover_media_id)
+         SELECT $1, a.id, a.ord, a.alt, a.cover
+         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[])
+              AS a(id, ord, alt, cover)
          ON CONFLICT (comment_version_id, attachment_id) DO NOTHING",
         comment_version_id,
         &ids,
         &orders,
         &alts as &[Option<String>],
+        &covers as &[Option<Uuid>],
     )
     .execute(&mut **tx)
     .await?;
     Ok(())
 }
 
-/// The three parallel arrays one gallery is bound as.
-type GalleryArrays = (Vec<Uuid>, Vec<i16>, Vec<Option<String>>);
+/// The four parallel arrays one gallery is bound as.
+type GalleryArrays = (Vec<Uuid>, Vec<i16>, Vec<Option<String>>, Vec<Option<Uuid>>);
 
-/// The gallery as the three parallel arrays `unnest` zips back together.
+/// The gallery as the four parallel arrays `unnest` zips back together.
 /// One `unnest` over parallel arrays is what keeps the whole gallery one
 /// statement, and the arrays have to be built before the query borrows
 /// them.
 ///
-/// All three are built in one pass so their lengths cannot diverge:
+/// All four are built in one pass so their lengths cannot diverge:
 /// `unnest` pads the short arrays of a ragged set with NULL, and both
 /// `attachment_id` and `display_order` are `NOT NULL`, so a divergence is
 /// either a refused statement or wrong rows — never a visible mismatch.
@@ -255,6 +255,7 @@ fn split_placements(gallery: &[GalleryPlacement]) -> Result<GalleryArrays, sqlx:
     let mut ids = Vec::with_capacity(gallery.len());
     let mut orders = Vec::with_capacity(gallery.len());
     let mut alts = Vec::with_capacity(gallery.len());
+    let mut covers = Vec::with_capacity(gallery.len());
     for (index, placement) in gallery.iter().enumerate() {
         let order = i16::try_from(index).map_err(|_| {
             sqlx::Error::Encode(
@@ -268,8 +269,9 @@ fn split_placements(gallery: &[GalleryPlacement]) -> Result<GalleryArrays, sqlx:
         ids.push(placement.attachment_id);
         orders.push(order);
         alts.push(placement.alt_text.clone());
+        covers.push(placement.cover_media_id);
     }
-    Ok((ids, orders, alts))
+    Ok((ids, orders, alts, covers))
 }
 
 struct GalleryRow {
@@ -304,7 +306,6 @@ fn gallery_entry(row: GalleryRow) -> (i64, GalleryEntry) {
                 mime_type: row.mime_type,
                 size_bytes: row.size_bytes,
                 options: row.options,
-                cover_media_id: row.cover_media_id,
                 redaction_reason: row.redaction_reason,
                 redacted_at: row.redacted_at,
                 created_at: row.created_at,
@@ -312,6 +313,7 @@ fn gallery_entry(row: GalleryRow) -> (i64, GalleryEntry) {
             display_order: row.display_order,
             is_cover: row.is_cover,
             alt_text: row.alt_text,
+            cover_media_id: row.cover_media_id,
         },
     )
 }
@@ -329,11 +331,10 @@ pub async fn post_galleries(
     let rows = sqlx::query_as!(
         GalleryRow,
         r#"SELECT j.post_version_id AS "version_id!", j.display_order,
-                  j.is_cover, j.alt_text,
+                  j.is_cover, j.alt_text, j.cover_media_id,
                   m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
                   m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
-                  m.cover_media_id,
                   m.redaction_reason, m.redacted_at, m.created_at
            FROM post_attachments j
            JOIN media_attachments m ON m.id = j.attachment_id
@@ -355,11 +356,10 @@ pub async fn comment_galleries(
     let rows = sqlx::query_as!(
         GalleryRow,
         r#"SELECT j.comment_version_id AS "version_id!", j.display_order,
-                  FALSE AS "is_cover!", j.alt_text,
+                  FALSE AS "is_cover!", j.alt_text, j.cover_media_id,
                   m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
                   m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
-                  m.cover_media_id,
                   m.redaction_reason, m.redacted_at, m.created_at
            FROM comment_attachments j
            JOIN media_attachments m ON m.id = j.attachment_id
@@ -392,7 +392,6 @@ pub async fn assets_by_digests(
         SELECT id, author_id, digest, digest_algo, storage_key,
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
-               cover_media_id,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
         WHERE author_id = $1 AND digest = ANY($2)
@@ -416,7 +415,6 @@ pub async fn assets_by_ids(
         SELECT id, author_id, digest, digest_algo, storage_key,
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
-               cover_media_id,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
         WHERE id = ANY($1)
@@ -435,7 +433,6 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
         SELECT id, author_id, digest, digest_algo, storage_key,
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
-               cover_media_id,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
         WHERE id = $1
@@ -686,12 +683,12 @@ pub async fn expired_upload_sessions(
 ///
 /// **The join is the seam.** "Orphaned" means no reference from any of
 /// the four content junctions, none from the profile and chat image
-/// columns, none from another asset that names this one as its poster,
-/// and none from the upload session that produced it. Every one of those
-/// references is checked here, in one query, deliberately: a reference
-/// this list misses is an asset deleted out from under a live parent, so
-/// the list must be extended in the same change that adds a way to
-/// reference an asset.
+/// columns, none from a post or comment placement that names this asset
+/// as its poster, and none from the upload session that produced it.
+/// Every one of those references is checked here, in one query,
+/// deliberately: a reference this list misses is an asset deleted out from
+/// under a live parent, so the list must be extended in the same change
+/// that adds a way to reference an asset.
 ///
 /// The session probe is the newest of them and the least obvious. A
 /// finished session holds its asset's id so a retried completion can be
@@ -700,12 +697,13 @@ pub async fn expired_upload_sessions(
 /// and the foreign key would refuse the delete — failing not that row but
 /// the whole sweep, so nothing would ever be collected again.
 ///
-/// The self-reference is the one an asset's own row carries. A poster is
-/// referenced by its video rather than by any parent, so without that
-/// probe the sweep would collect every poster the moment it aged past the
-/// window and leave its video pointing at a row that no longer exists —
-/// the exact failure the paragraph above is a standing instruction
-/// against.
+/// The poster probes are two rather than one because a cover is named on
+/// the placement: a post placement and a comment placement can each name
+/// it, and an asset serving as a poster is referenced by neither junction's
+/// `attachment_id`. Without both, the sweep would collect a poster the
+/// moment it aged past the window and leave its video pointing at a row
+/// that no longer exists — the exact failure the paragraph above is a
+/// standing instruction against.
 ///
 /// Two consequences of the junctions being keyed on the version row
 /// rather than the entity, both of which this query gets right by
@@ -722,8 +720,9 @@ pub async fn expired_upload_sessions(
 ///
 /// Each `NOT EXISTS` is an index probe of the referencing column — the
 /// four junctions' reverse index on `attachment_id`, the two version
-/// tables' partial index on the picture column, the asset table's own
-/// `cover_media_id`, and the session table's `media_id`. Postgres creates
+/// tables' partial index on the picture column, the post and comment
+/// junctions' partial index on `cover_media_id`, and the session table's
+/// `media_id`. Postgres creates
 /// no index behind a foreign key, so without them each probe is a
 /// sequential scan and so is the delete's own integrity re-check. A new
 /// way to reference an asset owes this list a probe *and* that column an
@@ -763,7 +762,9 @@ pub async fn sweep_orphans(
                     SELECT 1 FROM actor_profile_versions p WHERE p.avatar_id = m.id)
               AND NOT EXISTS (SELECT 1 FROM chat_versions c WHERE c.image_id = m.id)
               AND NOT EXISTS (
-                    SELECT 1 FROM media_attachments v WHERE v.cover_media_id = m.id)
+                    SELECT 1 FROM post_attachments    a WHERE a.cover_media_id = m.id)
+              AND NOT EXISTS (
+                    SELECT 1 FROM comment_attachments a WHERE a.cover_media_id = m.id)
               AND NOT EXISTS (
                     SELECT 1 FROM media_upload_sessions s WHERE s.media_id = m.id)
             ORDER BY m.created_at
@@ -786,27 +787,28 @@ mod placement_tests {
     use super::{GalleryPlacement, split_placements};
     use uuid::Uuid;
 
-    fn placement(n: u128, alt: Option<&str>) -> GalleryPlacement {
+    fn placement(n: u128, alt: Option<&str>, cover: Option<u128>) -> GalleryPlacement {
         GalleryPlacement {
             attachment_id: Uuid::from_u128(n),
             alt_text: alt.map(str::to_string),
+            cover_media_id: cover.map(Uuid::from_u128),
         }
     }
 
-    /// The three arrays are one gallery said three ways, so they have to
+    /// The four arrays are one gallery said four ways, so they have to
     /// come out the same length and in the same order — `unnest` pads a
-    /// ragged set with NULL, and two of the three columns are NOT NULL.
+    /// ragged set with NULL, and two of the four columns are NOT NULL.
     ///
-    /// A gallery's three bound arrays agree on length and on order.
+    /// A gallery's four bound arrays agree on length and on order.
     /// ´claim:media:a-gallerys-arrays-cannot-diverge´
     #[test]
-    fn the_three_arrays_agree_on_length_and_order() {
+    fn the_four_arrays_agree_on_length_and_order() {
         let gallery = [
-            placement(1, Some("first")),
-            placement(2, None),
-            placement(3, Some("third")),
+            placement(1, Some("first"), None),
+            placement(2, None, Some(9)),
+            placement(3, Some("third"), None),
         ];
-        let (ids, orders, alts) = split_placements(&gallery).expect("fits");
+        let (ids, orders, alts, covers) = split_placements(&gallery).expect("fits");
         assert_eq!(
             ids,
             vec![Uuid::from_u128(1), Uuid::from_u128(2), Uuid::from_u128(3)]
@@ -816,6 +818,7 @@ mod placement_tests {
             alts,
             vec![Some("first".to_string()), None, Some("third".to_string())]
         );
+        assert_eq!(covers, vec![None, Some(Uuid::from_u128(9)), None]);
     }
 
     /// Position is the order and index 0 is the cover, so the first
@@ -825,7 +828,7 @@ mod placement_tests {
     /// ´claim:media:the-first-placement-is-the-cover´
     #[test]
     fn the_first_placement_holds_position_zero() {
-        let (_, orders, _) = split_placements(&[placement(1, None)]).expect("fits");
+        let (_, orders, ..) = split_placements(&[placement(1, None, None)]).expect("fits");
         assert_eq!(orders, vec![0]);
         assert!(split_placements(&[]).expect("fits").0.is_empty());
     }

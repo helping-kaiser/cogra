@@ -318,10 +318,10 @@ describe("runUpload", () => {
   });
 });
 
-// THE ORDER IS THE CONTRACT. A video names its cover on its own upload and an
-// asset row is immutable once written, so there is no call that could attach a
-// poster afterwards — the cover has to be a real asset before the video is
-// created, and these assert exactly that.
+// THE ORDER IS THE CHEAP LEG FIRST. Both are ordinary uploads — the poster
+// rides `AttachmentInput` at prepare, not the clip's own call — so the order
+// is about cost: a refused cover discovered after the whole clip has gone up
+// costs the author the wait twice.
 describe("runVideoUpload", () => {
   const clip: PickedAsset = {
     ...asset,
@@ -346,7 +346,7 @@ describe("runVideoUpload", () => {
     } as unknown as ApolloClient;
   }
 
-  it("uploads the cover first and names it on the video", async () => {
+  it("uploads the cover first, then the clip, as two standalone assets", async () => {
     encodable();
     const client = clientAnsweringInTurn("media-cover", "media-video");
     const video = steps();
@@ -356,13 +356,9 @@ describe("runVideoUpload", () => {
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     expect(calls).toHaveLength(2);
-    // The cover goes up as bytes alone…
+    // Both go up as bytes alone: neither upload names the other.
     expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
-    // …and the video names it.
-    expect(calls[1]![0].variables.input).toEqual({
-      file: expect.any(File),
-      coverMediaId: "media-cover",
-    });
+    expect(calls[1]![0].variables.input).toEqual({ file: expect.any(File) });
     expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
   });
@@ -396,8 +392,8 @@ describe("runVideoUpload", () => {
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     // One call, not two: there is no cover leg to run.
     expect(calls).toHaveLength(1);
-    // `coverMediaId` is omitted rather than sent as null — the contract's
-    // optional field simply goes unnamed, which is what faceless means.
+    // The clip goes up as bytes alone, exactly as a covered one does; what
+    // faceless means is that the placement names no poster at prepare.
     expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
     // The cover reports nothing at all: there was no cover to report on.

@@ -118,14 +118,16 @@ export function waitingAssets(assets: readonly PickedAsset[]): readonly PickedAs
 }
 
 /**
- * A video and its cover, in the one order the contract allows.
+ * A video and its cover: two standalone assets the placement ties together.
  *
- * THE COVER GOES FIRST because the video names it: `coverMediaId` is part of
- * `uploadMedia`'s input, and an asset row is immutable once written, so there
- * is no second call that could attach a poster afterwards. That makes this the
- * one upload in the app that is a SEQUENCE rather than one of ten independent
- * ones — and it is why a cover that fails fails the video too, said in those
- * words rather than leaving a video stuck at "uploading" with no explanation.
+ * THE COVER GOES FIRST because it is the cheap leg. Both are ordinary uploads
+ * — the poster rides `AttachmentInput` at prepare, not the clip's own call —
+ * so nothing in the contract forces an order; what does is that a refused
+ * cover discovered after ninety megabytes have gone up costs the author the
+ * whole wait. Proving the small one first is why this is a SEQUENCE rather
+ * than one of ten independent uploads, and it is why a cover that fails fails
+ * the video too, said in those words rather than leaving a video stuck at
+ * "uploading" with no explanation.
  *
  * THE CLIP IS STRIPPED BEFORE IT GOES, on the device, exactly as a picture is.
  * The still path re-encodes through a canvas and the metadata cannot survive;
@@ -147,8 +149,8 @@ export function waitingAssets(assets: readonly PickedAsset[]): readonly PickedAs
  * A FACELESS CLIP STILL GOES UP. `cover` is null when the author left the face
  * unset — which the cover screen has allowed since the pick became optional
  * (jakob 2026-09-10) — and when the frame capture found nothing to offer. The
- * sequence then has no first leg: the video is uploaded naming no cover, which
- * the contract accepts. Treating null as "not ready yet" is what left a clip
+ * sequence then has no first leg, and the placement names no poster, which the
+ * contract accepts. Treating null as "not ready yet" is what left a clip
  * waiting forever with nothing to report.
  */
 export async function runVideoUpload(
@@ -160,7 +162,7 @@ export async function runVideoUpload(
   onCover: UploadStep,
 ): Promise<void> {
   if (cover === null) {
-    await sendVideo(client, guard, video, null, onVideo);
+    await sendVideo(client, guard, video, onVideo);
     return;
   }
   let encoded;
@@ -196,21 +198,20 @@ export async function runVideoUpload(
   }
   onCover({ kind: "done", mediaId: poster.value.id });
 
-  await sendVideo(client, guard, video, poster.value.id, onVideo);
+  await sendVideo(client, guard, video, onVideo);
 }
 
 /**
- * The clip's own leg: strip, then upload naming whatever face it has.
+ * The clip's own leg: strip, then upload.
  *
  * Shared by both entries so a faceless clip takes exactly the path a covered
- * one does, minus the cover — the alternative was a second copy of the strip
- * and its refusal wording, which is how the two drift apart.
+ * one does — the alternative was a second copy of the strip and its refusal
+ * wording, which is how the two drift apart.
  */
 async function sendVideo(
   client: ApolloClient,
   guard: AuthGuard,
   video: PickedAsset,
-  coverMediaId: string | null,
   onVideo: UploadStep,
 ): Promise<void> {
   // The strip is reported as `encoding`: it is the same stage in the same
@@ -233,7 +234,7 @@ async function sendVideo(
   // THE CLIP IS THE BODY WORTH PROTECTING. A picture sent twice costs a
   // moment; a video sent twice is the whole wait, twice.
   await guard.prime();
-  const uploaded = await uploadVideo(client, guard, { blob: stripped.blob, coverMediaId });
+  const uploaded = await uploadVideo(client, guard, { blob: stripped.blob });
 
   if (uploaded.kind === "success") {
     onVideo({ kind: "done", mediaId: uploaded.value.id });

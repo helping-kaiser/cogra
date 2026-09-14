@@ -22,6 +22,18 @@ describe("HelpDialog", () => {
     expect(screen.getByText(/can never change, not even by an edit/)).toBeInTheDocument();
   });
 
+  // CW-37: the key-absent seal's own topic, copy-voice.md's browser wording.
+  it("names the key story and carries copy-voice's browser wording verbatim", () => {
+    render(<HelpDialog open onClose={vi.fn()} topic={HELP_TOPICS.yourKey} />);
+    expect(screen.getByTestId("help-dialog")).toHaveAttribute("aria-label", "Your key");
+    expect(
+      screen.getByText(/Signing needs your key, and it isn't on this browser/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Restore the key with your recovery code to finish/),
+    ).toBeInTheDocument();
+  });
+
   it("says at most two things, per the copy rule", () => {
     for (const topic of Object.values(HELP_TOPICS)) {
       expect(topic.paragraphs.length).toBeLessThanOrEqual(2);

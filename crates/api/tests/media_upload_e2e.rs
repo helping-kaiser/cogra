@@ -141,14 +141,9 @@ impl Rig {
     /// the document with a null where the file goes, a `map` part
     /// naming that path, and the binary part itself.
     async fn upload(&self, token: &str, file: &[u8]) -> Value {
-        self.upload_with_cover(token, file, None).await
-    }
-
-    /// The same upload naming a poster, which only a video may do.
-    async fn upload_with_cover(&self, token: &str, file: &[u8], cover: Option<Uuid>) -> Value {
         let operations = json!({
             "query": UPLOAD_MEDIA,
-            "variables": { "input": { "file": null, "coverMediaId": cover }},
+            "variables": { "input": { "file": null }},
         })
         .to_string();
 
@@ -378,11 +373,10 @@ async fn an_unattached_asset_is_swept_with_its_object(pool: PgPool) {
     assert_eq!(rows, 0);
 }
 
-/// An asset row placed directly, so a fixture can state a poster link the
-/// upload path has no way to express yet: nothing it accepts is a video,
-/// and the row is immutable once written, so the link can only be stated
-/// at the insert.
-async fn insert_asset(pool: &PgPool, author: Uuid, fill: u8, cover: Option<Uuid>) -> Uuid {
+/// An asset row placed directly. The upload path has no way to produce a
+/// video here — nothing it accepts is one — and these fixtures are about
+/// what points at an asset rather than about its bytes.
+async fn insert_asset(pool: &PgPool, author: Uuid, fill: u8) -> Uuid {
     let id = Uuid::new_v4();
     postgres_store::media::insert(
         pool,
@@ -394,83 +388,176 @@ async fn insert_asset(pool: &PgPool, author: Uuid, fill: u8, cover: Option<Uuid>
         "image/webp",
         1024,
         &json!({ "v": 1, "aspect_ratio": "4:5" }),
-        cover,
     )
     .await
     .expect("asset row");
     id
 }
 
-/// A poster hangs off its video rather than off any parent, so the sweep
-/// is the one cascade that could delete it out from under a live clip. It
-/// has to see the asset-to-asset reference the same way it sees a
-/// junction row.
+/// A post version carrying one placement, written straight to the rows.
+/// The write path has its own end-to-end tests; what these need is a
+/// junction row naming a poster, which is a fact about the placement.
+async fn place_on_post(pool: &PgPool, author: Uuid, attachment: Uuid, cover: Uuid) -> i64 {
+    let post = Uuid::new_v4();
+    sqlx::query("INSERT INTO posts (id, author_id, l1_node_id) VALUES ($1, $2, $3)")
+        .bind(post)
+        .bind(author)
+        .bind(post.to_string())
+        .execute(pool)
+        .await
+        .expect("post");
+    let version: i64 = sqlx::query_scalar(
+        "INSERT INTO post_versions (post_id, content) VALUES ($1, 'body')
+         RETURNING version_id",
+    )
+    .bind(post)
+    .fetch_one(pool)
+    .await
+    .expect("post version");
+    sqlx::query(
+        "INSERT INTO post_attachments
+             (post_version_id, attachment_id, display_order, is_cover, cover_media_id)
+         VALUES ($1, $2, 0, TRUE, $3)",
+    )
+    .bind(version)
+    .bind(attachment)
+    .bind(cover)
+    .execute(pool)
+    .await
+    .expect("placement");
+    version
+}
+
+/// The comment side of [`place_on_post`].
+async fn place_on_comment(pool: &PgPool, author: Uuid, attachment: Uuid, cover: Uuid) -> i64 {
+    let target = Uuid::new_v4();
+    sqlx::query("INSERT INTO posts (id, author_id, l1_node_id) VALUES ($1, $2, $3)")
+        .bind(target)
+        .bind(author)
+        .bind(target.to_string())
+        .execute(pool)
+        .await
+        .expect("post");
+    let comment = Uuid::new_v4();
+    sqlx::query(
+        "INSERT INTO comments (id, target_id, target_type, author_id, l1_node_id)
+         VALUES ($1, $2, 'post', $3, $4)",
+    )
+    .bind(comment)
+    .bind(target)
+    .bind(author)
+    .bind(comment.to_string())
+    .execute(pool)
+    .await
+    .expect("comment");
+    let version: i64 = sqlx::query_scalar(
+        "INSERT INTO comment_versions (comment_id, content) VALUES ($1, 'answer')
+         RETURNING version_id",
+    )
+    .bind(comment)
+    .fetch_one(pool)
+    .await
+    .expect("comment version");
+    sqlx::query(
+        "INSERT INTO comment_attachments
+             (comment_version_id, attachment_id, display_order, cover_media_id)
+         VALUES ($1, $2, 0, $3)",
+    )
+    .bind(version)
+    .bind(attachment)
+    .bind(cover)
+    .execute(pool)
+    .await
+    .expect("placement");
+    version
+}
+
+/// A poster is named by the placement rather than carried in the gallery,
+/// so it is referenced by no junction's `attachment_id` and the sweep is
+/// the one cascade that could delete it out from under a live clip. Both
+/// junctions' cover columns have to be probed: a post placement and a
+/// comment placement each name one.
 ///
-/// A poster is referenced by its video rather than by a parent, so the orphan sweep leaves it standing for as long as the video does.
+/// A poster is referenced by the placement rather than by a gallery entry, so the orphan sweep leaves it standing for as long as the placement does.
 /// ´claim:media:a-poster-outlives-its-video´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_poster_is_not_swept_out_from_under_its_video(pool: PgPool) {
     let rig = Rig::new(pool);
     let author = rig.seed_member("author", "author@example.com").await;
 
-    let poster = insert_asset(&rig.pool, author, 1, None).await;
-    let video = insert_asset(&rig.pool, author, 2, Some(poster)).await;
+    let post_poster = insert_asset(&rig.pool, author, 1).await;
+    let post_video = insert_asset(&rig.pool, author, 2).await;
+    let comment_poster = insert_asset(&rig.pool, author, 3).await;
+    let comment_video = insert_asset(&rig.pool, author, 4).await;
+    let post_version = place_on_post(&rig.pool, author, post_video, post_poster).await;
+    let comment_version = place_on_comment(&rig.pool, author, comment_video, comment_poster).await;
 
     let swept = postgres_store::media::sweep_orphans(&rig.pool, 0.0, 100)
         .await
         .expect("sweep");
-    assert_eq!(
-        swept.iter().map(|a| a.id).collect::<Vec<_>>(),
-        vec![video],
-        "the video is unreferenced, but its poster is spoken for"
+    assert!(
+        swept.is_empty(),
+        "the clips are gallery entries and the posters are named by the placements"
     );
 
-    let swept = postgres_store::media::sweep_orphans(&rig.pool, 0.0, 100)
+    sqlx::query("DELETE FROM post_attachments WHERE post_version_id = $1")
+        .bind(post_version)
+        .execute(&rig.pool)
         .await
-        .expect("sweep");
+        .expect("unplace");
+    sqlx::query("DELETE FROM comment_attachments WHERE comment_version_id = $1")
+        .bind(comment_version)
+        .execute(&rig.pool)
+        .await
+        .expect("unplace");
+
+    let mut swept: Vec<Uuid> = postgres_store::media::sweep_orphans(&rig.pool, 0.0, 100)
+        .await
+        .expect("sweep")
+        .iter()
+        .map(|a| a.id)
+        .collect();
+    swept.sort();
+    let mut expected = vec![post_poster, post_video, comment_poster, comment_video];
+    expected.sort();
     assert_eq!(
-        swept.iter().map(|a| a.id).collect::<Vec<_>>(),
-        vec![poster],
-        "with the video gone the poster is an orphan like any other"
+        swept, expected,
+        "with no placement naming them the posters are orphans like any other"
     );
 }
 
-/// The poster link read back through the contract and through the row: a
-/// still names no cover, and a covered asset keeps the one it was written
-/// with.
+/// The poster read back where it is now written: on the junction row, not
+/// on the asset. A fresh upload is outside any placement, so it serves
+/// none.
 ///
-/// An asset serves the poster it names, and null when it names none.
-/// ´claim:media:an-asset-serves-the-poster-it-names´
+/// A placement serves the poster it names, and an asset outside a placement serves none.
+/// ´claim:media:a-placement-serves-the-poster-it-names´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_covered_asset_keeps_the_poster_it_names(pool: PgPool) {
+async fn a_placement_serves_the_poster_it_names(pool: PgPool) {
     let rig = Rig::new(pool);
     let author = rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;
 
-    let poster = insert_asset(&rig.pool, author, 1, None).await;
-    let video = insert_asset(&rig.pool, author, 2, Some(poster)).await;
+    let poster = insert_asset(&rig.pool, author, 1).await;
+    let video = insert_asset(&rig.pool, author, 2).await;
+    let version = place_on_post(&rig.pool, author, video, poster).await;
 
     let uploaded = rig.upload(&token, &photo_with_location()).await;
     assert!(
         uploaded["media"]["coverMedia"].is_null(),
-        "a still names no poster"
+        "an asset outside a placement names no poster"
     );
 
-    let loaded = postgres_store::media::by_id(&rig.pool, video)
+    let gallery = postgres_store::media::post_galleries(&rig.pool, &[version])
         .await
-        .expect("reads")
-        .expect("the video row");
+        .expect("gallery");
+    let entry = &gallery.first().expect("one placement").1;
+    assert_eq!(entry.asset.id, video);
     assert_eq!(
-        loaded.cover_media_id,
+        entry.cover_media_id,
         Some(poster),
-        "the link survives the round trip through the row"
+        "the poster is a fact about this placement"
     );
-
-    let uncovered = postgres_store::media::by_id(&rig.pool, poster)
-        .await
-        .expect("reads")
-        .expect("the poster row");
-    assert_eq!(uncovered.cover_media_id, None, "a poster carries no poster");
 }
 
 /// A real MP4 carrying one H.264 track and one sample of the given
@@ -620,44 +707,20 @@ fn landscape_h264_movie(sample_ms: u32) -> Vec<u8> {
     writer.into_writer().into_inner()
 }
 
-/// The field path a refusal names, so a test asserts where the client
-/// will actually read the message.
-fn refused_at(payload: &Value) -> Vec<String> {
-    payload["userErrors"]
-        .as_array()
-        .and_then(|errors| errors.first())
-        .and_then(|error| error["field"].as_array())
-        .map(|path| {
-            path.iter()
-                .filter_map(|part| part.as_str().map(str::to_string))
-                .collect()
-        })
-        .unwrap_or_default()
-}
-
 /// A video goes through the same upload a picture does, and comes back
 /// as itself: stored under its own extension, typed as MP4, carrying the
-/// duration the container states and pointing at the poster the client
-/// named.
+/// duration the container states. It names no poster — a cover is a fact
+/// about a placement, authored at prepare.
 ///
-/// A video uploads through the same path a picture does, keeping its own type, its probed duration and the poster it was given.
-/// ´claim:media:a-video-uploads-with-its-duration-and-poster´
+/// A video uploads through the same path a picture does, keeping its own type and its probed duration, and naming no poster.
+/// ´claim:media:a-video-uploads-with-its-own-type-and-duration´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_video_uploads_with_its_duration_and_poster(pool: PgPool) {
+async fn a_video_uploads_with_its_duration(pool: PgPool) {
     let rig = Rig::new(pool);
     rig.seed_member("author", "author@example.com").await;
     let token = rig.log_in("author@example.com").await;
 
-    let cover = rig.upload(&token, &photo_with_location()).await;
-    let cover_id = cover["media"]["id"].as_str().expect("the cover id");
-
-    let uploaded = rig
-        .upload_with_cover(
-            &token,
-            &h264_movie(2_500),
-            Some(Uuid::parse_str(cover_id).expect("a uuid")),
-        )
-        .await;
+    let uploaded = rig.upload(&token, &h264_movie(2_500)).await;
     assert_eq!(
         uploaded["userErrors"].as_array().map(Vec::len),
         Some(0),
@@ -665,7 +728,10 @@ async fn a_video_uploads_with_its_duration_and_poster(pool: PgPool) {
     );
     assert_eq!(uploaded["media"]["mimeType"], "video/mp4");
     assert_eq!(uploaded["media"]["options"]["durationMs"], 2_500);
-    assert_eq!(uploaded["media"]["coverMedia"]["id"], cover_id);
+    assert!(
+        uploaded["media"]["coverMedia"].is_null(),
+        "an upload is outside every placement, so it names no poster"
+    );
     assert!(
         uploaded["media"]["url"]
             .as_str()
@@ -702,112 +768,5 @@ async fn a_rotated_video_uploads_with_its_displayed_aspect_ratio(pool: PgPool) {
         "the track is coded 1920x1080 (16:9) but the matrix turns it a \
          quarter, so the displayed shape — and the aspect ratio the \
          contract publishes — is 9:16"
-    );
-}
-
-/// An asset row is immutable once written, poster included, so the
-/// second upload cannot take the poster it names — and being handed the
-/// first upload's row as a success would leave the author with neither
-/// an error nor what they asked for.
-///
-/// Re-uploading identical bytes under a different poster is refused against coverMediaId rather than silently keeping the first poster.
-/// ´claim:media:a-re-upload-may-not-rename-the-poster´
-#[sqlx::test(migrations = "../../migrations")]
-async fn a_re_upload_naming_a_different_poster_is_refused(pool: PgPool) {
-    let rig = Rig::new(pool);
-    rig.seed_member("author", "author@example.com").await;
-    let token = rig.log_in("author@example.com").await;
-
-    let first_cover = rig.upload(&token, &photo_with_location()).await;
-    let first_id =
-        Uuid::parse_str(first_cover["media"]["id"].as_str().expect("id")).expect("a uuid");
-    let second_cover = rig.upload(&token, &rig::animated_webp()).await;
-    let second_id =
-        Uuid::parse_str(second_cover["media"]["id"].as_str().expect("id")).expect("a uuid");
-    assert_ne!(first_id, second_id, "two distinct stills");
-
-    let movie = h264_movie(3_000);
-    let stored = rig.upload_with_cover(&token, &movie, Some(first_id)).await;
-    assert_eq!(stored["media"]["coverMedia"]["id"], first_id.to_string());
-
-    let again = rig.upload_with_cover(&token, &movie, Some(second_id)).await;
-    assert_eq!(
-        refused_at(&again),
-        vec!["coverMediaId"],
-        "the poster the author just chose is not silently discarded: {again}"
-    );
-
-    let same = rig.upload_with_cover(&token, &movie, Some(first_id)).await;
-    assert_eq!(
-        same["media"]["id"], stored["media"]["id"],
-        "naming the same poster still deduplicates: {same}"
-    );
-}
-
-/// The four ways a named poster is wrong, each refused against the field
-/// that carried it rather than accepted into a row.
-///
-/// A poster must be a still this account uploaded and still holds, and only a video may name one.
-/// ´claim:media:a-poster-must-be-the-uploaders-own-still´
-#[sqlx::test(migrations = "../../migrations")]
-async fn a_cover_outside_the_rules_is_refused(pool: PgPool) {
-    let rig = Rig::new(pool);
-    rig.seed_member("author", "author@example.com").await;
-    rig.seed_member("stranger", "stranger@example.com").await;
-    let token = rig.log_in("author@example.com").await;
-    let other = rig.log_in("stranger@example.com").await;
-
-    let mine = rig.upload(&token, &photo_with_location()).await;
-    let my_still = Uuid::parse_str(mine["media"]["id"].as_str().expect("id")).expect("a uuid");
-
-    let theirs = rig.upload(&other, &photo_with_location()).await;
-    let their_still = Uuid::parse_str(theirs["media"]["id"].as_str().expect("id")).expect("a uuid");
-
-    let cross = rig
-        .upload_with_cover(&token, &h264_movie(1_000), Some(their_still))
-        .await;
-    assert_eq!(
-        refused_at(&cross),
-        vec!["coverMediaId"],
-        "a cover is never someone else's asset: {cross}"
-    );
-
-    let bare_video = rig.upload(&token, &h264_movie(1_000)).await;
-    let a_video = Uuid::parse_str(bare_video["media"]["id"].as_str().expect("id")).expect("a uuid");
-    let video_cover = rig
-        .upload_with_cover(&token, &h264_movie(1_000), Some(a_video))
-        .await;
-    assert_eq!(
-        refused_at(&video_cover),
-        vec!["coverMediaId"],
-        "a video cannot stand in as a poster: {video_cover}"
-    );
-
-    let still_with_cover = rig
-        .upload_with_cover(&token, &photo_with_location(), Some(my_still))
-        .await;
-    assert_eq!(
-        refused_at(&still_with_cover),
-        vec!["coverMediaId"],
-        "only a video takes a cover: {still_with_cover}"
-    );
-
-    let missing = rig
-        .upload_with_cover(&token, &h264_movie(1_000), Some(Uuid::new_v4()))
-        .await;
-    assert_eq!(refused_at(&missing), vec!["coverMediaId"]);
-
-    sqlx::query("UPDATE media_attachments SET redacted_at = now() WHERE id = $1")
-        .bind(my_still)
-        .execute(&rig.pool)
-        .await
-        .expect("redact");
-    let removed = rig
-        .upload_with_cover(&token, &h264_movie(1_000), Some(my_still))
-        .await;
-    assert_eq!(
-        refused_at(&removed),
-        vec!["coverMediaId"],
-        "bytes that are gone cannot be a poster: {removed}"
     );
 }

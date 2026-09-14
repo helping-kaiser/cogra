@@ -482,6 +482,14 @@ struct AttachmentInput {
     /// so the same asset can read differently in two parents, and
     /// correcting it is a new version of the parent, never a re-upload.
     alt_text: Option<String>,
+    /// The video's poster — an asset this author uploaded, either a frame
+    /// the client cut out of the clip or a picture chosen instead. Only a
+    /// video placement takes one, and a video may always go without.
+    ///
+    /// Authored here for the same reason `altText` is: it is a fact about
+    /// this placement, so changing the cover is a new version of the
+    /// parent rather than a re-upload of the clip.
+    cover_media_id: Option<Uuid>,
 }
 
 impl AttachmentInput {
@@ -491,6 +499,7 @@ impl AttachmentInput {
             display_order: self.display_order,
             is_cover: self.is_cover,
             alt_text: self.alt_text.clone(),
+            cover_media_id: self.cover_media_id,
         }
     }
 }
@@ -706,25 +715,17 @@ struct PrepareProfileUpdateInput {
     avatar_media_id: async_graphql::MaybeUndefined<Uuid>,
 }
 
-/// Uploads one asset. Bytes and nothing authored: a description rides
-/// `AttachmentInput` at prepare, so a picture can upload the moment it is
-/// picked and be described any time before signing — nothing gates on the
-/// other. Aspect ratio and duration are derived from the bytes.
+/// Uploads one asset. Bytes and nothing authored: a description and a
+/// video's cover both ride `AttachmentInput` at prepare, so a picture can
+/// upload the moment it is picked and be described — or made a clip's
+/// poster — any time before signing; nothing gates on the other. Aspect
+/// ratio and duration are derived from the bytes.
 ///
 /// `actAs` is not here: a Collective is the only non-user actor there is
 /// and Collectives arrive with slice 5, so the uploader is the viewer.
 #[derive(InputObject)]
 struct UploadMediaInput {
     file: Upload,
-    /// The video's poster — an asset this account already uploaded,
-    /// either a frame the client pulled out of the clip or a picture the
-    /// author chose instead. Only a video takes one, and it must be an
-    /// image rather than another video.
-    ///
-    /// It is named here because an asset row is immutable once written:
-    /// the cover is part of what the video *is*, so it is stated when
-    /// the video is created rather than attached to it afterwards.
-    cover_media_id: Option<Uuid>,
 }
 
 /// The asset, or the refusal that explains what was wrong with the file.
@@ -799,10 +800,6 @@ struct BeginMediaUploadPayload {
 #[derive(InputObject)]
 struct CompleteMediaUploadInput {
     upload_id: Uuid,
-    /// The video's poster, on the same terms `uploadMedia` states: an
-    /// asset this account already uploaded, named as the asset is created
-    /// because an asset row is immutable once written.
-    cover_media_id: Option<Uuid>,
 }
 
 /// Gives up on an upload and releases its parts.
@@ -2162,23 +2159,7 @@ impl Mutation {
             }
         };
 
-        let cover =
-            match media::plan_cover(pool, v.user_id, !asset.is_still(), input.cover_media_id).await
-            {
-                Ok(cover) => cover,
-                Err(media::GalleryPlanError::BadInput(e)) => {
-                    return Ok(UploadMediaPayload::refused(UserError::at(
-                        ErrorCode::BadInput,
-                        e.message,
-                        e.path,
-                    )));
-                }
-                Err(media::GalleryPlanError::Internal(e)) => {
-                    return Err(async_graphql::Error::new(e));
-                }
-            };
-
-        let row = match media::store_asset(pool, blobs.as_ref(), v.user_id, asset, cover).await {
+        let row = match media::store_asset(pool, blobs.as_ref(), v.user_id, asset).await {
             Ok(row) => row,
             Err(media::GalleryPlanError::BadInput(e)) => {
                 return Ok(UploadMediaPayload::refused(UserError::at(
@@ -2273,15 +2254,8 @@ impl Mutation {
         let config = ctx.data::<MediaConfig>()?;
         let blobs = ctx.data::<Arc<dyn BlobStore>>()?;
 
-        match media::resumable::complete(
-            pool,
-            blobs.as_ref(),
-            config,
-            v.user_id,
-            input.upload_id,
-            input.cover_media_id,
-        )
-        .await
+        match media::resumable::complete(pool, blobs.as_ref(), config, v.user_id, input.upload_id)
+            .await
         {
             Ok(row) => Ok(UploadMediaPayload {
                 media: Some(MediaAttachmentType::asset(row)),

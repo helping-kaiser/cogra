@@ -115,4 +115,11 @@ export const HELP_TOPICS = {
       "The community pool covers the signing, like your posts. The record that you changed it stays, like every signed action.",
     ],
   },
+  yourKey: {
+    title: "Your key",
+    paragraphs: [
+      "Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device.",
+      "Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.",
+    ],
+  },
 } as const satisfies Record<string, HelpTopic>;
