@@ -1718,9 +1718,16 @@ entry first". What stands:
   `nearestTagAnchor`, `padPercentOf` — so a moved value, a hyphen
   where §3 rules U+2212, or a spoken reading left behind is a
   failure. A seventh hand-spelled readout anywhere in `screens/` fails
-  too: unchecked is not a state a literal gets to be in. Full
-  pipeline: `node bundle.mjs && node render-screens.mjs &&
-  node gen-maps.mjs && node check-flows.mjs && node check-readouts.mjs`.
+  too: unchecked is not a state a literal gets to be in.
+- **`_build/report-summaries.mjs` is report-only** (item 60, option A):
+  it enumerates the feed-filter trigger's reachable summary strings
+  (`feedFilterSummary`, `FeedFilter.jsx`) and measures each by real
+  `figtree.ttf` advance summing, printing how many exceed the
+  trigger's own 198px text room and the band's tighter 154px against
+  the total — never failing on what it finds, until item 64 rules a
+  threshold to hold the tree to. Full pipeline: `node bundle.mjs &&
+  node render-screens.mjs && node gen-maps.mjs && node check-flows.mjs
+  && node check-readouts.mjs && node report-summaries.mjs`.
 - **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
   & Wallet, Feed & Search, Comments, Compose, Media + Patterns; the
   Profile page joined 2026-09-01 — 699 edges over all 93 boards, no
@@ -4663,10 +4670,10 @@ recorded rather than drawn.
   `_ds_manifest.json` is the claude.ai Design app's own metadata and is
   refreshed only by that app, on an explicit sync-back.
 - `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
-  `gen-maps.mjs`, `check-flows.mjs`, `check-readouts.mjs` — the
-  canonical-canvas pipeline
+  `gen-maps.mjs`, `check-flows.mjs`, `check-readouts.mjs`,
+  `report-summaries.mjs` — the canonical-canvas pipeline
   (§13, *Canvas pages and flows*): render the screens, stamp the flow
-  numbers, generate the maps, gate the result. Run all five after any
+  numbers, generate the maps, gate the result. Run all six after any
   screen, component, or graph.json edit. A screen whose state is not a
   portrait phone exports `FRAME` and the shell builds that artboard
   instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
