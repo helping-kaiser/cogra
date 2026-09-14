@@ -3394,7 +3394,17 @@ four-rung ladder.
   and the root's scroll is wherever it was left — a pop is not a
   reload.
 - **At the root, scrolled, the tap goes to the top**, animated, so the
-  jump reads as travel over a list the reader still owns.
+  jump reads as travel over a list the reader still owns. **The feed
+  says this rung out loud** (jakob 2026-09-14): deep in the list, a
+  `Back to top` pill rides in with the returning collapsing band,
+  centred under it, and does exactly what the re-tap does. The two are
+  one outcome reached two ways — a rung a reader has to be told about,
+  and a control that tells them. The pill is the feed's alone, because
+  the feed is the only root with a top the reader is trying to get back
+  to; it needs about three screens of depth, since shallower the
+  returning band has already brought the top within a flick; and it is
+  drawn OUTSIDE the collapsing block, because height added to that block
+  moves the band's own threshold and re-clamps the list (item 45.3).
 - **At the top, only the feed answers.** It refreshes and loads what is
   new; Explore, Wallet and Profile do nothing, having nothing the
   reader is waiting on.
@@ -4741,7 +4751,9 @@ when the thing to read back is a collection.
   numbers may never be. `ActsCard` grew the door row — a FACT row
   (label, value, count) whose whole box is the control, `PickedRow`'s
   rule said for the acts card: no chevron, no trailing word, the
-  accessible name (`Manage the citations`) saying what opens.
+  accessible name (`Manage the 3 citations`) saying what opens — and
+  carrying the count, because a name on a door replaces the door's
+  contents and a listener would otherwise trade the number for the verb.
 - **THE TRAILING COUNT IS THE CITATIONS, BARE** — `3` for three, the
   list's length and nothing else. The signature's own total is the
   card's footer and already says in words what it counts. The
@@ -4805,6 +4817,98 @@ boards.
   The system adds no keyboard choreography. A pad parked over a sheet
   that holds a field needs no third rule: the sheet rises (rule two)
   and the pad re-parks above the keyboard (rule three), together.
+
+### The MVP smalls round — 2026-09-14
+
+Five of jakob's rulings taken in one sitting, unrelated to each other
+and each small enough that a round of its own would have cost more in
+ceremony than in drawing. What they share is that every one of them
+closes a place where the canvas knew a rule and had never drawn it.
+
+- **THE FEED SAYS ITS WAY BACK UP OUT LOUD.** The re-tap ladder's third
+  rung — at a scrolled root, the tab's own slot goes to the top — is a
+  gesture nobody is told about. On the feed it gets a control:
+  `BackToTop`, a `Back to top` pill that rides in with the returning
+  collapsing band, centred under it, doing exactly what the rung does.
+  The two are one outcome reached two ways, which is why the graph gives
+  them one destination. **Feed only**, because only the feed has a top
+  the reader is trying to get back to, and only past about three screens
+  of depth, because shallower the returning band has already brought the
+  top within a flick.
+- **AND IT IS DRAWN OUTSIDE THE COLLAPSING BLOCK.** The region hides
+  once half its own slot has scrolled past, so its threshold is a
+  function of its own height: a pill placed among the band's children
+  would move the band's collapse point on the feed alone, and a taller
+  block is precisely what re-clamps the list — the leftover scroll
+  reading back as "at the top", the region returning the instant it left
+  (item 45.3, found by Android's W1 lane). The pill is positioned
+  against the screen, takes no layout space, and sits at `zIndex` 19 to
+  the region's 20 so it leaves UNDER the band rather than over it.
+- **`FeedScrolled` IS THE TREE'S FIRST MID-SCROLL BOARD.** A feed drawn
+  from its first card is a feed at rest whatever else is on it, and the
+  pill would have read as furniture the feed always carries. The list is
+  pulled up so the top card is entered mid-way and the one under it runs
+  off the bottom edge.
+- **THE SKY CARD BECOMES AN ANNOUNCEMENT.** `Explore`'s hero is not
+  pulled — it stops being a door. The heading reads `The Sky — coming
+  soon`, the CTA is gone, and `Explore/2`'s gap went with it: an
+  announcement owes no design, so the tab's last undrawn promise stopped
+  counting as one. The card stays because pulling it would rebuild
+  Explore's first screen twice and lose the one drawing that says the
+  Sky is this tab's biggest idea. `ChatsComingSoon`'s precedent as a
+  card rather than a screen — chats had an icon whose tap needed
+  somewhere to land; this affordance sits inside a card that can answer
+  in place.
+- **THE PAD'S ONE IRREVERSIBLE GESTURE GETS ITS MOMENT.**
+  `SeveranceConfirm` had been a component and a card since the stance
+  work and no board ever raised it. It is drawn on the PICK route — an
+  ordinary pick that happens to net the bundle to (0, 0), confirmed and
+  never refused, which is the rule the dialog exists for — with the
+  component card's own arithmetic, because that arithmetic is forced:
+  a raw sum past the clip cannot be walked back by one pick when the
+  field stops at ±1, so the capped aside belongs to the explicit route.
+  It sits on the patterns page beside `PadKeyAbsent`, the other board
+  where the pad's overlay is the subject and the shell beneath is
+  ground.
+- **AND THE PAD THAT RAISES IT IS DRAWN.** `PadStanding` is the pad
+  opened on something the reader has already said their piece about, and
+  the first board in this tree to carry `Walk it back` — `StanceControl`
+  draws the walk-away only once there are records, and the master pad is
+  a first vouch with none, so every state past the first was represented
+  by a board that could not reach it. The two boards sit side by side in
+  flow order and share one fixture, so what the pad says is standing is
+  exactly what the dialog offers to walk back. Both routes now leave from
+  the pad that has something to sever: the pick case moved off
+  `VouchBackPad/4`, which had been standing in for a case a first vouch
+  cannot reach.
+- **BOTH COMING-SOON SURFACES NAME THE PROMISE THE SAME WAY.** The chats
+  screen read `Chats aren't built yet…` while the Sky card read `The Sky
+  — coming soon`, and a product with two answers to one question teaches
+  a reader nothing by the difference. The chats line becomes `Chats —
+  coming soon. Your conversations will be here.` — the thing, an em dash,
+  the promise, then one sentence of what will be there. `Coming soon` is
+  the whole of what either promises: no date, no release, because both
+  sit on the would-like list and the order can change.
+- **THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK.** The reel round
+  ruled that share is the first act to leave the action row when a phone
+  cannot hold four, and no board drew the menu it moves into.
+  `ReaderPostMenuNarrow` does, at **320** — the width is the state, the
+  way `ViewerLandscape` is drawn rotated, and a 390 board with a row
+  missing would be a claim about this phone made on a different one.
+  Share LEADS the sheet: every other row there is a menu row by nature,
+  share is the one that was a one-tap control a moment ago, and a reader
+  who opens this ⋮ to share came for the row that moved.
+- **THE CITATIONS DOOR SPEAKS ITS COUNT.** An `aria-label` REPLACES
+  what it names, so the References row drew a count, hid the digit,
+  paired it with "3 citations" — and then `Manage the citations` spoke
+  over all of it. The name carries the count instead: `Manage the 3
+  citations`, and at one `Manage the 1 citation`. One `citedRow` factory
+  writes both seals' row, so the compose seal and the reply seal changed
+  together and cannot disagree. Nothing is drawn differently.
+- **The gate**: boards **194 → 198**, edges **1372 → 1404**, gaps
+  **15 → 14**, flows hold at **63/61/2**. The reblessed flows are all of
+  one kind — a start that now stands on one more board and lands where it
+  always did.
 
 ---
 

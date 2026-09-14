@@ -152,6 +152,22 @@ nothing. The retired word survives in identifiers for the same reason
 `topics` does — `NO_STANDING_LABEL`'s own value is `No opinion yet`, and
 that pairing is the law in one line.
 
+## The feed's way back up
+
+**`Back to top`** — the pill that rides in with the returning collapsing
+band when the reader is deep in the feed (jakob's ruling 2026-09-14). It
+names the DESTINATION and, in the same two words, the direction: a
+reader three screens down knows both what they will get and which way
+the list is about to move. `Top` alone names a place with no promise
+attached, and `Scroll to top` spends a word on the mechanism, which is
+the one thing the reader can already see happening.
+
+Plain words and no glyph, which is a decision and not an omission: the
+inlined icon set carries no arrow that points up and §5 forbids drawing
+one, but the words would win anyway — an arrow alone reaches a listener
+as "button" and a reader as a guess, for a control that exists to be
+obvious.
+
 ## Platform nouns
 
 The key lives on a device, and the device is named as the reader sees
@@ -390,11 +406,17 @@ DO, the way the sound toggle already does:
   value. It is api-spec's own gloss said to a reader, and the other axis
   keeps `For or against`, the words a stance already uses for that slot.
 
-**`Manage the citations`** — the seal's "N cited" row, whose whole row is
-the control and which carries no word saying so. `Manage the pictures`
+**`Manage the N citations`** — the seal's "N cited" row, whose whole row
+is the control and which carries no word saying so. `Manage the pictures`
 (the details stage's picked row) said for the other collection: the verb
 is what the row does, and naming it is the only way a listener learns
-that a line reading "References · 3 cited · 3" is a door at all.
+that a line reading "References · 3 cited · 3" is a door at all. **The
+count rides inside the name**, because a door's name replaces everything
+in it: a listener who hears "Manage the citations" has been given the
+verb at the price of the number, and the number is the whole reason the
+row exists. The count is bare and the noun is the row's — "Manage the 3
+citations", and at one "Manage the 1 citation", the plural the acts
+card's own reading spells.
 
 **The acts card's count — `N <the row's noun>`** (jakob's ruling
 2026-09-14). The seal's rows end in a bare digit, which an eye reads
@@ -1313,18 +1335,31 @@ having already said what was counted.
 one thing that would fill it. It never scolds and it carries no `error`
 colour; a comment nobody has answered is not a fault.
 
-## The chats coming-soon screen
+## The coming-soon surfaces
 
-`ChatsComingSoon` is the screen the band's chats icon opens until
-messaging exists (backlog item 68). Its one line is the only copy of its
-own on the board — the header reads `Chats`, the back arrow `Back`, both
-already in use. The line (blessed 2026-09-14):
+Two places stand in for something drawn after the MVP: the screen the
+band's chats icon opens (`ChatsComingSoon`, backlog item 68) and the
+hero card on Explore (backlog item 16). **Both name the promise the same
+way** — the thing, an em dash, `coming soon`, then one sentence of what
+will be there:
 
-- `Chats aren't built yet. When they are, your conversations will be
-  here.`
+- `Chats — coming soon. Your conversations will be here.`
+- `The Sky — coming soon` · `Your sky — every account a star, sized by
+  your own paths to it.`
 
-Two sentences answering the reader's only two questions — why is this
-empty, and what is this screen for. The line deliberately says nothing
-about *when*: chats sit on the would-like list and the order can change,
-so the copy promises nothing the release order cannot keep.
+One construction, because a product that says `coming soon` in one place
+and something else in another has two answers to one question, and a
+reader who meets both learns nothing from the difference. The promise
+leads and the sentence under it says what the reader gets — the two
+questions every empty surface answers, in the same order.
+
+**`Coming soon` is the whole of what is promised.** No date, no release,
+no "next": both sit on the would-like list and the order can change, so
+the words say that something is intended and nothing about when it
+lands.
+
+The card carries the promise in its heading, where its name already was;
+the screen carries it in its one line, under a header that reads
+`Chats`. Neither surface offers an action — nothing a reader can do
+fills either of them yet.
 
