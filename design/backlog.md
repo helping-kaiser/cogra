@@ -2242,3 +2242,16 @@ canvas links. Per-canvas image budgets end the image squeeze (the
 item-62 pressure). Boards themselves do not change. Implementation
 is unaffected — their lanes grade against board files, not canvas
 URLs (confirmed 2026-09-14).
+
+### 70 · The seal's References row only draws one citation · *design*
+
+Surfaced by implementation's W4 seal lane (PR #706, 2026-09-14): the
+seal's References act row (`_shared.jsx`) draws exactly one staged
+citation — name over its stance readout — but the compose section
+allows up to ten staged at once, and no board draws the
+multi-citation case. Implementation shipped the drawn
+single-citation reading (first citation's name + readout, the
+trailing act count still totals correctly) and will render that
+undrawn case until the board exists. Needs a drawing round: how the
+row stacks, truncates, or summarizes 2–10 citations. No lane is
+blocked on it.
