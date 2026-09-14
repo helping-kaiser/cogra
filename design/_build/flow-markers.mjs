@@ -454,6 +454,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Hide @ada</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
+  // A deleted account's menu: the master's rows minus Mention, which stages a
+  // Reference at a person and has no handle left to spell.
+  ProfileDeletedMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Share this profile</button>", tag: "button" },
+    { n: 3, find: ">Hide this account</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   // Your own profile's menu (the private-viewer-state round): the two private
   // lists and the share row, over the page they belong to.
   ProfileOwnMenu: [
