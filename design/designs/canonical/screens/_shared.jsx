@@ -483,7 +483,17 @@ function RecentRow({ text }) {
   );
 }
 
-/* The Sky, teased — token colours only: item 16's galaxy, hinted. */
+/* The Sky, teased — token colours only: item 16's galaxy, hinted.
+
+   TWO RUNGS OF POINT, AND `secondaryContainer` IS NOT ONE OF THEM. The field
+   spends `outline` (far) and `primaryContainer` (near), plus `primary` for the
+   most-weighted point — three values that read on both grounds,
+   `primaryContainer` being literally the same #ef6c1a in either theme.
+   `secondaryContainer` cannot carry a rung here: dark it is #743918, which
+   sinks into the ground hard enough to invert the reading (CR 1.38 on the dark
+   card against `outline`'s 3.89), so the nearer points came out dimmer than the
+   far ones. Size and colour must climb together — a mid-weight point never
+   reads fainter than a small one. */
 function SkyField({ height = 180 }) {
   return (
     <Raw
@@ -493,11 +503,11 @@ function SkyField({ height = 180 }) {
         <line x1="140" y1="${height * 0.3}" x2="230" y2="${height * 0.62}" stroke="var(--border-hairline)" stroke-width="1"/>
         <line x1="230" y1="${height * 0.62}" x2="318" y2="${height * 0.38}" stroke="var(--border-hairline)" stroke-width="1"/>
         <line x1="140" y1="${height * 0.3}" x2="196" y2="${height * 0.14}" stroke="var(--border-hairline)" stroke-width="1"/>
-        <circle cx="40" cy="${height * 0.55}" r="7" fill="var(--secondary-container)"/>
+        <circle cx="40" cy="${height * 0.55}" r="7" fill="var(--primary-container)"/>
         <circle cx="140" cy="${height * 0.3}" r="12" fill="var(--primary)"/>
         <circle cx="196" cy="${height * 0.14}" r="4" fill="var(--outline)"/>
         <circle cx="230" cy="${height * 0.62}" r="9" fill="var(--primary-container)"/>
-        <circle cx="318" cy="${height * 0.38}" r="6" fill="var(--secondary-container)"/>
+        <circle cx="318" cy="${height * 0.38}" r="6" fill="var(--primary-container)"/>
         <circle cx="286" cy="${height * 0.78}" r="3" fill="var(--outline)"/>
         <circle cx="90" cy="${height * 0.82}" r="4" fill="var(--outline)"/>
       </svg>`}

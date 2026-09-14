@@ -4440,12 +4440,12 @@ needs.
   free.
 - **Two rungs of point, and `secondaryContainer` is not one.** Dark
   `secondaryContainer` is #743918, which sinks into the dark ground —
-  so `SkyField`'s mid-weight points come out dimmest exactly where
-  they should read brightest. The ceremony spends `outline` (far) and
+  a mid-weight point drawn in it comes out dimmest exactly where it
+  should read brightest. Every sky spends `outline` (far) and
   `primaryContainer` (near, and the same #ef6c1a in both themes),
-  plus `primary` for the reader. **The same inversion is latent in
-  `SkyField`** and is reported, not fixed here: fixing it moves the
-  Explore board.
+  plus `primary` for the point that outranks them; `SkyField` and the
+  ceremony share the rule, so size and colour climb together on both
+  grounds.
 - **You are marked as a vantage, not ranked as a star.** The reader's
   point is `primary` with a hairline halo. It is deliberately not the
   biggest point: in the Sky size means "your own paths to it", and

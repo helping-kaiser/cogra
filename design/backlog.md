@@ -2097,15 +2097,16 @@ feed-filter summary renders with an ellipsis, so vocabulary growth is
 caught at build time instead of on a phone. Sibling of 54.2's
 pair-format guard.
 
-### 61 · The sky's dark points read backwards · *design* · **ruled: its own pass**
+### 61 · The sky's dark points read backwards · *design* · **drawn 2026-09-14**
 
 Found by the ceremony round: dark `secondaryContainer` is `#743918`,
 which sinks into the near-black ground — on the Explore hero's
-`SkyField` the LARGEST points (the most-weighted accounts) come out
-the DIMMEST, so the weight reading runs backwards in the dark theme.
-`VouchedIn` avoided it by dropping to two rungs (`outline` /
-`primaryContainer`); the hero needs the same treatment or a dark-side
-token fix. Moves the Explore board — its own pass.
+`SkyField` the mid-weight points came out dimmer than the small ones,
+so the weight reading ran backwards in the dark theme. Closed with the
+ceremony's own fix rather than a token change: `SkyField`'s two
+`secondaryContainer` points now take `primaryContainer`, leaving the
+field on `outline` (far) / `primaryContainer` (near) plus `primary`,
+the three values `VouchedIn` already proved on both grounds.
 
 ### 62 · The canvas sits at the editor's file ceiling · *tooling* · **strategy ruled**
 
