@@ -47,19 +47,17 @@ export function uploadFilename(type: string = OUTPUT_TYPE): string {
 }
 
 /**
- * Bytes, and nothing the author typed. The description rides the prepare
- * input's `AttachmentInput` instead, so a picture uploads the moment it is
- * picked and neither half waits on the other.
+ * Bytes, and nothing the author typed. The description and a video's cover
+ * ride the prepare input's `AttachmentInput` instead, so a picture uploads
+ * the moment it is picked and neither half waits on the other.
  *
- * `coverMediaId` is the ONE exception, and only a video carries it. The cover
- * is part of what the video is rather than something attached to it afterwards
- * — an asset row is immutable once written — so it is named on the call that
- * creates the video, which is why the composer uploads the poster first and
- * this second.
+ * A cover is a fact about where the clip sits rather than about its bytes, so
+ * the poster and the video are two ordinary uploads and the placement is what
+ * ties them together.
  */
 export async function uploadMedia(
   client: ApolloClient,
-  asset: { blob: Blob; coverMediaId?: string },
+  asset: { blob: Blob },
 ): Promise<Outcome<MediaAsset>> {
   const file = new File([asset.blob], uploadFilename(asset.blob.type), {
     type: asset.blob.type,
@@ -68,12 +66,7 @@ export async function uploadMedia(
     () =>
       client.mutate({
         mutation: UploadMediaDocument,
-        variables: {
-          input:
-            asset.coverMediaId === undefined
-              ? { file }
-              : { file, coverMediaId: asset.coverMediaId },
-        },
+        variables: { input: { file } },
       }),
     (data) => data.uploadMedia.userErrors,
     (data) => data.uploadMedia.media,
@@ -133,21 +126,12 @@ function defaultUploader(): PartUploader {
 export async function uploadVideo(
   client: ApolloClient,
   guard: AuthGuard,
-  /**
-   * `coverMediaId` is NULL FOR A FACELESS CLIP, which the contract, the
-   * database and the backend all accept — a cover is optional (jakob
-   * 2026-09-10, "going without a cover is always possible"), so the id the
-   * video names is optional with it.
-   */
-  asset: { blob: Blob; coverMediaId: string | null },
+  asset: { blob: Blob },
   deps: ResumableDeps = {},
 ): Promise<Outcome<MediaAsset>> {
   const threshold = deps.thresholdBytes ?? RESUMABLE_THRESHOLD_BYTES;
   if (asset.blob.size < threshold) {
-    const { blob, coverMediaId } = asset;
-    return guard.run(() =>
-      uploadMedia(client, coverMediaId === null ? { blob } : { blob, coverMediaId }),
-    );
+    return guard.run(() => uploadMedia(client, { blob: asset.blob }));
   }
 
   // `kind` is VIDEO at every call site: `MediaUploadKind.STILL` is reserved
@@ -191,7 +175,7 @@ export async function uploadVideo(
       () =>
         client.mutate({
           mutation: CompleteMediaUploadDocument,
-          variables: { uploadId: opened.id, coverMediaId: asset.coverMediaId },
+          variables: { uploadId: opened.id },
         }),
       (data) => data.completeMediaUpload.userErrors,
       (data) => data.completeMediaUpload.media,

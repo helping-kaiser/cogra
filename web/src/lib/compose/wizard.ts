@@ -138,12 +138,14 @@ export function kindOf(asset: PickedAsset): MediaKind {
 }
 
 /**
- * The video's poster — its own asset, uploaded BEFORE the video that names it.
+ * The video's poster — its own standalone asset, named by the clip's
+ * placement rather than carried in the gallery.
  *
  * It is not an attachment: the post's gallery carries the video alone, and the
- * cover reaches the reader through the video's own `coverMedia`. That is why it
- * sits beside `assets` rather than in it — a cover in the gallery would publish
- * a second picture nobody attached.
+ * cover reaches the reader through the placement's own `coverMedia`. That is
+ * why it sits beside `assets` rather than in it — a cover in the gallery would
+ * publish a second picture nobody attached, and would break the one counting
+ * rule the body has: ten pictures or one video.
  */
 export type CoverAsset = {
   readonly id: string;
@@ -298,8 +300,8 @@ export function detailsGate(state: WizardState): Gate {
 
 /**
  * The cover screen's own gate. A faceless video is not a wall: the contract,
- * the database, and the backend all accept `coverMediaId: null`, so nothing
- * here should refuse what the rest of the system already allows (jakob,
+ * the database, and the backend all accept a placement naming no cover, so
+ * nothing here should refuse what the rest of the system already allows (jakob,
  * 2026-09-10 — "going without a cover is always possible"). Capture still
  * auto-fills the first frame the moment it succeeds; this gate just stops
  * treating its absence as a reason to hold the reader on the screen.
@@ -407,9 +409,20 @@ export function signedActions(state: WizardState): number {
   return 1 + state.tags.length + state.references.length;
 }
 
-/** The gallery in order, or null while any asset is still unresolved. */
+/**
+ * The gallery in order, or null while any asset is still unresolved.
+ *
+ * THE POSTER RIDES THE CLIP'S PLACEMENT, never a gallery entry of its own —
+ * that is what keeps "ten pictures or one video" one counting rule. A cover
+ * the author chose but whose upload has not landed makes the whole gallery
+ * unresolved: publishing the clip faceless because its poster was a moment
+ * behind is the one outcome that quietly drops what they picked.
+ */
 export function attachmentClaims(state: WizardState): readonly GalleryEntryDraft[] | null {
   if (state.mode === "words") return null;
+  if (state.cover !== null && state.cover.upload.kind !== "done") return null;
+  const coverMediaId =
+    state.cover?.upload.kind === "done" ? state.cover.upload.mediaId : null;
   const claims: GalleryEntryDraft[] = [];
   for (const asset of state.assets) {
     if (asset.upload.kind !== "done") return null;
@@ -419,6 +432,7 @@ export function attachmentClaims(state: WizardState): readonly GalleryEntryDraft
     claims.push({
       mediaId: asset.upload.mediaId,
       altText: asset.altText.trim() === "" ? null : asset.altText.trim(),
+      coverMediaId: kindOf(asset) === "video" ? coverMediaId : null,
     });
   }
   return claims;

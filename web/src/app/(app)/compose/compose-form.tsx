@@ -216,7 +216,10 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   }, [client, prefillReference, editingId]);
 
   // The gallery the edit leaves standing: exactly the one the post carries,
-  // in its own order, with the alt text each placement already witnessed.
+  // in its own order, with the alt text and the poster each placement already
+  // witnessed. Both are re-stated rather than omitted — an edit carries the
+  // whole gallery, so a placement that came back without its cover would
+  // publish a new version that silently lost the clip's face.
   const attachments: readonly GalleryEntryDraft[] = useMemo(
     () =>
       loadedPost === null
@@ -224,6 +227,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         : loadedPost.attachments.map((attachment) => ({
             mediaId: attachment.id,
             altText: attachment.altText ?? null,
+            coverMediaId: attachment.coverMedia?.id ?? null,
           })),
     [loadedPost],
   );

@@ -12,10 +12,10 @@
 // and a picture tile is a smaller decision to make, and the "A picture" route
 // already covers the author who wants a face the clip does not contain.
 //
-// THE COVER IS ITS OWN ASSET, never an attachment. It is uploaded first, and
-// the video names it on its own upload (`coverMediaId`), because an asset row
-// is immutable once written — so the poster is part of what the video IS rather
-// than something hung on it afterwards.
+// THE COVER IS ITS OWN ASSET, never an attachment. It goes up as an ordinary
+// upload of its own and the clip's placement names it at prepare
+// (`AttachmentInput.coverMediaId`) — which is what lets an edit put a different
+// face on a clip whose bytes never move.
 //
 // The captured frames are not held in the draft. They are derived from the clip
 // and cost one decode to rebuild, so re-capturing them when the screen opens is
