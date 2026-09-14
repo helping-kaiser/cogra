@@ -16,13 +16,19 @@
 // so a second axis would be a control that does nothing. One slider is shown
 // instead, and that is reported rather than decided here.
 
+import type { ReactNode } from "react";
+
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
+import { HelpDot } from "@/lib/ui2/help-dot";
+import { ReadoutChip } from "@/lib/ui2/chip";
 import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
 import { UploadStatusLine } from "@/lib/ui2/compose/upload-notice";
 import { StanceSlider } from "@/lib/ui/stance-slider";
-import { LicenseChooser } from "@/lib/ui/license-fields";
-import { formatDimension } from "@/lib/ui/stance-format";
+import { LicenseRows } from "@/lib/ui/license-rows";
+import { nearestAnchor } from "@/lib/stance/anchors";
+import type { StancePair } from "@/lib/stance/model";
+import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
 import { licenseTerms, PUBLIC_DOMAIN, type License } from "@/lib/license";
 import type { WizardState } from "@/lib/compose/wizard";
 import { signedActions } from "@/lib/compose/wizard";
@@ -42,6 +48,7 @@ export function SealStep({
   onSensitive,
   onSensitiveReason,
   onHelp,
+  onLicenseHelp,
   onSign,
   onBack,
   onRestoreKey,
@@ -59,6 +66,7 @@ export function SealStep({
   onSensitive: (next: boolean) => void;
   onSensitiveReason: (next: string) => void;
   onHelp: () => void;
+  onLicenseHelp: () => void;
   onSign: () => void;
   onBack: () => void;
   onRestoreKey: () => void;
@@ -90,20 +98,35 @@ export function SealStep({
         <ActRow label="Post" detail={heading} count={1} />
         {state.tags.length > 0 && (
           <ActRow
-            label="Topics"
-            detail={state.tags.map((tag) => `#${tag.name}`).join("  ")}
+            label="Tags"
+            detail={
+              <span className="flex flex-wrap items-center gap-1.5">
+                {state.tags.map((tag) => (
+                  <ReadoutChip key={tag.name}>#{tag.name}</ReadoutChip>
+                ))}
+              </span>
+            }
             count={state.tags.length}
           />
         )}
         {state.references.length > 0 && (
           <ActRow
             label="References"
-            detail={`${state.references.length} cited`}
+            detail={
+              <span className="flex flex-col gap-1 py-1.5">
+                {state.references.map((reference) => (
+                  <span key={reference.targetId} className="flex min-w-0 flex-col">
+                    <span className="truncate">{reference.target.label}</span>
+                    <StanceReadout pair={{ pDirected: reference.relevance, pInterest: reference.support }} />
+                  </span>
+                ))}
+              </span>
+            }
             count={state.references.length}
           />
         )}
-        <div className="flex min-h-12 items-center gap-2">
-          <span className="flex-1 text-label-large" data-testid="wizard-signed-actions">
+        <div className="flex min-h-12 flex-col justify-center gap-0.5 py-1.5">
+          <span className="text-label-large" data-testid="wizard-signed-actions">
             {acts === 1 ? "1 signed action" : `${acts} signed actions`}
           </span>
           {acts > 1 && (
@@ -124,7 +147,7 @@ export function SealStep({
         />
         <TermRow
           label="Where you stand on it"
-          value={formatDimension(state.pDirected)}
+          value={<StanceReadout pair={{ pDirected: state.pDirected, pInterest: 1 }} />}
           action="Adjust"
           testId="wizard-open-stance"
           onAction={() => onSheet("stance")}
@@ -202,19 +225,24 @@ export function SealStep({
         open={sheet === "license"}
         onClose={() => onSheet("none")}
         title="License"
+        titleTrailing={
+          <HelpDot ariaLabel="License" onOpen={onLicenseHelp} testId="wizard-license-help" />
+        }
         testId="wizard-license-sheet"
       >
-        <p className="m-0 text-label-small text-on-surface-variant">
-          Terms for anyone who reuses this.
-        </p>
-        <LicenseChooser value={state.license} onChange={onLicense} testIdPrefix="wizard" />
-        <div className="flex items-center gap-2 border-t border-outline-variant pt-2.5">
-          <span className="flex-1 text-label-small text-on-surface-variant">
-            {licenseTerms(state.license).join(" ")}
-          </span>
-          <PillButton testId="wizard-license-done" onClick={() => onSheet("none")}>
-            Done
-          </PillButton>
+        <div className="flex flex-col gap-4">
+          <p className="m-0 text-label-small text-on-surface-variant">
+            Terms for anyone who reuses this.
+          </p>
+          <LicenseRows value={state.license} onChange={onLicense} testIdPrefix="wizard" />
+          <div className="flex items-center gap-2 border-t border-outline-variant pt-2.5">
+            <span className="flex-1 text-label-small text-on-surface-variant">
+              {licenseTerms(state.license).join(" ")}
+            </span>
+            <PillButton testId="wizard-license-done" onClick={() => onSheet("none")}>
+              Done
+            </PillButton>
+          </div>
         </div>
       </BottomSheet>
 
@@ -254,12 +282,20 @@ export function SealStep({
   );
 }
 
-function ActRow({ label, detail, count }: { label: string; detail: string; count: number }) {
+function ActRow({
+  label,
+  detail,
+  count,
+}: {
+  label: string;
+  detail: ReactNode;
+  count: number;
+}) {
   return (
     <div className="flex min-h-11 items-center gap-2 border-b border-outline-variant">
-      <span className="w-19 flex-none text-label-medium text-on-surface-variant">{label}</span>
+      <span className="w-19 flex-none text-label-small text-on-surface-variant">{label}</span>
       <span className="min-w-0 flex-1 truncate text-body-medium">{detail}</span>
-      <span className="flex-none text-body-small text-on-surface-variant">
+      <span className="flex-none text-label-small text-on-surface-variant">
         {count === 1 ? "1 action" : `${count} actions`}
       </span>
     </div>
@@ -275,7 +311,7 @@ function TermRow({
   last = false,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   action: string;
   testId: string;
   onAction: () => void;
@@ -302,4 +338,27 @@ export function licenseSummary(license: License): string {
     license.provenance === PUBLIC_DOMAIN.provenance
     ? "Public domain — your default"
     : licenseTerms(license).join(" ");
+}
+
+/**
+ * The face and the exact pair (design.md §8.3), the same reading
+ * `reply-seal-step.tsx`'s local `StanceValue` gives the reply's own terms —
+ * kept as its own small copy here rather than a shared import so this lane
+ * stays self-contained; a later pass can fold both into one place.
+ */
+function StanceReadout({ pair }: { pair: StancePair }) {
+  const anchor = nearestAnchor(pair);
+  return (
+    <span className="inline-flex items-baseline gap-1">
+      <span aria-hidden="true" className="text-body-medium">
+        {anchor.emoji}
+      </span>
+      <span aria-hidden="true" className="text-body-small text-on-surface-variant">
+        {formatStancePair(pair)}
+      </span>
+      <span className="sr-only">
+        {anchor.label}, {formatStanceWords(pair)}
+      </span>
+    </span>
+  );
 }

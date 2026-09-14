@@ -88,6 +88,22 @@ describe("BottomSheet", () => {
     expect(dialog.className).toContain("mt-auto");
     expect(dialog.className).toContain("rounded-t-extra-large");
   });
+
+  it("carries what the heading line holds besides its name, without changing what it is labelled by", () => {
+    render(
+      <BottomSheet
+        open
+        onClose={() => {}}
+        title="Mark as sensitive"
+        titleTrailing={<button type="button">?</button>}
+      >
+        <p>Body</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByRole("heading", { level: 2, name: "Mark as sensitive" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "?" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Mark as sensitive")).toBeInTheDocument();
+  });
 });
 
 describe("SheetItem", () => {

@@ -71,6 +71,22 @@ export function Chip({
   );
 }
 
+// THE READOUT TONE (design/components/core/Chip.jsx — jakob's ruling, the
+// conformance round): a chip the reader is being SHOWN, not a control — the
+// tags read back inside the seal's acts card, where what a signature will
+// carry is being confirmed rather than picked. No press, no state layer, no
+// target, so a borderless span rather than a button. `min-height` and
+// padding instead of a fixed height, so it grows with the reader's text
+// setting instead of clipping it; `flex-none` is the acts row's business,
+// not this chip's.
+export function ReadoutChip({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex min-h-6 flex-none items-center rounded-full bg-secondary-container px-2 py-0.5 text-label-small text-on-secondary-container">
+      {children}
+    </span>
+  );
+}
+
 // Material's `close`, 24px grid, filled cut — the same drawing the canvas puts
 // on a picked topic and a picked photo. `currentColor` so it takes the chip's
 // own ink.
