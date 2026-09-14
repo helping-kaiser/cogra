@@ -2240,8 +2240,8 @@ jakob, via the implementation loop: chats moved to would-like #3, but
 the band law is unchanged — the trailing-cluster chats icon STAYS on
 every root band and taps into a coming-soon state. That screen has no
 board. Draw it; the W1 shell lanes wire the icon to it and grade
-against the board once drawn. New board = one canvas slot; its copy
-needs blessing in copy-voice.
+against the board once drawn. New board = one canvas slot; its line
+is blessed (2026-09-14) and lives in copy-voice.
 
 Drawn as `ChatsComingSoon` (canvas "Chats · not here yet", page Feed):
 the empty-state idiom exactly — `PageHeader` with the back arrow, one
