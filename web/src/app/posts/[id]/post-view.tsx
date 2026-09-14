@@ -17,6 +17,7 @@
 // unfolding one is its own request.
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -48,9 +49,9 @@ import { useAuthGuard } from "@/lib/session/runtime";
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { ActorChip } from "@/lib/ui/actor-chip";
-import { Button, buttonClassName } from "@/lib/ui/button";
+import { Button } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import { LicenseTerms } from "@/lib/ui/license-fields";
+import type { License } from "@/lib/license";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PendingMarker } from "@/lib/ui/pending-marker";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
@@ -88,6 +89,9 @@ import { usePreviewUrls } from "@/lib/compose/previews";
 import { sensitiveReasonProblem } from "@/lib/compose/wizard";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
+import { LicenseSheet } from "@/lib/ui2/license-sheet";
+import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
+import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { commentTarget, ReplyWizard } from "./reply/reply-wizard-view";
 import { CommentEditView } from "./edit/comment-edit-view";
 import { MultiActionConfirm } from "@/lib/ui/signed-actions";
@@ -172,6 +176,7 @@ export function PostView({
   store?: IdentityStore;
 }) {
   const client = useApolloClient();
+  const router = useRouter();
   const guard = useAuthGuard();
   const signer = useWriteSigner();
   const viewerId = useActiveAccountId();
@@ -200,6 +205,12 @@ export function PostView({
   const [replying, setReplying] = useState<ReplyTarget | null>(null);
   const [commentSigned, setCommentSigned] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): one
+  // sheet for the page, raised by whichever menu row asked for it. The license
+  // it shows outlives the `open` flag so the block does not blank out mid-exit.
+  const [licenseShown, setLicenseShown] = useState<License | null>(null);
+  const [licenseOpen, setLicenseOpen] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
   const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
   // Stable, so the snackbar's own timer is not restarted by every render of
   // the thread underneath it.
@@ -558,9 +569,70 @@ export function PostView({
   /** The dialog's own numbers and the run it stands in front of. */
   const confirmed = () => ({ count: editActions, busy: editSubmitting, run: runEdit });
 
+  const openLicense = (license: License) => {
+    setLicenseShown(license);
+    setLicenseOpen(true);
+  };
+
+  /**
+   * THE ROWS THE ONE MENU HOLDS — the author's post vs someone else's
+   * (`_shared.jsx:369-376`). Both keep the card's order: the acts the menu was
+   * opened for lead, and the license row closes it, the license being the
+   * rarest read in the product. The license row is dropped when there is none
+   * to show: the license rode the payload, so a redacted record has none
+   * (`PostCard.jsx:142`).
+   *
+   * ROWS WHOSE DESTINATION IS NOT BUILT STAND ANYWAY and do nothing (jakob
+   * 2026-09-14, the introduced-but-inert law): a menu that grew a row per slice
+   * would be a different menu every release, and the row order is ruled.
+   */
+  const postMenuItems = (own: boolean, handle: string | null, license: License | null) => {
+    const rows: MenuItem[] = [
+      { label: "Save", onSelect: () => {}, testId: "post-menu-save" },
+    ];
+    if (own) {
+      rows.push(
+        {
+          label: "Edit",
+          onSelect: () => router.push(`/compose?post=${postId}`),
+          testId: "post-menu-edit",
+        },
+        { label: "Mark as sensitive", onSelect: () => {}, testId: "post-menu-sensitive" },
+        { label: "Remove", onSelect: () => setRemoveOpen(true), testId: "post-menu-remove" },
+      );
+    } else {
+      rows.push(
+        {
+          label: "Cite in a new post",
+          onSelect: () => router.push(`/compose?reference=${postId}`),
+          testId: "post-menu-cite",
+        },
+        {
+          // The handle is the thing a reader recognises, and the word they will
+          // look for again under Hidden accounts (`ActorChip.jsx:67`).
+          label: handle === null ? "Hide this account" : `Hide @${handle}`,
+          onSelect: () => {},
+          testId: "post-menu-hide",
+        },
+      );
+    }
+    if (license !== null) {
+      rows.push({
+        label: "License terms",
+        onSelect: () => openLicense(license),
+        testId: "post-menu-license",
+      });
+    }
+    return rows;
+  };
+
   // The header rides every branch — a dead end (not found, transport
   // fault) is exactly where the back arrow matters most.
-  const header = (isCreator: boolean) => (
+  //
+  // ON A DETAIL SURFACE THE MENU LIVES UP HERE and the card's own dot yields
+  // (`_shared.jsx:337-341` — `PostCard` hides it in `detail`): two dots would
+  // be two menus for one post.
+  const header = (menu: readonly MenuItem[] | null) => (
     <PageHeader
       backHref="/feed"
       // The feed restores the place the reader left it in; scrolling it to the
@@ -569,15 +641,9 @@ export function PostView({
       backLabel="Back to feed"
       backTestId="post-back"
       action={
-        isCreator ? (
-          <Link
-            href={`/compose?post=${postId}`}
-            data-testid="post-edit"
-            className={buttonClassName({ variant: "outline", size: "sm" })}
-          >
-            Edit
-          </Link>
-        ) : undefined
+        menu === null || menu.length === 0 ? undefined : (
+          <OverflowMenu items={menu} ariaLabel="More on this post" testId="post-menu" />
+        )
       }
     />
   );
@@ -585,7 +651,7 @@ export function PostView({
   if (loading) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-        {header(false)}
+        {header(null)}
         <p>Loading…</p>
       </main>
     );
@@ -593,7 +659,7 @@ export function PostView({
   if (notFound) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-        {header(false)}
+        {header(null)}
         <p role="alert" data-testid="post-not-found">
           This post no longer resolves.
         </p>
@@ -603,7 +669,7 @@ export function PostView({
   if (detail === null) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-        {header(false)}
+        {header(null)}
         <div className="flex items-center gap-3">
           <TransportError testId="post-transport-error" />
           <Button
@@ -623,6 +689,40 @@ export function PostView({
   }
 
   const post = detail.post;
+
+  /**
+   * THE COMMENT'S ROWS (`_shared.jsx:392` — `[...CARD_MENU, OPINIONS_ROW,
+   * LICENSE_ROW]`). Save · Cite in a new post · Opinions on this · License
+   * terms, and no Hide: hiding names an actor, and its route is the
+   * commenter's profile (jakob 2026-09-12).
+   *
+   * `Opinions on this` STANDS WHATEVER THE COUNT IS, which is the difference
+   * between a menu row and a count line: a row that came and went with a number
+   * would make the menu a different menu every time.
+   */
+  const commentMenuItems = (comment: ThreadComment): MenuItem[] => {
+    const rows: MenuItem[] = [
+      { label: "Save", onSelect: () => {}, testId: `comment-menu-save-${comment.id}` },
+      {
+        label: "Cite in a new post",
+        onSelect: () => router.push(`/compose?reference=${comment.id}`),
+        testId: `comment-menu-cite-${comment.id}`,
+      },
+      {
+        label: "Opinions on this",
+        onSelect: () => {},
+        testId: `comment-menu-opinions-${comment.id}`,
+      },
+    ];
+    if (comment.license !== null && comment.license !== undefined) {
+      rows.push({
+        label: "License terms",
+        onSelect: () => openLicense(comment.license),
+        testId: `comment-menu-license-${comment.id}`,
+      });
+    }
+    return rows;
+  };
 
   const renderComment = (comment: ThreadComment, depth: number): React.ReactNode => {
     const thread = replyThreads[comment.id];
@@ -663,6 +763,16 @@ export function PostView({
                 {shortTimestamp(comment.createdAt)}
               </time>
             )}
+            {/* A COMMENT WEARS THE SAME OVERFLOW A POST DOES (`CommentMenu.jsx`),
+                pointed at the comment — beside the age, where the master draws
+                it. NO HIDE ROW, and the absence is ruled (jakob 2026-09-12):
+                hiding is an act on an ACTOR, and the route to it is the
+                commenter's own profile, one tap away through their chip. */}
+            <OverflowMenu
+              items={commentMenuItems(comment)}
+              ariaLabel="More on this comment"
+              testId={`comment-menu-${comment.id}`}
+            />
           </div>
               {/* A comment is text PLUS optional media — the XOR is the post's
                   rule alone (D16) — so both render, and both are veiled as one
@@ -705,10 +815,6 @@ export function PostView({
                   />
                 )}
               </BodyRegion>
-              <LicenseTerms
-                license={comment.license}
-                testId={`comment-license-terms-${comment.id}`}
-              />
               {/* The soft marker, friendly not forensic (design.md §9). */}
               {edited && (
                 <p
@@ -756,18 +862,6 @@ export function PostView({
                   >
                     Reply
                   </Button>
-                )}
-                {/* D20's Reference affordance: the word is Reference,
-                    never "cite". It opens the composer with this
-                    comment already drafted as a chip. */}
-                {phase === "signedIn" && (
-                  <Link
-                    href={`/compose?reference=${comment.id}`}
-                    data-testid={`comment-reference-${comment.id}`}
-                    className={buttonClassName({ variant: "text", size: "sm" })}
-                  >
-                    Reference
-                  </Link>
                 )}
                 {isOwn && (
                   <Button
@@ -897,7 +991,13 @@ export function PostView({
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
-      {header(isOwnPost && !redacted)}
+      {/* A REMOVED POST HAS NO MENU LEFT — back is the whole header
+          (`Removed.jsx:5-6`). There is nothing of it to edit, cite or license,
+          and the skeleton that holds the thread's place is not a thing a reader
+          keeps. */}
+      {header(
+        redacted ? null : postMenuItems(isOwnPost, post.author?.handle ?? null, post.license),
+      )}
       {refreshing && (
         <p role="status" aria-live="polite" data-testid="post-refreshing">
           Loading…
@@ -926,17 +1026,6 @@ export function PostView({
           onLinkCopied={() => setLinkCopied(true)}
         />
       </div>
-      {!redacted && <LicenseTerms license={post.license} testId="post-license-terms" />}
-      {/* D20's Reference affordance on the post itself. */}
-      {phase === "signedIn" && !redacted && (
-        <Link
-          href={`/compose?reference=${postId}`}
-          data-testid="post-reference"
-          className={`self-start ${buttonClassName({ variant: "outline", size: "sm" })}`}
-        >
-          Reference
-        </Link>
-      )}
       <hr className="border-outline-variant" />
       <h2 className="text-title-medium" id="post-comments">
         Comments
@@ -990,6 +1079,25 @@ export function PostView({
           this replaced as the deviation). The region is mounted whether or not
           it has anything to say, so assistive technology is already watching
           it when the confirmation arrives. */}
+      {/* ONE LICENSE SHEET FOR THE PAGE, raised by whichever menu row asked —
+          the post's own or any comment's. The terms of a node read the same
+          whichever menu asked for them (`PostLicense.jsx:7-9`). */}
+      {licenseShown !== null && (
+        <LicenseSheet
+          open={licenseOpen}
+          onClose={() => setLicenseOpen(false)}
+          license={licenseShown}
+          testId="license-sheet"
+        />
+      )}
+      {/* THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
+          slice 8's, whole — "we need to do erasure right so it should be one
+          task" — so Remove closes the dialog and changes nothing. */}
+      <RemoveConfirm
+        open={removeOpen}
+        onClose={() => setRemoveOpen(false)}
+        onRemove={() => setRemoveOpen(false)}
+      />
       <Snackbar
         testId="comment-signed"
         message={commentSigned ? "Signed — it's in the thread now, still settling." : null}
