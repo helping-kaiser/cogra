@@ -60,6 +60,7 @@ import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
+import com.cogra.core.designsystem.v2.media.PinnedClip
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
@@ -426,73 +427,92 @@ private fun PostDetailBody(
     // A removed post keeps its skeleton and loses everything the payload
     // carried: the license, the topics and the citations rode it away.
     val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
-    // The post is a card here too, edge to edge with its 8dp seam — on the
-    // boards the post wears the card and the thread stands in its own sheet
-    // over it, not as a second half of this page.
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("detail_list"),
-        contentPadding = PaddingValues(top = Space.x2, bottom = Space.x4),
-        verticalArrangement = Arrangement.spacedBy(Space.x2),
-    ) {
-        item {
-            Card(modifier = Modifier.fillMaxWidth().testTag("detail_card")) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(Space.x4),
-                    verticalArrangement = Arrangement.spacedBy(Space.x1),
-                ) {
-                    // PEOPLE FIRST: the author leads, above the content
-                    // and never below it as a byline — including on a
-                    // media post.
-                    ContentCardHeader(
-                        author = post.author,
-                        at = post.createdAt,
-                        onOpenActor = onOpenActor,
-                        testTagPrefix = "detail",
-                    )
-                    // The title titles the thing, so it stands above the
-                    // media rather than in the bar: below the picture it
-                    // would read as a caption, and the caption as a
-                    // second one. The detail is the read surface, so it
-                    // never clamps.
-                    post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.testTag("detail_title"),
+    // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
+    // the clip leaves the card body, pins above the column still playing, and
+    // wears the full transport. A post of pictures is untouched — its gallery
+    // is still the card's body. A removed record has no clip to pin.
+    val pinned = if (removed) {
+        null
+    } else {
+        post.attachments.firstOrNull { it.isVideo }?.toItem()
+    }
+    Column(modifier = Modifier.fillMaxSize()) {
+        if (pinned != null) {
+            // OUTSIDE the list, which is what "pinned" means: the body rises
+            // beneath a clip that stays put.
+            PinnedClip(item = pinned)
+        }
+        // The post is a card here too, edge to edge with its 8dp seam — on the
+        // boards the post wears the card and the thread stands in its own sheet
+        // over it, not as a second half of this page.
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("detail_list"),
+            contentPadding = PaddingValues(top = Space.x2, bottom = Space.x4),
+            verticalArrangement = Arrangement.spacedBy(Space.x2),
+        ) {
+            item {
+                Card(modifier = Modifier.fillMaxWidth().testTag("detail_card")) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Space.x4),
+                        verticalArrangement = Arrangement.spacedBy(Space.x1),
+                    ) {
+                        // PEOPLE FIRST: the author leads, above the content
+                        // and never below it as a byline — including on a
+                        // media post. On the video detail the clip is above
+                        // the CARD, so the chip leads the card rather than
+                        // the screen.
+                        ContentCardHeader(
+                            author = post.author,
+                            at = post.createdAt,
+                            onOpenActor = onOpenActor,
+                            testTagPrefix = "detail",
+                        )
+                        // The title titles the thing, so it stands above the
+                        // media rather than in the bar: below the picture it
+                        // would read as a caption, and the caption as a
+                        // second one. The detail is the read surface, so it
+                        // never clamps.
+                        post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.headlineSmall,
+                                modifier = Modifier.testTag("detail_title"),
+                            )
+                        }
+                        // Media, words and description are one region because
+                        // the veil covers them as one state (D12); the title
+                        // stays outside it.
+                        PostBody(
+                            content = post.content,
+                            description = post.description,
+                            attachments = post.attachments,
+                            attachmentsStatus = post.attachmentsStatus,
+                            moderation = post.moderation,
+                            testTagPrefix = "detail",
+                            modifier = Modifier.testTag("detail_body"),
+                            bleed = Space.x4,
+                            mediaPinned = pinned != null,
+                            // The same set the feed reads: a reader who
+                            // already chose to look at this post is not asked
+                            // again on the way in.
+                            revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
+                            onReveal = { onReveal(post.id, post.sensitiveMark()) },
+                        )
+                        DetailCardFoot(
+                            post = post,
+                            removed = removed,
+                            onOpenTopic = onOpenTopic,
+                            onOpenActor = onOpenActor,
+                            onOpenPost = onOpenPost,
+                            onOpenComments = onOpenComments,
+                            onShare = onShare,
+                            stanceControl = stanceControl,
                         )
                     }
-                    // Media, words and description are one region because
-                    // the veil covers them as one state (D12); the title
-                    // stays outside it.
-                    PostBody(
-                        content = post.content,
-                        description = post.description,
-                        attachments = post.attachments,
-                        attachmentsStatus = post.attachmentsStatus,
-                        moderation = post.moderation,
-                        testTagPrefix = "detail",
-                        modifier = Modifier.testTag("detail_body"),
-                        bleed = Space.x4,
-                        // The same set the feed reads: a reader who
-                        // already chose to look at this post is not asked
-                        // again on the way in.
-                        revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
-                        onReveal = { onReveal(post.id, post.sensitiveMark()) },
-                    )
-                    DetailCardFoot(
-                        post = post,
-                        removed = removed,
-                        onOpenTopic = onOpenTopic,
-                        onOpenActor = onOpenActor,
-                        onOpenPost = onOpenPost,
-                        onOpenComments = onOpenComments,
-                        onShare = onShare,
-                        stanceControl = stanceControl,
-                    )
                 }
             }
         }
