@@ -745,6 +745,10 @@ export function ComposeWizard({
             setSheet(next);
           }}
           onLicense={(license) => dispatch({ type: "license", license })}
+          // The cited sheet's removals and re-pairs land in the SAME staged
+          // set the details step owns — one reducer action, not a second copy
+          // of the citations kept by the seal.
+          onReferences={(references) => dispatch({ type: "references", references })}
           onStagedPDirected={setStagedPDirected}
           onSetStance={() => {
             dispatch({ type: "pDirected", pDirected: stagedPDirected });
