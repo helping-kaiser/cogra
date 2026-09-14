@@ -135,7 +135,7 @@ class StancePadTest {
             .fetchSemanticsNode()
             .config[SemanticsProperties.ContentDescription]
             .joinToString(" ")
-        assertThat(spoken).doesNotContain("😐")
+        assertThat(spoken).doesNotContain("🫥")
     }
 
     @Test
