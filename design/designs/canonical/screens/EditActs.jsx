@@ -19,9 +19,9 @@ export function Screen() {
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px 16px" }}>
           <ActsCard
             rows={[
-              { label: "Edit", value: "Salt maps of the coast road", count: "1" },
-              { label: "Tags added", value: "#saltmaps", count: "1" },
-              { label: "Tags withdrawn", value: "#coastroad", count: "1" },
+              { label: "Edit", value: "Salt maps of the coast road", count: "1", countNoun: "edit" },
+              { label: "Tags added", value: "#saltmaps", count: "1", countNoun: "tag" },
+              { label: "Tags withdrawn", value: "#coastroad", count: "1", countNoun: "tag" },
             ]}
             note="They land together, or none does."
           />
