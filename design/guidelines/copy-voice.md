@@ -142,11 +142,15 @@ opinion`. The verb is *give*, never *take*.
 
 The law stops at the code's own names, exactly as the tag/topic law
 does. `StanceControl`, `StancePad`, `StanceReadout`, `StanceRow`,
-`StanceValue`, `STANCE_ANCHORS`, the `stance` prop, the stance record
-and its `api-spec` shape, the flow-graph's `stance face` labels and the
-`ProfileStances` board name all stay: they name the record, no one
-using the product reads them, and churning them would cost every
-cross-reference to the contract for nothing.
+`StanceValue`, `StanceStanding`, `STANCE_ANCHORS`, `NO_STANDING_LABEL`,
+`standingLine`, `standingParts`, the `stance` prop, `StanceReadout`'s
+`kind="standing"` value, the stance record and its `api-spec` shape, the
+flow-graph's `stance face` labels and the `ProfileStances` board name all
+stay: they name the record, no one using the product reads them, and
+churning them would cost every cross-reference to the contract for
+nothing. The retired word survives in identifiers for the same reason
+`topics` does — `NO_STANDING_LABEL`'s own value is `No opinion yet`, and
+that pairing is the law in one line.
 
 ## Platform nouns
 
