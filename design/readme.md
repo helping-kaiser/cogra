@@ -1081,7 +1081,8 @@ The recovery-code screen is a trap: no back affordance, and the only
 way out is the code typed or pasted back. A think-twice dialog gates
 entry to it. The parked stance pad rests 16px above
 whatever it parks over — the bottom bar where one exists, a sheet's
-bottom edge otherwise; one number everywhere (ruled 2026-09-10). First-time onboarding is
+bottom edge otherwise, the keyboard while one is up; one number
+everywhere (ruled 2026-09-10). First-time onboarding is
 per-control, never a tour, and on the entry screens only the pad
 carries it — what it is for, how it opens, that nothing signs until
 Set, and that the input can be swapped in settings.
@@ -4777,6 +4778,33 @@ instead of a gap, and the message-someone flow resolves.
 - **The gate**: boards hold at **194**, edges hold at **1372**, gaps
   **20 → 15**, flows **63/60/3 → 63/61/2**, the compose canvas
   unchanged at 75/200 files (63% headroom).
+
+### The keyboard's own mechanism — 2026-09-14
+
+The design system said nothing about the on-screen keyboard (census
+2026-09-14). jakob's ruling: a guideline, platform standard, no new
+boards.
+
+- **The keyboard never covers the focused field.** Each platform's own
+  mechanism does the work — Android's ime insets (the window resizes,
+  the focused field scrolls clear), the web's default
+  scroll-into-view. No custom panning, no reimplementation.
+- **A bottom-anchored surface that holds a field rises with the
+  keyboard** — a sheet with an input, the comment composer row. The
+  bottom bar does not; the keyboard covering it is the platform's own
+  behaviour.
+- **The parked pad treats the keyboard as one more parking edge**, 16px
+  above it while one is up — the existing parked-pad rule (§13 *The
+  entry flow*) extended by one clause, not a new number.
+- **A screen that does not scroll keeps the focused field and the
+  primary action above the keyboard**; content above them may scroll or
+  compress. The recovery-code screen — the deliberate trap with no back
+  affordance — is the sharp case: the code and its confirm control stay
+  visible.
+- **Nothing animates beyond the platform's own keyboard transition.**
+  The system adds no keyboard choreography. A pad parked over a sheet
+  that holds a field needs no third rule: the sheet rises (rule two)
+  and the pad re-parks above the keyboard (rule three), together.
 
 ---
 
