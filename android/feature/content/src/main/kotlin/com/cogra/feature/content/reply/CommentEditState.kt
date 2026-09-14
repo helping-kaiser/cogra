@@ -9,8 +9,8 @@ import com.cogra.domain.repo.ContentRepository
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.TagSectionState
 import com.cogra.feature.content.wizard.AssetUpload
-import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.inFlight
 import com.cogra.feature.content.wizard.pickedPictures
 import com.cogra.feature.content.wizard.withAltText

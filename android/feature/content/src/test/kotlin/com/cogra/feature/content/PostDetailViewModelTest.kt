@@ -35,7 +35,6 @@ import com.cogra.domain.testing.testReferenceClaim
 import com.cogra.domain.testing.testTopicClaim
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -47,6 +46,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class PostDetailViewModelTest {
@@ -142,7 +142,6 @@ class PostDetailViewModelTest {
         /** The gallery the last comment/reply creation carried. */
         var lastCommentAttachments: List<AttachmentClaim> = emptyList()
 
-
         override suspend fun prepareComment(
             target: String,
             content: String,
@@ -235,6 +234,7 @@ class PostDetailViewModelTest {
     fun tearDown() {
         Dispatchers.resetMain()
     }
+
     @Test
     fun startLoadsThePostAndItsThread() = runTest(dispatcher) {
         val vm = viewModel()

@@ -1,5 +1,6 @@
 package com.cogra.feature.content
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -41,7 +42,6 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.annotation.StringRes
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CollapsingTopBanner
@@ -159,8 +159,11 @@ fun ComposePostScreen(
                     title = {
                         Text(
                             stringResource(
-                                if (editing) R.string.content_compose_edit_title
-                                else R.string.content_compose_title,
+                                if (editing) {
+                                    R.string.content_compose_edit_title
+                                } else {
+                                    R.string.content_compose_title
+                                },
                             ),
                         )
                     },

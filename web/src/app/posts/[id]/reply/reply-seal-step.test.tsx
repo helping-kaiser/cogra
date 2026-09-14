@@ -55,6 +55,13 @@ function renderSeal(overrides: Partial<ReplyState> = {}, sheet: ReplySheet = "no
 // the one sheet. What is the reply's own is the add-row, which rides along in
 // every state because a comment's seal IS its details stage.
 describe("ReplySealStep — the citations' three readings", () => {
+  it("speaks the comment row's count in its own noun", () => {
+    renderSeal();
+    expect(within(screen.getByTestId("reply-seal-acts")).getByText("1 comment")).toHaveClass(
+      "sr-only",
+    );
+  });
+
   it("offers only the add-row with nothing staged", () => {
     renderSeal();
     const acts = within(screen.getByTestId("reply-seal-acts"));
@@ -97,7 +104,9 @@ describe("ReplySealStep — the citations' three readings", () => {
     });
     const door = screen.getByTestId("reply-open-cited");
     expect(door).toHaveTextContent("2 cited");
-    expect(door.lastElementChild?.textContent).toBe("2");
+    // Seen bare, heard whole (item 73): the digit is drawn, the reading spoken.
+    expect(door.lastElementChild?.firstElementChild?.textContent).toBe("2");
+    expect(within(door).getByText("2 citations")).toHaveClass("sr-only");
     expect(screen.getByRole("button", { name: "Manage the citations" })).toBe(door);
     // The add-row survives the count.
     expect(screen.getByTestId("reply-open-references")).toBeInTheDocument();

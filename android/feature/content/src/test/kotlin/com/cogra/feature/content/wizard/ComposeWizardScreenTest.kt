@@ -3,6 +3,7 @@ package com.cogra.feature.content.wizard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertCountEquals
@@ -11,8 +12,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextEquals
-import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.filterToOne
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -22,7 +23,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
-import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import com.cogra.core.designsystem.v2.compose.HelpTopic
@@ -769,6 +769,17 @@ class ComposeWizardScreenTest {
         assertThat(referenceRemovals).containsExactly("u1")
         compose.onNodeWithTag("wizard_cited_sheet_row_1_repair").performClick()
         assertThat(referenceTunings).containsExactly("p2")
+    }
+
+    // Item 73 (jakob's ruling 2026-09-14): the digit is what the eye gets,
+    // and an ear given "2" alone gets nothing — so the count's node answers
+    // with the whole reading, in the ROW's own noun.
+    @Test
+    fun theActsRowsShowTheCountBareAndSpeakItWhole() {
+        compose.setContent { Wizard(sealWithTwoCitations()) }
+
+        compose.onNodeWithText("2").assertContentDescriptionContains("2 citations")
+        compose.onNodeWithText("1").assertContentDescriptionContains("1 post")
     }
 
     private fun sealWithTwoCitations() = ComposeWizardState(

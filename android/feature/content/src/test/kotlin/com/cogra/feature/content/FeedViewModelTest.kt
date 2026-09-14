@@ -1,10 +1,10 @@
 package com.cogra.feature.content
 
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
 import com.cogra.domain.Outcome
 import com.cogra.domain.Page
 import com.cogra.domain.PostView
-import com.cogra.domain.FieldStatus
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveMark
@@ -13,7 +13,6 @@ import com.cogra.domain.content.isRevealed
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.testPost
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -23,6 +22,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FeedViewModelTest {

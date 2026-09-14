@@ -1,21 +1,22 @@
 package com.cogra.feature.content.reply
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.semantics.SemanticsActions
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
@@ -456,6 +457,17 @@ class ReplyWizardScreenTest {
 
         compose.onNodeWithTag("reply_cited_sheet_row_1_remove").performClick()
         assertThat(referenceRemovals).containsExactly("p-1")
+    }
+
+    // Item 73 (jakob's ruling 2026-09-14): the digit is drawn, the count is
+    // spoken whole, and the noun is the row's own — the References row counts
+    // CITATIONS, the Comment row counts comments.
+    @Test
+    fun theActsRowsShowTheCountBareAndSpeakItWhole() {
+        compose.setContent { Wizard(sealWithCitations(2)) }
+
+        compose.onNodeWithText("2").assertContentDescriptionContains("2 citations")
+        compose.onNodeWithText("1").assertContentDescriptionContains("1 comment")
     }
 
     private fun sealWithCitations(count: Int) = sealWithWords().copy(

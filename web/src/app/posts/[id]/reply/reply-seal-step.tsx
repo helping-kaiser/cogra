@@ -119,14 +119,14 @@ export function ReplySealStep({
           <span className="min-w-0 flex-1 truncate text-body-medium" data-testid="reply-act-comment">
             {replyActLabel(state.target)}
           </span>
-          {/* The bare number the board draws — see `AddRow` below. */}
-          <span className="flex-none text-body-small text-on-surface-variant">1</span>
+          <ActsCount count={1} noun="comment" />
         </div>
 
         <AddRow
           label="+ Add a topic"
           filled={state.tags.map((tag) => `#${tag.name}`).join("  ")}
           count={state.tags.length}
+          countNoun="tag"
           testId="reply-open-topics"
           onOpen={() => onSheet("topics")}
         />
@@ -435,12 +435,14 @@ function AddRow({
   label,
   filled,
   count,
+  countNoun,
   testId,
   onOpen,
 }: {
   label: string;
   filled: string;
   count: number;
+  countNoun: string;
   testId: string;
   onOpen: () => void;
 }) {
@@ -455,8 +457,29 @@ function AddRow({
       >
         {filled}
       </button>
-      <span className="flex-none text-body-small text-on-surface-variant">{count}</span>
+      <ActsCount count={count} noun={countNoun} />
     </div>
+  );
+}
+
+/**
+ * THE COUNT IS SEEN BARE AND HEARD WHOLE (jakob's ruling 2026-09-14, design
+ * backlog item 73; `ActsCard.jsx:27-39`). The digit is what the board draws;
+ * an ear given the number alone gets nothing, so the digit leaves the
+ * accessibility tree and a paired reading says "2 citations". The noun is the
+ * row's own — the References row counts CITATIONS — never its label's.
+ *
+ * A count already made of words ("1 more", on a row that still offers an act)
+ * keeps them and says itself.
+ */
+function ActsCount({ count, noun }: { count: number; noun: string }) {
+  return (
+    <span className="flex-none text-body-small text-on-surface-variant">
+      <span aria-hidden="true">{count}</span>
+      <span className="sr-only">
+        {count} {count === 1 ? noun : `${noun}s`}
+      </span>
+    </span>
   );
 }
 
@@ -528,7 +551,7 @@ function ReplyCitedRow({
       >
         <span aria-hidden="true">×</span>
       </button>
-      <span className="flex-none text-body-small text-on-surface-variant">1</span>
+      <ActsCount count={1} noun="citation" />
     </div>
   );
 }
@@ -559,7 +582,7 @@ function CitedRow({
     >
       <span className="w-19 flex-none text-label-medium text-on-surface-variant">References</span>
       <span className="min-w-0 flex-1 truncate text-body-medium">{count} cited</span>
-      <span className="flex-none text-body-small text-on-surface-variant">{count}</span>
+      <ActsCount count={count} noun="citation" />
     </button>
   );
 }

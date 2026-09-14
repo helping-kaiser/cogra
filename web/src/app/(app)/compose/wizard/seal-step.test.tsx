@@ -109,7 +109,7 @@ describe("SealStep", () => {
       expect(door).toHaveTextContent("2 cited");
       // The trailing count is the citations, BARE — the list's length and
       // nothing else, never the signature's own act total.
-      expect(door.lastElementChild?.textContent).toBe("2");
+      expect(door.lastElementChild?.firstElementChild?.textContent).toBe("2");
       expect(door).not.toHaveTextContent("2 actions");
       // Two or more is where the name stops being the shortest true answer,
       // so no citation is named on the card any more.
@@ -306,6 +306,33 @@ describe("SealStep", () => {
     expect(screen.getByText("they land together, or none does")).toBeInTheDocument();
   });
 
+  // Item 73 (jakob's ruling 2026-09-14): the digit is what the eye gets, and
+  // an ear given "3" alone gets nothing — so the digit leaves the
+  // accessibility tree and the count is spoken whole, in the ROW's own noun.
+  it("shows the count bare and speaks it whole, in the row's own noun", () => {
+    renderStep({
+      tags: [tag("fieldnotes"), tag("coastroad")],
+      references: [citation("p-1", "One"), citation("p-2", "Two")],
+    });
+    const acts = within(screen.getByTestId("wizard-seal-acts"));
+    expect(acts.getByText("1 post")).toHaveClass("sr-only");
+    expect(acts.getByText("2 tags")).toHaveClass("sr-only");
+    // The References row counts CITATIONS — the noun is the row's, not the
+    // label's, and no rule derives it from "References".
+    expect(acts.getByText("2 citations")).toHaveClass("sr-only");
+    const bare = screen.getByTestId("wizard-open-cited").lastElementChild
+      ?.firstElementChild as HTMLElement;
+    expect(bare.textContent).toBe("2");
+    expect(bare).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("keeps the singular at one", () => {
+    renderStep({ references: [citation("p-1", "One")] });
+    expect(
+      within(screen.getByTestId("wizard-seal-acts")).getByText("1 citation"),
+    ).toHaveClass("sr-only");
+  });
+
   it("reads act-card labels and counts at the same small type role", () => {
     renderStep({ tags: [tag("fieldnotes")] });
     const label = screen.getByText("Tags");
@@ -314,8 +341,9 @@ describe("SealStep", () => {
     expect(label.className).toContain("text-label-small");
     // The trailing count is the BARE NUMBER the board draws: the word
     // form spent the row's width on a noun the label column already says,
-    // and what it spent came out of the value slot.
-    expect(count.textContent).toBe("1");
+    // and what it spent came out of the value slot. What is DRAWN is the
+    // digit; the reading beside it is `sr-only` (item 73).
+    expect((count.firstElementChild as HTMLElement).textContent).toBe("1");
     expect(count.className).toContain("text-label-small");
   });
 
