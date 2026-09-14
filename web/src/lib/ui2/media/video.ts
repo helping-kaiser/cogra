@@ -160,21 +160,37 @@ export function probeVideo(file: Blob): Promise<VideoProbe> {
 }
 
 /**
- * Where the offered cover frames are taken from, as fractions of the clip.
+ * Where three of the four offered cover frames are taken from, as fractions
+ * of the clip. The fourth — the opening second — is a time, not a fraction,
+ * and is added by `frameTimes` below.
  *
  * NOT ZERO, deliberately. A great many clips open on a fade from black, and a
  * black poster is the one cover that tells a reader nothing at all — so the
- * earliest offer sits just inside the opening, and the first is the one
- * selected when the screen opens.
- *
- * `CoverRow` asks for a fourth offer at one second ("FOUR FRAMES, NOT THREE:
- * 1s, 10%, 50%, 90%"). A time is not a fraction, and these points carry no
- * duration to turn one into the other.
+ * earliest fractional offer sits just inside the opening.
  */
 export const FRAME_POINTS = [0.1, 0.5, 0.9] as const;
 
 /**
- * Pull stills out of a clip at the given fractions of its length.
+ * `CoverRow` asks for four offers ("FOUR FRAMES, NOT THREE: 1s, 10%, 50%,
+ * 90%") and the first is selected when the screen opens.
+ */
+const FIRST_FRAME_SECONDS = 1;
+
+/**
+ * The clip-relative times to capture, in offer order: the 1-second opening,
+ * clamped so a clip shorter than a second is never asked for a time past its
+ * own end, then the three fractional points scaled to the clip's length.
+ */
+export function frameTimes(
+  lengthSeconds: number,
+  fractions: readonly number[] = FRAME_POINTS,
+): readonly number[] {
+  const opening = Math.min(FIRST_FRAME_SECONDS, lengthSeconds);
+  return [opening, ...fractions.map((fraction) => lengthSeconds * fraction)];
+}
+
+/**
+ * Pull stills out of a clip at the times `frameTimes` names.
  *
  * HOW A FRAME IS TAKEN. Seek, wait for `seeked`, then draw the video element
  * into a canvas with `drawImage` — which MDN documents as accepting an
@@ -233,7 +249,7 @@ function attachOffscreen(video: HTMLVideoElement): () => void {
 
 export async function captureFrames(
   file: Blob,
-  points: readonly number[] = FRAME_POINTS,
+  fractions: readonly number[] = FRAME_POINTS,
 ): Promise<readonly Blob[]> {
   const url = URL.createObjectURL(file);
   const video = document.createElement("video");
@@ -273,9 +289,9 @@ export async function captureFrames(
     const duration = video.duration;
     const length = Number.isFinite(duration) && duration > 0 ? duration : 0;
     const frames: Blob[] = [];
-    for (const point of points) {
+    for (const time of frameTimes(length, fractions)) {
       if (Date.now() >= deadline) break;
-      const frame = await frameAt(video, length * point);
+      const frame = await frameAt(video, time);
       if (frame) frames.push(frame);
     }
     return frames;

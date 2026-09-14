@@ -5,9 +5,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.filterToOne
 import androidx.compose.ui.test.hasClickAction
@@ -353,6 +355,39 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_grid_c").performClick()
 
         assertThat(picked).containsExactly("a", "c").inOrder()
+    }
+
+    private val withVideoPicked = ComposeWizardState(
+        mode = BodyMode.Media,
+        picked = listOf(PickedAsset("clip", 1f, durationMs = 42_000)),
+        deviceMedia = listOf(
+            DeviceMedia("clip", 1f, durationMs = 42_000),
+            DeviceMedia("other", 1f),
+        ),
+    )
+
+    // CW-06 (`ComposePickVideo`'s `PickTray`): one clip is not a set to
+    // reorder, so the tray drops Show all and carries the caption this state
+    // needs instead of the sheet.
+    @Test
+    fun theTraySwapsInTheClipsOwnCaptionAndDropsShowAll() {
+        compose.setContent { Wizard(withVideoPicked) }
+
+        compose.onNodeWithTag("wizard_picked_count").assertTextEquals("Picked · 1")
+        compose.onNodeWithText("A video is the whole post. Its cover comes next.").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_show_all").assertDoesNotExist()
+    }
+
+    // CW-07 (`ComposePickVideo`'s `DeadGrid`): a post carries pictures OR one
+    // video, so once a clip is staged the grid — the photos-app tile and
+    // every device tile alike — takes no more picks.
+    @Test
+    fun theGridGoesDeadOnceAClipIsStaged() {
+        compose.setContent { Wizard(withVideoPicked) }
+
+        compose.onNodeWithTag("wizard_open_picker").assertIsNotEnabled()
+        compose.onNodeWithTag("wizard_grid_other").assertHasNoClickAction()
+        compose.onNodeWithTag("wizard_grid_clip").assertHasNoClickAction()
     }
 
     @Test

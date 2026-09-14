@@ -102,7 +102,18 @@ fun CoverRow(
             )
         }
         Text(
-            text = "A frame, or a picture of your own.",
+            // NO FRAMES IS A STATE THE ROW HOLDS (video-cover round,
+            // 2026-09-10): extraction is a thing a device can fail at, and
+            // an empty `frames` here means it already has — not that
+            // capture is still running, which the caller holds off drawing
+            // this row for at all. The terminal answer says why the choice
+            // is smaller than it was rather than leaving four empty tiles
+            // to offer pictures that do not exist.
+            text = if (frames.isEmpty()) {
+                "This clip gave no frames — choose a picture of your own, or leave it without one."
+            } else {
+                "A frame, or a picture of your own."
+            },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.then(
