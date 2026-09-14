@@ -21,6 +21,7 @@ export function BottomSheet({
   open,
   onClose,
   title,
+  titleTrailing,
   children,
   testId = "bottom-sheet",
 }: {
@@ -29,6 +30,13 @@ export function BottomSheet({
   // Every sheet is titled: the title is what the sheet is labelled by, so a
   // screen reader announces what opened rather than "dialog".
   title: string;
+  /**
+   * What the heading line carries besides its name (design's `SheetTitle`
+   * `trailing`) — a sheet's own "?", or the switch the sheet exists for. The
+   * dialog's accessible name still comes from `title` alone; this only adds
+   * to the drawn row.
+   */
+  titleTrailing?: ReactNode;
   children: ReactNode;
   testId?: string;
 }) {
@@ -86,7 +94,14 @@ export function BottomSheet({
             with the backdrop, Escape, or its own action, and a handle that
             looks draggable but is not would lie. */}
         <span aria-hidden="true" className="mx-auto mt-3 h-1 w-8 rounded-full bg-outline-variant" />
-        <h2 className="px-6 pt-4 pb-2 text-title-medium">{title}</h2>
+        {titleTrailing === undefined ? (
+          <h2 className="px-6 pt-4 pb-2 text-title-medium">{title}</h2>
+        ) : (
+          <div className="flex items-center gap-2 px-6 pt-4 pb-2">
+            <h2 className="m-0 flex-1 text-title-medium">{title}</h2>
+            {titleTrailing}
+          </div>
+        )}
         <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-8">{children}</div>
       </div>
     </dialog>
