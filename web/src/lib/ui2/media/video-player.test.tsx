@@ -57,8 +57,8 @@ describe("autoplay", () => {
     expect(video.paused).toBe(true);
   });
 
-  it("carries the element's own controls — the ruling asks for real ones", () => {
-    expect(player()).toHaveAttribute("controls");
+  it("never carries the native transport — every card wears the sound disc instead", () => {
+    expect(player()).not.toHaveAttribute("controls");
   });
 });
 
@@ -160,6 +160,26 @@ describe("the reading surface", () => {
   });
 });
 
+// FE-26/H-04: a feed card wears the sound control and nothing else — no
+// play/pause, no duration pill, at both scales (design/readme.md, "the video
+// conform round"). The reading surface never had a transport; the full/card
+// surface loses its native one here, so both land on the same one control.
+describe("the full surface (a feed card's clip)", () => {
+  it("wears one control, and it is the sound", () => {
+    const video = player();
+    expect(video).not.toHaveAttribute("controls");
+    expect(screen.getByTestId("video-player-sound")).toHaveAttribute(
+      "aria-label",
+      "Turn sound on",
+    );
+  });
+
+  it("shows no duration, which the detail surface owns for now (W3-6)", () => {
+    player({ durationMs: 18_000 });
+    expect(screen.queryByTestId("video-player-duration")).toBeNull();
+  });
+});
+
 describe("the tile", () => {
   it("renders a player for a video and an image for a picture", () => {
     render(
@@ -172,12 +192,15 @@ describe("the tile", () => {
     render(
       <MediaTile src={CLIP} mimeType="video/mp4" testId="moving" onOpen={() => {}} />,
     );
-    expect(screen.queryByRole("button")).toBeNull();
+    // The sound disc is a real button now that native controls are gone; what
+    // must still never happen is MediaTile's own onOpen wrapper around it.
+    expect(screen.queryByRole("button", { name: /open the picture/i })).toBeNull();
+    expect(screen.getByTestId("moving").closest("button")).toBeNull();
   });
 
-  it("draws the length where the contract states one", () => {
+  it("shows no duration pill — the sound disc is the only control a tile's clip wears", () => {
     render(<MediaTile src={CLIP} mimeType="video/mp4" durationMs={42_000} testId="moving" />);
-    expect(screen.getByTestId("moving-duration")).toHaveTextContent("0:42");
+    expect(screen.queryByTestId("moving-duration")).toBeNull();
   });
 });
 
