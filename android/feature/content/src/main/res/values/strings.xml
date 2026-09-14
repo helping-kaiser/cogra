@@ -32,6 +32,30 @@
         <item quantity="one">%d reference</item>
         <item quantity="other">%d references</item>
     </plurals>
+    <!-- THE TAGS-AND-REFERENCES SHEET (RefsSheet.jsx): what the counts
+         open. Two groups, and one row per signed act — the leading mark
+         says the kind without a word beside it, so the kind is the row's
+         own second line and the pair rides its right edge. -->
+    <string name="content_refs_sheet_title">Tags &amp; references</string>
+    <string name="content_refs_section_tags">Tags</string>
+    <string name="content_refs_section_references">References</string>
+    <string name="content_refs_kind_tag">Tag</string>
+    <!-- A citation at a person is a MENTION: the target's class is the
+         whole distinction between quoting, embedding and mentioning. -->
+    <string name="content_refs_kind_mention">Mention</string>
+    <string name="content_refs_kind_post">Post</string>
+    <string name="content_refs_kind_comment">Comment</string>
+    <!-- A claim this instance cannot type is a reference and nothing
+         more precise; it still counts, and still names its L1 id. -->
+    <string name="content_refs_kind_reference">Reference</string>
+    <!-- The row, spoken: the object's or face's reading is lossy, so the
+         pair is spelled out beside it. A tag's word names a degree of
+         aboutness and is true of the row; a stance anchor's names a
+         feeling about a stance, which a citation is not — so the
+         citation's reading is its two axes and nothing else. -->
+    <string name="content_refs_row_tag">#%1$s, %2$s, relevance %3$s, confidence %4$s</string>
+    <string name="content_refs_row_reference">%1$s, %2$s, relevance %3$s, support %4$s</string>
+
     <!-- The affordance row. The comment count is spoken rather than
          drawn as a word — the row is glyph-plus-number, and the label
          lives in the accessibility tree instead. -->

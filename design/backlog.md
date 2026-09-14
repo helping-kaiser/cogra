@@ -2140,10 +2140,11 @@ characters, which an advance sum measures identically.
 The measurement this item's premise rested on ran low twice: at wght 300
 rather than the 500 the pill paints, and counting `--text-label-large`'s
 tracking, which a form control's UA rule drops — the trigger renders at
-`letter-spacing: normal`. The weight is fixed; the tracking term stays
-deliberately, as the guard's margin over the kerning an advance sum
-cannot see, measured against Chrome at ~1.7% wide of the real paint. The
-truncation census still prints; only the exit code changed.
+`letter-spacing: normal`. The weight is fixed; the unpainted tracking
+term is the guard's deliberate margin (jakob 2026-09-14) — it covers the
+kerning an advance sum cannot see and holds the census ~1.7% wide of the
+real paint, checked against Chrome. The truncation census still prints;
+only the exit code changed.
 
 ### 64 · The filter summaries outgrow their trigger · *design* · **ruled + built 2026-09-14**
 
@@ -2273,7 +2274,7 @@ count stays in the accessible name. Redraw the master + conform the
 prose; implementation's W3-7 viewer lane grades against the updated
 master (not yet dispatched — the W3 window is the deadline).
 
-Drawn as `ViewerDots` in `MediaViewer.jsx`: **seven slots**, the window
+Drawn as `PagerDots`: **seven slots**, the window
 sliding centred on the current index and clamped to the set's two ends,
 the edge dot on a side with more beyond it drawn at 4px against the
 6px full dot. One smaller size and not a ladder of them, the active dot
@@ -2283,10 +2284,22 @@ pixel-identical: four pictures fit the window whole. The windowed case
 has no board — none of the three viewer boards carries a set past four
 — so it is drawn in the Media card's specimen at m=4, 7 and 10.
 
-**The card's own pager is deliberately untouched.** Item 21's ruling
-governs it and item 67 names the viewer only, so a gallery card still
-draws its set whole — up to the ten-picture authoring cap. Whether the
-window belongs there too is jakob's call, not this round's.
+**The card's pager windows too** (jakob 2026-09-14, "do the same insta
+has done": ten dots under a gallery card is too much). The card and the
+viewer page the same set with the same gesture, so a marker that
+windowed in one and ran long in the other would be two vocabularies for
+one position — the card now draws the identical row, and the reason the
+viewer's row has a ceiling is the reason the card's has one.
+
+One implementation serves both, as `PagerDots`. It lives in
+`MediaAttachment.jsx` rather than the viewer, because the viewer already
+imports `useGlobalMute` from there and the bundler fails on an import
+cycle; the windowing math has one home and neither pager restates it.
+What differs is a `tone`: the page's own ink on a card — `primary` for
+here, the hairline for the rest — and white with a drop shadow over the
+viewer's scrim, where a 6px dot has an unknown photograph behind it.
+The specimen draws both tones at m=4, 7 and 10, since no board carries a
+set past seven.
 
 ### 68 · The chats icon needs its coming-soon screen · *design* · **drawn 2026-09-14**
 
@@ -2308,12 +2321,16 @@ aren't built yet. When they are, your conversations will be here.`
 Three alternates and the timing question are in copy-voice under
 "Awaiting blessing — the chats coming-soon screen"; jakob picks.
 
-**Still owed, deliberately left:** the *Message* control on another's
-profile (`ProfileOther`, `ProfileOtherHeld`, `ProfilePosts`,
-`ProfileComments`) and the message row in search results still carry
-the chat-surface gap. Ruling 68 names the band icon, and routing a
-labelled *Message* into a coming-soon screen is a separate decision.
-`message-someone` stays blocked on it.
+**The labelled routes followed** (jakob 2026-09-14). The *Message*
+control on another's profile (`ProfileOther`, `ProfileOtherHeld`,
+`ProfilePosts`, `ProfileComments`) and the message row in search results
+land on `ChatsComingSoon` too: one missing surface answers in one place,
+and a labelled control that went nowhere while the band's icon explained
+itself was the same gap told twice. All five are signed-in boards, so
+none needs the guest bands' `GuestGate` detour — the rule that decides
+between the two is who is reading, not which control was tapped. The
+graph's gap count falls 20 → 15, `message-someone` resolves (61 of 63
+flows), and the witness is reblessed on that one step.
 
 ### 69 · The canvas splits by domain · *tooling* · **done 2026-09-14**
 
@@ -2419,7 +2436,7 @@ at the design-ci target: 25–35 s quiet, render-screens ~two-thirds,
 regressions judged from quiet runs only. bundle and render-screens
 now print their own ms like every other stage.
 
-### 72 · What the standing-prose pass left for rulings · *design*
+### 72 · What the standing-prose pass left for rulings · *design* · **closed 2026-09-14**
 
 Three leftovers from item 57's judgment pass (2026-09-14):
 
@@ -2440,7 +2457,22 @@ Three leftovers from item 57's judgment pass (2026-09-14):
   staged citation carries the stance that rides with it" is a model
   question (a citation carries its own pair), not a naming one.
 
-### 73 · The acts count has no accessible reading · *design*
+Closed 2026-09-14, all three ruled together. The readme's four
+narrative sites took item 57's rule — 🤷 reads a zero BUNDLE, the
+resting face means "no opinion yet", a pick nets a BUNDLE to `(0, 0)`
+(`stance-control.md`'s own wording), and the redacted skeleton keeps
+"the opinion a reader can still give"; the L1 term α_i and every
+model-voice "stance" stayed, as did the ordinary English "standing" the
+readme uses a dozen times for a rule that still stands. The core-loop
+harness conformed both rendered strings and nothing else: backlog item
+1's title is the item's name, not a surface. The law's kept-list now
+enumerates the identifiers rather than the families alone, which was
+the gap — the code keeps the retired word exactly as it keeps `topics`,
+and `NO_STANDING_LABEL = "No opinion yet"` is that pairing in one line.
+The rider was plain imprecision, not a model question: the comment now
+says the staged citation carries its own pair.
+
+### 73 · The acts count has no accessible reading · *design* · **closed 2026-09-14**
 
 Surfaced by implementation's bare-count conform (their PR #730,
 2026-09-14): `ActsCard`'s trailing count span carries no aria on any
@@ -2452,3 +2484,18 @@ aria names, the viewer dots' "Picture n of m"), so the master wants
 an accessible count reading; the exact wording is jakob's
 (implementation's suggested shape: "3 signed actions"). Visually the
 bare number stays — that part is ruled.
+
+Closed 2026-09-14. jakob ruled the shape `N <the row's noun>`: the
+digit goes `aria-hidden` and a paired `SR_ONLY` reading says "1 post",
+"3 tags", "3 citations" — the unit a listener needs, and the one the
+suggested "3 signed actions" would have flattened, since the References
+row counts citations and the footer already counts acts. The noun is
+the BOARD's to give (`ActsCardRow.countNoun`, singular; the card adds
+the regular plural): it is the row's own noun, not its label's, and no
+rule turns "References" into "citation". `StanceReadout`'s `SR_ONLY` is
+the technique, unchanged and unduplicated. Rows whose count is already
+words — the reply seal's "1 more" add-rows — keep it and pass no noun.
+Recorded in copy-voice under Accessible names. The two wallet seals'
+Address rows are the one place still bare: the wallet surfaces are held
+for another lane, and an absent noun renders exactly as before, so they
+adopt it when that lane next opens them.
