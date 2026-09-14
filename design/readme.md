@@ -4769,11 +4769,10 @@ when the thing to read back is a collection.
   slot, so the count never truncates and the ellipsis stays the single
   reading's business.
 
-### The gate-guards round — 2026-09-14
+### The chats-routing close — 2026-09-14
 
-Items 60 and 64 closed: the gate now catches a truncating filter
-summary (item 60), and the feed-filter vocabulary that outgrew its
-trigger is fixed (item 64).
+Item 68 closed: every Message control routes to the coming-soon board
+instead of a gap, and the message-someone flow resolves.
 
 - **The gate**: boards hold at **194**, edges hold at **1372**, gaps
   **20 → 15**, flows **63/60/3 → 63/61/2**, the compose canvas
