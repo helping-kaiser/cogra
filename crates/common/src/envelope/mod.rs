@@ -388,6 +388,7 @@ mod tests {
             digest: [fill; MEDIA_DIGEST_LEN],
             mime: mime.into(),
             alt_text: alt_text.map(Into::into),
+            cover: None,
         }
     }
 
@@ -696,10 +697,80 @@ mod tests {
             Value::Array(vec![media_entry(vec![
                 (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
                 (ASSET_KEY_MIME, Value::Text("image/webp".into())),
-                (3, Value::Uint(1080)),
+                (4, Value::Uint(1080)),
             ])]),
             "unknown media entry field",
         );
+    }
+
+    /// The poster is witnessed as a digest, so a value that is not one —
+    /// wrong type, or the right type at the wrong length — refuses the
+    /// envelope rather than being read as some other still.
+    ///
+    /// A cover is witnessed as a well-sized digest or the entry is refused, so no reader resolves a poster it half-understood.
+    /// ´claim:envelope:a-cover-is-witnessed-as-a-well-sized-digest´
+    #[test]
+    fn manifest_rejects_a_cover_that_is_not_a_digest() {
+        refuses_media(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text("video/mp4".into())),
+                (ASSET_KEY_COVER, Value::Text("not bytes".into())),
+            ])]),
+            "media cover must be a digest",
+        );
+        for length in [0, 16, 31, 33, 64] {
+            refuses_media(
+                Value::Array(vec![media_entry(vec![
+                    (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                    (ASSET_KEY_MIME, Value::Text("video/mp4".into())),
+                    (ASSET_KEY_COVER, Value::Bytes(vec![2; length])),
+                ])]),
+                "media cover must be 32 bytes",
+            );
+        }
+    }
+
+    /// A clip shown without a poster and a clip shown with one are two
+    /// states of the same entry, and both survive the round trip — the
+    /// absent one leaving key 3 out entirely, so "no cover" encodes like
+    /// a still, which never has one.
+    ///
+    /// A covered clip and an uncovered one round-trip as two states of the same entry, the uncovered one leaving the key out.
+    /// ´claim:envelope:a-cover-round-trips-in-both-states´
+    #[test]
+    fn manifest_round_trips_a_covered_clip() {
+        for cover in [None, Some([9; MEDIA_DIGEST_LEN])] {
+            let content = CograContent {
+                media: vec![MediaAsset {
+                    digest: [1; MEDIA_DIGEST_LEN],
+                    mime: "video/mp4".into(),
+                    alt_text: None,
+                    cover,
+                }],
+                ..cogra(None, None, Some("a clip"))
+            };
+            let bytes = content.clone().encode_payload();
+            assert_eq!(
+                CograContent::decode_payload(&bytes).expect("valid"),
+                content
+            );
+            let carries_key = match Envelope::decode(&bytes)
+                .expect("valid")
+                .extensions
+                .get(&COGRA_GUILD_KEY)
+            {
+                Some(Value::Map(guild)) => match guild.get(&COGRA_KEY_MEDIA) {
+                    Some(Value::Array(entries)) => match &entries[0] {
+                        Value::Map(entry) => entry.contains_key(&ASSET_KEY_COVER),
+                        _ => panic!("an entry map"),
+                    },
+                    _ => panic!("a manifest array"),
+                },
+                _ => panic!("the guild map"),
+            };
+            assert_eq!(carries_key, cover.is_some());
+        }
     }
 
     /// An asset carries a well-sized digest or it is refused, nothing else identifying it.
@@ -944,7 +1015,7 @@ mod tests {
             Value::Array(vec![media_entry(vec![
                 (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
                 (ASSET_KEY_MIME, Value::Text("image/webp".into())),
-                (3, Value::Uint(1)),
+                (4, Value::Uint(1)),
             ])]),
             "unknown media entry field",
         );

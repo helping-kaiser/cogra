@@ -834,6 +834,7 @@ fn manifest_entry(
         digest,
         mime: asset.mime_type.clone(),
         alt_text,
+        cover: None,
     })
 }
 
