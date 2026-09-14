@@ -47,6 +47,13 @@ a date. The removal mark's `when` speaks this vocabulary like any
 other timestamp — it is the redaction's own moment, not the content's
 age.
 
+Forward-looking moments read the same ladder forward (ruled
+2026-09-14): the relative form — `in 6 days`, `in 1 day`, then `in 5
+hours` on the last day — is the future vocabulary. A far date, where
+one is also shown, spells `dd.mm.yyyy` (`08.09.2026`), never an
+abbreviated month. Blessed instances: `WalletCampaign`'s `Ends in 6
+days · 08.09.2026`, `WalletCampaigns`' `In escrow · ends in 6 days`.
+
 ## Register
 
 Write from the reader's side. Active voice. **A control says what will
@@ -1079,26 +1086,6 @@ Drawn on `Settings`, `DeleteAccount`, `DeleteAccountMail`,
 flow's words carry the product's erasure ethic, so the register is held
 tighter here than anywhere: honest, quiet, no drama, and nothing that
 argues with a decision the reader has made.
-
-**THE ONE WORD NOT YET RULED — how a FUTURE moment is said.** The ages
-ladder above is a vocabulary for how long ago something happened; the
-deletion band counts FORWARD, and no ruling covers that (backlog 54.1).
-Three candidates:
-
-1. `Deleted in 6d` — the ladder read forward, one vocabulary for every
-   duration on screen. Cheapest to hold, and the one place the ladder's
-   compression can genuinely mislead: `6d` means *ago* everywhere else
-   in the product, so a reader scanning a band could read the account as
-   already gone.
-2. `Deleted in 6 days` — spelled out. **Recommended, and what is
-   drawn.** The ladder's compression buys room in lists where many ages
-   compete for it; this is one sentence in a band with room to spare, so
-   the compression buys nothing and costs the ambiguity above. Running
-   down: `in 1 day`, then `in 5 hours` on the last day.
-3. `Deleted on 17.09.2026` — the ladder's own past-30-days branch, a
-   fixed date. Exact and needs no arithmetic, but a date does not shrink,
-   and a window whose whole point is that it is closing should read as
-   closing.
 
 **The settings row is two words and a footnote.** `Delete account` on a
 navigating row, and under the group: `Nothing is deleted here. The next
