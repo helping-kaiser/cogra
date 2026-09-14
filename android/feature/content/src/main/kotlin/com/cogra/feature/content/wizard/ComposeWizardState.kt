@@ -354,9 +354,9 @@ data class ComposeWizardState(
      * Every pick has an id: the gallery can be attached as it stands.
      *
      * A video is not complete until its cover has landed too. The cover
-     * is not an attachment — it rides the video's own asset row — but
-     * the video cannot be uploaded at all until the cover has an id to
-     * name, so an incomplete cover is an incomplete body.
+     * is not an attachment — it rides the clip's own placement — but the
+     * placement cannot name an id that does not exist yet, so an
+     * incomplete cover is an incomplete body.
      */
     val uploadsComplete: Boolean
         get() = picked.isNotEmpty() &&

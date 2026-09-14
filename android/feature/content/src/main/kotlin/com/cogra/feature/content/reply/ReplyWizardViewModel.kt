@@ -181,9 +181,9 @@ class ReplyWizardViewModel @Inject constructor(
      * Re-encodes the clip as soon as it is picked, and stops there.
      *
      * **The transcode starts at pick; the upload waits for `Next`.** The
-     * cover has to be uploaded before the clip that names it — an asset
-     * row is immutable once written — and the cover is still being
-     * chosen on this very screen. Sending the clip early would mean
+     * cover is still being chosen on this very screen, and the placement
+     * cannot be prepared until its id exists. Sending the clip early
+     * would mean
      * re-sending fifty megabytes the moment the author tapped a
      * different frame. The slow half runs while they write, which is
      * what makes the gated seal (`ComposeSealUploading`) brief rather
@@ -267,12 +267,12 @@ class ReplyWizardViewModel @Inject constructor(
 
     /**
      * The clip's whole journey to the server: its face first, then the
-     * bytes that name it.
+     * bytes.
      *
-     * An asset row is immutable once written, so a video states its
-     * poster when it is created rather than gaining one afterwards.
-     * Sending the cover first also fails fast — a refused cover is
-     * learned at once rather than after fifty megabytes.
+     * Two standalone uploads, in this order because the cover is the
+     * cheap leg: a refused cover is learned at once rather than after
+     * fifty megabytes. The placement names the poster's id at prepare,
+     * so the id has to exist by then.
      */
     private fun startVideoUpload() {
         val clip = _state.value.video ?: return
@@ -288,7 +288,7 @@ class ReplyWizardViewModel @Inject constructor(
                 uploadSession = progress.uploadId
                 _state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
             }
-            when (val outcome = media.uploadVideo(processed, coverId, sending)) {
+            when (val outcome = media.uploadVideo(processed, sending)) {
                 is Outcome.Success -> {
                     _state.update { it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id)) }
                     runCatching { File(processed.path).delete() }
@@ -472,8 +472,16 @@ class ReplyWizardViewModel @Inject constructor(
                     license = current.license,
                     tags = current.tagSection.tags.map { it.toClaim() },
                     references = current.referenceSection.references.map { it.toClaim() },
+                    // The poster rides the clip's own placement, the same
+                    // way a post's does, so it never enters the gallery.
                     attachments = current.picked.mapNotNull { asset ->
-                        asset.mediaId?.let { AttachmentClaim(it, asset.altText.ifBlank { null }) }
+                        asset.mediaId?.let {
+                            AttachmentClaim(
+                                mediaId = it,
+                                altText = asset.altText.ifBlank { null },
+                                coverMediaId = current.coverMediaId.takeIf { _ -> asset.isVideo },
+                            )
+                        }
                     },
                     pDirected = current.pDirected,
                     pInterest = current.pInterest,

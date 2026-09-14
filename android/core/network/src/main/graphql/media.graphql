@@ -26,12 +26,13 @@ fragment MediaFields on MediaAttachment {
     aspectRatio
     durationMs
   }
-  # A video's poster — the still shown before playback and wherever
-  # autoplay does not run. Spelled out rather than spreading this
+  # The poster this placement names — the still shown before playback and
+  # wherever autoplay does not run. Spelled out rather than spreading this
   # fragment, which cannot recurse; one level is all there is, since a
   # poster is an image and never carries a poster of its own. Kept
   # narrow against the query budget: what it takes to draw the still
-  # and to honour a redaction of the cover alone.
+  # and to honour a redaction of the cover alone. Null outside a
+  # placement — a fresh upload names none.
   coverMedia {
     id
     url
@@ -42,12 +43,9 @@ fragment MediaFields on MediaAttachment {
   }
 }
 
-# Bytes and nothing authored: a description rides `AttachmentInput` at
-# prepare, so a picture uploads the moment it is picked.
-#
-# `coverMediaId` names an already-uploaded still as the video's poster.
-# A still passes it null — the two-step upload sends the cover first and
-# names it on the video, because an asset row is immutable once written.
+# Bytes and nothing authored: a description and a video's cover both ride
+# `AttachmentInput` at prepare, so a picture uploads the moment it is
+# picked and a poster is an ordinary upload of its own.
 #
 # The input rides as ONE variable rather than as its fields spread into
 # an inline object: both clients name this operation `UploadMedia`, and
@@ -89,8 +87,8 @@ mutation BeginMediaUpload($declaredBytes: Int!, $kind: MediaUploadKind!) {
 #
 # **Safe to retry**: a client whose connection dropped waiting for this
 # reply calls it again and is handed the same asset.
-mutation CompleteMediaUpload($uploadId: UUID!, $coverMediaId: UUID) {
-  completeMediaUpload(input: { uploadId: $uploadId, coverMediaId: $coverMediaId }) {
+mutation CompleteMediaUpload($uploadId: UUID!) {
+  completeMediaUpload(input: { uploadId: $uploadId }) {
     media {
       ...MediaFields
     }
