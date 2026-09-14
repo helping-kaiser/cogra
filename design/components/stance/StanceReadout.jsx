@@ -22,7 +22,7 @@ import React from "react";
    "slightly smiling face", never "Like this", so dropping the label from the DOM
    entirely would take the meaning from exactly the readers §10 protects. Every
    visible readout therefore pairs an `aria-hidden` visual with a
-   screen-reader-only reading that names the stance and its axes.
+   screen-reader-only reading that names the opinion and its axes.
 
    Nothing sits under the knob: a thumb on the control covers exactly the spot
    where feedback would otherwise appear. Both lines are `aria-live`.
@@ -74,15 +74,15 @@ export const INTEREST_LABEL = "How much reaches you";
 /** The ends of each axis, named. A slider from −1 to +1 needs its poles said. */
 export const DIRECTED_POLES = ["Against", "For"];
 export const INTEREST_POLES = ["Less", "More"];
-/** What the middle pair is: the edge being authored, not the standing. */
+/** What the middle pair is: the edge being authored, not the bundle it joins. */
 export const PICK_LABEL = "Your pick";
 
 export const SEVERED_LABEL = "Walked back";
 export const NO_STANDING_LABEL = "No opinion yet";
-/** What a bundle standing at exactly (0, 0) reads as. */
+/** What a bundle at exactly (0, 0) reads as. */
 export const ZERO_BUNDLE_EMOJI = "🤷";
 /** The face an unauthored target wears at rest — the dotted-line face, deliberately
-    outside the table so an empty control cannot read as a standing already held. */
+    outside the table so an empty control cannot read as an opinion already given. */
 export const RESTING_FACE_EMOJI = "🫥";
 
 /** Visually hidden, still read aloud — where the anchors' words now live. */
@@ -258,7 +258,7 @@ export function nearestValenceAnchor(pDirected) {
   return VALENCE_SIX[VALENCE_SIX.length - 1];
 }
 
-/** The readout a STANDING wears. The table never speaks for zero. */
+/** The readout a BUNDLE wears. The table never speaks for zero. */
 export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
   if (pair.pDirected === 0 && pair.pInterest === 0) return { emoji: ZERO_BUNDLE_EMOJI, label: zeroLabel };
   return nearestAnchor(pair);
@@ -266,9 +266,9 @@ export function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
 
 /* The read-only value readout (profile round, 2026-09-01): a stance RECORD's
    face and pair drawn plainly wherever a stance is data rather than a control
-   — the stances page's rows, the chronicle's stance entries. Never
+   — the opinions page's rows, the chronicle's opinion entries. Never
    interactive: acting on a person means opening their profile first (jakob —
-   stancing here is more deliberate than a follow). */
+   giving an opinion here is more deliberate than a follow). */
 export function StanceValue({ pDirected, pInterest, showPair = true }) {
   const pair = { pDirected, pInterest };
   const readout = bundleReadout(pair);
@@ -370,7 +370,7 @@ export function standingLine(bundle, targetLabel) {
  * makes sense.
  *
  * The raw sum LEADS and the fold is derived from it. Stating the fold first and
- * the raw sum second reads as arithmetic that does not work — "my stance is +1.00,
+ * the raw sum second reads as arithmetic that does not work — "my opinion is +1.00,
  * so why does walking back take 1.40?" — because it presents the capped number as
  * the thing that exists and the true total as a correction to it. The total is
  * what the reader built up; the cap is what the feed reads of it. In that order it
@@ -485,7 +485,7 @@ export function OwnStanceReadout({ pDirected, style }) {
   return <ReadoutLine emoji={band.emoji} exact={exact} spoken={`${band.label}, ${DIRECTED_LABEL} ${exact}`} style={style} />;
 }
 
-/** The standing, split for rendering: either a sentence, or a readout to lay out. */
+/** The bundle, split for rendering: either a sentence, or a readout to lay out. */
 export function standingParts(bundle, targetLabel) {
   if (bundle === undefined) return { sentence: "Checking your current opinion…" };
   if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
@@ -513,8 +513,8 @@ export function landingParts(landing) {
 }
 
 /* One labelled readout: the name of the quantity, then the face and the numbers on
-   the line below it. Three of these stack in the pad — current stance, the pick,
-   the resulting stance — and they are formatted identically so the eye can compare
+   the line below it. Three of these stack in the pad — current opinion, the pick,
+   the resulting opinion — and they are formatted identically so the eye can compare
    them without reading. */
 function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style }) {
   if (sentence !== undefined) {
@@ -544,7 +544,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
   );
 }
 
-/** The standing and the pick — everything that sits above the field. */
+/** The current opinion and the pick — everything that sits above the field. */
 export function StanceStanding({ pick, bundle, targetLabel, style }) {
   const anchor = nearestAnchor(pick);
   return (
