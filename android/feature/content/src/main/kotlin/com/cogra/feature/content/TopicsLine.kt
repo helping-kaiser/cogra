@@ -16,6 +16,7 @@
 
 package com.cogra.feature.content
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.widthIn
@@ -58,16 +59,13 @@ private val CHIP_LABEL_CAP = CHIP_CAP - 34.dp
 /**
  * The one line, on every variant.
  *
- * **The counts are not a control yet.** The master makes them the way in
- * to the topics-and-references sheet, and on a detail surface the whole
- * line is that opener — but `RefsSheet` is not built, and a control whose
- * destination does not exist is a dead control (design/readme.md §2). So
- * the counts read as the fact they are, and the chips keep the topic
- * screen they already reach; the openers arrive with the sheet.
- *
- * The same staging costs the detail its on-demand reveal of each claim's
- * signed pair: those values are `ReferenceRow`'s in the sheet, and the
- * one-line master has no room for a toggle beside the counts.
+ * **THE COUNTS ARE THE WAY IN** (graph.json: every `reference count` edge
+ * advances to `RefsSheet`), and which control opens it is the master's own
+ * split: on a detail surface the WHOLE line is the opener and the chips go
+ * inert inside it, on a summary card the counts open it and the chips still
+ * reach the topic screen. Given neither handler the counts stay the plain
+ * fact they were — a comment's line is that case, since the sheet a comment
+ * would open sits inside the sheet the thread already is.
  */
 @Composable
 internal fun TopicsLine(
@@ -76,6 +74,10 @@ internal fun TopicsLine(
     onOpenTopic: (String) -> Unit,
     testTagPrefix: String,
     modifier: Modifier = Modifier,
+    /** A detail surface: the whole line opens the sheet, the chips inert. */
+    onOpen: (() -> Unit)? = null,
+    /** A summary card: the counts open the sheet, the chips still navigate. */
+    onOpenReferences: (() -> Unit)? = null,
 ) {
     if (topics.isEmpty() && references.isEmpty()) return
     val measurer = rememberTextMeasurer()
@@ -87,7 +89,9 @@ internal fun TopicsLine(
     val counts = countsText(topics.size - visible.size, references.size)
 
     Row(
-        modifier = modifier.testTag("${testTagPrefix}_topics_line"),
+        modifier = modifier
+            .then(if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier)
+            .testTag("${testTagPrefix}_topics_line"),
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -95,7 +99,12 @@ internal fun TopicsLine(
             val name = claim.hashtag.name.value.orEmpty()
             TopicChip(
                 name = name,
-                onClick = { onOpenTopic(name) },
+                // Inert inside the line that is itself the opener: a chip
+                // sitting in a control must not be a second one, and a chip
+                // that swallowed the tap without acting would be a dead
+                // control — so on that surface the chip opens what the line
+                // opens.
+                onClick = onOpen ?: { onOpenTopic(name) },
                 modifier = Modifier.widthIn(max = CHIP_CAP),
                 testTag = "${testTagPrefix}_topic_$name",
             )
@@ -107,7 +116,15 @@ internal fun TopicsLine(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.testTag("${testTagPrefix}_topics_counts"),
+                modifier = Modifier
+                    .then(
+                        if (onOpenReferences != null) {
+                            Modifier.clickable(onClick = onOpenReferences)
+                        } else {
+                            Modifier
+                        },
+                    )
+                    .testTag("${testTagPrefix}_topics_counts"),
             )
         }
     }

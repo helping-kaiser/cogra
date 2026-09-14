@@ -91,6 +91,8 @@ fun PostDetailRoute(
     /** `ReplyMedia` 6 — `CommentEdit`, on an own comment. */
     onEditComment: (commentId: String, parentTitle: String) -> Unit,
     onOpenActor: (String) -> Unit,
+    /** A post cited from the tags-and-references sheet. */
+    onOpenPost: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     /** The Reference affordance (D20): compose a post citing this node. */
     onReference: (String) -> Unit,
@@ -142,6 +144,7 @@ fun PostDetailRoute(
         onReveal = viewModel::onReveal,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
+        onOpenPost = onOpenPost,
         onOpenTopic = onOpenTopic,
         onReference = onReference,
         onShare = { id -> context.sharePost(viewModel.shareUrl(id)) },
@@ -171,6 +174,8 @@ fun PostDetailScreen(
     onReveal: (String, SensitiveMark) -> Unit,
     onEdit: (String) -> Unit,
     onOpenActor: (String) -> Unit,
+    /** A post cited from the tags-and-references sheet. */
+    onOpenPost: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onReference: (String) -> Unit,
     /** Hands this post to the platform's own share sheet. */
@@ -321,6 +326,7 @@ fun PostDetailScreen(
                             post = state.post,
                             onReveal = onReveal,
                             onOpenActor = onOpenActor,
+                            onOpenPost = onOpenPost,
                             onOpenTopic = onOpenTopic,
                             onOpenComments = { commentsOpen = true },
                             onShare = onShare,
@@ -409,6 +415,8 @@ private fun PostDetailBody(
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    /** A post cited from the tags-and-references sheet. */
+    onOpenPost: (String) -> Unit,
     /** `ReplyEntry`: the affordance row's count raises the thread. */
     onOpenComments: () -> Unit,
     /** Hands this post to the platform's own share sheet. */
@@ -479,6 +487,8 @@ private fun PostDetailBody(
                         post = post,
                         removed = removed,
                         onOpenTopic = onOpenTopic,
+                        onOpenActor = onOpenActor,
+                        onOpenPost = onOpenPost,
                         onOpenComments = onOpenComments,
                         onShare = onShare,
                         stanceControl = stanceControl,
@@ -502,6 +512,10 @@ private fun DetailCardFoot(
     post: PostView,
     removed: Boolean,
     onOpenTopic: (String) -> Unit,
+    /** The sheet the topics line opens: a mention lands on the profile. */
+    onOpenActor: (String) -> Unit,
+    /** …and a cited post or comment on the post carrying it. */
+    onOpenPost: (String) -> Unit,
     /** `ReplyEntry`: the affordance row's count raises the thread. */
     onOpenComments: () -> Unit,
     onShare: (String) -> Unit,
@@ -512,12 +526,27 @@ private fun DetailCardFoot(
     }
     // The license, the topics and the citations rode the payload away.
     if (!removed) {
+        // THE WHOLE LINE IS THE OPENER on a detail surface (`TopicsLine.jsx`),
+        // and what it opens is the sheet the counts have always pointed at.
+        var refsOpen by rememberSaveable { mutableStateOf(false) }
         TopicsLine(
             topics = post.topics,
             references = post.references,
             onOpenTopic = onOpenTopic,
             testTagPrefix = "detail_post",
+            onOpen = { refsOpen = true },
         )
+        if (refsOpen) {
+            RefsSheet(
+                topics = post.topics,
+                references = post.references,
+                onDismiss = { refsOpen = false },
+                onOpenTopic = onOpenTopic,
+                onOpenActor = onOpenActor,
+                onOpenPost = onOpenPost,
+                testTagPrefix = "detail_post",
+            )
+        }
     }
     PostAffordanceRow(
         commentCount = post.commentCount,
