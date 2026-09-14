@@ -39,8 +39,9 @@ import com.cogra.feature.content.R
  *
  * The board offers a preview of the clip, a row of frames lifted out of
  * it, and one dashed tile that opens the device's own picker. Whichever
- * the author settles on is uploaded as its own still and named on the
- * clip's upload, because an asset row is immutable once written.
+ * the author settles on is uploaded as its own standalone still, and the
+ * clip's placement names it at prepare — which is what lets an edit put
+ * a different face on a clip whose bytes never move.
  *
  * A frame needs no crop: it was cut from the clip and already carries
  * the clip's shape. Only a cover picked from the gallery can disagree

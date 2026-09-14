@@ -54,7 +54,7 @@ use postgres_store::PgPool;
 use postgres_store::media as store;
 use uuid::Uuid;
 
-use super::{BlobStore, GalleryError, MediaConfig, MediaError, plan_cover, store_asset};
+use super::{BlobStore, GalleryError, MediaConfig, MediaError, store_asset};
 
 /// The most parts one upload may be cut into, fixed by S3 at 10 000.
 ///
@@ -342,20 +342,12 @@ pub async fn receive_part(
 /// decided by [`super::process`] from the assembled bytes — the same call
 /// the single-shot upload makes, so the two paths cannot drift into
 /// admitting different things.
-/// A refused poster leaves the session standing rather than discarding
-/// it: the bytes are assembled and correct, and the repair is a second
-/// `complete` naming a poster that exists — re-sending the whole file
-/// because one field was wrong is not the trade. The session then ages
-/// out on its own, and [`sweep_expired`] closes its row whatever the
-/// store says, so a session left here cannot block the collection of any
-/// other.
 pub async fn complete(
     pool: &PgPool,
     blobs: &dyn BlobStore,
     config: &MediaConfig,
     author: Uuid,
     session_id: Uuid,
-    cover_media_id: Option<Uuid>,
 ) -> Result<store::MediaAttachment, SessionError> {
     let session = store::upload_session(pool, session_id, author)
         .await
@@ -421,14 +413,7 @@ pub async fn complete(
         }
     };
 
-    let cover = plan_cover(pool, author, !asset.is_still(), cover_media_id)
-        .await
-        .map_err(|e| match e {
-            super::GalleryPlanError::BadInput(e) => SessionError::BadInput(e),
-            super::GalleryPlanError::Internal(e) => SessionError::Internal(e),
-        })?;
-
-    let row = store_asset(pool, blobs, author, asset, cover)
+    let row = store_asset(pool, blobs, author, asset)
         .await
         .map_err(|e| match e {
             super::GalleryPlanError::BadInput(e) => SessionError::BadInput(e),

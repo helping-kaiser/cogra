@@ -57,4 +57,40 @@ describe("CoverRow", () => {
     );
     expect(screen.queryByTestId("wizard-cover-picture-image")).toBeNull();
   });
+
+  // NEW-2 (ComposeCoverNoFrames.jsx:44): the terminal answer once extraction
+  // is done and came back with nothing — never while `capturing` still has a
+  // chance of producing an offer.
+  it("names the reason once extraction is done and found no frames", () => {
+    render(
+      <CoverRow
+        framePreviews={[]}
+        cover={null}
+        coverPreview={null}
+        capturing={false}
+        onPickFrame={vi.fn()}
+        onPickPicture={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByText(
+        "This clip gave no frames — choose a picture of your own, or leave it without one.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the default caption while capture is still running", () => {
+    render(
+      <CoverRow
+        framePreviews={[]}
+        cover={null}
+        coverPreview={null}
+        capturing
+        onPickFrame={vi.fn()}
+        onPickPicture={vi.fn()}
+      />,
+    );
+    expect(screen.getByText("A frame, or a picture of your own.")).toBeInTheDocument();
+    expect(screen.queryByText(/gave no frames/)).toBeNull();
+  });
 });
