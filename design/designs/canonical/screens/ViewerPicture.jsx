@@ -16,7 +16,7 @@
    exactly as it does in the card, and the dot row says where in it the reader
    is. Four pictures fit the row's window of seven, so all four stand full size
    here; a longer set slides the window and shrinks the edge dot it is running
-   past (`ViewerDots`, item 67). The count itself is spoken, not drawn — the
+   past (`PagerDots`, item 67). The count itself is spoken, not drawn — the
    row's accessible name reads "Picture 2 of 4".
 
    NO ACTS AND NO DESCRIPTION. The opinion, the count and the share stay on the

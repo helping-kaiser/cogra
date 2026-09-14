@@ -296,6 +296,103 @@ export function MediaAttachment({
   );
 }
 
+/* THE WINDOWED DOT ROW (item 67, ruled 2026-09-14: "n of m dots with max dots,
+   just copy how insta does it" — and, for the card, "do the same insta has
+   done"). ONE ROW SERVES BOTH PAGERS. The card and the viewer page the same set
+   with the same gesture, so a marker that windowed in one and ran long in the
+   other would be two vocabularies for one position. It lives here because the
+   viewer already depends on this file and the reverse import would be a cycle;
+   the viewer draws it in its own tone.
+
+   A ROW THAT GROWS WITH THE SET STOPS BEING A POSITION MARKER. Ten dots at 12px
+   of pitch is a ruler, and a reader counting rungs is doing the work the marker
+   exists to save. So the row has A CEILING — seven slots, the same bound the
+   pattern this copies uses — and past it the row is a WINDOW onto the set
+   rather than a picture of it.
+
+   THE WINDOW SLIDES, CENTRED ON WHERE THE READER IS. Its start is the current
+   index less half the window, clamped to the set's two ends: the active dot
+   travels to the middle and stays there while the row moves under it, and at
+   either end the window parks so the last dot of the set can be reached.
+
+   AN EDGE DOT WITH MORE BEYOND IT IS SMALLER. That is the whole of how the row
+   admits what it is not showing: a shrunk dot at the edge reads as "the set
+   keeps going this way", where a full one reads as "this is the end". One
+   smaller size and not a ladder of them — at a 6px dot a third size is noise,
+   and with the authoring cap at ten pictures the row never hides more than
+   three. THE ACTIVE DOT IS NEVER THE SHRUNK ONE: the clamp above keeps it off
+   an overflowing edge, so the dot that says "here" is always full size.
+
+   EVERY SLOT KEEPS ITS PITCH. The dot is centred in a slot the size of a full
+   dot, so shrinking one moves nothing beside it — a row that reflowed as the
+   reader swiped would be its own kind of noise.
+
+   THE COUNT IS NOT DRAWN. The plain "Picture n of m" stays in the accessible
+   name, where it has always been: the frame carries the dots, a listener
+   carries the number.
+
+   TWO TONES, ONE ROW. On a card the dots are the page's own ink — `primary`
+   for here, the hairline for the rest. Over the viewer's scrim there is no
+   surface to borrow from, so they are white, and carry a drop shadow because a
+   6px dot on an unknown photograph needs one to stay visible. */
+const DOT_WINDOW = 7;
+const DOT_FULL = 6;
+const DOT_EDGE = 4;
+
+const DOT_TONES = {
+  card: { on: "var(--primary)", off: "var(--border-hairline)", filter: "none" },
+  viewer: { on: "#fff", off: "rgba(255,255,255,0.42)", filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))" },
+};
+
+export function PagerDots({ count, current, tone = "card" }) {
+  if (count < 2) return null;
+  const palette = DOT_TONES[tone] ?? DOT_TONES.card;
+  const window = Math.min(count, DOT_WINDOW);
+  const start = Math.max(0, Math.min(current - (window >> 1), count - window));
+  const slots = Array.from({ length: window }, (_, offset) => start + offset);
+  const moreBefore = start > 0;
+  const moreAfter = start + window < count;
+
+  return (
+    <div
+      aria-label={`Picture ${current + 1} of ${count}`}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: `${DOT_FULL}px`,
+        filter: palette.filter,
+      }}
+    >
+      {slots.map((index, offset) => {
+        const edge =
+          (offset === 0 && moreBefore) || (offset === window - 1 && moreAfter);
+        const size = edge ? DOT_EDGE : DOT_FULL;
+        return (
+          <span
+            key={index}
+            style={{
+              width: `${DOT_FULL}px`,
+              height: `${DOT_FULL}px`,
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
+            <span
+              style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                borderRadius: "var(--radius-full)",
+                background: index === current ? palette.on : palette.off,
+              }}
+            />
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 /* THE GALLERY IS A PAGER (jakob 2026-08-31). Every picture in a post shares the
    post's one crop shape, so the honest layout is one frame at that shape,
    swiped: each picture is shown WHOLE, exactly as its author shaped it, and the
@@ -350,21 +447,8 @@ export function MediaGallery({ items = [], ratio, radius, maxHeight }) {
         ))}
       </div>
       {/* The dots are a readout, not ten targets — the gesture is the swipe. */}
-      <div
-        aria-label={`Picture ${page + 1} of ${items.length}`}
-        style={{ display: "flex", justifyContent: "center", gap: "6px", padding: "8px 0 0" }}
-      >
-        {items.map((item, index) => (
-          <span
-            key={item.src ?? index}
-            style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "var(--radius-full)",
-              background: index === page ? "var(--primary)" : "var(--border-hairline)",
-            }}
-          />
-        ))}
+      <div style={{ padding: "8px 0 0" }}>
+        <PagerDots count={items.length} current={page} />
       </div>
     </div>
   );

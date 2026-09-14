@@ -3,8 +3,8 @@ Use `ActsCard` on every "What you sign" surface — the seal's list of what one 
 ```jsx
 <ActsCard
   rows={[
-    { label: "Post", value: "Sunday at the tide market", count: "1" },
-    { label: "Topics", value: <TopicChips />, count: "2" },
+    { label: "Post", value: "Sunday at the tide market", count: "1", countNoun: "post" },
+    { label: "Topics", value: <TopicChips />, count: "2", countNoun: "tag" },
   ]}
   total="3 things, signed together"
 />
@@ -17,3 +17,4 @@ What holds:
 - **On a multi-act seal, pass `note="They land together, or none does."`** — the quiet subline under the total. Omit it on a single-act seal. (It had drifted across the hand boards; the component is now its one home.)
 - **A fact row that counts a collection takes `onOpen` + `openLabel`** and becomes a door: `{ label: "References", value: "3 cited", count: "3", onOpen, openLabel: "Manage the citations" }`. The whole row is the control — no chevron, no trailing word — so the accessible name is the only thing that says so. A count the reader cannot open is a number they cannot check.
 - **A row's count is that row's own, bare** — `3` for three citations, not "3 actions". The signature's total is the footer and already says in words what it counts.
+- **Every counted row carries `countNoun`, its singular noun** — `"citation"` on References, `"tag"` on Tags, `"post"` on Post. The eye keeps the bare digit; the ear gets "3 citations", because a number read alone says nothing. The noun is the board's to give: the label is a heading, not the unit. Omit it only where the count is already words (`"1 more"` on an action row).

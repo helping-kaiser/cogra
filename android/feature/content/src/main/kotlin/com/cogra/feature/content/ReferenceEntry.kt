@@ -228,9 +228,13 @@ private fun ReferenceFinderSheet(
 /**
  * One chip's two parameters. The dialog only closes the editor — every
  * change is already in the draft, and nothing here signs.
+ *
+ * Shared with [CitedSheet], which re-pairs a staged citation from the seal:
+ * one pair editor, or the two surfaces would drift into two ways of moving
+ * one pair.
  */
 @Composable
-private fun ReferenceParametersDialog(
+internal fun ReferenceParametersDialog(
     row: ReferenceRow,
     testTagPrefix: String,
     onRelevanceChange: (Double) -> Unit,

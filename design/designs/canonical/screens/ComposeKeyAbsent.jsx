@@ -26,7 +26,7 @@ export function Screen() {
 
         <ActsCard
           rows={[
-            { label: "Post", value: "Salt maps of the coast road", count: "1" },
+            { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
             {
               label: "Tags",
               value: (
@@ -36,8 +36,9 @@ export function Screen() {
                 </span>
               ),
               count: "2",
+              countNoun: "tag",
             },
-            { label: "References", value: "The long way home — @ada", count: "1" },
+            { label: "References", value: "The long way home — @ada", count: "1", countNoun: "citation" },
           ]}
           total="4 things, signed together"
           note="They land together, or none does."

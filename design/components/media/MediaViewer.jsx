@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
 import { VideoTransport, GESTURE_ZONE } from "./VideoControls.jsx";
-import { useGlobalMute } from "./MediaAttachment.jsx";
+import { useGlobalMute, PagerDots } from "./MediaAttachment.jsx";
 
 /* PROPOSED — the full-media view. Settled 2026-08-26: media in a post is shown
    WHOLE, and tapping it in the detail view opens it "covering as much of the
@@ -34,7 +34,8 @@ import { useGlobalMute } from "./MediaAttachment.jsx";
      name rather than on the frame.
    · THE DOT ROW IS WINDOWED (item 67, ruled 2026-09-14). At most seven dots
      are drawn; past that the row slides and its overflowing edge dot shrinks —
-     see `ViewerDots` below for why.
+     see `PagerDots` (`MediaAttachment.jsx`) for why, and for the card row
+     this one is drawn identically to.
    · A VIDEO TAKES THE FULL TRANSPORT (`VideoTransport`) — play/pause and a real
      timeline — and ROTATING THE DEVICE fills the screen with it. Rotation is
      the device's own gesture, so there is no rotate control to draw.
@@ -48,86 +49,6 @@ import { useGlobalMute } from "./MediaAttachment.jsx";
    The scrim is the dialog scrim, so the viewer belongs to the same family as
    every other thing that covers the screen in this system. */
 
-/* THE WINDOWED DOT ROW (item 67, ruled 2026-09-14: "n of m dots with max dots,
-   just copy how insta does it").
-
-   A ROW THAT GROWS WITH THE SET STOPS BEING A POSITION MARKER. Ten dots at 12px
-   of pitch is a ruler, and a reader counting rungs is doing the work the marker
-   exists to save. So the row has A CEILING — seven slots, the same bound the
-   pattern this copies uses — and past it the row is a WINDOW onto the set
-   rather than a picture of it.
-
-   THE WINDOW SLIDES, CENTRED ON WHERE THE READER IS. Its start is the current
-   index less half the window, clamped to the set's two ends: the active dot
-   travels to the middle and stays there while the row moves under it, and at
-   either end the window parks so the last dot of the set can be reached.
-
-   AN EDGE DOT WITH MORE BEYOND IT IS SMALLER. That is the whole of how the row
-   admits what it is not showing: a shrunk dot at the edge reads as "the set
-   keeps going this way", where a full one reads as "this is the end". One
-   smaller size and not a ladder of them — at a 6px dot a third size is noise,
-   and with the authoring cap at ten pictures the row never hides more than
-   three. THE ACTIVE DOT IS NEVER THE SHRUNK ONE: the clamp above keeps it off
-   an overflowing edge, so the dot that says "here" is always full size.
-
-   EVERY SLOT KEEPS ITS PITCH. The dot is centred in a slot the size of a full
-   dot, so shrinking one moves nothing beside it — a row that reflowed as the
-   reader swiped would be its own kind of noise.
-
-   THE COUNT IS NOT DRAWN. The plain "Picture n of m" stays in the accessible
-   name, where it has always been: the frame carries the dots, a listener
-   carries the number. */
-const DOT_WINDOW = 7;
-const DOT_FULL = 6;
-const DOT_EDGE = 4;
-
-export function ViewerDots({ count, current }) {
-  if (count < 2) return null;
-  const window = Math.min(count, DOT_WINDOW);
-  const start = Math.max(0, Math.min(current - (window >> 1), count - window));
-  const slots = Array.from({ length: window }, (_, offset) => start + offset);
-  const moreBefore = start > 0;
-  const moreAfter = start + window < count;
-
-  return (
-    <div
-      aria-label={`Picture ${current + 1} of ${count}`}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: `${DOT_FULL}px`,
-        filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))",
-      }}
-    >
-      {slots.map((index, offset) => {
-        const edge =
-          (offset === 0 && moreBefore) || (offset === window - 1 && moreAfter);
-        const size = edge ? DOT_EDGE : DOT_FULL;
-        return (
-          <span
-            key={index}
-            style={{
-              width: `${DOT_FULL}px`,
-              height: `${DOT_FULL}px`,
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <span
-              style={{
-                width: `${size}px`,
-                height: `${size}px`,
-                borderRadius: "var(--radius-full)",
-                background: index === current ? "#fff" : "rgba(255,255,255,0.42)",
-              }}
-            />
-          </span>
-        );
-      })}
-    </div>
-  );
-}
 
 export function MediaViewer({
   items = [],
@@ -171,7 +92,7 @@ export function MediaViewer({
      pager ruling — dots only, never arrows and never a "1/n" pill). Arrows here
      would be a second vocabulary for a gesture the reader already has, and the
      count belongs to the accessible name, not the frame. The row itself is
-     `ViewerDots`, windowed at seven. */
+     `PagerDots`, windowed at seven. */
   const dots = count > 1 && (
     <div
       style={{
@@ -184,7 +105,7 @@ export function MediaViewer({
         justifyContent: "center",
       }}
     >
-      <ViewerDots count={count} current={current} />
+      <PagerDots count={count} current={current} tone="viewer" />
     </div>
   );
 
