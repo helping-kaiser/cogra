@@ -40,7 +40,7 @@ import {
   pictureId,
   type EditGallery,
 } from "@/lib/compose/comment-edit";
-import { commentBodyProblem } from "@/lib/compose/reply-wizard";
+import { COMMENT_BODY_MAX_CHARS, commentBodyProblem } from "@/lib/compose/reply-wizard";
 import type { TagDraft } from "@/lib/topics/draft";
 import type { ReferenceDraft } from "@/lib/references/draft";
 
@@ -149,6 +149,7 @@ export function CommentEditView({
           multiline
           rows={3}
           testId="comment-edit-input"
+          cap={COMMENT_BODY_MAX_CHARS}
           error={commentBodyProblem(words) ?? undefined}
         />
 
