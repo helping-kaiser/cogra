@@ -16,6 +16,7 @@ import com.cogra.domain.content.MAX_POST_BODY_CHARS
 import com.cogra.domain.content.MAX_SENSITIVE_REASON_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
 import com.cogra.domain.content.MAX_WEBSITE_URL_CHARS
+import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.domain.media.RESUMABLE_THRESHOLD_BYTES
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.signing.TERMINAL_REFUSALS
@@ -60,6 +61,7 @@ class ClientConstantsTest {
         assertThat(RESUMABLE_THRESHOLD_BYTES).isEqualTo(media.long("resumableThresholdBytes"))
         assertThat(ContentRepository.MAX_COMMENT_ATTACHMENTS)
             .isEqualTo(media.int("commentAttachments"))
+        assertThat(MAX_ALT_TEXT_CHARS).isEqualTo(media.int("altTextChars"))
     }
 
     // Both axes, because the tap is one policy and not two: a default

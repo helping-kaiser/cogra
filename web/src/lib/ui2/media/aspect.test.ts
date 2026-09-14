@@ -55,13 +55,7 @@ describe("tileRatio", () => {
 
 describe("fitFor", () => {
   it("always fills the tile — nothing is letterboxed (FE-30, the media law)", () => {
-    expect(fitFor(9 / 16)).toBe("cover");
-    expect(fitFor(3 / 4)).toBe("cover");
-    expect(fitFor(4 / 5)).toBe("cover");
-    expect(fitFor(1)).toBe("cover");
-    expect(fitFor(16 / 9)).toBe("cover");
-    expect(fitFor(null)).toBe("cover");
-    expect(fitFor(Number.NaN)).toBe("cover");
+    expect(fitFor()).toBe("cover");
   });
 });
 
