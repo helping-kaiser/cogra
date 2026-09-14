@@ -49,9 +49,9 @@ import com.cogra.domain.compose.DraftShape
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.domain.media.isAltTextTooLong
+import com.cogra.feature.content.CitedSheet
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceCandidateRow
-import com.cogra.feature.content.CitedSheet
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
 

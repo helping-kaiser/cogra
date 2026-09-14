@@ -125,7 +125,7 @@ export function SealStep({
         data-testid="wizard-seal-acts"
         className="flex flex-col rounded-medium bg-surface-container-highest px-4 py-1"
       >
-        <ActRow label="Post" detail={heading} count={1} />
+        <ActRow label="Post" detail={heading} count={1} countNoun="post" />
         {state.tags.length > 0 && (
           <ActRow
             label="Tags"
@@ -137,6 +137,7 @@ export function SealStep({
               </span>
             }
             count={state.tags.length}
+            countNoun="tag"
           />
         )}
         {/* THE REFERENCES ROW IN ITS THREE READINGS (jakob's rulings
@@ -163,6 +164,7 @@ export function SealStep({
               </span>
             }
             count={1}
+            countNoun="citation"
           />
         )}
         {state.references.length > 1 && (
@@ -389,21 +391,44 @@ function ActRow({
   label,
   detail,
   count,
+  countNoun,
 }: {
   label: string;
   detail: ReactNode;
   count: number;
+  /** The singular noun the count counts — see `ActsCount`. */
+  countNoun: string;
 }) {
   return (
     <div className="flex min-h-11 items-center gap-2 border-b border-outline-variant">
       <span className="w-19 flex-none text-label-small text-on-surface-variant">{label}</span>
       <span className="min-w-0 flex-1 truncate text-body-medium">{detail}</span>
-      {/* THE BARE NUMBER, as the board draws it (`ActsCard`'s `count`:
-          "1", "2"). The word form spent the row's width on a noun the
-          column already says, and what it spent came out of the value
-          slot — the drawn example name ellipsised on a real device. */}
-      <span className="flex-none text-label-small text-on-surface-variant">{count}</span>
+      <ActsCount count={count} noun={countNoun} />
     </div>
+  );
+}
+
+/**
+ * THE COUNT IS SEEN BARE AND HEARD WHOLE (jakob's ruling 2026-09-14, design
+ * backlog item 73; `ActsCard.jsx:27-39`).
+ *
+ * The digit is what the board draws: the word form spent the row's width on a
+ * noun the label column already says, and what it spent came out of the value
+ * slot. But a trailing "3" is unambiguous only to an eye that has the label on
+ * the same line, and meaningless to an ear that gets the number alone — so the
+ * digit leaves the accessibility tree and a paired reading says "3 citations".
+ *
+ * THE NOUN COMES FROM THE ROW, never from its label: the References row counts
+ * CITATIONS, and no rule derives that word from "References".
+ */
+function ActsCount({ count, noun }: { count: number; noun: string }) {
+  return (
+    <span className="flex-none text-label-small text-on-surface-variant">
+      <span aria-hidden="true">{count}</span>
+      <span className="sr-only">
+        {count} {count === 1 ? noun : `${noun}s`}
+      </span>
+    </span>
   );
 }
 
@@ -440,7 +465,7 @@ function CitedRow({
     >
       <span className="w-19 flex-none text-label-small text-on-surface-variant">References</span>
       <span className="min-w-0 flex-1 truncate text-body-medium">{count} cited</span>
-      <span className="flex-none text-label-small text-on-surface-variant">{count}</span>
+      <ActsCount count={count} noun="citation" />
     </button>
   );
 }

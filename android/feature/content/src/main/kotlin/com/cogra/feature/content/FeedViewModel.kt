@@ -6,17 +6,17 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.PostView
 import com.cogra.domain.content.LandingSignal
 import com.cogra.domain.content.NodeLanding
-import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SeenPosts
+import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.repo.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /** One page per fetch; the server default is the same number. */
 internal const val FEED_PAGE_SIZE = 20
@@ -108,6 +108,7 @@ class FeedViewModel @Inject constructor(
     // reappear — a visible flash — on every failed retry. It also
     // carries which fetch failed, so the fault can surface where
     // that fetch was requested.
+
     /**
      * The landed-only opt-out. The cursor namespaces differ, so a
      * change restarts the walk rather than continuing the held one.

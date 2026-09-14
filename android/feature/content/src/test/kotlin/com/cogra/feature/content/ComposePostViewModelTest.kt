@@ -33,7 +33,6 @@ import com.cogra.domain.topics.TAG_DEFAULT_CONFIDENCE
 import com.cogra.domain.topics.TAG_DEFAULT_RELEVANCE
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -43,6 +42,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ComposePostViewModelTest {

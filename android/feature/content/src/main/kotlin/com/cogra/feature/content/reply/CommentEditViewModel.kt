@@ -25,18 +25,18 @@ import com.cogra.feature.content.editableRow
 import com.cogra.feature.content.referenceFieldIndex
 import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
-import com.cogra.feature.content.wizard.UploadFailure
-import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.PickedAsset
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.attachmentFieldIndex
+import com.cogra.feature.content.wizard.uploadPicture
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * `CommentEdit`.

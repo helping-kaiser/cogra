@@ -28,7 +28,6 @@ import com.cogra.domain.testing.testHashtag
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.UploadFailure
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -38,6 +37,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 /**
  * `CommentEdit`'s flow.
@@ -56,8 +56,7 @@ class CommentEditViewModelTest {
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val sealer = SealingWriteRepository(actor)
 
-    private class ScriptedContent(private val sealer: SealingWriteRepository) :
-        ThrowingContentRepository() {
+    private class ScriptedContent(private val sealer: SealingWriteRepository) : ThrowingContentRepository() {
         var loaded: Outcome<CommentForEdit?> = Outcome.Success(
             CommentForEdit(
                 comment = testComment("c1", body = "As it stands"),
@@ -92,8 +91,7 @@ class CommentEditViewModelTest {
         }
     }
 
-    private class ScriptedTopics(private val sealer: SealingWriteRepository) :
-        ThrowingTopicRepository() {
+    private class ScriptedTopics(private val sealer: SealingWriteRepository) : ThrowingTopicRepository() {
         val staged = mutableListOf<Triple<String, String, Double?>>()
         var outcome: Outcome<List<PreparedWriteView>>? = null
 

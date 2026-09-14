@@ -30,22 +30,22 @@ import com.cogra.feature.content.tagFieldIndex
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.COMMENT_SCALE
 import com.cogra.feature.content.wizard.COMMENT_VIDEO_MAX_BYTES
-import com.cogra.feature.content.wizard.UploadFailure
-import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.RefusedPick
+import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.attachmentFieldIndex
 import com.cogra.feature.content.wizard.refusesVideo
 import com.cogra.feature.content.wizard.screenPicture
-import java.io.File
+import com.cogra.feature.content.wizard.uploadPicture
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
+import javax.inject.Inject
 
 /**
  * The reply wizard.
