@@ -741,37 +741,49 @@ private fun LicenseAxis(
     }
 }
 
+/** One axis of a license, as the read surface says it. */
+internal data class LicenseReading(val axis: String, val reading: String)
+
 /**
- * What a landed node's qualifiers oblige, on the read surface. Public
- * Domain is the one pair that obliges nothing, so it says so rather
- * than listing two absences; a degree between the published tiers reads
- * as the degree itself rather than being rounded into a tier it is not.
+ * What a pair obliges, per axis, IN THE REUSER'S VOICE
+ * (`LicenseChooser.jsx:36-49`). The chooser's hints address the author
+ * declaring the terms — "Every use credits you" — which on a read
+ * surface told a reuser they were owed the credit they in fact owe.
+ *
+ * BOTH ROWS ALWAYS STAND, whatever the pair: a block that dropped an
+ * axis at zero would read as a shorter license rather than a term that
+ * obliges nothing, and the two readings only read as a pair while they
+ * are drawn as one. A degree between the published tiers reads as the
+ * degree itself rather than being rounded into a tier it is not.
  */
 @Composable
-internal fun licenseTerms(license: LicenseChoice): String {
-    if (license.attribution == 0.0 && license.provenance == 0.0) {
-        return stringResource(R.string.content_license_terms_public_domain)
-    }
-    val terms = mutableListOf<String>()
-    if (license.attribution > 0.0) {
-        terms += when (license.attribution) {
-            0.5 -> stringResource(R.string.content_license_terms_credit_commercial)
-            1.0 -> stringResource(R.string.content_license_terms_credit_always)
+internal fun licenseReadings(license: LicenseChoice): List<LicenseReading> = listOf(
+    LicenseReading(
+        axis = stringResource(R.string.content_license_attribution_label),
+        reading = when (license.attribution) {
+            0.0 -> stringResource(R.string.content_license_reading_credit_none)
+            0.5 -> stringResource(R.string.content_license_reading_credit_commercial)
+            1.0 -> stringResource(R.string.content_license_reading_credit_always)
             else -> stringResource(
-                R.string.content_license_terms_credit_degree,
+                R.string.content_license_reading_credit_degree,
                 license.attribution.toString(),
             )
-        }
-    }
-    if (license.provenance > 0.0) {
-        terms += when (license.provenance) {
-            0.5 -> stringResource(R.string.content_license_terms_record_commercial)
-            1.0 -> stringResource(R.string.content_license_terms_record_always)
+        },
+    ),
+    LicenseReading(
+        axis = stringResource(R.string.content_license_provenance_label),
+        reading = when (license.provenance) {
+            0.0 -> stringResource(R.string.content_license_reading_record_none)
+            0.5 -> stringResource(R.string.content_license_reading_record_commercial)
+            1.0 -> stringResource(R.string.content_license_reading_record_always)
             else -> stringResource(
-                R.string.content_license_terms_record_degree,
+                R.string.content_license_reading_record_degree,
                 license.provenance.toString(),
             )
-        }
-    }
-    return terms.joinToString(" ")
-}
+        },
+    ),
+)
+
+/** Whether a pair is the one readers already have a word for. */
+internal fun isPublicDomain(license: LicenseChoice): Boolean =
+    license.attribution == 0.0 && license.provenance == 0.0
