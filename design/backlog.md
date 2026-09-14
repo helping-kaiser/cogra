@@ -2095,7 +2095,7 @@ formatter moves every board with a negative pair, so it is its own
 pass — rule which character wins, then conform formatter or guideline
 and re-render.
 
-### 60 · The gate should catch a truncating filter summary · *tooling*
+### 60 · The gate should catch a truncating filter summary · *tooling* · **closed 2026-09-14**
 
 Ruled 2026-09-11: the guard belongs in the GATE, not in a character
 budget. The gate-guards round (2026-09-14) built the measurement —
@@ -2113,7 +2113,28 @@ summaries, or fixing the vocabulary first (item 64). Sibling of
 54.2's pair-format guard (shipped as `check-readouts`, the gate's
 fifth stage).
 
-### 64 · The filter summaries outgrow their trigger · *design*
+Closed by item 64's rule: with the collapse itself measured in pixels
+the guard has nothing left to weigh, so `report-summaries.mjs` exits
+nonzero on any reachable summary past the band's 154px. One measuring
+implementation serves both sides — the master's `measureTriggerText`
+decides where to collapse, and the gate asks it how wide each summary
+is — and the stage owns the font the master cannot read: `figtree.ttf`'s
+advances instanced at the trigger's own wght 500 (`fvar`/`avar`/`HVAR`,
+no new dependency), re-derived on every run and failed on when the
+master's table has drifted from them. The declared-order enumeration is
+exact for what it gates, not a sample: the head no longer varies with
+click order, and a permutation of a spelled list reorders the same
+characters, which an advance sum measures identically.
+
+The measurement this item's premise rested on ran low twice: at wght 300
+rather than the 500 the pill paints, and counting `--text-label-large`'s
+tracking, which a form control's UA rule drops — the trigger renders at
+`letter-spacing: normal`. The weight is fixed; the tracking term stays
+deliberately, as the guard's margin over the kerning an advance sum
+cannot see, measured against Chrome at ~1.7% wide of the real paint. The
+truncation census still prints; only the exit code changed.
+
+### 64 · The filter summaries outgrow their trigger · *design* · **ruled + built 2026-09-14**
 
 Found by the gate-guards round (2026-09-14) while building item 60's
 check: the feed-filter vocabulary already composes summaries wider
@@ -2124,6 +2145,22 @@ The drawn boards' five summaries all fit (≤148.6px); the overflow
 lives in the unboarded combinations. Needs a design ruling: shorter
 kind labels, a tighter collapse rule, or a wider trigger — then item
 60's guard can gate absolutely.
+
+Ruled by jakob 2026-09-14, the collapse rule: the head spells at most
+one kind — "Nothing", the kind's own label, or "N kinds" — and the
+tail's 26-character budget becomes a real 154px on the whole reading,
+measured in the type the trigger renders in. The labels stay; shortening
+the vocabulary was the option refused. That makes the budget
+self-enforcing: what decides whether the extras are spelled is the width
+itself, so no label and no new kind can push the pill past its room.
+Census after the change: 0 of 325 reachable summaries over 154px, widest
+"Chats · text · + removed" at 153.9px, and the widest collapse the rule
+can fall back to ("Campaigns · 4 changes") sits at 148.6px. The four
+drawn boards read exactly as they did — "Posts", "3 kinds · 4 changes",
+"Posts · photos · newest", "Nothing · showing seen" — and re-render
+byte-identical. `designs/search/screens/FieldFirstSearch.jsx` keeps its
+literal "All kinds · ranked · showing seen": frozen ideation, noted as
+unconformed rather than conformed.
 
 ### 65 · ComposePad's face claims a derivation that doesn't answer · *design* · **drawn 2026-09-14**
 
