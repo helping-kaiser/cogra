@@ -60,7 +60,6 @@ import {
   BodyRegion,
   PostMedia,
   bodyIsSensitive,
-  galleryIsRedacted,
   galleryItems,
   hasMedia,
   hasVideo,
@@ -1036,13 +1035,11 @@ export function PostView({
   // the clip leaves the card body and pins above it, wearing the full
   // transport, and the card beneath is the post as it always reads. A post of
   // pictures is unchanged — its gallery is still the card's body.
-  // A REDACTED GALLERY IS NOT A CLIP TO PIN: it is the placeholder, and the
-  // placeholder is the card's body wherever it lands. Only a playable clip
-  // leaves the card.
-  const clip =
-    !redacted && !galleryIsRedacted(post) && hasVideo(post)
-      ? galleryItems(post).find((item) => item.mimeType.startsWith("video/"))
-      : undefined;
+  // A REMOVED RECORD HAS NO CLIP TO PIN: redaction is record-granular, so the
+  // skeleton is the whole card and the placeholder is its body.
+  const clip = !redacted && hasVideo(post)
+    ? galleryItems(post).find((item) => item.mimeType.startsWith("video/"))
+    : undefined;
   // A gallery entry's `src` is optional on the tile because the tile also
   // draws the asset-less reserved region; a PINNED clip is a clip, so a
   // sourceless one is not one and the card keeps its body.
