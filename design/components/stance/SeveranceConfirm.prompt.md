@@ -1,4 +1,4 @@
-`SeveranceConfirm` is the only gate in the stance flow, and it **confirms rather than refuses**. It opens both when the reader deliberately severs and when an ordinary pick happens to net their standing to (0, 0).
+`SeveranceConfirm` is the only gate in the stance flow, and it **confirms rather than refuses**. It opens both when the reader deliberately severs and when an ordinary pick happens to net their opinion to (0, 0).
 
 ```jsx
 <SeveranceConfirm

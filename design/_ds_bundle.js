@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"ViewerDots","sourcePath":"components/media/MediaViewer.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"60be373be4f6","components/compose/ActsFooter.jsx":"4d474d1463db","components/compose/Caret.jsx":"7c8616dba407","components/compose/CoverRow.jsx":"c52618a34fe5","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"7a4e260a43ac","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"947836ad201f","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"570f672e033c","components/compose/TopicRemovable.jsx":"e36e24c12cfb","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f1ad3e7f28e4","components/content/CommentCard.jsx":"22cd54aabc3a","components/content/OverflowMenu.jsx":"47a53e5d0285","components/content/PostCard.jsx":"1ab2c898a870","components/content/ReferenceRow.jsx":"64219e74ca21","components/content/ShareButton.jsx":"a94e6dee7156","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6b9e07b63f21","components/core/BottomSheet.jsx":"7887a3ccf45b","components/core/Button.jsx":"49115256e31e","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"c0fe5f63cbb7","components/core/ContentRow.jsx":"7712c0cd74b3","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"8815966734db","components/honesty/PendingMarker.jsx":"7428662f343f","components/honesty/SensitiveVeil.jsx":"a5deb1a3edb7","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"4c4de225c963","components/media/MediaViewer.jsx":"de7c737f73b2","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"e1407898f8fb","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"1eb54848dfa9","components/navigation/BottomNav.jsx":"97b7b37b3100","components/navigation/CograBand.jsx":"b56086c8634f","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"4e54abd8cbc0","components/navigation/Icon.jsx":"53861f55d66a","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"8f609947a202","components/navigation/TabBar.jsx":"2d2f44c5a698","components/people/ActorChip.jsx":"ea02237eb500","components/people/ProfileHeader.jsx":"b3ff7024cbb5","components/people/StanceRow.jsx":"6296d2136f98","components/proposed/ExplainableNumber.jsx":"cd6488b3817c","components/stance/SeveranceConfirm.jsx":"22409f34d548","components/stance/StanceAlternates.jsx":"5fd873421d0d","components/stance/StanceCoachMark.jsx":"66ebe4394049","components/stance/StanceControl.jsx":"fb6372a11e64","components/stance/StancePad.jsx":"be49bf0f663c","components/stance/StanceReadout.jsx":"b0f263d7d535","components/stance/StanceSlider.jsx":"57078ae91304","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"b41a5971e24e","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"87ec0347bfe3","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"ViewerDots","sourcePath":"components/media/MediaViewer.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"60be373be4f6","components/compose/ActsFooter.jsx":"4d474d1463db","components/compose/Caret.jsx":"7c8616dba407","components/compose/CoverRow.jsx":"c52618a34fe5","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"7a4e260a43ac","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"947836ad201f","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"e47373d76959","components/compose/TopicRemovable.jsx":"e36e24c12cfb","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f1ad3e7f28e4","components/content/CommentCard.jsx":"ad51e671a44d","components/content/OverflowMenu.jsx":"1850244ef737","components/content/PostCard.jsx":"4d4dfc4da98d","components/content/ReferenceRow.jsx":"64219e74ca21","components/content/ShareButton.jsx":"45265b425904","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6b9e07b63f21","components/core/BottomSheet.jsx":"b747075e9eff","components/core/Button.jsx":"49115256e31e","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"c0fe5f63cbb7","components/core/ContentRow.jsx":"7712c0cd74b3","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"8677378b9a3c","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"8815966734db","components/honesty/PendingMarker.jsx":"7428662f343f","components/honesty/SensitiveVeil.jsx":"b636ab75703c","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"4c4de225c963","components/media/MediaViewer.jsx":"35ef46f646d3","components/media/PinnedClip.jsx":"deaed5abc604","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"2b8d1b95fbb9","components/media/VideoControls.jsx":"bf80af8840a2","components/navigation/BorrowedViewBand.jsx":"1eb54848dfa9","components/navigation/BottomNav.jsx":"97b7b37b3100","components/navigation/CograBand.jsx":"b56086c8634f","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"598a88247246","components/navigation/Icon.jsx":"9faeec50bf10","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"ea02237eb500","components/people/ProfileHeader.jsx":"3252958affa9","components/people/StanceRow.jsx":"df1b1bfd9f0e","components/proposed/ExplainableNumber.jsx":"9c309fa9a858","components/stance/SeveranceConfirm.jsx":"033dbf69e18a","components/stance/StanceAlternates.jsx":"5fd873421d0d","components/stance/StanceCoachMark.jsx":"66ebe4394049","components/stance/StanceControl.jsx":"33e8e3804072","components/stance/StancePad.jsx":"be49bf0f663c","components/stance/StanceReadout.jsx":"fc8c17af485b","components/stance/StanceSlider.jsx":"57078ae91304","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"b41a5971e24e","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"aad089b500ac","designs/core-loop/app.jsx":"87ec0347bfe3","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -417,8 +417,8 @@ const PATHS = {
      besides. `sentiment_neutral` is the same idea drawn as a line face, so the
      rail reads as one set. The official cut draws its eyes as <circle>s; PATHS
      holds paths only, so each is carried as an exact arc path — same geometry,
-     the `photo_camera` precedent. It is the UNSET state only: a stance that has
-     been taken still shows its own face, which is the readout. */
+     the `photo_camera` precedent. It is the UNSET state only: an opinion that
+     has been given still shows its own face, which is the readout. */
   sentiment_neutral: ["M9 15.5h6v1H9v-1z", "M15.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3z", "M8.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3z", "M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"],
   /* Handing a post to the OS share sheet (reel round, 2026-09-03). */
   share: ["M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"],
@@ -859,7 +859,7 @@ try { (() => {
      surface; a navigation bar under it would offer to leave mid-decision.
    · Scrim at 50%, and pressing it closes. Escape closes. Both because a drawer
      the reader opened is a drawer the reader can drop.
-   · Never open beside the stance pad: one parked surface at a time, and the pad
+   · Never open beside the opinion pad: one parked surface at a time, and the pad
      owns the same corner of the screen.
    · Enters over 400ms from the bottom, leaves over 200ms to the bottom
      (`tokens/transitions.css`) — a dismissal exits the edge it entered from. */
@@ -2641,7 +2641,7 @@ try { (() => {
    "slightly smiling face", never "Like this", so dropping the label from the DOM
    entirely would take the meaning from exactly the readers §10 protects. Every
    visible readout therefore pairs an `aria-hidden` visual with a
-   screen-reader-only reading that names the stance and its axes.
+   screen-reader-only reading that names the opinion and its axes.
 
    Nothing sits under the knob: a thumb on the control covers exactly the spot
    where feedback would otherwise appear. Both lines are `aria-live`.
@@ -2711,14 +2711,14 @@ const INTEREST_LABEL = "How much reaches you";
 /** The ends of each axis, named. A slider from −1 to +1 needs its poles said. */
 const DIRECTED_POLES = ["Against", "For"];
 const INTEREST_POLES = ["Less", "More"];
-/** What the middle pair is: the edge being authored, not the standing. */
+/** What the middle pair is: the edge being authored, not the bundle it joins. */
 const PICK_LABEL = "Your pick";
 const SEVERED_LABEL = "Walked back";
 const NO_STANDING_LABEL = "No opinion yet";
-/** What a bundle standing at exactly (0, 0) reads as. */
+/** What a bundle at exactly (0, 0) reads as. */
 const ZERO_BUNDLE_EMOJI = "🤷";
 /** The face an unauthored target wears at rest — the dotted-line face, deliberately
-    outside the table so an empty control cannot read as a standing already held. */
+    outside the table so an empty control cannot read as an opinion already given. */
 const RESTING_FACE_EMOJI = "🫥";
 
 /** Visually hidden, still read aloud — where the anchors' words now live. */
@@ -3042,7 +3042,7 @@ function nearestValenceAnchor(pDirected) {
   return VALENCE_SIX[VALENCE_SIX.length - 1];
 }
 
-/** The readout a STANDING wears. The table never speaks for zero. */
+/** The readout a BUNDLE wears. The table never speaks for zero. */
 function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
   if (pair.pDirected === 0 && pair.pInterest === 0) return {
     emoji: ZERO_BUNDLE_EMOJI,
@@ -3053,9 +3053,9 @@ function bundleReadout(pair, zeroLabel = SEVERED_LABEL) {
 
 /* The read-only value readout (profile round, 2026-09-01): a stance RECORD's
    face and pair drawn plainly wherever a stance is data rather than a control
-   — the stances page's rows, the chronicle's stance entries. Never
+   — the opinions page's rows, the chronicle's opinion entries. Never
    interactive: acting on a person means opening their profile first (jakob —
-   stancing here is more deliberate than a follow). */
+   giving an opinion here is more deliberate than a follow). */
 function StanceValue({
   pDirected,
   pInterest,
@@ -3168,7 +3168,7 @@ function standingLine(bundle, targetLabel) {
  * makes sense.
  *
  * The raw sum LEADS and the fold is derived from it. Stating the fold first and
- * the raw sum second reads as arithmetic that does not work — "my stance is +1.00,
+ * the raw sum second reads as arithmetic that does not work — "my opinion is +1.00,
  * so why does walking back take 1.40?" — because it presents the capped number as
  * the thing that exists and the true total as a correction to it. The total is
  * what the reader built up; the cap is what the feed reads of it. In that order it
@@ -3308,7 +3308,7 @@ function OwnStanceReadout({
   });
 }
 
-/** The standing, split for rendering: either a sentence, or a readout to lay out. */
+/** The bundle, split for rendering: either a sentence, or a readout to lay out. */
 function standingParts(bundle, targetLabel) {
   if (bundle === undefined) return {
     sentence: "Checking your current opinion…"
@@ -3346,8 +3346,8 @@ function landingParts(landing) {
 }
 
 /* One labelled readout: the name of the quantity, then the face and the numbers on
-   the line below it. Three of these stack in the pad — current stance, the pick,
-   the resulting stance — and they are formatted identically so the eye can compare
+   the line below it. Three of these stack in the pad — current opinion, the pick,
+   the resulting opinion — and they are formatted identically so the eye can compare
    them without reading. */
 function ReadoutBlock({
   label,
@@ -3406,7 +3406,7 @@ function ReadoutBlock({
   }, spoken));
 }
 
-/** The standing and the pick — everything that sits above the field. */
+/** The current opinion and the pick — everything that sits above the field. */
 function StanceStanding({
   pick,
   bundle,
@@ -3746,7 +3746,7 @@ const { NodeMark, Icon, BUTTON_CLASS, formatStancePair, nearestAnchor, SR_ONLY }
    rule, said for the other family. The conformance round left the row inert
    because removal was the only thing a staged citation was for; it no longer
    is. A citation's two axes are BOTH signed (`ReferenceInput`, api-spec.md), so
-   unlike a tag's pair this one is the stance pad's own shape, and what the row
+   unlike a tag's pair this one is `StancePad`'s own shape, and what the row
    opens is that pad in a sheet. Given no `onEdit` the row stays exactly as
    inert as the conformance round left it.
 
@@ -5493,7 +5493,7 @@ const { DialogSurface, buttonStyle, BUTTON_CLASS, nearestAnchor, severanceParts,
 //
 // THE RAW TOTAL LEADS. §8.3 requires the raw sums on every surface that explains
 // cost, because they are what a walk back to zero actually walks — but stating the
-// clipped fold first and the raw sum second reads as broken arithmetic ("my stance
+// clipped fold first and the raw sum second reads as broken arithmetic ("my opinion
 // is +1.00, so why does walking it back take +1.40?"). The total is what the
 // reader built up; the cap is what routing reads of it. In that order it explains
 // itself.
@@ -5623,10 +5623,10 @@ const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, Stance
 /* CoGra's SIGNATURE INTERACTION (design.md §8). Everything in this file is a rule
    from that section, not a preference:
 
-   AT REST the target shows the standing — face, words, and the folded pair. A
-   viewer without a standing sees a MUTED, TRANSLUCENT face: the same control at
+   AT REST the target shows the current opinion — face, words, and the folded pair.
+   A viewer with no opinion yet sees a MUTED, TRANSLUCENT face: the same control at
    rest, visibly waiting to be given a value, never a bare word and never the shrug
-   a zero standing owns.
+   a zero opinion owns.
 
    A TAP OPENS THE PAD (jakob's ruling, the geek round). The light gesture — the
    one a thumb gives by accident — costs nothing and signs nothing; it blooms the
@@ -5638,7 +5638,7 @@ const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, Stance
    signature is the one that takes a held finger, and the gesture nobody gives by
    mistake is the only one allowed to act by itself.
 
-   THE HOLD ANSWERS IMMEDIATELY. The resting target moves to the new standing at
+   THE HOLD ANSWERS IMMEDIATELY. The resting target moves to the new opinion at
    once and a snackbar confirms the signature: a gesture that stages a priced act
    must never be silent, because silence reads as failure and invites the same act
    again.
@@ -5656,9 +5656,9 @@ const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, Stance
    opening the pad must never also open the post.
 
    IT NEVER PREVENTS A CHOICE. The whole square is reachable, corners included. A
-   pick that nets the standing to (0, 0) is confirmed, not refused.
+   pick that nets the bundle to (0, 0) is confirmed, not refused.
 
-   This recreation folds locally and keeps its own standing in state; the product
+   This recreation folds locally and keeps its own bundle in state; the product
    asks the backend for the authoritative projection before signing. */
 
 const LONG_PRESS_MS = 500;
@@ -5670,7 +5670,7 @@ const LONG_PRESS_MS = 500;
    size as the comment bubble beside it, white with the same soft shadow. No
    disc and no ring — a plate around one control in a column of five reads as
    chrome, and the first cut of it was exactly the clonky thing that made the
-   rail stop looking like one set. A stance that HAS been taken still shows its
+   rail stop looking like one set. An opinion that HAS been given still shows its
    own face at the same size, because that face is the readout.
 
    The gesture, the pad, the ceremony and the muting rule are unchanged; this
@@ -5715,7 +5715,7 @@ function parkedPadStyle(inset = 16) {
    `wide` (profile round, 2026-09-01) is the PRESENTATIONAL variant a profile
    header wears: the same anchor stretched to the row's width in the outline
    button's clothes, and — divergence from the card anchor, deliberate — the
-   words drawn beside the face, because here the stance IS the row's one action
+   words drawn beside the face, because here the opinion IS the row's one action
    and a lone face at full width reads as lost. Tap, hold, pad, severance: all
    unchanged — the variant restyles the anchor and nothing else. */
 function StanceControl({
@@ -5911,7 +5911,7 @@ function StanceControl({
   /*#__PURE__*/
   /* OVER MEDIA THE UNSET STATE IS A LINE FACE, not a muted emoji: on
      photography "quiet" and "invisible" are the same thing, and the
-     glyph says "no standing yet" by being the empty face rather than
+     glyph says "no opinion yet" by being the empty face rather than
      by being faint. */
   React.createElement(Icon, {
     name: "sentiment_neutral",
@@ -6153,8 +6153,8 @@ const { Icon, BottomSheet, SheetItem } = __ds_scope;
    the same place.
 
    It exists because the affordance row has a budget and the things competing for
-   it do not all deserve the same weight. A stance is the gesture the product
-   lives on; checking a license is something a reader does once in a hundred
+   it do not all deserve the same weight. Giving an opinion is the gesture the
+   product lives on; checking a license is something a reader does once in a hundred
    readings. The row carries what a reader reaches for; this carries the rest.
 
    Rules it keeps:
@@ -7399,8 +7399,8 @@ function SensitiveVeil({
        thing and a second wash over the other. The whole body is replaced by ONE
        block instead: words and pictures together, at the scale of the card it
        sits in. What stays outside it is the comment's answer to the title
-       staying readable on a post — the author, the timestamp, and the stance a
-       reader can still take, so choosing to look is informed.
+       staying readable on a post — the author, the timestamp, and the opinion a
+       reader can still give, so choosing to look is informed.
         The wash is the veil's own, but the type is the THEME's rather than the
        media face's fixed white: that white is legible because the wash lies over
        a picture, and here it lies over the card, which is light in the light
@@ -7704,7 +7704,7 @@ function CommentCard({
   /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
      has no title to leave outside it, so what carries the informed choice is
      the frame the card already wears — the author, the timestamp, the topics,
-     and the stance the reader can still take. */
+     and the opinion the reader can still give. */
   const body = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
@@ -7994,7 +7994,7 @@ const { Icon, VideoTransport, GESTURE_ZONE, useGlobalMute } = __ds_scope;
    · A VIDEO TAKES THE FULL TRANSPORT (`VideoTransport`) — play/pause and a real
      timeline — and ROTATING THE DEVICE fills the screen with it. Rotation is
      the device's own gesture, so there is no rotate control to draw.
-   · NO ACTS. No stance, no comments, no share: acting on a post happens where
+   · NO ACTS. No opinion, no comments, no share: acting on a post happens where
      the post is, and a viewer that grows a toolbar is a viewer nobody trusts to
      close.
    · THE DESCRIPTION IS NOT SHOWN. Alt text is written for the people who cannot
@@ -8233,7 +8233,7 @@ const { Icon } = __ds_scope;
    public tally of something the graph does not record.
 
    IT IS LAST IN THE ROW, and that is a rule rather than a layout: the row's
-   order — stance, score, comment, share — is its order of importance, and it is
+   order — opinion, score, comment, share — is its order of importance, and it is
    also the queue. On a phone too narrow to hold all four, share is the first to
    move into the ⋮ menu. `PostCard` draws it; `showShare={false}` is for a
    surface that has none to offer. */
@@ -8374,7 +8374,7 @@ function PostCard({
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
   // surviving body. The card renders its skeleton instead: author, timestamp,
-  // thread position, and the stance a reader can still take all survive, because
+  // thread position, and the opinion a reader can still give all survive, because
   // no record leaves the graph and no removal is silent.
   const hasMedia = !redacted && Array.isArray(media) && media.length > 0;
   // A media post's caption is clamped and openable in place. The SUMMARY title
@@ -10305,11 +10305,11 @@ const { Icon, MonogramAvatar, StanceControl, ExplainableNumber } = __ds_scope;
 /* THE STREAM'S RAIL (readme §13, the reel round) — the post card's action row
    turned on its side and laid over the clip.
 
-   THE ORDER IS RULED, top to bottom: author · stance · comments · share · the
+   THE ORDER IS RULED, top to bottom: author · opinion · comments · share · the
    score. People lead, the way they lead on a card (§1) — the author is the one
    thing here that is not an act. Then the acts in the card's own order, with
    share arriving after them. THE SCORE SITS LAST because it is the door out of
-   the stream: a thumb reaching for the stance never passes over the exit.
+   the stream: a thumb reaching for the opinion never passes over the exit.
    Topics, the reference count and the reader's ⋮ are deliberately absent —
    they belong to the detail view the score opens.
 
@@ -10979,7 +10979,7 @@ try { (() => {
    and a second signal on top of it reads as two states.
 
    `primaryContainer` is not available here: a filter is not the loudest thing on
-   any screen it appears on, and the stance knob has already spent it.
+   any screen it appears on, and the pad's knob has already spent it.
 
    DRAWN AT 32PX, border-box — the chips' rung, because this control lives among
    chips (the filter sheets) and a taller pill beside 32px chips read as swollen
@@ -11140,11 +11140,10 @@ const { BottomSheet, Chip, Button, FilterSection, OrderSection, FILTER_ORDER, He
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The feed filter (backlog item 4, second pass; grown by item 19).
 
-   WHAT THIS REPLACED. A three-segment row — Posts / Comments / Stances — which was
-   wrong twice over: a stance is not a thing that gets ranked, and the real set is
-   ten kinds that COMBINE. A segmented row cannot express a combination, so it
-   was the wrong control for the job, not a badly drawn one. Sorting, forms of
-   post, and what the feed also admits piled on top; none of it fits in a row of
+   THE SET IS TEN KINDS THAT COMBINE, and an opinion is not one of them: it is
+   not a thing that gets ranked. A segmented row cannot express a combination, so
+   it is the wrong control for this job, not a badly drawn one. Sorting, forms of
+   post, and what the feed also admits pile on top; none of it fits in a row of
    pills across the top of a screen.
 
    SO: A TRIGGER AND A SHEET. The trigger is one chip-shaped control that reads
@@ -11237,20 +11236,68 @@ const FEED_FILTER_DEFAULT = {
 };
 const labelOf = (set, value) => (set.find(entry => entry.value === value) || {}).label;
 
-/* The trigger's own words, AND ITS BUDGET. One kind names itself, two are worth
-   spelling out, and past that a count is more useful than a truncated list. The
-   exceptions matter more than the detail — a filter you have forgotten about is the
-   one that confuses you — but four of them do not fit in a pill, and a pill that
-   overflows has told the reader nothing.
+/* THE BAND'S ROOM FOR THE TRIGGER. What overflows is a width, so the budget is
+   one: 154px is what the `CograBand` actually leaves the pill's words. */
+const BAND_CEILING_PX = 154;
 
-   So the kinds always show, and everything else collapses to a count of changes
-   once it stops fitting. "Far from the default" is the useful fact at that point;
-   which four ways is what the sheet is for. */
-function feedFilterSummary(value = FEED_FILTER_DEFAULT, budget = 26) {
+/* THE TRIGGER'S TYPE, MEASURED. Deciding what fits means measuring, and the
+   summary is composed in the browser as well as in node's renderer — neither of
+   which can open a TTF. So the font's advances ride along as data: per-character
+   advance widths from `assets/fonts/figtree.ttf`, in font units, at the wght=500
+   instance `--text-label-large` renders at. The file's own default instance is
+   the Light 300 corner, which is narrower and would promise room that isn't
+   there, so the table is instanced (avar + HVAR) rather than read off `hmtx`.
+
+   `_build/report-summaries.mjs --print-metrics` writes this block; the same
+   stage re-derives it from the font on every run and fails the pipeline if the
+   two have drifted apart. One measurement, two readers. */
+const TRIGGER_FONT_SIZE_PX = 14; // --text-label-large, 0.875rem
+const TRIGGER_UNITS_PER_EM = 1000; // figtree.ttf, head.unitsPerEm
+/* THE TRACKING TERM IS A MARGIN, NOT THE PAINT. The pill's words render at
+   `letter-spacing: normal` — a form control's own UA rule drops the ground's
+   tracking and the trigger sets none back — while the budget counts
+   `--text-label-large`'s 0.00625rem per character anyway. A guard wants its
+   error above what it guards: this term, plus the kerning an advance sum
+   cannot see, holds the measurement ~1.7% wide of the real paint (checked
+   against Chrome at wght 500), so a string the rule calls a fit is one. */
+const TRIGGER_LETTER_SPACING_PX = 0.1;
+const TRIGGER_ALPHABET = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~·";
+const TRIGGER_ADVANCES = [244.27, 301.75, 345.07, 629.43, 560.98, 793.06, 644.58, 212.1, 360.07, 360.07, 482.59, 625.73, 234.64, 414.27, 218.95, 400.67, 642.87, 415.73, 564.19, 547.03, 624.31, 576.3, 569.46, 542.33, 613.57, 569.46, 266.11, 271.39, 625.73, 625.73, 625.73, 506.31, 989.72, 686.94, 611.15, 721.87, 691.03, 590.99, 546.17, 755.53, 750.85, 275.75, 524.94, 625.27, 524.47, 848.74, 773.71, 779.17, 585.77, 782.02, 630.9, 612.13, 561.22, 706.42, 700.78, 966.63, 632.0, 616.1, 638.27, 329.19, 400.67, 329.19, 559.07, 437.13, 232.81, 516.29, 588.59, 542.15, 588.31, 548.26, 375.77, 591.17, 561.45, 240.07, 274.62, 499.69, 227.2, 856.76, 560.88, 580.15, 593.59, 581.46, 349.24, 466.0, 384.34, 560.88, 530.08, 798.12, 492.14, 539.97, 487.54, 387.73, 257.14, 387.73, 594.94, 256.01];
+const TRIGGER_ADVANCE = new Map([...TRIGGER_ALPHABET].map((character, index) => [character, TRIGGER_ADVANCES[index]]));
+const TRIGGER_ADVANCE_WIDEST = Math.max(...TRIGGER_ADVANCES);
+
+/* A character the table doesn't carry measures as its widest one: an unfamiliar
+   glyph makes the summary collapse a word early, never overflow the band. */
+function measureTriggerText(text) {
+  let units = 0;
+  let characters = 0;
+  for (const character of text) {
+    const advance = TRIGGER_ADVANCE.get(character);
+    units += advance === undefined ? TRIGGER_ADVANCE_WIDEST : advance;
+    characters += 1;
+  }
+  return units / TRIGGER_UNITS_PER_EM * TRIGGER_FONT_SIZE_PX + characters * TRIGGER_LETTER_SPACING_PX;
+}
+
+/* The trigger's own words, AND ITS BUDGET. The head spells one kind or counts
+   them: alone, a kind says its name; past one, a count is more useful than a
+   list the pill cannot finish. The exceptions matter more than the detail — a
+   filter you have forgotten about is the one that confuses you — so they are
+   spelled while they fit and collapse to a count of changes when they stop.
+
+   THE BUDGET IS PIXELS. A character count cannot tell a wide word from a narrow
+   one — "Campaigns · showing seen" and "Proposals · text + video" run the same
+   24 characters and 20px apart, one of them past the band — and what overflows
+   is a width. So the summary measures itself in the type it renders in and
+   collapses at the real edge — which makes the budget self-enforcing: a longer
+   label or a new kind cannot quietly push the pill past its room. "Far from the
+   default" is the useful fact at that point; which four ways is what the sheet
+   is for. */
+function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_CEILING_PX) {
   const kinds = value.kinds || [];
   const forms = value.forms || [];
   const also = value.also || [];
-  const head = kinds.length === 0 ? "Nothing" : kinds.length <= 2 ? kinds.map((kind, index) => index === 0 ? labelOf(FEED_KINDS, kind) : labelOf(FEED_KINDS, kind).toLowerCase()).join(", ") : kinds.length + " kinds";
+  const head = kinds.length === 0 ? "Nothing" : kinds.length === 1 ? labelOf(FEED_KINDS, kinds[0]) : kinds.length + " kinds";
   const extras = [];
   if (forms.length > 0 && forms.length < FEED_FORMS.length) extras.push(forms.map(form => labelOf(FEED_FORMS, form).toLowerCase()).join(" + "));
   if (value.order && value.order !== "ranked") extras.push(labelOf(FEED_ORDER, value.order).toLowerCase());
@@ -11258,7 +11305,7 @@ function feedFilterSummary(value = FEED_FILTER_DEFAULT, budget = 26) {
   if (also.length > 0) extras.push("+ " + also.map(entry => labelOf(FEED_ALSO, entry).toLowerCase()).join(", "));
   if (extras.length === 0) return head;
   const spelled = [head, ...extras].join(" · ");
-  if (spelled.length <= budget) return spelled;
+  if (measureTriggerText(spelled) <= budgetPx) return spelled;
   return head + " · " + extras.length + (extras.length === 1 ? " change" : " changes");
 }
 
@@ -11449,6 +11496,8 @@ __ds_scope.FEED_FORMS = FEED_FORMS;
 __ds_scope.FEED_ORDER = FEED_ORDER;
 __ds_scope.FEED_ALSO = FEED_ALSO;
 __ds_scope.FEED_FILTER_DEFAULT = FEED_FILTER_DEFAULT;
+__ds_scope.BAND_CEILING_PX = BAND_CEILING_PX;
+__ds_scope.measureTriggerText = measureTriggerText;
 __ds_scope.feedFilterSummary = feedFilterSummary;
 __ds_scope.FilterTrigger = FilterTrigger;
 __ds_scope.FeedFilterSheet = FeedFilterSheet;
@@ -11461,7 +11510,7 @@ const { Icon } = __ds_scope;
 /* The full-width tab row (item 17, the conformance round, jakob's ruling F):
    equal cells across the surface with a hairline under them, the chosen one in
    primary with a 2px underline. The profile's chronicle draws it with glyphs,
-   the stances page with words; they were two copies of one row.
+   the opinions page with words; they were two copies of one row.
 
    THE UNDERLINE IS A DELIBERATE DEVIATION from "selection is colour only". An
    icon's colour alone is too quiet to say which of three same-weight glyphs is
@@ -11553,7 +11602,7 @@ const { MonogramAvatar, REDACTED_ACTOR_NAME, Button, Icon, StanceControl } = __d
 
    PEOPLE FIRST, AND A PERSON IS A TARGET. A profile is the one surface whose
    subject is a person, so the stance control on THEM leads the actions: the whole
-   product is stances on things, and a person is the most consequential thing to
+   product is opinions on things, and a person is the most consequential thing to
    have one on. On a profile it wears the wide anchor — the row's one action,
    stretched to the row (jakob 2026-09-01, "the stance icon looks lost" at
    anchor size).
@@ -11583,11 +11632,11 @@ const { MonogramAvatar, REDACTED_ACTOR_NAME, Button, Icon, StanceControl } = __d
    THE COUNTS ARE THE HARD PART. The thing being counted is what the repo calls a
    connection, and that word is on the banned list (readme §3) along with the rest
    of the implementation vocabulary. So the header counts what a reader can
-   actually place: how many people have taken a stance on this person, and how many
-   this person has taken. Two figures, each labelled, each plain — never one merged
-   "followers" number, because there is no following here and borrowing the word
-   would describe a different product. A Posts figure leads the row, and the
-   figures are one tap target leading to the stances page: both directions,
+   actually place: how many people have given an opinion on this person, and how
+   many this person has given. Two figures, each labelled, each plain — never one
+   merged "followers" number, because there is no following here and borrowing the
+   word would describe a different product. A Posts figure leads the row, and the
+   figures are one tap target leading to the opinions page: both directions,
    separated, never merged there either.
 
    THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (jakob 2026-09-01). Changing the
@@ -11829,18 +11878,18 @@ __ds_scope.ProfileHeader = ProfileHeader;
 // components/people/StanceRow.jsx
 try { (() => {
 const { MonogramAvatar, StanceValue } = __ds_scope;
-/* A person on a stances list (item 17, the conformance round): their face,
+/* A person on an opinions list (item 17, the conformance round): their face,
    their name, and THE STANCE THE ROW IS ABOUT (jakob 2026-09-01) — the
    record's own value, read-only.
 
    THE VALUE IS THE ROW'S INFORMATION, which is what makes this row different
    from every followers list it resembles. A follow is a fact you either have
    or don't, so such a list shows only who. A stance has a sign and a
-   magnitude, so a list of stances that showed only who would be hiding the
-   part that says anything.
+   magnitude, so a list that showed only who would be hiding the part that
+   says anything.
 
    IT IS READ-ONLY, AND THE WHOLE ROW OPENS THE PERSON. There is no adjust
-   control here: acting on a stance means going to the profile it is about,
+   control here: acting on an opinion means going to the profile it is about,
    where the pad and its context live. A slider in a list row would let someone
    change a public record while scrolling past it. */
 
@@ -12561,6 +12610,8 @@ __ds_ns.FEED_ORDER = __ds_scope.FEED_ORDER;
 __ds_ns.FEED_ALSO = __ds_scope.FEED_ALSO;
 
 __ds_ns.FEED_FILTER_DEFAULT = __ds_scope.FEED_FILTER_DEFAULT;
+
+__ds_ns.BAND_CEILING_PX = __ds_scope.BAND_CEILING_PX;
 
 __ds_ns.FilterTrigger = __ds_scope.FilterTrigger;
 

@@ -4,7 +4,7 @@ import { Icon } from "./Icon.jsx";
 /* The full-width tab row (item 17, the conformance round, jakob's ruling F):
    equal cells across the surface with a hairline under them, the chosen one in
    primary with a 2px underline. The profile's chronicle draws it with glyphs,
-   the stances page with words; they were two copies of one row.
+   the opinions page with words; they were two copies of one row.
 
    THE UNDERLINE IS A DELIBERATE DEVIATION from "selection is colour only". An
    icon's colour alone is too quiet to say which of three same-weight glyphs is

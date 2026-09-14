@@ -24,7 +24,7 @@ import { formatStancePair, nearestAnchor, SR_ONLY } from "../stance/StanceReadou
    rule, said for the other family. The conformance round left the row inert
    because removal was the only thing a staged citation was for; it no longer
    is. A citation's two axes are BOTH signed (`ReferenceInput`, api-spec.md), so
-   unlike a tag's pair this one is the stance pad's own shape, and what the row
+   unlike a tag's pair this one is `StancePad`'s own shape, and what the row
    opens is that pad in a sheet. Given no `onEdit` the row stays exactly as
    inert as the conformance round left it.
 

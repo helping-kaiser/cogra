@@ -23,7 +23,7 @@ import React from "react";
    and a second signal on top of it reads as two states.
 
    `primaryContainer` is not available here: a filter is not the loudest thing on
-   any screen it appears on, and the stance knob has already spent it.
+   any screen it appears on, and the pad's knob has already spent it.
 
    DRAWN AT 32PX, border-box — the chips' rung, because this control lives among
    chips (the filter sheets) and a taller pill beside 32px chips read as swollen
