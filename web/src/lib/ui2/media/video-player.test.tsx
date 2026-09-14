@@ -82,9 +82,10 @@ describe("the one global mute", () => {
     expect(two.muted).toBe(true);
   });
 
-  it("takes the reader's press on the element's own mute button", () => {
-    // The native control is the one a reader actually reaches for, so it has to
-    // be the global control: the press arrives as `volumechange`, not a click.
+  it("takes an out-of-band mute change, e.g. from picture-in-picture", () => {
+    // Nothing in this component itself changes `.muted` except the sound
+    // disc, but an external `volumechange` must still sync into the store
+    // rather than silently diverging from every other player on screen.
     const video = player();
     act(() => {
       video.muted = false;
