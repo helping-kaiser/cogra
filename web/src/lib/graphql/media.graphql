@@ -49,8 +49,8 @@ mutation BeginMediaUpload($declaredBytes: Int!, $kind: MediaUploadKind!) {
 #
 # **Safe to retry**: a client whose connection dropped waiting for this reply
 # calls it again and is handed the same asset.
-mutation CompleteMediaUpload($uploadId: UUID!, $coverMediaId: UUID) {
-  completeMediaUpload(input: { uploadId: $uploadId, coverMediaId: $coverMediaId }) {
+mutation CompleteMediaUpload($uploadId: UUID!) {
+  completeMediaUpload(input: { uploadId: $uploadId }) {
     media {
       ...MediaFields
     }
