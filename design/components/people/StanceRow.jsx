@@ -2,18 +2,18 @@ import React from "react";
 import { MonogramAvatar } from "./ActorChip.jsx";
 import { StanceValue } from "../stance/StanceReadout.jsx";
 
-/* A person on a stances list (item 17, the conformance round): their face,
+/* A person on an opinions list (item 17, the conformance round): their face,
    their name, and THE STANCE THE ROW IS ABOUT (jakob 2026-09-01) — the
    record's own value, read-only.
 
    THE VALUE IS THE ROW'S INFORMATION, which is what makes this row different
    from every followers list it resembles. A follow is a fact you either have
    or don't, so such a list shows only who. A stance has a sign and a
-   magnitude, so a list of stances that showed only who would be hiding the
-   part that says anything.
+   magnitude, so a list that showed only who would be hiding the part that
+   says anything.
 
    IT IS READ-ONLY, AND THE WHOLE ROW OPENS THE PERSON. There is no adjust
-   control here: acting on a stance means going to the profile it is about,
+   control here: acting on an opinion means going to the profile it is about,
    where the pad and its context live. A slider in a list row would let someone
    change a public record while scrolling past it. */
 

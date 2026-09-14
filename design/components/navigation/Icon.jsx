@@ -117,8 +117,8 @@ const PATHS = {
      besides. `sentiment_neutral` is the same idea drawn as a line face, so the
      rail reads as one set. The official cut draws its eyes as <circle>s; PATHS
      holds paths only, so each is carried as an exact arc path — same geometry,
-     the `photo_camera` precedent. It is the UNSET state only: a stance that has
-     been taken still shows its own face, which is the readout. */
+     the `photo_camera` precedent. It is the UNSET state only: an opinion that
+     has been given still shows its own face, which is the readout. */
   sentiment_neutral: [
     "M9 15.5h6v1H9v-1z",
     "M15.5 8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 1 1 0-3z",

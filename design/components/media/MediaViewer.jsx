@@ -38,7 +38,7 @@ import { useGlobalMute } from "./MediaAttachment.jsx";
    · A VIDEO TAKES THE FULL TRANSPORT (`VideoTransport`) — play/pause and a real
      timeline — and ROTATING THE DEVICE fills the screen with it. Rotation is
      the device's own gesture, so there is no rotate control to draw.
-   · NO ACTS. No stance, no comments, no share: acting on a post happens where
+   · NO ACTS. No opinion, no comments, no share: acting on a post happens where
      the post is, and a viewer that grows a toolbar is a viewer nobody trusts to
      close.
    · THE DESCRIPTION IS NOT SHOWN. Alt text is written for the people who cannot
