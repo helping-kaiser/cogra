@@ -57,14 +57,40 @@ describe("DescribeSheet", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/too long/i);
   });
 
-  it("says which picture is being described, when there is more than one", () => {
+  // CW-15 (2026-09-08 UI audit): the board never drew a running count, so
+  // the sheet stays quiet about it regardless of what a caller passes.
+  it("never shows a running count — the board draws no such line", () => {
     open({ position: { index: 1, total: 3 } });
-    expect(screen.getByText("Picture 2 of 3")).toBeInTheDocument();
+    expect(screen.queryByText(/Picture \d+ of \d+/)).toBeNull();
   });
 
-  it("stays quiet about position when there is only one picture", () => {
-    open({ position: { index: 0, total: 1 } });
-    expect(screen.queryByText(/Picture 1 of 1/)).toBeNull();
+  // CW-15: the reason sits directly under the title on both shapes, not as
+  // an extended trailing line near the field.
+  it("carries the reason under the title, not as an extended trailing line", () => {
+    open();
+    expect(
+      screen.getByText("Read aloud to people who can't see it."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/shown if the picture can't load/),
+    ).toBeNull();
+  });
+
+  // CW-16 (2026-09-08 UI audit): the sheet's other shape, for a clip.
+  it("becomes the video shape when asked", () => {
+    open({ video: true });
+    expect(screen.getByTestId("describe-sheet")).toHaveAttribute(
+      "aria-label",
+      "Describe the video",
+    );
+    expect(screen.getByText("What's in the video")).toBeInTheDocument();
+    expect(screen.getByTestId("describe-sheet-play-disc")).toBeInTheDocument();
+  });
+
+  it("wears no play disc, and asks about the picture, off the picture shape", () => {
+    open();
+    expect(screen.getByText("What's in the picture")).toBeInTheDocument();
+    expect(screen.queryByTestId("describe-sheet-play-disc")).toBeNull();
   });
 
   it("carries the ? that says nothing is described for you", () => {
