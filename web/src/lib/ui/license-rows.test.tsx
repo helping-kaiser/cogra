@@ -9,7 +9,9 @@ describe("LicenseRows", () => {
     render(<LicenseRows value={PUBLIC_DOMAIN} onChange={vi.fn()} testIdPrefix="wizard" />);
     expect(screen.getByText("No credit")).toBeInTheDocument();
     expect(screen.getByText("Nobody owes you a name.")).toBeInTheDocument();
-    expect(screen.getByText("No record")).toBeInTheDocument();
+    // The provenance tiers are VERBS — what the author chooses is whether the
+    // platform logs (copy-voice.md "The author's own tier names").
+    expect(screen.getByText("Not logged")).toBeInTheDocument();
     expect(screen.getByText("Uses go unlogged.")).toBeInTheDocument();
   });
 

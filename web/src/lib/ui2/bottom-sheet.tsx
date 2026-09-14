@@ -22,6 +22,7 @@ export function BottomSheet({
   onClose,
   title,
   titleTrailing,
+  titleHidden = false,
   children,
   testId = "bottom-sheet",
 }: {
@@ -37,6 +38,15 @@ export function BottomSheet({
    * to the drawn row.
    */
   titleTrailing?: ReactNode;
+  /**
+   * A sheet whose content heads itself draws no title row — design keeps the
+   * two apart (`BottomSheet` takes an `ariaLabel`; `SheetTitle` is a separate
+   * master a board includes when it wants one). A menu is its own rows, and the
+   * license block's caption already says `License terms`, so a title above it
+   * would say the words twice a few pixels apart in two sizes. The name still
+   * reaches a screen reader through `aria-label`, which is where one asks.
+   */
+  titleHidden?: boolean;
   children: ReactNode;
   testId?: string;
 }) {
@@ -94,7 +104,7 @@ export function BottomSheet({
             with the backdrop, Escape, or its own action, and a handle that
             looks draggable but is not would lie. */}
         <span aria-hidden="true" className="mx-auto mt-3 h-1 w-8 rounded-full bg-outline-variant" />
-        {titleTrailing === undefined ? (
+        {titleHidden ? null : titleTrailing === undefined ? (
           <h2 className="px-6 pt-4 pb-2 text-title-medium">{title}</h2>
         ) : (
           <div className="flex items-center gap-2 px-6 pt-4 pb-2">
