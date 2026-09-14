@@ -591,9 +591,10 @@ paper over:
   (sensitive, veiled; removed, as
   its skeleton). None of that fits in a row across the top of a screen, so
   it is one chip-shaped trigger reading the view back in words plus a
-  sheet — and the trigger has a budget: the kinds always show, and once
-  the exceptions stop fitting they collapse to a count ("Posts, comments ·
-  3 changes"), because a pill that overflows has told the reader nothing
+  sheet — and the trigger has a budget, in pixels: the head names one
+  kind or counts them, and once the exceptions stop fitting the band's
+  154px they collapse to a count ("3 kinds · 4 changes"), because a pill
+  that overflows has told the reader nothing
   and "far from the default" is the fact that matters there. It applies live — no Apply button asking the reader to guess — and
   switching every kind off is allowed: the feed says what is off rather
   than the chip refusing the tap. No glyph on the trigger: there is no
@@ -1724,13 +1725,18 @@ entry first". What stands:
   where §3 rules U+2212, or a spoken reading left behind is a
   failure. A seventh hand-spelled readout anywhere in `screens/` fails
   too: unchecked is not a state a literal gets to be in.
-- **`_build/report-summaries.mjs` is report-only** (item 60, option A):
-  it enumerates the feed-filter trigger's reachable summary strings
-  (`feedFilterSummary`, `FeedFilter.jsx`) and measures each by real
-  `figtree.ttf` advance summing, printing how many exceed the
-  trigger's own 198px text room and the band's tighter 154px against
-  the total — never failing on what it finds, until item 64 rules a
-  threshold to hold the tree to. Full pipeline: `node bundle.mjs &&
+- **`_build/report-summaries.mjs` is the gate's third half** (items 60
+  + 64): it enumerates the feed-filter trigger's reachable summary
+  strings (`feedFilterSummary`, `FeedFilter.jsx`), measures each with
+  the master's own `measureTriggerText`, and **fails on any summary
+  past the band's 154px** — the master collapses at that width, so an
+  overflow means the collapse never fired. It owns the font the master
+  cannot read: `figtree.ttf`'s advances, instanced at the wght 500 the
+  trigger renders at, re-derived on every run and checked against the
+  master's table so budget and ruler cannot drift apart
+  (`--print-metrics` writes that table). The census prints either way
+  — how many summaries exceed the trigger's own 198px text room and
+  the band's tighter 154px against the total. Full pipeline: `node bundle.mjs &&
   node render-screens.mjs && node gen-maps.mjs && node gen-canvases.mjs
   && node check-flows.mjs && node check-readouts.mjs &&
   node report-summaries.mjs`.
