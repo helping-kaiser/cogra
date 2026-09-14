@@ -121,8 +121,6 @@
     <!-- The one-axis reading: the anchor's word, then the axis and the
          one number — `Nice, For or against +0.10`. -->
     <string name="valence_reading">%1$s, %2$s %3$s</string>
-    <!-- What the pad's readout block is called (design/backlog.md 30). -->
-    <string name="valence_pick">Your pick</string>
     <string name="stance_carries_nothing">This would carry nothing.</string>
     <string name="stance_carries_nothing_directed">Where you stand would carry nothing.</string>
     <string name="stance_carries_nothing_interest">What reaches you would carry nothing.</string>

@@ -583,7 +583,17 @@ class ComposeWizardViewModel @Inject constructor(
     fun onSensitiveReasonChange(reason: String) =
         _state.update { it.copy(sensitiveReason = reason) }
 
-    fun onOpenSheet(sheet: SealSheet) = _state.update { it.copy(sheet = sheet) }
+    /**
+     * Opening the pad starts it from the stance that is standing, so
+     * Cancel can put it back exactly.
+     */
+    fun onOpenSheet(sheet: SealSheet) = _state.update {
+        if (sheet == SealSheet.Stance) {
+            it.copy(sheet = sheet, stagedPDirected = it.pDirected)
+        } else {
+            it.copy(sheet = sheet)
+        }
+    }
 
     fun onCloseSheet() = _state.update { it.closedSheets() }
 
@@ -622,7 +632,11 @@ class ComposeWizardViewModel @Inject constructor(
 
     fun onLicenseChange(license: LicenseChoice) = _state.update { it.copy(license = license) }
 
-    fun onPDirectedChange(value: Double) = _state.update { it.copy(pDirected = value) }
+    /** A drag on the pad's field: staged, not set (`ComposePad`). */
+    fun onPDirectedChange(value: Double) = _state.update { it.copy(stagedPDirected = value) }
+
+    /** The pad's Set — the one gesture that moves the stance the seal reads. */
+    fun onSetStance() = _state.update { it.copy(pDirected = it.stagedPDirected).closedSheets() }
 
     // -- Uploads (D5: one call per asset, concurrent, retryable) --
 

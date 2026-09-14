@@ -275,6 +275,15 @@ data class ComposeWizardState(
     val pDirected: Double = DEFAULT_P_DIRECTED,
 
     /**
+     * What the open pad has under the finger — staged, not set, until Set.
+     *
+     * The board's own line: "release never commits, Set does". A pad that
+     * wrote through on every drag would leave Cancel with nothing to
+     * cancel, so the drag moves this and only Set moves [pDirected].
+     */
+    val stagedPDirected: Double = DEFAULT_P_DIRECTED,
+
+    /**
      * The author's own sensitive mark (`ComposeSensitive`).
      *
      * It veils the pictures and the words until a reader chooses
@@ -324,9 +333,20 @@ data class ComposeWizardState(
     /** Every pick that has an id on the server. */
     val uploadedIds: List<String> get() = picked.mapNotNull { it.mediaId }
 
-    /** Any drawer open over the current stage. */
+    /**
+     * The opinion pad is parked over the page, not a drawer.
+     *
+     * It sits at the lower centre of the viewport, the same place every
+     * time, because muscle memory is part of the control
+     * (design/readme.md §"Fixed elements"). Riding the sheet host would
+     * draw a second sheet chrome around it — the doubled surface F2-10
+     * reports — and would park it wherever the drawer happened to stop.
+     */
+    val padOpen: Boolean get() = sheet == SealSheet.Stance
+
+    /** Any drawer open over the current stage — the pad is not one. */
     val anySheetOpen: Boolean
-        get() = sheet != SealSheet.None || pickedSheetOpen || describingIndex != null
+        get() = (sheet != SealSheet.None && !padOpen) || pickedSheetOpen || describingIndex != null
 
     /** How many picks carry a description — `DescribeCounter`'s count. */
     val describedCount: Int get() = picked.count { it.altText.isNotBlank() }
@@ -554,8 +574,10 @@ fun ComposeWizardState.advanced(): ComposeWizardState? = when (step) {
  * way; it is written continuously rather than at the exit.
  */
 fun ComposeWizardState.retreated(): ComposeWizardState? = when {
-    // A sheet is a drawer over the stage: it closes before the stage moves.
-    anySheetOpen -> closedSheets()
+    // A sheet is a drawer over the stage and the pad is parked above it:
+    // either closes before the stage moves, and closing the pad stages
+    // nothing, exactly as Cancel does not.
+    anySheetOpen || padOpen -> closedSheets()
     step == WizardStep.Body -> null
     step == WizardStep.Crop -> copy(step = WizardStep.Body)
     // The cover stage is reached from the pick, so back returns there.

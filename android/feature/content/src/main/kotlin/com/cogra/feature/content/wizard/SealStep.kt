@@ -2,6 +2,7 @@ package com.cogra.feature.content.wizard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -12,8 +13,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,15 +25,19 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.StancePoint
+import com.cogra.core.designsystem.ValenceField
 import com.cogra.core.designsystem.nearestStanceAnchor
+import com.cogra.core.designsystem.nearestValenceAnchor
 import com.cogra.core.designsystem.pair
+import com.cogra.core.designsystem.valenceExact
+import com.cogra.core.designsystem.valenceReading
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograReadoutChip
@@ -99,12 +104,12 @@ internal fun ColumnScope.SealStepBody(
         if (!state.keyAbsent) {
             SettingRow(
                 label = "Where you stand on it",
-                // A publish's own stance is one axis (pDirected); pInterest is
-                // census-fixed at 1 here — "your own post always reaches you
-                // in full" (StanceSheet's doc, below) — so the readout reads
-                // the real fixed pair, the same shape the reply seal already
-                // reads its own two-axis pick through (ReplySealStep.kt).
-                value = stanceRowReading(StancePoint(state.pDirected, 1.0)),
+                // ONE NUMBER, not a pair (jakob's ruling, 2026-09-14): the
+                // second is census-fixed at 1 rather than picked — "your own
+                // post always reaches you in full" — so reading a pair back
+                // shows the author a figure nobody chose. The face is the
+                // one-axis table's, built for exactly this reading.
+                value = ownStanceRowReading(state.pDirected),
                 actionText = "Adjust",
                 onAction = { onOpenSheet(SealSheet.Stance) },
                 testTag = "wizard_seal_stance",
@@ -359,6 +364,15 @@ private fun stanceRowReading(pick: StancePoint): String =
     "${nearestStanceAnchor(pick).emoji} ${pick.pair()}"
 
 /**
+ * The same row reading for a pick that names NO PAIR: the face from the
+ * one-axis table and the one number the author actually set. A citation's
+ * row keeps [stanceRowReading] — a stance toward somebody else's thing is
+ * two choices, and both of them are drawn.
+ */
+private fun ownStanceRowReading(pDirected: Double): String =
+    "${nearestValenceAnchor(pDirected).emoji} ${valenceExact(pDirected)}"
+
+/**
  * `ComposeKeyAbsent` — this app holds no actor key, so nothing can be
  * signed here. The panel itself; the keep-draft way out is a sibling
  * below it ([SealStepBody]), not drawn inside — the board's own layout
@@ -608,59 +622,117 @@ private fun DegreeGroup(
 /**
  * `ComposePad` — where the author stands on their own post.
  *
- * **A named divergence.** The board draws the full stance pad, the
- * bloomed two-axis control `feature:stance` owns. That component reads
- * a *stance toward a target* — a record with its own standing, its own
- * severance quote, its own repository — and this value is none of
- * those: it is `pDirected` on the Publish input, a field of the record
- * being authored, with `pInterest` census-fixed at 1 for a Publish. So
- * this is one labelled slider, the same shape `TagParameterSliders`
- * already uses for a record's own parameters, and the pad is left to
- * the surface it belongs to.
+ * **THE FIELD IS ONE AXIS, and that is why `StancePad` is not here.**
+ * The two-axis field is the square because the square IS the value
+ * space, both parameters the author's to choose. On one's own post the
+ * second is not: a post always reaches its author in full, so
+ * `pInterest` is census-fixed at 1 on the Publish input and a square
+ * would offer a choice that is not one. What is left is a line, and
+ * [ValenceField] draws it.
+ *
+ * **It parks over the page; it is not a drawer.** The caller owns the
+ * wash and the parking (`ComposeWizardScreen`), the way the reply seal's
+ * pad already works; this draws the card.
  */
 @Composable
-internal fun StanceSheet(
+internal fun ComposePad(
     pDirected: Double,
     onChange: (Double) -> Unit,
-    onDone: () -> Unit,
+    onSet: () -> Unit,
     onCancel: () -> Unit,
+    onHelp: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    CograSheetSurface(testTag = "wizard_stance_sheet") {
-        SheetTitle("Where you stand on it")
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(PAD_CORNER))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .padding(Space.x4)
+            .testTag("wizard_stance_pad"),
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
+    ) {
+        Box(Modifier.fillMaxWidth()) {
+            // The readout clears the corner the `?` sits in, so the two
+            // never collide.
+            Column(modifier = Modifier.padding(end = PAD_HELP_GUTTER)) {
+                Text(
+                    // Drawn, not spoken: the reading below says the value,
+                    // and a screen reader hearing "Your pick" before every
+                    // drag would hear the label more often than the number
+                    // (`ComposePad.jsx:58-73`, design/backlog.md item 30).
+                    text = "Your pick",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OwnStanceReading(pDirected)
+            }
+            HelpDot(
+                onHelp = onHelp,
+                contentDescription = HelpTopic.YourOpinionOnYourPost.title,
+                modifier = Modifier.align(Alignment.TopEnd),
+                testTag = "wizard_stance_help",
+            )
+        }
+        ValenceField(
+            value = pDirected,
+            onValueChange = onChange,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            testTag = "wizard_stance_field",
+        )
         Text(
             text = "Your own post always reaches you in full.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        val reading = "+%.2f".format(pDirected)
-        // Hoisted: `semantics {}` is not a composable scope.
-        val spoken = stringResource(R.string.content_stance_on_post)
-        Text(
-            text = "Your pick: $reading",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        Slider(
-            value = pDirected.toFloat(),
-            onValueChange = { onChange(it.toDouble()) },
-            valueRange = -1f..1f,
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("wizard_stance_slider")
-                .semantics {
-                    contentDescription = spoken
-                    stateDescription = reading
-                },
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Space.x2, Alignment.End),
         ) {
             CograButton("Cancel", onCancel, kind = ButtonKind.Text, testTag = "wizard_stance_cancel")
-            CograButton("Set", onDone, testTag = "wizard_stance_set")
+            CograButton("Set", onSet, testTag = "wizard_stance_set")
         }
     }
 }
+
+/**
+ * THE FACE AND THE ONE NUMBER, one type step apart — the board's own
+ * proportion for this readout, and the same one the reply pad draws its
+ * pair at.
+ *
+ * The face leaves the semantics tree and the readout announces the
+ * band's words plus the one axis instead: an emoji's own accessible name
+ * is "slightly smiling face", never "Nice" (design.md §10).
+ */
+@Composable
+private fun OwnStanceReading(pDirected: Double) {
+    val band = nearestValenceAnchor(pDirected)
+    val spoken = valenceReading(pDirected)
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        modifier = Modifier
+            .semantics(mergeDescendants = true) { contentDescription = spoken }
+            .testTag("wizard_stance_reading"),
+    ) {
+        Text(
+            text = band.emoji,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.clearAndSetSemantics { },
+        )
+        Text(
+            text = valenceExact(pDirected),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.clearAndSetSemantics { },
+        )
+    }
+}
+
+/** `--radius-extra-large`, the rung every parked pad and sheet wears. */
+private val PAD_CORNER = 28.dp
+
+/** What the readout leaves clear of the `?` in the corner. */
+private val PAD_HELP_GUTTER = 40.dp
 
 /**
  * The seal's reading of a license, the way the board words it — the
@@ -686,8 +758,8 @@ private fun LicenseSheetPreview() {
 
 @ThemePreviews
 @Composable
-private fun StanceSheetPreview() {
+private fun ComposePadPreview() {
     Cogra2PreviewTheme {
-        StanceSheet(pDirected = 0.1, onChange = {}, onDone = {}, onCancel = {})
+        ComposePad(pDirected = 0.1, onChange = {}, onSet = {}, onCancel = {}, onHelp = {})
     }
 }
