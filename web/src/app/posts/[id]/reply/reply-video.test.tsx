@@ -206,6 +206,20 @@ describe("a comment's video", () => {
     expect(counter.parentElement).toHaveTextContent("0 of 1 described");
   });
 
+  // CW-16 (2026-09-08 UI audit): the sheet the counter opens is the video
+  // shape, not the picture one — its own title and the play disc on the
+  // clip's cover frame, never a per-picture walk.
+  it("opens the video shape of the describe sheet, not the picture one", async () => {
+    draw();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId("reply-describe-counter"));
+
+    const sheet = await screen.findByTestId("reply-describe-sheet");
+    expect(sheet).toHaveAttribute("aria-label", "Describe the video");
+    expect(screen.getByText("What's in the video")).toBeInTheDocument();
+    expect(screen.getByTestId("reply-describe-sheet-play-disc")).toBeInTheDocument();
+  });
+
   it("shows the clip's length on the composer's own tile", async () => {
     server.use(uploadOk());
     draw();
