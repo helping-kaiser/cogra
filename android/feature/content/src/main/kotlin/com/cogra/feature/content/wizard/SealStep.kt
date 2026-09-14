@@ -29,6 +29,9 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.ErrorLine
+import com.cogra.core.designsystem.StancePoint
+import com.cogra.core.designsystem.nearestStanceAnchor
+import com.cogra.core.designsystem.pair
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
@@ -38,6 +41,7 @@ import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.SettingRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.SummaryRow
+import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -45,6 +49,8 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.content.MAX_SENSITIVE_REASON_CHARS
 import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.feature.content.R
+import com.cogra.feature.content.ReferenceRow
+import com.cogra.feature.content.referenceLabel
 
 /**
  * `ComposeSeal` — every act with its cost, before a single signature.
@@ -85,7 +91,12 @@ internal fun ColumnScope.SealStepBody(
         )
         SettingRow(
             label = "Where you stand on it",
-            value = "+%.2f".format(state.pDirected),
+            // A publish's own stance is one axis (pDirected); pInterest is
+            // census-fixed at 1 here — "your own post always reaches you
+            // in full" (StanceSheet's doc, below) — so the readout reads
+            // the real fixed pair, the same shape the reply seal already
+            // reads its own two-axis pick through (ReplySealStep.kt).
+            value = stanceRowReading(StancePoint(state.pDirected, 1.0)),
             actionText = "Adjust",
             onAction = { onOpenSheet(SealSheet.Stance) },
             testTag = "wizard_seal_stance",
@@ -162,19 +173,21 @@ private fun ActBlock(state: ComposeWizardState) {
         ActRow(kind = "Post", detail = state.sealSummary, acts = 1)
         if (state.tagSection.tags.isNotEmpty()) {
             Hairline()
+            // CW-22: the board's label is "Tags", not "Topics"
+            // (_shared.jsx:839). The value itself stays plain text here —
+            // the board draws readout-tone chips, and no such tone exists
+            // yet on the chip atom (v2/atom/Chips.kt's `CograChip` is
+            // always an interactive control, selected or not; there is no
+            // non-interactive "readout" chip to draw a signed act with).
             ActRow(
-                kind = "Topics",
+                kind = "Tags",
                 detail = state.tagSection.tags.joinToString(" ") { "#${it.name}" },
                 acts = state.tagSection.tags.size,
             )
         }
         if (state.referenceSection.references.isNotEmpty()) {
             Hairline()
-            ActRow(
-                kind = "References",
-                detail = "${state.referenceSection.references.size} cited",
-                acts = state.referenceSection.references.size,
-            )
+            ReferenceActRow(references = state.referenceSection.references)
         }
         Hairline()
         val acts = state.signedActionCount
@@ -215,11 +228,77 @@ private fun ActRow(kind: String, detail: String, acts: Int) {
         )
         Text(
             text = if (acts == 1) "1 action" else "$acts actions",
-            style = MaterialTheme.typography.bodySmall,
+            // CW-25: both text tokens in the acts row are label-small
+            // (ActsCard.jsx:27-43, LABEL and COUNT share --text-label-small);
+            // the kind label above already reads it correctly.
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
+
+/**
+ * The References act row: unlike [ActRow]'s single-line value, the board
+ * (`_shared.jsx:848-860`) draws the citation's name over its own stance
+ * readout — the staged citation carries the stance that rides with it, so
+ * the row is two lines: what is cited, and what signing it says about the
+ * citer.
+ *
+ * **A named reading of the undrawn case.** The board's only example
+ * carries one citation; the section allows up to ten staged at once, and
+ * no board draws what the row does with more than one. This reads the
+ * first — the common case, and the one the board actually shows — and
+ * leaves the rest to the trailing count, the same way the count already
+ * tells the reader there is more than the value line spells out. Flagged
+ * rather than silently generalized: a multi-citation layout is a board
+ * question, not a technical one.
+ */
+@Composable
+private fun ReferenceActRow(references: List<ReferenceRow>) {
+    val primary = references.first()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Space.x2),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        Text(
+            text = "References",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(76.dp),
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = referenceLabel(primary.target),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = stanceRowReading(StancePoint(primary.relevance, primary.support)),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            text = if (references.size == 1) "1 action" else "${references.size} actions",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/**
+ * The seal row's own reading: the face, then the pair, in the one string a
+ * settings row carries — the same shape `ReplySealStep.kt`'s
+ * `stanceRowReading` already reads the reply seal's own pick through.
+ */
+@Composable
+private fun stanceRowReading(pick: StancePoint): String =
+    "${nearestStanceAnchor(pick).emoji} ${pick.pair()}"
 
 /**
  * `ComposeKeyAbsent` — this device holds no actor key, so nothing can
@@ -346,9 +425,14 @@ internal fun LicenseSheet(
     license: LicenseChoice,
     onChange: (LicenseChoice) -> Unit,
     onDone: () -> Unit,
+    onHelp: () -> Unit,
 ) {
     CograSheetSurface(testTag = "wizard_license_sheet") {
-        SheetTitle("License")
+        SheetTitle(
+            text = "License",
+            onHelp = onHelp,
+            helpContentDescription = HelpTopic.License.title,
+        )
         Text(
             text = "Terms for anyone who reuses this.",
             style = MaterialTheme.typography.bodySmall,
@@ -389,14 +473,14 @@ private data class Degree(val value: Double, val label: String, val reading: Str
 
 private val CREDIT = listOf(
     Degree(0.0, "No credit", "Nobody owes you a name."),
-    Degree(0.5, "Credit commercially", "Commercial uses credit you."),
+    Degree(0.5, "Credit commercially", "Commercial uses credit you; everything else is free."),
     Degree(1.0, "Credit always", "Every use credits you."),
 )
 
 private val RECORD = listOf(
     Degree(0.0, "No record", "Uses go unlogged."),
-    Degree(0.5, "Record commercially", "Commercial uses are logged."),
-    Degree(1.0, "Record always", "Every use is logged publicly."),
+    Degree(0.5, "Record commercially", "Commercial uses are logged publicly and stay open to audit."),
+    Degree(1.0, "Record always", "Every use is logged publicly and stays open to audit."),
 )
 
 @Composable
@@ -528,7 +612,7 @@ internal fun LicenseChoice.sealLabel(): String = when {
 @Composable
 private fun LicenseSheetPreview() {
     Cogra2PreviewTheme {
-        LicenseSheet(LicenseChoice.PublicDomain, {}, {})
+        LicenseSheet(LicenseChoice.PublicDomain, {}, {}, {})
     }
 }
 
