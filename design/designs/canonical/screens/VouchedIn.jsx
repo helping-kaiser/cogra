@@ -20,16 +20,13 @@
    is hand-drawn where the system already owns the drawing.
 
    TWO RUNGS OF POINT, NOT THREE, AND `secondaryContainer` IS NOT ONE OF THEM.
-   `SkyField` spends `secondaryContainer` on its mid-weight points, which works
-   on the Explore hero's light card and inverts in the dark theme: dark
-   `secondaryContainer` is #743918, a dark brown that sinks into the near-black
-   ground, so the LARGEST points come out the DIMMEST and the weight reading
-   runs backwards. This board therefore spends only `outline` (far) and
-   `primaryContainer` (near) on the field, plus `primary` for you — three values
-   that all read on both grounds, `primaryContainer` being literally the same
-   #ef6c1a in either theme. The same inversion is latent in `SkyField` itself;
-   it is reported rather than fixed here, because fixing it moves the Explore
-   board, which belongs to its own pass.
+   Dark `secondaryContainer` is #743918, a dark brown that sinks into the
+   near-black ground, so a mid-weight point drawn in it comes out dimmer than
+   the small ones and the weight reading runs backwards. This board spends only
+   `outline` (far) and `primaryContainer` (near) on the field, plus `primary`
+   for you — three values that all read on both grounds, `primaryContainer`
+   being literally the same #ef6c1a in either theme. `SkyField` spends the same
+   three, so the two skies teach one reading.
 
    THE FIELD MAKES NO CLAIM ABOUT WEIGHTING, and the copy is careful not to make
    one. The Explore hero promises a sky "sized by your own paths to it"; on this
