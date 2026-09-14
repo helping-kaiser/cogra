@@ -7,11 +7,10 @@ import { HelpDot } from "../core/HelpDot.jsx";
 
 /* The feed filter (backlog item 4, second pass; grown by item 19).
 
-   WHAT THIS REPLACED. A three-segment row — Posts / Comments / Stances — which was
-   wrong twice over: a stance is not a thing that gets ranked, and the real set is
-   ten kinds that COMBINE. A segmented row cannot express a combination, so it
-   was the wrong control for the job, not a badly drawn one. Sorting, forms of
-   post, and what the feed also admits piled on top; none of it fits in a row of
+   THE SET IS TEN KINDS THAT COMBINE, and an opinion is not one of them: it is
+   not a thing that gets ranked. A segmented row cannot express a combination, so
+   it is the wrong control for this job, not a badly drawn one. Sorting, forms of
+   post, and what the feed also admits pile on top; none of it fits in a row of
    pills across the top of a screen.
 
    SO: A TRIGGER AND A SHEET. The trigger is one chip-shaped control that reads
