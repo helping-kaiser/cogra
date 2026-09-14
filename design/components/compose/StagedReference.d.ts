@@ -21,7 +21,7 @@ export interface StagedReferenceProps {
   /** The × is its own button, named "Remove <name>". */
   onRemove?: () => void;
   /**
-   * Opens the citation's pair editor — the stance pad in a sheet, because both
+   * Opens the citation's pair editor — `StancePad` in a sheet, because both
    * of a citation's axes are signed. Given it, the row (minus the ×) becomes a
    * button named "<name> — set how it relates"; without it the row is inert.
    */

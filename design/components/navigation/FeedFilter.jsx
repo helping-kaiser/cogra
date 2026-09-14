@@ -7,11 +7,10 @@ import { HelpDot } from "../core/HelpDot.jsx";
 
 /* The feed filter (backlog item 4, second pass; grown by item 19).
 
-   WHAT THIS REPLACED. A three-segment row — Posts / Comments / Stances — which was
-   wrong twice over: a stance is not a thing that gets ranked, and the real set is
-   ten kinds that COMBINE. A segmented row cannot express a combination, so it
-   was the wrong control for the job, not a badly drawn one. Sorting, forms of
-   post, and what the feed also admits piled on top; none of it fits in a row of
+   THE SET IS TEN KINDS THAT COMBINE, and an opinion is not one of them: it is
+   not a thing that gets ranked. A segmented row cannot express a combination, so
+   it is the wrong control for this job, not a badly drawn one. Sorting, forms of
+   post, and what the feed also admits pile on top; none of it fits in a row of
    pills across the top of a screen.
 
    SO: A TRIGGER AND A SHEET. The trigger is one chip-shaped control that reads
@@ -76,25 +75,80 @@ export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos",
 
 const labelOf = (set, value) => (set.find((entry) => entry.value === value) || {}).label;
 
-/* The trigger's own words, AND ITS BUDGET. One kind names itself, two are worth
-   spelling out, and past that a count is more useful than a truncated list. The
-   exceptions matter more than the detail — a filter you have forgotten about is the
-   one that confuses you — but four of them do not fit in a pill, and a pill that
-   overflows has told the reader nothing.
+/* THE BAND'S ROOM FOR THE TRIGGER. What overflows is a width, so the budget is
+   one: 154px is what the `CograBand` actually leaves the pill's words. */
+export const BAND_CEILING_PX = 154;
 
-   So the kinds always show, and everything else collapses to a count of changes
-   once it stops fitting. "Far from the default" is the useful fact at that point;
-   which four ways is what the sheet is for. */
-export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budget = 26) {
+/* THE TRIGGER'S TYPE, MEASURED. Deciding what fits means measuring, and the
+   summary is composed in the browser as well as in node's renderer — neither of
+   which can open a TTF. So the font's advances ride along as data: per-character
+   advance widths from `assets/fonts/figtree.ttf`, in font units, at the wght=500
+   instance `--text-label-large` renders at. The file's own default instance is
+   the Light 300 corner, which is narrower and would promise room that isn't
+   there, so the table is instanced (avar + HVAR) rather than read off `hmtx`.
+
+   `_build/report-summaries.mjs --print-metrics` writes this block; the same
+   stage re-derives it from the font on every run and fails the pipeline if the
+   two have drifted apart. One measurement, two readers. */
+const TRIGGER_FONT_SIZE_PX = 14; // --text-label-large, 0.875rem
+const TRIGGER_UNITS_PER_EM = 1000; // figtree.ttf, head.unitsPerEm
+/* THE TRACKING TERM IS A MARGIN, NOT THE PAINT. The pill's words render at
+   `letter-spacing: normal` — a form control's own UA rule drops the ground's
+   tracking and the trigger sets none back — while the budget counts
+   `--text-label-large`'s 0.00625rem per character anyway. A guard wants its
+   error above what it guards: this term, plus the kerning an advance sum
+   cannot see, holds the measurement ~1.7% wide of the real paint (checked
+   against Chrome at wght 500), so a string the rule calls a fit is one. */
+const TRIGGER_LETTER_SPACING_PX = 0.1;
+const TRIGGER_ALPHABET =
+  " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~·";
+const TRIGGER_ADVANCES = [
+  244.27, 301.75, 345.07, 629.43, 560.98, 793.06, 644.58, 212.1, 360.07, 360.07,
+  482.59, 625.73, 234.64, 414.27, 218.95, 400.67, 642.87, 415.73, 564.19, 547.03,
+  624.31, 576.3, 569.46, 542.33, 613.57, 569.46, 266.11, 271.39, 625.73, 625.73,
+  625.73, 506.31, 989.72, 686.94, 611.15, 721.87, 691.03, 590.99, 546.17, 755.53,
+  750.85, 275.75, 524.94, 625.27, 524.47, 848.74, 773.71, 779.17, 585.77, 782.02,
+  630.9, 612.13, 561.22, 706.42, 700.78, 966.63, 632.0, 616.1, 638.27, 329.19,
+  400.67, 329.19, 559.07, 437.13, 232.81, 516.29, 588.59, 542.15, 588.31, 548.26,
+  375.77, 591.17, 561.45, 240.07, 274.62, 499.69, 227.2, 856.76, 560.88, 580.15,
+  593.59, 581.46, 349.24, 466.0, 384.34, 560.88, 530.08, 798.12, 492.14, 539.97,
+  487.54, 387.73, 257.14, 387.73, 594.94, 256.01,
+];
+const TRIGGER_ADVANCE = new Map([...TRIGGER_ALPHABET].map((character, index) => [character, TRIGGER_ADVANCES[index]]));
+const TRIGGER_ADVANCE_WIDEST = Math.max(...TRIGGER_ADVANCES);
+
+/* A character the table doesn't carry measures as its widest one: an unfamiliar
+   glyph makes the summary collapse a word early, never overflow the band. */
+export function measureTriggerText(text) {
+  let units = 0;
+  let characters = 0;
+  for (const character of text) {
+    const advance = TRIGGER_ADVANCE.get(character);
+    units += advance === undefined ? TRIGGER_ADVANCE_WIDEST : advance;
+    characters += 1;
+  }
+  return (units / TRIGGER_UNITS_PER_EM) * TRIGGER_FONT_SIZE_PX + characters * TRIGGER_LETTER_SPACING_PX;
+}
+
+/* The trigger's own words, AND ITS BUDGET. The head spells one kind or counts
+   them: alone, a kind says its name; past one, a count is more useful than a
+   list the pill cannot finish. The exceptions matter more than the detail — a
+   filter you have forgotten about is the one that confuses you — so they are
+   spelled while they fit and collapse to a count of changes when they stop.
+
+   THE BUDGET IS PIXELS. A character count cannot tell a wide word from a narrow
+   one — "Campaigns · showing seen" and "Proposals · text + video" run the same
+   24 characters and 20px apart, one of them past the band — and what overflows
+   is a width. So the summary measures itself in the type it renders in and
+   collapses at the real edge — which makes the budget self-enforcing: a longer
+   label or a new kind cannot quietly push the pill past its room. "Far from the
+   default" is the useful fact at that point; which four ways is what the sheet
+   is for. */
+export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_CEILING_PX) {
   const kinds = value.kinds || [];
   const forms = value.forms || [];
   const also = value.also || [];
-  const head =
-    kinds.length === 0
-      ? "Nothing"
-      : kinds.length <= 2
-        ? kinds.map((kind, index) => (index === 0 ? labelOf(FEED_KINDS, kind) : labelOf(FEED_KINDS, kind).toLowerCase())).join(", ")
-        : kinds.length + " kinds";
+  const head = kinds.length === 0 ? "Nothing" : kinds.length === 1 ? labelOf(FEED_KINDS, kinds[0]) : kinds.length + " kinds";
   const extras = [];
   if (forms.length > 0 && forms.length < FEED_FORMS.length) extras.push(forms.map((form) => labelOf(FEED_FORMS, form).toLowerCase()).join(" + "));
   if (value.order && value.order !== "ranked") extras.push(labelOf(FEED_ORDER, value.order).toLowerCase());
@@ -102,7 +156,7 @@ export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budget = 26) {
   if (also.length > 0) extras.push("+ " + also.map((entry) => labelOf(FEED_ALSO, entry).toLowerCase()).join(", "));
   if (extras.length === 0) return head;
   const spelled = [head, ...extras].join(" · ");
-  if (spelled.length <= budget) return spelled;
+  if (measureTriggerText(spelled) <= budgetPx) return spelled;
   return head + " · " + extras.length + (extras.length === 1 ? " change" : " changes");
 }
 

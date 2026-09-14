@@ -117,7 +117,7 @@ export function PostCard({
   // REDACTION IS RECORD-GRANULAR. An illegal verdict removes the payload, so
   // every authored field goes at once — there is no redacted title beside a
   // surviving body. The card renders its skeleton instead: author, timestamp,
-  // thread position, and the stance a reader can still take all survive, because
+  // thread position, and the opinion a reader can still give all survive, because
   // no record leaves the graph and no removal is silent.
   const hasMedia = !redacted && Array.isArray(media) && media.length > 0;
   // A media post's caption is clamped and openable in place. The SUMMARY title
@@ -357,7 +357,7 @@ export function PostCard({
           post cannot spare. That is the constraint
           that keeps every affordance here glyph-plus-number — words would not
           fit, which is a feature. Nothing in here may take `primaryContainer`:
-          the stance knob already spends it.
+          the pad's knob already spends it.
 
           IT SPREADS ACROSS THE CARD (jakob's ruling, the geek round). The row's
           controls sit at even intervals over the full width rather than huddled
@@ -412,7 +412,7 @@ export function PostCard({
             </button>
           )}
           {/* SHARE CLOSES THE ROW. The order here is the order of importance —
-              stance, score, comment, share — and it is also the queue: on a
+              opinion, score, comment, share — and it is also the queue: on a
               phone too narrow to hold all four, share is the first to move into
               the ⋮ menu, and the row gives way from its end. Anything added
               later is ranked against what is already reachable before it earns a
