@@ -1,5 +1,5 @@
 import React from "react";
-import { InlineAction } from "../core/Button.jsx";
+import { InlineAction, BUTTON_CLASS } from "../core/Button.jsx";
 
 /* The seal's acts card (media slice, 2026-08-31 — extracted the moment a
    second seal needed it: the profile-picture seal joined the post's and the
@@ -14,7 +14,16 @@ import { InlineAction } from "../core/Button.jsx";
    an `action` is a control — what could still be added, lined up with what has
    been — and there the whole row is the button. Truncation belongs to the value
    slot alone: an action row has no slot to clip, so the 48px target the word
-   promises reaches the row's own edges instead of being cut back to the ink. */
+   promises reaches the row's own edges instead of being cut back to the ink.
+
+   A FACT ROW IS A DOOR WHEN THE FACT IS A COLLECTION (`onOpen`, jakob's ruling
+   2026-09-14, backlog item 70). One staged citation reads back as itself; two
+   or more read back as their count, and the count is only honest if the reader
+   can go and see what it counts. So the row keeps its three slots — label,
+   value, count — and the whole row becomes the control, `PickedRow`'s rule for
+   the picked pictures said for the acts card: no chevron, no trailing word,
+   the accessible name saying what opens. It stays a FACT row and not an action
+   row, because what it opens is what it already says. */
 
 const ROW = {
   display: "flex",
@@ -42,6 +51,31 @@ const COUNT = {
   color: "var(--text-secondary)",
 };
 
+const VALUE = {
+  flex: 1,
+  minWidth: 0,
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+/* The door's own box is the row's box: no border, no background, no padding,
+   the page's ink — so the card reads as the card it always was and only the
+   state layer, the focus ring and the 48px target arrive with `BUTTON_CLASS`. */
+const DOOR = {
+  ...ROW,
+  width: "100%",
+  border: 0,
+  background: "none",
+  padding: 0,
+  cursor: "pointer",
+  fontFamily: "var(--font-sans)",
+  color: "var(--on-surface)",
+  textAlign: "left",
+};
+
 export function ActsCard({ rows = [], total, note }) {
   return (
     <div
@@ -60,22 +94,16 @@ export function ActsCard({ rows = [], total, note }) {
             <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap" }}>{row.action}</span>
             <span style={COUNT}>{row.count}</span>
           </InlineAction>
+        ) : row.onOpen ? (
+          <button key={index} type="button" onClick={row.onOpen} aria-label={row.openLabel} className={BUTTON_CLASS} style={DOOR}>
+            <span style={LABEL}>{row.label}</span>
+            <span style={VALUE}>{row.value}</span>
+            <span style={COUNT}>{row.count}</span>
+          </button>
         ) : (
           <div key={index} style={ROW}>
             <span style={LABEL}>{row.label}</span>
-            <span
-              style={{
-                flex: 1,
-                minWidth: 0,
-                fontSize: "var(--text-body-medium)",
-                lineHeight: "var(--text-body-medium--line-height)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {row.value}
-            </span>
+            <span style={VALUE}>{row.value}</span>
             <span style={COUNT}>{row.count}</span>
           </div>
         )
