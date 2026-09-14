@@ -602,6 +602,32 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: ">Sign and publish</button>", tag: "button" },
     { n: 8, find: ">Back</button>", tag: "button" },
   ],
+  // The seal at more than one staged citation (item 70): `ComposeSeal`'s own
+  // eight controls, and the References row that has become a door.
+  ComposeSealCited: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: ">Sign and publish</button>", tag: "button" },
+    { n: 8, find: ">Back</button>", tag: "button" },
+    { n: 9, find: 'aria-label="Manage the citations"', tag: "button" },
+  ],
+  // What that door opens. The board is scanExempt, so only the sheet's own
+  // controls and its scrim carry numbers; the three rows' name-buttons share
+  // one number and their ×s another, one edge covering each control.
+  ComposeCitations: [
+    { n: 1, find: 'aria-label="The long way home — @ada — set how it relates"', tag: "button" },
+    { n: 1, find: 'aria-label="Mira Voss — set how it relates"', tag: "button" },
+    { n: 1, find: 'aria-label="Tide tables and the third headland — @juno — set how it relates"', tag: "button" },
+    { n: 2, find: 'aria-label="Remove The long way home — @ada"', tag: "button" },
+    { n: 2, find: 'aria-label="Remove Mira Voss"', tag: "button" },
+    { n: 2, find: 'aria-label="Remove Tide tables and the third headland — @juno"', tag: "button" },
+    { n: 3, find: ">Done</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   ComposeKeyAbsent: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
@@ -779,6 +805,22 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: ">Back</button>", tag: "button" },
     { n: 11, find: 'aria-label="Remove Tide tables', tag: "button" },
     { n: 12, find: "aria-label=\"Tide tables and the third headland — set how it relates\"", tag: "button" },
+  ],
+  // The same seal counting its citations (item 70). Ten of the eleven numbers
+  // are `ReplyCited`'s own — the states differ in one row — and 11, which was
+  // the staged row's ×, is here the door the counting row has become.
+  ReplyCitedMany: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: "+ Add a tag", tag: "button" },
+    { n: 5, find: "+ Cite something", tag: "button" },
+    { n: 6, find: ">Adjust</button>", tag: "button" },
+    { n: 7, find: ">Change</button>", tag: "button" },
+    { n: 8, find: ">Mark</button>", tag: "button" },
+    { n: 9, find: ">Sign comment</button>", tag: "button" },
+    { n: 10, find: ">Back</button>", tag: "button" },
+    { n: 11, find: 'aria-label="Manage the citations"', tag: "button" },
   ],
   ComposeSealUploading: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
