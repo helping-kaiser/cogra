@@ -11,7 +11,7 @@ export function Screen() {
 
         <ActsCard
           rows={[
-            { label: "Post", value: "Sunday at the tide market", count: "1" },
+            { label: "Post", value: "Sunday at the tide market", count: "1", countNoun: "post" },
             {
               label: "Tags",
               value: (
@@ -21,6 +21,7 @@ export function Screen() {
                 </span>
               ),
               count: "2",
+              countNoun: "tag",
             },
           ]}
           total="3 things, signed together"
