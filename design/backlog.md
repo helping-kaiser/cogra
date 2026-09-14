@@ -2151,3 +2151,18 @@ render `+0,40` where §3's fixed `+0.40 / +0.20` allows only the dot.
 Pin the locale (`en-US` or an explicit numbering contract) in both
 formatters and re-render; the U+2212 substitution (item 59, ruled)
 is unaffected.
+
+### 66 · What the image round found out of scope · *design + system*
+
+Two fixture defects the 2026-09-14 consolidation surfaced and left
+alone:
+
+- **The search boards ship a broken image.** Three
+  `design/designs/search/screens/*.jsx` reference `post-photo.jpg`,
+  but `design/designs/search/` has no `img/` directory — the frozen
+  search-ideation canvas renders a broken image where the post photo
+  should sit.
+- **`inviter.jpg` upscales ~2× in a post frame.** The file is
+  192×192 but fills the 390px square frame of `SOL_POST`; Mira's
+  face reads soft there. A higher-resolution source for the same
+  face would fix it — one file swap, no reference changes.
