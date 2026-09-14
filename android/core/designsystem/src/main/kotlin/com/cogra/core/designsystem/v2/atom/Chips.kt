@@ -111,7 +111,10 @@ private fun Modifier.semanticsSelected(isSelected: Boolean, selectable: Boolean)
         this
     }
 
-/** [ReadoutChipMinHeight]'s and [ReadoutChipVerticalPadding]'s source: `design/components/core/Chip.jsx`'s `READOUT` style (lines 88-101). */
+/**
+ * [ReadoutChipMinHeight] and [ReadoutChipVerticalPadding]'s source:
+ * `design/components/core/Chip.jsx`'s `READOUT` style (lines 88-101).
+ */
 private val ReadoutChipMinHeight = 24.dp
 private val ReadoutChipVerticalPadding = 2.dp
 
