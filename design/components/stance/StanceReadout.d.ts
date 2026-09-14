@@ -84,6 +84,24 @@ export declare const STANCE_ANCHORS: readonly (StancePair & { emoji: string; lab
  * read these values.
  */
 export declare const TAG_ANCHORS: readonly (StancePair & { emoji: string; label: string })[];
+/** One band of the one-axis table: the face it wears, the anchor's own position
+ *  and word, and where the band stops. `to` is the band's upper edge and
+ *  `toInclusive` says whether the edge belongs to it — at a midpoint the milder
+ *  face wins, and exactly 0.00 reads 🙂. */
+export interface ValenceBand {
+  emoji: string;
+  label: string;
+  /** The anchor's position on the axis, read from `STANCE_ANCHORS`. */
+  pDirected: number;
+  to: number;
+  toInclusive: boolean;
+}
+
+/** The six-band contract a pick with no second axis reads through — the
+ *  pure-valence spine of `STANCE_ANCHORS`. Both clients read these values. */
+export declare const VALENCE_SIX: readonly ValenceBand[];
+/** The face a one-axis pick wears. Out-of-range values are clamped in. */
+export declare function nearestValenceAnchor(pDirected: number): ValenceBand;
 export declare const ORIGIN: StancePair;
 export declare const TAP_DEFAULT: StancePair;
 export declare const DIRECTED_LABEL: string;

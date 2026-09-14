@@ -121,6 +121,44 @@ export const STANCE_ANCHORS = [
   { pDirected: -0.9, pInterest: -0.9, emoji: "💀", label: "Absolutely not" },
 ];
 
+/* THE ONE-AXIS TABLE (jakob's ruling, 2026-09-14). A pick on one's own post
+   names a valence and nothing else — a post always reaches its author in full,
+   so `pInterest` is not a thing to choose — and `nearestAnchor` cannot answer
+   for a value that names no pair. These six are the twenty's pure-valence
+   spine, the mild, middle and far face on each side, at ±0.15, ±0.55 and
+   ±0.90. Glyph, word and position are READ from `STANCE_ANCHORS`, so the six
+   are six OF the twenty and cannot drift from them.
+
+   THE BANDS ARE WRITTEN, NOT COMPUTED. They are the midpoints between
+   neighbouring anchors — ±0.35 between the mild and the middle face, ±0.725
+   between the middle and the far one — but derived at runtime the first of
+   those comes out as −0.7250000000000001, and a band edge that depends on the
+   order of a multiply is a face that depends on the platform. So the edges are
+   spelled, and every comparison below is a `<` or an `===`.
+
+   EACH ROW OWNS THE AXIS UP TO ITS `to`, and `toInclusive` says whether the
+   edge itself belongs to it. Away from the edges this is the nearest anchor by
+   distance; the asymmetry in `toInclusive` is where the two ruled tie-breaks
+   live, and it is the same rule stated twice:
+     · AT A MIDPOINT THE MILDER FACE WINS — the one nearer zero. On the
+       negative side that is the band above, so a negative row stops short of
+       its edge; on the positive side it is the band below, so a positive row
+       keeps it.
+     · EXACTLY 0.00 READS 🙂 — the 😕 row stops short of zero, so zero falls
+       into the first band above it.
+   Six monotone bands covering the closed axis, and the same face everywhere. */
+export const VALENCE_SIX = [
+  { emoji: "😠", to: -0.725, toInclusive: false },
+  { emoji: "🙁", to: -0.35, toInclusive: false },
+  { emoji: "😕", to: 0, toInclusive: false },
+  { emoji: "🙂", to: 0.35, toInclusive: true },
+  { emoji: "😊", to: 0.725, toInclusive: true },
+  { emoji: "😍", to: DIMENSION_MAX, toInclusive: true },
+].map((band) => {
+  const anchor = STANCE_ANCHORS.find((a) => a.emoji === band.emoji);
+  return { ...band, pDirected: anchor.pDirected, label: anchor.label };
+});
+
 /* THE TAG TABLE IS ITS OWN, AND IT IS DISJOINT FROM THE STANCE FACES (jakob's
    ruling, the tag pad round). Not one glyph appears in both tables, and that is
    the point rather than an accident of picking: a face that means "Like this"
@@ -206,6 +244,18 @@ export function nearestTagAnchor(pair) {
     }
   }
   return best;
+}
+
+/** The face a ONE-AXIS pick wears — the first `VALENCE_SIX` band the value
+ *  falls inside. The bands cover the closed axis, so every value has exactly
+ *  one; out of range is clamped in rather than refused, the way the pad
+ *  clamps. */
+export function nearestValenceAnchor(pDirected) {
+  const value = clampDimension(pDirected);
+  for (const band of VALENCE_SIX) {
+    if (value < band.to || (band.toInclusive && value === band.to)) return band;
+  }
+  return VALENCE_SIX[VALENCE_SIX.length - 1];
 }
 
 /** The readout a STANDING wears. The table never speaks for zero. */
