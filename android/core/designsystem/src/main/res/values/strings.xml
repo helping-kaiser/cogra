@@ -200,6 +200,13 @@
     <string name="designsystem_video_mute">Mute</string>
     <string name="designsystem_video_unmute">Unmute</string>
 
+    <!-- The transport's rest, on the surfaces where the clip is the thing
+         the reader came for. The skips say their size, because "ten
+         seconds back" is the whole of what the glyph means. -->
+    <string name="designsystem_video_rewind">Back ten seconds</string>
+    <string name="designsystem_video_forward">Forward ten seconds</string>
+    <string name="designsystem_video_seek">Seek</string>
+
     <!-- The gallery's dot row, read as a position. Positional arguments
          because the order of the two numbers is a property of the
          language, not of the layout. -->

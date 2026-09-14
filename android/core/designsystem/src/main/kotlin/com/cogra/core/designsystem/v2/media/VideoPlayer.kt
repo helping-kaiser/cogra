@@ -4,7 +4,6 @@ import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,11 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -47,6 +42,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.compose.PlayerSurface
 import androidx.media3.ui.compose.state.rememberPresentationState
+import androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.MediaOverlay
@@ -334,29 +330,41 @@ fun VideoPlayer(
             )
         }
 
+        // THE LADDER'S SECOND RUNG. The full transport REPLACES the disc
+        // rather than joining it: the sound decision rides the bar, because a
+        // disc beside a bar is two pieces of chrome for one clip.
         if (controls == VideoControls.Full && player != null) {
-            PlayPauseButton(
+            // Media3's own progress holder rather than a hand-rolled ticker:
+            // it polls the player on an interval and stops when the
+            // composition leaves, which is exactly the loop a timeline needs
+            // and the one every player writes wrong.
+            val progressState = rememberProgressStateWithTickInterval(player, TICK_MS)
+            val length = progressState.durationMs.takeIf { it > 0 }
+                ?: durationMs?.toLong()
+                ?: 0L
+            val position = progressState.currentPositionMs.coerceAtLeast(0L)
+            VideoTransport(
                 playing = playing,
-                onToggle = { if (playing) player.pause() else player.play() },
+                elapsedMs = position,
+                durationMs = length,
+                progress = if (length > 0) position.toFloat() / length else 0f,
+                muted = muted,
+                onTogglePlay = { if (playing) player.pause() else player.play() },
+                // The player's own seek commands, so the increment it was
+                // built with is the one every path uses.
+                onSkip = { step -> if (step < 0) player.seekBack() else player.seekForward() },
+                onSeek = { at -> if (length > 0) player.seekTo((at * length).toLong()) },
+                onToggleMute = VideoSound::toggle,
                 modifier = Modifier.align(Alignment.Center),
             )
         }
 
-        Row(
-            modifier = Modifier.align(Alignment.BottomStart).padding(Space.x2),
-        ) {
-            if (controls == VideoControls.Full) {
-                durationMs?.let {
-                    OverlayBadge(modifier = Modifier.testTag("video_duration")) {
-                        Text(
-                            text = formatRunningTime(it),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MediaOverlay.BadgeInk,
-                        )
-                    }
-                }
+        if (controls == VideoControls.SoundOnly) {
+            Row(
+                modifier = Modifier.align(Alignment.BottomStart).padding(Space.x2),
+            ) {
+                MuteButton(muted = muted)
             }
-            MuteButton(muted = muted)
         }
     }
 }
@@ -416,33 +424,6 @@ internal fun posterReason(
     else -> "no frame rendered yet"
 }
 
-@Composable
-private fun PlayPauseButton(
-    playing: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val label =
-        stringResource(if (playing) R.string.designsystem_video_pause else R.string.designsystem_video_play)
-    Box(
-        modifier = modifier
-            .size(CONTROL_DIAMETER)
-            .clip(RoundedCornerShape(CONTROL_DIAMETER / 2))
-            .background(MediaOverlay.Badge)
-            .clickable(onClick = onToggle)
-            .semantics { contentDescription = label }
-            .testTag("video_play_pause"),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            imageVector = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-            contentDescription = null,
-            tint = MediaOverlay.BadgeInk,
-            modifier = Modifier.size(CONTROL_GLYPH),
-        )
-    }
-}
-
 /**
  * The shared mute, as a control.
  *
@@ -478,18 +459,6 @@ private fun MuteButton(muted: Boolean) {
     }
 }
 
-@Composable
-private fun OverlayBadge(modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(Space.x1))
-            .background(MediaOverlay.Badge)
-            .padding(horizontal = Space.x2, vertical = 1.dp),
-        contentAlignment = Alignment.Center,
-        content = content,
-    )
-}
-
 /** Minutes and seconds, growing an hours field past the hour. */
 fun formatRunningTime(ms: Int): String {
     val total = (ms / 1000).coerceAtLeast(0)
@@ -507,7 +476,10 @@ fun formatRunningTime(ms: Int): String {
 internal const val SURFACE_TAG = "video_surface"
 internal const val POSTER_TAG = "video_poster"
 
-private val CONTROL_DIAMETER = 56.dp
-private val CONTROL_GLYPH = 32.dp
+/** How often the timeline asks the player where it is. Four times a second is
+ * under the eye's threshold for a knob that follows playback and well above the
+ * cost of a field read. */
+private const val TICK_MS = 250L
+
 private val BADGE_CONTROL = 28.dp
 private val BADGE_GLYPH = 16.dp

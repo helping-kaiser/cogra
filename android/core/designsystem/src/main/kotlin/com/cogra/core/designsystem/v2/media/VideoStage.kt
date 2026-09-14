@@ -94,7 +94,18 @@ object VideoStage {
         hasRendered = false
         holding = Holding(
             url = url,
-            player = ExoPlayer.Builder(context.applicationContext).build().apply {
+            player = ExoPlayer.Builder(context.applicationContext)
+                // THE SKIPS ARE TEN SECONDS, said by the board's own labels
+                // ("Back ten seconds", `VideoControls.jsx:196`). They are the
+                // PLAYER's increments rather than arithmetic in the control,
+                // because `seekBack`/`seekForward` are what Media3's own seek
+                // commands act on — including the notification and any future
+                // media button — and a control that did its own subtraction
+                // would leave those two answering five seconds
+                // (developer.android.com/media/media3/exoplayer/listening-to-player-events).
+                .setSeekBackIncrementMs(SKIP_MS)
+                .setSeekForwardIncrementMs(SKIP_MS)
+                .build().apply {
                 setMediaItem(Media3Item.fromUri(url))
                 // A clip on a card loops: it is a moment rather than a
                 // programme, and the alternative is a card that goes
@@ -184,4 +195,7 @@ object VideoStage {
         holding = null
         hasRendered = false
     }
+
+    /** What one press of a skip is worth, on every clip this stage plays. */
+    const val SKIP_MS = 10_000L
 }
