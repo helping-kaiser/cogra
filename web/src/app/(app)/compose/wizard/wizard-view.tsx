@@ -586,7 +586,7 @@ export function ComposeWizard({
         // trailing information, which is all "Last step" is.
         action={
           state.step === "seal" ? (
-            <span className="text-body-small text-on-surface-variant">Last step</span>
+            <span className="text-label-small text-on-surface-variant">Last step</span>
           ) : undefined
         }
         testId="wizard-header"
@@ -617,7 +617,7 @@ export function ComposeWizard({
             data-testid="wizard-draft-fresh"
             className="m-0 flex-1 text-body-medium text-on-surface-variant"
           >
-            Or start fresh — pick one picture, several, or one video.
+            Or start fresh —
           </p>
         </div>
       )}
@@ -629,26 +629,40 @@ export function ComposeWizard({
       )}
 
       {state.step === "pick" && (
-        <PickStep
-          mode={state.mode}
-          words={state.words}
-          assets={state.assets}
-          previews={previews}
-          refusals={refusals}
-          // The refusals carry their own words now, so this is only the
-          // empty-body gate again.
-          error={gate.ok ? null : gate.reason}
-          blocked={!gate.ok}
-          onWords={(words) => dispatch({ type: "words", words })}
-          onMode={(mode) => dispatch({ type: "mode", mode })}
-          onPick={(files) => void takeFiles(files)}
-          onUnpick={(id) => dispatch({ type: "unpick", id })}
-          onDismissRefusal={(id) =>
-            setRefusals((current) => current.filter((refusal) => refusal.id !== id))
-          }
-          onManage={() => setManaging(true)}
-          onNext={() => dispatch({ type: "advance" })}
-        />
+        // CW-42 (ComposeDraft.jsx): while the draft offer shows, the pick
+        // step underneath is present, clearly not the subject, and the
+        // thing Discard hands the author back — dimmed to 55% AND inert,
+        // mirroring ComposeWizardScreen.kt's `DIMMED = 0.55f` gated by
+        // `draftOffer != null`. `inert` takes pointer, keyboard and AT
+        // reach away together; the opacity alone would still let a stray
+        // tab or click land on a grid the draft's own pair should decide.
+        <div
+          data-testid="wizard-pick-region"
+          className="flex flex-1 flex-col"
+          style={offered !== null ? { opacity: 0.55 } : undefined}
+          inert={offered !== null}
+        >
+          <PickStep
+            mode={state.mode}
+            words={state.words}
+            assets={state.assets}
+            previews={previews}
+            refusals={refusals}
+            // The refusals carry their own words now, so this is only the
+            // empty-body gate again.
+            error={gate.ok ? null : gate.reason}
+            blocked={!gate.ok}
+            onWords={(words) => dispatch({ type: "words", words })}
+            onMode={(mode) => dispatch({ type: "mode", mode })}
+            onPick={(files) => void takeFiles(files)}
+            onUnpick={(id) => dispatch({ type: "unpick", id })}
+            onDismissRefusal={(id) =>
+              setRefusals((current) => current.filter((refusal) => refusal.id !== id))
+            }
+            onManage={() => setManaging(true)}
+            onNext={() => dispatch({ type: "advance" })}
+          />
+        </div>
       )}
 
       {state.step === "crop" && (
@@ -725,6 +739,7 @@ export function ComposeWizard({
             dispatch({ type: "sensitiveReason", sensitiveReason })
           }
           onHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
+          onLicenseHelp={() => setHelp(HELP_TOPICS.license)}
           onSign={() => void submit()}
           onBack={() => dispatch({ type: "back" })}
           onRestoreKey={() => router.push("/restore")}

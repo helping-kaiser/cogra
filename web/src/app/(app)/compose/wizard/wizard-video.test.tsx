@@ -238,12 +238,31 @@ describe("picking a video", () => {
     await pickFiles([aPicture()]);
     await pickFiles([aVideo()]);
 
-    expect(await screen.findByTestId("wizard-refusals")).toHaveTextContent(
-      "A post carries pictures or one video, not both.",
-    );
+    const list = await screen.findByTestId("wizard-refusals");
+    expect(list).toHaveTextContent("A post carries pictures or one video, not both.");
     // And nothing was taken away from the author in the process: the tray is
     // still there with the picture in it.
     expect(screen.getByTestId("wizard-show-all")).toBeInTheDocument();
+    // CW-09: the refused tile exists (`RefusedFile`'s failed thumb), but a
+    // video gets no preview image — a browser has no cheap way to pull a
+    // poster frame from a refused clip's bytes.
+    expect(list.querySelector('[data-testid$="-thumb"]')).not.toBeNull();
+    expect(list.querySelector('[data-testid$="-thumb-image"]')).toBeNull();
+  });
+
+  // CW-09 (ComposePickedErrors): a refused picture's own bytes preview its
+  // tile, the same as an accepted one's — the board draws a real thumbnail,
+  // not a bare error line.
+  it("shows a real thumbnail for a refused picture", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    await pickFiles([aPicture()]);
+
+    const list = await screen.findByTestId("wizard-refusals");
+    expect(list).toHaveTextContent("A post carries pictures or one video, not both.");
+    const image = list.querySelector('[data-testid$="-thumb-image"]');
+    expect(image).not.toBeNull();
+    expect(image).toHaveAttribute("src", "blob:preview");
   });
 
   it("refuses a container the server would refuse, before it is uploaded", async () => {
@@ -269,6 +288,9 @@ describe("picking a video", () => {
 
     const list = await screen.findByTestId("wizard-refusals");
     expect(list.querySelectorAll("li")).toHaveLength(2);
+    // Neither file is a picture CoGra can preview, so both tiles are empty —
+    // the honest picture of a file nothing can read, not a broken image.
+    expect(list.querySelector('[data-testid$="-thumb-image"]')).toBeNull();
 
     // A second pick does not wipe the first refusal away.
     await pickFiles([aPicture()]);

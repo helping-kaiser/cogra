@@ -382,7 +382,12 @@ internal fun ReplyWizardScreen(
                 )
 
                 state.sheet == ReplySealSheet.License ->
-                    LicenseSheet(state.license, onLicenseChange, onCloseSheet)
+                    LicenseSheet(
+                        state.license,
+                        onLicenseChange,
+                        onCloseSheet,
+                        onHelp = { onOpenHelp(HelpTopic.License) },
+                    )
 
                 // The post seal's own sheet, not a comment-scale copy:
                 // its one line reads for both scales (ruling 42).

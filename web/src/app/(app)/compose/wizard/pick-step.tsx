@@ -20,6 +20,7 @@ import { useId, useRef, useState } from "react";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
 import { MediaThumb } from "@/lib/ui2/compose/media-thumb";
 import { UploadErrorLine } from "@/lib/ui2/compose/upload-notice";
+import { useObjectUrl } from "@/lib/compose/previews";
 import type { PickRefusal } from "@/lib/compose/pick";
 import type { PickedAsset } from "@/lib/compose/wizard";
 import { kindOf, POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
@@ -336,23 +337,23 @@ function MediaBody({
           )}
         </div>
 
-        {/* THE REFUSALS, one line each, each with its own way out — and the
-            tray above went on holding everything that was accepted. They stay
-            until dismissed: a file refused mid-batch is easy to miss, and a
-            banner that faded would leave an author wondering where their
-            picture went. No Retry: retrying cannot make a file smaller or a
-            format readable. */}
+        {/* THE REFUSALS, each a `RefusedFile` tile — the failed thumb beside
+            its own words — and the tray above went on holding everything
+            that was accepted. They stay until dismissed: a file refused
+            mid-batch is easy to miss, and a banner that faded would leave an
+            author wondering where their picture went. No Retry: retrying
+            cannot make a file smaller or a format readable
+            (ComposePickedErrors, padding "14px 24px 0", gap 10). */}
         {refusals.length > 0 && (
           <ul
             data-testid="wizard-refusals"
-            className="m-0 mt-3 flex list-none flex-col gap-1 p-0"
+            className="m-0 mt-3.5 flex list-none flex-col gap-2.5 p-0"
           >
             {refusals.map((refusal) => (
               <li key={refusal.id}>
-                <UploadErrorLine
-                  message={refusal.reason}
-                  onRemove={() => onDismissRefusal(refusal.id)}
-                  testId={`wizard-refusal-${refusal.id}`}
+                <RefusedFileRow
+                  refusal={refusal}
+                  onDismiss={() => onDismissRefusal(refusal.id)}
                 />
               </li>
             ))}
@@ -362,5 +363,38 @@ function MediaBody({
         <NextAction disabled={blocked} onNext={onNext} className="pt-4" />
       </div>
     </>
+  );
+}
+
+/**
+ * One refused file, as `RefusedFile` draws it (design/components/compose):
+ * the failed tile beside the words, `gap: var(--space-2)`.
+ *
+ * A picture's own bytes preview the tile. A video or anything else gets
+ * none — the same "omit `src` for a file nothing can read: an empty tile is
+ * the honest picture" rule the design system states, since a browser has no
+ * cheap way to pull a poster frame from a refused clip's bytes the way an
+ * `<img>` shows a picture's.
+ */
+function RefusedFileRow({
+  refusal,
+  onDismiss,
+}: {
+  refusal: PickRefusal;
+  onDismiss: () => void;
+}) {
+  const previewable = refusal.file.type.startsWith("image/");
+  const src = useObjectUrl(previewable ? refusal.file : null);
+  return (
+    <div className="flex items-center gap-2">
+      <MediaThumb src={src} failed testId={`wizard-refusal-${refusal.id}-thumb`} />
+      <div className="min-w-0 flex-1">
+        <UploadErrorLine
+          message={refusal.reason}
+          onRemove={onDismiss}
+          testId={`wizard-refusal-${refusal.id}`}
+        />
+      </div>
+    </div>
   );
 }

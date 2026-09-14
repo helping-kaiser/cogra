@@ -3,12 +3,15 @@ package com.cogra.feature.content.wizard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.filterToOne
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -19,6 +22,7 @@ import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.crypto.ActorKey
+import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftAsset
@@ -35,6 +39,10 @@ import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
+import com.cogra.feature.content.ReferenceRow
+import com.cogra.feature.content.ReferenceSectionState
+import com.cogra.feature.content.TagRow
+import com.cogra.feature.content.TagSectionState
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -464,6 +472,21 @@ class ComposeWizardScreenTest {
     }
 
     @Test
+    fun theCropStageCarriesTheQuietNoteExactlyOnce() {
+        // CW-11's audit citation ("CropStep.kt — no such note anywhere in
+        // the file") was true of this file's own text but not of what the
+        // stage renders: `MediaCrop` already defaults its `caption` param to
+        // this exact string (core/designsystem/.../media/MediaCrop.kt:62).
+        // This pins ComposeCrop's caption to appearing once, not zero times
+        // and not twice — a regression this lane's first draft introduced by
+        // adding a second, unaware of MediaCrop's own default.
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
+        compose
+            .onAllNodesWithText("One shape for the whole post. Drag to move, pinch to zoom.")
+            .assertCountEquals(1)
+    }
+
+    @Test
     fun theFilmstripAppearsOnlyWhenThereIsMoreThanOnePicture() {
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Crop)) }
         // Existence rather than display: whether the strip sits above
@@ -606,6 +629,75 @@ class ComposeWizardScreenTest {
         // says where the mark stands and opens the sheet that sets it.
         compose.setContent { Wizard(ComposeWizardState(body = "x", step = WizardStep.Seal)) }
         compose.onNodeWithTag("wizard_seal_sensitive").assertIsDisplayed()
+    }
+
+    // CW-22: the act block's label is "Tags", the board's word
+    // (_shared.jsx:839), not "Topics".
+    @Test
+    fun theSealsTagRowIsLabelledTagsNotTopics() {
+        val state = ComposeWizardState(
+            body = "x",
+            step = WizardStep.Seal,
+            tagSection = TagSectionState(tags = listOf(TagRow("fieldnotes"))),
+        )
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithText("Tags").assertExists()
+        compose.onNodeWithText("Topics").assertDoesNotExist()
+    }
+
+    // CW-21: the References act row reads the citation's own name and its
+    // stance, not a bare count.
+    @Test
+    fun theSealsReferencesRowNamesTheCitationAndItsStance() {
+        val target = ReferenceTargetView.Profile(id = "u1", handle = "ada", displayName = "Ada")
+        val state = ComposeWizardState(
+            body = "x",
+            step = WizardStep.Seal,
+            referenceSection = ReferenceSectionState(
+                references = listOf(ReferenceRow("u1", target, relevance = 0.1, support = 0.1)),
+            ),
+        )
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithText("@ada").assertExists()
+        compose.onNodeWithText("1 cited").assertDoesNotExist()
+    }
+
+    // CW-23: the stance row reads the fixed pair through the same
+    // face-plus-numbers readout the reply seal already uses for its own
+    // pick, not a raw "+0.10".
+    @Test
+    fun theSealsStanceRowReadsTheReadoutNotARawNumber() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, pDirected = 0.1)
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithTag("wizard_seal_stance").assertIsDisplayed()
+        compose.onNodeWithText("+0.10").assertDoesNotExist()
+    }
+
+    // CW-27: the license sheet's "?" opens the same house explanation the
+    // sensitive sheet's own "?" already opens through.
+    //
+    // Two "?"s coexist here — the header's own (`wizard_header_help`,
+    // "Signed actions") is unconditional on the seal step regardless of
+    // any sheet open over it, a pre-existing condition this finding did
+    // not touch — so the sheet's is picked out by excluding that tag.
+    @Test
+    fun theLicenseSheetsHelpOpensItsTopic() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, sheet = SealSheet.License)
+        compose.setContent { Wizard(state) }
+        compose.onAllNodesWithText("?").filterToOne(hasTestTag("wizard_header_help").not()).performClick()
+        assertThat(helps).containsExactly(HelpTopic.License)
+    }
+
+    // CW-29: the audit clause the board carries on both non-zero
+    // provenance degrees, and the credit degree's "everything else is
+    // free" clause.
+    @Test
+    fun theLicenseSheetsHintsCarryTheirAuditClause() {
+        val state = ComposeWizardState(body = "x", step = WizardStep.Seal, sheet = SealSheet.License)
+        compose.setContent { Wizard(state) }
+        compose.onNodeWithText("Commercial uses credit you; everything else is free.").assertExists()
+        compose.onNodeWithText("Commercial uses are logged publicly and stay open to audit.").assertExists()
+        compose.onNodeWithText("Every use is logged publicly and stays open to audit.").assertExists()
     }
 
     @Test
