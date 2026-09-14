@@ -189,13 +189,13 @@ workstream.
 **The would-like-to-have list** — picked up inside the MVP window
 only if the core lands early, in this order:
 
-1. Chats — slice 5's chat half. Not make-or-break for the first
+1. Push notifications — 3.1's second channel.
+2. Change histories — the staged workstream.
+3. Chats — slice 5's chat half. Not make-or-break for the first
    release, and not free to pull forward: the invite and membership
    flows are proposal-backed
    ([chats.md](../instances/chats.md#4-membership)), so chats carry
    that proposal machinery with them (ruled 2026-09-14).
-2. Push notifications — 3.1's second channel.
-3. Change histories — the staged workstream.
 4. The walk-the-graph frontend (unlikely; large).
 
 **Order** (dependency-driven, as always):
