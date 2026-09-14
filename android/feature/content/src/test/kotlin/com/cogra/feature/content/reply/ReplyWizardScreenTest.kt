@@ -1,20 +1,29 @@
 package com.cogra.feature.content.reply
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.cogra.core.designsystem.v2.compose.HelpTopic
+import com.cogra.domain.ReferenceContentKind
+import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.VideoFrame
+import com.cogra.feature.content.ReferenceRow
+import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
@@ -66,6 +75,8 @@ class ReplyWizardScreenTest {
     private val removals = mutableListOf<Int>()
     private val sheets = mutableListOf<ReplySealSheet>()
     private var closedSheets = 0
+    private var referenceRemovals = mutableListOf<String>()
+    private var referenceTunings = mutableListOf<String>()
     private val helps = mutableListOf<HelpTopic>()
     private val stances = mutableListOf<Pair<Double, Double>>()
     private val marks = mutableListOf<Boolean>()
@@ -110,8 +121,8 @@ class ReplyWizardScreenTest {
             onCloseFinder = {},
             onFinderQueryChange = {},
             onPickReference = {},
-            onRemoveReference = {},
-            onTuneReference = {},
+            onRemoveReference = { referenceRemovals += it },
+            onTuneReference = { referenceTunings += it },
             onDoneTuningReference = {},
             onReferenceRelevanceChange = { _, _ -> },
             onReferenceSupportChange = { _, _ -> },
@@ -395,6 +406,89 @@ class ReplyWizardScreenTest {
             .containsExactly(ReplySealSheet.Topics, ReplySealSheet.References)
             .inOrder()
     }
+
+    // The N-cited round (jakob's rulings 2026-09-14, design backlog item 70).
+    // The rule is about citations, not about which composer staged them: one
+    // reads back as itself, two or more count behind a door — and the add-row
+    // rides along in every state, because a comment's seal IS its details
+    // stage (`ReplyCitedMany.jsx:12-16`).
+    @Test
+    fun theSealReadsOneStagedCitationBackAsItselfAndKeepsTheAddRow() {
+        compose.setContent { Wizard(sealWithCitations(1)) }
+
+        compose.onNodeWithTag("reply_seal_cited_one").assertExists()
+        compose.onNodeWithText("Reference").assertExists()
+        compose.onNodeWithText("1 cited").assertDoesNotExist()
+        compose.onNodeWithTag("reply_seal_cite").assertExists()
+
+        compose.onNodeWithTag("reply_seal_cited_remove").performClick()
+        assertThat(referenceRemovals).containsExactly("p-0")
+    }
+
+    @Test
+    fun theSealCountsFromTwoBehindADoorAndStillOffersAnother() {
+        compose.setContent { Wizard(sealWithCitations(2)) }
+
+        val door = compose.onNodeWithTag("reply_seal_cited")
+        door.assertExists()
+        compose.onNodeWithText("2 cited").assertExists()
+        assertThat(door.fetchSemanticsNode().config[SemanticsActions.OnClick].label)
+            .isEqualTo("Manage the citations")
+        compose.onNodeWithTag("reply_seal_cite").assertExists()
+
+        door.performClick()
+        assertThat(sheets).containsExactly(ReplySealSheet.Cited)
+    }
+
+    /** The post seal's own sheet, opened from this seal's door. */
+    @Test
+    fun theCitedDoorOpensTheOneSheetBothSealsOpen() {
+        compose.setContent { Wizard(sealWithCitations(2).copy(sheet = ReplySealSheet.Cited)) }
+
+        compose.onNodeWithTag("reply_cited_sheet").assertExists()
+        compose.onNodeWithText("Cited · 2").assertExists()
+        // The SHEET adds nothing. The seal under it keeps its own add-row —
+        // that offer is the stage's, not the manager's — so the assertion is
+        // scoped to what the door opened.
+        compose.onNode(
+            hasText("+ Cite something", substring = true) and
+                hasAnyAncestor(hasTestTag("reply_cited_sheet")),
+        ).assertDoesNotExist()
+
+        compose.onNodeWithTag("reply_cited_sheet_row_1_remove").performClick()
+        assertThat(referenceRemovals).containsExactly("p-1")
+    }
+
+    // Item 73 (jakob's ruling 2026-09-14): the digit is drawn, the count is
+    // spoken whole, and the noun is the row's own — the References row counts
+    // CITATIONS, the Comment row counts comments.
+    @Test
+    fun theActsRowsShowTheCountBareAndSpeakItWhole() {
+        compose.setContent { Wizard(sealWithCitations(2)) }
+
+        compose.onNodeWithText("2").assertContentDescriptionContains("2 citations")
+        compose.onNodeWithText("1").assertContentDescriptionContains("1 comment")
+    }
+
+    private fun sealWithCitations(count: Int) = sealWithWords().copy(
+        referenceSection = ReferenceSectionState(
+            references = (0 until count).map { index ->
+                ReferenceRow(
+                    targetId = "p-$index",
+                    target = ReferenceTargetView.Content(
+                        kind = ReferenceContentKind.POST,
+                        id = "p-$index",
+                        title = "Tide tables $index",
+                        snippet = null,
+                        authorHandle = "juno",
+                        authorDisplayName = null,
+                    ),
+                    relevance = 0.1,
+                    support = 0.1,
+                )
+            },
+        ),
+    )
 
     /** `ReplySeal` 9 and 10. */
     @Test

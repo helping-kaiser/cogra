@@ -45,6 +45,7 @@ import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.media.MAX_ALT_TEXT_CHARS
 import com.cogra.domain.media.isAltTextTooLong
+import com.cogra.feature.content.CitedSheet
 import com.cogra.feature.content.R
 import com.cogra.feature.content.ReferenceEntry
 import com.cogra.feature.content.TopicEntry
@@ -296,6 +297,7 @@ internal fun ReplyWizardScreen(
                                 onOpenSheet = onOpenSheet,
                                 onAddTopic = { onOpenSheet(ReplySealSheet.Topics) },
                                 onCite = { onOpenSheet(ReplySealSheet.References) },
+                                onRemoveReference = onRemoveReference,
                             )
                         }
                         WizardFooter {
@@ -448,6 +450,20 @@ internal fun ReplyWizardScreen(
                         )
                         CograButton("Done", onCloseSheet, testTag = "reply_references_done")
                     }
+
+                // `ComposeCitations` — the post seal's own sheet, opened from
+                // this seal's "N cited" door. One surface, drawn once,
+                // wherever a staged collection is managed.
+                state.sheet == ReplySealSheet.Cited -> CitedSheet(
+                    section = state.referenceSection,
+                    onRemoveReference = onRemoveReference,
+                    onTuneReference = onTuneReference,
+                    onDoneTuningReference = onDoneTuningReference,
+                    onReferenceRelevanceChange = onReferenceRelevanceChange,
+                    onReferenceSupportChange = onReferenceSupportChange,
+                    onDone = onCloseSheet,
+                    testTag = "reply_cited_sheet",
+                )
 
                 else -> Unit
             }

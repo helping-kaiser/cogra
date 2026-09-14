@@ -1,6 +1,7 @@
 package com.cogra.feature.content.reply
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,9 +9,14 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -42,6 +49,9 @@ import com.cogra.core.designsystem.v2.atom.SummaryRow
 import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.compose.UploadStatusLine
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.feature.content.ReferenceRow
+import com.cogra.feature.content.referenceLabel
+import com.cogra.feature.content.wizard.actsCountReading
 import com.cogra.feature.content.wizard.sealLabel
 
 /**
@@ -63,6 +73,7 @@ internal fun ColumnScope.ReplySealStepBody(
     onOpenSheet: (ReplySealSheet) -> Unit,
     onAddTopic: () -> Unit,
     onCite: () -> Unit,
+    onRemoveReference: (String) -> Unit,
 ) {
     Text(
         text = "${state.sealSummary}.",
@@ -71,7 +82,13 @@ internal fun ColumnScope.ReplySealStepBody(
         modifier = Modifier.testTag("reply_seal_summary"),
     )
 
-    ReplyActBlock(state = state, onAddTopic = onAddTopic, onCite = onCite)
+    ReplyActBlock(
+        state = state,
+        onAddTopic = onAddTopic,
+        onCite = onCite,
+        onOpenCited = { onOpenSheet(ReplySealSheet.Cited) },
+        onRemoveReference = onRemoveReference,
+    )
 
     Column(Modifier.fillMaxWidth()) {
         // "Toward what you answer" — a reply's parameters are a stance
@@ -168,6 +185,8 @@ private fun ReplyActBlock(
     state: ReplyWizardState,
     onAddTopic: () -> Unit,
     onCite: () -> Unit,
+    onOpenCited: () -> Unit,
+    onRemoveReference: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -180,7 +199,8 @@ private fun ReplyActBlock(
         ActRow(
             kind = "Comment",
             detail = state.target?.actLabel.orEmpty(),
-            trailing = "1",
+            count = 1,
+            countNoun = "comment",
         )
         Hairline()
         val tags = state.tagSection.tags
@@ -194,25 +214,17 @@ private fun ReplyActBlock(
             ActRow(
                 kind = "Topics",
                 detail = tags.joinToString(" ") { "#${it.name}" },
-                trailing = "${tags.size}",
+                count = tags.size,
+                countNoun = "tag",
             )
         }
         Hairline()
-        val references = state.referenceSection.references
-        if (references.isEmpty()) {
-            OfferRow(
-                text = "+ Cite something — a post, a person, a comment, an item",
-                onClick = onCite,
-                testTag = "reply_seal_cite",
-            )
-        } else {
-            ActRow(
-                kind = "References",
-                detail = "${references.size} cited",
-                trailing = "${references.size}",
-            )
-        }
-        Hairline()
+        CitationRows(
+            references = state.referenceSection.references,
+            onCite = onCite,
+            onOpenCited = onOpenCited,
+            onRemoveReference = onRemoveReference,
+        )
         val acts = state.signedActionCount
         SummaryRow(
             headline = if (acts == 1) "1 signed action" else "$acts signed actions",
@@ -226,7 +238,7 @@ private fun ReplyActBlock(
 }
 
 @Composable
-private fun ActRow(kind: String, detail: String, trailing: String) {
+private fun ActRow(kind: String, detail: String, count: Int, countNoun: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -248,11 +260,153 @@ private fun ActRow(kind: String, detail: String, trailing: String) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        Text(
-            text = trailing,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        ActsCount(count = count, noun = countNoun)
+    }
+}
+
+/**
+ * The bare digit, spoken whole (jakob's ruling 2026-09-14, design backlog
+ * item 73; `ActsCard.jsx:27-39`). An ear given the number alone gets nothing,
+ * so the digit's node answers with the reading instead — and the noun is the
+ * row's own, never its label's. A count already made of words ("1 more") keeps
+ * them and says itself.
+ */
+@Composable
+private fun ActsCount(count: Int, noun: String) {
+    val spoken = actsCountReading(count, noun)
+    Text(
+        text = "$count",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.semantics { contentDescription = spoken },
+    )
+}
+
+/**
+ * THE SAME THREE READINGS THE POST'S SEAL TAKES (jakob's ruling 2026-09-14,
+ * design backlog item 70): the rule is about citations, not about which
+ * composer staged them. One reads back as itself, two or more read back as
+ * their count behind a door — and the add-row rides along in every state,
+ * because a comment's seal IS its details stage and counting the citations
+ * takes away no way to add another (`ReplyCitedMany.jsx:12-16`,
+ * `_shared.jsx:1076-1099`).
+ */
+@Composable
+private fun CitationRows(
+    references: List<ReferenceRow>,
+    onCite: () -> Unit,
+    onOpenCited: () -> Unit,
+    onRemoveReference: (String) -> Unit,
+) {
+    if (references.size == 1) {
+        ReplyCitedRow(
+            // Singular: the label names the EDGE staged rather than the block
+            // it sits in, and one edge is a reference (`_shared.jsx:1046-1052`).
+            name = referenceLabel(references.first().target),
+            onRepair = onCite,
+            onRemove = { onRemoveReference(references.first().targetId) },
         )
+        Hairline()
+    } else if (references.size > 1) {
+        CitedDoorRow(count = references.size, onOpen = onOpenCited, testTag = "reply_seal_cited")
+        Hairline()
+    }
+    // "+ Cite something", the short form: the hand board spelled the kinds out
+    // while the staged twin said the short form, so one surface said two things
+    // depending on whether a reference had landed. The picker's own screen is
+    // where the kinds are enumerated (`ReplySeal.jsx:14-17`).
+    OfferRow(text = "+ Cite something", onClick = onCite, testTag = "reply_seal_cite")
+    Hairline()
+}
+
+/**
+ * The reply's ONE staged citation, read back as itself: the name that opens
+ * the citation's pair, and the × that drops it, each naming the citation it
+ * acts on (`StagedReference`'s rule, jakob 2026-09-10).
+ */
+@Composable
+private fun ReplyCitedRow(name: String, onRepair: () -> Unit, onRemove: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Space.x1)
+            .testTag("reply_seal_cited_one"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        Text(
+            text = "Reference",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(ACT_LABEL_WIDTH),
+        )
+        Text(
+            text = name,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(min = 48.dp)
+                .wrapContentHeight()
+                .clickable(
+                    role = Role.Button,
+                    onClickLabel = "$name — set how it relates",
+                    onClick = onRepair,
+                )
+                .testTag("reply_seal_cited_repair"),
+        )
+        Icon(
+            imageVector = Icons.Filled.Close,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .heightIn(min = 48.dp)
+                .clickable(role = Role.Button, onClickLabel = "Remove $name", onClick = onRemove)
+                .testTag("reply_seal_cited_remove"),
+        )
+        ActsCount(count = 1, noun = "citation")
+    }
+}
+
+/**
+ * The References row once it COUNTS: "N cited", the bare count, and the whole
+ * row as the control — the post seal's own door, said on this seal, opening
+ * the one sheet both seals open (`ReplyCitedMany.jsx:17-20`). No chevron and
+ * no trailing word, so the label on the gesture is what tells a listener the
+ * line is a door ("Manage the citations", copy-voice).
+ */
+@Composable
+private fun CitedDoorRow(count: Int, onOpen: () -> Unit, testTag: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                role = Role.Button,
+                onClickLabel = "Manage the citations",
+                onClick = onOpen,
+            )
+            .padding(vertical = Space.x2)
+            .testTag(testTag),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        Text(
+            text = "References",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.width(ACT_LABEL_WIDTH),
+        )
+        Text(
+            text = "$count cited",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        ActsCount(count = count, noun = "citation")
     }
 }
 
