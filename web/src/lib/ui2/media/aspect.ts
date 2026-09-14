@@ -73,6 +73,7 @@ export function parseAspectRatio(text: string | null | undefined): number | null
  * media law). `sourceRatio` stays in the signature so call sites need no
  * change; the fit itself is unconditional now.
  */
-export function fitFor(_sourceRatio: number | null | undefined): "contain" | "cover" {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for a stable signature, per the doc comment above.
+export function fitFor(sourceRatio: number | null | undefined): "contain" | "cover" {
   return "cover";
 }
