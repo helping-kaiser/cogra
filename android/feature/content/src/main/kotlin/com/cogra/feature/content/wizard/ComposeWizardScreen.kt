@@ -465,6 +465,7 @@ internal fun ComposeWizardScreen(
                     onValueChange = { onAltTextChange(describing.uri, it) },
                     onDone = onCloseSheet,
                     onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
+                    video = describing.isVideo,
                     testTag = "wizard_describe_sheet",
                 )
 

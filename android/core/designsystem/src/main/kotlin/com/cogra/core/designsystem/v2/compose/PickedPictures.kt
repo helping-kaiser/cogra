@@ -132,6 +132,12 @@ enum class DescribeSubject(val label: String) {
  * Alt text is authored, optional, never invented; a described set is a
  * choice made visible, not a chore bar. It sits **under** the row, not
  * inside it.
+ *
+ * **THE REASON RIDES UNDER THE ROW** (jakob 2026-09-03), permanently: an
+ * optional field with no stated purpose reads as a chore, and the one thing
+ * that makes it worth writing — someone is listening to it — was behind a
+ * `?` nobody opens. Same words as the sheet's own sub-line, so the row and
+ * the sheet it opens say one thing.
  */
 @Composable
 fun DescribeCounter(
@@ -142,23 +148,32 @@ fun DescribeCounter(
     subject: DescribeSubject = DescribeSubject.Pictures,
     testTag: String? = null,
 ) {
-    Row(
+    Column(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Space.x1),
+        verticalArrangement = Arrangement.spacedBy(Space.x1),
     ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Space.x1),
+        ) {
+            Text(
+                text = subject.label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .minimumInteractiveComponentSize()
+                    .defaultMinSize(minHeight = 0.dp)
+                    .clickable(role = Role.Button, onClick = onDescribe)
+                    .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            )
+            Text(
+                text = "· $described of $total described",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Text(
-            text = subject.label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .minimumInteractiveComponentSize()
-                .defaultMinSize(minHeight = 0.dp)
-                .clickable(role = Role.Button, onClick = onDescribe)
-                .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
-        )
-        Text(
-            text = "· $described of $total described",
+            text = "Read aloud to people who can't see it.",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
