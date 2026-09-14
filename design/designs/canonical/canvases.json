@@ -1,0 +1,28 @@
+{
+  "canvases": [
+    {
+      "id": "feed",
+      "title": "CoGra · Feed & comments",
+      "pages": ["feed", "comments"],
+      "launch": "feed"
+    },
+    {
+      "id": "profile",
+      "title": "CoGra · Profile & settings",
+      "pages": ["profile"],
+      "launch": "profile"
+    },
+    {
+      "id": "compose",
+      "title": "CoGra · Compose & media",
+      "pages": ["compose", "media"],
+      "launch": "compose"
+    },
+    {
+      "id": "entry",
+      "title": "CoGra · Entry, money & maps",
+      "pages": ["overview", "entry", "money", "patterns"],
+      "launch": "overview"
+    }
+  ]
+}
