@@ -2203,9 +2203,13 @@ item 33, jakob's rulings the same day).
   through is not full screen. Nothing is cut there —
   it is the surface every crop in the product is measured against — a
   picture pinch-zooms and **the gallery's swipe and its dots** carry
-  over, dots only, no arrows and no "n of m" (the pager ruling holds
-  here too: arrows would be a second vocabulary for a gesture the
-  reader already has). And a clip
+  over, dots only, no arrows (the pager ruling holds here too: arrows
+  would be a second vocabulary for a gesture the reader already has),
+  the count spoken in the row's accessible name rather than drawn.
+  **The row is windowed at seven**: past seven pictures it slides
+  centred on where the reader is, and the edge dot on the side the set
+  keeps going is drawn smaller — a marker with a ceiling, where a row
+  that grew with the set would be a ruler to count. And a clip
   whose shape is not the device's keeps its shape and takes the ground
   beside it rather than being cropped to the edges. **No acts** on the
   viewer, and **the description is not shown**: alt text is read aloud
