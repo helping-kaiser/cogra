@@ -54,6 +54,8 @@ const claimedBy = new Map();
 for (const c of canvases) {
   if (!c.id || !c.title || !Array.isArray(c.pages) || !c.pages.length || !c.launch)
     fails.push(`canvases.json: ${c.id ?? "(unnamed)"} needs id, title, a non-empty pages list and launch`);
+  if (c.title && /[<>&"\\]/.test(c.title))
+    fails.push(`canvases.json: ${c.id}'s title carries one of < > & " backslash, which the canvas editor refuses at seed time`);
   if (seenId.has(c.id)) fails.push(`canvases.json: ${c.id} is declared twice`);
   seenId.add(c.id);
   for (const p of c.pages ?? []) {
