@@ -29,6 +29,15 @@ import { formatStancePair, formatTagPair, nearestAnchor, nearestTagAnchor, SR_ON
    a plain string the row prints as given — an age, a date — and geek mode
    never touches it, because an age is not a signal number.
 
+   THE FAMILY IS THE ACT'S, NOT THE KIND'S (the topic round, 2026-09-14). The
+   `kind` answers it almost everywhere, because almost everywhere a topic row
+   carries the TAG a reader signed on some content. On *Your topics* the same
+   topic row carries an AFFINITY — the viewer's own stance toward the Type,
+   both axes signed, read through the twenty faces. Two different records point
+   at the same kind of node, so the kind cannot be the whole answer: `pairFamily`
+   names it outright where it differs, and the kind still answers by default, so
+   every row already drawn reads exactly as it did.
+
    THE PAIRS ARE THE GEEK READING (readme §13). Every pair is drawn as its
    nearest anchor's glyph — the thirteen objects for a topic, the twenty faces
    for a citation — with the digits in a `cg-exact` span that paints only when
@@ -86,8 +95,8 @@ export function NodeMark({ kind, name, src }) {
    indirect hit is indistinguishable from a mishit. The row's right edge is one
    of three: `pair` (the signed pair, as numbers), `rank` (the viewer-relative
    rank), or `value` (a plain string — the age past the seam). */
-export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank, trailing, pending = false, onOpen }) {
-  const tagFamily = kind === "topic";
+export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, value, rank, trailing, pending = false, onOpen }) {
+  const tagFamily = pairFamily === undefined ? kind === "topic" : pairFamily === "tag";
   const exact = pair ? (tagFamily ? formatTagPair(pair) : formatStancePair(pair)) : null;
   /* EVERY PAIR HAS A FACE TO FALL BACK TO (jakob's ruling, the geek round —
      backlog item 53.3). A topic reads the thirteen objects; a person, post or
@@ -99,8 +108,13 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank,
      THE WORD COMES WITH THE TAG AND NOT WITH THE CITATION (`RefPair`'s rule).
      A tag anchor's word names a degree of aboutness and is true of the row; a
      stance anchor's names a feeling about a stance, and a citation is not one
-     — so the spoken reading there is the pair itself, exactly. */
+     — so the spoken reading there is the pair itself, exactly. BY THAT SAME
+     TEST an Affinity takes its word: it IS a stance, the reader's own, toward
+     the Type the row names, so the twenty faces' word is true of it. The
+     citation is the one family the word is withheld from, and it is withheld
+     for what it is rather than for which table it reads. */
   const anchor = pair ? (tagFamily ? nearestTagAnchor(pair) : nearestAnchor(pair)) : null;
+  const spokenWord = tagFamily || pairFamily === "stance";
   return (
     <button
       type="button"
@@ -198,7 +212,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, value, rank,
                   {anchor && <span style={{ fontSize: "var(--text-body-medium)", lineHeight: 1 }}>{anchor.emoji}</span>}
                   <span className="cg-exact">{exact}</span>
                 </span>
-                <span style={SR_ONLY}>{tagFamily && anchor ? `${anchor.label}, ${exact}` : exact}</span>
+                <span style={SR_ONLY}>{spokenWord && anchor ? `${anchor.label}, ${exact}` : exact}</span>
               </>
             )}
             {pending && <PendingMarker inline />}

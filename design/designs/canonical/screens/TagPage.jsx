@@ -1,7 +1,8 @@
 /* THE TAG PAGE (readme §13, the tag round; ruled 2026-09-01, drawn
-   2026-09-09). What every `#chip` on every surface opens — the one destination
-   a tag has. Both apps have shipped it since slice 2.3 and the canvas had
-   never drawn it, which is the debt this board pays.
+   2026-09-09; the stance row added by the topic round, 2026-09-14). What every
+   `#chip` on every surface opens — the one destination a tag has. Both apps
+   have shipped it since slice 2.3 and the canvas had never drawn it, which is
+   the debt this board pays.
 
    IT IS A SUBPAGE OF SEARCH, so the arrow is a LINK back to Explore rather
    than history, and there is NO BOTTOM BAR — the settings round's rule for a
@@ -11,14 +12,21 @@
    in this system (`TopicChip`), and a page titled `saltmaps` would be the one
    place it is not.
 
-   THE HEADER CARRIES NO FOLLOW CONTROL (jakob's review, 2026-09-09). Following
-   a tag is real — an **Affinity** record, Actor → Type, `viewerStance` its
-   read — but a stance anchor on the header's trailing edge read as a stance
-   readout for the post the reader arrived from, not as a gesture toward the
-   tag. Rather than draw a control that misreads, the page draws none: the
-   follow gesture is owed its surface in slice 3's round, which is also when
-   the roadmap lets it ship at all ("Topic follow is backend-accepted but
-   client-hidden until the topic feed lands").
+   THE HEADER STILL CARRIES NO CONTROL, AND THE ROW BELOW IT DOES (jakob's
+   review 2026-09-09, closed by the topic round 2026-09-14). A stance anchor on
+   the header's trailing edge read as a stance readout for the post the reader
+   arrived from; a row of its own, under the title and above anything belonging
+   to a post, cannot. THE GESTURE IS AN AFFINITY — Actor → Type, both
+   parameters signed, bundling NET, and a walk-back to nothing is the same
+   priced severance every other stance's is. There is no toggle and no one-tap
+   follow, because this product has no such gesture to offer: taking a position
+   on a topic is taking a position, at the same price and through the same
+   ceremony. The anatomy lives on `TagPageBody`; this board is the page with
+   nothing held, and `TagPageHeld` the page with something.
+
+   THE WORD "FOLLOW" IS NOT ON THE SCREEN, and will not be (copy-voice's ban,
+   extended to topics 2026-09-14). The list of what a reader holds is "Your
+   topics", in Explore.
 
    NO ORDER CONTROL, AND THAT IS THE CONTRACT (jakob's ruling). `taggedContent`
    is `(limit: Int)` returning a plain list, newest claim first, and the schema
@@ -73,34 +81,8 @@
    "post this tag" button is a compose entrance nothing has ruled, so it is not
    invented here. */
 
-export const FRAME = { width: 390, height: 1280 };
+export const FRAME = { width: 390, height: 1344 };
 
 export function Screen() {
-  return (
-    <>
-      <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
-        <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
-          <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
-        </TaggedRow>
-
-        <TaggedRow pair={{ pDirected: 0.55, pInterest: 1 }}>
-          <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
-        </TaggedRow>
-
-        <TaggedRow pair={{ pDirected: 0.4, pInterest: 0.9 }}>
-          <CommentCard
-            attach
-            author={ADA}
-            content="Low tide is kinder to the rubbings than noon ever was."
-            timestamp="4d"
-            license={{ attribution: 0, provenance: 0 }}
-            bundle={mkBundle(0.1, 0.1)}
-            target="“Salt maps of the coast road” — @sol"
-            onOpenTarget={() => {}}
-          />
-        </TaggedRow>
-      </div>
-    </>
-  );
+  return <TagPageBody />;
 }

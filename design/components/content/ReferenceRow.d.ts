@@ -56,6 +56,14 @@ export interface ReferenceRowProps {
    */
   pair?: StancePair;
   /**
+   * Which record family `pair` belongs to, where the `kind` does not answer it.
+   * A topic row usually carries a TAG (`"tag"`, the default for that kind); on
+   * *Your topics* it carries the viewer's own AFFINITY toward the Type, both
+   * axes signed and read through the twenty faces, so that list passes
+   * `"stance"`. Omitted, the kind decides and nothing drawn changes.
+   */
+  pairFamily?: "tag" | "stance";
+  /**
    * A viewer-relative rank: the score's graph glyph, with the number beside it
    * in geek mode. Wins over `pair` and `value`.
    */

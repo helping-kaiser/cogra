@@ -32,6 +32,12 @@ export interface ContentRowProps {
   name?: string;
   /** …else a stance face, for a record that is a stance… */
   face?: { pDirected: number; pInterest: number };
+  /**
+   * …else the mark a kind with no icon wears — a topic's `#`, a text post's
+   * `T`. `NodeMark`'s own rule, read by a second row master: no icon set has a
+   * glyph for either and §5 forbids drawing one.
+   */
+  letter?: string;
   /** …else a glyph (defaults to the wallet glyph). */
   glyph?: string;
   /** Draws the direction badge on the disc; `in` rotates the arrow. */
