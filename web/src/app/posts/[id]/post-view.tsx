@@ -87,6 +87,7 @@ import {
 import { runUpload } from "@/lib/compose/uploads";
 import { usePreviewUrls } from "@/lib/compose/previews";
 import { sensitiveReasonProblem } from "@/lib/compose/wizard";
+import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
@@ -203,6 +204,10 @@ export function PostView({
   // words, the pictures, the topics, the citations and the stance all live in
   // the wizard's own machine, and nothing of a discarded comment survives here.
   const [replying, setReplying] = useState<ReplyTarget | null>(null);
+  // THE THREAD IS A SHEET (`_shared.jsx:1247-1257`), raised by the affordance
+  // row's comment count and dropped like any other drawer. The post keeps its
+  // place underneath: nothing about the page scrolls when the sheet opens.
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentSigned, setCommentSigned] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): one
@@ -548,7 +553,9 @@ export function PostView({
     const done = await signAll(writes);
     setEditSubmitting(false);
     if (done) {
-      setEditing(null);
+      // The edit settles IN THE THREAD (`CommentEdit` 12 → the thread), so
+      // the sheet comes back up with it and the snackbar reads over it.
+      backToThread();
       setCommentSigned(true);
       refresh();
     } else {
@@ -572,6 +579,27 @@ export function PostView({
   const openLicense = (license: License) => {
     setLicenseShown(license);
     setLicenseOpen(true);
+  };
+
+  /**
+   * THE THREAD YIELDS TO THE COMPOSER, AND TAKES ITS PLACE BACK (ReplyEntry
+   * via=5 and via=7 advance to `ReplyCompose`; every way out of it comes back
+   * to the thread). The wizard and the editor are full-focus surfaces over
+   * this page, so a sheet left open behind one would be a second surface
+   * claiming the screen — and an open sheet is a modal dialog, which would
+   * leave the wizard beneath it inert.
+   */
+  const openComposer = (target: ReplyTarget) => {
+    setCommentsOpen(false);
+    setEditing(null);
+    setReplying(target);
+  };
+
+  /** Back to the thread, which is where both composers' exits land. */
+  const backToThread = () => {
+    setReplying(null);
+    setEditing(null);
+    setCommentsOpen(true);
   };
 
   /**
@@ -866,8 +894,7 @@ export function PostView({
                       // ReplyEntry via=5: the composer, PRE-TARGETED at this
                       // comment. The other door — "Add a comment" at the foot
                       // of the thread — pins the post instead.
-                      setReplying(commentTarget(comment));
-                      setEditing(null);
+                      openComposer(commentTarget(comment));
                     }}
                   >
                     Reply
@@ -882,6 +909,9 @@ export function PostView({
                       // The editor opens on what the comment actually
                       // carries — text and claims alike — so an untouched
                       // editor stages nothing (F10).
+                      // The editor is the composer's twin surface, so the
+                      // thread yields to it the same way (see `openComposer`).
+                      setCommentsOpen(false);
                       const loadedDraft = comment.content.value ?? "";
                       const loaded = tagDrafts(comment.topics);
                       // A claim CoGra cannot type has no L2 id to name
@@ -1013,6 +1043,11 @@ export function PostView({
           Loading…
         </p>
       )}
+      {/* A failed whole-post refresh, where the failed read was asked for —
+          the page, not the thread, which is a sheet the reader may never open.
+          A failed comments page surfaces at the load-more slot inside the
+          sheet instead (web.md "Design guidelines", the Android twin). */}
+      {transportFault === "refresh" && <TransportError testId="post-thread-transport-error" />}
       {/* THE POST IS A CARD HERE TOO (`PostCard.jsx:363` — `<Card>` for every
           variant, `detail` included). It was the page ground while its own
           comments sat on cards, which is the inverse of the board's emphasis.
@@ -1027,68 +1062,107 @@ export function PostView({
           authorTestId="post-author"
           stanceTestId="post-stance"
           comments={post.comments.totalCount}
-          onOpenComments={() => {
-            // The ruled destination is the comments sheet, which is not drawn
-            // here yet — so the count takes the reader to the thread where it
-            // currently lives, at the foot of this page.
-            document.getElementById("post-comments")?.scrollIntoView?.({ block: "start" });
-          }}
+          // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
+          // edge advances to `ReplyEntry`), here as on every other board that
+          // carries it.
+          onOpenComments={() => setCommentsOpen(true)}
           onLinkCopied={() => setLinkCopied(true)}
         />
       </div>
-      <hr className="border-outline-variant" />
-      <h2 className="text-title-medium" id="post-comments">
-        Comments
-      </h2>
-      {/* A failed whole-post refresh; a failed comments page surfaces
-          at the load-more slot below instead (web.md "Design
-          guidelines", the Android twin). */}
-      {transportFault === "refresh" && <TransportError testId="post-thread-transport-error" />}
-      {comments.length === 0 && <p data-testid="post-no-comments">No comments yet.</p>}
-      <ul className="flex flex-col gap-3">
-        {comments.map((comment) => renderComment(comment, 0))}
-      </ul>
-      {hasMore &&
-        (transportFault === "append" ? (
-          <div className="flex items-center gap-3">
-            <TransportError
-              testId="post-more-comments-error"
-              message="Can't reach the server — more comments can't load right now."
+      {/* THE THREAD IS A SHEET OVER THE POST (`_shared.jsx:1247-1257`): the
+          title, the list of comments, and the entry row pinned at its foot.
+          The post keeps its place behind it — the sheet is a drawer over the
+          page, so nothing here scrolls when it opens or drops. */}
+      <BottomSheet
+        open={commentsOpen}
+        onClose={() => setCommentsOpen(false)}
+        title="Comments"
+        height="full"
+        testId="comments-sheet"
+        foot={
+          <>
+            {/* A completed action is confirmed by a SNACKBAR on both platforms
+                (design.md §6). It rides the sheet the way a stance control's
+                rides its own card: the thread is what the comment landed in,
+                and a snackbar on the page under an open sheet would be behind
+                it. */}
+            <Snackbar
+              testId="comment-signed"
+              message={commentSigned ? "Signed — it's in the thread now, still settling." : null}
+              onDismiss={dismissCommentSigned}
             />
-            <Button
-              testId="post-more-comments-retry"
-              variant="outline"
-              size="sm"
-              onClick={() => void onLoadMore()}
-              disabled={loadingMore}
-            >
-              Retry
-            </Button>
-          </div>
-        ) : (
-          <Button
-            testId="post-more-comments"
-            variant="outline"
-            onClick={() => void onLoadMore()}
-            disabled={loadingMore}
-          >
-            Load more
-          </Button>
-        ))}
-      {phase === "signedOut" && (
-        <Link
-          href="/login"
-          data-testid="comment-signin"
-          className="self-start text-body-medium text-on-surface-variant underline"
-        >
-          Sign in or join to comment
-        </Link>
-      )}
-      {/* A completed action is confirmed by a SNACKBAR on both platforms
-          (design.md §6, and readme §13's audit answers name the coloured line
-          this replaced as the deviation). The region is mounted whether or not
-          it has anything to say, so assistive technology is already watching
-          it when the confirmation arrives. */}
+            {/* ReplyEntry's entry row, pinned at the foot of the sheet: the
+                door that pins the POST as what the comment answers. The board
+                draws the viewer's own avatar beside it; drawing one here would
+                mean a profile read this page does not otherwise make, which is
+                exactly the cost the read restructure is removing, so the row is
+                the field alone. */}
+            {phase === "signedIn" && (
+              <div
+                data-testid="comment-entry"
+                className="flex items-center gap-3 border-t border-outline-variant px-4 pt-3"
+              >
+                <button
+                  type="button"
+                  data-testid="comment-add"
+                  onClick={() => openComposer(postTarget(post, postId))}
+                  className="cg-state cg-focus min-h-14 flex-1 rounded-extra-small border border-outline px-3 text-left text-body-large text-on-surface-variant"
+                >
+                  Add a comment
+                </button>
+              </div>
+            )}
+            {/* The write affordance swaps, never merely disables: a member gets
+                the composer's door, an anonymous reader gets the join entry. */}
+            {phase === "signedOut" && (
+              <Link
+                href="/login"
+                data-testid="comment-signin"
+                className="block border-t border-outline-variant px-4 pt-3 text-body-medium text-on-surface-variant underline"
+              >
+                Sign in or join to comment
+              </Link>
+            )}
+          </>
+        }
+      >
+        {/* The list's own gutter is 16px, not the sheet's 24
+            (`_shared.jsx:1251`): comment cards stand wider in the sheet than
+            rows of text would. */}
+        <div className="-mx-2 flex flex-col gap-3">
+          {comments.length === 0 && <p data-testid="post-no-comments">No comments yet.</p>}
+          <ul className="flex flex-col gap-3">
+            {comments.map((comment) => renderComment(comment, 0))}
+          </ul>
+          {hasMore &&
+            (transportFault === "append" ? (
+              <div className="flex items-center gap-3">
+                <TransportError
+                  testId="post-more-comments-error"
+                  message="Can't reach the server — more comments can't load right now."
+                />
+                <Button
+                  testId="post-more-comments-retry"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void onLoadMore()}
+                  disabled={loadingMore}
+                >
+                  Retry
+                </Button>
+              </div>
+            ) : (
+              <Button
+                testId="post-more-comments"
+                variant="outline"
+                onClick={() => void onLoadMore()}
+                disabled={loadingMore}
+              >
+                Load more
+              </Button>
+            ))}
+        </div>
+      </BottomSheet>
       {/* ONE LICENSE SHEET FOR THE PAGE, raised by whichever menu row asked —
           the post's own or any comment's. The terms of a node read the same
           whichever menu asked for them (`PostLicense.jsx:7-9`). */}
@@ -1108,11 +1182,6 @@ export function PostView({
         onClose={() => setRemoveOpen(false)}
         onRemove={() => setRemoveOpen(false)}
       />
-      <Snackbar
-        testId="comment-signed"
-        message={commentSigned ? "Signed — it's in the thread now, still settling." : null}
-        onDismiss={dismissCommentSigned}
-      />
       {/* Where the browser has no platform share sheet the control copies the
           link, and this is what says so (readme §13, the audit answers). */}
       <Snackbar
@@ -1120,26 +1189,6 @@ export function PostView({
         message={linkCopied ? LINK_COPIED : null}
         onDismiss={dismissLinkCopied}
       />
-      {/* ReplyEntry's entry row, pinned at the foot of the thread: the door
-          that pins the POST as what the comment answers. The board draws the
-          viewer's own avatar beside it; drawing one here would mean a profile
-          read this page does not otherwise make, which is exactly the cost
-          the read restructure is removing, so the row is the field alone. */}
-      {phase === "signedIn" && (
-        <div
-          data-testid="comment-entry"
-          className="flex items-center gap-3 border-t border-outline-variant pt-3"
-        >
-          <button
-            type="button"
-            data-testid="comment-add"
-            onClick={() => setReplying(postTarget(post, postId))}
-            className="cg-state cg-focus min-h-14 flex-1 rounded-extra-small border border-outline px-3 text-left text-body-large text-on-surface-variant"
-          >
-            Add a comment
-          </button>
-        </div>
-      )}
       {/* The wizard is a surface OVER the thread, and every way out of it
           comes back here — which is why the thread keeps its scroll, its
           unfolded branches, and the target's own name while it is open. */}
@@ -1147,9 +1196,11 @@ export function PostView({
         <ReplyWizard
           target={replying}
           store={store}
-          onLeave={() => setReplying(null)}
+          onLeave={backToThread}
           onSigned={() => {
-            setReplying(null);
+            // `ReplySeal` 9 → the thread, the comment settling: the sheet
+            // comes back up behind the confirmation.
+            backToThread();
             setCommentSigned(true);
             refresh();
           }}
@@ -1199,7 +1250,7 @@ export function PostView({
             onActs={setEditActsOpen}
             onHelp={() => setEditHelp(HELP_TOPICS.editing)}
             onSign={() => void onSubmitEdit()}
-            onLeave={() => setEditing(null)}
+            onLeave={backToThread}
           />
           {/* One picture at a time, keyed by id: comments have no in-sheet
               stepping, on the editor as on the composer. */}
