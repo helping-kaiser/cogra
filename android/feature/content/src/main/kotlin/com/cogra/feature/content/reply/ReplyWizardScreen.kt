@@ -378,6 +378,7 @@ internal fun ReplyWizardScreen(
                     onValueChange = { onAltTextChange(describing.uri, it) },
                     onDone = onCloseSheet,
                     onHelp = { onOpenHelp(HelpTopic.DescribingPictures) },
+                    video = describing.isVideo,
                     testTag = "reply_describe_sheet",
                 )
 
