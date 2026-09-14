@@ -80,6 +80,13 @@ export const HELP_TOPICS = {
       "You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each action still counts.",
     ],
   },
+  license: {
+    title: "License",
+    paragraphs: [
+      "Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it.",
+      "The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.",
+    ],
+  },
   markingAsSensitive: {
     title: "Marking as sensitive",
     paragraphs: [
