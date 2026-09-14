@@ -87,10 +87,10 @@ import {
 import { runUpload } from "@/lib/compose/uploads";
 import { usePreviewUrls } from "@/lib/compose/previews";
 import { sensitiveReasonProblem } from "@/lib/compose/wizard";
+import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
-import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { commentTarget, ReplyWizard } from "./reply/reply-wizard-view";
