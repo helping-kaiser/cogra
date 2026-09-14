@@ -1,7 +1,7 @@
 "use client";
 
-// The feed's video: autoplay muted when it comes into view, real controls, and
-// the one global mute.
+// The feed's video: autoplay muted when it comes into view, the sound disc
+// every card wears, and the one global mute.
 //
 // AUTOPLAY IS ONLY EVER MUTED, and that is a platform rule rather than a taste.
 // MDN: "Autoplay blocking is not applied to <video> elements when the source
@@ -25,23 +25,24 @@
 // pauses rather than stopping: coming back should resume where the reader was,
 // not restart.
 //
-// THE MUTE IS BOUND BOTH WAYS. The element's own controls carry a mute button,
-// so the reader's press arrives as a `volumechange` on the element rather than
-// as a click this component sees. Reading it back into the shared store is what
-// makes the native control the global control — otherwise the one affordance a
-// reader actually reaches for would be the one that does not stick.
+// THE MUTE IS BOUND BOTH WAYS. Nothing but this component's own sound disc
+// changes `.muted` today, but a `volumechange` can still arrive from outside
+// it — the browser's picture-in-picture window carries its own mute control —
+// so reading it back into the shared store is what keeps an out-of-band mute
+// from silently diverging from what every other player on screen shows.
 //
 // `prefers-reduced-motion` STOPS THE AUTOPLAY. Video that starts by itself is
 // motion the reader did not ask for, and the reduced-motion preference is the
 // standing request not to be shown it. The clip still plays on a press.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { formatDuration } from "./video";
 import { isMuted, setMuted, useMuted } from "./mute";
+import { claim, surrender } from "./video-stage";
 
-/** Enough of the frame in view to be worth playing — half, so two clips never fight. */
-const VISIBLE_ENOUGH = 0.5;
+/** Enough of the frame in view to be worth playing — android's gate, blessed
+ * (design/readme.md: "One clip plays at a time, at 70% visibility or more"). */
+const VISIBLE_ENOUGH = 0.7;
 
 /**
  * How much of a player a surface gets.
@@ -59,7 +60,6 @@ export function VideoPlayer({
   src,
   poster,
   altText,
-  durationMs,
   testId = "video-player",
   autoplay = true,
   surface = "full",
@@ -69,19 +69,27 @@ export function VideoPlayer({
   /** The video's face. Null when there is none, or when it was redacted. */
   poster?: string | null;
   altText?: string | null;
+  /** Not rendered — no surface wears a duration pill. Kept so a caller can
+   * still pass the contract's field through without a type error. */
   durationMs?: number | null;
   testId?: string;
   autoplay?: boolean;
   surface?: PlayerSurface;
   /**
    * Whether the caller reserved a frame for the clip to fill. Framed, the
-   * element takes its parent's box whole; unframed it sizes itself and the
-   * height cap is what bounds it.
+   * element takes its parent's box whole; unframed it sizes itself, full
+   * width, at whatever height its own ratio gives it.
    */
   framed?: boolean;
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const muted = useMuted();
+  // Identity, not value: the stage tells surfaces apart by object identity
+  // (mirroring VideoStage.kt's `token: Any`). `useState`'s lazy initializer
+  // runs once and its result is stable across re-renders — unlike
+  // `useRef({}).current`, it never reads a ref during render, which React's
+  // own lint rule (react-hooks/refs) forbids.
+  const [stageToken] = useState(() => ({}));
 
   // The store is the truth; the element follows it. Written through the
   // property rather than the attribute because the attribute is only the
@@ -105,26 +113,33 @@ export function VideoPlayer({
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
+            // Claim the stage before playing — one clip plays at a time, so
+            // claiming pauses whatever this replaces (FE-28).
+            claim(stageToken, video);
             // Muted at the moment of the call, not merely at mount: a reader
             // who left the sound on is still governed by the same store, and an
             // unmuted autoplay would simply be refused.
             video.muted = isMuted();
             void video.play().catch(() => {
               // NotAllowedError, or a decode this browser cannot start. The
-              // poster stays, the controls stay, and nothing is said — a
+              // poster stays, the sound disc stays, and nothing is said — a
               // refusal here is the browser's policy, not a fault the reader
               // can act on.
             });
-          } else if (!video.paused) {
-            video.pause();
+          } else {
+            if (!video.paused) video.pause();
+            surrender(stageToken);
           }
         }
       },
       { threshold: VISIBLE_ENOUGH },
     );
     observer.observe(video);
-    return () => observer.disconnect();
-  }, [autoplay, src]);
+    return () => {
+      observer.disconnect();
+      surrender(stageToken);
+    };
+  }, [autoplay, src, stageToken]);
 
   const reading = surface === "reading";
 
@@ -142,7 +157,6 @@ export function VideoPlayer({
         muted
         playsInline
         loop
-        controls={!reading}
         preload="metadata"
         aria-label={altText ?? undefined}
         data-testid={testId}
@@ -151,50 +165,36 @@ export function VideoPlayer({
         // ratio clamped to tall — 16:9 and 1:1 display true, anything taller
         // than 4:5 centre-crops to it, and letterboxing exists nowhere (the
         // reel round, review 1). Without it the element takes the CSS default
-        // `object-fit: fill`, so the moment the height cap shortened the box
-        // the picture was squeezed wider than the clip actually is.
+        // `object-fit: fill`, so the moment a caller's reserved box didn't
+        // match the clip's own ratio the picture was squeezed to fit it.
         className={
           reading || framed
             ? "block size-full bg-surface-container-high object-cover"
-            : "block max-h-[var(--media-max-height)] w-full bg-surface-container-high object-cover"
+            : "block w-full bg-surface-container-high object-cover"
         }
       />
 
-      {/* THE ONE CONTROL A COMMENT'S VIDEO WEARS. It carries the sticky
-          decision every video shares, so pressing it here changes the sound
-          for the whole session — which is why it reads the shared store rather
-          than the element. */}
-      {reading && (
-        <button
-          type="button"
-          data-testid={`${testId}-sound`}
-          aria-label={muted ? "Turn sound on" : "Turn sound off"}
-          aria-pressed={!muted}
-          onClick={() => setMuted(!muted)}
-          className="cg-state cg-focus absolute bottom-2 left-2 grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-surface-snackbar p-0 text-on-surface-snackbar"
-        >
-          <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
-            {muted ? (
-              <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
-            ) : (
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-            )}
-          </svg>
-        </button>
-      )}
-
-      {/* NO DURATION ON A READING SURFACE. It is authoring-side information —
-          the composer's tile carries it, where the author is choosing a clip. */}
-      {!reading && typeof durationMs === "number" && durationMs > 0 && (
-        <span
-          data-testid={`${testId}-duration`}
-          // Top, not bottom: the element's own control bar owns the bottom edge
-          // and a badge there would sit under the reader's thumb.
-          className="pointer-events-none absolute right-2 top-2 rounded-extra-small bg-scrim/55 px-2 py-px text-label-small text-white"
-        >
-          {formatDuration(durationMs)}
-        </span>
-      )}
+      {/* THE ONE CONTROL EVERY CARD'S CLIP WEARS — no play/pause, no duration
+          pill, at both scales (design/readme.md, "the video conform round").
+          It carries the sticky decision every video shares, so pressing it
+          here changes the sound for the whole session — which is why it
+          reads the shared store rather than the element. */}
+      <button
+        type="button"
+        data-testid={`${testId}-sound`}
+        aria-label={muted ? "Turn sound on" : "Turn sound off"}
+        aria-pressed={!muted}
+        onClick={() => setMuted(!muted)}
+        className="cg-state cg-focus absolute bottom-2 left-2 grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-surface-snackbar p-0 text-on-surface-snackbar"
+      >
+        <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
+          {muted ? (
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z" />
+          ) : (
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+          )}
+        </svg>
+      </button>
     </span>
   );
 }
