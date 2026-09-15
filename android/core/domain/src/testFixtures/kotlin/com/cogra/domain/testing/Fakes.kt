@@ -25,6 +25,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentForEdit
+import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
@@ -441,7 +442,7 @@ open class ThrowingContentRepository : ContentRepository {
         first: Int,
         after: String?,
         includePending: Boolean,
-    ): Outcome<Page<CommentView>> = throw UnsupportedOperationException()
+    ): Outcome<CommentPage?> = throw UnsupportedOperationException()
     override suspend fun preparePost(
         title: String?,
         description: String?,

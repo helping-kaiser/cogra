@@ -67,8 +67,6 @@ class PostDetailViewModelTest {
                     comments = Page(listOf(testComment("c1")), "cc1", hasNextPage = true),
                 ),
             )
-        var nextComments: Outcome<Page<CommentView>> =
-            Outcome.Success(Page(listOf(testComment("c2")), null, hasNextPage = false))
         var commentPrepared = 0
 
         var detailReads = 0
@@ -83,16 +81,6 @@ class PostDetailViewModelTest {
             detailReads += 1
             includePendingAsked += includePending
             return detail
-        }
-
-        override suspend fun comments(
-            postId: String,
-            first: Int,
-            after: String?,
-            includePending: Boolean,
-        ): Outcome<Page<CommentView>> {
-            includePendingAsked += includePending
-            return nextComments
         }
 
         var prepareFails = false
@@ -236,15 +224,12 @@ class PostDetailViewModelTest {
         Dispatchers.resetMain()
     }
     @Test
-    fun startLoadsThePostAndItsThread() = runTest(dispatcher) {
+    fun startLoadsThePost() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start("post-1")
         dispatcher.scheduler.advanceUntilIdle()
 
-        val state = vm.state.value
-        assertThat(state.post?.id).isEqualTo("post-1")
-        assertThat(state.comments.map { it.id }).containsExactly("c1")
-        assertThat(state.commentsHaveMore).isTrue()
+        assertThat(vm.state.value.post?.id).isEqualTo("post-1")
     }
 
     @Test
@@ -259,8 +244,6 @@ class PostDetailViewModelTest {
         // Before the read has had a chance to come back.
         assertThat(vm.state.value.post?.id).isEqualTo("post-1")
         assertThat(vm.state.value.loading).isFalse()
-        // The thread is only ever the fresh read's.
-        assertThat(vm.state.value.comments).isEmpty()
         // And the read that catches up behind says NOTHING: an indicator
         // over a post the reader can already see claims the screen is
         // still arriving when it has arrived (F2-9).
@@ -268,7 +251,6 @@ class PostDetailViewModelTest {
 
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(content.detailReads).isEqualTo(1)
-        assertThat(vm.state.value.comments.map { it.id }).containsExactly("c1")
         assertThat(vm.state.value.refreshing).isFalse()
     }
 
@@ -345,19 +327,6 @@ class PostDetailViewModelTest {
     }
 
     @Test
-    fun loadMoreAppendsComments() = runTest(dispatcher) {
-        val vm = viewModel()
-        vm.start("post-1")
-        dispatcher.scheduler.advanceUntilIdle()
-
-        vm.loadMoreComments()
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertThat(vm.state.value.comments.map { it.id }).containsExactly("c1", "c2").inOrder()
-        assertThat(vm.state.value.commentsHaveMore).isFalse()
-    }
-
-    @Test
     fun anUnknownPostRendersNotFound() = runTest(dispatcher) {
         content.detail = Outcome.Success(null)
         val vm = viewModel()
@@ -389,43 +358,7 @@ class PostDetailViewModelTest {
     }
 
     @Test
-    fun aFailedCommentsPageFaultsAtTheAppendSlot() = runTest(dispatcher) {
-        content.nextComments = Outcome.Failed(IOException("offline"))
-        val vm = viewModel()
-        vm.start("post-1")
-        dispatcher.scheduler.advanceUntilIdle()
-
-        vm.loadMoreComments()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.transportFault).isEqualTo(TransportFault.APPEND)
-        assertThat(vm.state.value.comments.map { it.id }).containsExactly("c1")
-        assertThat(vm.state.value.commentsHaveMore).isTrue()
-
-        // A later successful page clears the fault and appends.
-        content.nextComments =
-            Outcome.Success(Page(listOf(testComment("c2")), null, hasNextPage = false))
-        vm.loadMoreComments()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.transportFault).isNull()
-        assertThat(vm.state.value.comments.map { it.id }).containsExactly("c1", "c2").inOrder()
-    }
-
-    @Test
-    fun aCommentThatLandedMidWalkIsNotAppendedTwice() = runTest(dispatcher) {
-        content.nextComments =
-            Outcome.Success(Page(listOf(testComment("c1"), testComment("c2")), null, hasNextPage = false))
-        val vm = viewModel()
-        vm.start("post-1")
-        dispatcher.scheduler.advanceUntilIdle()
-
-        vm.loadMoreComments()
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertThat(vm.state.value.comments.map { it.id }).containsExactly("c1", "c2").inOrder()
-    }
-
-    @Test
-    fun theThreadAsksForPendingEntriesByDefault() = runTest(dispatcher) {
+    fun theDetailAsksForPendingEntriesByDefault() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start("post-1")
         dispatcher.scheduler.advanceUntilIdle()
@@ -444,52 +377,6 @@ class PostDetailViewModelTest {
      * already holds — the refetched page is what carries the pending
      * marker the fresh comment wears.
      */
-    @Test
-    fun aCommentSignedOnTheWizardRefetchesTheThreadAndSaysSoOnce() = runTest(dispatcher) {
-        val vm = viewModel()
-        vm.start("post-1")
-        dispatcher.scheduler.advanceUntilIdle()
-        val readsBefore = content.detailReads
-
-        vm.onCommentSigned()
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertThat(content.detailReads).isGreaterThan(readsBefore)
-        assertThat(vm.state.value.commentSigned).isTrue()
-
-        // The one-shot fires once: a recomposition never re-announces it.
-        vm.onCommentSignedShown()
-        assertThat(vm.state.value.commentSigned).isFalse()
-    }
-
-    /**
-     * Opening a branch fetches it (Q49): nothing is prefetched, so the
-     * thread starts empty and the read is what fills it.
-     */
-    @Test
-    fun expandingRepliesFetchesTheBranch() = runTest(dispatcher) {
-        val vm = viewModel()
-        vm.start("post-1")
-        dispatcher.scheduler.advanceUntilIdle()
-        val comment = testComment("c1").copy(replyCount = 1)
-        vm.onLoadMoreReplies(comment)
-        dispatcher.scheduler.advanceUntilIdle()
-        val thread = vm.state.value.replyThreads["c1"]
-        checkNotNull(thread)
-        assertThat(thread.items.map { it.id }).containsExactly("r1")
-        assertThat(thread.hasMore).isFalse()
-    }
-
-    @Test
-    fun aFailedReplyPageOffersRetryInPlace() = runTest(dispatcher) {
-        content.repliesPage = Outcome.Failed(java.io.IOException("offline"))
-        val vm = viewModel()
-        vm.start("post-1")
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onLoadMoreReplies(testComment("c1"))
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.replyThreads["c1"]?.failed).isTrue()
-    }
 }
 
 /** The build's web origin, as the share link is built from it. */
