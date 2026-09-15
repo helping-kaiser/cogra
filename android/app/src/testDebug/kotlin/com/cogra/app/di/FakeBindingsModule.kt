@@ -24,6 +24,7 @@ import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
+import com.cogra.domain.CommentPage
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
@@ -152,6 +153,20 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         commentsAfter: String?,
         includePending: Boolean,
     ): Outcome<PostDetail?> = Outcome.Success(details[id])
+
+    /**
+     * The thread, read on its own — what the comments sheet asks for on
+     * either surface it stands over. Scripted from the same [details]
+     * the post read serves, so a test scripts one post and gets both.
+     */
+    override suspend fun comments(
+        postId: String,
+        first: Int,
+        after: String?,
+        includePending: Boolean,
+    ): Outcome<CommentPage?> = Outcome.Success(
+        details[postId]?.let { CommentPage(it.comments, total = it.comments.items.size) },
+    )
 }
 
 /** Scriptable profile surface: the viewer's own, others by handle,
