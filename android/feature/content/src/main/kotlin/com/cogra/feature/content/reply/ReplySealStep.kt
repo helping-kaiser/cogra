@@ -375,7 +375,8 @@ private fun ReplyCitedRow(name: String, onRepair: () -> Unit, onRemove: () -> Un
  * row as the control — the post seal's own door, said on this seal, opening
  * the one sheet both seals open (`ReplyCitedMany.jsx:17-20`). No chevron and
  * no trailing word, so the label on the gesture is what tells a listener the
- * line is a door ("Manage the citations", copy-voice).
+ * line is a door, count folded in ("Manage the N citations", and at one
+ * "Manage the 1 citation" — copy-voice.md:409-419).
  */
 @Composable
 private fun CitedDoorRow(count: Int, onOpen: () -> Unit, testTag: String) {
@@ -384,7 +385,7 @@ private fun CitedDoorRow(count: Int, onOpen: () -> Unit, testTag: String) {
             .fillMaxWidth()
             .clickable(
                 role = Role.Button,
-                onClickLabel = "Manage the citations",
+                onClickLabel = "Manage the $count ${if (count == 1) "citation" else "citations"}",
                 onClick = onOpen,
             )
             .padding(vertical = Space.x2)

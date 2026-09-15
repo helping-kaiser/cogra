@@ -5039,6 +5039,28 @@ slice-3 remainders beside it. The round's premise is one sentence:
   nothing, because a topic that will not fit leaves the summary instead
   of stretching it.
 
+### The viewer-grammar close — 2026-09-15
+
+Two rulings from the census fabric that had no design home until now
+(backlog item 83; the clip half surfaced by the implementation loop's
+viewer lane).
+
+- **A detail clip stops at its end and offers replay; a feed clip
+  loops.** jakob's reasoning, kept whole: "it also seperates once again
+  from vertical videos that are to be watched in the reel scroller. (we
+  have reels (insta) and videos (yt) in one platform and they are
+  different medias so i think the sharp differences are good)". The
+  stop belongs to the reel-vs-video split, not to playback plumbing: a
+  looping detail clip would blur the one line the two medias keep
+  sharp.
+- **The pinned clip's chrome tap stays platform-native.** Web opens the
+  viewer only while the transport chrome is up — a tap with the chrome
+  hidden reveals it first, else the transport would be unreachable
+  under auto-hide; Android, which never hides the transport there,
+  takes the tap directly. Ruled deliberate when the implementation loop
+  queued the asymmetry: each platform keeps its own player's reflex,
+  and one grammar forced across both would break the reflex on one of
+  them.
 ### The tag-page smalls — 2026-09-15
 
 Three items the topic round left standing, all about the tag page and

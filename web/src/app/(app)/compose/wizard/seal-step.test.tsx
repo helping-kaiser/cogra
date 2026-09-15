@@ -122,7 +122,9 @@ describe("SealStep", () => {
       const { onSheet } = renderStep({
         references: [citation("p-1", "One"), citation("p-2", "Two"), citation("p-3", "Three")],
       });
-      const door = screen.getByRole("button", { name: "Manage the citations" });
+      // The door's name folds the count in — "Manage the N citations", and at
+      // one "Manage the 1 citation" (copy-voice.md:409-419).
+      const door = screen.getByRole("button", { name: "Manage the 3 citations" });
       expect(door).toBe(screen.getByTestId("wizard-open-cited"));
       // No chevron, no trailing word: the accessible name is the only thing
       // that says the line is a door (copy-voice, `PickedRow`'s rule).
