@@ -15,13 +15,16 @@
    (`invitations.md` §4), so there is no act to undo and no mark to leave. What
    changes is that the application stops waiting on the reader. The person
    keeps the account they made and keeps reading with it, which the whole
-   product already lets anyone do — and the second sentence says so plainly,
-   because a reader about to press this will otherwise assume they are
-   throwing someone out.
+   product already lets anyone do.
 
-   THE WAY BACK IS NAMED. A fresh link puts the same person back in this list,
-   so the decision is reversible by a route the reader can picture — which is
-   the honest alternative to an Undo the mechanic cannot offer.
+   IT IS THIS READER'S REFUSAL AND NOT A VERDICT (jakob 2026-09-15). The
+   dialog has to say both halves or it says the wrong thing: the row leaves
+   YOUR list, and the person is TOLD — those are the two effects, and a reader
+   who is not told that the person hears about it is being let to press this
+   as though it were private. Then the half that keeps it from reading as
+   expulsion: any other member can still vouch them in, and they are handed a
+   link to ask with. One person declining to vouch is one person declining to
+   vouch, and the copy is what stops the product from making it mean more.
 
    IT NAMES THE PERSON, and it names `@imke` — the row whose application is
    not even ready yet, which is the one a reader is likeliest to close. One
@@ -37,10 +40,10 @@ export function Screen() {
           Close @imke's application?
         </h2>
         <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-          Their account stays exactly as it is — signed in, and free to keep reading. The application just stops waiting on you.
+          It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading.
         </p>
         <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-          A fresh invite link puts them back in this list.
+          This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.
         </p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <Button variant="text">Close it</Button>

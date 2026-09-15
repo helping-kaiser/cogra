@@ -146,6 +146,15 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantRejected.dc.html",
+      "title": "Applicant · turned down",
+      "x": 2400,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "SignIn.dc.html",
       "title": "Sign in",
       "x": 0,
@@ -417,10 +426,10 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -1870,
+      "x": -2160,
       "y": 0,
-      "w": 1450,
-      "h": 3782,
+      "w": 1740,
+      "h": 3800,
       "page": "entry",
       "title": "Entry · flow map"
     },

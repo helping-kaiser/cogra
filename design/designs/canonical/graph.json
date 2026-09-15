@@ -57,6 +57,7 @@
     "InviteNew": "the create sheet covers the invites list — the page's own New invite, its rows, its close controls and its link cards are inactive in this state; only the sheet (and its scrim) is live",
     "InviteExpiry": "the expiry chooser covers the create sheet, which covers the list — two sheets deep, the create sheet dimmed under the chooser's own wash, and only the top sheet (and that wash) is live",
     "InviteCreated": "the fresh link's sheet covers the invites list — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "VouchAsk": "the scrim wash covers the ask — the card's Not now and the way back are inactive in this state; only the parked pad is live",
     "ApprovePad": "the scrim wash covers the invites list — its semantic elements (the page's New invite, the rows, the close controls and the link cards) are inactive in this state; only the parked pad is live",
     "RejectConfirm": "the think-twice dialog covers the invites list — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
     "NetworkError": "the fault in place — a pattern exemplar drawn on the seal, where the retry the failure offers is the only thing this board is about; the seal's own header, facts and way back are `ComposeSeal`'s controls, wired on that board",
@@ -72,6 +73,8 @@
     "KeyElsewhere": "app open, signed in on a device the key is not on",
     "Verified": "opened from the verification mail",
     "ApplicantWaiting": "ApplicantFeed once every task card is done — time, not a tap",
+    "ApplicantRejected": "the same applicant shell once the inviter has closed the application — the card flips where the reader is standing; somebody else's decision, not a tap",
+    "VouchAsk": "opened from a rejected applicant's ask link, handed over outside the product — a link, not a tap",
     "VouchBack": "the approval landing — arrives with the next open, not a tap",
     "WalletSetup": "the wallet tab's first open — no rail key, no address yet",
     "ReplyMedia": "a thread whose comments carry pictures — the same sheet, a state not a tap",
@@ -1702,6 +1705,7 @@
     { "from": "Notifications", "via": 12, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "Notifications", "via": 13, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
     { "from": "Notifications", "via": 14, "kind": "advance", "label": "an application of yours became approvable", "to": [{ "board": "Invites", "case": "the queue, where the approving happens" }] },
+    { "from": "Notifications", "via": 15, "kind": "advance", "label": "an inviter closed your application", "to": [{ "board": "ApplicantRejected", "case": "the shell it happened in, where the ask link stands" }] },
 
     { "from": "NotificationsEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "the root the bell was tapped on" }] },
     { "from": "NotificationsEmpty", "via": 2, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
@@ -1789,8 +1793,32 @@
     { "from": "ApprovePad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "Invites", "case": "nothing signed — the application is still waiting" }] },
     { "from": "ApprovePad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands, the row leaves the queue, and the approval notifies them" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master)" }] },
 
-    { "from": "RejectConfirm", "via": 1, "kind": "advance", "label": "Close it", "to": [{ "board": "Invites", "case": "the row leaves — their account stays a signed-in reader, and a fresh link puts them back" }] },
+    { "from": "RejectConfirm", "via": 1, "kind": "advance", "label": "Close it", "to": [{ "board": "Invites", "case": "the row leaves this inviter's list and the applicant is told — their account stays a signed-in reader, and any other member can still vouch them in" }] },
     { "from": "RejectConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the application is still waiting" }] },
-    { "from": "RejectConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing closed" }] }
+    { "from": "RejectConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing closed" }] },
+
+    { "from": "ApplicantRejected", "via": 1, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
+    { "from": "ApplicantRejected", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
+    { "from": "ApplicantRejected", "via": 3, "kind": "advance", "label": "post media", "to": [{ "board": "PostDetail", "case": "pictures — the post opens" }, { "board": "PostDetailVideo", "case": "a clip wider than tall — the post opens" }, { "board": "Reel", "case": "a portrait clip — the stream opens" }] },
+    { "from": "ApplicantRejected", "via": 4, "kind": "detour", "label": "More (caption)", "to": [{ "terminal": "self", "case": "the caption unfolds" }] },
+    { "from": "ApplicantRejected", "via": 5, "kind": "advance", "label": "tag chip", "to": [{ "board": "TagPage" }] },
+    { "from": "ApplicantRejected", "via": 6, "kind": "advance", "label": "reference count", "to": [{ "board": "RefsSheet" }] },
+    { "from": "ApplicantRejected", "via": 7, "kind": "advance", "label": "stance face", "to": [{ "terminal": "self", "case": "press-and-hold — a positive stance stages" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }, { "terminal": "self", "case": "one stance already staged — the snackbar answers", "info": true }] },
+    { "from": "ApplicantRejected", "via": 8, "kind": "detour", "label": "Post Score", "to": [{ "board": "FeedEntry" }] },
+    { "from": "ApplicantRejected", "via": 9, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
+    { "from": "ApplicantRejected", "via": 10, "kind": "nav", "label": "nav · Feed", "to": [{ "terminal": "self", "case": "scrolled — back to the top" }, { "terminal": "self", "case": "at the top — the feed refreshes" }] },
+    { "from": "ApplicantRejected", "via": 11, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "ApplicantRejected", "via": 12, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick", "case": "first post — the wizard opens, the act stages" }, { "terminal": "self", "case": "one post already staged — the snackbar answers", "info": true }] },
+    { "from": "ApplicantRejected", "via": 13, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletApplicant" }] },
+    { "from": "ApplicantRejected", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "ProfileApplicant" }] },
+    { "from": "ApplicantRejected", "via": 15, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
+    { "from": "ApplicantRejected", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "ApplicantRejected", "via": 17, "kind": "advance", "label": "copy your ask link", "to": [{ "terminal": "self", "case": "the ask link lands on the clipboard — Link copied. It does not expire and it is not used up, so the same one goes to as many members as the reader knows" }] },
+    { "from": "ApplicantRejected", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
+
+    { "from": "VouchAsk", "via": 1, "kind": "detour", "label": "? — how vouching works", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
+    { "from": "VouchAsk", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick — the same standing low default the queue's own pad opens at" }] },
+    { "from": "VouchAsk", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "terminal": "back", "case": "nothing signed — the ask still stands, and the same link opens it again" }] },
+    { "from": "VouchAsk", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands and the person is now this member's to have vouched in" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master)" }] }
   ]
 }

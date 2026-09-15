@@ -59,18 +59,31 @@ export function PayoutAddressRow({ address, onOpen }) {
    the one that was not is now `copyLabel`, because a button announcing "Copy
    the address" over an invite link is the drawing lying to the only reader who
    depends on it. The default keeps the wallet's own word, so nothing there
-   moves; a second kind of string passes its own. */
+   moves; a second kind of string passes its own.
 
-export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", caption }) {
+   `bare` DROPS THE CONTAINER AND KEEPS THE ANATOMY, the shape `SettingsGroup`
+   already has and for the same reason: a card on a surface of the card's own
+   tonal rung is two containers saying one thing a few pixels apart. It is for
+   the string that is a RESTATEMENT rather than a thing of its own — the invite
+   code beneath the invite link it was cut from, the ask link inside the card
+   that explains it. Only the fill and the inset go; the label, the copy
+   control, the mono block and the caption are unchanged, because the reason
+   they are shaped that way does not depend on what is behind them. */
+
+export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", caption, bare = false }) {
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
         gap: "var(--space-2)",
-        borderRadius: "var(--radius-medium)",
-        background: "var(--surface-card)",
-        padding: "var(--space-3) var(--space-4)",
+        ...(bare
+          ? null
+          : {
+              borderRadius: "var(--radius-medium)",
+              background: "var(--surface-card)",
+              padding: "var(--space-3) var(--space-4)",
+            }),
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>

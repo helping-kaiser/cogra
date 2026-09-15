@@ -133,6 +133,12 @@
       "end": { "board": "ApprovePad", "via": 4, "case": "signed — the vouch lands, the row leaves the queue, and the approval notifies them" }
     },
     {
+      "name": "answer-someones-ask-link",
+      "description": "An ask link opens on the person who sent it, with the pad already there; Set signs the vouch that brings them in — the route a turned-down applicant still has.",
+      "start": { "board": "VouchAsk" },
+      "end": { "board": "VouchAsk", "via": 4, "case": "signed — the vouch lands and the person is now this member's to have vouched in" }
+    },
+    {
       "name": "restore-your-key",
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
       "start": { "control": "Restore the key", "except": ["Restore"] },

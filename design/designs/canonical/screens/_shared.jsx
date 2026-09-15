@@ -2289,6 +2289,14 @@ const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
 const SOL_INVITE_LINK = `https://cogra.social/join/${SOL_INVITE_ID}`;
 const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-6e0a85f37c24";
 
+/* THE ASK LINK — the invite link's mirror, and shaped as its mirror: the same
+   origin, its own path, one id. What it is NOT is the difference that matters.
+   An invite link points at a SLOT its issuer opened, so it expires and it can
+   be used up; an ask link points at a PERSON, so it does neither. It stands
+   for as long as the person is waiting to be let in, and every member who
+   opens it is answering the same standing question. */
+const ASK_LINK = "https://cogra.social/vouch/5d9e7a41-b062-4c38-8e5f-1a4703cbd926";
+
 /* THE ROW'S OWN CLOSE, the Saved list's `Unsave` one surface over: icon-only,
    `ContentRow`'s `action` slot, `text-secondary`, its name only in the
    accessibility tree. A row in this list has exactly two things a reader can
@@ -2334,13 +2342,19 @@ function PadLine({ children }) {
   );
 }
 
-/* THE PAD'S OWN LINES on the approval board. They are not one-time coaching
-   the way `VouchBackPad`'s are: approving is rare, consequential and priced,
-   and the two facts below are true every single time it happens. */
-function ApprovePadNote() {
+/* THE PAD'S OWN LINES wherever a vouch is being given. They are not one-time
+   coaching the way `VouchBackPad`'s are: vouching somebody in is rare,
+   consequential and priced, and the two facts below are true every single time
+   it happens.
+
+   IT TAKES THE HANDLE because the same pad now opens from two places — the
+   inviter's own queue, and an ask link a stranger to that queue sent — and the
+   act is identical from both. One note, two boards: the member who answers an
+   ask link is doing exactly what the inviter would have done. */
+function ApprovePadNote({ handle }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <PadLine>Approving is vouching. Set signs your opinion on @rafa and brings them in.</PadLine>
+      <PadLine>Vouching is the act. Set signs your opinion on {handle} and brings them in.</PadLine>
       <PadLine>It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.</PadLine>
     </div>
   );
@@ -2430,7 +2444,7 @@ function InvitesBody({ approving = false }) {
                   helpLabel="How vouching works"
                   defaultOpen
                   defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
-                  padNote={<ApprovePadNote />}
+                  padNote={<ApprovePadNote handle="@rafa" />}
                 />
               ) : (
                 <CloseApplication handle="@rafa" />
