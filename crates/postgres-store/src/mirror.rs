@@ -327,6 +327,101 @@ pub struct RecordFilter {
     pub payload_marked: Option<bool>,
     pub since_epoch: Option<i64>,
     pub until_epoch: Option<i64>,
+    /// Node-anchored traversal (api-spec `Node.outgoingRecords` /
+    /// `incomingRecords`): the record has a leg incident on the anchor,
+    /// on the end the direction names.
+    pub anchor: Option<NodeAnchor>,
+    /// Sign of the record's authored `p_d`, read off the leg the API
+    /// exposes as `Record.pDirected` — the binary/A leg.
+    pub p_directed_sign: Option<Sign>,
+    /// Sign of the record's authored `p_i`, read off the same leg.
+    pub p_interest_sign: Option<Sign>,
+}
+
+/// One end of a leg, as a traversal anchors on it: `Outgoing` walks the
+/// legs the node is the source of, `Incoming` the legs it is the target
+/// of. The legs of an act run author → target on a binary act and
+/// author → middle → terminal on a hyper one (layer1-interface.md §9.6),
+/// so this is the edge direction a graph walk sees.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Direction {
+    Outgoing,
+    Incoming,
+}
+
+/// A node-anchored traversal: the identifiers the anchor node answers to,
+/// which end of the leg it sits on, and an optional kind for the node at
+/// the leg's far end.
+///
+/// `ids` is a set because an actor is one anchoring under two identifiers
+/// — `addr:a` and `prof:a` are the Actor and the Profile of one atom
+/// (layer1-interface.md §8.1) — so a walk rooted at a person must follow
+/// both.
+#[derive(Debug, Clone)]
+pub struct NodeAnchor {
+    pub ids: Vec<String>,
+    pub direction: Direction,
+    pub far_kind: Option<NodeKind>,
+}
+
+/// The sign of an authored parameter (api-spec `Sign`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Sign {
+    Positive,
+    Negative,
+    Zero,
+}
+
+impl Sign {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Sign::Positive => "positive",
+            Sign::Negative => "negative",
+            Sign::Zero => "zero",
+        }
+    }
+}
+
+/// The kind of a node at a leg's far end (api-spec `NodeKind`).
+///
+/// A node's kind is what CoGra types the identifier as, which is the same
+/// question `nodes::resolve_id` answers on the read path: the identifier
+/// grammar decides the classes L1 itself separates (a Type is any `name:`
+/// node), and the L2 rows decide the ones it does not — `mint:` says
+/// "minted", never whether the minted Content node is a Post. A kind
+/// whose slice carries no rows yet therefore matches nothing, the same
+/// empty answer an unresolvable id gets.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NodeKind {
+    User,
+    Collective,
+    Post,
+    Comment,
+    Chat,
+    ChatMessage,
+    Item,
+    Hashtag,
+    Proposal,
+    Campaign,
+    Offer,
+}
+
+impl NodeKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            NodeKind::User => "user",
+            NodeKind::Collective => "collective",
+            NodeKind::Post => "post",
+            NodeKind::Comment => "comment",
+            NodeKind::Chat => "chat",
+            NodeKind::ChatMessage => "chat_message",
+            NodeKind::Item => "item",
+            NodeKind::Hashtag => "hashtag",
+            NodeKind::Proposal => "proposal",
+            NodeKind::Campaign => "campaign",
+            NodeKind::Offer => "offer",
+        }
+    }
 }
 
 /// One record by its identifier, with legs; None when the mirror does
@@ -383,6 +478,13 @@ struct RecordRow {
 /// on the authoritative causal key `(epoch, act_time, position)`.
 /// `backward` serves `last`/`before`; results always come back
 /// newest-first.
+///
+/// It also serves the node-anchored reads (`Node.outgoingRecords` /
+/// `incomingRecords`) through `RecordFilter::anchor`, so the two surfaces
+/// cannot drift in what a filter means. Every anchored predicate is
+/// `EXISTS` over the legs rather than a join, which both keeps the page a
+/// page of *records* — an act incident on the anchor twice is one row, not
+/// two — and leaves the unanchored read's plan untouched.
 pub async fn records(
     pool: &PgPool,
     filter: &RecordFilter,
@@ -394,6 +496,20 @@ pub async fn records(
         Some((e, a, p)) => (Some(e), Some(a), Some(p)),
         None => (None, None, None),
     };
+    let (anchor_source, anchor_target) = match &filter.anchor {
+        Some(anchor) => match anchor.direction {
+            Direction::Outgoing => (Some(anchor.ids.as_slice()), None),
+            Direction::Incoming => (None, Some(anchor.ids.as_slice())),
+        },
+        None => (None, None),
+    };
+    let far_kind = filter
+        .anchor
+        .as_ref()
+        .and_then(|anchor| anchor.far_kind)
+        .map(NodeKind::as_str);
+    let p_directed_sign = filter.p_directed_sign.map(Sign::as_str);
+    let p_interest_sign = filter.p_interest_sign.map(Sign::as_str);
     let rows = if backward {
         sqlx::query_as!(
             RecordRow,
@@ -414,6 +530,58 @@ pub async fn records(
                              SELECT 1 FROM mirror_record_legs l
                              WHERE l.record_id = r.record_id
                                AND l.leg = 't' AND l.target = $7))
+                     AND ($12::text[] IS NULL OR EXISTS (
+                             SELECT 1 FROM mirror_record_legs l
+                             WHERE l.record_id = r.record_id
+                               AND l.source = ANY($12)
+                               AND ($14::text IS NULL OR CASE
+                                     WHEN $14 = 'post' THEN EXISTS (
+                                          SELECT 1 FROM posts p
+                                          WHERE p.l1_node_id = l.target)
+                                     WHEN $14 = 'comment' THEN EXISTS (
+                                          SELECT 1 FROM comments c
+                                          WHERE c.l1_node_id = l.target)
+                                     WHEN $14 = 'hashtag' THEN l.target LIKE 'name:%'
+                                     WHEN $14 IN ('user', 'collective') THEN EXISTS (
+                                          SELECT 1 FROM actors a
+                                          WHERE a.kind = $14
+                                            AND (l.target LIKE 'prof:%'
+                                                 OR l.target LIKE 'addr:%')
+                                            AND a.realization_address = split_part(l.target, ':', 2))
+                                     ELSE FALSE END)))
+                     AND ($13::text[] IS NULL OR EXISTS (
+                             SELECT 1 FROM mirror_record_legs l
+                             WHERE l.record_id = r.record_id
+                               AND l.target = ANY($13)
+                               AND ($14::text IS NULL OR CASE
+                                     WHEN $14 = 'post' THEN EXISTS (
+                                          SELECT 1 FROM posts p
+                                          WHERE p.l1_node_id = l.source)
+                                     WHEN $14 = 'comment' THEN EXISTS (
+                                          SELECT 1 FROM comments c
+                                          WHERE c.l1_node_id = l.source)
+                                     WHEN $14 = 'hashtag' THEN l.source LIKE 'name:%'
+                                     WHEN $14 IN ('user', 'collective') THEN EXISTS (
+                                          SELECT 1 FROM actors a
+                                          WHERE a.kind = $14
+                                            AND (l.source LIKE 'prof:%'
+                                                 OR l.source LIKE 'addr:%')
+                                            AND a.realization_address = split_part(l.source, ':', 2))
+                                     ELSE FALSE END)))
+                     AND (($15::text IS NULL AND $16::text IS NULL) OR EXISTS (
+                             SELECT 1 FROM mirror_record_legs s
+                             WHERE s.record_id = r.record_id
+                               AND s.leg IN ('binary', 'a')
+                               AND ($15::text IS NULL OR CASE
+                                     WHEN $15 = 'positive' THEN s.p_d > 0
+                                     WHEN $15 = 'negative' THEN s.p_d < 0
+                                     WHEN $15 = 'zero' THEN s.p_d = 0
+                                     ELSE FALSE END)
+                               AND ($16::text IS NULL OR CASE
+                                     WHEN $16 = 'positive' THEN s.p_i > 0
+                                     WHEN $16 = 'negative' THEN s.p_i < 0
+                                     WHEN $16 = 'zero' THEN s.p_i = 0
+                                     ELSE FALSE END)))
                      AND ($8::bigint IS NULL
                           OR (r.epoch, r.act_time, r.position) > ($8, $9, $10))
                    ORDER BY r.epoch ASC, r.act_time ASC, r.position ASC
@@ -431,6 +599,11 @@ pub async fn records(
             ca,
             cp,
             limit,
+            anchor_source,
+            anchor_target,
+            far_kind,
+            p_directed_sign,
+            p_interest_sign,
         )
         .fetch_all(pool)
         .await?
@@ -453,6 +626,58 @@ pub async fn records(
                          SELECT 1 FROM mirror_record_legs l
                          WHERE l.record_id = r.record_id
                            AND l.leg = 't' AND l.target = $7))
+                 AND ($12::text[] IS NULL OR EXISTS (
+                         SELECT 1 FROM mirror_record_legs l
+                         WHERE l.record_id = r.record_id
+                           AND l.source = ANY($12)
+                           AND ($14::text IS NULL OR CASE
+                                 WHEN $14 = 'post' THEN EXISTS (
+                                      SELECT 1 FROM posts p
+                                      WHERE p.l1_node_id = l.target)
+                                 WHEN $14 = 'comment' THEN EXISTS (
+                                      SELECT 1 FROM comments c
+                                      WHERE c.l1_node_id = l.target)
+                                 WHEN $14 = 'hashtag' THEN l.target LIKE 'name:%'
+                                 WHEN $14 IN ('user', 'collective') THEN EXISTS (
+                                      SELECT 1 FROM actors a
+                                      WHERE a.kind = $14
+                                        AND (l.target LIKE 'prof:%'
+                                             OR l.target LIKE 'addr:%')
+                                        AND a.realization_address = split_part(l.target, ':', 2))
+                                 ELSE FALSE END)))
+                 AND ($13::text[] IS NULL OR EXISTS (
+                         SELECT 1 FROM mirror_record_legs l
+                         WHERE l.record_id = r.record_id
+                           AND l.target = ANY($13)
+                           AND ($14::text IS NULL OR CASE
+                                 WHEN $14 = 'post' THEN EXISTS (
+                                      SELECT 1 FROM posts p
+                                      WHERE p.l1_node_id = l.source)
+                                 WHEN $14 = 'comment' THEN EXISTS (
+                                      SELECT 1 FROM comments c
+                                      WHERE c.l1_node_id = l.source)
+                                 WHEN $14 = 'hashtag' THEN l.source LIKE 'name:%'
+                                 WHEN $14 IN ('user', 'collective') THEN EXISTS (
+                                      SELECT 1 FROM actors a
+                                      WHERE a.kind = $14
+                                        AND (l.source LIKE 'prof:%'
+                                             OR l.source LIKE 'addr:%')
+                                        AND a.realization_address = split_part(l.source, ':', 2))
+                                 ELSE FALSE END)))
+                 AND (($15::text IS NULL AND $16::text IS NULL) OR EXISTS (
+                         SELECT 1 FROM mirror_record_legs s
+                         WHERE s.record_id = r.record_id
+                           AND s.leg IN ('binary', 'a')
+                           AND ($15::text IS NULL OR CASE
+                                 WHEN $15 = 'positive' THEN s.p_d > 0
+                                 WHEN $15 = 'negative' THEN s.p_d < 0
+                                 WHEN $15 = 'zero' THEN s.p_d = 0
+                                 ELSE FALSE END)
+                           AND ($16::text IS NULL OR CASE
+                                 WHEN $16 = 'positive' THEN s.p_i > 0
+                                 WHEN $16 = 'negative' THEN s.p_i < 0
+                                 WHEN $16 = 'zero' THEN s.p_i = 0
+                                 ELSE FALSE END)))
                  AND ($8::bigint IS NULL
                       OR (r.epoch, r.act_time, r.position) < ($8, $9, $10))
                ORDER BY r.epoch DESC, r.act_time DESC, r.position DESC
@@ -468,6 +693,11 @@ pub async fn records(
             ca,
             cp,
             limit,
+            anchor_source,
+            anchor_target,
+            far_kind,
+            p_directed_sign,
+            p_interest_sign,
         )
         .fetch_all(pool)
         .await?

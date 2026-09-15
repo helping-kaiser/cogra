@@ -561,7 +561,8 @@ function ReplyCitedRow({
  * row as the control — the post seal's own door, said on this seal, opening
  * the one sheet both seals open (`ReplyCitedMany.jsx:17-20`). No chevron and
  * no trailing word, so the accessible name is what tells a listener the line
- * is a door ("Manage the citations", copy-voice).
+ * is a door, count folded in ("Manage the N citations", and at one "Manage
+ * the 1 citation" — copy-voice.md:409-419).
  */
 function CitedRow({
   count,
@@ -577,7 +578,7 @@ function CitedRow({
       type="button"
       data-testid={testId}
       onClick={onOpen}
-      aria-label="Manage the citations"
+      aria-label={`Manage the ${count} ${count === 1 ? "citation" : "citations"}`}
       className="cg-state cg-focus flex min-h-[38px] w-full cursor-pointer items-center gap-2 border-0 border-b border-solid border-outline-variant bg-transparent p-0 text-left text-on-surface"
     >
       <span className="w-19 flex-none text-label-medium text-on-surface-variant">References</span>
