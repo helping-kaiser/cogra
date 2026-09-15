@@ -47,7 +47,7 @@ Out of scope:
 
 ## What notifies
 
-Seven kinds. Each is a landed act by **another actor** whose
+Eight kinds. Each is a completed act by **another actor** whose
 target is the viewer's own content, profile, or application.
 
 | Kind | The act behind it | Actor | Opening the row lands on |
@@ -57,10 +57,17 @@ target is the viewer's own content, profile, or application.
 | **Mention** | a **Reference** whose target is the viewer's Profile — the target's node class is what makes the citation a mention ([api-spec.md](api-spec.md)) | the citing artifact's author | the citing post or comment |
 | **Citation** | a **Reference** whose target is a Post or Comment the viewer authored | the citing author | the citing post or comment |
 | **Opinion on your profile** | an **Opinion** whose target is the viewer's Profile — the gesture that makes one person follow another | the opinion's author | that actor's profile |
+| **Application approvable** | an applicant staged through one of the viewer's invite links completed the second of their two proofs, so the application is now the viewer's to act on ([auth.md "Application"](auth.md#application-the-applicant-state)) | the applicant | the invites screen, on the waiting application |
 | **Invite landed** | a **Registration** landing an account that applied through one of the viewer's invite links ([invitations.md](../primitive/invitations.md)) | the account that landed | the new member's profile |
 | **Application approved** | the inviter's priced approval of the viewer's own application ([auth.md "Approval and landing"](auth.md#approval-and-landing)) | the inviter | the inviter's profile — who vouched, and where the reciprocation the landing prompts is made |
 
-Two properties hold across all seven and are what make the set a
+The approvable kind fires at approvability, not at staging: that
+is the moment the act becomes the viewer's to answer. Before both
+proofs are in the inviter has nothing they could do with the row,
+and a second row per applicant would report the application's
+schema instead of an event ("One act, one row" below).
+
+Two properties hold across all eight and are what make the set a
 set rather than a list of features:
 
 - **Someone else acted.** The viewer is the addressee, never the
@@ -168,6 +175,14 @@ addressee. Writing at ingestion rather than computing the list per
 read is what lets read state be per row: a row needs an identity
 to carry `readAt`.
 
+**The account-state kinds are written at their transition.**
+`APPLICATION_APPROVABLE` and `APPLICATION_APPROVED` have no record
+to ingest: the first is written when the second approvability
+proof completes, the second when the inviter's approval commits.
+Each transition happens once per application row and writes one
+notification, so neither kind repeats and neither has anything to
+collapse.
+
 **One act, one row.** A record that reaches the viewer two ways —
 a comment on your post that also mentions you — writes the row for
 the more specific kind, the comment, and not the mention. Two rows
@@ -243,20 +258,24 @@ connection like every other list.
 type Notification {
   id: UUID!
   kind: NotificationKind!
-  "Who acted."
+  "Who acted. For APPLICATION_APPROVABLE this is the applicant
+   account — an actor row with a handle and nothing on the graph
+   yet, named only to the inviter whose link staged it."
   actor: Actor!
   "What opening the row lands on — the comment, the citing post,
-   the acting actor's profile."
+   the acting actor's profile. Null for APPLICATION_APPROVABLE,
+   whose destination is the invites screen rather than a node."
   subject: Node
   "The viewer's own node the act reached: the post commented on,
    the comment replied to, the profile mentioned. Null for the
-   two invite-flow kinds, which reach the account rather than a
+   three invite-flow kinds, which reach the account rather than a
    node."
   context: Node
   "The landed L1 record behind the act — the row's traceable
-   source, and where a stance row reads its pair. Null for
-   APPLICATION_APPROVED, which is an account-state moment with no
-   record of its own."
+   source, and where a stance row reads its pair. Null for the two
+   account-state kinds, APPLICATION_APPROVABLE and
+   APPLICATION_APPROVED, which are moments in an application's
+   life with no record of their own."
   record: Record
   "When the act landed."
   createdAt: DateTime!
@@ -264,7 +283,7 @@ type Notification {
   readAt: DateTime
 }
 
-"The seven addressed acts. A kind is the act plus what it
+"The eight addressed acts. A kind is the act plus what it
  reached, which is what a reader needs to know before opening."
 enum NotificationKind {
   "A comment on the viewer's post."
@@ -277,6 +296,10 @@ enum NotificationKind {
   CITATION
   "An opinion whose target is the viewer's profile."
   PROFILE_OPINION
+  "An application staged through the viewer's invite link became
+   approvable — email verified and key attached, so the inviter
+   can now act on it."
+  APPLICATION_APPROVABLE
   "An account applied through the viewer's invite link and landed."
   INVITE_LANDED
   "The viewer's inviter approved their application."
@@ -321,6 +344,10 @@ extend type Mutation {
 node the viewer can no longer reach — redacted to the reduced
 projection, or not yet carried as a display row — must not fail
 the row. The row still says what happened and when.
+`APPLICATION_APPROVABLE` carries none by construction: the
+applicant holds nothing on the graph before approval, so the row
+opens by kind on the invites screen, where the act can be
+answered.
 
 The storage shape the resolvers read, for
 [data-model.md](data-model.md):
@@ -340,7 +367,7 @@ CREATE TABLE user_notifications (
     subject_id  UUID,
     context_id  UUID,
     -- L1's own identifier for the causing record; null for the
-    -- account-state kind.
+    -- account-state kinds.
     record_id   TEXT,
     created_at  TIMESTAMPTZ NOT NULL,
     read_at     TIMESTAMPTZ
@@ -412,7 +439,7 @@ are reached:
   category the rows belong to.
 - [edges.md](../primitive/edges.md) — the Review, Reference, and
   Opinion families the kinds resolve to.
-- [auth.md](auth.md) — the application lifecycle behind the two
+- [auth.md](auth.md) — the application lifecycle behind the three
   invite-flow kinds.
 - [design.md](design.md) — the band the bell sits in and the list
   conventions the surface follows.

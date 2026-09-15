@@ -160,9 +160,9 @@ The flow:
    commits the inviter's stance: the backend then runs the
    admission sequence — the funded burn, the Registration
    grounding the new Actor + Profile, and the inviter's Opinion
-   toward the new Profile. The link's stance values are
-   **pre-filled, not pre-committed** — the inviter can adjust
-   them at approval.
+   toward the new Profile. **The link carries no stance values**:
+   the inviter chooses `(p_d, p_i)` at approval, the moment the
+   act is priced and the only moment anything reads them.
 3. **The joiner accepts by reciprocating** (§2) — their own
    Opinion toward the inviter's Profile completes the pair and
    the membership.
@@ -172,13 +172,14 @@ the shared graph is public — they just cannot act. Approval
 latency (an inviter who doesn't check their phone for hours) is
 a UX cost, not a correctness problem.
 
-**Link modes.** When generating a link, the inviter picks
-**single-use or multi-use**; both are time-gated and revocable at
-any time.
+**Link modes.** A link is **single-use by default**; the inviter
+opens it to multi-use when generating it. Both are time-gated and
+revocable at any time.
 
-- **Single-use.** One applicant slot. Best for targeted invites —
-  a specific link to a specific person; a leaked link stages at
-  most one stranger, and approval still gates the join.
+- **Single-use.** One applicant slot — the default, and what a
+  targeted invite wants: a specific link to a specific person; a
+  leaked link stages at most one stranger, and approval still
+  gates the join.
 - **Multi-use.** Many applicants can stage through the same link
   until its timer expires — the shared-funnel mode influencers
   and public communities need, where the inviter does not know in
@@ -216,8 +217,9 @@ cluster**. The approval gate (§4) doesn't remove the hazard —
 carelessly batch-approving unknown applicants *is* mis-vouching —
 it makes the mis-vouch an explicit, priced act. The same mechanic
 that gives the inviter reach — and lifetime referral earnings —
-concentrates the cost onto them. Single-use links sidestep this
-by construction.
+concentrates the cost onto them. Single-use links sidestep the
+hazard by construction, which is why they are the default: the
+ordinary invite aims at one person.
 
 The system tolerates the multi-use case because public links are
 necessary for high-reach onboarding, and the abuse is

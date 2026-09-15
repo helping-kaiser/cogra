@@ -440,7 +440,8 @@ function ActsCount({ count, noun }: { count: number; noun: string }) {
  * becoming an action row, because what it opens is what it already says. It
  * carries no chevron and no trailing word — `PickedRow`'s rule for the picked
  * pictures, said here — so the accessible name is the only thing that tells a
- * listener the line is a door at all ("Manage the citations", copy-voice).
+ * listener the line is a door at all, count folded in ("Manage the N
+ * citations", and at one "Manage the 1 citation" — copy-voice.md:409-419).
  *
  * THE TRAILING COUNT IS THE CITATIONS, BARE — the list's length and nothing
  * else. The signature's own total is the card's footer and already says in
@@ -460,7 +461,7 @@ function CitedRow({
       type="button"
       data-testid={testId}
       onClick={onOpen}
-      aria-label="Manage the citations"
+      aria-label={`Manage the ${count} ${count === 1 ? "citation" : "citations"}`}
       className="cg-state cg-focus flex min-h-11 w-full cursor-pointer items-center gap-2 border-0 border-b border-solid border-outline-variant bg-transparent p-0 text-left text-on-surface"
     >
       <span className="w-19 flex-none text-label-small text-on-surface-variant">References</span>

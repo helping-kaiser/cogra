@@ -388,7 +388,8 @@ private fun ReferenceActRow(reference: ReferenceRow) {
  * becoming an action row, because what it opens is what it already says. No
  * chevron and no trailing word — `PickedRow`'s rule for the picked pictures,
  * said here — so the label on the gesture is what tells a listener the line is
- * a door at all ("Manage the citations", copy-voice).
+ * a door at all, count folded in ("Manage the N citations", and at one
+ * "Manage the 1 citation" — copy-voice.md:409-419).
  *
  * THE TRAILING COUNT IS THE CITATIONS, BARE: the list's length and nothing
  * else. The signature's own total is the block's footer and already says in
@@ -401,7 +402,7 @@ private fun CitedDoorRow(count: Int, onOpen: () -> Unit, testTag: String) {
             .fillMaxWidth()
             .clickable(
                 role = Role.Button,
-                onClickLabel = "Manage the citations",
+                onClickLabel = "Manage the $count ${if (count == 1) "citation" else "citations"}",
                 onClick = onOpen,
             )
             .padding(vertical = Space.x2)

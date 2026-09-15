@@ -19,7 +19,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.domain.content.MAX_BIO_CHARS
 import com.cogra.domain.content.MAX_DISPLAY_NAME_CHARS
@@ -166,61 +166,46 @@ fun ProfileEditScreen(
                             testTag = "profile_edit_avatar_preview",
                         )
                     }
-                    OutlinedTextField(
+                    CograTextField(
                         value = state.displayName,
                         onValueChange = onDisplayNameChange,
-                        label = { Text(stringResource(R.string.profile_edit_display_name)) },
-                        singleLine = true,
-                        isError = state.emptyName || state.displayNameTooLong,
-                        supportingText = when {
-                            state.emptyName -> {
-                                { Text(stringResource(R.string.profile_edit_empty_name)) }
-                            }
-                            state.displayNameTooLong -> {
-                                {
-                                    Text(
-                                        stringResource(
-                                            R.string.profile_edit_display_name_too_long,
-                                            MAX_DISPLAY_NAME_CHARS,
-                                        ),
-                                    )
-                                }
-                            }
+                        label = stringResource(R.string.profile_edit_display_name),
+                        cap = MAX_DISPLAY_NAME_CHARS,
+                        error = when {
+                            state.emptyName -> stringResource(R.string.profile_edit_empty_name)
+                            state.displayNameTooLong -> stringResource(
+                                R.string.profile_edit_display_name_too_long,
+                                MAX_DISPLAY_NAME_CHARS,
+                            )
                             else -> null
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("profile_edit_display_name"),
+                        testTag = "profile_edit_display_name",
                     )
-                    OutlinedTextField(
+                    CograTextField(
                         value = state.bio,
                         onValueChange = onBioChange,
-                        label = { Text(stringResource(R.string.profile_edit_bio)) },
+                        label = stringResource(R.string.profile_edit_bio),
+                        singleLine = false,
                         minLines = 3,
-                        isError = state.bioTooLong,
-                        supportingText = if (state.bioTooLong) {
-                            { Text(stringResource(R.string.profile_edit_bio_too_long, MAX_BIO_CHARS)) }
+                        cap = MAX_BIO_CHARS,
+                        error = if (state.bioTooLong) {
+                            stringResource(R.string.profile_edit_bio_too_long, MAX_BIO_CHARS)
                         } else {
                             null
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("profile_edit_bio"),
+                        testTag = "profile_edit_bio",
                     )
-                    OutlinedTextField(
+                    CograTextField(
                         value = state.websiteUrl,
                         onValueChange = onWebsiteChange,
-                        label = { Text(stringResource(R.string.profile_edit_website)) },
-                        singleLine = true,
-                        isError = state.websiteUrlTooLong,
-                        supportingText = if (state.websiteUrlTooLong) {
-                            { Text(stringResource(R.string.profile_edit_website_too_long, MAX_WEBSITE_URL_CHARS)) }
+                        label = stringResource(R.string.profile_edit_website),
+                        cap = MAX_WEBSITE_URL_CHARS,
+                        error = if (state.websiteUrlTooLong) {
+                            stringResource(R.string.profile_edit_website_too_long, MAX_WEBSITE_URL_CHARS)
                         } else {
                             null
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("profile_edit_website"),
+                        testTag = "profile_edit_website",
                     )
                     if (state.refused) {
                         Text(
@@ -238,9 +223,11 @@ fun ProfileEditScreen(
                     }
                     Button(
                         onClick = onSubmit,
-                        // A picture still on its way has no id to name,
-                        // so saving would silently drop it.
-                        enabled = !state.submitting && !state.imagesPending,
+                        // A picture still on its way has no id to name, and
+                        // an over-cap field disables Save too (the counter
+                        // law) — `canSubmit` only makes visible what the
+                        // ViewModel's own submit gate already refuses.
+                        enabled = state.canSubmit,
                         modifier = Modifier.testTag("profile_edit_save"),
                     ) {
                         Text(stringResource(R.string.profile_edit_save))

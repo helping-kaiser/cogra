@@ -26,6 +26,13 @@ doing: **graph, node, edge, vertex, tensor, weight, parameter,
 decentralized, protocol, token, crypto**. The repo's own internal
 vocabulary is equally out: *valence*, *connection*, `p_d`, `p_i`.
 
+An **opinion's** two stance parameters are labelled `For or against` and
+`How much reaches you` on screen, and nothing else. Another record family
+filling the same two slots names them its own — a tag's pair editor says
+`How much it is about this` / `How sure you are`, a citation's field
+`Barely` / `Entirely`, an Affinity's `Dislike` / `Like`. The control
+owns the geometry, the record family owns the words.
+
 The rule is "as little as possible, as much as needed", not a word ban.
 Where the format *is* the content, name it exactly: a key export that
 won't say PEM, PKCS#8, hex, or Ed25519 is an export nobody can feed to
