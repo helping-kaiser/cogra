@@ -29,10 +29,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -3030,
+      "x": -3320,
       "y": 0,
-      "w": 2610,
-      "h": 4267,
+      "w": 2900,
+      "h": 4323,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -418,6 +418,15 @@
       "file": "VouchAskPad.dc.html",
       "title": "Invites · answering the ask",
       "x": 3840,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "RejectAllConfirm.dc.html",
+      "title": "Invites · closing a link's applications",
+      "x": 4320,
       "y": 6328,
       "w": 390,
       "h": 844,
