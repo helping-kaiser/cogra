@@ -1642,6 +1642,9 @@ Object.assign(FLOW_MARKERS, {
     // mid-list would renumber five nav edges to say nothing new: the badge is
     // an identity, not a position (the settings page's own rule).
     { n: 14, find: ">@rafa is ready for your approval<", tag: "button" },
+    // The ninth, the eighth's twin (the reject extension), taking its next
+    // free number for the same reason.
+    { n: 15, find: ">@kel closed your application<", tag: "button" },
   ],
   /* ── The Post score’s drill-down (backlog item 13) ─────────────────────
      The path rows and the step rows carry one number each: they are one control
@@ -1766,12 +1769,45 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* THE REJECT EXTENSION'S TWO BOARDS (jakob 2026-09-15). They are declared
+   ABOVE the three band sweeps on purpose: a sweep pushes onto
+   `FLOW_MARKERS[board] ??= []`, so an Object.assign running after one would
+   replace the array it filled and drop the markers it had just added.
+
+   `ApplicantRejected` IS `ApplicantWaiting`'S NUMBERING, to the number. It is
+   the same shell with one card swapped, so every control it shares keeps the
+   badge it already had — the three sweeps below name it beside its sibling at
+   the same numbers — and the card's own control takes 17, the number the
+   dismissal it replaced was using. A board that renumbers what it inherited
+   makes two boards of one anatomy disagree for no reason.
+
+   `VouchAsk` IS `ApprovePad`'S, for the same reason: the same pad doing the
+   same act, so the same four numbers in the same order. Its card's `Not now`
+   and its way back sit under the wash and carry none, exactly as
+   `VouchBackPad`'s do. */
+Object.assign(FLOW_MARKERS, {
+  ApplicantRejected: [
+    ...post({ author: 1, menu: 2, media: 3, more: 4, topic: 5, refs: 6, stance: 7, score: 8, comments: 9 }),
+    secondComments(9),
+    ...nav(10),
+    { n: 17, find: 'aria-label="Copy your ask link"', tag: "button" },
+  ],
+  VouchAsk: [
+    { n: 1, find: 'aria-label="How vouching works"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 2, find: ">Choose your opinion on @noor</button>", tag: "button" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+  ],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
    surface's gap (guest boards: the guest gate's). */
 const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
+  ApplicantRejected: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 8,
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
@@ -1791,6 +1827,7 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
    name and carries its marker in its own list above. */
 const BAND_BELL = {
   ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
+  ApplicantRejected: 18,
   ComposeExpired: 20, Explore: 9,
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
@@ -1809,6 +1846,7 @@ for (const [board, n] of Object.entries(BAND_BELL)) {
    the platform's own sheet. */
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
+  ApplicantRejected: 16,
   KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
   FeedNarrowed: 17, FeedScrolled: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16, FeedTopic: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,

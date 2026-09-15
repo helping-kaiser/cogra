@@ -120,6 +120,30 @@ export function Screen() {
           trailing="12d"
           onOpen={() => {}}
         />
+        {/* THE NINTH KIND (the invites round's extension, 2026-09-15): an
+            inviter closed an application of yours. It is the eighth's twin and
+            had to be drawn beside it — a mechanic that notifies a yes and says
+            nothing about a no leaves the applicant waiting on a thing that has
+            already stopped happening, which is the one cruelty this flow can
+            commit by omission.
+
+            THE TWO ROWS TOGETHER ARE THE STORY, and the order tells it: @kel
+            closed an application fourteen days ago and @mira vouched them in
+            two days later. That is the ruled recovery path drawn as history —
+            one member declining is one member declining, and the ask link is
+            how the next one hears about it.
+
+            IT NAMES THE PERSON AND USES THE CONTROL'S OWN WORD. `closed` is
+            what the button said; a notification that softened it to something
+            else would be the product telling two stories about one act. */}
+        <ContentRow
+          variant="chronicle"
+          chevron={false}
+          name="Kel Moreau"
+          title="@kel closed your application"
+          trailing="14d"
+          onOpen={() => {}}
+        />
       </ChronicleList>
       <BottomNav active={null} slots={ALL_SLOTS} inline />
     </>

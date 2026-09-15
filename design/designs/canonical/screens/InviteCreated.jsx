@@ -24,9 +24,9 @@
    `extractInviteId` already reads. Drawing it in its own `surface-card`
    container would claim a second thing exists; drawing it on the sheet's own
    ground says it is the first thing with the link taken off. That is
-   `PayoutAddress`'s anatomy minus the container, and if a second surface ever
-   wants the same, it becomes a `bare` prop on that master — the shape
-   `SettingsGroup` already has for exactly this reason.
+   `PayoutAddress` with `bare` — the shape `SettingsGroup` already has for
+   exactly this reason, and the rejected applicant's ask link is the second
+   surface that asked for it.
 
    MONO AND WHOLE, both of them. A UUID read aloud or typed by hand is checked
    character by character, and the one place this system allows truncation is
@@ -53,55 +53,14 @@ export function Screen() {
 
           <Button style={{ width: "100%" }}>Share link</Button>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
-              <span
-                style={{
-                  flex: 1,
-                  fontSize: "var(--text-label-medium)",
-                  lineHeight: "var(--text-label-medium--line-height)",
-                  fontWeight: "var(--text-label-medium--font-weight)",
-                  letterSpacing: "var(--text-label-medium--letter-spacing)",
-                  color: "var(--text-secondary)",
-                }}
-              >
-                Invite code
-              </span>
-              <button
-                type="button"
-                aria-label="Copy the code"
-                className="cg-state cg-focus cg-hit"
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  display: "grid",
-                  placeItems: "center",
-                  border: 0,
-                  background: "none",
-                  borderRadius: "var(--radius-full)",
-                  color: "var(--text-secondary)",
-                  padding: 0,
-                  cursor: "pointer",
-                  flex: "none",
-                }}
-              >
-                <Icon name="content_copy" size={18} />
-              </button>
-            </div>
-            <code
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "var(--text-body-small)",
-                lineHeight: "var(--text-body-small--line-height)",
-                overflowWrap: "anywhere",
-                wordBreak: "break-all",
-                color: "var(--on-surface)",
-              }}
-            >
-              {SOL_INVITE_ID}
-            </code>
-            <QuietNote>The same invite with the link taken off — the door takes either.</QuietNote>
-          </div>
+          <PayoutAddress
+            bare
+            label="Invite code"
+            address={SOL_INVITE_ID}
+            onCopy={() => {}}
+            copyLabel="Copy the code"
+            caption="The same invite with the link taken off — the door takes either."
+          />
         </div>
       </BottomSheet>
     </>

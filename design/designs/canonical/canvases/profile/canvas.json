@@ -32,7 +32,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 4172,
+      "h": 4215,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -400,6 +400,15 @@
       "file": "RejectConfirm.dc.html",
       "title": "Invites · closing an application",
       "x": 2880,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "VouchAsk.dc.html",
+      "title": "Invites · someone asked you to vouch",
+      "x": 3360,
       "y": 6328,
       "w": 390,
       "h": 844,

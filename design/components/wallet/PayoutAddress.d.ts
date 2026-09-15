@@ -16,6 +16,11 @@ export interface PayoutAddressProps {
   changeLabel?: string;
   /** The quiet line under the address, e.g. "The address is public — and so is every change to it." */
   caption?: string;
+  /** Drops the card fill and inset, keeping the whole anatomy — for a string
+   *  that restates one beside it (the invite code under its link) or that is
+   *  already inside a card (the ask link in the rejected applicant's card).
+   *  Never for a string that is the surface's own subject. */
+  bare?: boolean;
 }
 
 export declare function PayoutAddress(props: PayoutAddressProps): JSX.Element;

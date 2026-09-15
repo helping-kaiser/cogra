@@ -6,6 +6,7 @@
       "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
       "status": "resolved",
       "startsOn": [
+        "ApplicantRejected",
         "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -56,7 +57,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 48 boards → ComposePick",
+        "start · «nav · New post» on 49 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -68,6 +69,7 @@
         "ComposeDetails",
         "ComposeSeal",
         "ComposeLanded",
+        "ApplicantRejected",
         "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
@@ -183,6 +185,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
@@ -210,7 +213,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 26 boards → ReplyEntry",
+        "start · «comment count» on 27 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
@@ -220,6 +223,7 @@
         "ReplyCompose",
         "ReplySeal",
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
@@ -407,6 +411,19 @@
       ]
     },
     {
+      "name": "answer-someones-ask-link",
+      "description": "An ask link opens on the person who sent it, with the pad already there; Set signs the vouch that brings them in — the route a turned-down applicant still has.",
+      "status": "resolved",
+      "steps": [
+        "start · VouchAsk",
+        "end · VouchAsk · 4 «Set» → Invites — signed — the vouch lands and the person is now this member's to have vouched in"
+      ],
+      "boards": [
+        "VouchAsk",
+        "Invites"
+      ]
+    },
+    {
       "name": "restore-your-key",
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
       "status": "resolved",
@@ -493,6 +510,7 @@
       "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
       "status": "resolved",
       "startsOn": [
+        "ApplicantRejected",
         "ComposeExpired",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -516,11 +534,12 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 21 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 22 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
         "VouchBackPad",
+        "ApplicantRejected",
         "ComposeExpired",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -706,6 +725,7 @@
       "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
       "status": "resolved",
       "startsOn": [
+        "ApplicantRejected",
         "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -756,7 +776,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 48 boards → ComposePick",
+        "start · «nav · New post» on 49 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -768,6 +788,7 @@
         "ComposeDetails",
         "ComposeSeal",
         "ComposeLanded",
+        "ApplicantRejected",
         "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
@@ -822,6 +843,7 @@
       "description": "A horizontal or square clip takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
       "status": "resolved",
       "startsOn": [
+        "ApplicantRejected",
         "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -872,7 +894,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 48 boards → ComposePick",
+        "start · «nav · New post» on 49 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -884,6 +906,7 @@
         "ComposeDetailsVideo",
         "ComposeSeal",
         "ComposeLanded",
+        "ApplicantRejected",
         "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
@@ -938,6 +961,7 @@
       "description": "A vertical clip meets no cover step at all: it plays the moment it is on screen, so its face is its first frame and the wizard runs pick to details, where an optional door offers a cover to anyone who wants one.",
       "status": "resolved",
       "startsOn": [
+        "ApplicantRejected",
         "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -988,7 +1012,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 48 boards → ComposePick",
+        "start · «nav · New post» on 49 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -998,6 +1022,7 @@
         "ComposeDetailsVideo",
         "ComposeSeal",
         "ComposeLanded",
+        "ApplicantRejected",
         "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
@@ -1353,6 +1378,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
@@ -1379,12 +1405,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 25 boards → ProfileOther",
+        "start · «author chip» on 26 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
         "ProfileOther",
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
@@ -1417,6 +1444,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "DeleteAccountCanceled",
@@ -1435,12 +1463,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — pictures — the post opens on 17 boards → PostDetail",
+        "start · «post media» — pictures — the post opens on 18 boards → PostDetail",
         "end · arrival at PostDetail"
       ],
       "boards": [
         "PostDetail",
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "DeleteAccountCanceled",
@@ -1465,6 +1494,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "DeleteAccountCanceled",
@@ -1483,12 +1513,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 17 boards → Reel",
+        "start · «post media» — a portrait clip — the stream opens on 18 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
         "Reel",
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "DeleteAccountCanceled",
@@ -1540,6 +1571,7 @@
       "blockedBy": "the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "DeleteAccountCanceled",
@@ -1556,12 +1588,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 15 boards → RefsSheet",
+        "start · «reference count» on 16 boards → RefsSheet",
         "end · RefsSheet · 2 «reference rows» → gap: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)"
       ],
       "boards": [
         "RefsSheet",
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "DeleteAccountCanceled",
@@ -1669,6 +1702,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
@@ -1695,7 +1729,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Post Score» on 25 boards → FeedEntry",
+        "start · «Post Score» on 26 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1707,6 +1741,7 @@
         "RankHop",
         "RankRecords",
         "ApplicantFeed",
+        "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
@@ -1767,6 +1802,22 @@
         "make-your-key",
         "verify-the-email"
       ]
+    },
+    "ApplicantRejected": {
+      "flows": [
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": []
     },
     "ApplicantWaiting": {
       "flows": [
@@ -2405,10 +2456,12 @@
     },
     "Invites": {
       "flows": [
+        "answer-someones-ask-link",
         "send-someone-an-invite",
         "vouch-an-applicant-in"
       ],
       "endpoint": [
+        "answer-someones-ask-link",
         "vouch-an-applicant-in"
       ]
     },
@@ -2994,6 +3047,14 @@
       ],
       "endpoint": [
         "open-the-viewer"
+      ]
+    },
+    "VouchAsk": {
+      "flows": [
+        "answer-someones-ask-link"
+      ],
+      "endpoint": [
+        "answer-someones-ask-link"
       ]
     },
     "VouchBack": {
