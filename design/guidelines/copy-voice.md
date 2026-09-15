@@ -30,7 +30,7 @@ An **opinion's** two stance parameters are labelled `For or against` and
 `How much reaches you` on screen, and nothing else. Another record family
 filling the same two slots names them its own — a tag's pair editor says
 `How much it is about this` / `How sure you are`, a citation's field
-`Barely` / `Entirely`, an Affinity's `Not mine` / `Mine`. The control
+`Barely` / `Entirely`, an Affinity's `Dislike` / `Like`. The control
 owns the geometry, the record family owns the words.
 
 The rule is "as little as possible, as much as needed", not a word ban.
@@ -1400,25 +1400,23 @@ naming the one thing that would fill it — including where the gesture
 lives, because a reader with no topics has not met the tag page's row
 yet.
 
-**The Affinity pad's poles — PROPOSED, NOT BLESSED.** The pad a topic's
-stance row opens fills the same two signed slots as an opinion's with
-different quantities: association and attraction
-(`layer1-interface.md` §9.5). Like a tag's pair editor, it names its own
-ends in the reader's words: association runs `Not mine` to `Mine`, and
-attraction runs `Away` up to `Toward`. *Not mine / Mine* says coherence
-rather than verdict, which is what the census means by association's
-sign being coherence and never a standing vouch; *Away / Toward* is what
-attraction is, and deliberately borrows neither the opinion's
-`Less / More` (which names reach, a different question) nor its
-`Against / For` (which names a verdict this record does not carry).
-Blessed 2026-09-15.
-
-**What the pad still calls its axes is the opinion's, and that is a
-known mismatch.** Above the alternate sliders the two tracks are still
-labelled `For or against` and `How much reaches you` — the stance
-family's names, on a record that is not one. The four poles were this
-round's to propose; the two axis names are a copy ruling of their own
-and wait for one (backlog item 79).
+**The Affinity pad's six words.** The pad a topic's stance row opens
+fills the same two signed slots as an opinion's with different
+quantities: association and attraction (`layer1-interface.md` §9.5).
+Like a tag's pair editor it names them in the reader's words — and it
+names what each axis ASKS as well as where it ends, because the ends
+alone leave a slider labelled with the opinion's question. Association
+asks **`How much you like it`** and runs `Dislike` to `Like`;
+attraction asks **`How close you want to be`** and runs `Far away` to
+`Close to me`. That is the pair a reader actually decides about a
+topic — how much they like it, and how much of it they want to see —
+and the words are the plainest ones that carry it. They borrow neither
+the opinion's `Less / More`, which names reach rather than closeness,
+nor its `Against / For`, which names a verdict this record does not
+carry. The field draws the four ends; the two questions ride the
+sliders, the typed fields and every spoken readout, so the accessible
+route asks what the drawn one asks. Ruled 2026-09-15; drawn on
+`TagPageHeldPad`.
 
 **The feed filter's section**: label `One topic`, hint `Topics you hold
 and are for. A topic you hold against stays a record — it just never

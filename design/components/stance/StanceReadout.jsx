@@ -74,6 +74,18 @@ export const INTEREST_LABEL = "How much reaches you";
 /** The ends of each axis, named. A slider from −1 to +1 needs its poles said. */
 export const DIRECTED_POLES = ["Against", "For"];
 export const INTEREST_POLES = ["Less", "More"];
+
+/* THE AXIS NAMES TRAVEL WITH THE RECORD FAMILY, exactly as the poles already
+   do (`STANCE_AXES`, StancePad.jsx). The poles say where an axis ENDS; these
+   say what it ASKS, and both are the family's words rather than the control's.
+   A stance asks "For or against" because its slots hold valence and
+   connection; an Affinity's hold association and attraction, which is a
+   different question in the same two slots. The names reach only the surfaces
+   that SAY the axis — the sliders, the direct-entry labels, and every spoken
+   readout — because the field itself draws poles and no question at all.
+   Leaving them in the control is what let the accessible route ask one
+   family's question about another family's record (backlog item 79). */
+export const STANCE_AXIS_NAMES = { directed: DIRECTED_LABEL, interest: INTEREST_LABEL };
 /** What the middle pair is: the edge being authored, not the bundle it joins. */
 export const PICK_LABEL = "Your pick";
 
@@ -340,8 +352,8 @@ export function formatTagPair(pair) {
 }
 
 /** The same two values with their axes named, for surfaces without the pad's layout. */
-export function formatStanceWords(pair) {
-  return `${DIRECTED_LABEL} ${formatDimension(pair.pDirected)}, ${INTEREST_LABEL} ${formatDimension(pair.pInterest)}`;
+export function formatStanceWords(pair, names = STANCE_AXIS_NAMES) {
+  return `${names.directed} ${formatDimension(pair.pDirected)}, ${names.interest} ${formatDimension(pair.pInterest)}`;
 }
 
 /** Where a pick lands the bundle: `clip` of RAW SUM plus pick, folded locally. */
@@ -421,7 +433,7 @@ export function landingLine(landing) {
    the eye gets from the face — in both modes.
 
    The severed line has no pair to show and stays a plain string. */
-export function signedLine(standing, records, severed, targetLabel) {
+export function signedLine(standing, records, severed, targetLabel, names = STANCE_AXIS_NAMES) {
   const acts = records === 1 ? "Signed" : `Signed ${records} things`;
   if (severed) return `${acts}, still settling. You've walked ${targetLabel} back to nothing.`;
   const readout = bundleReadout(standing);
@@ -433,7 +445,7 @@ export function signedLine(standing, records, severed, targetLabel) {
         <span className="cg-exact">{` (${formatStancePair(standing)})`}</span>
       </span>
       <span style={SR_ONLY}>
-        {`${acts}, still settling. Current opinion: ${readout.label}, ${formatStanceWords(standing)}`}
+        {`${acts}, still settling. Current opinion: ${readout.label}, ${formatStanceWords(standing, names)}`}
       </span>
     </>
   );
@@ -461,13 +473,13 @@ function ReadoutLine({ emoji, exact, spoken, style }) {
 }
 
 /** Face and pair, and the words for a reader who cannot see the face (§8.3). */
-export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, style }) {
+export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, names = STANCE_AXIS_NAMES, style }) {
   const readout = kind === "standing" ? bundleReadout(pair, zeroLabel) : nearestAnchor(pair);
   return (
     <ReadoutLine
       emoji={readout.emoji}
       exact={formatStancePair(pair)}
-      spoken={`${readout.label}, ${formatStanceWords(pair)}`}
+      spoken={`${readout.label}, ${formatStanceWords(pair, names)}`}
       style={style}
     />
   );
@@ -486,7 +498,7 @@ export function OwnStanceReadout({ pDirected, style }) {
 }
 
 /** The bundle, split for rendering: either a sentence, or a readout to lay out. */
-export function standingParts(bundle, targetLabel) {
+export function standingParts(bundle, targetLabel, names = STANCE_AXIS_NAMES) {
   if (bundle === undefined) return { sentence: "Checking your current opinion…" };
   if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
   if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} You've walked ${targetLabel} back to nothing.` };
@@ -495,12 +507,12 @@ export function standingParts(bundle, targetLabel) {
     label: "Current opinion",
     emoji: readout.emoji,
     pair: formatStancePair(bundle.current),
-    spoken: `Current opinion: ${readout.label}, ${formatStanceWords(bundle.current)}`,
+    spoken: `Current opinion: ${readout.label}, ${formatStanceWords(bundle.current, names)}`,
   };
 }
 
 /** The landing, split the same way. */
-export function landingParts(landing) {
+export function landingParts(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return { sentence: "Adding it up…" };
   if (landing.severed || landing.inert) return { sentence: landingLine(landing) };
   const readout = bundleReadout(landing.landing);
@@ -508,7 +520,7 @@ export function landingParts(landing) {
     label: "Resulting opinion",
     emoji: readout.emoji,
     pair: formatStancePair(landing.landing),
-    spoken: `Resulting opinion: ${readout.label}, ${formatStanceWords(landing.landing)}`,
+    spoken: `Resulting opinion: ${readout.label}, ${formatStanceWords(landing.landing, names)}`,
   };
 }
 
@@ -545,11 +557,11 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
 }
 
 /** The current opinion and the pick — everything that sits above the field. */
-export function StanceStanding({ pick, bundle, targetLabel, style }) {
+export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_NAMES, style }) {
   const anchor = nearestAnchor(pick);
   return (
     <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", ...style }}>
-      <ReadoutBlock {...standingParts(bundle, targetLabel)} />
+      <ReadoutBlock {...standingParts(bundle, targetLabel, names)} />
       {/* The pick's own readout — above the field, never under the knob, because a
           thumb on the control covers exactly where feedback would otherwise sit. */}
       <ReadoutBlock
@@ -557,17 +569,17 @@ export function StanceStanding({ pick, bundle, targetLabel, style }) {
         label={PICK_LABEL}
         emoji={anchor.emoji}
         pair={formatStancePair(pick)}
-        spoken={`${PICK_LABEL}: ${anchor.label}, ${formatStanceWords(pick)}`}
+        spoken={`${PICK_LABEL}: ${anchor.label}, ${formatStanceWords(pick, names)}`}
       />
     </div>
   );
 }
 
 /** The landing — the one readout that sits below the field. */
-export function StanceLandingLine({ landing, style }) {
+export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, style }) {
   return (
     <div aria-live="polite" style={style}>
-      <ReadoutBlock {...landingParts(landing)} />
+      <ReadoutBlock {...landingParts(landing, names)} />
     </div>
   );
 }
