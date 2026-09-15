@@ -420,4 +420,59 @@ class StanceRepositoryTest {
         assertThat(writes.lastTarget).isEqualTo("t1")
         assertThat(writes.lastPick).isEqualTo(-0.3 to 0.2)
     }
+
+    // -- The topic leg: a name is an address, not a spelling of an id --
+
+    @Test
+    fun `a topic read asks the hashtag root once and never probes`() = runTest {
+        // The probe exists because an OPAQUE id does not say which root
+        // holds it. A name does, so the topic read is one document —
+        // and a feed drawing one control per card is exactly why that
+        // matters (this file's own note on the priced shape).
+        val repo = repo()
+        enqueue(answerJson("hashtag", bundleJson(pDirected = 0.6, pInterest = 0.35, recordCount = 4)))
+
+        val standing = (repo.standing(StanceTarget.Topic("saltmaps")) as Outcome.Success).value
+
+        assertThat(standing.target).isEqualTo(StanceTarget.Topic("saltmaps"))
+        assertThat(standing.net).isEqualTo(StancePair(0.6, 0.35))
+        assertThat(standing.records).isEqualTo(4)
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("HashtagStance")
+        assertThat(body).contains("\"name\":\"saltmaps\"")
+        // Nothing else was asked: a probe would have left requests behind.
+        assertThat(server.requestCount).isEqualTo(1)
+    }
+
+    @Test
+    fun `a topic the substrate cannot carry is refused, not read as an empty bundle`() = runTest {
+        enqueue(missJson("hashtag"))
+
+        val outcome = repo().standing(StanceTarget.Topic("not a name"))
+
+        assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)
+        assertThat((outcome as Outcome.Refused).errors.single().code).isEqualTo(ErrorCode.NOT_FOUND)
+    }
+
+    @Test
+    fun `a topic stance is staged by name, not by id`() = runTest {
+        // `PrepareStanceInput` is exactly-one-of, and a Type anchored
+        // vacuously has no id to send — naming it is what registers it.
+        repo().prepareStance(StanceTarget.Topic("saltmaps"), StancePair(0.25, 0.3))
+
+        assertThat(writes.lastTopic).isEqualTo("saltmaps")
+        assertThat(writes.lastTarget).isNull()
+        assertThat(writes.lastPick).isEqualTo(0.25 to 0.3)
+    }
+
+    @Test
+    fun `unfollowing sends topicName, and no target rides along`() = runTest {
+        enqueue("""{"data":{"prepareSeverance":{"writes":[],"userErrors":[]}}}""")
+
+        repo().prepareSeverance(StanceTarget.Topic("saltmaps"))
+
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"topicName\":\"saltmaps\"")
+        assertThat(body).doesNotContain("\"target\"")
+    }
 }
