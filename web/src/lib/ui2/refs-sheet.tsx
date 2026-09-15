@@ -38,13 +38,13 @@ import type { ReferenceClaimNode } from "@/lib/references/claims";
 import { targetView, untypedTargetView } from "@/lib/references/normalize";
 import type { ReferenceTargetView } from "@/lib/references/draft";
 import { Icon } from "@/lib/ui/icons";
-import { PendingMarker } from "@/lib/ui/pending-marker";
 import { formatReferenceParamWords } from "@/lib/ui/reference-format";
 import { formatStancePair } from "@/lib/ui/stance-format";
 import { formatTagPair, formatTagParamWords } from "@/lib/ui/tag-format";
 import { BottomSheet } from "./bottom-sheet";
 import { ListRow } from "./list-row";
 import { MonogramAvatar } from "./monogram-avatar";
+import { PairReadout } from "./pair-readout";
 
 /** A standing tag claim, as every content document serves it. */
 export type TopicClaimNode = {
@@ -135,37 +135,6 @@ function referenceMark(view: ReferenceTargetView): ReactNode {
       // none rather than claiming a class the client cannot read.
       return <NodeTile>{null}</NodeTile>;
   }
-}
-
-/**
- * The row's right edge: the face, the exact pair, and — stacked under them —
- * the settling mark. The face is the quick read and the numbers carry the fact;
- * every hidden number has a screen-reader-only twin, because the visual pairing
- * of glyph and digits says nothing on its own.
- */
-function PairReadout({
-  emoji,
-  exact,
-  spoken,
-  pending,
-  testId,
-}: {
-  emoji: string;
-  exact: string;
-  spoken: string;
-  pending: boolean;
-  testId: string;
-}) {
-  return (
-    <span className="flex flex-none flex-col items-end whitespace-nowrap text-body-small text-on-surface-variant">
-      <span aria-hidden="true" className="inline-flex items-center gap-1" data-testid={testId}>
-        <span>{emoji}</span>
-        <span>{exact}</span>
-      </span>
-      <span className="sr-only">{spoken}</span>
-      {pending && <PendingMarker inline testId={`${testId}-pending`} />}
-    </span>
-  );
 }
 
 export function RefsSheet({

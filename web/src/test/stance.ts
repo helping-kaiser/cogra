@@ -6,9 +6,10 @@
 // "no stance yet" affordance, and the test still passes while the
 // standing never renders. That is the hole these close.
 //
-// `viewerStance` hangs off three concrete types under three different
-// roots, so the shape is built once here rather than three times in
-// every surface test.
+// `viewerStance` hangs off four concrete types under four different
+// roots, so the shape is built once here rather than four times in
+// every surface test. A topic's identity is its canonical name rather
+// than a UUID (hashtag.md §1), so that one root is keyed on `name`.
 
 import { graphql, HttpResponse } from "msw";
 import type { RequestHandler } from "msw";
@@ -51,9 +52,16 @@ export function stanceBundle(stance: SeededStance) {
   };
 }
 
-function root(operation: string, field: string, typename: string, seeded: Record<string, SeededStance>) {
+function root(
+  operation: string,
+  field: string,
+  typename: string,
+  seeded: Record<string, SeededStance>,
+  /** Which variable names the target — `name` for the topic root. */
+  key: "id" | "name" = "id",
+) {
   return graphql.query(operation, ({ variables }) => {
-    const id = String(variables.id);
+    const id = String(variables[key]);
     return HttpResponse.json({
       data: {
         [field]: {
@@ -67,14 +75,16 @@ function root(operation: string, field: string, typename: string, seeded: Record
 }
 
 /**
- * Handlers for all three roots, keyed by target id. An id with nothing
- * seeded answers as a target this viewer has never stanced, so the
- * control shows the affordance — the ordinary case, not a refusal.
+ * Handlers for all four roots, keyed by target id — a topic's being its
+ * canonical name, the same key the seam hands the control. An id with
+ * nothing seeded answers as a target this viewer has never stanced, so
+ * the control shows the affordance — the ordinary case, not a refusal.
  */
 export function stanceHandlers(seeded: Record<string, SeededStance> = {}): RequestHandler[] {
   return [
     root("PostStance", "post", "Post", seeded),
     root("CommentStance", "comment", "Comment", seeded),
     root("ProfileStance", "user", "User", seeded),
+    root("HashtagStance", "hashtag", "Hashtag", seeded, "name"),
   ];
 }

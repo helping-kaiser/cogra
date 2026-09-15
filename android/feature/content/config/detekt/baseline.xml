@@ -25,7 +25,7 @@
     <ID>LongMethod:ComposeWizardVideoDescribeTest.kt:ComposeWizardVideoDescribeTest$@Composable private fun Wizard</ID>
     <ID>LongMethod:ComposeWizardViewModel.kt:ComposeWizardViewModel$fun onSign</ID>
     <ID>LongMethod:FeedScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun FeedScreen</ID>
-    <ID>LongMethod:PostDetailScreen.kt:@Composable private fun CommentThread</ID>
+    <ID>LongMethod:CommentsSheet.kt:@Composable private fun CommentThread</ID>
     <ID>LongMethod:PostDetailScreen.kt:@Composable private fun PostWithThread</ID>
     <ID>LongMethod:PostDetailScreen.kt:@OptIn(ExperimentalMaterial3Api::class) @Composable fun PostDetailScreen</ID>
     <ID>LongMethod:ReferenceEntry.kt:@Composable internal fun ReferenceEntry</ID>

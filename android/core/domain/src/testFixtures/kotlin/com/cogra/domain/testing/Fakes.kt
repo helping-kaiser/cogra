@@ -25,6 +25,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentForEdit
+import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
@@ -78,6 +79,7 @@ import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
@@ -314,6 +316,11 @@ open class ThrowingWriteRepository : WriteRepository {
         pDirected: Double,
         pInterest: Double,
     ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
+    override suspend fun prepareTopicStance(
+        topicName: String,
+        pDirected: Double,
+        pInterest: Double,
+    ): Outcome<List<PreparedWriteView>> = throw UnsupportedOperationException()
     override suspend fun submitProposal(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> =
         throw UnsupportedOperationException()
     override suspend fun approveAct(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> =
@@ -338,6 +345,13 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
         pInterest: Double,
     ): Outcome<List<PreparedWriteView>> = Outcome.Success(listOf(stage()))
 
+    /** The topic leg stages the same signable write: the address differs, the act does not. */
+    override suspend fun prepareTopicStance(
+        topicName: String,
+        pDirected: Double,
+        pInterest: Double,
+    ): Outcome<List<PreparedWriteView>> = Outcome.Success(listOf(stage()))
+
     /**
      * Stages one signable write — the generic entry content fakes
      * delegate to, so any prepare verb's result runs the real signing
@@ -345,7 +359,7 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
      * fixture's canonical test proposal either way.
      */
     fun stage(family: Family = Family.OPINION): PreparedWriteView {
-        val id = "w${nextSeq}"
+        val id = "w$nextSeq"
         val view = PreparedWriteView(
             id = id,
             family = family,
@@ -408,18 +422,18 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
 
 /** Stance-repository base: every call throws until overridden. */
 open class ThrowingStanceRepository : StanceRepository {
-    override suspend fun prepareStance(target: String, pick: StancePair): Outcome<List<PreparedWriteView>> =
+    override suspend fun prepareStance(target: StanceTarget, pick: StancePair): Outcome<List<PreparedWriteView>> =
         throw UnsupportedOperationException()
-    override suspend fun standing(target: String, includePending: Boolean): Outcome<StanceStanding> =
+    override suspend fun standing(target: StanceTarget, includePending: Boolean): Outcome<StanceStanding> =
         throw UnsupportedOperationException()
     override suspend fun projection(
-        target: String,
+        target: StanceTarget,
         pick: StancePair,
         includePending: Boolean,
     ): Outcome<StanceProjection> = throw UnsupportedOperationException()
-    override suspend fun severanceQuote(target: String, includePending: Boolean): Outcome<SeveranceQuote> =
+    override suspend fun severanceQuote(target: StanceTarget, includePending: Boolean): Outcome<SeveranceQuote> =
         throw UnsupportedOperationException()
-    override suspend fun prepareSeverance(target: String): Outcome<List<PreparedWriteView>> =
+    override suspend fun prepareSeverance(target: StanceTarget): Outcome<List<PreparedWriteView>> =
         throw UnsupportedOperationException()
 }
 
@@ -441,7 +455,7 @@ open class ThrowingContentRepository : ContentRepository {
         first: Int,
         after: String?,
         includePending: Boolean,
-    ): Outcome<Page<CommentView>> = throw UnsupportedOperationException()
+    ): Outcome<CommentPage?> = throw UnsupportedOperationException()
     override suspend fun preparePost(
         title: String?,
         description: String?,

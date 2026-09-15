@@ -9,15 +9,19 @@
 import type { ApolloClient } from "@apollo/client";
 
 import {
+  CitedByCountDocument,
+  CitedByDocument,
   PrepareReferenceDocument,
   PrepareReferenceWithdrawalDocument,
   ReferenceCandidatesDocument,
+  type CitedByQuery,
 } from "@/__generated__/graphql";
 import {
   newReferenceDraft,
   type ReferenceDraft,
 } from "@/lib/references/draft";
 import { isQueryable, targetView } from "@/lib/references/normalize";
+import { CONTENT_PAGE_SIZE, type Page } from "./content-api";
 import { fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 
@@ -116,4 +120,63 @@ export async function prepareReferenceWithdrawal(
     (data) => data.prepareReferenceWithdrawal.userErrors,
     (data) => data.prepareReferenceWithdrawal.writes?.map(stagedFromPrepared) ?? null,
   );
+}
+
+/**
+ * One citing artifact, as the cited-by sheet draws it: the record's own
+ * signed pair, plus the artifact the citation was built into.
+ */
+export type CitingRecordView = CitedByQuery["records"]["edges"][number]["node"];
+
+/**
+ * A page of what cites a node, newest-first, with the count of the whole
+ * match beside it.
+ *
+ * The read is terminal-anchored rather than node-anchored: a Reference
+ * is a hyper act, so a node sits on the target end of two different legs
+ * — the T leg of the citations aimed at it, and the A leg of the ones it
+ * made itself. Only the terminal leg answers "what cites this".
+ */
+export async function fetchCitedBy(
+  client: ApolloClient,
+  nodeId: string,
+  after: string | null = null,
+): Promise<Outcome<Page<CitingRecordView> & { total: number }>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: CitedByDocument,
+      variables: { id: nodeId, first: CONTENT_PAGE_SIZE, after },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  const records = fetched.value.records;
+  return success({
+    items: records.edges.map((edge) => edge.node),
+    endCursor: records.pageInfo.endCursor ?? null,
+    hasNextPage: records.pageInfo.hasNextPage,
+    total: records.totalCount ?? 0,
+  });
+}
+
+/**
+ * How many artifacts cite this one — the number the detail card's line
+ * reads to know whether to draw itself at all.
+ *
+ * Null counts as zero: the contract leaves the count nullable, and a
+ * count the server cannot state is not a count a line can print.
+ */
+export async function fetchCitedByCount(
+  client: ApolloClient,
+  nodeId: string,
+): Promise<Outcome<number>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: CitedByCountDocument,
+      variables: { id: nodeId },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  return success(fetched.value.records.totalCount ?? 0);
 }

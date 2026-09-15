@@ -47,7 +47,7 @@ Out of scope:
 
 ## What notifies
 
-Eight kinds. Each is a completed act by **another actor** whose
+Nine kinds. Each is a completed act by **another actor** whose
 target is the viewer's own content, profile, or application.
 
 | Kind | The act behind it | Actor | Opening the row lands on |
@@ -60,6 +60,7 @@ target is the viewer's own content, profile, or application.
 | **Application approvable** | an applicant staged through one of the viewer's invite links completed the second of their two proofs, so the application is now the viewer's to act on ([auth.md "Application"](auth.md#application-the-applicant-state)) | the applicant | the invites screen, on the waiting application |
 | **Invite landed** | a **Registration** landing an account that applied through one of the viewer's invite links ([invitations.md](../primitive/invitations.md)) | the account that landed | the new member's profile |
 | **Application approved** | the inviter's priced approval of the viewer's own application ([auth.md "Approval and landing"](auth.md#approval-and-landing)) | the inviter | the inviter's profile — who vouched, and where the reciprocation the landing prompts is made |
+| **Application rejected** | the actor whose queue it sat in closed the viewer's application without approving it ([auth.md "Rejection"](auth.md#application-the-applicant-state)) | that actor | the viewer's own application state, where the ways back in are offered |
 
 The approvable kind fires at approvability, not at staging: that
 is the moment the act becomes the viewer's to answer. Before both
@@ -67,7 +68,14 @@ proofs are in the inviter has nothing they could do with the row,
 and a second row per applicant would report the application's
 schema instead of an event ("One act, one row" below).
 
-Two properties hold across all eight and are what make the set a
+The rejected kind is in the set for the symmetric reason: a close
+the applicant could only infer from a status field going quiet
+would leave them waiting on a queue they have already left. It
+reports one member's decision, never the network's — the account
+reads on, and the row opens where both ways back in are offered
+([auth.md "Rejection"](auth.md#application-the-applicant-state)).
+
+Two properties hold across all nine and are what make the set a
 set rather than a list of features:
 
 - **Someone else acted.** The viewer is the addressee, never the
@@ -77,8 +85,9 @@ set rather than a list of features:
   the owner is the viewer.
 
 **Applicants are addressees too.** An account in the applicant
-state can receive the approval notification and the opinion its
-inviter authors toward its new Profile, so the list and its
+state can receive its application's own outcome — approval or
+rejection — and the opinion its inviter authors toward its new
+Profile, so the list and its
 affordance exist from the moment an account exists. A reader with
 no account has nothing that can be addressed and no list.
 
@@ -176,11 +185,14 @@ read is what lets read state be per row: a row needs an identity
 to carry `readAt`.
 
 **The account-state kinds are written at their transition.**
-`APPLICATION_APPROVABLE` and `APPLICATION_APPROVED` have no record
-to ingest: the first is written when the second approvability
-proof completes, the second when the inviter's approval commits.
-Each transition happens once per application row and writes one
-notification, so neither kind repeats and neither has anything to
+`APPLICATION_APPROVABLE`, `APPLICATION_APPROVED` and
+`APPLICATION_REJECTED` have no record to ingest: the first is
+written when the second approvability proof completes, the second
+when the inviter's approval commits, the third when the approver
+closes the entry — on its own or as one of a link's whole waiting
+queue, which is that many closes and that many addressees. Each
+transition happens once per application row and writes one
+notification, so none of them repeats and none has anything to
 collapse.
 
 **One act, one row.** A record that reaches the viewer two ways —
@@ -263,19 +275,20 @@ type Notification {
    yet, named only to the inviter whose link staged it."
   actor: Actor!
   "What opening the row lands on — the comment, the citing post,
-   the acting actor's profile. Null for APPLICATION_APPROVABLE,
-   whose destination is the invites screen rather than a node."
+   the acting actor's profile. Null for APPLICATION_APPROVABLE and
+   APPLICATION_REJECTED, whose destinations are the invites screen
+   and the viewer's own application state rather than a node."
   subject: Node
   "The viewer's own node the act reached: the post commented on,
    the comment replied to, the profile mentioned. Null for the
-   three invite-flow kinds, which reach the account rather than a
+   four invite-flow kinds, which reach the account rather than a
    node."
   context: Node
   "The landed L1 record behind the act — the row's traceable
-   source, and where a stance row reads its pair. Null for the two
-   account-state kinds, APPLICATION_APPROVABLE and
-   APPLICATION_APPROVED, which are moments in an application's
-   life with no record of their own."
+   source, and where a stance row reads its pair. Null for the
+   three account-state kinds — APPLICATION_APPROVABLE,
+   APPLICATION_APPROVED and APPLICATION_REJECTED — which are
+   moments in an application's life with no record of their own."
   record: Record
   "When the act landed."
   createdAt: DateTime!
@@ -283,7 +296,7 @@ type Notification {
   readAt: DateTime
 }
 
-"The eight addressed acts. A kind is the act plus what it
+"The nine addressed acts. A kind is the act plus what it
  reached, which is what a reader needs to know before opening."
 enum NotificationKind {
   "A comment on the viewer's post."
@@ -304,6 +317,10 @@ enum NotificationKind {
   INVITE_LANDED
   "The viewer's inviter approved their application."
   APPLICATION_APPROVED
+  "The approver closed the viewer's application without approving
+   it — that queue entry only; the account and both re-arm paths
+   remain."
+  APPLICATION_REJECTED
 }
 
 type NotificationConnection {
@@ -344,10 +361,11 @@ extend type Mutation {
 node the viewer can no longer reach — redacted to the reduced
 projection, or not yet carried as a display row — must not fail
 the row. The row still says what happened and when.
-`APPLICATION_APPROVABLE` carries none by construction: the
-applicant holds nothing on the graph before approval, so the row
-opens by kind on the invites screen, where the act can be
-answered.
+`APPLICATION_APPROVABLE` and `APPLICATION_REJECTED` carry none by
+construction: the applicant holds nothing on the graph before
+approval, so each row opens by kind — the first on the invites
+screen where the act can be answered, the second on the viewer's
+own application state.
 
 The storage shape the resolvers read, for
 [data-model.md](data-model.md):
@@ -439,7 +457,7 @@ are reached:
   category the rows belong to.
 - [edges.md](../primitive/edges.md) — the Review, Reference, and
   Opinion families the kinds resolve to.
-- [auth.md](auth.md) — the application lifecycle behind the three
+- [auth.md](auth.md) — the application lifecycle behind the four
   invite-flow kinds.
 - [design.md](design.md) — the band the bell sits in and the list
   conventions the surface follows.
