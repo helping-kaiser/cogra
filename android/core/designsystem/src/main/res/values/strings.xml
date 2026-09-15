@@ -97,6 +97,12 @@
     <string name="stance_target_action">Tap for a light yes, or press and hold to pick exactly</string>
     <!-- A target that already carries a standing says so first. -->
     <string name="stance_target_with_standing">%1$s: %2$s. %3$s</string>
+    <!-- WHAT IT STANCES TOWARD, FIRST (`TagPage`, the topic round). A
+         page may carry more than one stance control — the topic's row
+         and every card's — and the accessible name is the only thing
+         that says which is which. Only surfaces that do not already
+         name their target from context pass one. -->
+    <string name="stance_target_labelled">%1$s. %2$s</string>
     <!-- The transient confirmation a signed stance leaves (design.md §8.3).
          "Still settling" is the honest part: the standing it names is the
          pending-inclusive fold, counting a record not yet on L1 (§9). -->
@@ -107,6 +113,15 @@
          where it leaves them (design.md §8.2). -->
     <string name="stance_axis_directed">How you stand</string>
     <string name="stance_axis_interest">In your world</string>
+    <!-- THE AFFINITY FAMILY'S OWN TWO (ruled 2026-09-15, drawn on
+         `TagPageHeldPad`). Following a topic IS the stance gesture, but
+         the two slots it fills are association and attraction, and
+         neither is asked by the opinion's question: "how you stand"
+         names a verdict an Affinity does not carry, and "in your world"
+         names reach rather than closeness. Carried through
+         `StanceAxes`, never swapped in by a surface. -->
+    <string name="stance_axis_affinity_directed">How much you like it</string>
+    <string name="stance_axis_affinity_interest">How close you want to be</string>
     <string name="stance_standing">Where you stand now</string>
     <string name="stance_standing_none">You haven\'t said anything about this yet</string>
     <!-- The zero bundle's own wording (design.md §8.4). A standing at
@@ -152,7 +167,12 @@
 
     <!-- Severance: the one gesture that nets a bundle back to nothing
          (design.md §8.5). The route is findable from the open pad. -->
-    <string name="stance_severance_open">Sever this</string>
+    <!-- The route's own wording, and deliberately not the ceremony's
+         (`TagPageHeldPad`, drawn 2026-09-15; web's #760): the button is
+         what a reader looking for the way out reads, and "Walk it back"
+         is what the gesture does. The confirmation that follows keeps
+         the word for the act itself. -->
+    <string name="stance_severance_open">Walk it back</string>
     <string name="stance_severance_title">Sever this?</string>
     <string name="stance_severance_reached">This pick nets everything you\'ve said about it back to nothing.</string>
     <string name="stance_severance_body">Nothing you\'ve said about it carries any more: it stops reaching you, it earns you nothing, and nothing you vouch for travels through it.</string>

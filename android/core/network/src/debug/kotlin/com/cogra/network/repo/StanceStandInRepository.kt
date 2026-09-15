@@ -32,6 +32,7 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
+import com.cogra.domain.stance.StanceTarget
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
@@ -41,7 +42,7 @@ import javax.inject.Singleton
 class StanceStandInRepository @Inject constructor(private val writes: WriteRepository) : StanceRepository {
 
     private val lock = Mutex()
-    private val picks = mutableMapOf<String, MutableList<StancePair>>()
+    private val picks = mutableMapOf<StanceTarget, MutableList<StancePair>>()
 
     /**
      * The one leg that is already on the API: the generic stance prepare,
@@ -49,15 +50,18 @@ class StanceStandInRepository @Inject constructor(private val writes: WriteRepos
      * the faked reads below move after a commit; it disappears with the
      * rest of the bookkeeping when the real reads land.
      */
-    override suspend fun prepareStance(target: String, pick: StancePair): Outcome<List<PreparedWriteView>> {
-        val prepared = writes.prepareStance(target, pick.pDirected, pick.pInterest)
+    override suspend fun prepareStance(target: StanceTarget, pick: StancePair): Outcome<List<PreparedWriteView>> {
+        val prepared = when (target) {
+            is StanceTarget.Node -> writes.prepareStance(target.id, pick.pDirected, pick.pInterest)
+            is StanceTarget.Topic -> writes.prepareTopicStance(target.name, pick.pDirected, pick.pInterest)
+        }
         if (prepared is Outcome.Success) {
             lock.withLock { picks.getOrPut(target) { mutableListOf() }.add(pick) }
         }
         return prepared
     }
 
-    override suspend fun standing(target: String, includePending: Boolean): Outcome<StanceStanding> =
+    override suspend fun standing(target: StanceTarget, includePending: Boolean): Outcome<StanceStanding> =
         lock.withLock {
             val own = picks[target].orEmpty()
             Outcome.Success(
@@ -72,7 +76,7 @@ class StanceStandInRepository @Inject constructor(private val writes: WriteRepos
         }
 
     override suspend fun projection(
-        target: String,
+        target: StanceTarget,
         pick: StancePair,
         includePending: Boolean,
     ): Outcome<StanceProjection> = lock.withLock {
@@ -88,7 +92,7 @@ class StanceStandInRepository @Inject constructor(private val writes: WriteRepos
         )
     }
 
-    override suspend fun severanceQuote(target: String, includePending: Boolean): Outcome<SeveranceQuote> =
+    override suspend fun severanceQuote(target: StanceTarget, includePending: Boolean): Outcome<SeveranceQuote> =
         lock.withLock {
             val own = picks[target].orEmpty()
             val net = fold(own)
@@ -108,7 +112,7 @@ class StanceStandInRepository @Inject constructor(private val writes: WriteRepos
      * and a stand-in that returned made-up writes would put a signature
      * on nothing. The confirm surface reports the refusal like any other.
      */
-    override suspend fun prepareSeverance(target: String): Outcome<List<PreparedWriteView>> =
+    override suspend fun prepareSeverance(target: StanceTarget): Outcome<List<PreparedWriteView>> =
         Outcome.Refused(
             listOf(UserError(ErrorCode.INTERNAL, "no backend to stage a severance batch")),
         )

@@ -253,6 +253,30 @@ fun StanceControl(
     onConfirmationShown: () -> Unit,
     testTagPrefix: String,
     modifier: Modifier = Modifier,
+    /**
+     * The record family's own words for the two slots it fills. The
+     * control owns the geometry; the family owns the words, and they
+     * are passed through unchanged to every readout and to the
+     * alternates alike, so the drawn route and the accessible one never
+     * name the same axis two ways.
+     */
+    axes: StanceAxes = StanceAxes.Opinion,
+    /**
+     * What this control stances toward, in the reader's own words —
+     * `#saltmaps`, hash and all. Named because a page may carry more
+     * than one stance control and the face's accessible name is what
+     * says which is which (`TagPage`: "AND IT NAMES WHAT IT STANCES").
+     * Null where the surrounding context already says it, which is
+     * every control that sits inside the thing it stances toward.
+     */
+    targetLabel: String? = null,
+    /**
+     * Stretched to the column, as a page's one primary action rather
+     * than an anchor inside a card (`TagPage`: "THE ROW IS THE PAGE'S
+     * ONE ACTION"). Only the resting target widens — the pad is the
+     * same surface wherever it was opened from.
+     */
+    wide: Boolean = false,
 ) {
     val extentPx = with(LocalDensity.current) { FIELD_EXTENT.toPx() }
     val gapPx = with(LocalDensity.current) { PAD_GAP.roundToPx() }
@@ -270,17 +294,32 @@ fun StanceControl(
     val standingLabel = stringResource(R.string.stance_standing)
     // A target that already carries a standing says so before it says
     // what a touch does (design.md §8.3).
-    val description = state.standing?.let {
-        stringResource(R.string.stance_target_with_standing, standingLabel, it.reading(), action)
+    val unlabelled = state.standing?.let {
+        stringResource(R.string.stance_target_with_standing, standingLabel, it.reading(axes), action)
     } ?: action
+    val description = targetLabel?.let {
+        stringResource(R.string.stance_target_labelled, it, unlabelled)
+    } ?: unlabelled
+    // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (`TagPageHeldPad`: the
+    // pad over a topic nobody holds has three controls, the pad over a
+    // held one has four). With nothing said there is no relationship to
+    // leave, and the route led only to a confirmation saying so.
+    //
+    // A null standing IS the whole test, and it is the same test the web
+    // control spells as `records > 0` (#760): the holder publishes the
+    // fold's net only once the bundle covers a record, so unread and
+    // unauthored both arrive here as null — and a bundle that HAS
+    // records and nets to zero is severance, which stays reachable.
+    val severable = state.standing != null
 
-    StanceConfirmation(state.confirmation, standingLabel, onConfirmationShown)
+    StanceConfirmation(state.confirmation, standingLabel, axes, onConfirmationShown)
 
     Column(modifier) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .sizeIn(minWidth = TARGET_MIN, minHeight = TARGET_MIN)
+                .then(if (wide) Modifier.fillMaxWidth() else Modifier)
                 .clip(RoundedCornerShape(50))
                 .stanceGesture(
                     enabled = !state.busy,
@@ -311,17 +350,20 @@ fun StanceControl(
                         onTapDefault()
                         true
                     }
-                    customActions = listOf(
+                    customActions = listOfNotNull(
                         CustomAccessibilityAction(exactLabel) {
                             onOpenPad()
                             onHold()
                             if (!state.exactValues) onToggleExactValues()
                             true
                         },
+                        // Offered on the same terms as the drawn route:
+                        // an action that can only open a dialog saying
+                        // there is nothing to walk back is not an action.
                         CustomAccessibilityAction(severLabel) {
                             onOpenSeverance()
                             true
-                        },
+                        }.takeIf { severable },
                     )
                 }
                 .testTag("${testTagPrefix}_stance"),
@@ -357,6 +399,8 @@ fun StanceControl(
                         onToggleExactValues = onToggleExactValues,
                         onOpenSeverance = onOpenSeverance,
                         testTagPrefix = testTagPrefix,
+                        axes = axes,
+                        severable = severable,
                     )
                 }
             }
@@ -374,6 +418,7 @@ fun StanceControl(
                 onConfirm = onConfirmSeverance,
                 onDismiss = onDismissSeverance,
                 testTagPrefix = testTagPrefix,
+                axes = axes,
             )
         }
     }
@@ -588,6 +633,8 @@ private fun StancePadOverlay(
     onToggleExactValues: () -> Unit,
     onOpenSeverance: () -> Unit,
     testTagPrefix: String,
+    axes: StanceAxes,
+    severable: Boolean,
 ) {
     val explainLabel = stringResource(R.string.stance_explain)
     Card(modifier = Modifier.width(PAD_WIDTH).testTag("${testTagPrefix}_stance_pad")) {
@@ -609,7 +656,7 @@ private fun StancePadOverlay(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Box(modifier = Modifier.weight(1f)) {
-                    StanceStandingLine(state.standing, testTagPrefix)
+                    StanceStandingLine(state.standing, testTagPrefix, axes)
                 }
                 TextButton(
                     onClick = { explaining = !explaining },
@@ -633,20 +680,20 @@ private fun StancePadOverlay(
                     testTagPrefix = testTagPrefix,
                 )
             } else {
-                StanceReadout(state.pick, testTagPrefix)
+                StanceReadout(state.pick, testTagPrefix, axes)
                 // The chosen surface replaces the pad, it does not sit beside
                 // it: an alternate is the input, not a second opinion
                 // (design.md §8.6).
                 if (state.inputMode == StanceInputSurface.PAD) {
                     StancePadField(state.pick, onPick = onPick, enabled = !state.busy)
                 }
-                StanceLandingLine(state.landing, testTagPrefix)
+                StanceLandingLine(state.landing, testTagPrefix, axes)
             }
             if (sticky) {
                 // The alternates are the accessible path, so the way into
                 // them is present whatever the stored preference is.
                 if (!explaining && (state.exactValues || state.inputMode != StanceInputSurface.PAD)) {
-                    StanceExactValues(state.inputMode, state.pick, onPick, testTagPrefix)
+                    StanceExactValues(state.inputMode, state.pick, onPick, testTagPrefix, axes)
                 }
                 if (state.failed) {
                     StanceFailure(state.needsKey, testTagPrefix)
@@ -685,12 +732,17 @@ private fun StancePadOverlay(
                     }
                 }
                 // The route for the reader who came here to sever: it has
-                // to be findable from the open pad (design.md §8.5).
-                TextButton(
-                    onClick = onOpenSeverance,
-                    modifier = Modifier.testTag("${testTagPrefix}_stance_sever"),
-                ) {
-                    Text(stringResource(R.string.stance_severance_open))
+                // to be findable from the open pad (design.md §8.5) —
+                // and it stands only where there is something to walk
+                // back, which is what makes the held pad's four controls
+                // and the unheld pad's three (`TagPageHeldPad`).
+                if (severable) {
+                    TextButton(
+                        onClick = onOpenSeverance,
+                        modifier = Modifier.testTag("${testTagPrefix}_stance_sever"),
+                    ) {
+                        Text(stringResource(R.string.stance_severance_open))
+                    }
                 }
             }
         }
@@ -806,11 +858,12 @@ private fun StanceRestingFace(standing: StancePoint?, testTagPrefix: String) {
 private fun StanceConfirmation(
     confirmation: StancePoint?,
     standingLabel: String,
+    axes: StanceAxes,
     onShown: () -> Unit,
 ) {
     val host = LocalSnackbarHostState.current
     val message = rememberUpdatedState(
-        confirmation?.let { stringResource(R.string.stance_signed, standingLabel, it.reading()) },
+        confirmation?.let { stringResource(R.string.stance_signed, standingLabel, it.reading(axes)) },
     )
     val consume = rememberUpdatedState(onShown)
     LaunchedEffect(host) {
@@ -839,13 +892,13 @@ private fun StanceFailure(needsKey: Boolean, testTagPrefix: String) {
  * keeps apart, and read-side throughout (design.md §8.1).
  */
 @Composable
-private fun StanceStandingLine(standing: StancePoint?, testTagPrefix: String) {
+private fun StanceStandingLine(standing: StancePoint?, testTagPrefix: String, axes: StanceAxes) {
     val text = when {
         standing == null -> stringResource(R.string.stance_standing_none)
         // The zero bundle never speaks through the anchor table
         // (design.md §8.4): it is named, not read as a near neighbour.
         standing.isZeroBundle -> stringResource(R.string.stance_standing_zero)
-        else -> "${stringResource(R.string.stance_standing)}: ${standing.reading()}"
+        else -> "${stringResource(R.string.stance_standing)}: ${standing.reading(axes)}"
     }
     Text(
         text = text,
@@ -867,10 +920,10 @@ private fun StanceStandingLine(standing: StancePoint?, testTagPrefix: String) {
  * in words, so no reader is handed a bare pair to decode.
  */
 @Composable
-private fun StanceReadout(pick: StancePoint, testTagPrefix: String) {
+private fun StanceReadout(pick: StancePoint, testTagPrefix: String, axes: StanceAxes) {
     val anchor = nearestStanceAnchor(pick)
     val words = stringResource(anchor.label)
-    val spoken = pick.reading()
+    val spoken = pick.reading(axes)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         // One readout, announced once.
@@ -1084,7 +1137,7 @@ private fun DrawScope.drawStanceField(
  * nothing here to wait for and no spinner to show.
  */
 @Composable
-private fun StanceLandingLine(landing: StanceLanding?, testTagPrefix: String) {
+private fun StanceLandingLine(landing: StanceLanding?, testTagPrefix: String, axes: StanceAxes) {
     if (landing == null) {
         Text(
             text = stringResource(R.string.stance_landing_working),
@@ -1107,7 +1160,7 @@ private fun StanceLandingLine(landing: StanceLanding?, testTagPrefix: String) {
     // One node, announced once and in words: the face is a readout of a
     // pair that is spoken in full beside it, so its own emoji name would
     // be noise (design.md §10).
-    val spoken = "$caption: ${landing.net.reading()}. $words"
+    val spoken = "$caption: ${landing.net.reading(axes)}. $words"
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1141,11 +1194,11 @@ private fun StanceLandingLine(landing: StanceLanding?, testTagPrefix: String) {
  * to prevent.
  */
 @Composable
-fun StancePoint.reading(): String = stringResource(
+fun StancePoint.reading(axes: StanceAxes = StanceAxes.Opinion): String = stringResource(
     R.string.stance_reading,
-    stringResource(R.string.stance_axis_directed),
+    stringResource(axes.directed),
     twoPlaces(directed),
-    stringResource(R.string.stance_axis_interest),
+    stringResource(axes.interest),
     twoPlaces(interest),
 )
 
@@ -1197,9 +1250,10 @@ private fun StanceExactValues(
     pick: StancePoint,
     onPick: (StancePoint) -> Unit,
     testTagPrefix: String,
+    axes: StanceAxes,
 ) {
-    val directedLabel = stringResource(R.string.stance_axis_directed)
-    val interestLabel = stringResource(R.string.stance_axis_interest)
+    val directedLabel = stringResource(axes.directed)
+    val interestLabel = stringResource(axes.interest)
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
