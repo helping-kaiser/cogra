@@ -4,7 +4,7 @@ import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { StanceSlider } from "./StanceSlider.jsx";
 import { STANCE_ALTERNATES_HELP, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { STANCE_AXES } from "./StancePad.jsx";
-import { clampDimension, DIRECTED_LABEL, INTEREST_LABEL } from "./StanceReadout.jsx";
+import { clampDimension } from "./StanceReadout.jsx";
 
 /* The alternate inputs (design.md §8.6) — paired sliders and direct entry. Same
    machinery as the pad, different surface: they write the same two values, and the
@@ -28,13 +28,14 @@ import { clampDimension, DIRECTED_LABEL, INTEREST_LABEL } from "./StanceReadout.
    Severance is findable from the open pad; for anyone whose input is an alternate
    the pad never opens, so it is findable here instead.
 
-   THE POLES TRAVEL WITH THE RECORD FAMILY, exactly as they do on the field
+   THE WORDS TRAVEL WITH THE RECORD FAMILY, exactly as they do on the field
    (`STANCE_AXES`, StancePad.jsx). The alternates are the SAME gesture through
    other controls, so a family that names its own poles must name them here too
-   — a field reading `Not mine / Mine` beside a slider reading `Against / For`
-   would make the accessible route a different question from the drawn one. The
-   two axis NAMES above the tracks are still the stance family's; see the topic
-   round's note in the backlog. */
+   — a field reading `Dislike / Like` beside a slider reading `Against / For`
+   would make the accessible route a different question from the drawn one.
+   THE AXIS NAMES ABOVE THE TRACKS TRAVEL THE SAME WAY (backlog item 79): this
+   is where the axis is actually NAMED rather than merely ended, so a family
+   whose slots hold something other than a stance says so here or nowhere. */
 
 /* THE BOUND IS A PROP HERE TOO, for `StanceSlider`'s reason: the typed route and
    the dragged one must not disagree about what a value may be. A field that
@@ -192,14 +193,14 @@ export function StanceAlternates({
         {showing === "sliders" ? (
           <>
             <StanceSlider
-              label={DIRECTED_LABEL}
+              label={axes.directed}
               minLabel={axes.left}
               maxLabel={axes.right}
               value={pick.pDirected}
               onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })}
             />
             <StanceSlider
-              label={INTEREST_LABEL}
+              label={axes.interest}
               minLabel={axes.bottom}
               maxLabel={axes.top}
               value={pick.pInterest}
@@ -208,8 +209,8 @@ export function StanceAlternates({
           </>
         ) : (
           <>
-            <DirectEntry label={DIRECTED_LABEL} value={pick.pDirected} onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })} />
-            <DirectEntry label={INTEREST_LABEL} value={pick.pInterest} onChange={(pInterest) => onPick && onPick({ ...pick, pInterest })} />
+            <DirectEntry label={axes.directed} value={pick.pDirected} onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })} />
+            <DirectEntry label={axes.interest} value={pick.pInterest} onChange={(pInterest) => onPick && onPick({ ...pick, pInterest })} />
           </>
         )}
       </div>
