@@ -2239,6 +2239,34 @@ const POST_OPINION_HOLDERS = [
    words, ruled 2026-09-15: each axis's question and its two ends, because a
    slider that says where a track stops still has to say what the track asks.
    The pad itself draws the four ends alone. */
+/* THE TOPIC'S WAY OUT IS ITS OWN WORD (jakob 2026-09-15): "nah thats all to
+   complicated for users.. instead of walk back we could just call it
+   'disconnect' or sth like this. and then we can say 'no opinion towards
+   #saltmaps' or sth similar.. we want human wording not this nerdy stuff!"
+
+   `Walk it back` is a sentence about a person — you walk back something you
+   said to somebody. A reader who has said they like a topic has not made a
+   promise to it, and the word for undoing that is the plain one everybody
+   already owns: they disconnect. The readouts follow the same rule — what a
+   reader is left with is not a state with a name, it is simply no opinion
+   towards the thing, said in those words.
+
+   PERSONS KEEP THEIR FAMILY. jakob objected to the topic's wording and only to
+   it, and `Walk it back` is right where there IS a relationship: it stands on
+   every profile, post and comment pad exactly as before. */
+const AFFINITY_SEVERANCE = {
+  control: "Disconnect",
+  title: (name) => `Disconnect from ${name}?`,
+  effect: (name) =>
+    `You end up with no opinion towards ${name}. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`,
+  sum: (name, total) => `Everything you've said about ${name} adds up to ${total}, and disconnecting clears all of it.`,
+  gone: (name) => `No opinion towards ${name}.`,
+  zero: "No opinion",
+  landing: "This leaves you with no opinion towards it.",
+  help: "Disconnect takes everything you've said about the topic to nothing. It has its own confirmation, and each thing you've said is cleared by its own signature.",
+  helpAlternates: "Disconnect takes everything to nothing, and each thing you've said is cleared by its own signature.",
+};
+
 const AFFINITY_AXES = {
   directed: "How much you like it",
   left: "Dislike",
@@ -2246,6 +2274,7 @@ const AFFINITY_AXES = {
   interest: "How close you want to be",
   bottom: "Far away",
   top: "Close to me",
+  severance: AFFINITY_SEVERANCE,
 };
 
 /* `stanceOpen`/`stanceDefaultPick` are `PostCard`'s two pass-throughs by

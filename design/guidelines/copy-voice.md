@@ -977,7 +977,8 @@ both axes. A walk-back signature keeps its sentence:
 **The walk-back.** Button `Walk it back`, dialog `Walk it all back?`,
 cost `It signs 3 things, each paid separately.` (`It signs 1 thing,
 paid on its own.` in the singular), and the cap aside trimmed to
-`Your feed reads it capped at +1.00 / +0.85.`
+`Your feed reads it capped at +1.00 / +0.85.` **These are the PERSON
+family's words** — see *the topic disconnects* below.
 
 **What one signature commits is counted in things.** The footer reads
 `You're signing 2 things`, the total `2 things, signed together`
@@ -1643,3 +1644,46 @@ inviter"; `@mira approved your application` as the approver's act. The
 primitive's freedom to reciprocate anyone stays in §2 and stays off the
 screen — no surface offers a choice of inviter, because no reader is
 asked to make one.
+
+## Awaiting blessing — the topic disconnects
+
+**A person is walked back; a topic is DISCONNECTED from** (jakob
+2026-09-15, rejecting *walked back*, *let go* and *dropped* for the
+topic in one breath: "nah thats all to complicated for users.. instead
+of walk back we could just call it 'disconnect' or sth like this. and
+then we can say 'no opinion towards #saltmaps' or sth similar.. we want
+human wording not this nerdy stuff!"). That sentence is the direction,
+not just the ruling: where a word can be the plain one everybody already
+owns, it is.
+
+`Walk it back` is a sentence about a person — you walk back something
+you said to somebody — and a reader who said they like a topic made it
+no promise. The two families therefore part at the way out, the same way
+they already parted at the axis words, and **the split is by record
+family, not by surface**: every person pad keeps `Walk it back` and
+every topic pad says `Disconnect`, wherever either stands.
+
+**The topic family's words**, drawn on `TagPageHeldPad` and its dialog:
+
+- Control `Disconnect` — the pad's standing way out, and the confirming
+  button in the dialog it opens.
+- Dialog title `Disconnect from #saltmaps?`
+- What it does: `You end up with no opinion towards #saltmaps. It stops
+  reaching your feed, you stop earning from it, and nothing passes on
+  through you.`
+- The total: `Everything you've said about #saltmaps adds up to
+  +1.40 / +0.95, and disconnecting clears all of it.`
+- The landing, inside the pad: `This leaves you with no opinion towards
+  it.`
+- What a disconnected topic reads as, wherever it is read as a sentence:
+  `No opinion towards #saltmaps.` — and as a bare label beside the
+  shrug, `No opinion`.
+- The help line: `Disconnect takes everything you've said about the
+  topic to nothing. It has its own confirmation, and each thing you've
+  said is cleared by its own signature.` (the alternates' shorter twin:
+  `Disconnect takes everything to nothing, and each thing you've said is
+  cleared by its own signature.`)
+
+**`Severed` and `severance` are not words on any screen, and on a topic
+surface not even nearly.** They name the mechanic in the docs and the
+code; what a reader is told is what they are left with.

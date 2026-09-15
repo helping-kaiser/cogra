@@ -5194,8 +5194,8 @@ a pad nobody could open. This round rules the words and draws the pad.
   `PadStanding`'s four controls, the family's words at the edges — and
   changing all six words had until now moved not one rendered board,
   which is what a canvas review cannot catch. It is also the only board
-  where the way out of a held topic is visible: held, the pad carries
-  `Walk it back`, and that is the severance ceremony at this topic's own
+  where the way out of a held topic is visible: held, the pad carries it,
+  and it is the same ceremony every held record has, at this topic's own
   price. The row cannot show it and *Your topics* deliberately offers no
   per-row removal, so without this board the door existed in the code
   and nowhere on the canvas.
@@ -5438,6 +5438,30 @@ inherited. Ruled by jakob the same day.
   freedom to reciprocate anyone stands, and stays off the screen — no
   surface offers a choice of inviter, because no reader is asked to make
   one.
+- **A person is walked back; a topic is disconnected from (jakob).**
+  Three tidier variants of the same register were refused in one
+  breath — "nah thats all to complicated for users.. instead of walk
+  back we could just call it 'disconnect' or sth like this. and then we
+  can say 'no opinion towards #saltmaps' or sth similar.. we want human
+  wording not this nerdy stuff!" — and that last clause is the direction
+  the ruling leaves behind, not just its justification. `Walk it back`
+  is a sentence about a PERSON: you walk back something you said to
+  somebody, and a reader who liked a topic made it no promise. So the
+  two families part at the way out exactly as they already parted at the
+  axis words: the topic pad's control is `Disconnect`, its dialog asks
+  `Disconnect from #saltmaps?`, and what it leaves reads `No opinion
+  towards #saltmaps`. Persons keep their family untouched — jakob
+  objected to the topic's wording and only to it.
+- **The mechanism is the poles' own, one layer further down.** A family
+  already names its axes through one object; it now names its severance
+  through the same object, and where it names none the control's own
+  words stand. The lines that carry a name or a figure take them as
+  arguments, so a family's object holds no target — one constant serves
+  every topic page there will be. The sweep reaches the four places the
+  words surface: the pad's standing control, the confirm dialog's title,
+  sentences and button, the spoken and drawn readouts of a bundle at
+  nothing, and the help panel's fourth line, which teaches the way out
+  and would otherwise have taught a topic reader the other family's word.
 - **The gate**: 194 → **203 boards**, 1461 → **1511 edges**, gaps 14 →
   **13** and flows 63 → **66 declared · 64 resolved**, the two blocked
   ones unchanged. The gap count falls because `Profile/7` closed and no
