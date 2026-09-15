@@ -50,12 +50,13 @@ export interface StanceControlProps {
    */
   helpLabel?: string;
   /**
-   * What the four poles are called, for a record family that is not the
-   * stance's — an Affinity toward a Type fills the same two signed slots with
-   * association and attraction. Defaults to `STANCE_AXES`; passed through
-   * unchanged to the field AND to the alternates, so the dragged route and the
-   * accessible one never name one axis two ways. The two axis NAMES above the
-   * alternates' tracks are still the stance family's.
+   * The record family's words, for a family that is not the stance's — an
+   * Affinity toward a Type fills the same two signed slots with association and
+   * attraction. Defaults to `STANCE_AXES`; passed through unchanged to the
+   * field, to the alternates, to the severance confirm and to the three spoken
+   * readouts, so the dragged route and the accessible one never name one axis
+   * two ways. The poles reach the field; the axis questions reach everything
+   * that says an axis out loud.
    */
   axes?: PadAxes;
 }
