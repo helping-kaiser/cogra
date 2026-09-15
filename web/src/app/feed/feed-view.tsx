@@ -34,6 +34,7 @@ import {
 import { Button } from "@/lib/ui/button";
 import { CograBand } from "@/lib/ui/cogra-band";
 import { CollapsingTop } from "@/lib/ui/collapsing-top";
+import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { PostCard } from "@/lib/ui/post-card";
 import { tailIndexOf, useApproachingTail } from "@/lib/ui/infinite-list";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
@@ -148,6 +149,9 @@ export function FeedView({
   // Stable, so the snackbar's own timer is not restarted by every render of
   // the feed underneath it.
   const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
+  // The band's chats affordance, signed out: the guest gate the canvas
+  // draws (`graph.json` "FeedBare" → `GuestGate`) — ask, never bounce.
+  const [chatsPrompting, setChatsPrompting] = useState(false);
 
   // Effect-invoked, so no synchronous setState here; the retry button
   // resets the loading state in its own handler. The fault reflects
@@ -251,7 +255,21 @@ export function FeedView({
       >
         {/* A tab root wears the mark, not a page title: the reader knows which
             tab they are on from the bar, and the band's other half works. */}
-        <CograBand>
+        <CograBand
+          // The chats affordance (jakob 2026-09-01). A signed-out tap
+          // opens the guest gate, the edge the canvas draws
+          // (`graph.json` "FeedBare" → `GuestGate`); a signed-in tap
+          // reaches the coming-soon destination (`graph.json` "Feed" →
+          // `ChatsComingSoon`, backlog item 68). Nothing is drawn while
+          // the phase resolves, matching every other read below.
+          onChats={
+            phase === "signedOut"
+              ? () => setChatsPrompting(true)
+              : phase === "signedIn"
+                ? () => router.push("/chats")
+                : undefined
+          }
+        >
           {/* The band carries its own gutter — it is a bare line under the
               identity band, not a card in the stack below it. Nothing is
               drawn while the phase resolves: the two readings differ, and
@@ -383,6 +401,11 @@ export function FeedView({
           onDismiss={dismissLinkCopied}
         />
       </div>
+      {/* Conditionally mounted, matching `stance-control.tsx`'s own guest
+          gate: `JoinPrompt` always draws its `data-testid`, so a second one
+          mounted unconditionally alongside a post card's own gate collides
+          on it the moment both ride the same tree. */}
+      {chatsPrompting && <JoinPrompt open onClose={() => setChatsPrompting(false)} />}
     </main>
   );
 }
