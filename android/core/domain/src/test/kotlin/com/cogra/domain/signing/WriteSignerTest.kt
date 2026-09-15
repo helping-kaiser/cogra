@@ -40,6 +40,9 @@ private class FakeWriteRepository(val actor: ActorKey) : WriteRepository {
     override suspend fun prepareStance(targetId: String, pDirected: Double, pInterest: Double) =
         throw UnsupportedOperationException()
 
+    override suspend fun prepareTopicStance(topicName: String, pDirected: Double, pInterest: Double) =
+        throw UnsupportedOperationException()
+
     override suspend fun submitProposal(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> {
         refuseSubmit?.let { return Outcome.Refused(it) }
         if (failSubmit) return Outcome.Failed(IOException("submit lost"))

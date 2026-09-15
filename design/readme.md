@@ -82,8 +82,9 @@ What that means for design work:
   for members, applicants, and guests. A slot that needs an account asks
   on tap — it never bounces the reader out of the read.
 - **Membership is by invitation.** A new account is an *applicant* until
-  its inviter approves it; applicant vs member is expressed as cards in
-  the shell, never as different navigation.
+  a member vouches for it — not necessarily the one whose link they came
+  through; applicant vs member is expressed as cards in the shell, never
+  as different navigation.
 - **Writes are signed on the device.** A post, a comment, an edit, and a
   stance are each a signed, priced act. The UI's honesty obligations
   (§9 of `design.md`, §8 below) follow from that.
@@ -815,6 +816,21 @@ weights every choice equally. Instead:
   it just stops being the default-looking one. No new colour: severance
   is a deliberate act, not a failure.
 
+**A dialog is inset from the screen, and the gap is what makes it a
+dialog** (jakob 2026-09-15: "popups should not be full width (if they
+dont need to).. it makes them standout more"). `DialogSurface` centres
+every dialog at `--dialog-max-width` (20rem) and keeps it at least
+`--dialog-inset` (32px) from either edge. The inset is the load-bearing
+number and it is deliberately wider than the 24px screen gutter: a
+dialog whose edges line up with the body text behind it reads as part of
+that body, which is the one thing a dialog must not read as. The
+platform's own floor is 24dp and its narrowest dialog 280dp, so this
+sits inside the idiom rather than beside it. **One width, for all of
+them** — the shell was extracted so the dialogs could not drift, and a
+per-board width is exactly that drift; `width` overrides the max for a
+dialog that genuinely cannot live at the house size, and no dialog in
+the product does.
+
 ### The stance control
 
 **A stance reads as face + pair, never face + words + pair.** Three
@@ -1056,14 +1072,18 @@ may serve any actor's view of the shared record to any reader. So:
   already carry.
 - **The borrowed view persists through the applicant days** and hands
   over to the member's own view the moment their first stance exists —
-  the vouch-back — which the inviter seeded anyway, so the feed barely
-  moves at the handover.
+  the vouch-back.
 - **The vantage resolves to the most specific actor available**, and
-  the band names whichever one it lands on. An invite-link visitor
-  borrows the inviter. An applicant borrows their own inviter — the
-  person who already chose them, and whose stances their first
-  vouch-back will echo. A bare visitor borrows genesis, strictly as the
-  fallback when nobody more particular is known. The order matters more
+  the band names whichever one it lands on. Anyone who arrived through
+  an invite link borrows that link's ISSUER, and an applicant is still
+  one of those: the rung is the link, not a vouch. Nobody has vouched
+  for an applicant yet — that is what the applicant days are — so the
+  issuer is the only actor their arrival carries, and calling that rung
+  "their own inviter, who already chose them" claimed a relationship
+  that does not exist until the vouch-back fixes it
+  ([invitations.md §2](../docs/primitive/invitations.md)). A bare
+  visitor borrows genesis, strictly as the fallback when nobody more
+  particular is known. The order matters more
   than any single rung: a reader should be shown the nearest real
   perspective the arrival carries, and genesis is what is left when the
   arrival carries none.
@@ -4013,7 +4033,7 @@ drew against it. Ruled by jakob the same day.
 - **Guests have no bell; applicants do.** Nothing can be addressed to an
   account that does not exist, so `Main`, `FeedBare`, `GuestGate` and
   `WalletGuest` opt out. An applicant is an addressee already — the
-  approval and the inviter's opinion both land on them — so the
+  approval and the approver's opinion both land on them — so the
   applicant boards carry it.
 - **A dot, never a count (jakob).** `--primary` at 8px, ringed in the
   surface, pinned to the glyph's top-right in `ContentRow`'s own badge
@@ -4479,8 +4499,8 @@ needs.
 
 - **What the ceremony is ABOUT is the borrowed view ending.** A feed
   is ranked from the viewer's own outgoing opinions; until the
-  vouch-back the new member had none and browsed from their inviter's
-  vantage. The signature is the moment their own view begins — that,
+  vouch-back the new member had none and browsed from the vantage of
+  the link they came through. The signature is the moment their own view begins — that,
   not a milestone badge, is the thing worth marking, and it lets the
   copy stay concrete while the headline carries the metaphor.
 - **The sky is `SkyField`'s vocabulary, not a new drawing.** The
@@ -5096,6 +5116,35 @@ none of them needing a board. Ruled by jakob the same day.
   the reader actually stood. The whole family takes the `back` terminal;
   the boards keep drawing `Back to Explore`, the cold entry's state
   being the one that stands with no route behind it.
+- **And the origin gets a noun, from a table** (jakob, "as
+  recommended"). A label that names where the reader stood needs one
+  word per place they can have stood, or the rule is only three
+  examples and a guess. The table is built from the page's ACTUAL
+  arriving edges, so it is closed rather than open-ended — a named
+  surface keeps its name, and everything else is named by what it is:
+
+  | Where the reader came from | The label |
+  |---|---|
+  | Explore, at rest | `Back to Explore` |
+  | Explore, mid-query | `Back to the search` |
+  | Your topics | `Back to Your topics` |
+  | the feed, in any of its states | `Back to feed` |
+  | a post, through its tags-and-references sheet | `Back to the post` |
+  | a comment's chips, in the thread | `Back to the comments` |
+  | a profile's posts | `Back to the profile` |
+  | another tag's page | `Back to #<thattag>` |
+  | nowhere — a shared URL | `Back to Explore` |
+
+  Three of those want a word about why. **The feed's many states are
+  one noun**: `Feed`, `FeedScrolled`, `FeedNarrowed`, the applicant
+  shells, `Main`, `KeyElsewhere` and the rest are the same feed with a
+  setting or a band on, and a reader who scrolled three screens did not
+  stand somewhere else. **A sheet is named by what it is a sheet of**:
+  the tags-and-references sheet is the only route from a post detail to
+  a tag page, and back returns the post with its sheet — `Back to the
+  sheet` would name the layer instead of the place. **And a tag page
+  reached from a tag page names the tag**, because `Back to the topic`
+  would be true of the page the reader is standing on too.
 - **The guest close, ruled the same evening.** Guests reach every
   reading page and it is always the same: the stance face wears the
   unset 🫥 and the scores come from the genesis vantage. So every
@@ -5145,8 +5194,8 @@ a pad nobody could open. This round rules the words and draws the pad.
   `PadStanding`'s four controls, the family's words at the edges — and
   changing all six words had until now moved not one rendered board,
   which is what a canvas review cannot catch. It is also the only board
-  where the way out of a held topic is visible: held, the pad carries
-  `Walk it back`, and that is the severance ceremony at this topic's own
+  where the way out of a held topic is visible: held, the pad carries it,
+  and it is the same ceremony every held record has, at this topic's own
   price. The row cannot show it and *Your topics* deliberately offers no
   per-row removal, so without this board the door existed in the code
   and nowhere on the canvas.
@@ -5158,6 +5207,190 @@ a pad nobody could open. This round rules the words and draws the pad.
   the band's 154px, widest unchanged at `Chats · text · + removed`,
   153.9px: a parked pad adds no filter reading.
 
+### The invites round — 2026-09-15
+
+The last gap off a root page. `Profile via 7` had pointed at "the invites
+screen (not designed)" since the profile round; seven boards close it,
+and closing it forced the mechanic itself to be ruled rather than
+inherited. Ruled by jakob the same day.
+
+- **The screen has two halves and they must not look alike.** Staging is
+  free and revocable — a link is a thing the reader made, revoked with
+  one quiet word, and nothing about it touches the record. Vouching is
+  signed and priced. Drawing them in one register would let a reader
+  reach the second while thinking they were doing the first, which is
+  the only way this mechanic can hurt someone.
+- **Approving IS the vouch (jakob), so approving happens on the pad.**
+  The row opens `StanceControl`, parked open at the standing default,
+  and `Set` signs the approver's Opinion toward the new Profile. A button
+  labelled "Approve" would have hidden a signed, priced stance behind a
+  word that sounds like moderation. `ApprovePad` is `VouchBackPad`
+  mirrored: the handshake has two halves and the tree now draws both,
+  with the same master, the same anatomy and the same low defaults.
+- **No `Walk it back` on it.** That control exists where there is a
+  bundle to undo, and a first vouch has none — nothing has been signed
+  toward this person by anyone, because their Profile did not exist
+  until this act made it possible.
+- **The prefill is gone from the whole mechanic (jakob).** A link used
+  to carry suggested stance values for the issuer's eventual Opinion.
+  It asked for a number at the moment the reader knows least, about
+  somebody who did not exist yet, and the answer was re-asked at
+  approval anyway. The opinion is picked once, on the pad, when there is
+  a person to have it about. `invitations.md` §4 and `api-spec.md`'s
+  `InviteLink` still described the prefill when these boards were drawn
+  and are being rewritten to match the ruling; no surface in this tree
+  ever drew one.
+- **Single use is the default (jakob).** A targeted invite is the
+  ordinary one and the safe one — a leaked link stages at most one
+  stranger — so the default sits where a reader who changes nothing is
+  least exposed. The switch is worded as the RESTRICTION, `Only one
+  person can use it`, which is why that row carries no status line: the
+  label already says what ON does, and what OFF does is the group's
+  footnote.
+- **Two decisions on the create sheet and no third.** Who may use it,
+  and how long it lives. Expiry is a three-row chooser stacked over the
+  sheet — `24 hours · 7 days · 30 days`, no custom date: a calendar here
+  would answer a question nobody asks in months, and it would be the
+  third decision the sheet was kept clear of.
+- **The capability has one shape on screen, and it is the link
+  (jakob).** `auth.md`'s *Link URLs* makes the id the capability and
+  the product's own `extractInviteId` reads a bare one out of whatever
+  is pasted — but that is a TOLERANCE at the door, not a second way to
+  invite somebody. `InviteCreated` therefore serves the link alone,
+  mono and whole, with `Link copied` as its one snackbar, and the entry
+  door still says `Paste your invite link` because the field accepting
+  a pasted link is the whole of what a reader has to know. Two
+  spellings of one capability made the sender choose at the moment they
+  were trying to send, and the choice bought them nothing: the same
+  door opens either way. The word **token** never reaches the screen.
+- **The card is the wallet's.** An invite link and a payout address are
+  the same reading problem — a long string nobody can check by eye, held
+  whole — so `PayoutAddress` draws both. Only its copy button's
+  accessible name had to open up (`copyLabel`): a button announcing
+  "Copy the address" over an invite link lies to the one reader who
+  depends on it.
+- **Revoking has no dialog and no Undo (jakob).** None could be honest:
+  nothing un-revokes a link. The card leaves with a snackbar, and it
+  never touches applicants already staged through it — they stay
+  approvable, because closing the door is not the same as turning
+  someone away at it. Dead links leave the list entirely; what is on
+  screen is what can still be used.
+- **Closing an application is a dialog, and it deletes nothing.** The
+  applicant staged service-side, so there is no act to undo and no mark
+  to leave. The person keeps the account they made and keeps reading
+  with it. The safe action is filled and holds the right-hand slot
+  (§11), there is no `error` colour — `SeveranceConfirm`'s own rule —
+  and the way back is named rather than offered: a fresh link puts the
+  same person back in this list.
+- **The queue is ordered by waiting, never by readiness**, and the
+  board draws that: a nine-day application still short of its key
+  stands above a three-day one that is ready. The section is
+  `Applications` and not "Waiting on you", because only one of those
+  rows is; who is waited on is the row's own second line. An applicant
+  wears a monogram and never a picture — there is no Profile to carry
+  one until the approval lands.
+- **A staged applicant now notifies, and it is the eighth kind.** It
+  passes the set's own test: somebody else acted — the applicant
+  attached their key, the second of the two proofs — and the act
+  reached something with an owner. Nothing else can tell an inviter
+  this, and a staged applicant nobody approves is the one failure mode
+  the mechanic has.
+- **The Invites row wears the bell's dot (jakob: the inviter must learn
+  someone is waiting).** A dot and not a count, the bell's ruling reused
+  rather than a second badge vocabulary invented beside it: the button
+  says something is waiting, and the list two taps away is where a
+  number means anything. Its accessible name changes with it.
+- **The inviter reward appears nowhere on this screen.** It is real and
+  it is permanent, and putting it on the surface where a reader decides
+  whom to vouch for would price the decision in the one currency it
+  must not be priced in.
+- **A rejection is one member's refusal, not a verdict (jakob, the same
+  day, extending the round).** Closing an application takes it out of
+  THAT inviter's queue and tells the applicant; the account persists,
+  reads on, and can be vouched in by anybody else. So the dialog names
+  both effects — it leaves your list, AND they are told — because a
+  reader not told the second is pressing it as though it were private,
+  and it names the recovery in the same breath so the first does not
+  read as expulsion. Deletion is not mentioned anywhere in the flow,
+  because nothing is deleted anywhere in the flow.
+- **The ask link is the invite link's mirror, and the mirror is exact
+  except where it must not be.** Same card, same copy control, same
+  mono block — but an invite link points at a SLOT its issuer opened,
+  and an ask link points at a PERSON. So it has no expiry, no slot
+  state, and no limit on how many people it goes to: it stands for as
+  long as somebody is waiting to be let in, and every member who opens
+  it is answering one standing question. `ApplicantRejected` is
+  `ApplicantWaiting` with the card flipped and nothing else taken away
+  — the shell, the band, the borrowed feed and the bar all stay, which
+  is the drawing that says the account survived. Its card cannot be put
+  away: the sibling earned its `Got it` by naming something to wait
+  for, and this one names the only route forward there is.
+- **Answering an ask link is the same act as approving, so it is the
+  same pad.** `VouchAsk` reuses `ApprovePad`'s `StanceControl` and its
+  note rather than forking either — which is why that note now takes a
+  handle. A member answering a link is doing exactly what the inviter
+  would have done from their own queue, and drawing it as a second kind
+  of act would invent a difference the mechanic does not have. The
+  screen names no inviter and no reason: who turned somebody down is
+  theirs to tell, and an ask link carries a person, not a case file.
+- **Applications are grouped by the link they came through, and the
+  group carries a batch close** (jakob: "if someone bots us from the
+  start it would be nice to have.. we add batching.. batched by invite
+  link?"). A leaked link is the failure mode this queue has, and it
+  arrives as a burst that is really one event; flat, the reader closed
+  it one row at a time and could not see it was one event at all. The
+  batch act sits on the GROUP HEADER and not on the link card, because
+  `PayoutAddress` is allowed one inline word and a live link already
+  spends it on `Revoke` — and the header is the better home anyway,
+  since the count is right beside the gesture that acts on it. Grouping
+  does not reorder the queue by what the reader can act on: groups sit
+  by their oldest waiting application, rows by age inside them.
+  `RejectAllConfirm` is the confirm, and it puts the COUNT in its
+  title, because the count is the risk — it names no handles, since a
+  dialog that grows with the burst stops being readable exactly when
+  the burst is worst. The sweep passes over applications already
+  closed, so the number named is the number that changes. One waiting
+  gets no batch control: `Close all 1` is the row's own close with a
+  longer name.
+- **The link lands on the page, not on the pad** (jakob). A reader who
+  taps a link has arrived, not asked, and a stance is opened by the
+  reader's own gesture everywhere else in the tree; an arrival from
+  outside the app is the last place to make the exception. `VouchAsk`
+  is the landing with the affordance closed and `VouchAskPad` the state
+  past the press. It is a board rather than a wire to `ApprovePad`
+  because the queue's pad cancels and signs back to `Invites`, which is
+  what sits behind *it* — sending an ask-link reader to the invites list
+  to say "not now" would answer a question they never asked.
+- **`PayoutAddress` grew `bare`.** The rejected applicant's ask link,
+  held inside the card whose words explain what it is for, wants the
+  card's anatomy without the card: `SettingsGroup`'s shape, and
+  `SettingsGroup`'s reasoning — a container inside a container of the
+  same tonal rung is two containers saying one thing.
+- **The ninth notification kind is the eighth's twin.** A mechanic that
+  notifies a yes and says nothing about a no leaves the applicant
+  waiting on something that already stopped happening, which is the one
+  cruelty this flow can commit by omission. The two rows together are
+  the ruled recovery path drawn as history: `@kel closed your
+  application` fourteen days ago, `@mira approved your application`
+  twelve — one member declining is one member declining.
+- **Two flows, not one.** The round meant to declare a single inviter's
+  journey — make a link, share it, approve the person. The graph refused
+  it honestly: a sheet's scrim is a `back` edge, the search walks
+  `advance` alone, and after handing the link to the platform's share
+  sheet the reader genuinely leaves and comes back days later when the
+  notification arrives. `send-someone-an-invite` ends on the share,
+  `vouch-an-applicant-in` ends on the signature, and the extension's
+  `answer-someones-ask-link` ends on the other one. The seam between
+  them is time — and, for the ask link, two different people — not a
+  missing design.
+- **The gate**: 194 → **203 boards**, 1461 → **1511 edges**, gaps 14 →
+  **13** and flows 63 → **66 declared · 64 resolved**, the two blocked
+  ones unchanged. The gap count falls because `Profile/7` closed and no
+  new one opened. The witness moved only where it should: three flows
+  added, the new boards joining the index, `Profile` gaining two of
+  them, `ApplicantRejected` joining the origin lists every shell board
+  with a post card and a bar belongs to — the way `FeedUnread` did —
+  and no existing flow rerouted a single step.
 ### The seal's tags and the pad's words — 2026-09-15
 
 Three defects of the same kind: a drawing that stops being true at the
@@ -5211,6 +5444,127 @@ edge of what it was drawn for.
   154px, widest unchanged at `Chats · text · + removed`, 153.9px. Ten
   pad boards re-render on the field's new anatomy and no seal but the
   new one moves a byte.
+
+### The re-review — 2026-09-15
+
+Six rulings off jakob's pass over the round above, and one of them
+overturns a ruling from the same day. Nothing here is a new surface
+except the board the last one needed.
+
+- **A system card is marked on its edge, not washed through its ground
+  (jakob, re-reviewing the first attempt: "wash of the box is not what i
+  meant.. this just looks bad.. i was thinking about some gradient or
+  sth.. making it obvious that this card (and potentially all system
+  cards) are cogra cards you should act on and not a normal part of the
+  feed").** A tint over the whole card lands on the half a reader is
+  trying to read through, and a 7% brand wash on a warm neutral ground
+  is indistinguishable from a card somebody emphasised. So `TaskCard`
+  takes the feed card's own ground back and wears `--ring-task`, a 2px
+  gradient edge at the brand wash's own 140° angle running the brand's
+  three warm fills — `primary`, the seed, `secondary-container`. It is
+  the story ring's grammar, which is the one decoration a reader
+  already reads as "the system put this here", and it is a mark no post
+  card in the column can wear. The corner mark stays beside it: a ring
+  says a card is marked, only the mark says by whom. The recipe takes
+  roles rather than hex, so one definition serves both themes.
+- **A tag is born of a connection, so the empty page is the page after
+  one (jakob).** "a tag is born by its connection to sth.. it does not
+  exist before its first connection.. so there is no page of tags that
+  dont have posts yet.. i guess if someone unbind the post we have an
+  empty page.. (its history would not be empty tho) but then we should
+  add the stance here. no reason for it to not be there."
+  `TagPageEmpty`'s premise is rewritten to that: the list is empty and
+  the topic's history is not. And the page gains the topic stance row,
+  which **overrules item 81's clause that the empty page wires no face
+  at all** — an Affinity toward a Type needs no Tag records to exist
+  first, and a reader standing at a name with nothing under it is not a
+  reader with nothing to say about it. The row is `TopicStanceRow`, one
+  anatomy lifted out of `TagPageBody` so the two states cannot drift
+  apart, and the wiring is the populated page's, `GuestGate` included.
+  The line keeps the present tense — `Nothing carries this tag right
+  now` — because `hashtag(name)` still resolves a name nothing has used,
+  and a sentence about what was unbound would lie to that one arrival.
+- **`Back to feed`, everywhere (jakob).** The drawn spelling wins over
+  the written rule, which is the right way round: the boards are where a
+  reader meets the words. The feed is a named surface — Explore,
+  settings — and not a common noun like the post or the wallet, so it
+  takes no article and the rest of the origin table is untouched. The
+  Reel's accessible name changes with it and copy-voice states it once.
+  The sweep found no third spelling: `DetailHeader`, `Removed` and both
+  shipped apps were already drawing it this way.
+- **A surface names the approver, never the role "inviter" (jakob):**
+  "yeah sweep — the other version where you can choose your inviter is a
+  super corner case that will probabely never happen." `invitations.md`
+  §2 fixes the inviter at the JOINER's own back-edge, so an applicant
+  has no inviter yet — only a member whose approval is waited on. The
+  prose says whose: `All set — waiting on @mira` over `Their approval
+  brings you in`, `Waiting on @mira` on the profile card, the approver's
+  act in copy-voice and on `ApprovePad`, whose reader may have issued no
+  link at all — which is what `VouchAsk` proves. The rule is about the
+  WORDS: where one member issues the link and approves through it, which
+  is the ordinary case, the fixtures rightly show one person. §2's
+  freedom to reciprocate anyone stands, and stays off the screen — no
+  surface offers a choice of inviter, because no reader is asked to make
+  one.
+- **A person is walked back; a topic is disconnected from (jakob).**
+  Three tidier variants of the same register were refused in one
+  breath — "nah thats all to complicated for users.. instead of walk
+  back we could just call it 'disconnect' or sth like this. and then we
+  can say 'no opinion towards #saltmaps' or sth similar.. we want human
+  wording not this nerdy stuff!" — and that last clause is the direction
+  the ruling leaves behind, not just its justification. `Walk it back`
+  is a sentence about a PERSON: you walk back something you said to
+  somebody, and a reader who liked a topic made it no promise. So the
+  two families part at the way out exactly as they already parted at the
+  axis words: the topic pad's control is `Disconnect`, its dialog asks
+  `Disconnect from #saltmaps?`, and what it leaves reads `No opinion
+  towards #saltmaps`. Persons keep their family untouched — jakob
+  objected to the topic's wording and only to it.
+- **The mechanism is the poles' own, one layer further down.** A family
+  already names its axes through one object; it now names its severance
+  through the same object, and where it names none the control's own
+  words stand. The lines that carry a name or a figure take them as
+  arguments, so a family's object holds no target — one constant serves
+  every topic page there will be. The sweep reaches the four places the
+  words surface: the pad's standing control, the confirm dialog's title,
+  sentences and button, the spoken and drawn readouts of a bundle at
+  nothing, and the help panel's fourth line, which teaches the way out
+  and would otherwise have taught a topic reader the other family's word.
+- **The draft's shape is web's everywhere, and the blocked roll answers
+  (jakob).** "yes web everywhere... maybe we should make the draft more
+  prominent.. right now it is easy to just wonder why you cant act.. i
+  guess clicking the images should also start the discard process (open
+  the popup).. else people might just click the images and wonder why
+  nothing happens." `ComposeDraft` already drew the state — this ruling
+  changes it rather than creating it. Three things follow. The SHAPE is
+  web's: the pick region under an unanswered draft is dimmed AND out of
+  reach, pointer, keyboard and assistive tech together, where Android
+  dims it and leaves it tappable. The DRAFT is prominent the way every
+  other card the product speaks through is — it wears `--ring-task`,
+  the same brand edge a `TaskCard` wears, because it is the same fact:
+  this card is the product addressing the reader and the one thing on
+  the screen that can be acted on. The dim beneath it stays at its
+  blessed 0.55; the ruling asked for a louder draft, not a fainter roll.
+  And the ROLL ANSWERS: a shield — one transparent control over the
+  whole region, so the keyboard and a screen reader reach what the thumb
+  reaches — raises `ComposeDraftDiscard`, the new board. Reaching past
+  the draft is asking to discard it, so that is what the dialog asks,
+  in `DiscardConfirm`'s family: the safe answer filled, no `error`
+  colour, and both words carrying their object, because a bare
+  `Discard` already stands inert behind the wash. The scrim is the third
+  answer nobody has to spell. Android's divergence is implementation's
+  to close (backlog 97).
+- **The gate**: one board added — `ComposeDraftDiscard`, the only
+  surface any of the six needed — and edges **1522 → 1527**: two wiring
+  the emptied tag page's new stance row, three the draft's shield and
+  its dialog. Gaps hold at **13** and flows at **66 declared · 64
+  resolved · 2 blocked**, `flows.resolved.json` byte-identical, so
+  nothing needed re-blessing: no journey was rerouted, only answered in
+  more places. Reachable filter summaries hold at **370**, **0** over
+  the band's 154px, widest unchanged at `Chats · text · + removed`,
+  153.9px. The compose canvas takes the new board at **79/200 files**
+  (61% headroom). Every board in the tree re-rendered, because two of
+  the six moved a token and a component the whole tree reads.
 
 ---
 

@@ -660,6 +660,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Discard</button>", tag: "button" },
     { n: 4, find: ">Continue</button>", tag: "button" },
+    /* The roll's shield (the re-review, 2026-09-15): one control over a region
+       that is out of reach, so a tap on the pictures reaches the discard
+       instead of nothing. */
+    { n: 5, find: 'aria-label="Answer your draft before starting a new post"', tag: "button" },
+  ],
+  /* The same stage with the shield's answer raised. Only the DIALOG's pair is
+     stamped — the body beneath the scrim is inert and every one of its controls
+     is wired on `ComposeDraft`. Its words carry their object for the reason the
+     board gives: a bare `Discard` already stands, inert, behind the wash. */
+  ComposeDraftDiscard: [
+    { n: 1, find: ">Discard it</button>", tag: "button" },
+    { n: 2, find: ">Keep the draft</button>", tag: "button" },
   ],
   ComposeSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -965,7 +977,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(12),
   ],
   Reel: [
-    { n: 1, find: 'aria-label="Back to the feed"', tag: "button" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "button" },
     { n: 2, find: 'aria-label="Turn sound on"', tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a" },
     { n: 4, find: 'aria-label="Give your opinion on this post"', tag: "button" },
@@ -1048,7 +1060,10 @@ const ownProfile = () => [
   { n: 4, find: 'aria-label="Change your picture"', tag: "button" },
   { n: 5, find: 'aria-label="Your opinions, both directions"', tag: "button" },
   { n: 6, find: ">Edit profile</button>", tag: "button" },
-  { n: 7, find: ">Invites</button>", tag: "button" },
+  // The waiting dot rides inside the button (the invites round), so the label
+  // is no longer the last thing before the closing tag: the find stops at the
+  // word, which matches the applicant's dotless button just as well.
+  { n: 7, find: ">Invites<", tag: "button" },
   { n: 8, find: 'aria-label="Posts"', tag: "button" },
   { n: 8, find: 'aria-label="Comments"', tag: "button" },
   { n: 8, find: 'aria-label="Everything"', tag: "button" },
@@ -1650,6 +1665,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: ">@juno landed through your invite<", tag: "button" },
     { n: 8, find: ">@mira approved your application<", tag: "button" },
     ...nav(9),
+    // The eighth kind arrived after the list was numbered, and a row inserted
+    // mid-list would renumber five nav edges to say nothing new: the badge is
+    // an identity, not a position (the settings page's own rule).
+    { n: 14, find: ">@rafa is ready for your approval<", tag: "button" },
+    // The ninth, the eighth's twin (the reject extension), taking its next
+    // free number for the same reason.
+    { n: 15, find: ">@kel closed your application<", tag: "button" },
   ],
   /* ── The Post score’s drill-down (backlog item 13) ─────────────────────
      The path rows and the step rows carry one number each: they are one control
@@ -1774,12 +1796,54 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* THE REJECT EXTENSION'S TWO BOARDS (jakob 2026-09-15). They are declared
+   ABOVE the three band sweeps on purpose: a sweep pushes onto
+   `FLOW_MARKERS[board] ??= []`, so an Object.assign running after one would
+   replace the array it filled and drop the markers it had just added.
+
+   `ApplicantRejected` IS `ApplicantWaiting`'S NUMBERING, to the number. It is
+   the same shell with one card swapped, so every control it shares keeps the
+   badge it already had — the three sweeps below name it beside its sibling at
+   the same numbers — and the card's own control takes 17, the number the
+   dismissal it replaced was using. A board that renumbers what it inherited
+   makes two boards of one anatomy disagree for no reason.
+
+   `VouchAskPad` IS `ApprovePad`'S, for the same reason: the same pad doing the
+   same act, so the same four numbers in the same order. Its card's `Not now`
+   and its way back sit under the wash and carry none, exactly as
+   `VouchBackPad`'s do — they carry their numbers one board earlier instead, on
+   `VouchAsk`, which is the same surface with the pad closed and nothing
+   dimmed. The landing numbers what a landing has: the way back, the decline,
+   and the affordance that opens the pad. */
+Object.assign(FLOW_MARKERS, {
+  ApplicantRejected: [
+    ...post({ author: 1, menu: 2, media: 3, more: 4, topic: 5, refs: 6, stance: 7, score: 8, comments: 9 }),
+    secondComments(9),
+    ...nav(10),
+    { n: 17, find: 'aria-label="Copy your ask link"', tag: "button" },
+  ],
+  VouchAsk: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Not now</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Give your opinion on @noor"', tag: "button" },
+    { n: 3, find: ">Choose your opinion on @noor</button>", tag: "button" },
+  ],
+  VouchAskPad: [
+    { n: 1, find: 'aria-label="How vouching works"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 2, find: ">Choose your opinion on @noor</button>", tag: "button" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+  ],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
    surface's gap (guest boards: the guest gate's). */
 const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
+  ApplicantRejected: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 8,
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
@@ -1799,6 +1863,7 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
    name and carries its marker in its own list above. */
 const BAND_BELL = {
   ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
+  ApplicantRejected: 18,
   ComposeExpired: 20, Explore: 9,
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
@@ -1817,6 +1882,7 @@ for (const [board, n] of Object.entries(BAND_BELL)) {
    the platform's own sheet. */
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
+  ApplicantRejected: 16,
   KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
   FeedNarrowed: 17, FeedScrolled: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16, FeedTopic: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
@@ -1882,12 +1948,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
     { n: 2, find: 'aria-label="Opinion pad for #saltmaps"', tag: "div" },
     { n: 2, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
-    { n: 3, find: ">Walk it back</button>", tag: "button" },
+    { n: 3, find: ">Disconnect</button>", tag: "button" },
     { n: 4, find: ">Cancel</button>", tag: "button" },
     { n: 5, find: ">Set</button>", tag: "button" },
   ],
+  /* The emptied page carries the topic's own row and nothing else, so the two
+     numbers the row needs are the two it gets: the page's accessible path at 2,
+     by the family's convention, and the face at the next free number — which
+     here is 3, because no post or comment face stands between them. */
   TagPageEmpty: [
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
+    { n: 2, find: ">Choose your opinion on #slipwaylight</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Give your opinion on #slipwaylight"', tag: "button" },
   ],
   TagPicker: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
@@ -1953,3 +2025,82 @@ export function applyFlowMarkers(name, html) {
   }
   return html;
 }
+
+/* THE INVITES ROUND'S SEVEN BOARDS (2026-09-15).
+
+   `Invites` IS THE ONLY ONE THAT SCANS. The other five over it are `scanExempt`
+   — a sheet, a wash or a dialog covers the page, and what is covered is inert —
+   so they number the surface on top and nothing beneath it.
+
+   A REPEATED CONTROL KEEPS ONE NUMBER, the rule the feed's post cards and the
+   Saved list's Unsave already follow. Two live-link cards means two copies and
+   two Revokes, and on `InviteCreated` a third copy inside the sheet: one act,
+   one outcome, one edge. The sheet carries one copy control and it is the
+   link's: the link is the only shape the capability takes on screen.
+
+   THE CLOSE IS ONE CONTROL ON TWO ROWS, so one edge covers it — and the dialog
+   it raises names one of them, the way `SeveranceConfirm` names one target for
+   the two routes into it. */
+Object.assign(FLOW_MARKERS, {
+  Invites: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">New invite</button>", tag: "button" },
+    { n: 3, find: ">@imke<", tag: "button" },
+    { n: 3, find: ">@vora81<", tag: "button" },
+    { n: 3, find: ">@vora82<", tag: "button" },
+    { n: 3, find: ">@vora83<", tag: "button" },
+    { n: 4, find: ">@rafa<", tag: "button" },
+    { n: 5, find: 'aria-label="Close @imke&#x27;s application"', tag: "button" },
+    { n: 5, find: 'aria-label="Close @vora81&#x27;s application"', tag: "button" },
+    { n: 5, find: 'aria-label="Close @vora82&#x27;s application"', tag: "button" },
+    { n: 5, find: 'aria-label="Close @vora83&#x27;s application"', tag: "button" },
+    { n: 5, find: 'aria-label="Close @rafa&#x27;s application"', tag: "button" },
+    { n: 6, find: 'aria-label="Copy the link"', tag: "button", all: true },
+    { n: 7, find: ">Revoke</button>", tag: "button", all: true },
+    { n: 8, find: ">Close all</button>", tag: "button" },
+  ],
+  RejectAllConfirm: [
+    { n: 1, find: ">Close them</button>", tag: "button" },
+    { n: 2, find: ">Keep them</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  InvitesEmpty: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">Create invite</button>", tag: "button" },
+  ],
+  InviteNew: [
+    { n: 1, find: ">Only one person can use it</span>", tag: "button" },
+    { n: 2, find: ">Expires after</span>", tag: "button" },
+    { n: 3, find: ">Create invite</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // Two sheets, two washes, one number: outside the sheet is outside it
+  // (`CommentMenu`'s own rule, cited).
+  InviteExpiry: [
+    { n: 1, find: 'name="invite-expiry"', tag: "label", all: true },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div", all: true },
+  ],
+  InviteCreated: [
+    { n: 1, find: 'aria-label="Copy the link"', tag: "button", all: true },
+    { n: 2, find: ">Share link</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The pad's own anatomy, `VouchBackPad`'s numbering exactly — the same four
+  // controls in the same order, because it is the same master doing the same
+  // job from the other side of the handshake. No `Walk it back`: a first vouch
+  // has no bundle to walk back, so the third number is Cancel here as it is
+  // there. The wash carries no edge, likewise: it is a wash, and the pad's own
+  // Cancel is the way out.
+  ApprovePad: [
+    { n: 1, find: 'aria-label="How vouching works"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 2, find: ">Choose your opinion on @rafa</button>", tag: "button" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+  ],
+  RejectConfirm: [
+    { n: 1, find: ">Close it</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+});

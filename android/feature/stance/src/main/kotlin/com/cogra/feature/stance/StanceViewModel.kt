@@ -32,6 +32,7 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.store.IdentityStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -106,9 +107,9 @@ data class SeveranceState(
 )
 
 data class StanceUiState(
-    val targets: Map<String, TargetStance> = emptyMap(),
+    val targets: Map<StanceTarget, TargetStance> = emptyMap(),
     /** The control whose first tap opened the teaching mark, if any. */
-    val coachTarget: String? = null,
+    val coachTarget: StanceTarget? = null,
     /** The reader's chosen input surface, the same on every control (design.md §8.6). */
     val inputMode: StanceInputMode = StanceInputMode.Default,
 )
@@ -124,7 +125,7 @@ class StanceViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     /** Targets whose standing read is in flight; a feed asks once, not per frame. */
-    private val reading = mutableSetOf<String>()
+    private val reading = mutableSetOf<StanceTarget>()
 
     /**
      * Whether the held gesture has been taught on this device; null until
@@ -151,7 +152,7 @@ class StanceViewModel @Inject constructor(
      * control comes back into view. Otherwise a single transport blip
      * leaves that card a mystery button for the rest of the session.
      */
-    fun observe(target: String) {
+    fun observe(target: StanceTarget) {
         if (_state.value.targets[target]?.standingRead == true) return
         if (!reading.add(target)) return
         _state.update { state ->
@@ -173,7 +174,7 @@ class StanceViewModel @Inject constructor(
      * tap after that commits the modest positive default (design.md §8.3,
      * §8.7).
      */
-    fun onTapDefault(target: String) {
+    fun onTapDefault(target: StanceTarget) {
         when (taught) {
             // The store has not answered yet: wait for it rather than
             // spending the teaching tap on a guess.
@@ -186,7 +187,7 @@ class StanceViewModel @Inject constructor(
         }
     }
 
-    fun onOpenPad(target: String) {
+    fun onOpenPad(target: StanceTarget) {
         // A hold IS the lesson. It closes an open mark, and it spends the
         // teaching tap for a reader who found the gesture without being
         // told — either way they have met it, and teaching them later
@@ -214,12 +215,12 @@ class StanceViewModel @Inject constructor(
      * so there is no round trip to wait for and nothing to debounce
      * (design.md §8.3).
      */
-    fun onPick(target: String, pick: StancePair) {
+    fun onPick(target: StanceTarget, pick: StancePair) {
         update(target) { it.copy(pick = pick, landing = it.landingFor(pick)) }
     }
 
     /** A hold released without drifting parks the pad open (design.md §8.5, §8.6). */
-    fun onHold(target: String) = update(target) { it.copy(pad = PadMode.STICKY) }
+    fun onHold(target: StanceTarget) = update(target) { it.copy(pad = PadMode.STICKY) }
 
     /**
      * Shuts the pad and stages nothing. Called on the way out of a
@@ -227,7 +228,7 @@ class StanceViewModel @Inject constructor(
      * — a feed asks this of every control it holds, and a dismissal that
      * touched state would churn the whole map for nothing.
      */
-    fun onDismissPad(target: String) {
+    fun onDismissPad(target: StanceTarget) {
         val entry = _state.value.targets[target] ?: return
         if (entry.pad == PadMode.CLOSED) return
         update(target) {
@@ -235,7 +236,7 @@ class StanceViewModel @Inject constructor(
         }
     }
 
-    fun onToggleExactValues(target: String) =
+    fun onToggleExactValues(target: StanceTarget) =
         update(target) { it.copy(exactValues = !it.exactValues) }
 
     /**
@@ -243,7 +244,7 @@ class StanceViewModel @Inject constructor(
      * about rather than refused, through the same confirmation the
      * explicit route opens (design.md §8.2, §8.5).
      */
-    fun onCommit(target: String) {
+    fun onCommit(target: StanceTarget) {
         val entry = _state.value.targets[target] ?: return
         if (entry.landing?.severance == true) {
             openSeverance(target, fromPick = true)
@@ -253,11 +254,11 @@ class StanceViewModel @Inject constructor(
     }
 
     /** The route for the reader who came to sever (design.md §8.5). */
-    fun onOpenSeverance(target: String) = openSeverance(target, fromPick = false)
+    fun onOpenSeverance(target: StanceTarget) = openSeverance(target, fromPick = false)
 
-    fun onDismissSeverance(target: String) = update(target) { it.copy(severance = null) }
+    fun onDismissSeverance(target: StanceTarget) = update(target) { it.copy(severance = null) }
 
-    fun onConfirmSeverance(target: String) {
+    fun onConfirmSeverance(target: StanceTarget) {
         val open = _state.value.targets[target]?.severance ?: return
         if (open.working) return
         update(target) { it.copy(severance = open.copy(working = true, failed = false)) }
@@ -289,7 +290,7 @@ class StanceViewModel @Inject constructor(
      * teaches has been spent", and a flag written later would let a
      * restart swallow a second priced tap in silence.
      */
-    private fun teach(target: String) {
+    private fun teach(target: StanceTarget) {
         taught = true
         _state.update { it.copy(coachTarget = target) }
         viewModelScope.launch { identity.markStancePadTaught() }
@@ -300,7 +301,7 @@ class StanceViewModel @Inject constructor(
         _state.update { it.copy(coachTarget = null) }
     }
 
-    private fun openSeverance(target: String, fromPick: Boolean) {
+    private fun openSeverance(target: StanceTarget, fromPick: Boolean) {
         viewModelScope.launch {
             when (val outcome = stances.severanceQuote(target)) {
                 is Outcome.Success -> update(target) {
@@ -312,9 +313,9 @@ class StanceViewModel @Inject constructor(
     }
 
     /** Consumes the one-shot confirmation once the screen has shown it. */
-    fun onConfirmationShown(target: String) = update(target) { it.copy(confirmation = null) }
+    fun onConfirmationShown(target: StanceTarget) = update(target) { it.copy(confirmation = null) }
 
-    private fun commit(target: String, pick: StancePair) {
+    private fun commit(target: StanceTarget, pick: StancePair) {
         val entry = _state.value.targets[target]
         if (entry?.busy == true) return
         update(target) { it.copy(busy = true, failed = false, needsKey = false) }
@@ -365,7 +366,7 @@ class StanceViewModel @Inject constructor(
      * The raw sums move with it: a second pick before the read lands
      * must fold onto the first, not onto the history that preceded it.
      */
-    private fun showPendingStanding(target: String, pick: StancePair) = update(target) {
+    private fun showPendingStanding(target: StanceTarget, pick: StancePair) = update(target) {
         val raw = it.standingRaw ?: return@update it
         val landed = localLanding(raw, pick)
         it.copy(
@@ -385,7 +386,7 @@ class StanceViewModel @Inject constructor(
      * records is no standing at all, which is the difference between the
      * labelled affordance and a folded pair on the target.
      */
-    private suspend fun readStanding(target: String) {
+    private suspend fun readStanding(target: StanceTarget) {
         when (val outcome = stances.standing(target)) {
             is Outcome.Success -> update(target) {
                 it.copy(
@@ -411,17 +412,17 @@ class StanceViewModel @Inject constructor(
     // pad the reader never asked for, and an open pad keeps its place.
     // A pending standing does not survive it — the write did not keep
     // the promise the pending answer made, so the fold is asked again.
-    private fun fail(target: String, needsKey: Boolean) {
+    private fun fail(target: StanceTarget, needsKey: Boolean) {
         val pending = _state.value.targets[target]?.standingPending == true
         update(target) { it.copy(busy = false, failed = true, needsKey = needsKey) }
         if (pending) viewModelScope.launch { readStanding(target) }
     }
 
-    private fun failSeverance(target: String) = update(target) {
+    private fun failSeverance(target: StanceTarget) = update(target) {
         it.copy(severance = it.severance?.copy(working = false, failed = true))
     }
 
-    private fun update(target: String, block: (TargetStance) -> TargetStance) {
+    private fun update(target: StanceTarget, block: (TargetStance) -> TargetStance) {
         _state.update { state ->
             val entry = state.targets[target] ?: TargetStance()
             state.copy(targets = state.targets + (target to block(entry)))

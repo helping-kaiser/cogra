@@ -1,6 +1,6 @@
 import React from "react";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
-import { SR_ONLY } from "./StanceReadout.jsx";
+import { SR_ONLY, STANCE_SEVERANCE_WORDS, severanceWords } from "./StanceReadout.jsx";
 
 /* A HELP SENTENCE SPEAKS THE FACE AND CARRIES THE DIGITS BEHIND IT (jakob's
    ruling, the geek round). Every line that names a pair is emoji-first: the
@@ -72,7 +72,7 @@ export const STANCE_PAD_HELP = [
   "Drag the knob. Left to right is against to for; bottom to top is how much more of it you want reaching you.",
   "Letting go changes nothing. Set signs it, Cancel leaves without signing.",
   "Your pick adds to what you've said before — that's why the two faces can differ.",
-  "Walk it back takes everything you've said to nothing. It has its own confirmation, and each thing you've said is walked back by its own signature.",
+  STANCE_SEVERANCE_WORDS.help,
 ];
 
 /* The same help, for the alternates — which have no field, so the first line has
@@ -83,8 +83,21 @@ export const STANCE_ALTERNATES_HELP = [
   "Two values, not one. The first is whether you're for or against it; the second is how much more of it you want reaching you.",
   "Nothing is signed until you press Sign it.",
   "Your pick adds to what you've said before — that's why the two faces can differ.",
-  "Walk it back takes everything to nothing, and each thing you've said is walked back by its own signature.",
+  STANCE_SEVERANCE_WORDS.helpAlternates,
 ];
+
+/* THE FOURTH LINE IS THE FAMILY'S (jakob 2026-09-15). The first three teach the
+   control and hold for every record family; the last one names the way out, and
+   a topic's way out is not a person's. So it is swapped rather than the whole
+   list forked — the teaching is one teaching, and only the word it ends on
+   changes. A family that names no severance of its own gets these unchanged. */
+export function padHelp(names) {
+  return [...STANCE_PAD_HELP.slice(0, 3), severanceWords(names).help];
+}
+
+export function alternatesHelp(names) {
+  return [...STANCE_ALTERNATES_HELP.slice(0, 3), severanceWords(names).helpAlternates];
+}
 
 export function StanceCoachMark({ onDismiss, style }) {
   const dismissRef = React.useRef(null);

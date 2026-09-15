@@ -9,6 +9,7 @@ import type { ApolloClient } from "@apollo/client";
 import {
   CommentRepliesDocument,
   CommentSelfMarkDocument,
+  PostCommentsDocument,
   PostDetailDocument,
   PostsDocument,
   PrepareCommentDocument,
@@ -17,6 +18,7 @@ import {
   PreparePostEditDocument,
   type CommentRepliesQuery,
   type LandingState,
+  type PostCommentsQuery,
   type PostDetailQuery,
   type PostsQuery,
 } from "@/__generated__/graphql";
@@ -29,8 +31,18 @@ import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 
 export type PostView = PostsQuery["posts"]["edges"][number]["node"];
 
-type DetailPost = NonNullable<PostDetailQuery["post"]>;
-export type CommentView = DetailPost["comments"]["edges"][number]["node"];
+/**
+ * A comment, as THE THREAD'S OWN read serves it.
+ *
+ * Off `PostComments` rather than `PostDetail` because the sheet is the one
+ * comments surface and it is raised from the feed as readily as from the
+ * detail — a shape derived from the detail read would name the wrong owner.
+ * The two documents select the same fields, so the detail's own page is still
+ * assignable to this where the parked reduction has not landed yet.
+ */
+export type CommentView = NonNullable<
+  PostCommentsQuery["post"]
+>["comments"]["edges"][number]["node"];
 /**
  * A reply, as the EXPAND read serves it (Q49).
  *
@@ -181,6 +193,45 @@ const INCLUDE_PENDING_DEFAULT = true;
 
 function includePendingOf(options: ListingOptions): boolean {
   return options.includePending ?? INCLUDE_PENDING_DEFAULT;
+}
+
+/**
+ * A post's thread: one page of it, and how big the whole thing is.
+ *
+ * The total rides the page because the sheet states it whether or not the
+ * surface underneath drew a count — it is cursor-independent, so it answers
+ * the same on page one and page four.
+ */
+export type CommentThread = Page<CommentView> & { total: number };
+
+/** One page of a post's comments, for the sheet that owns them. */
+export async function fetchPostComments(
+  client: ApolloClient,
+  postId: string,
+  after: string | null = null,
+  options: ListingOptions = {},
+): Promise<Outcome<CommentThread | null>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: PostCommentsDocument,
+      variables: {
+        id: postId,
+        first: CONTENT_PAGE_SIZE,
+        after,
+        includePending: includePendingOf(options),
+      },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  const post = fetched.value.post;
+  if (!post) return success(null);
+  return success({
+    items: post.comments.edges.map((edge) => edge.node),
+    endCursor: post.comments.pageInfo.endCursor ?? null,
+    hasNextPage: post.comments.pageInfo.hasNextPage,
+    total: post.comments.totalCount,
+  });
 }
 
 /** A further page of one comment's direct replies (expand). */

@@ -94,10 +94,9 @@ function isFolded(media: boolean, words: string | null, description: string | nu
  * accessible name and zero showing the glyph alone.
  *
  * "Read the replies" is a different intent from "read the post", so it does not
- * hide behind the card tap. Its ruled destination is the comments sheet, which
- * is not drawn here yet — so on a card it goes to the thread's current home
- * (the post page) and on the detail it takes the reader to the thread already
- * on the page. Neither is a control that goes nowhere.
+ * hide behind the card tap. Its ruled destination is the comments sheet, over
+ * whichever surface the card is on (jakob 2026-09-15) — the same full-function
+ * thread from a feed card as from the detail.
  */
 function CommentCount({
   count,
@@ -160,9 +159,9 @@ export function PostCard({
   stanceTestId: string;
   /** The whole thread's count, off `Post.comments.totalCount`. */
   comments: number;
-  /** Where the count leads on a summary card. */
+  /** Where the count leads on a card with no thread to raise. */
   commentsHref?: string;
-  /** What it does on the detail, where the thread is already on the page. */
+  /** The count's ruled destination: the comments sheet, over this surface. */
   onOpenComments?: () => void;
   /** Says `Link copied` where the browser has no platform share sheet. */
   onLinkCopied: () => void;
@@ -470,7 +469,13 @@ export function PostCard({
         />
         <CommentCount
           count={comments}
-          href={detail ? undefined : (commentsHref ?? href)}
+          // THE SHEET WINS WHEREVER IT IS OFFERED. A card handed a door to the
+          // thread opens the thread; the route is the fallback for a card
+          // mounted where no sheet is (a link is still better than a control
+          // that goes nowhere).
+          href={
+            detail || onOpenComments !== undefined ? undefined : (commentsHref ?? href)
+          }
           onOpen={onOpenComments}
           testId={`${testId}-comments`}
         />

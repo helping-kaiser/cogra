@@ -428,6 +428,24 @@
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
 
+  /* A dialog is held clear of the screen edge, and the gap is what says it is
+     floating rather than page (readme §11). Wider than the 24px gutter on
+     purpose; above the platform's 24dp floor and 280dp narrowest. */
+  --dialog-inset: var(--space-8);
+  --dialog-max-width: 20rem;
+
+  /* The ring the SYSTEM wears on a card it put in a reader's feed, against the
+     card the system merely carries (jakob 2026-09-15: "some gradient or sth..
+     making it obvious that this card (and potentially all system cards) are
+     cogra cards you should act on and not a normal part of the feed"). The
+     ground stays the feed card's own — the brand travels on the EDGE, which is
+     the story ring's grammar and the one mark a post card can never wear. The
+     recipe is the brand wash's own angle and the brand's own three warm fills,
+     so the edge reads as one family with the wallet's hero; it takes roles
+     rather than hex, so both themes are this one definition. */
+  --ring-task: linear-gradient(140deg, var(--primary) 0%, var(--primary-container) 46%, var(--secondary-container) 100%);
+  --ring-task-width: 2px;
+
   /* The resting stance face with no standing behind it: muted and translucent. */
   --opacity-resting-face: 0.4; /* @kind other */
   /* The stance face over media. The emoji is a mark, sized to the line face
@@ -985,6 +1003,24 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
 
+  /* A dialog is held clear of the screen edge, and the gap is what says it is
+     floating rather than page (readme §11). Wider than the 24px gutter on
+     purpose; above the platform's 24dp floor and 280dp narrowest. */
+  --dialog-inset: var(--space-8);
+  --dialog-max-width: 20rem;
+
+  /* The ring the SYSTEM wears on a card it put in a reader's feed, against the
+     card the system merely carries (jakob 2026-09-15: "some gradient or sth..
+     making it obvious that this card (and potentially all system cards) are
+     cogra cards you should act on and not a normal part of the feed"). The
+     ground stays the feed card's own — the brand travels on the EDGE, which is
+     the story ring's grammar and the one mark a post card can never wear. The
+     recipe is the brand wash's own angle and the brand's own three warm fills,
+     so the edge reads as one family with the wallet's hero; it takes roles
+     rather than hex, so both themes are this one definition. */
+  --ring-task: linear-gradient(140deg, var(--primary) 0%, var(--primary-container) 46%, var(--secondary-container) 100%);
+  --ring-task-width: 2px;
+
   /* The resting stance face with no standing behind it: muted and translucent. */
   --opacity-resting-face: 0.4; /* @kind other */
   /* The stance face over media. The emoji is a mark, sized to the line face
@@ -1137,13 +1173,13 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 </div>
 <div style="position:relative;flex:1;"><div style="position:absolute;left:20px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Entry<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">27 boards · 200 edges · <span style="color:inherit;">0 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 33</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 18</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 24</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 10</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 18</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 6</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 7</div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">28 boards · 218 edges · <span style="color:inherit;">0 gaps</span></div>
+<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 37</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 22</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 28</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 12</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 18</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 7</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 8</div>
 </div>
 <div style="position:absolute;left:340px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Compose<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">39 boards · 254 edges · <span style="color:var(--error);">1 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 33</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 19</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 4</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 15</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 8</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 3</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 3</div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">39 boards · 248 edges · <span style="color:var(--error);">1 gaps</span></div>
+<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 30</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 4</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 15</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 8</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 3</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 3</div>
 </div>
 <div style="position:absolute;left:660px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Comments<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
@@ -1152,8 +1188,8 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 </div>
 <div style="position:absolute;left:980px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Feed &amp; Search<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">26 boards · 294 edges · <span style="color:var(--error);">2 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 26</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 19</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 52</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 11</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 42</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 16</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 16</div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">26 boards · 296 edges · <span style="color:var(--error);">2 gaps</span></div>
+<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 26</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 19</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 52</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 12</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 42</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 16</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 18</div>
 </div>
 <div style="position:absolute;left:20px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Money &amp; Wallet<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
@@ -1162,13 +1198,13 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 </div>
 <div style="position:absolute;left:340px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Media<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">29 boards · 221 edges · <span style="color:inherit;">0 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 38</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 12</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 20</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 16</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 5</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 7</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 5</div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">29 boards · 220 edges · <span style="color:inherit;">0 gaps</span></div>
+<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 37</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 12</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 20</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 16</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 5</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 7</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 5</div>
 </div>
 <div style="position:absolute;left:660px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Profile<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">37 boards · 269 edges · <span style="color:var(--error);">1 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 20</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 43</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 9</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 13</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 10</div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">47 boards · 307 edges · <span style="color:inherit;">0 gaps</span></div>
+<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 20</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 43</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 9</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 14</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 14</div>
 </div>
 <div style="position:absolute;left:980px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Patterns &amp; reference<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>

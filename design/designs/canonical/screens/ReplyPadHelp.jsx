@@ -24,7 +24,7 @@ export function Screen() {
     <>
       <ReplyPadBody />
 
-      <DialogSurface ariaLabel="Toward what you answer" width="21rem">
+      <DialogSurface ariaLabel="Toward what you answer">
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
             Toward what you answer
