@@ -2676,7 +2676,7 @@ the same treatment. It is a copy ruling, which is why the round flagged
 it rather than inventing one. The poles themselves were blessed
 2026-09-15; the axis names are the half still owed.
 
-### 80 · `readme.md` §3 says the stance parameters have two labels and nothing else · *design*
+### 80 · `readme.md` §3 says the stance parameters have two labels and nothing else · *design* · **ruled + recorded**
 
 Surfaced by the topic round 2026-09-14 while giving the Affinity family
 its pole words. §3 reads: "The two stance parameters are labelled **For
@@ -2692,6 +2692,14 @@ family fills the same two slots with is that family's to name
 (`StancePad`'s own contract says exactly this). §3 wants one clause
 saying so, and copy-voice's *vocabulary that stays off the screen*
 probably wants the same clause. A tightening pass, not a decision.
+
+Tightened 2026-09-15 — jakob confirmed it needed no ruling. §3 now names
+the noun: an OPINION's two stance parameters carry those two labels and
+nothing else, and another record family filling the same two slots names
+them its own. copy-voice's *vocabulary that stays off the screen* carries
+the same clause with the three families' words beside it, the long
+version's job. Both borrow the citation round's own formulation — the
+control owns the geometry, the record family owns the words.
 
 ### 81 · A guest on a tag page has no ruled outcome · *design*
 
