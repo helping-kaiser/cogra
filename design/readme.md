@@ -5516,6 +5516,36 @@ except the board the last one needed.
   (61% headroom). Every board in the tree re-rendered, because two of
   the six moved a token and a component the whole tree reads.
 
+### The detail-fold and reply-return rulings — 2026-09-15
+
+Two rulings from the same evening that changed no drawing, recorded so
+the next round can find them.
+
+- **The detail keeps its fold, deliberately.** The measured state — the
+  action row 103.5px below the visible column on the gallery detail,
+  73.5px on the video detail — was put to jakob with the ordering and
+  ceiling alternatives, and he ruled it as drawn: "detail view is about
+  the details afterall, if the user wouldve wanted to go to comments
+  directly he wouldve clicked it, and breaking the order (keeping all
+  the posts contents as one entity) is bad. so nothing changes and we
+  record this as a minor inconvenience." The true-shape round's trade
+  extends to the detail knowingly; `PostCard`'s clamps-nothing rule
+  stands; the card keeps its one order on every surface.
+- **A signed reply returns the reader exactly where they were.** The
+  `reply-to-a-post` flow's promised end — "the thread, the comment
+  settling" — is the ruled behaviour, precisely: the sheet reopens at
+  the same scroll offset, the new reply drawn on its PARENT comment in
+  `CommentCard`'s reserved `children` slot wearing `PendingMarker`'s
+  "Still settling", and a parent whose replies were collapsed behind a
+  count EXPANDS on arrival — jakob: "show the content you just wrote".
+  The same rule covers a comment EDIT ("editing sth and then not
+  seeing the corrected version gives the user uncertainty if it even
+  happened") and reads identically for a sheet raised from the feed:
+  the return is a property of the sheet, never of the page beneath it.
+  The navigation result carries two values — the scroll offset and the
+  parent comment id. The landing state itself is still undrawn: item
+  85.
+
 ---
 
 ## 14. The canvases

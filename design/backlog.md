@@ -3114,3 +3114,15 @@ dialog anatomy already shared with `DiscardConfirm`. Web's own
 
 Nothing here is a design question; the boards are the contract and this
 is conformance work.
+
+### 85 · The signed reply's landing state is promised and undrawn · *design* · **open**
+
+Filed 2026-09-15 with the reply-return ruling (readme, *the
+detail-fold and reply-return rulings*). The flow's end case promises
+"the thread, the comment settling", and every component piece exists —
+`CommentCard` takes `pending`, reserves `children` for exactly this
+placement, and `PendingMarker` says "Still settling" — but no board
+draws the landing: the sheet at the reader's own scroll offset with
+their just-signed reply on its expanded parent. One state board (a
+`ReplyEntry` variant or its own drawing, the round's call) closes it;
+the edit-return twin ruled the same evening lands on the same anatomy.
