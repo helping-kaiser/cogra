@@ -35,7 +35,13 @@ import { firstRefusalMessage } from "@/lib/ui/error-messages";
 import { appendDeduped } from "@/lib/api/pagination";
 import type { StagedWriteView } from "@/lib/api/writes-api";
 import { prepareTag } from "@/lib/api/topics-api";
-import { prepareReference, prepareReferenceWithdrawal } from "@/lib/api/references-api";
+import {
+  fetchCitedBy,
+  fetchCitedByCount,
+  prepareReference,
+  prepareReferenceWithdrawal,
+  type CitingRecordView,
+} from "@/lib/api/references-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { tagChanges, WITHDRAWN_RELEVANCE, type TagDraft } from "@/lib/topics/draft";
 import { referenceDrafts } from "@/lib/references/claims";
@@ -94,6 +100,7 @@ import { sensitiveReasonProblem } from "@/lib/compose/wizard";
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
+import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
 import { postMenuItems } from "@/lib/ui2/post-menu";
@@ -231,6 +238,20 @@ export function PostView({
   // a sheet over a sheet, `stacked` (design/readme.md:2364). The one mount
   // below answers for whichever menu asked, so this tracks which case it is.
   const [licenseStacked, setLicenseStacked] = useState(false);
+  // ONE SHEET, TWO DOORS, exactly as the license has: the post's count line
+  // raises it over the page, a comment's ⋮ raises it over the thread. What
+  // differs is the node it reads and whether it stacks, so that is all this
+  // holds — `null` is closed.
+  const [citedBySheet, setCitedBySheet] = useState<{
+    nodeId: string;
+    stacked: boolean;
+  } | null>(null);
+  const [citedByRecords, setCitedByRecords] = useState<readonly CitingRecordView[]>([]);
+  const [citedByCursor, setCitedByCursor] = useState<string | null>(null);
+  const [citedByHasMore, setCitedByHasMore] = useState(false);
+  const [citedByLoadingMore, setCitedByLoadingMore] = useState(false);
+  // The post's own inbound count, for the line that draws only above zero.
+  const [citedByCount, setCitedByCount] = useState(0);
   const [removeOpen, setRemoveOpen] = useState(false);
   const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
   // Stable, so the snackbar's own timer is not restarted by every render of
@@ -335,6 +356,51 @@ export function PostView({
   }, [client, postId]);
 
   useEffect(() => refresh(), [refresh]);
+
+  // The count rides its own read: it is not a field of the post, and it is one
+  // aggregate rather than a page, so it costs nothing to ask for separately and
+  // keeps the detail read's own budget where it is. A failure leaves the count
+  // at zero, which draws no line — an inbound count is not worth a fault banner
+  // over the post the reader came for.
+  useEffect(() => {
+    let cancelled = false;
+    void fetchCitedByCount(client, postId).then((outcome) => {
+      if (cancelled || outcome.kind !== "success") return;
+      setCitedByCount(outcome.value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, postId]);
+
+  /**
+   * Both doors into the cited-by sheet: the post's count line, and a comment's
+   * ⋮ row. The node differs and so does whether the sheet stacks; everything
+   * else — the order, the rows, the paging — is one surface.
+   */
+  const openCitedBy = (nodeId: string, stacked: boolean) => {
+    setCitedBySheet({ nodeId, stacked });
+    setCitedByRecords([]);
+    setCitedByCursor(null);
+    setCitedByHasMore(false);
+    void fetchCitedBy(client, nodeId).then((outcome) => {
+      if (outcome.kind !== "success") return;
+      setCitedByRecords(outcome.value.items);
+      setCitedByCursor(outcome.value.endCursor);
+      setCitedByHasMore(outcome.value.hasNextPage);
+    });
+  };
+
+  const onLoadMoreCitedBy = async () => {
+    if (citedBySheet === null || citedByLoadingMore || !citedByHasMore) return;
+    setCitedByLoadingMore(true);
+    const outcome = await fetchCitedBy(client, citedBySheet.nodeId, citedByCursor);
+    setCitedByLoadingMore(false);
+    if (outcome.kind !== "success") return;
+    setCitedByRecords((current) => appendDeduped(current, outcome.value.items));
+    setCitedByCursor(outcome.value.endCursor);
+    setCitedByHasMore(outcome.value.hasNextPage);
+  };
 
   // Pull-down at the top is one of the surfaces the pull-to-refresh
   // ruling names (design/readme.md, "The pull-down lives on every
@@ -716,6 +782,16 @@ export function PostView({
         onSelect: () => router.push(`/compose?reference=${comment.id}`),
         testId: `comment-menu-cite-${comment.id}`,
       },
+      // INBOUND BEFORE OPINIONS (`_shared.jsx:397-413`): it sits between the
+      // acts and the license because it is a fact about the ARTIFACT, where
+      // the row under it is a fact about people. Like that row it stands
+      // whatever the count is — a comment has no count line of its own, so
+      // this is the only door to the list, and the only way to meet it empty.
+      {
+        label: "Cited by",
+        onSelect: () => openCitedBy(comment.id, true),
+        testId: `comment-menu-cited-by-${comment.id}`,
+      },
       {
         label: "Opinions on this",
         onSelect: () => {},
@@ -1083,6 +1159,8 @@ export function PostView({
           // carries it.
           onOpenComments={() => setCommentsOpen(true)}
           onLinkCopied={() => setLinkCopied(true)}
+          citedBy={citedByCount}
+          onOpenCitedBy={() => openCitedBy(postId, false)}
         />
       </div>
       {/* THE THREAD IS A SHEET OVER THE POST (`_shared.jsx:1247-1257`): the
@@ -1192,6 +1270,21 @@ export function PostView({
           license={licenseShown}
           testId="license-sheet"
           stacked={licenseStacked}
+        />
+      )}
+      {/* ONE MOUNT, TWO DOORS — the post's count line and a comment's ⋮. Which
+          one asked decides the node it reads and whether it stacks, exactly as
+          the license sheet above resolves its own two doors. */}
+      {citedBySheet !== null && (
+        <CitedBySheet
+          open
+          onClose={() => setCitedBySheet(null)}
+          records={citedByRecords}
+          hasMore={citedByHasMore}
+          loadingMore={citedByLoadingMore}
+          onLoadMore={() => void onLoadMoreCitedBy()}
+          stacked={citedBySheet.stacked}
+          testId="cited-by-sheet"
         />
       )}
       {/* THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is

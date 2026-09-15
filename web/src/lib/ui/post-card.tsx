@@ -144,6 +144,8 @@ export function PostCard({
   commentsHref,
   onOpenComments,
   onLinkCopied,
+  citedBy = 0,
+  onOpenCitedBy,
   mediaPinned = false,
   onOpenMedia,
 }: {
@@ -164,6 +166,16 @@ export function PostCard({
   onOpenComments?: () => void;
   /** Says `Link copied` where the browser has no platform share sheet. */
   onLinkCopied: () => void;
+  /**
+   * How many artifacts cite this one — the INBOUND mirror of `references`,
+   * which counts what this post points at. DETAIL VARIANT ONLY, and only above
+   * zero. Never folded into the references count: that number is the
+   * tags-and-references sheet's length, and this is a different list by
+   * different authors, in a different order.
+   */
+  citedBy?: number;
+  /** Opens the cited-by sheet. */
+  onOpenCitedBy?: () => void;
   /**
    * The surface is already showing this post's media above the card, so the
    * card draws none — the video detail, where "THE CLIP IS PINNED ABOVE THE
@@ -417,6 +429,30 @@ export function PostCard({
             testId={`${testId}-refs-sheet`}
           />
         </>
+      )}
+      {/* WHAT CITES THIS, as a count that opens the list holding them
+          (`screens/CitedBy.jsx`; readme item 55).
+
+          IT IS NOT THE REFERENCES LINE GROWN A SECOND NUMBER. That line's count
+          is the tags-and-references sheet's length — a law this leaves where it
+          stands. Inbound citations are a different list, by different authors,
+          in a different order, and folding them into one count would make
+          neither number checkable.
+
+          AT ZERO THERE IS NO ROW — a tap that can only open an empty list is a
+          tap spent on nothing. The comment's door is its ⋮, where the row
+          stands whatever the count is, and that is where the empty sheet
+          lives. */}
+      {!redacted && detail && citedBy > 0 && (
+        <button
+          type="button"
+          className="w-full text-left text-body-small text-on-surface-variant"
+          data-testid={`${testId}-cited-by`}
+          aria-label="Cited by"
+          onClick={onOpenCitedBy}
+        >
+          Cited by {citedBy}
+        </button>
       )}
       {/* Shown in full, marked quietly (design.md §9) — a pending post is real
           content whose place in the order is not yet fixed. */}

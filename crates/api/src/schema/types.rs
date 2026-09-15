@@ -1062,7 +1062,7 @@ impl User {
         after: Option<String>,
         last: Option<i32>,
         before: Option<String>,
-    ) -> async_graphql::Result<KeysetConnection<Record>> {
+    ) -> async_graphql::Result<RecordConnection> {
         node_records(
             ctx,
             self.graph_anchor(),
@@ -1107,7 +1107,7 @@ impl User {
         after: Option<String>,
         last: Option<i32>,
         before: Option<String>,
-    ) -> async_graphql::Result<KeysetConnection<Record>> {
+    ) -> async_graphql::Result<RecordConnection> {
         node_records(
             ctx,
             self.graph_anchor(),
@@ -1815,7 +1815,7 @@ impl PostType {
         after: Option<String>,
         last: Option<i32>,
         before: Option<String>,
-    ) -> async_graphql::Result<KeysetConnection<Record>> {
+    ) -> async_graphql::Result<RecordConnection> {
         node_records(
             ctx,
             vec![self.0.l1_node_id.clone()],
@@ -1860,7 +1860,7 @@ impl PostType {
         after: Option<String>,
         last: Option<i32>,
         before: Option<String>,
-    ) -> async_graphql::Result<KeysetConnection<Record>> {
+    ) -> async_graphql::Result<RecordConnection> {
         node_records(
             ctx,
             vec![self.0.l1_node_id.clone()],
@@ -2091,7 +2091,7 @@ impl CommentType {
         after: Option<String>,
         last: Option<i32>,
         before: Option<String>,
-    ) -> async_graphql::Result<KeysetConnection<Record>> {
+    ) -> async_graphql::Result<RecordConnection> {
         node_records(
             ctx,
             vec![self.0.l1_node_id.clone()],
@@ -2136,7 +2136,7 @@ impl CommentType {
         after: Option<String>,
         last: Option<i32>,
         before: Option<String>,
-    ) -> async_graphql::Result<KeysetConnection<Record>> {
+    ) -> async_graphql::Result<RecordConnection> {
         node_records(
             ctx,
             vec![self.0.l1_node_id.clone()],
@@ -2901,7 +2901,7 @@ pub(super) async fn resolve_reference_target(
     ),
     field(
         name = "outgoing_records",
-        ty = "KeysetConnection<Record>",
+        ty = "RecordConnection",
         desc = "Records authored from this node — for an actor, their outgoing chronicle; the generic way to read any relationship before named convenience views exist. Filter by family, by the kind of node on the far end, by parameter sign (e.g. only vouch-positive Opinions, or (0,0) update records), payload-marked state, and/or a landing-epoch window.",
         arg(name = "family", ty = "Option<RecordFamily>"),
         arg(name = "to_kind", ty = "Option<NodeKind>"),
@@ -2917,7 +2917,7 @@ pub(super) async fn resolve_reference_target(
     ),
     field(
         name = "incoming_records",
-        ty = "KeysetConnection<Record>",
+        ty = "RecordConnection",
         desc = "Records pointing at this node. Exposed as public topology / an inbound-attention surface only — per the feed-ranking model, inbound records never shape this node's own feed. Same filters as outgoingRecords; fromKind selects the source kind.",
         arg(name = "family", ty = "Option<RecordFamily>"),
         arg(name = "from_kind", ty = "Option<NodeKind>"),
@@ -2979,11 +2979,11 @@ pub(crate) async fn node_records(
     anchor_ids: Vec<String>,
     direction: mirror::Direction,
     args: NodeRecordsArgs,
-) -> async_graphql::Result<KeysetConnection<Record>> {
+) -> async_graphql::Result<RecordConnection> {
     let pool = ctx.data::<PgPool>()?;
     let page = keyset_page(args.first, args.after, args.last, args.before)?;
     if anchor_ids.is_empty() {
-        return Ok(keyset_connection(Vec::new(), &page, record_cursor, Record));
+        return Ok(record_connection(Vec::new(), &page, None));
     }
     let filter = mirror::RecordFilter {
         family: args.family.map(|f| f.as_family().as_str().to_string()),
@@ -3008,7 +3008,7 @@ pub(crate) async fn node_records(
     )
     .await
     .map_err(|e| async_graphql::Error::new(e.to_string()))?;
-    Ok(keyset_connection(rows, &page, record_cursor, Record))
+    Ok(record_connection(rows, &page, Some(filter)))
 }
 
 /// A record's place in the chronicle's keyset: the causal key alone.
@@ -3098,6 +3098,63 @@ pub type KeysetConnectionWith<G, F> = Connection<
 >;
 
 pub type KeysetConnection<G> = KeysetConnectionWith<G, async_graphql::connection::EmptyFields>;
+
+/// A chronicle connection: the record page plus the match's own count.
+pub type RecordConnection = KeysetConnectionWith<Record, RecordConnectionFields>;
+
+/// `RecordConnection`'s connection-level fields, holding the filter that
+/// served the edges rather than a computed number — the count is one
+/// aggregate per connection, run only when asked, which is the pricing
+/// api-spec.md "Pagination" declares it under.
+///
+/// `None` is a read that resolved to nothing at all: an id naming no
+/// known node, or an actor with no address yet. Those serve an empty
+/// page rather than an error, and their count is zero without a query —
+/// counting under a filter whose narrowing clause was dropped would
+/// report the whole chronicle.
+pub struct RecordConnectionFields {
+    filter: Option<mirror::RecordFilter>,
+}
+
+#[Object]
+impl RecordConnectionFields {
+    /// How many records this filter matches in total, across every page,
+    /// independent of the cursor — the count behind an inbound-count
+    /// line, which reads it to know whether to draw at all.
+    ///
+    /// Nullable as the spec declares it. It answers with a number on
+    /// every read the mirror can serve; the null is the contract's room
+    /// for a count some future backing cannot state, not a case this
+    /// implementation produces. The value saturates at [`i32::MAX`]:
+    /// GraphQL's `Int` is 32-bit, and saturating beats failing the read.
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let Some(filter) = &self.filter else {
+            return Ok(Some(0));
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let total = mirror::count_records(pool, filter)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+}
+
+/// A page of records, carrying the filter that produced it so the count
+/// can be resolved under exactly the same predicate.
+pub(crate) fn record_connection(
+    rows: Vec<mirror::RecordFull>,
+    page: &KeysetPage,
+    filter: Option<mirror::RecordFilter>,
+) -> RecordConnection {
+    keyset_connection_with(
+        rows,
+        page,
+        record_cursor,
+        Record,
+        RecordConnectionFields { filter },
+    )
+}
 
 /// A thread connection: the comment page plus the thread's own count.
 pub type CommentConnection = KeysetConnectionWith<CommentType, CommentConnectionFields>;

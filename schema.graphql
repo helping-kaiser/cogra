@@ -2067,6 +2067,18 @@ type RecordConnection {
 	A list of edges.
 	"""
 	edges: [RecordEdge!]!
+	"""
+	How many records this filter matches in total, across every page,
+	independent of the cursor — the count behind an inbound-count
+	line, which reads it to know whether to draw at all.
+	
+	Nullable as the spec declares it. It answers with a number on
+	every read the mirror can serve; the null is the contract's room
+	for a count some future backing cannot state, not a case this
+	implementation produces. The value saturates at [`i32::MAX`]:
+	GraphQL's `Int` is 32-bit, and saturating beats failing the read.
+	"""
+	totalCount: Int
 }
 
 """

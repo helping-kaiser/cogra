@@ -731,6 +731,113 @@ pub async fn records(
         .collect())
 }
 
+/// How many records the same filter matches, across every page.
+///
+/// The predicate is [`records`]' own, minus the cursor and the limit —
+/// the two things that make a page a page. Keeping it a separate
+/// statement rather than a window function over the page keeps the
+/// paged read's plan untouched: a caller that never asks for the count
+/// pays nothing for it, which is the pricing the count is declared under
+/// (api-spec.md "Pagination").
+pub async fn count_records(pool: &PgPool, filter: &RecordFilter) -> Result<i64, MirrorError> {
+    let (anchor_source, anchor_target) = match &filter.anchor {
+        Some(anchor) => match anchor.direction {
+            Direction::Outgoing => (Some(anchor.ids.as_slice()), None),
+            Direction::Incoming => (None, Some(anchor.ids.as_slice())),
+        },
+        None => (None, None),
+    };
+    let far_kind = filter
+        .anchor
+        .as_ref()
+        .and_then(|anchor| anchor.far_kind)
+        .map(NodeKind::as_str);
+    let total = sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "count!"
+           FROM mirror_records r
+           WHERE ($1::text IS NULL OR r.author = $1)
+             AND ($2::text IS NULL OR r.family = $2)
+             AND ($3::boolean IS NULL OR r.payload_marked = $3)
+             AND ($4::bigint IS NULL OR r.epoch >= $4)
+             AND ($5::bigint IS NULL OR r.epoch <= $5)
+             AND ($6::text IS NULL OR EXISTS (
+                     SELECT 1 FROM mirror_record_legs l
+                     WHERE l.record_id = r.record_id
+                       AND l.leg IN ('binary', 'a') AND l.target = $6))
+             AND ($7::text IS NULL OR EXISTS (
+                     SELECT 1 FROM mirror_record_legs l
+                     WHERE l.record_id = r.record_id
+                       AND l.leg = 't' AND l.target = $7))
+             AND ($8::text[] IS NULL OR EXISTS (
+                     SELECT 1 FROM mirror_record_legs l
+                     WHERE l.record_id = r.record_id
+                       AND l.source = ANY($8)
+                       AND ($10::text IS NULL OR CASE
+                             WHEN $10 = 'post' THEN EXISTS (
+                                  SELECT 1 FROM posts p
+                                  WHERE p.l1_node_id = l.target)
+                             WHEN $10 = 'comment' THEN EXISTS (
+                                  SELECT 1 FROM comments c
+                                  WHERE c.l1_node_id = l.target)
+                             WHEN $10 = 'hashtag' THEN l.target LIKE 'name:%'
+                             WHEN $10 IN ('user', 'collective') THEN EXISTS (
+                                  SELECT 1 FROM actors a
+                                  WHERE a.kind = $10
+                                    AND (l.target LIKE 'prof:%'
+                                         OR l.target LIKE 'addr:%')
+                                    AND a.realization_address = split_part(l.target, ':', 2))
+                             ELSE FALSE END)))
+             AND ($9::text[] IS NULL OR EXISTS (
+                     SELECT 1 FROM mirror_record_legs l
+                     WHERE l.record_id = r.record_id
+                       AND l.target = ANY($9)
+                       AND ($10::text IS NULL OR CASE
+                             WHEN $10 = 'post' THEN EXISTS (
+                                  SELECT 1 FROM posts p
+                                  WHERE p.l1_node_id = l.source)
+                             WHEN $10 = 'comment' THEN EXISTS (
+                                  SELECT 1 FROM comments c
+                                  WHERE c.l1_node_id = l.source)
+                             WHEN $10 = 'hashtag' THEN l.source LIKE 'name:%'
+                             WHEN $10 IN ('user', 'collective') THEN EXISTS (
+                                  SELECT 1 FROM actors a
+                                  WHERE a.kind = $10
+                                    AND (l.source LIKE 'prof:%'
+                                         OR l.source LIKE 'addr:%')
+                                    AND a.realization_address = split_part(l.source, ':', 2))
+                             ELSE FALSE END)))
+             AND (($11::text IS NULL AND $12::text IS NULL) OR EXISTS (
+                     SELECT 1 FROM mirror_record_legs s
+                     WHERE s.record_id = r.record_id
+                       AND s.leg IN ('binary', 'a')
+                       AND ($11::text IS NULL OR CASE
+                             WHEN $11 = 'positive' THEN s.p_d > 0
+                             WHEN $11 = 'negative' THEN s.p_d < 0
+                             WHEN $11 = 'zero' THEN s.p_d = 0
+                             ELSE FALSE END)
+                       AND ($12::text IS NULL OR CASE
+                             WHEN $12 = 'positive' THEN s.p_i > 0
+                             WHEN $12 = 'negative' THEN s.p_i < 0
+                             WHEN $12 = 'zero' THEN s.p_i = 0
+                             ELSE FALSE END)))"#,
+        filter.author.as_deref(),
+        filter.family.as_deref(),
+        filter.payload_marked,
+        filter.since_epoch,
+        filter.until_epoch,
+        filter.target.as_deref(),
+        filter.terminal.as_deref(),
+        anchor_source,
+        anchor_target,
+        far_kind,
+        filter.p_directed_sign.map(Sign::as_str),
+        filter.p_interest_sign.map(Sign::as_str),
+    )
+    .fetch_one(pool)
+    .await?;
+    Ok(total)
+}
+
 struct LegOwned {
     record_id: String,
     leg: RecordLeg,
