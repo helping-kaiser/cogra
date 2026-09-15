@@ -476,6 +476,65 @@ impl RecordFamily {
     }
 }
 
+/// The kind of a node — used to filter record endpoints by the type
+/// of node on the far end (e.g. only a User's records that point at
+/// Posts). PROPOSAL and CAMPAIGN are CoGra's typed views over
+/// Content anchor nodes; OFFER is the Bid-minted settlement node.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum NodeKind {
+    User,
+    Collective,
+    Post,
+    Comment,
+    Chat,
+    ChatMessage,
+    Item,
+    Hashtag,
+    Proposal,
+    Campaign,
+    Offer,
+}
+
+impl NodeKind {
+    pub fn as_store(self) -> mirror::NodeKind {
+        match self {
+            Self::User => mirror::NodeKind::User,
+            Self::Collective => mirror::NodeKind::Collective,
+            Self::Post => mirror::NodeKind::Post,
+            Self::Comment => mirror::NodeKind::Comment,
+            Self::Chat => mirror::NodeKind::Chat,
+            Self::ChatMessage => mirror::NodeKind::ChatMessage,
+            Self::Item => mirror::NodeKind::Item,
+            Self::Hashtag => mirror::NodeKind::Hashtag,
+            Self::Proposal => mirror::NodeKind::Proposal,
+            Self::Campaign => mirror::NodeKind::Campaign,
+            Self::Offer => mirror::NodeKind::Offer,
+        }
+    }
+}
+
+/// The sign of an authored parameter, for filtering records by
+/// valence or by the inert (0) state. POSITIVE: > 0. NEGATIVE: < 0.
+/// ZERO: exactly 0.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum Sign {
+    Positive,
+    Negative,
+    Zero,
+}
+
+impl Sign {
+    pub fn as_store(self) -> mirror::Sign {
+        match self {
+            Self::Positive => mirror::Sign::Positive,
+            Self::Negative => mirror::Sign::Negative,
+            Self::Zero => mirror::Sign::Zero,
+        }
+    }
+}
+
 /// Handshake progress of a staged write (api-spec "The write flow").
 #[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
 #[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
@@ -886,6 +945,23 @@ impl User {
         }
     }
 
+    /// The graph identifiers this actor answers to. An Actor and its
+    /// Profile are one anchoring under two identifiers
+    /// (layer1-interface.md §8.1) — the author's own leg is always
+    /// `addr:a`, while a mention or an invitation points at `prof:a` —
+    /// so a traversal rooted at a person follows both or misses half its
+    /// own chronicle. Empty for a keyless account: it fronts nothing on
+    /// the graph yet.
+    fn graph_anchor(&self) -> Vec<String> {
+        match self.identity.l0_address.as_deref() {
+            Some(address) => vec![
+                NodeId::Addr(address.to_string()).to_string(),
+                NodeId::Prof(address.to_string()).to_string(),
+            ],
+            None => Vec::new(),
+        }
+    }
+
     fn is_viewer(&self, ctx: &Context<'_>) -> bool {
         match (self.viewer_session, ctx.data_opt::<Option<Viewer>>()) {
             (Some(_), _) => true,
@@ -959,6 +1035,98 @@ impl User {
                 },
             },
         )
+    }
+
+    /// Records authored from this node — for an actor, their outgoing
+    /// chronicle; the generic way to read any relationship before named
+    /// convenience views exist. Filter by family, by the kind of node
+    /// on the far end, by parameter sign (e.g. only vouch-positive
+    /// Opinions, or (0,0) update records), payload-marked state, and/or
+    /// a landing-epoch window.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the Node interface declares; grouping them into a struct would change the published contract"
+    )]
+    async fn outgoing_records(
+        &self,
+        ctx: &Context<'_>,
+        family: Option<RecordFamily>,
+        to_kind: Option<NodeKind>,
+        p_directed_sign: Option<Sign>,
+        p_interest_sign: Option<Sign>,
+        payload_marked: Option<bool>,
+        since_epoch: Option<i64>,
+        until_epoch: Option<i64>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<KeysetConnection<Record>> {
+        node_records(
+            ctx,
+            self.graph_anchor(),
+            mirror::Direction::Outgoing,
+            NodeRecordsArgs {
+                family,
+                far_kind: to_kind,
+                p_directed_sign,
+                p_interest_sign,
+                payload_marked,
+                since_epoch,
+                until_epoch,
+                first,
+                after,
+                last,
+                before,
+            },
+        )
+        .await
+    }
+
+    /// Records pointing at this node. Exposed as public topology / an
+    /// inbound-attention surface only — per the feed-ranking model,
+    /// inbound records never shape this node's own feed. Same filters
+    /// as outgoingRecords; fromKind selects the source kind.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the Node interface declares; grouping them into a struct would change the published contract"
+    )]
+    async fn incoming_records(
+        &self,
+        ctx: &Context<'_>,
+        family: Option<RecordFamily>,
+        from_kind: Option<NodeKind>,
+        p_directed_sign: Option<Sign>,
+        p_interest_sign: Option<Sign>,
+        payload_marked: Option<bool>,
+        since_epoch: Option<i64>,
+        until_epoch: Option<i64>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<KeysetConnection<Record>> {
+        node_records(
+            ctx,
+            self.graph_anchor(),
+            mirror::Direction::Incoming,
+            NodeRecordsArgs {
+                family,
+                far_kind: from_kind,
+                p_directed_sign,
+                p_interest_sign,
+                payload_marked,
+                since_epoch,
+                until_epoch,
+                first,
+                after,
+                last,
+                before,
+            },
+        )
+        .await
     }
 
     /// The account's name in the one actor namespace: 3–30 characters of
@@ -1622,6 +1790,98 @@ impl PostType {
         Landing::of(self.0.order, self.0.version_pending)
     }
 
+    /// Records authored from this node — for an actor, their outgoing
+    /// chronicle; the generic way to read any relationship before named
+    /// convenience views exist. Filter by family, by the kind of node
+    /// on the far end, by parameter sign (e.g. only vouch-positive
+    /// Opinions, or (0,0) update records), payload-marked state, and/or
+    /// a landing-epoch window.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the Node interface declares; grouping them into a struct would change the published contract"
+    )]
+    async fn outgoing_records(
+        &self,
+        ctx: &Context<'_>,
+        family: Option<RecordFamily>,
+        to_kind: Option<NodeKind>,
+        p_directed_sign: Option<Sign>,
+        p_interest_sign: Option<Sign>,
+        payload_marked: Option<bool>,
+        since_epoch: Option<i64>,
+        until_epoch: Option<i64>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<KeysetConnection<Record>> {
+        node_records(
+            ctx,
+            vec![self.0.l1_node_id.clone()],
+            mirror::Direction::Outgoing,
+            NodeRecordsArgs {
+                family,
+                far_kind: to_kind,
+                p_directed_sign,
+                p_interest_sign,
+                payload_marked,
+                since_epoch,
+                until_epoch,
+                first,
+                after,
+                last,
+                before,
+            },
+        )
+        .await
+    }
+
+    /// Records pointing at this node. Exposed as public topology / an
+    /// inbound-attention surface only — per the feed-ranking model,
+    /// inbound records never shape this node's own feed. Same filters
+    /// as outgoingRecords; fromKind selects the source kind.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the Node interface declares; grouping them into a struct would change the published contract"
+    )]
+    async fn incoming_records(
+        &self,
+        ctx: &Context<'_>,
+        family: Option<RecordFamily>,
+        from_kind: Option<NodeKind>,
+        p_directed_sign: Option<Sign>,
+        p_interest_sign: Option<Sign>,
+        payload_marked: Option<bool>,
+        since_epoch: Option<i64>,
+        until_epoch: Option<i64>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<KeysetConnection<Record>> {
+        node_records(
+            ctx,
+            vec![self.0.l1_node_id.clone()],
+            mirror::Direction::Incoming,
+            NodeRecordsArgs {
+                family,
+                far_kind: from_kind,
+                p_directed_sign,
+                p_interest_sign,
+                payload_marked,
+                since_epoch,
+                until_epoch,
+                first,
+                after,
+                last,
+                before,
+            },
+        )
+        .await
+    }
+
     async fn title(&self) -> ModeratedText {
         ModeratedText::from_version(self.0.title.clone(), self.0.redaction_reason.is_some())
     }
@@ -1804,6 +2064,98 @@ impl CommentType {
     /// Where this comment stands relative to L1 finality.
     async fn landing(&self) -> Landing {
         Landing::of(self.0.order, self.0.version_pending)
+    }
+
+    /// Records authored from this node — for an actor, their outgoing
+    /// chronicle; the generic way to read any relationship before named
+    /// convenience views exist. Filter by family, by the kind of node
+    /// on the far end, by parameter sign (e.g. only vouch-positive
+    /// Opinions, or (0,0) update records), payload-marked state, and/or
+    /// a landing-epoch window.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the Node interface declares; grouping them into a struct would change the published contract"
+    )]
+    async fn outgoing_records(
+        &self,
+        ctx: &Context<'_>,
+        family: Option<RecordFamily>,
+        to_kind: Option<NodeKind>,
+        p_directed_sign: Option<Sign>,
+        p_interest_sign: Option<Sign>,
+        payload_marked: Option<bool>,
+        since_epoch: Option<i64>,
+        until_epoch: Option<i64>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<KeysetConnection<Record>> {
+        node_records(
+            ctx,
+            vec![self.0.l1_node_id.clone()],
+            mirror::Direction::Outgoing,
+            NodeRecordsArgs {
+                family,
+                far_kind: to_kind,
+                p_directed_sign,
+                p_interest_sign,
+                payload_marked,
+                since_epoch,
+                until_epoch,
+                first,
+                after,
+                last,
+                before,
+            },
+        )
+        .await
+    }
+
+    /// Records pointing at this node. Exposed as public topology / an
+    /// inbound-attention surface only — per the feed-ranking model,
+    /// inbound records never shape this node's own feed. Same filters
+    /// as outgoingRecords; fromKind selects the source kind.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the Node interface declares; grouping them into a struct would change the published contract"
+    )]
+    async fn incoming_records(
+        &self,
+        ctx: &Context<'_>,
+        family: Option<RecordFamily>,
+        from_kind: Option<NodeKind>,
+        p_directed_sign: Option<Sign>,
+        p_interest_sign: Option<Sign>,
+        payload_marked: Option<bool>,
+        since_epoch: Option<i64>,
+        until_epoch: Option<i64>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<KeysetConnection<Record>> {
+        node_records(
+            ctx,
+            vec![self.0.l1_node_id.clone()],
+            mirror::Direction::Incoming,
+            NodeRecordsArgs {
+                family,
+                far_kind: from_kind,
+                p_directed_sign,
+                p_interest_sign,
+                payload_marked,
+                since_epoch,
+                until_epoch,
+                first,
+                after,
+                last,
+                before,
+            },
+        )
+        .await
     }
 
     async fn content(&self) -> ModeratedText {
@@ -2546,6 +2898,38 @@ pub(super) async fn resolve_reference_target(
         name = "landing",
         ty = "Landing",
         desc = "Where this node stands relative to L1 finality — landing is a substrate fact about every minted node."
+    ),
+    field(
+        name = "outgoing_records",
+        ty = "KeysetConnection<Record>",
+        desc = "Records authored from this node — for an actor, their outgoing chronicle; the generic way to read any relationship before named convenience views exist. Filter by family, by the kind of node on the far end, by parameter sign (e.g. only vouch-positive Opinions, or (0,0) update records), payload-marked state, and/or a landing-epoch window.",
+        arg(name = "family", ty = "Option<RecordFamily>"),
+        arg(name = "to_kind", ty = "Option<NodeKind>"),
+        arg(name = "p_directed_sign", ty = "Option<Sign>"),
+        arg(name = "p_interest_sign", ty = "Option<Sign>"),
+        arg(name = "payload_marked", ty = "Option<bool>"),
+        arg(name = "since_epoch", ty = "Option<i64>"),
+        arg(name = "until_epoch", ty = "Option<i64>"),
+        arg(name = "first", ty = "Option<i32>"),
+        arg(name = "after", ty = "Option<String>"),
+        arg(name = "last", ty = "Option<i32>"),
+        arg(name = "before", ty = "Option<String>")
+    ),
+    field(
+        name = "incoming_records",
+        ty = "KeysetConnection<Record>",
+        desc = "Records pointing at this node. Exposed as public topology / an inbound-attention surface only — per the feed-ranking model, inbound records never shape this node's own feed. Same filters as outgoingRecords; fromKind selects the source kind.",
+        arg(name = "family", ty = "Option<RecordFamily>"),
+        arg(name = "from_kind", ty = "Option<NodeKind>"),
+        arg(name = "p_directed_sign", ty = "Option<Sign>"),
+        arg(name = "p_interest_sign", ty = "Option<Sign>"),
+        arg(name = "payload_marked", ty = "Option<bool>"),
+        arg(name = "since_epoch", ty = "Option<i64>"),
+        arg(name = "until_epoch", ty = "Option<i64>"),
+        arg(name = "first", ty = "Option<i32>"),
+        arg(name = "after", ty = "Option<String>"),
+        arg(name = "last", ty = "Option<i32>"),
+        arg(name = "before", ty = "Option<String>")
     )
 )]
 pub enum Node {
@@ -2556,6 +2940,86 @@ pub enum Node {
     /// which is why the variant carries a `User` rather than an actor
     /// abstraction.
     Profile(User),
+}
+
+/// The filter and page arguments both node-anchored record fields take
+/// (api-spec `Node.outgoingRecords` / `incomingRecords`). Carried as one
+/// value because the pair is declared once on the interface and
+/// implemented on every node type: a per-type argument list would be
+/// three places for the contract to drift.
+pub(crate) struct NodeRecordsArgs {
+    pub family: Option<RecordFamily>,
+    /// The kind of the node at the far end of the anchoring leg —
+    /// `toKind` walking out, `fromKind` walking in.
+    pub far_kind: Option<NodeKind>,
+    pub p_directed_sign: Option<Sign>,
+    pub p_interest_sign: Option<Sign>,
+    pub payload_marked: Option<bool>,
+    pub since_epoch: Option<i64>,
+    pub until_epoch: Option<i64>,
+    pub first: Option<i32>,
+    pub after: Option<String>,
+    pub last: Option<i32>,
+    pub before: Option<String>,
+}
+
+/// The one resolver behind `outgoingRecords` and `incomingRecords` on
+/// every node type: the same mirror filter, the same keyset machinery,
+/// and the same connection the top-level `records` query is built from —
+/// anchored on the node instead of on a client-named id.
+///
+/// `anchor_ids` is the set of identifiers the node answers to, which is
+/// one for a minted node and two for an actor (`addr:a` and `prof:a` are
+/// one anchoring — layer1-interface.md §8.1). An actor with no address
+/// yet answers to nothing on the graph, so the empty set serves an empty
+/// page rather than an error, the contract an unresolvable id already
+/// carries on `records`.
+pub(crate) async fn node_records(
+    ctx: &Context<'_>,
+    anchor_ids: Vec<String>,
+    direction: mirror::Direction,
+    args: NodeRecordsArgs,
+) -> async_graphql::Result<KeysetConnection<Record>> {
+    let pool = ctx.data::<PgPool>()?;
+    let page = keyset_page(args.first, args.after, args.last, args.before)?;
+    if anchor_ids.is_empty() {
+        return Ok(keyset_connection(Vec::new(), &page, record_cursor, Record));
+    }
+    let filter = mirror::RecordFilter {
+        family: args.family.map(|f| f.as_family().as_str().to_string()),
+        payload_marked: args.payload_marked,
+        since_epoch: args.since_epoch,
+        until_epoch: args.until_epoch,
+        anchor: Some(mirror::NodeAnchor {
+            ids: anchor_ids,
+            direction,
+            far_kind: args.far_kind.map(NodeKind::as_store),
+        }),
+        p_directed_sign: args.p_directed_sign.map(Sign::as_store),
+        p_interest_sign: args.p_interest_sign.map(Sign::as_store),
+        ..Default::default()
+    };
+    let rows = mirror::records(
+        pool,
+        &filter,
+        page.cursor.map(|c| c.order()),
+        page.backward,
+        page.limit + 1,
+    )
+    .await
+    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    Ok(keyset_connection(rows, &page, record_cursor, Record))
+}
+
+/// A record's place in the chronicle's keyset: the causal key alone.
+/// Records carry no L2 id, so the cursor's id slot stays empty.
+pub(crate) fn record_cursor(r: &mirror::RecordFull) -> CursorKey {
+    CursorKey {
+        epoch: r.epoch,
+        act_time: r.act_time,
+        position: r.position,
+        id: None,
+    }
 }
 
 /// What a Review can respond to (comment.md §1). Every passive node
