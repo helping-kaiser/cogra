@@ -52,29 +52,17 @@ const TRACK = "rgba(255,255,255,0.32)";
 const WASH = "linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0))";
 
 /**
- * THE HIT TARGET IS 44px EVEN WHERE THE GLYPH IS 28.
+ * THE TARGET IS 48px EVEN WHERE THE DISC IS DRAWN AT 28.
  *
- * WCAG 2.2's enhanced target size is "at least 44 by 44 CSS pixels"
- * (https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html), and
- * the sound and fullscreen discs on this bar are drawn at 28. The board's
- * geometry is not the thing to change — the target is — so the extra reach is
- * an overlay centred on the button rather than a bigger button: nothing moves,
- * and the thumb stops missing. This mirrors what android takes from Material's
- * own `minimumInteractiveComponentSize`.
+ * "Touch targets never below 48px" (design/readme.md §4), and this bar's sound
+ * and fullscreen discs are drawn at 28 while the skips are drawn at 44 — all
+ * three under it. The board's geometry is not the thing to change, the TARGET
+ * is, which is exactly what `cg-hit` exists for: a transparent overlay centred
+ * on the control reaches `--touch-target-min` on both axes while the ink stays
+ * put, and its `min-*: 100%` keeps it from ever shrinking one that is already
+ * larger. The same trade `Button`'s small rung and `Chip` already make, and the
+ * same one android takes from Material's `minimumInteractiveComponentSize`.
  */
-const HIT_TARGET_MIN = 44;
-
-function HitTarget({ box }: { box: number }) {
-  if (box >= HIT_TARGET_MIN) return null;
-  return (
-    <span
-      aria-hidden="true"
-      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-      style={{ width: `${HIT_TARGET_MIN}px`, height: `${HIT_TARGET_MIN}px` }}
-    />
-  );
-}
-
 function TransportButton({
   label,
   glyph,
@@ -104,7 +92,7 @@ function TransportButton({
         event.stopPropagation();
         onClick();
       }}
-      className="cg-state cg-focus relative grid flex-none cursor-pointer place-items-center rounded-full border-0 p-0"
+      className="cg-state cg-focus cg-hit relative grid flex-none cursor-pointer place-items-center rounded-full border-0 p-0"
       style={{
         width: `${box}px`,
         height: `${box}px`,
@@ -113,7 +101,6 @@ function TransportButton({
         filter: OVER_MEDIA,
       }}
     >
-      <HitTarget box={box} />
       <Icon name={glyph} size={size} />
     </button>
   );
