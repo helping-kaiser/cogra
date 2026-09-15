@@ -171,12 +171,27 @@ describe("a comment's video", () => {
     draw();
     await pickFiles([aVideo()]);
 
-    // No stage between: the cover row is in the composer the author is on.
+    // No stage between: the cover row is in the composer the author is on —
+    // and it OFFERS, it does not choose (HT-COVER). A comment's clip goes
+    // faceless just as a post's does until a tile is tapped.
     expect(await screen.findByTestId("reply-cover-frame-0")).toHaveAttribute(
       "aria-pressed",
-      "true",
+      "false",
     );
     expect(screen.getByTestId("reply-cover-picture")).toBeInTheDocument();
+  });
+
+  // THE JOURNEY THE OLD NET NEVER WALKED (HT-COVER): every offer lands and
+  // not one of them becomes the face on its own.
+  it("keeps the clip faceless when no offer is tapped", async () => {
+    draw();
+    await pickFiles([aVideo()]);
+
+    await screen.findByTestId("reply-cover-frame-0");
+    for (const tile of screen.getAllByTestId(/^reply-cover-frame-/)) {
+      expect(tile).toHaveAttribute("aria-pressed", "false");
+    }
+    expect(screen.getByTestId("reply-cover-picture")).toHaveAttribute("aria-pressed", "false");
   });
 
   // The other half of the words' height rule: with a 220dp frame, its cover
