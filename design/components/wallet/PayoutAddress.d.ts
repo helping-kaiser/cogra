@@ -9,6 +9,8 @@ export interface PayoutAddressProps {
   label?: string;
   /** Renders the copy icon button. */
   onCopy?: () => void;
+  /** The copy button's accessible name — its only name, since it carries no word. Pass one wherever the string is not a payout address ("Copy the link"). */
+  copyLabel?: string;
   /** Renders the Change affordance; the flow it opens is the address-change seal. */
   onChange?: () => void;
   changeLabel?: string;
