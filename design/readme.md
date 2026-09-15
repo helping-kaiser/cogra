@@ -5383,6 +5383,22 @@ inherited. Ruled by jakob the same day.
   `answer-someones-ask-link` ends on the other one. The seam between
   them is time — and, for the ask link, two different people — not a
   missing design.
+- **A system card is marked on its edge, not washed through its ground
+  (jakob, re-reviewing the first attempt: "wash of the box is not what i
+  meant.. this just looks bad.. i was thinking about some gradient or
+  sth.. making it obvious that this card (and potentially all system
+  cards) are cogra cards you should act on and not a normal part of the
+  feed").** A tint over the whole card lands on the half a reader is
+  trying to read through, and a 7% brand wash on a warm neutral ground
+  is indistinguishable from a card somebody emphasised. So `TaskCard`
+  takes the feed card's own ground back and wears `--ring-task`, a 2px
+  gradient edge at the brand wash's own 140° angle running the brand's
+  three warm fills — `primary`, the seed, `secondary-container`. It is
+  the story ring's grammar, which is the one decoration a reader
+  already reads as "the system put this here", and it is a mark no post
+  card in the column can wear. The corner mark stays beside it: a ring
+  says a card is marked, only the mark says by whom. The recipe takes
+  roles rather than hex, so one definition serves both themes.
 - **The gate**: 194 → **203 boards**, 1461 → **1511 edges**, gaps 14 →
   **13** and flows 63 → **66 declared · 64 resolved**, the two blocked
   ones unchanged. The gap count falls because `Profile/7` closed and no

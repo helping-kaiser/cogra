@@ -290,20 +290,37 @@ function FeedList({ children }) {
    they read as a text post from nobody, which is how a reader scrolls past the
    one card in the column that is addressed to them.
 
-   TWO MARKS, BOTH QUIET. The ground takes `--surface-task`, a faint brand wash
-   — a shade and not a highlight, because none of these cards is an alarm and
-   one of them is bad news. The mark takes the trailing corner, which is the
-   half that answers "who is telling me this": a wash alone could be a post
-   somebody had emphasised, and the mark cannot be read as anything but the
-   product. It is `aria-hidden` and carries no words — the title already says
-   what the card is; the mark is for the eye mid-scroll.
+   THE BRAND RIDES THE EDGE, NOT THE GROUND (jakob 2026-09-15: "wash of the box
+   is not what i meant.. this just looks bad.. i was thinking about some
+   gradient"). A tinted ground reads as a stain on a card rather than a mark on
+   one, and it is the half of the card a reader is trying to read through. So
+   the ground goes back to the feed card's own colour and the card takes a
+   `--ring-task` edge instead: the brand's own sweep, at the brand wash's angle,
+   drawn as a hairline no post card in the column can wear. It is the story
+   ring's grammar — a ring around something ordinary is the one decoration every
+   reader already reads as "the system put this here".
+
+   THE RING NEEDS THE MARK BESIDE IT, so the mark stays. The ring says a card is
+   marked; only the mark says by WHOM, and a ring alone is exactly the signal a
+   reader could mistake for a post somebody had emphasised. It is `aria-hidden`
+   and carries no words — the title already says what the card is; the mark and
+   the ring are both for the eye mid-scroll.
 
    THE TITLE KEEPS ITS ROW. The mark shares the heading's line rather than
    taking one of its own, so a task card is the height it always was and the
-   column's rhythm does not change around it. */
+   column's rhythm does not change around it. `border-box` keeps the ring inside
+   the card's own width wherever the card is not a stretched feed child. */
 function TaskCard({ title, body, children }) {
   return (
-    <Card style={{ flex: "none", background: "var(--surface-task)" }}>
+    <Card
+      style={{
+        flex: "none",
+        boxSizing: "border-box",
+        border: "var(--ring-task-width) solid transparent",
+        background:
+          "linear-gradient(var(--surface-card), var(--surface-card)) padding-box, var(--ring-task) border-box",
+      }}
+    >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
         <h2
           style={{
