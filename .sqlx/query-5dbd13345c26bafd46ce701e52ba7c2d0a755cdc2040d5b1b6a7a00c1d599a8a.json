@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT COUNT(*) AS \"count!\"\n           FROM mirror_records r\n           WHERE ($1::text IS NULL OR r.author = $1)\n             AND ($2::text IS NULL OR r.family = $2)\n             AND ($3::boolean IS NULL OR r.payload_marked = $3)\n             AND ($4::bigint IS NULL OR r.epoch >= $4)\n             AND ($5::bigint IS NULL OR r.epoch <= $5)\n             AND ($6::text IS NULL OR EXISTS (\n                     SELECT 1 FROM mirror_record_legs l\n                     WHERE l.record_id = r.record_id\n                       AND l.leg IN ('binary', 'a') AND l.target = $6))\n             AND ($7::text IS NULL OR EXISTS (\n                     SELECT 1 FROM mirror_record_legs l\n                     WHERE l.record_id = r.record_id\n                       AND l.leg = 't' AND l.target = $7))\n             AND ($8::text[] IS NULL OR EXISTS (\n                     SELECT 1 FROM mirror_record_legs l\n                     WHERE l.record_id = r.record_id\n                       AND l.source = ANY($8)\n                       AND ($10::text IS NULL OR CASE\n                             WHEN $10 = 'post' THEN EXISTS (\n                                  SELECT 1 FROM posts p\n                                  WHERE p.l1_node_id = l.target)\n                             WHEN $10 = 'comment' THEN EXISTS (\n                                  SELECT 1 FROM comments c\n                                  WHERE c.l1_node_id = l.target)\n                             WHEN $10 = 'hashtag' THEN l.target LIKE 'name:%'\n                             WHEN $10 IN ('user', 'collective') THEN EXISTS (\n                                  SELECT 1 FROM actors a\n                                  WHERE a.kind = $10\n                                    AND (l.target LIKE 'prof:%'\n                                         OR l.target LIKE 'addr:%')\n                                    AND a.realization_address = split_part(l.target, ':', 2))\n                             ELSE FALSE END)))\n             AND ($9::text[] IS NULL OR EXISTS (\n                     SELECT 1 FROM mirror_record_legs l\n                     WHERE l.record_id = r.record_id\n                       AND l.target = ANY($9)\n                       AND ($10::text IS NULL OR CASE\n                             WHEN $10 = 'post' THEN EXISTS (\n                                  SELECT 1 FROM posts p\n                                  WHERE p.l1_node_id = l.source)\n                             WHEN $10 = 'comment' THEN EXISTS (\n                                  SELECT 1 FROM comments c\n                                  WHERE c.l1_node_id = l.source)\n                             WHEN $10 = 'hashtag' THEN l.source LIKE 'name:%'\n                             WHEN $10 IN ('user', 'collective') THEN EXISTS (\n                                  SELECT 1 FROM actors a\n                                  WHERE a.kind = $10\n                                    AND (l.source LIKE 'prof:%'\n                                         OR l.source LIKE 'addr:%')\n                                    AND a.realization_address = split_part(l.source, ':', 2))\n                             ELSE FALSE END)))\n             AND (($11::text IS NULL AND $12::text IS NULL) OR EXISTS (\n                     SELECT 1 FROM mirror_record_legs s\n                     WHERE s.record_id = r.record_id\n                       AND s.leg IN ('binary', 'a')\n                       AND ($11::text IS NULL OR CASE\n                             WHEN $11 = 'positive' THEN s.p_d > 0\n                             WHEN $11 = 'negative' THEN s.p_d < 0\n                             WHEN $11 = 'zero' THEN s.p_d = 0\n                             ELSE FALSE END)\n                       AND ($12::text IS NULL OR CASE\n                             WHEN $12 = 'positive' THEN s.p_i > 0\n                             WHEN $12 = 'negative' THEN s.p_i < 0\n                             WHEN $12 = 'zero' THEN s.p_i = 0\n                             ELSE FALSE END)))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8",
+        "Text",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5dbd13345c26bafd46ce701e52ba7c2d0a755cdc2040d5b1b6a7a00c1d599a8a"
+}

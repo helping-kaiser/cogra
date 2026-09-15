@@ -682,6 +682,7 @@ query CitedBy($id: UUID!, $fromKind: NodeKind, $first: Int, $after: String) {
 const TERMINAL_QUERY: &str = r#"
 query CitedByTerminal($id: UUID!, $first: Int) {
   records(terminal: $id, family: REFERENCE, first: $first) {
+    totalCount
     edges {
       node {
         id pDirected pInterest
@@ -932,6 +933,27 @@ async fn the_cited_side_reads_its_citations(pool: PgPool) {
         vec!["Answering the tide", "Where the salt goes"],
         "naming the leg answers the same question in one page, both kinds \
          together and the node's own citation left out"
+    );
+    assert_eq!(
+        by_terminal["records"]["totalCount"],
+        json!(2),
+        "the count counts what the filter matched"
+    );
+    let one = rig
+        .gql(TERMINAL_QUERY, json!({ "id": cited, "first": 1 }))
+        .await;
+    assert_eq!(
+        one["records"]["totalCount"],
+        json!(2),
+        "and does not move with the cursor — one page, the whole count"
+    );
+
+    let uncited = rig.post(bob, &bob_key, "Nobody cites this").await;
+    assert_eq!(
+        rig.gql(TERMINAL_QUERY, json!({ "id": uncited })).await["records"]["totalCount"],
+        json!(0),
+        "zero is a number the count states, which is what lets a line know \
+         not to draw itself"
     );
     let _ = citing_comment;
 }
