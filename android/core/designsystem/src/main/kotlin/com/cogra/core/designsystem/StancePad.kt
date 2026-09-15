@@ -226,6 +226,30 @@ private val PAD_BOTTOM = 16.dp
 private val PAD_WIDTH = 288.dp
 
 /**
+ * What the resting target announces, in the order the reader needs it:
+ * what it stances toward, where they stand on it, and only then what a
+ * touch does (design.md §8.3; `TagPage` for the label).
+ */
+@Composable
+private fun targetDescription(
+    standing: StancePoint?,
+    axes: StanceAxes,
+    targetLabel: String?,
+): String {
+    val action = stringResource(R.string.stance_target_action)
+    val withStanding = standing?.let {
+        stringResource(
+            R.string.stance_target_with_standing,
+            stringResource(R.string.stance_standing),
+            it.reading(axes),
+            action,
+        )
+    } ?: action
+    return targetLabel?.let { stringResource(R.string.stance_target_labelled, it, withStanding) }
+        ?: withStanding
+}
+
+/**
  * The stance control: the resting target, the pad it blooms, and the
  * severance confirmation either can reach.
  *
@@ -290,16 +314,8 @@ fun StanceControl(
     val tapLabel = stringResource(R.string.stance_target)
     val exactLabel = stringResource(R.string.stance_pick_exactly)
     val severLabel = stringResource(R.string.stance_severance_open)
-    val action = stringResource(R.string.stance_target_action)
     val standingLabel = stringResource(R.string.stance_standing)
-    // A target that already carries a standing says so before it says
-    // what a touch does (design.md §8.3).
-    val unlabelled = state.standing?.let {
-        stringResource(R.string.stance_target_with_standing, standingLabel, it.reading(axes), action)
-    } ?: action
-    val description = targetLabel?.let {
-        stringResource(R.string.stance_target_labelled, it, unlabelled)
-    } ?: unlabelled
+    val description = targetDescription(state.standing, axes, targetLabel)
     // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (`TagPageHeldPad`: the
     // pad over a topic nobody holds has three controls, the pad over a
     // held one has four). With nothing said there is no relationship to

@@ -359,7 +359,7 @@ class SealingWriteRepository(private val actor: ActorKey) : ThrowingWriteReposit
      * fixture's canonical test proposal either way.
      */
     fun stage(family: Family = Family.OPINION): PreparedWriteView {
-        val id = "w${nextSeq}"
+        val id = "w$nextSeq"
         val view = PreparedWriteView(
             id = id,
             family = family,
