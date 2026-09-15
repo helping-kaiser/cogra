@@ -2254,21 +2254,32 @@ const AFFINITY_AXES = {
    server-rendered board asks the master for a state a click cannot reach
    instead of copying the pad. No `padInset` rides with them: the inset exists
    to lift the parked card clear of a bottom bar, and this page has none. */
+/* THE TOPIC'S OWN STANCE ROW, as one anatomy (the re-review, 2026-09-15). Both
+   states of the page carry it now — the populated one and the emptied one — and
+   a row drawn twice is a row that can disagree with itself about its padding,
+   its width or its axis words. So it is lifted here and the two boards differ
+   only in the name they hand it and whether anything is held. */
+function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick }) {
+  return (
+    <div style={{ padding: "4px 16px 8px" }}>
+      <StanceControl
+        wide
+        targetLabel={name}
+        axes={AFFINITY_AXES}
+        bundle={bundle}
+        defaultOpen={stanceOpen}
+        defaultPick={stanceDefaultPick}
+        onCommit={() => {}}
+      />
+    </div>
+  );
+}
+
 function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
   return (
     <>
       <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
-      <div style={{ padding: "4px 16px 8px" }}>
-        <StanceControl
-          wide
-          targetLabel="#saltmaps"
-          axes={AFFINITY_AXES}
-          bundle={bundle}
-          defaultOpen={stanceOpen}
-          defaultPick={stanceDefaultPick}
-          onCommit={() => {}}
-        />
-      </div>
+      <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
           <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />

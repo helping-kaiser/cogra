@@ -1925,8 +1925,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Cancel</button>", tag: "button" },
     { n: 5, find: ">Set</button>", tag: "button" },
   ],
+  /* The emptied page carries the topic's own row and nothing else, so the two
+     numbers the row needs are the two it gets: the page's accessible path at 2,
+     by the family's convention, and the face at the next free number — which
+     here is 3, because no post or comment face stands between them. */
   TagPageEmpty: [
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
+    { n: 2, find: ">Choose your opinion on #slipwaylight</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Give your opinion on #slipwaylight"', tag: "button" },
   ],
   TagPicker: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },

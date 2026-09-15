@@ -5399,6 +5399,23 @@ inherited. Ruled by jakob the same day.
   card in the column can wear. The corner mark stays beside it: a ring
   says a card is marked, only the mark says by whom. The recipe takes
   roles rather than hex, so one definition serves both themes.
+- **A tag is born of a connection, so the empty page is the page after
+  one (jakob).** "a tag is born by its connection to sth.. it does not
+  exist before its first connection.. so there is no page of tags that
+  dont have posts yet.. i guess if someone unbind the post we have an
+  empty page.. (its history would not be empty tho) but then we should
+  add the stance here. no reason for it to not be there."
+  `TagPageEmpty`'s premise is rewritten to that: the list is empty and
+  the topic's history is not. And the page gains the topic stance row,
+  which **overrules item 81's clause that the empty page wires no face
+  at all** — an Affinity toward a Type needs no Tag records to exist
+  first, and a reader standing at a name with nothing under it is not a
+  reader with nothing to say about it. The row is `TopicStanceRow`, one
+  anatomy lifted out of `TagPageBody` so the two states cannot drift
+  apart, and the wiring is the populated page's, `GuestGate` included.
+  The line keeps the present tense — `Nothing carries this tag right
+  now` — because `hashtag(name)` still resolves a name nothing has used,
+  and a sentence about what was unbound would lie to that one arrival.
 - **The gate**: 194 → **203 boards**, 1461 → **1511 edges**, gaps 14 →
   **13** and flows 63 → **66 declared · 64 resolved**, the two blocked
   ones unchanged. The gap count falls because `Profile/7` closed and no
