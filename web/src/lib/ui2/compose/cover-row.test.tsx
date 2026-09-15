@@ -41,7 +41,8 @@ describe("CoverRow", () => {
       />,
     );
     expect(screen.queryByTestId("wizard-cover-picture-image")).toBeNull();
-    expect(screen.getByText("A picture")).toBeInTheDocument();
+    // The glyph alone carries the tile; the name is the button's own label.
+    expect(screen.getByLabelText("A picture of your own")).toBeInTheDocument();
   });
 
   it("still draws the plain tile if the picture is chosen but its preview hasn't minted yet", () => {

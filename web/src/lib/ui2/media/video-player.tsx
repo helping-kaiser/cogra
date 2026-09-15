@@ -85,6 +85,7 @@ export function VideoPlayer({
   fit = "cover",
   onOpenViewer,
   durationMs,
+  safeArea = false,
 }: {
   src: string;
   /** The video's face. Null when there is none, or when it was redacted. */
@@ -131,6 +132,15 @@ export function VideoPlayer({
    * reveal tap intact and still gives the clip its own route in.
    */
   onOpenViewer?: () => void;
+  /**
+   * Whether this player reaches the edges of the SCREEN rather than sitting in
+   * a frame on the page.
+   *
+   * Only the fullscreen viewer does, and only there does the transport's bar
+   * have to clear the phone's own bottom strip — a framed clip inset for a home
+   * indicator that is nowhere near it would just float.
+   */
+  safeArea?: boolean;
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const muted = useMuted();
@@ -139,6 +149,9 @@ export function VideoPlayer({
   // element is the truth about where playback is, and a second copy ticking on
   // its own would disagree with it the moment a seek or a stall happened.
   const [playing, setPlaying] = useState(false);
+  // A clip that ran out is a clip at rest, and the transport has to say WHICH
+  // rest: the press at the end starts the clip again rather than resuming it.
+  const [ended, setEnded] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [lengthSec, setLengthSec] = useState<number | null>(null);
   // The chrome is drawn revealed and hides itself; a tap on the video brings it
@@ -267,7 +280,10 @@ export function VideoPlayer({
         // The transport's whole state comes off these: what the element is
         // doing IS what the controls report, so a play that the browser
         // refused shows as paused rather than as a lying pause glyph.
-        onPlay={() => setPlaying(true)}
+        onPlay={() => {
+          setPlaying(true);
+          setEnded(false);
+        }}
         onPause={() => setPlaying(false)}
         // A clip that runs out is a clip at rest, and the transport has to say
         // so. The HTML spec fires `pause` before `ended` for a non-looping
@@ -275,7 +291,10 @@ export function VideoPlayer({
         // (html.spec.whatwg.org, "playback has ended"), so the state is taken
         // from the event that is guaranteed rather than from the one that is
         // conditional.
-        onEnded={() => setPlaying(false)}
+        onEnded={() => {
+          setPlaying(false);
+          setEnded(true);
+        }}
         onTimeUpdate={(event) => setElapsedSec(event.currentTarget.currentTime)}
         onDurationChange={(event) => {
           const length = event.currentTarget.duration;
@@ -320,6 +339,8 @@ export function VideoPlayer({
       {transport && chromeShown && (
         <VideoTransport
           playing={playing}
+          ended={ended}
+          safeArea={safeArea}
           elapsed={formatDuration(Math.floor(elapsedSec) * 1000)}
           duration={formatDuration((totalSec ?? 0) * 1000)}
           progress={progress}

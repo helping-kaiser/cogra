@@ -13,9 +13,17 @@
 // without any of them being reimplemented — which is the documented platform
 // answer and the same one `join-prompt` already takes in the 1.0 layer.
 
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from "react";
 
 import { exitDuration, SHEET_OUT_MS } from "@/lib/ui/motion";
+import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 
 export function BottomSheet({
   open,
@@ -121,6 +129,28 @@ export function BottomSheet({
     return () => clearTimeout(timer);
   }, [open]);
 
+  // PULLING DOWN IS HOW A DRAWER IS DROPPED (design/readme.md: "pulling down
+  // already means dismiss and one gesture may not mean two things"). The
+  // handle was drawn but inert, so the sheet answered only the backdrop, the
+  // back arrow and Escape — and the one gesture a reader reaches for first
+  // did nothing.
+  //
+  // IT PULLS THE SHEET, NEVER ITS CONTENTS. The gesture starts only when the
+  // body is at its own top, so a scrolled thread scrolls; and it moves the
+  // surface alone — nothing it does reaches what the sheet is showing, which
+  // is what keeps an unfolded branch unfolded through a pull.
+  const body = useRef<HTMLDivElement | null>(null);
+  const pulledFrom = useRef<number | null>(null);
+  const [pull, setPull] = useState(0);
+
+  const endPull = () => {
+    if (pulledFrom.current === null) return;
+    const travel = pull;
+    pulledFrom.current = null;
+    setPull(0);
+    if (travel >= PULL_THRESHOLD) onClose();
+  };
+
   return (
     <dialog
       ref={ref}
@@ -132,6 +162,21 @@ export function BottomSheet({
       onClick={(event) => {
         if (event.target === ref.current) onClose();
       }}
+      onPointerDown={(event) => {
+        // A pull is a touch gesture; a mouse drag on a sheet is a selection.
+        if (event.pointerType === "mouse") return;
+        if ((body.current?.scrollTop ?? 0) > 0) return;
+        pulledFrom.current = event.clientY;
+      }}
+      onPointerMove={(event) => {
+        if (pulledFrom.current === null) return;
+        const travel = event.clientY - pulledFrom.current;
+        // Upward is the reader scrolling into the sheet, not dropping it.
+        setPull(travel > 0 ? travel : 0);
+      }}
+      onPointerUp={endPull}
+      onPointerCancel={endPull}
+      style={{ "--cg-sheet-drag": `${pull}px` } as CSSProperties}
       // `mt-auto` is what puts it at the bottom edge: a dialog is centred by
       // default, and this one rises from the edge it will go back to. It may
       // fill the screen up to a sliver below the top, so the rounded corners
@@ -139,13 +184,24 @@ export function BottomSheet({
       className={`${closing ? "cg-sheet-out" : "cg-sheet-in"} ${
         height === "full" ? "h-[calc(100dvh-72px)]" : "max-h-[92dvh]"
       } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 ${
-        stacked ? "bg-surface-container-highest" : "bg-surface-container-high"
-      } p-0 text-on-surface backdrop:bg-scrim/50`}
+        // ONE SCRIM, HOWEVER MANY SHEETS. The system has a single dimming
+        // token (`--scrim-dialog`, 50% black) and stacking moves the z-layer,
+        // never the tone (design/components/core/BottomSheet.jsx). Every
+        // native `<dialog>` paints its own `::backdrop`, so a sheet raised
+        // over another one composited a second 50% over the first — ~75%
+        // black, far darker than anything drawn. The upper sheet takes the
+        // next tonal rung and no scrim of its own; the one beneath it is
+        // still dimming the page.
+        stacked
+          ? "bg-surface-container-highest backdrop:bg-transparent"
+          : "bg-surface-container-high backdrop:bg-scrim/50"
+      } p-0 text-on-surface`}
     >
       <div className={`flex flex-col ${height === "full" ? "h-full" : "max-h-[92dvh]"}`}>
-        {/* The drag handle is drawn but not a control: the sheet is dropped
-            with the backdrop, Escape, or its own action, and a handle that
-            looks draggable but is not would lie. */}
+        {/* The handle says the sheet can be pulled down, and it can. The
+            gesture is read across the whole surface, so the grip marks where
+            the eye goes rather than the only place that answers; the
+            backdrop, Escape and the sheet's own action drop it too. */}
         <span aria-hidden="true" className="mx-auto mt-3 h-1 w-8 rounded-full bg-outline-variant" />
         {titleHidden ? null : titleTrailing === undefined ? (
           <h2 className="px-6 pt-4 pb-2 text-title-medium">{title}</h2>
@@ -156,7 +212,13 @@ export function BottomSheet({
           </div>
         )}
         <div
-          ref={bodyRef}
+          // The pull needs the scroller too — it may only start at its top —
+          // so the node goes to this component's own ref as well as the
+          // caller's.
+          ref={(node) => {
+            body.current = node;
+            if (bodyRef) bodyRef.current = node;
+          }}
           data-testid={`${testId}-body`}
           className={`min-h-0 flex-1 overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
         >

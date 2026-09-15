@@ -7,12 +7,12 @@ import com.cogra.domain.LicenseChoice
 
 /**
  * THE ROWS THE ONE MENU HOLDS — the author's post vs someone else's
- * (`_shared.jsx:369-376`). Both keep the card's order: the acts the menu
+ * (`_shared.jsx:372-380`). Both keep the card's order: the acts the menu
  * was opened for lead, and the license closes it, the license being the
  * rarest read in the product.
  *
- * THE MENU IS THE POST'S, NOT THE SCREEN'S. `PostCard.jsx:257` draws it on
- * every non-detail card and `_shared.jsx:337-341` takes it off the detail's,
+ * THE MENU IS THE POST'S, NOT THE SCREEN'S. `PostCard.jsx:262` draws it on
+ * every non-detail card and `_shared.jsx:341-346` takes it off the detail's,
  * where the top bar carries the one menu instead — so a feed card and a
  * detail's app bar build the same two row sets. They live here rather than
  * in either caller, because a second copy is how the two drift.
@@ -69,7 +69,7 @@ internal fun postMenuRows(
         add(MenuRow(hide, "${testTagPrefix}_hide") {})
     }
     // The license rode the payload, so a redacted record has none to show
-    // (`PostCard.jsx:142`).
+    // (`PostCard.jsx:146-148`).
     if (license != null) {
         add(
             MenuRow(

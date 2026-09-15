@@ -23,6 +23,8 @@ import { preparePost } from "@/lib/api/content-api";
 import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
 import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
+import { newReferenceDraft } from "@/lib/references/draft";
+import { untypedTargetView } from "@/lib/references/normalize";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -99,7 +101,25 @@ export function ComposeWizard({
   const signer = useWriteSigner();
   const keyOnDevice = useKeyOnDevice(store);
 
-  const [state, setState] = useState<WizardState>(emptyWizard);
+  // The Reference affordance (D20): a detail surface sends the author here
+  // with the node it wants cited, and the chip arrives STAGED — not merely
+  // offered. It is INITIAL STATE rather than an effect: the citation is
+  // part of what this wizard opened as, and the id alone is enough to
+  // stage it. The label is filled in behind it, below.
+  //
+  // A TARGET THE LOOKUP CANNOT TYPE IS STILL STAGED: the citation names
+  // its target by id, so the write stands whatever this instance can
+  // render, and dropping the gesture silently would be worse than a chip
+  // with no label (`ReferenceClaim.target` is nullable for exactly this).
+  const prefill = useSearchParams().get("reference");
+  const [state, setState] = useState<WizardState>(() =>
+    prefill === null
+      ? emptyWizard()
+      : {
+          ...emptyWizard(),
+          references: [newReferenceDraft(prefill, untypedTargetView(prefill))],
+        },
+  );
   const dispatch = useCallback((action: WizardAction) => {
     setState((current) => wizardReducer(current, action));
   }, []);
@@ -170,6 +190,11 @@ export function ComposeWizard({
   // author's own picture — so the details thumbnail and the cover row's own
   // tile can both show it rather than the video's bytes or a bare outline.
   const coverPreview = useObjectUrl(cover?.file ?? null);
+  // THE COVERLESS CLIP'S FACE IS ITS FIRST FRAME (design/readme.md, the
+  // video-cover round). An `img` cannot decode the clip's own bytes, so the
+  // tile that stands for the video needs a still either way: the chosen face
+  // when there is one, and otherwise the opening frame already in hand.
+  const clipFace = coverPreview ?? framePreviews[0] ?? null;
 
   // The badge's number AND the clip's shape, read off the clip as soon as it is
   // picked rather than waiting for the cover screen — the details row shows the
@@ -212,16 +237,10 @@ export function ComposeWizard({
           frames: taken,
           urls: taken.map((frame) => URL.createObjectURL(frame)),
         });
-        // The board opens with the first offer selected, so the author's only
-        // job is to change it. `coverIfUnset` is what keeps that default from
-        // overwriting a face a restored draft already carries.
-        const first = taken[0];
-        if (first !== undefined) {
-          dispatch({
-            type: "coverIfUnset",
-            cover: { id: newComposeId(), file: first, frame: 0, upload: { kind: "waiting" } },
-          });
-        }
+        // EXTRACTION OFFERS; IT NEVER CHOOSES. The frames arriving changes
+        // what the author can pick and not what they have picked — a cover
+        // is optional and its own standalone asset, so a face nobody tapped
+        // is a face nobody signed, and it would upload on the way out.
       })
       .catch(() => {
         // No frames is a state the screen draws: "A picture" still works, and a
@@ -272,22 +291,24 @@ export function ComposeWizard({
     });
   };
 
-  // The Reference affordance: a detail surface sends the author here with the
-  // node it wants cited, and the chip arrives prefilled. It resolves through
-  // the finder's own lookup, so a miss simply leaves the section empty.
-  const prefill = useSearchParams().get("reference");
+  // The staged citation's label, which the finder's own lookup answers —
+  // so the affordance needs no second endpoint and the chip reads the same
+  // as a picked one. A miss leaves the chip standing on its id.
   useEffect(() => {
     if (prefill === null) return;
     let cancelled = false;
     void fetchReferenceCandidates(client, prefill, 1).then((outcome) => {
       if (cancelled || outcome.kind !== "success") return;
       const candidate = outcome.value[0];
-      if (candidate === undefined) return;
-      setState((current) =>
-        current.references.some((reference) => reference.targetId === candidate.targetId)
-          ? current
-          : { ...current, references: [...current.references, candidate] },
-      );
+      if (candidate === undefined || candidate.targetId !== prefill) return;
+      setState((current) => ({
+        ...current,
+        references: current.references.map((reference) =>
+          reference.targetId === prefill
+            ? { ...reference, target: candidate.target }
+            : reference,
+        ),
+      }));
     });
     return () => {
       cancelled = true;
@@ -602,7 +623,27 @@ export function ComposeWizard({
           draft={offered}
           previews={offeredPreviews}
           onContinue={() => {
-            setState(offered);
+            // THE CITATION CROSSES THE RESTORE. The author reached this
+            // screen by asking to cite a node (D20), and the draft answers
+            // a different question — what they were writing last week.
+            // Taking it up must not undo the gesture that opened the
+            // wizard, or `Cite in a new post` silently opens an ordinary
+            // composer.
+            setState((current) => ({
+              ...offered,
+              references: current.references.some(
+                (reference) => reference.targetId === prefill,
+              )
+                ? [
+                    ...offered.references.filter(
+                      (reference) => reference.targetId !== prefill,
+                    ),
+                    ...current.references.filter(
+                      (reference) => reference.targetId === prefill,
+                    ),
+                  ]
+                : offered.references,
+            }));
             setOffered(null);
           }}
           onDiscard={() => {
@@ -708,8 +749,10 @@ export function ComposeWizard({
           mode={state.mode}
           assets={state.assets}
           previews={previews}
+          clipFace={clipFace}
           coverPreview={coverPreview}
           durationMs={durationMs}
+          onCover={() => dispatch({ type: "back" })}
           title={state.title}
           description={state.description}
           tags={state.tags}

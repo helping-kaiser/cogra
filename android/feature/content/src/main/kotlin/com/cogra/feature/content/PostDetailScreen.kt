@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -24,14 +26,18 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.pullToRefresh
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -44,8 +50,6 @@ import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
-import com.cogra.core.designsystem.collapsingTop
-import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
@@ -116,10 +120,23 @@ fun PostDetailRoute(
             viewModel.refresh()
         }
     }
+    // THE PULL REACHES BOTH OWNERS. The thread is the sheet's and the count
+    // on the affordance row is this screen's, so one re-pull has to say so
+    // twice — otherwise the reader pulls, opens the thread, and reads the
+    // page from before the pull.
+    var threadToken by remember { mutableIntStateOf(0) }
+    // …and a reply landing changes the POST's own comment count, which is
+    // read with the post rather than with the thread.
+    LaunchedEffect(commentsReturn.landed) {
+        if (commentsReturn.landed) viewModel.refresh()
+    }
     PostDetailScreen(
         state = state,
         viewerId = viewerId,
-        onRefresh = viewModel::refresh,
+        onRefresh = {
+            threadToken++
+            viewModel.refresh()
+        },
         onReveal = viewModel::onReveal,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
@@ -149,6 +166,7 @@ fun PostDetailRoute(
                 onDepart = onCommentsDepart,
                 commentsReturn = commentsReturn,
                 onReturnConsumed = onCommentsReturnConsumed,
+                refreshToken = threadToken,
                 stanceControl = { target, tag ->
                     StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
                 },
@@ -222,19 +240,23 @@ fun PostDetailScreen(
     // covered — and every way out of them comes back to it (`ReplyCompose` and
     // `CommentEdit` both cancel and advance to the thread).
     var commentsOpen by rememberSaveable { mutableStateOf(false) }
-    val collapsingTop = rememberCollapsingTop()
     Scaffold(
         snackbarHost = { CograSnackbarHost(snackbar) },
         topBar = {
+            // THE DETAIL'S BAR IS PINNED (jakob 2026-09-15): collapsing the
+            // top is the READING SURFACES' motion, not every page's, and
+            // this bar is the only place the post's one menu and its way
+            // back live (`_shared.jsx:341-346` takes the ⋮ off the card
+            // here). A bar that leaves with the scroll takes the post's
+            // whole set of acts off screen mid-read, which is not a cost
+            // the collapse was ever meant to buy.
             TopAppBar(
                 // The 48dp band every board draws (`spacing.css`
                 // `--top-bar-height`, `PageHeader.jsx`); M3's small bar
                 // defaults to 64dp, which is a rung the design does not
-                // have. `expandedHeight` is the documented way to set it,
-                // and the collapse arithmetic follows it.
+                // have. `expandedHeight` is the documented way to set it.
                 expandedHeight = Layout.TopBarHeight,
                 colors = surfaceTopAppBarColors(),
-                scrollBehavior = collapsingTop.scrollBehavior,
                 // No title in the band: the post's title is the card's
                 // heading, above its media (`_shared.jsx:287-289` — the
                 // detail header takes no title prop).
@@ -261,30 +283,46 @@ fun PostDetailScreen(
             )
         },
     ) { padding ->
-        PullToRefreshBox(
-            // The read in flight, not the empty screen: a post opened
-            // from the feed is already drawn while its read runs, and
-            // an indicator over content the reader can see says the
-            // screen is still arriving when it has arrived (HT-10).
-            isRefreshing = state.refreshing,
-            onRefresh = onRefresh,
+        // PULL-TO-REFRESH BELONGS TO THE TOP OF THE THREAD: a reader
+        // correcting upward from the middle of a long post is scrolling,
+        // not asking for a re-read. With a pinned bar there is no collapse
+        // left to absorb that correction's leftover, so the rule is stated
+        // here instead of riding the bar's motion.
+        //
+        // IT IS LATCHED AT THE GESTURE'S START, never read live: a drag
+        // that travels through the top has ALREADY been spent as scroll,
+        // and re-arming as it arrives would turn the tail of every long
+        // correction into a refetch. This is the web's own rule — its
+        // `usePullToRefresh` asks `atTop()` on `touchstart` and not again
+        // (`lib/ui/pull-to-refresh.ts`).
+        val listState = rememberLazyListState()
+        var pullArmed by remember { mutableStateOf(true) }
+        LaunchedEffect(listState) {
+            snapshotFlow { listState.isScrollInProgress }.collect { scrolling ->
+                if (scrolling) {
+                    pullArmed = listState.firstVisibleItemIndex == 0 &&
+                        listState.firstVisibleItemScrollOffset == 0
+                }
+            }
+        }
+        val refreshState = rememberPullToRefreshState()
+        Box(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .pullToRefresh(
+                    // The read in flight, not the empty screen: a post
+                    // opened from the feed is already drawn while its read
+                    // runs, and an indicator over content the reader can
+                    // see says the screen is still arriving when it has
+                    // arrived (HT-10).
+                    isRefreshing = state.refreshing,
+                    state = refreshState,
+                    enabled = pullArmed,
+                    onRefresh = onRefresh,
+                ),
         ) {
-            // The collapsing top wires up inside the pull-to-refresh
-            // box, not on the Scaffold: post-scroll flows innermost
-            // first, and the refresh gesture consumes the unconsumed
-            // at-the-top leftover — the gate's signal that the reader is
-            // back at the top — before an outer gate would ever see it.
-            // Outside, the bar stays hidden at the top of the thread
-            // while a pull is already gathering, which reads as a
-            // refresh fired mid-scroll (the feed's twin wiring).
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .collapsingTop(collapsingTop),
-            ) {
+            Box(Modifier.fillMaxSize()) {
                 when {
                     state.notFound -> ErrorLine(
                         R.string.content_error_not_found,
@@ -344,6 +382,7 @@ fun PostDetailScreen(
                         PostDetailBody(
                             state = state,
                             post = state.post,
+                            listState = listState,
                             onReveal = onReveal,
                             onOpenActor = onOpenActor,
                             onOpenPost = onOpenPost,
@@ -355,6 +394,11 @@ fun PostDetailScreen(
                     }
                 }
             }
+            PullToRefreshDefaults.Indicator(
+                state = refreshState,
+                isRefreshing = state.refreshing,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
         }
     }
 
@@ -381,7 +425,7 @@ fun PostDetailScreen(
 
 /**
  * ON A DETAIL SURFACE THE MENU LIVES UP HERE and the card's own dot yields
- * (`_shared.jsx:337-341`): two dots would be two menus for one post.
+ * (`_shared.jsx:341-346`): two dots would be two menus for one post.
  *
  * A REMOVED POST HAS NO MENU LEFT — back is the whole header
  * (`Removed.jsx:5-6`). There is nothing of it to edit, cite or license, and
@@ -421,6 +465,8 @@ private fun DetailMenu(
 private fun PostDetailBody(
     state: PostDetailUiState,
     post: PostView,
+    /** Hoisted: the refresh gesture is gated on this list's own place. */
+    listState: LazyListState,
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
     onOpenActor: (String) -> Unit,
@@ -470,6 +516,7 @@ private fun PostDetailBody(
         // boards the post wears the card and the thread stands in its own sheet
         // over it, not as a second half of this page.
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .testTag("detail_list"),

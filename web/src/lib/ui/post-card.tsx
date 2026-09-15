@@ -288,10 +288,10 @@ export function PostCard({
   return (
     <Card testId={testId}>
       {/* AUTHOR, TIMESTAMP, AND THE ⋮ — the card's header line. ON A DETAIL
-          SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW (`_shared.jsx:337-341`
+          SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW (`_shared.jsx:341-346`
           — the master hides the card's dot in `detail`): two dots would be two
           menus for one post. A summary card keeps its own, because in a feed
-          there is no header to carry it (`PostCard.jsx:257`). */}
+          there is no header to carry it (`PostCard.jsx:262`). */}
       <div className="flex items-center justify-between gap-2">
         {post.author && (
           <ActorChip

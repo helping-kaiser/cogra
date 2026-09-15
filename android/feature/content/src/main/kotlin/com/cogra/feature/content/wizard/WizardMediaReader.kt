@@ -37,32 +37,19 @@ internal class WizardMediaReader(
      * frames costs a decode per frame, and an author who picked a clip
      * and then changed their mind should not have paid for it.
      *
-     * A successful extraction settles [CoverChoice.None] on the first
-     * offered frame — but only while the author is still on the cover
-     * stage and has not chosen anything else. An author who moved on
-     * before extraction finished meant to go without a face, and this
-     * must not reach back and give them one after the fact; an author
-     * who tapped a frame or a picture already has their own answer to
-     * keep. Extraction coming back empty leaves [CoverChoice.None]
-     * standing — there is nothing here to settle it on.
+     * EXTRACTION OFFERS; IT NEVER CHOOSES. The frames land in the state
+     * and nothing else moves: [CoverChoice.None] is what an author who
+     * has not tapped anything has, and it is what they keep. A cover is
+     * optional and its own standalone asset, so a face nobody picked is
+     * a face nobody signed — and it would upload on the way out of the
+     * stage, attaching an image the author never chose.
      */
     fun loadCoverFrames() {
         val clip = state.value.video ?: return
         if (state.value.coverFrames.isNotEmpty()) return
         scope.launch {
             val frames = video.coverFrames(clip.uri, ComposeWizardViewModel.COVER_FRAME_COUNT)
-            state.update { current ->
-                val settledChoice = if (
-                    current.step == WizardStep.Cover &&
-                    current.coverChoice is CoverChoice.None &&
-                    frames.isNotEmpty()
-                ) {
-                    CoverChoice.Frame(0)
-                } else {
-                    current.coverChoice
-                }
-                current.copy(coverFrames = frames, coverChoice = settledChoice)
-            }
+            state.update { current -> current.copy(coverFrames = frames) }
         }
     }
 

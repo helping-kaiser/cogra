@@ -15,9 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +34,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.HelpDialog
 import com.cogra.core.designsystem.v2.atom.WizardHeader
 import com.cogra.core.designsystem.v2.compose.DescribeSheet
@@ -384,6 +383,9 @@ internal fun ComposeWizardScreen(
                             onRemovePick = onRemovePickAt,
                             onManagePictures = onManagePictures,
                             onDescribePictures = onDescribePictures,
+                            // The cover field's two states reach one place:
+                            // the stage behind this one.
+                            onCover = onBack,
                             topics = {
                                 // The 2.3 section, embedded rather than
                                 // rebuilt: only its surroundings changed.
@@ -495,8 +497,7 @@ internal fun ComposeWizardScreen(
     // `DescribeSheet` open over the pick and details stages; the license
     // and the sensitive mark over the seal.
     if (state.anySheetOpen) {
-        val sheetState = rememberModalBottomSheetState()
-        ModalBottomSheet(onDismissRequest = onCloseSheet, sheetState = sheetState) {
+        CograSheetHost(onDismissRequest = onCloseSheet) {
             val describing = state.describingIndex?.let { state.picked.getOrNull(it) }
             when {
                 describing != null -> DescribeSheet(
