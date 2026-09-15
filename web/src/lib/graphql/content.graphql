@@ -127,6 +127,46 @@ query PostDetail(
   }
 }
 
+# THE THREAD'S OWN READ, and the reason it is its own operation.
+#
+# The comments sheet is the one comments surface (jakob 2026-09-15): the count
+# on a feed card raises the same full-function thread the detail's count does.
+# A feed card has no detail read behind it, so a thread that could only arrive
+# inside `PostDetail` could not be raised there at all.
+#
+# It selects the comments connection exactly as `PostDetail` does — the same
+# fields, the same `first: 0` branch counts (Q49) — and nothing of the post
+# beyond the id that answered, because the surface underneath already has the
+# post it drew the count from.
+query PostComments(
+  $id: UUID!
+  $first: Int!
+  $after: String
+  $includePending: Boolean! = true
+) {
+  post(id: $id) {
+    id
+    comments(first: $first, after: $after, includePending: $includePending) {
+      # The whole thread's size, cursor-independent — the count the card
+      # states, so the sheet can stand on its own beside it.
+      totalCount
+      edges {
+        node {
+          ...CommentFields
+          # A branch arrives as a count, never as a page (Q49).
+          replies(first: 0, includePending: $includePending) {
+            totalCount
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
 # The expand read: a further page of one comment's direct replies, each
 # carrying only the COUNT of its own branch — the same rule as the thread
 # read, one level down, so unfolding cannot re-create the cost Q49 removed.
