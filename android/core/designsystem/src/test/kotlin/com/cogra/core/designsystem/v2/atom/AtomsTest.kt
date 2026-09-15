@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertTouchHeightIsEqualTo
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsSelected
@@ -492,6 +493,42 @@ class AtomsTest {
         )
         buttons[0].assert(hasTestTag("discard_discard"))
         buttons[1].assert(hasTestTag("discard_keep"))
+    }
+
+    // Pinned to the master (`design/components/states/EmptyState.jsx`): a
+    // calm statement and nothing else when the surface has no action.
+    @Test
+    fun anEmptyStateStatesTheFactAndDrawsNoActionByDefault() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                EmptyState(testTag = "empty", title = "Nothing here yet.")
+            }
+        }
+
+        compose.onNodeWithTag("empty").assertIsDisplayed()
+        compose.onNodeWithText("Nothing here yet.").assertIsDisplayed()
+        compose.onNodeWithTag("empty_action").assertDoesNotExist()
+    }
+
+    // The master's `actionLabel && onAction` fallback: the one action that
+    // fills the list, built from the two strings rather than passed whole.
+    @Test
+    fun anEmptyStateBuildsTheOneActionThatFillsIt() {
+        var created = false
+        compose.setContent {
+            Cogra2PreviewTheme {
+                EmptyState(
+                    testTag = "empty",
+                    title = "Nothing here yet.",
+                    actionLabel = "New post",
+                    onAction = { created = true },
+                )
+            }
+        }
+
+        compose.onNodeWithTag("empty_action").assertTextEquals("New post")
+        compose.onNodeWithTag("empty_action").performClick()
+        assertThat(created).isTrue()
     }
 }
 
