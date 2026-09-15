@@ -20,8 +20,10 @@
 //
 // THE COMPOSER TAKES THE SCREEN, AND GIVES IT BACK WHOLE. See `depart` and
 // `restoring` below: the return is two values — where the reader was, and
-// which comment the new reply hangs under — and it is a property of THIS
-// surface, so it reads the same raised from the feed as from the detail.
+// which branch has to be standing when they get back — and it is a property of
+// THIS surface, so it reads the same raised from the feed as from the detail.
+// Both composers take it: a reply and an edit alike put what was just written
+// in front of its author (jakob 2026-09-15, Q6).
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -190,10 +192,11 @@ type PendingSubmit = "edit";
  * What the sheet has to be given back when a composer hands the screen over.
  *
  * TWO VALUES, because one cannot restore the return. The place is where the
- * reader was reading; `unfolding` names the comment the new reply hangs under,
- * whose branch is behind a collapsed count until it is asked for — so a
- * refetch alone would land the reader on a thread that looks unchanged. Null
- * is a comment on the post itself, which is already at the top level.
+ * reader was reading; `unfolding` names the comment whose branch has to be
+ * open for the new words to be on screen — the parent a reply hangs under, or
+ * the parent of an edited reply — since a branch is behind a collapsed count
+ * until it is asked for, and a refetch alone would land the reader on a thread
+ * that looks unchanged. Null is content at the top level, already in view.
  */
 type Return = { place: ScrollPlace; unfolding: string | null };
 
@@ -273,6 +276,11 @@ export function CommentsSheet({
     gallery: EditGallery;
     /** What the comment is on, for the editor's lede. */
     targetLabel: string;
+    /**
+     * The comment this one hangs under, or null at the top level — so the
+     * return can put the edited words back in front of the author (Q6).
+     */
+    parentId: string | null;
     /** The author's own mark as the editor found it, and as it holds it now. */
     loadedSensitive: boolean;
     loadedSensitiveReason: string;
@@ -734,12 +742,12 @@ export function CommentsSheet({
       // The edit settles IN THE THREAD (`CommentEdit` 12 → the thread), so
       // the sheet comes back up with it and the snackbar reads over it.
       //
-      // AN EDIT KNOWS NO PARENT. The editor was opened on a comment, not on a
-      // branch, so the return carries the place alone and a branch the reader
-      // had unfolded around it re-collapses. The reply path — which does know
-      // what it hangs under — gets the whole ruling; this half waits on
-      // jakob's question about where an edit's own return should land.
-      landed(null);
+      // SHOW THEM WHAT THEY JUST WROTE — an edit as much as a reply (jakob
+      // 2026-09-15, Q6): "editing sth and then not seeing the corrected
+      // version gives the user uncertainty if it even happened". An edited
+      // reply lives one level down, behind its parent's collapsed count, so
+      // the return unfolds that branch the same way the reply path does.
+      landed(editing.parentId);
     } else {
       setEditFailed(true);
     }
@@ -844,7 +852,7 @@ export function CommentsSheet({
     return rows;
   };
 
-  const openEditor = (comment: ThreadComment) => {
+  const openEditor = (comment: ThreadComment, parentId: string | null) => {
     // The editor opens on what the comment actually carries — text and
     // claims alike — so an untouched editor stages nothing (F10). It is
     // the composer's twin surface, so the thread yields to it the same
@@ -867,6 +875,7 @@ export function CommentsSheet({
       loadedGallery,
       gallery: loadedGallery,
       targetLabel: post.title.value?.trim() || "this post",
+      parentId,
       // The OR is what a READER sees; the switch is the author's own mark
       // and arrives from its own read a moment later (round 4). Starting
       // from the OR would show a moderator's verdict as the author's until
@@ -902,7 +911,17 @@ export function CommentsSheet({
     setReplying(null);
   };
 
-  const renderComment = (comment: ThreadComment, depth: number): React.ReactNode => {
+  /**
+   * `parentId` is the comment this one hangs under — null at the top level. It
+   * is what both returns restore: a reply lands under the comment it answers,
+   * and an edited reply is behind its own parent's collapsed count, so either
+   * way the branch that has to be standing afterwards is named here.
+   */
+  const renderComment = (
+    comment: ThreadComment,
+    depth: number,
+    parentId: string | null,
+  ): React.ReactNode => {
     const thread = replyThreads[comment.id];
     const replies = thread?.items ?? [];
     const repliesHaveMore = thread?.hasMore ?? false;
@@ -1051,7 +1070,7 @@ export function CommentsSheet({
                 testId={`comment-edit-${comment.id}`}
                 variant="text"
                 size="sm"
-                onClick={() => openEditor(comment)}
+                onClick={() => openEditor(comment, parentId)}
               >
                 Edit
               </Button>
@@ -1060,7 +1079,7 @@ export function CommentsSheet({
         </Card>
         {replies.length > 0 && (
           <ul className="flex flex-col gap-3">
-            {replies.map((reply) => renderComment(reply, depth + 1))}
+            {replies.map((reply) => renderComment(reply, depth + 1, comment.id))}
           </ul>
         )}
         {thread?.loading === true && (
@@ -1196,7 +1215,7 @@ export function CommentsSheet({
             <p data-testid="post-no-comments">No comments yet.</p>
           )}
           <ul className="flex flex-col gap-3">
-            {comments.map((comment) => renderComment(comment, 0))}
+            {comments.map((comment) => renderComment(comment, 0, null))}
           </ul>
           {hasMore &&
             (transportFault === "append" ? (
