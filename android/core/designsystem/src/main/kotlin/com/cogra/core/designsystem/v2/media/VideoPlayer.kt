@@ -4,6 +4,7 @@ import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -158,11 +159,30 @@ fun VideoPlayer(
      * (`MediaViewer.jsx:153`).
      */
     onOpenViewer: (() -> Unit)? = null,
+    /**
+     * What the device's own bars and gesture strip take, where this surface
+     * reaches the screen's edges.
+     *
+     * Zero for every framed surface — a card's clip and the detail's pinned
+     * clip sit inside the page, and a bar inset for a navigation bar that is
+     * nowhere near them would just float. The fullscreen viewer hands its own
+     * safe area down, because there the bar genuinely is the bottom of the
+     * screen (jakob 2026-09-15, hand test).
+     */
+    chromeInsets: PaddingValues = PaddingValues(0.dp),
     testTag: String? = null,
 ) {
     val context = LocalContext.current
     val muted by VideoSound.muted.collectAsState()
     var playing by remember { mutableStateOf(false) }
+    var ended by remember { mutableStateOf(false) }
+
+    // The chrome is drawn revealed, and a tap on the clip takes it away and
+    // brings it back — the same rule web has had since the transport landed.
+    // On the fullscreen viewer that tap USED TO CLOSE the whole layer, which
+    // turned every reach for a control into a dismissal (jakob 2026-09-15,
+    // hand test).
+    var chromeShown by remember { mutableStateOf(true) }
 
     // The player is borrowed rather than built: the same clip on the
     // feed card and on the post detail is the same instance, so opening
@@ -197,6 +217,28 @@ fun VideoPlayer(
         }
     }
 
+    // THE WAY BACK FROM A SURFACE THAT TOOK THE CLIP AND THEN LEFT (jakob
+    // 2026-09-15, hand test: returning from the fullscreen viewer left the
+    // detail's pinned clip a black box with no transport at all).
+    //
+    // The viewer claims the stage on the way in and surrenders on the way out,
+    // which leaves the clip on stage with NO OWNER. The detail's surface never
+    // stopped being composed, so its `LifecycleStartEffect` — keyed on the url
+    // and the token, over a lifecycle that never stopped — does not run again:
+    // it goes on holding a token the stage no longer recognises, `playerFor`
+    // answers null, the `PlayerSurface` has nothing bound to draw, and the
+    // transport is not drawn at all because there is no player to drive it.
+    //
+    // An unowned stage is a claim waiting to be made by whoever is still
+    // composed and still showing this clip. Claiming the clip already on stage
+    // keeps the very same player — no prepare, no seek — so what this costs is
+    // a token swap, and what it buys is the clip coming back alive where the
+    // reader left it.
+    val unowned = VideoStage.holding?.let { it.url == url && it.owner == null } == true
+    LaunchedEffect(unowned, url, token) {
+        if (unowned) VideoStage.claim(context, url, token)
+    }
+
     // Read from the stage rather than held: a second clip taking the
     // stage releases this one's player, and a surface holding its own
     // reference would go on talking to a released instance.
@@ -220,6 +262,15 @@ fun VideoPlayer(
                 playing = isPlaying
             }
 
+            // A CLIP THAT RAN OUT IS A CLIP AT REST, and the transport has to
+            // say which rest it is: `STATE_ENDED` is what turns the Play glyph
+            // into Replay, because the same press means two different things
+            // either side of the end
+            // (developer.android.com/media/media3/exoplayer/listening-to-player-events).
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                ended = playbackState == Player.STATE_ENDED
+            }
+
             override fun onRenderedFirstFrame() {
                 // The end of every flash, whatever caused it — and the
                 // fact the stage remembers, so the next surface this
@@ -236,6 +287,10 @@ fun VideoPlayer(
             }
         }
         player?.addListener(listener)
+        // The player may already be past its end when this surface binds it —
+        // the viewer opening on a clip the detail had run out is exactly that —
+        // and a listener only ever hears about the NEXT change.
+        ended = player?.playbackState == Player.STATE_ENDED
         onDispose {
             player?.removeListener(listener)
             playing = false
@@ -307,7 +362,14 @@ fun VideoPlayer(
             // between the cover and the video, jakob's relayout is real
             // and the log says so in two lines.
             .onSizeChanged { VideoTrace.surface(traced, "measured", it.width, it.height) }
-            .surfaceTap(onOpenViewer),
+            .surfaceTap(enabled = controls == VideoControls.Full) {
+                // THE TAP READS THE CHROME, NEVER THE LAYER. With the controls
+                // up and somewhere to go, it is the clip's own route into the
+                // viewer (graph.json, `PostDetailVideo` via 3); otherwise it
+                // takes the chrome away and brings it back. Closing is the X's
+                // job and the back gesture's, and nothing else's.
+                if (chromeShown && onOpenViewer != null) onOpenViewer() else chromeShown = !chromeShown
+            },
         contentAlignment = Alignment.Center,
     ) {
         // Sized once, from a number known before composition. A clip
@@ -361,13 +423,15 @@ fun VideoPlayer(
         // THE LADDER'S SECOND RUNG. The full transport REPLACES the disc
         // rather than joining it: the sound decision rides the bar, because a
         // disc beside a bar is two pieces of chrome for one clip.
-        if (controls == VideoControls.Full && player != null) {
+        if (controls == VideoControls.Full && player != null && chromeShown) {
             FullTransport(
                 player = player,
                 playing = playing,
+                ended = ended,
                 muted = muted,
                 recordDurationMs = durationMs,
                 onFullscreen = onOpenViewer,
+                chromeInsets = chromeInsets,
                 modifier = Modifier.align(Alignment.Center),
             )
         }
@@ -396,15 +460,16 @@ private fun VideoControls.repeatMode(): Int = when (this) {
 }
 
 /**
- * THE TAP ON THE CLIP, where the surface has somewhere for it to go — the other
- * way into the fullscreen viewer beside the transport's own toggle
- * (graph.json, `PostDetailVideo` via 3).
+ * THE TAP ON THE CLIP, on every surface that wears a transport.
  *
  * It sits UNDER the transport, so every press aimed at play, seek or sound is
- * that control's and only the frame around them is the frame's.
+ * that control's and only the frame around them is the frame's. A reading
+ * surface takes no tap at all: presence on screen is the whole policy there,
+ * and a card whose clip answered a press would be a second, contradictory
+ * answer to a question already settled.
  */
-private fun Modifier.surfaceTap(onTap: (() -> Unit)?): Modifier =
-    if (onTap != null) clickable(onClick = onTap) else this
+private fun Modifier.surfaceTap(enabled: Boolean, onTap: () -> Unit): Modifier =
+    if (enabled) clickable(onClick = onTap) else this
 
 /**
  * The transport, bound to the clip on stage.
@@ -423,9 +488,11 @@ private fun Modifier.surfaceTap(onTap: (() -> Unit)?): Modifier =
 private fun FullTransport(
     player: Player,
     playing: Boolean,
+    ended: Boolean,
     muted: Boolean,
     recordDurationMs: Int?,
     onFullscreen: (() -> Unit)?,
+    chromeInsets: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     val progress = rememberProgressStateWithTickInterval(player, TICK_MS)
@@ -433,6 +500,8 @@ private fun FullTransport(
     val position = progress.currentPositionMs.coerceAtLeast(0L)
     VideoTransport(
         playing = playing,
+        ended = ended,
+        chromeInsets = chromeInsets,
         elapsedMs = position,
         durationMs = length,
         progress = if (length > 0) position.toFloat() / length else 0f,
