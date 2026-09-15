@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -31,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.v2.atom.sheetContainerColor
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.LicenseChoice
 
@@ -103,6 +105,11 @@ internal fun LicenseTerms(license: LicenseChoice, testTag: String) {
  * the reader tapped, and the Public Domain name rides that same line — so a
  * title above it would say `License terms` twice, a few pixels apart, in two
  * sizes. The sheet's name lives on its accessible name instead.
+ *
+ * [stacked] is true when this comes up over another sheet rather than the
+ * plain page — a comment's own terms, raised over the comments thread
+ * (`CommentLicense.jsx`, design/readme.md:2364). The post's own terms stay
+ * unstacked, over the post page.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,9 +117,15 @@ internal fun LicenseSheet(
     license: LicenseChoice,
     onDismiss: () -> Unit,
     testTag: String = "license_sheet",
+    stacked: Boolean = false,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        containerColor = sheetContainerColor(
+            stacked,
+            MaterialTheme.colorScheme,
+            BottomSheetDefaults.ContainerColor,
+        ),
         modifier = Modifier.testTag(testTag),
     ) {
         Column(

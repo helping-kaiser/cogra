@@ -159,7 +159,7 @@ an `instances/` doc is a sign the mechanism belongs in
   invitation-based registration, JWT access + Postgres refresh
   tokens, sessions.
 - [notifications](implementation/notifications.md) — the second
-  surfacing channel: the seven addressed acts that notify, the
+  surfacing channel: the nine addressed acts that notify, the
   in-app list, per-viewer rows and their two-level read state,
   the bell's dot.
 - [design](implementation/design.md) — the design system both

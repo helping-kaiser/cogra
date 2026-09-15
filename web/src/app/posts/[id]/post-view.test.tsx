@@ -384,6 +384,11 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId("post-menu"));
     fireEvent.click(screen.getByTestId("post-menu-license"));
     expect(screen.getByTestId("license-sheet-terms")).toHaveTextContent("Public domain");
+    // Raised from the post's own menu, over the page — never stacked
+    // (design/readme.md:2364).
+    expect(screen.getByTestId("license-sheet").className).not.toContain(
+      "bg-surface-container-highest",
+    );
   });
 
   it("raises a comment's own terms from the comment's menu", async () => {
@@ -396,8 +401,18 @@ describe("PostView", () => {
     await openComments();
     await screen.findByTestId("post-body");
     fireEvent.click(screen.getByTestId("comment-menu-c1"));
+    // The comment's own menu is a sheet over the comments thread's sheet,
+    // and takes the next tonal rung (`CommentMenu.jsx`, design/readme.md:2364).
+    expect(screen.getByTestId("comment-menu-c1-sheet").className).toContain(
+      "bg-surface-container-highest",
+    );
     fireEvent.click(screen.getByTestId("comment-menu-license-c1"));
     expect(screen.getByTestId("license-sheet-terms")).toHaveTextContent("Public domain");
+    // Raised from a comment's menu, over the comments thread — stacked
+    // (`CommentLicense.jsx`, design/readme.md:2364).
+    expect(screen.getByTestId("license-sheet").className).toContain(
+      "bg-surface-container-highest",
+    );
   });
 
   // The rows are `OWN_POST_MENU` (`_shared.jsx:369-375`): Save · Edit · Mark as

@@ -56,4 +56,24 @@ describe("OverflowMenu", () => {
     render(<OverflowMenu items={[]} ariaLabel="More on this post" testId="post-menu" />);
     expect(screen.queryByTestId("post-menu")).not.toBeInTheDocument();
   });
+
+  // A menu over another sheet takes the next tonal rung (`CommentMenu.jsx`,
+  // design/readme.md:2364); a menu over the plain page does not.
+  it("stacks over the sheet it opens from", () => {
+    render(
+      <OverflowMenu items={rows()} ariaLabel="More on this comment" testId="comment-menu" stacked />,
+    );
+    fireEvent.click(screen.getByTestId("comment-menu"));
+    expect(screen.getByTestId("comment-menu-sheet").className).toContain(
+      "bg-surface-container-highest",
+    );
+  });
+
+  it("does not stack when it opens over the page", () => {
+    render(<OverflowMenu items={rows()} ariaLabel="More on this post" testId="post-menu" />);
+    fireEvent.click(screen.getByTestId("post-menu"));
+    expect(screen.getByTestId("post-menu-sheet").className).not.toContain(
+      "bg-surface-container-highest",
+    );
+  });
 });

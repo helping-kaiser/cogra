@@ -68,6 +68,9 @@ class ContentScreensTest {
         onChats: (() -> Unit)? = null,
         onShare: (String) -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
+        viewerId: String? = null,
+        onEditPost: (String) -> Unit = {},
+        onCitePost: (String) -> Unit = {},
     ) {
         compose.setContent {
             FeedScreen(
@@ -82,6 +85,9 @@ class ContentScreensTest {
                 onChats = onChats,
                 keyBanner = keyBanner,
                 borrowedViewBand = borrowedViewBand,
+                viewerId = viewerId,
+                onEditPost = onEditPost,
+                onCitePost = onCitePost,
             )
         }
     }
@@ -359,6 +365,122 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_load_more_error").performScrollTo().assertExists()
         compose.onNodeWithTag("feed_load_more_retry").performClick()
         assertThat(more).isTrue()
+    }
+
+    // -- The feed card's ⋮ (`PostCard.jsx:257`) --
+
+    /** The rows are `READER_POST_MENU` (`_shared.jsx:376`), on a card. */
+    @Test
+    fun aFeedCardCarriesTheReaderMenuForSomeoneElsesPost() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_save").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_hide").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_license").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_edit").assertDoesNotExist()
+        compose.onNodeWithTag("feed_p1_menu_remove").assertDoesNotExist()
+    }
+
+    /** The rows are `OWN_POST_MENU` (`_shared.jsx:369-375`), on a card. */
+    @Test
+    fun aFeedCardCarriesTheOwnPostMenuWhereTheViewerIsTheAuthor() {
+        var editing: String? = null
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "author-1",
+            onEditPost = { editing = it },
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_save").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_sensitive").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_remove").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_license").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_hide").assertDoesNotExist()
+        compose.onNodeWithTag("feed_p1_menu_cite").assertDoesNotExist()
+
+        compose.onNodeWithTag("feed_p1_menu_edit").performClick()
+        assertThat(editing).isEqualTo("p1")
+    }
+
+    /**
+     * A SIGNED-OUT READER IS NOBODY'S AUTHOR. With no viewer there is no own
+     * post, so the card falls to the reader's rows rather than guessing.
+     */
+    @Test
+    fun aSignedOutReaderGetsTheReaderRowsOnEveryCard() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = null,
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_edit").assertDoesNotExist()
+    }
+
+    /** The menu's navigating rows work from the feed as from the detail. */
+    @Test
+    fun theCardsCiteRowStagesThePostInTheComposer() {
+        var cited: String? = null
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+            onCitePost = { cited = it },
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_cite").performClick()
+        assertThat(cited).isEqualTo("p1")
+    }
+
+    /** The license row opens the terms on the card that asked for them. */
+    @Test
+    fun theCardsLicenseRowOpensTheTermsOverTheFeed() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1", license = LicenseChoice(attribution = 1.0, provenance = 0.0)),
+                ),
+            ),
+            viewerId = "someone-else",
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_license").performClick()
+        compose.onNodeWithTag("license_sheet_terms").assertExists()
+    }
+
+    /**
+     * EVERY CARD'S ROWS ARE ITS OWN. A feed is a list of cards, so the tags
+     * are per post — two cards' rows are never one tag.
+     */
+    @Test
+    fun eachCardsRowsAreScopedToThatCard() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"), testPost("p2"))),
+            viewerId = "someone-else",
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
+        compose.onNodeWithTag("feed_p2_menu_cite").assertDoesNotExist()
+    }
+
+    /** A REMOVED POST HAS NO MENU AT ALL (`Removed.jsx:5-6`). */
+    @Test
+    fun aRemovedCardDropsTheMenuWholesale() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(content = ModeratedField(null, FieldStatus.REDACTED)),
+                ),
+            ),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("feed_post_p1").assertExists()
+        compose.onNodeWithTag("feed_p1_menu").assertDoesNotExist()
     }
 
     // -- Composer --
@@ -869,6 +991,53 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_menu_opinions_c1").assertExists()
         compose.onNodeWithTag("comment_menu_license_c1").assertExists()
         compose.onNodeWithTag("comment_menu_hide_c1").assertDoesNotExist()
+    }
+
+    // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the thread
+    // already lives in a sheet, so the comment's own menu is a sheet on a
+    // sheet — both stand at once (design/readme.md:2364). The tonal rung
+    // itself is pinned in SheetContainerColorTest; this pins the mount.
+    @Test
+    fun theCommentsMenuStandsOverTheThreadsOwnSheet() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        openComments()
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("comment_c1_menu_sheet").assertExists()
+    }
+
+    // The post's own menu opens over the plain page — no sheet stands
+    // beneath it, so it never stacks (design/readme.md:2364).
+    @Test
+    fun thePostsOwnMenuOpensOverThePageAlone() {
+        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("detail_menu_sheet").assertExists()
+    }
+
+    // ONE SHEET, TWO MENUS (`CommentLicense.jsx:9-10`): raised from a
+    // comment's row it comes up over the thread, still a sheet on a sheet.
+    @Test
+    fun aCommentsLicenseComesUpOverTheThreadsOwnSheet() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        openComments()
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comment_menu_license_c1").performClick()
+        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("license_sheet_terms").assertExists()
     }
 
     // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination

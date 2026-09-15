@@ -96,6 +96,7 @@ import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
+import { postMenuItems } from "@/lib/ui2/post-menu";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { commentTarget, ReplyWizard } from "./reply/reply-wizard-view";
 import { CommentEditView } from "./edit/comment-edit-view";
@@ -225,6 +226,11 @@ export function PostView({
   const [viewerAt, setViewerAt] = useState<number | null>(null);
   const [licenseShown, setLicenseShown] = useState<License | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
+  // ONE SHEET, TWO MENUS (`PostLicense.jsx:11-12`): the post's own row raises
+  // it over the page, a comment's row raises it over the comments thread —
+  // a sheet over a sheet, `stacked` (design/readme.md:2364). The one mount
+  // below answers for whichever menu asked, so this tracks which case it is.
+  const [licenseStacked, setLicenseStacked] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
   // Stable, so the snackbar's own timer is not restarted by every render of
@@ -586,9 +592,10 @@ export function PostView({
   /** The dialog's own numbers and the run it stands in front of. */
   const confirmed = () => ({ count: editActions, busy: editSubmitting, run: runEdit });
 
-  const openLicense = (license: License) => {
+  const openLicense = (license: License, stacked: boolean) => {
     setLicenseShown(license);
     setLicenseOpen(true);
+    setLicenseStacked(stacked);
   };
 
   /**
@@ -612,67 +619,20 @@ export function PostView({
     setCommentsOpen(true);
   };
 
-  /**
-   * THE ROWS THE ONE MENU HOLDS — the author's post vs someone else's
-   * (`_shared.jsx:369-376`). Both keep the card's order: the acts the menu was
-   * opened for lead, and the license row closes it, the license being the
-   * rarest read in the product. The license row is dropped when there is none
-   * to show: the license rode the payload, so a redacted record has none
-   * (`PostCard.jsx:142`).
-   *
-   * ROWS WHOSE DESTINATION IS NOT BUILT STAND ANYWAY and do nothing (jakob
-   * 2026-09-14, the introduced-but-inert law): a menu that grew a row per slice
-   * would be a different menu every release, and the row order is ruled.
-   */
-  const postMenuItems = (own: boolean, handle: string | null, license: License | null) => {
-    const rows: MenuItem[] = [
-      { label: "Save", onSelect: () => {}, testId: "post-menu-save" },
-    ];
-    if (own) {
-      rows.push(
-        {
-          label: "Edit",
-          onSelect: () => router.push(`/compose?post=${postId}`),
-          testId: "post-menu-edit",
-        },
-        {
-          // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
-          // post sensitive is always a signed action changing the post — an
-          // edit — so there is no standalone commit path and this row is a
-          // door into the edit flow rather than a sheet of its own. Edit is
-          // the general door; this is the intentioned one. When the edit
-          // surface's drawn Sensitive row lands (CW-46) the link can focus it.
-          label: "Mark as sensitive",
-          onSelect: () => router.push(`/compose?post=${postId}`),
-          testId: "post-menu-sensitive",
-        },
-        { label: "Remove", onSelect: () => setRemoveOpen(true), testId: "post-menu-remove" },
-      );
-    } else {
-      rows.push(
-        {
-          label: "Cite in a new post",
-          onSelect: () => router.push(`/compose?reference=${postId}`),
-          testId: "post-menu-cite",
-        },
-        {
-          // The handle is the thing a reader recognises, and the word they will
-          // look for again under Hidden accounts (`ActorChip.jsx:67`).
-          label: handle === null ? "Hide this account" : `Hide @${handle}`,
-          onSelect: () => {},
-          testId: "post-menu-hide",
-        },
-      );
-    }
-    if (license !== null) {
-      rows.push({
-        label: "License terms",
-        onSelect: () => openLicense(license),
-        testId: "post-menu-license",
-      });
-    }
-    return rows;
-  };
+  /** The shared rows (`ui2/post-menu.ts`), bound to this page's doors. */
+  const menuFor = (own: boolean, handle: string | null, license: License | null) =>
+    postMenuItems({
+      postId,
+      own,
+      handle,
+      license,
+      navigate: (href) => router.push(href),
+      // The post's own menu lives in the page header, over the page — never
+      // over the comments thread, so its license row is never stacked.
+      openLicense: (license) => openLicense(license, false),
+      openRemove: () => setRemoveOpen(true),
+      testIdPrefix: "post-menu",
+    });
 
   // The header rides every branch — a dead end (not found, transport
   // fault) is exactly where the back arrow matters most.
@@ -765,7 +725,9 @@ export function PostView({
     if (comment.license !== null && comment.license !== undefined) {
       rows.push({
         label: "License terms",
-        onSelect: () => openLicense(comment.license),
+        // Raised from inside the comments thread — a sheet over a sheet
+        // (`CommentLicense.jsx`, design/readme.md:2364).
+        onSelect: () => openLicense(comment.license, true),
         testId: `comment-menu-license-${comment.id}`,
       });
     }
@@ -815,11 +777,15 @@ export function PostView({
                 pointed at the comment — beside the age, where the master draws
                 it. NO HIDE ROW, and the absence is ruled (jakob 2026-09-12):
                 hiding is an act on an ACTOR, and the route to it is the
-                commenter's own profile, one tap away through their chip. */}
+                commenter's own profile, one tap away through their chip.
+                IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the
+                thread already lives in a sheet, so this menu is a sheet on a
+                sheet (design/readme.md:2364). */}
             <OverflowMenu
               items={commentMenuItems(comment)}
               ariaLabel="More on this comment"
               testId={`comment-menu-${comment.id}`}
+              stacked
             />
           </div>
               {/* A comment is text PLUS optional media — the XOR is the post's
@@ -1059,7 +1025,7 @@ export function PostView({
           and the skeleton that holds the thread's place is not a thing a reader
           keeps. */}
       {header(
-        redacted ? null : postMenuItems(isOwnPost, post.author?.handle ?? null, post.license),
+        redacted ? null : menuFor(isOwnPost, post.author?.handle ?? null, post.license),
       )}
       {refreshing && (
         <p role="status" aria-live="polite" data-testid="post-refreshing">
@@ -1215,13 +1181,17 @@ export function PostView({
       </BottomSheet>
       {/* ONE LICENSE SHEET FOR THE PAGE, raised by whichever menu row asked —
           the post's own or any comment's. The terms of a node read the same
-          whichever menu asked for them (`PostLicense.jsx:7-9`). */}
+          whichever menu asked for them (`PostLicense.jsx:7-9`). Which one
+          asked also decides whether this comes up over the page or over the
+          comments thread, so `stacked` rides the same state as the license
+          itself (`CommentLicense.jsx`, design/readme.md:2364). */}
       {licenseShown !== null && (
         <LicenseSheet
           open={licenseOpen}
           onClose={() => setLicenseOpen(false)}
           license={licenseShown}
           testId="license-sheet"
+          stacked={licenseStacked}
         />
       )}
       {/* THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is

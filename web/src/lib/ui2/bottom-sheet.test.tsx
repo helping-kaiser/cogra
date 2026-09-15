@@ -124,6 +124,30 @@ describe("BottomSheet", () => {
     expect(screen.getByTestId("bottom-sheet").className).toContain("h-[calc(100dvh-72px)]");
   });
 
+  // A sheet over a sheet takes the next tonal rung (design/readme.md:2364:
+  // "its surface moves to `surfaceContainerHighest` ... two surfaces at one
+  // rung claim one elevation").
+  it("takes the next tonal rung when it stacks over another sheet", () => {
+    const { rerender } = render(
+      <BottomSheet open onClose={() => {}} title="Comment actions" stacked>
+        <p>Row</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByTestId("bottom-sheet").className).toContain(
+      "bg-surface-container-highest",
+    );
+
+    rerender(
+      <BottomSheet open onClose={() => {}} title="Comment actions">
+        <p>Row</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByTestId("bottom-sheet").className).not.toContain(
+      "bg-surface-container-highest",
+    );
+    expect(screen.getByTestId("bottom-sheet").className).toContain("bg-surface-container-high");
+  });
+
   it("pins the foot below the body, outside what scrolls", () => {
     render(
       <BottomSheet

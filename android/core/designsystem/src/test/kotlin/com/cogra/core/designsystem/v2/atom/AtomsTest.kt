@@ -448,6 +448,30 @@ class AtomsTest {
     }
 
     @Test
+    fun aStackedOverflowMenuStillOpensAndActsOnItsRows() {
+        // The tonal rung is pinned directly in SheetContainerColorTest
+        // (design/readme.md:2364); this only guards that `stacked` never
+        // breaks the menu's own behaviour.
+        var selected = false
+        compose.setContent {
+            Cogra2PreviewTheme {
+                CograOverflowMenu(
+                    items = listOf(MenuRow("License terms", "row_license") { selected = true }),
+                    contentDescription = "More on this comment",
+                    testTag = "comment_menu",
+                    stacked = true,
+                )
+            }
+        }
+
+        compose.onNodeWithTag("comment_menu").performClick()
+        compose.onNodeWithTag("comment_menu_sheet").assertExists()
+        compose.onNodeWithTag("row_license").performClick()
+
+        assertThat(selected).isTrue()
+    }
+
+    @Test
     fun theWayBackTakesTheDialogsEmphasisRatherThanTheDiscard() {
         compose.setContent {
             Cogra2PreviewTheme {

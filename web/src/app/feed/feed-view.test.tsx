@@ -221,10 +221,11 @@ describe("FeedView", () => {
     expect(comments).toHaveTextContent("");
   });
 
-  // Two slots the row is drawn with and cannot fill yet, each absent rather
-  // than dead: the Post Score has no field on the contract until slice 3's
-  // ranker, and the overflow ⋮ has no menus drawn here yet.
-  it("draws neither the Post Score nor the overflow ⋮ until their surfaces exist", async () => {
+  // One slot the row is drawn with and cannot fill yet, absent rather than
+  // dead: the Post Score has no field on the contract until slice 3's ranker.
+  // The ⋮ beside it is drawn — `PostCard.jsx:257` puts it on every non-detail
+  // card — and the rows it holds are read on the card's own suite.
+  it("draws the overflow ⋮ but not the Post Score, whose field does not exist", async () => {
     server.use(
       graphql.query("Posts", () =>
         HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) }),
@@ -233,7 +234,7 @@ describe("FeedView", () => {
     renderWithProviders(<FeedView />);
     await screen.findByTestId("feed-post-p1");
     expect(screen.queryByTestId("feed-post-p1-score")).not.toBeInTheDocument();
-    expect(screen.queryByLabelText("More on this post")).not.toBeInTheDocument();
+    expect(screen.getByTestId("feed-post-p1-menu")).toHaveAccessibleName("More on this post");
   });
 
   it("carries the post's topics on one line, each chip navigating to its topic route", async () => {
