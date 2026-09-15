@@ -12,9 +12,10 @@
 // CHATS RIDE THE BAND (jakob 2026-09-01): messaging must be reachable from any
 // major screen, so the affordance belongs to the band rather than to each tab.
 // It sits LEFT of the screen's own trailing control, so the ruled corner
-// occupants keep their edge. It renders only where it leads somewhere: the chat
-// surface is an undesigned gap on the canvas (`graph.json`, the `chats` edge),
-// so no tab passes `onChats` yet and the band draws no control to nowhere.
+// occupants keep their edge. It renders only where it leads somewhere: a tab
+// that passes no `onChats` draws no control to nowhere. Every root eventually
+// wires one (`graph.json`, the `chats` edge) — today that is the feed, reaching
+// the coming-soon destination (backlog item 68, ruled 2026-09-14).
 
 import type { ReactNode } from "react";
 

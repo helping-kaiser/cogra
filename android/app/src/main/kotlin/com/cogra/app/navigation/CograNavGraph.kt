@@ -57,6 +57,7 @@ import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
 import com.cogra.feature.auth.RestoreRoute
+import com.cogra.feature.content.ChatsComingSoonRoute
 import com.cogra.feature.content.ComposePostRoute
 import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.content.FeedRoute
@@ -173,6 +174,14 @@ data object Settings
 
 @Serializable
 data object KeyExport
+
+/**
+ * Chats — coming soon (backlog item 68, ruled 2026-09-14). Reachable from
+ * every root band's chats affordance; no state of its own, so one route
+ * serves every caller.
+ */
+@Serializable
+data object ChatsComingSoon
 
 /** The app's coarse auth phase; each value owns a navigation graph root. */
 enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
@@ -415,7 +424,8 @@ private fun CograNavGraphContent(
     val onOwnProfileTab = onProfile &&
         backStackEntry?.toRoute<Profile>()?.handle == null
     val onPostDetail = backStackEntry?.destination?.hasRoute(PostDetail::class) == true
-    val onReadSurface = onFeedTab || onProfile || onPostDetail
+    val onChatsComingSoon = backStackEntry?.destination?.hasRoute(ChatsComingSoon::class) == true
+    val onReadSurface = onFeedTab || onProfile || onPostDetail || onChatsComingSoon
 
     // The documented tab pattern: pop to the signed-in root saving
     // state, single-top, restoring the target tab's state.
@@ -596,14 +606,21 @@ private fun CograNavGraphContent(
                     },
                     // The chats affordance the band carries (jakob
                     // 2026-09-01). A signed-out tap opens the guest gate,
-                    // which is the edge the canvas draws; the signed-in
-                    // destination is a declared gap ("the chat surface (not
-                    // designed)"), so no control is drawn for a member
-                    // until it exists.
-                    onChats = if (signedIn == false) {
-                        { joinPrompt = true }
-                    } else {
-                        null
+                    // which is the edge the canvas draws (`graph.json`
+                    // "FeedBare" → `GuestGate`); a signed-in tap reaches
+                    // the coming-soon destination (`graph.json` "Feed" →
+                    // `ChatsComingSoon`, backlog item 68). Nothing is
+                    // drawn while the auth state is still unknown — the
+                    // two readings differ, and guessing puts the wrong
+                    // action on the tap for a frame.
+                    onChats = when (signedIn) {
+                        false -> {
+                            { joinPrompt = true }
+                        }
+                        true -> {
+                            { navController.navigate(ChatsComingSoon) }
+                        }
+                        null -> null
                     },
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = consumeSigned,
@@ -811,6 +828,9 @@ private fun CograNavGraphContent(
             composable<KeyExport> {
                 // Arriving reveals nothing; the screen's own gate does.
                 KeyExportRoute(onBack = { navController.navigateUp() })
+            }
+            composable<ChatsComingSoon> {
+                ChatsComingSoonRoute(onBack = { navController.navigateUp() })
             }
         }
     }
