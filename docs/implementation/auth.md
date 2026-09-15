@@ -300,7 +300,8 @@ link they arrived through.
 ### The ask link (applicant side)
 
 The mirror of invite-link generation, and the applicant's own way
-to reach a voucher: one `auth_ask_links` row per account
+to reach someone who might vouch: one `auth_ask_links` row per
+account
 ([data-model.md](data-model.md)), written at registration and
 carrying nothing but the account it points at. The link URL
 carries only the row id, and the applicant can copy it from their
