@@ -24,7 +24,10 @@ import { Icon } from "../navigation/Icon.jsx";
      becomes `replay`, labelled "Replay" — the same glyph at the same size in
      the same place, because the thumb that wants it is already there.
    · The BAR ALONG THE BOTTOM, INSET FROM THE EDGE: elapsed · the timeline ·
-     total, with the fullscreen toggle at its right end.
+     total, with the fullscreen toggle at its right end. THE ROW IS 48px TALL —
+     the ruled target floor (readme §4), which every glyph on it answers to
+     through `cg-hit` rather than by growing its ink: a 48px box under each
+     would spend on chrome the width the timeline is there to have.
    · NOTHING TOUCHES THE BOTTOM EDGE. Android's system gesture zone lives in the
      last strip of the screen, so a control there is not a control — it is a
      swipe that closes the app. This is why the bar is inset and why the stream's
@@ -68,7 +71,7 @@ function TransportButton({ label, glyph, size = 22, box = 32, onClick, style }) 
         event.stopPropagation();
         if (onClick) onClick(event);
       }}
-      className="cg-state cg-focus"
+      className="cg-state cg-focus cg-hit"
       style={{
         display: "grid",
         placeItems: "center",
@@ -216,6 +219,7 @@ export function VideoTransport({
           left: "12px",
           right: "12px",
           bottom: `${inset}px`,
+          minHeight: "var(--touch-target-min)",
           display: "flex",
           alignItems: "center",
           gap: "var(--space-2)",

@@ -20,6 +20,7 @@ What holds:
 - **Uniform for every clip.** Never "controls for long videos, none for short ones": a reader who learns a control on one clip has to find it on the next, and a rule with a threshold is a rule nobody can predict.
 - **The centre slot has three states.** Play, pause, and — once the clip has run out — **Replay**: a detail clip stops at its end rather than looping (*the viewer-grammar close*), and `ended` turns the same slot into the `replay` glyph at the same size.
 - **The timeline is a slider, not a progress bar.** It takes a tap anywhere along it and a drag along it, so it carries the knob and the `slider` role rather than a filled track.
+- **The bar's row is 48px tall** — the ruled target floor. The small glyphs on it keep their drawn size and reach the floor through `cg-hit`, so the timeline keeps the width.
 - **The chrome auto-hides**, and a tap on the video brings it back. Boards draw the revealed state, because a board of the hidden state is a board of a video.
 - **Nothing else.** No fullscreen button (the clip itself opens the viewer), no speed menu, no settings gear.
 - **Times are formatted by the caller.** The component never does arithmetic, so a board and the product can put the same strings in it.
