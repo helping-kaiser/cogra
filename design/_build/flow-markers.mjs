@@ -684,6 +684,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Back</button>", tag: "button" },
     { n: 9, find: 'aria-label="Manage the 3 citations"', tag: "button" },
   ],
+  // The seal at more tags than the row holds (jakob 2026-09-15): the same
+  // eight controls, and the Tags row that has become a door — the References
+  // row beside it is the single reading, which carries no control of its own.
+  ComposeSealTagged: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: ">Sign and publish</button>", tag: "button" },
+    { n: 8, find: ">Back</button>", tag: "button" },
+    { n: 9, find: 'aria-label="Manage the 7 tags"', tag: "button" },
+  ],
   // What that door opens. The board is scanExempt, so only the sheet's own
   // controls and its scrim carry numbers; the three rows' name-buttons share
   // one number and their ×s another, one edge covering each control.
