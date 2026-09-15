@@ -86,6 +86,10 @@ data class ProfileEditUiState(
     val displayNameTooLong: Boolean get() = isDisplayNameTooLong(displayName)
     val bioTooLong: Boolean get() = isBioTooLong(bio)
     val websiteUrlTooLong: Boolean get() = isWebsiteUrlTooLong(websiteUrl)
+
+    /** Save may fire: nothing pending, and no field is over its ruled cap. */
+    val canSubmit: Boolean
+        get() = !submitting && !imagesPending && !displayNameTooLong && !bioTooLong && !websiteUrlTooLong
 }
 
 /**
