@@ -164,6 +164,10 @@ export function FeedView({
   // second raise of the same thread keep what the reader had already unfolded.
   const [commentsPost, setCommentsPost] = useState<PostView | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  // What the raised thread last said its length was, and which post's it is:
+  // one sheet answers whichever count was tapped, so the number it reports
+  // belongs to that card alone and not to whatever card is drawn next.
+  const [liveComments, setLiveComments] = useState<{ id: string; total: number } | null>(null);
 
   // Effect-invoked, so no synchronous setState here; the retry button
   // resets the loading state in its own handler. The fault reflects
@@ -225,7 +229,7 @@ export function FeedView({
     setLoading(true);
     refresh();
   }, [releasePin, refresh]);
-  usePullToRefresh({ host, onPull });
+  usePullToRefresh({ host, onPull, enabled: !commentsOpen });
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasNextPage) return;
@@ -367,7 +371,9 @@ export function FeedView({
               testId={`feed-post-${post.id}`}
               authorTestId={`feed-author-${post.id}`}
               stanceTestId={`feed-stance-${post.id}`}
-              comments={post.comments.totalCount}
+              comments={
+                liveComments?.id === post.id ? liveComments.total : post.comments.totalCount
+              }
               // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
               // edge advances to `ReplyEntry`) — the card's own tap opens the
               // post, which is the different intent.
@@ -434,6 +440,7 @@ export function FeedView({
           onOpenChange={setCommentsOpen}
           post={commentsPost}
           store={store}
+          onCount={(total) => setLiveComments({ id: commentsPost.id, total })}
         />
       )}
     </main>
