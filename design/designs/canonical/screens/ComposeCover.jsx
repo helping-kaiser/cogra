@@ -18,7 +18,10 @@
    THE STRIP IS `CoverRow`, whole: the "Cover" label, the four frames cut from
    the clip, the dashed way out to the gallery, and the line underneath. The
    comment composer and the reply's failed-video board draw the same row, and a
-   fourth spelling of it here is the drift the round exists to end. */
+   fourth spelling of it here is the drift the round exists to end.
+
+   NOTHING IS CHOSEN UNTIL THE AUTHOR PICKS: the ring on the first frame draws
+   what chosen looks like, not a cover the step arrived with. */
 const PREVIEW_WIDTH = 342; // the wizard's 390 less its two 24px gutters
 const CLIP_RATIO = 1; // square — the shape this clip posts at
 
