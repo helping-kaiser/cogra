@@ -73,20 +73,33 @@ export function Screen() {
           </span>
         </div>
 
+        {/* THE POLE WORDS SIT OUTSIDE THE TRACK — the master's ruling (jakob
+            2026-09-15, `StancePad`), which this one-axis field takes rather
+            than patching locally. They were drawn ON the line, which is the
+            one place the dot goes when the value reaches that pole: the word
+            the reader most needs at that moment was the word the dot covered.
+            The gutters hold the words, the track holds the value, and the two
+            never share a pixel. The track narrows by what the words take, so
+            the pad keeps the footprint the sheet was drawn around. */}
         <div
           role="group"
           aria-label="Opinion pad for your own post"
-          style={{ alignSelf: "center", position: "relative", width: 260, height: 72, borderRadius: "var(--radius-large)", background: "var(--surface-container-highest)", touchAction: "none" }}
+          style={{ alignSelf: "center", display: "flex", alignItems: "center", gap: 6 }}
         >
-          <span aria-hidden="true" style={{ position: "absolute", left: 8, right: 8, top: "50%", height: 1, background: "var(--border-hairline)" }} />
-          <span aria-hidden="true" style={{ position: "absolute", left: "50%", top: 8, bottom: 8, width: 1, background: "var(--border-hairline)" }} />
-          <span aria-hidden="true" style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", padding: "0 2px", background: "var(--surface-container-highest)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+          <span aria-hidden="true" style={{ flex: "none", width: 50, textAlign: "right", whiteSpace: "nowrap", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             Against
           </span>
-          <span aria-hidden="true" style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", padding: "0 2px", background: "var(--surface-container-highest)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+          {/* 192, not the earlier 148 — jakob (2026-09-15): the one-axis track
+              was "quite small"; it takes the row's slack, stopping short of
+              pushing the gutter words into the card's sides. */}
+          <span style={{ position: "relative", width: 192, height: 72, borderRadius: "var(--radius-large)", background: "var(--surface-container-highest)", touchAction: "none" }}>
+            <span aria-hidden="true" style={{ position: "absolute", left: 8, right: 8, top: "50%", height: 1, background: "var(--border-hairline)" }} />
+            <span aria-hidden="true" style={{ position: "absolute", left: "50%", top: 8, bottom: 8, width: 1, background: "var(--border-hairline)" }} />
+            <span aria-hidden="true" style={{ position: "absolute", left: "55%", top: "50%", width: 24, height: 24, margin: "-12px 0 0 -12px", borderRadius: "var(--radius-full)", background: "var(--surface-loud)", border: "1px solid var(--on-surface-loud)" }} />
+          </span>
+          <span aria-hidden="true" style={{ flex: "none", width: 50, textAlign: "left", whiteSpace: "nowrap", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             For
           </span>
-          <span aria-hidden="true" style={{ position: "absolute", left: "55%", top: "50%", width: 24, height: 24, margin: "-12px 0 0 -12px", borderRadius: "var(--radius-full)", background: "var(--surface-loud)", border: "1px solid var(--on-surface-loud)" }} />
         </div>
 
         <QuietNote>Your own post always reaches you in full.</QuietNote>

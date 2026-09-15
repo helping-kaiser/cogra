@@ -1070,6 +1070,49 @@ const citedRow = (count) => ({
   openLabel: `Manage the ${count} ${count === 1 ? "citation" : "citations"}`,
 });
 
+/* ── THE SEAL'S TAGS ROW, IN ITS TWO READINGS (jakob's ruling 2026-09-15) ────
+   THE CHIPS ARE THE READING WHILE THEY FIT. Two short names are shorter than
+   the sentence that would count them, and a seal is a read-back: what you
+   signed, in the words you chose. Past what the slot holds the row went on
+   drawing chips the value slot then clipped — two and a half pills beside a
+   count that said seven — which is the same defect `citedRow` closes one row
+   below, arriving from the other direction.
+
+   SO THE OVERFLOW IS THE REFERENCES' SHAPE, not a second invention of it:
+   "7 tags", one line, and the row a DOOR. The seal stays one screen tall at
+   any number of tags, and the count stays checkable — the pair of promises
+   that rule exists for.
+
+   THE NOUN IS THE READER'S. A `#name` is a TAG on screen and a topic in the
+   record (copy-voice.md, *Naming*), so the row counts tags — the word
+   `TopicsLine` already uses where the feed folds a tag list into its
+   remainder, said again on this side of the composer.
+
+   WHERE THE DOOR LEADS IS THE DETAILS STAGE, and it is the one place the two
+   rows do not match: a citation's door opens a sheet OVER the seal, a tag's
+   walks back to where tags are staged, because the compose flow has no
+   staged-tags sheet to open. Wired to the surface that exists rather than
+   inventing the one that would match (backlog item 95). */
+const tagsRow = (count) => ({
+  label: "Tags",
+  value: `${count} tags`,
+  count: String(count),
+  countNoun: "tag",
+  onOpen: () => {},
+  openLabel: `Manage the ${count} ${count === 1 ? "tag" : "tags"}`,
+});
+
+/* What the seal was drawn holding, and what a well-tagged post holds. Spelled
+   once because two states draw them: the row that reads the names back and
+   the row that counts them. */
+const SEAL_TAGS = ["fieldnotes", "coastroad"];
+const SEAL_TAGS_MANY = ["fieldnotes", "coastroad", "saltmaps", "tidal", "estuary", "cartography", "lowtide"];
+
+/* HOW MANY CHIPS THE ROW HOLDS — the capacity of the value slot the card
+   leaves between its 76px label and its count, not a taste. The fold begins
+   where the drawing stops being readable. */
+const TAGS_ROW_HOLDS = 2;
+
 /* The post's staged set past the first, written once: the seal that COUNTS
    these and the sheet that LISTS them are two boards of one moment, and a
    count drawn beside a list it disagreed with would be the very defect this
@@ -1100,7 +1143,7 @@ const REPLY_CITATION = "Tide tables and the third headland";
 
 /* THE POST'S SEAL, whole — `ComposeSeal` itself, and what the opinion pad, the
    license sheet, the sensitive sheet and the "?" dialog stand on. */
-function ComposeSealBody({ cited = 1 }) {
+function ComposeSealBody({ cited = 1, tags = SEAL_TAGS }) {
   return (
     <>
       <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
@@ -1110,17 +1153,20 @@ function ComposeSealBody({ cited = 1 }) {
         <ActsCard
           rows={[
             { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
-            {
-              label: "Tags",
-              value: (
-                <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
-                  <Chip label="#fieldnotes" tone="readout" />
-                  <Chip label="#coastroad" tone="readout" />
-                </span>
-              ),
-              count: "2",
-              countNoun: "tag",
-            },
+            tags.length > TAGS_ROW_HOLDS
+              ? tagsRow(tags.length)
+              : {
+                  label: "Tags",
+                  value: (
+                    <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
+                      {tags.map((tag) => (
+                        <Chip key={tag} label={`#${tag}`} tone="readout" />
+                      ))}
+                    </span>
+                  ),
+                  count: String(tags.length),
+                  countNoun: "tag",
+                },
             cited > 1
               ? citedRow(cited)
               : {
@@ -1138,7 +1184,7 @@ function ComposeSealBody({ cited = 1 }) {
                   count: "1",
                 },
           ]}
-          total={`${3 + cited} things, signed together`}
+          total={`${1 + tags.length + cited} things, signed together`}
           note="They land together, or none does."
         />
 
@@ -1214,7 +1260,7 @@ function ReplyPadBody() {
           </span>
         </div>
 
-        <div role="group" aria-label="Opinion pad for the post you answer" style={{ alignSelf: "center", width: 240 }}>
+        <div role="group" aria-label="Opinion pad for the post you answer" style={{ alignSelf: "stretch" }}>
           <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
         </div>
 

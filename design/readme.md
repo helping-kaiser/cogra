@@ -265,10 +265,7 @@ roles; 600–700 exist in the variable file for emphasis.
 A **4px base grid**. The web client's actual numbers: screen gutter
 24px, screen stack gap 16px, card padding 16px, card inner gap 12px,
 list gap 12px, content column `max-width: 42rem` centred. Touch targets
-never below **48px**, the stance control's resting state included —
-the platform accessibility floor (48dp on Android; the web meets it at
-the same number), confirmed as the ruled minimum for every interactive
-control (jakob, 2026-09-15).
+never below **48px**, the stance control's resting state included.
 
 Fixed elements: the bottom bar (64px, `surfaceContainer`, hairline top
 border, `env(safe-area-inset-bottom)` padding) and the collapsing top
@@ -5394,6 +5391,59 @@ inherited. Ruled by jakob the same day.
   them, `ApplicantRejected` joining the origin lists every shell board
   with a post card and a bar belongs to — the way `FeedUnread` did —
   and no existing flow rerouted a single step.
+### The seal's tags and the pad's words — 2026-09-15
+
+Three defects of the same kind: a drawing that stops being true at the
+edge of what it was drawn for.
+
+- **THE SEAL'S TAGS ROW COUNTS WHEN THE CHIPS STOP FITTING.** jakob:
+  "i just noticed that our boards dont have a design for the seal with
+  more tag chips (so that the row is to full). please have it the same
+  as with references i guess?" The row drew chips into a slot that
+  clips them, so a well-tagged post read as two and a half pills beside
+  a count saying seven. Past what the row holds it now takes the
+  References row's own shape — **"7 tags"**, one line, the row a door
+  named **`Manage the 7 tags`**, the count folded into the name because
+  an `aria-label` replaces everything inside the box it names. The noun
+  is the reader's: a `#name` is a tag on screen and a topic in the
+  record. `ComposeSealTagged` draws the state; every seal drawing tags
+  through the shared body carries the rule. Where the door LEADS is the
+  one place the two rows disagree — a citation's opens a sheet over the
+  seal, a tag's walks back to the details stage, the composer having no
+  staged-tags sheet to open (backlog item 95). That the system now
+  folds a tag list two ways — the feed's line keeps what fits and
+  counts the rest — is item 96.
+- **THE PAD'S POLE WORDS LEAVE THE FIELD.** jakob: "the words 'against'
+  and 'for' are on the axis... we either have to make it so the dot is
+  clearly visible and looks nice even when below the words or we need
+  to move them of the axis." They sat at the four edge midpoints, which
+  is exactly where the knob goes when the value reaches that pole, and
+  the knob is an opaque disc drawn after them: at the top pole the word
+  disappeared under it whole. Making the knob read better cannot fix
+  that — the drawn field IS the value space (§8.3), so the knob travels
+  every point a word could occupy, and inside the field any word is
+  reachable. The words take gutters around the field and nothing but
+  dead ground stays inside it. The component sizes the field to what
+  the ring leaves, so a caller places one box; the hand-drawn one-axis
+  field on `ComposePad` follows the same rule rather than patching
+  itself.
+- **AND THE PICKED VIDEO CAN BE TAKEN BACK.** jakob: "i can remove
+  images but not the video if i want to change my choice." The pick
+  step's tray always carried the clip's ×; the DETAILS stage did not,
+  by a ruling that a clip is read-only there and the pick step is one
+  Back away. A picture leaves the post from that same stage through the
+  row that opens its manager, so the asymmetry was real: what an author
+  most wants to revise is which clip. The tile now wears the tray's own
+  × — one gesture for one item, no Show all sheet, because one clip is
+  not a set — and it gives back the step that takes picks.
+- **The gate**: boards **195 → 196** (`ComposeSealTagged`), edges
+  **1466 → 1476** — nine for the new seal, one for the clip's × — gaps
+  hold at **14**, flows hold at **63/61/2** with **2** journey-stopping.
+  The compose canvas moves **78 → 79/200 files** (61% headroom).
+  Reachable filter summaries hold at **370**, **0** over the band's
+  154px, widest unchanged at `Chats · text · + removed`, 153.9px. Ten
+  pad boards re-render on the field's new anatomy and no seal but the
+  new one moves a byte.
 
 ### The re-review — 2026-09-15
 
