@@ -5,9 +5,12 @@ import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 /* The borrowed-view band (readme §13). A guest or applicant feed shows a
    borrowed vantage point, because a viewer with no outgoing stances has no
    view of their own. The vantage resolves to the most specific actor the
-   arrival carries — the inviter's for an invite-link visitor, their own
-   inviter's for an applicant, and the genesis moderator's for a bare arrival,
-   strictly as the fallback. The borrowed view is ALWAYS named, and this band
+   arrival carries — the ISSUER's for anyone who came through an invite link,
+   visitor and applicant alike, and the genesis moderator's for a bare
+   arrival, strictly as the fallback. The rung is the link and not a vouch:
+   nobody has vouched for an applicant yet, which is what the applicant days
+   ARE, so the only actor their arrival carries is whoever's link they came
+   through. The borrowed view is ALWAYS named, and this band
    is the naming: it rides the collapsing top in place of the guest notice
    (which it subsumes), says whose view this is, and carries the one
    sign-in-or-join entry. The label is what makes the borrowed view honest
