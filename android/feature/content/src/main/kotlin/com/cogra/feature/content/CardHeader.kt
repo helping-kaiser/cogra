@@ -35,6 +35,9 @@ import java.time.Instant
  *
  * @param at when the node was authored; drawn as a compact age.
  * @param menu the overflow's rows, or empty for no ⋮ at all.
+ * @param stacked the menu opens over another sheet rather than the plain
+ *   page — the comment card's, over the comments thread (`CommentMenu.jsx`,
+ *   design/readme.md:2364).
  */
 @Composable
 internal fun ContentCardHeader(
@@ -46,6 +49,7 @@ internal fun ContentCardHeader(
     now: Instant = Instant.now(),
     menu: List<MenuRow> = emptyList(),
     menuContentDescription: String = "",
+    stacked: Boolean = false,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -76,6 +80,7 @@ internal fun ContentCardHeader(
             items = menu,
             contentDescription = menuContentDescription,
             testTag = "${testTagPrefix}_menu",
+            stacked = stacked,
         )
     }
 }

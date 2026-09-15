@@ -44,6 +44,7 @@ export function OverflowMenu({
   ariaLabel,
   testId,
   trailing,
+  stacked = false,
 }: {
   items: readonly MenuItem[];
   /** What the trigger and the sheet are both called, e.g. "More on this post". */
@@ -51,6 +52,13 @@ export function OverflowMenu({
   testId: string;
   /** The dialogs and sheets the rows open, mounted beside the menu. */
   trailing?: ReactNode;
+  /**
+   * This menu opens over another sheet rather than over the page — the
+   * comment's ⋮ over the comments thread (`CommentMenu.jsx`, design/readme.md:2364).
+   * A menu whose presenter is the plain page (a post's own ⋮, a feed card's)
+   * stays unstacked.
+   */
+  stacked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -78,6 +86,7 @@ export function OverflowMenu({
         title={ariaLabel}
         titleHidden
         testId={`${testId}-sheet`}
+        stacked={stacked}
       >
         <div className="flex flex-col">
           {items.map((item) => (

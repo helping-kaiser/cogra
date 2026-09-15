@@ -192,6 +192,11 @@ fun PostDetailScreen(
     // one sheet for the screen, raised by whichever menu row asked for it —
     // the post's own or any comment's.
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
+    // The post's row raises it over the page; a comment's raises it over the
+    // comments thread — a sheet over a sheet, `stacked`
+    // (`CommentLicense.jsx`, design/readme.md:2364). The one mount below
+    // answers for whichever menu asked, so this tracks which case it was.
+    var licenseStacked by remember { mutableStateOf(false) }
     var removeOpen by remember { mutableStateOf(false) }
     // SAVED, not merely remembered: the composer and the comment editor are
     // their own destinations, so the thread is left and re-entered rather than
@@ -237,7 +242,11 @@ fun PostDetailScreen(
                         onEdit = onEdit,
                         onCite = onReference,
                         onRemove = { removeOpen = true },
-                        onLicense = { licenseShown = it },
+                        // Over the page — never stacked.
+                        onLicense = { license ->
+                            licenseShown = license
+                            licenseStacked = false
+                        },
                     )
                 },
             )
@@ -356,13 +365,17 @@ fun PostDetailScreen(
             onOpenActor = onOpenActor,
             onOpenTopic = onOpenTopic,
             onReference = onReference,
-            onLicense = { licenseShown = it },
+            // Over the comments thread's own sheet — stacked.
+            onLicense = { license ->
+                licenseShown = license
+                licenseStacked = true
+            },
             onSignInOrJoin = onSignInOrJoin,
             stanceControl = stanceControl,
         )
     }
     licenseShown?.let { license ->
-        LicenseSheet(license = license, onDismiss = { licenseShown = null })
+        LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = licenseStacked)
     }
     // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
     // slice 8's, whole — "we need to do erasure right so it should be one
@@ -382,6 +395,9 @@ fun PostDetailScreen(
  * A REMOVED POST HAS NO MENU LEFT — back is the whole header
  * (`Removed.jsx:5-6`). There is nothing of it to edit, cite or license, and
  * the skeleton that holds the thread's place is not a thing a reader keeps.
+ *
+ * It lives in the top bar, over the plain page — never over the comments
+ * thread — so it stays unstacked, unlike the comment's own menu.
  */
 @Composable
 private fun DetailMenu(
@@ -963,6 +979,10 @@ private fun CommentThread(
                         onLicense = { onLicense(comment.license) },
                     ),
                     menuContentDescription = stringResource(R.string.content_menu_comment),
+                    // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`):
+                    // the thread already lives in a sheet, so this menu is a
+                    // sheet on a sheet (design/readme.md:2364).
+                    stacked = true,
                 )
                 // A comment is text **plus** optional media (D16),
                 // so its body is never the exclusive-or a post's

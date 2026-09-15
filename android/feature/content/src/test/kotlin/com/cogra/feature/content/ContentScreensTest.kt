@@ -993,6 +993,53 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_menu_hide_c1").assertDoesNotExist()
     }
 
+    // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the thread
+    // already lives in a sheet, so the comment's own menu is a sheet on a
+    // sheet — both stand at once (design/readme.md:2364). The tonal rung
+    // itself is pinned in SheetContainerColorTest; this pins the mount.
+    @Test
+    fun theCommentsMenuStandsOverTheThreadsOwnSheet() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        openComments()
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("comment_c1_menu_sheet").assertExists()
+    }
+
+    // The post's own menu opens over the plain page — no sheet stands
+    // beneath it, so it never stacks (design/readme.md:2364).
+    @Test
+    fun thePostsOwnMenuOpensOverThePageAlone() {
+        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("detail_menu_sheet").assertExists()
+    }
+
+    // ONE SHEET, TWO MENUS (`CommentLicense.jsx:9-10`): raised from a
+    // comment's row it comes up over the thread, still a sheet on a sheet.
+    @Test
+    fun aCommentsLicenseComesUpOverTheThreadsOwnSheet() {
+        renderDetail(
+            PostDetailUiState(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        openComments()
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comment_menu_license_c1").performClick()
+        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("license_sheet_terms").assertExists()
+    }
+
     // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination
     // is not built yet stands and does nothing.
     @Test
