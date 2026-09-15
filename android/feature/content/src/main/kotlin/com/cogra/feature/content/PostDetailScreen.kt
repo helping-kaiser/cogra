@@ -28,6 +28,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -116,10 +117,23 @@ fun PostDetailRoute(
             viewModel.refresh()
         }
     }
+    // THE PULL REACHES BOTH OWNERS. The thread is the sheet's and the count
+    // on the affordance row is this screen's, so one re-pull has to say so
+    // twice — otherwise the reader pulls, opens the thread, and reads the
+    // page from before the pull.
+    var threadToken by remember { mutableIntStateOf(0) }
+    // …and a reply landing changes the POST's own comment count, which is
+    // read with the post rather than with the thread.
+    LaunchedEffect(commentsReturn.landed) {
+        if (commentsReturn.landed) viewModel.refresh()
+    }
     PostDetailScreen(
         state = state,
         viewerId = viewerId,
-        onRefresh = viewModel::refresh,
+        onRefresh = {
+            threadToken++
+            viewModel.refresh()
+        },
         onReveal = viewModel::onReveal,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
@@ -149,6 +163,7 @@ fun PostDetailRoute(
                 onDepart = onCommentsDepart,
                 commentsReturn = commentsReturn,
                 onReturnConsumed = onCommentsReturnConsumed,
+                refreshToken = threadToken,
                 stanceControl = { target, tag ->
                     StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
                 },

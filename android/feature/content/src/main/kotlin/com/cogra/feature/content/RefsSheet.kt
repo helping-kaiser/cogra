@@ -91,6 +91,22 @@ internal fun RefsSheet(
     onOpenPost: (String) -> Unit,
     testTagPrefix: String,
 ) {
+    // THE SHEET IS THE DOOR, NOT THE DESTINATION — `CograOverflowMenu`'s own
+    // rule, which this sheet did not keep. Its opener remembers `refsOpen`
+    // across the trip (`rememberSaveable`), so a row that navigated while the
+    // sheet was still open left it open: Back restored the surface AND raised
+    // the sheet over it again, with no way out but a second Back. Dropping
+    // the sheet as the row acts is what makes Back land where the reader
+    // opened it from.
+    val leaving: ((String) -> Unit) -> (String) -> Unit = { go ->
+        { id ->
+            onDismiss()
+            go(id)
+        }
+    }
+    val openTopic = leaving(onOpenTopic)
+    val openActor = leaving(onOpenActor)
+    val openPost = leaving(onOpenPost)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -116,7 +132,7 @@ internal fun RefsSheet(
                     item { SectionLabel(stringResource(R.string.content_refs_section_tags)) }
                 }
                 items(topics, key = { it.hashtag.id }) { claim ->
-                    TagRow(claim, onOpenTopic, testTagPrefix)
+                    TagRow(claim, openTopic, testTagPrefix)
                 }
                 if (references.isNotEmpty()) {
                     item {
@@ -124,7 +140,7 @@ internal fun RefsSheet(
                     }
                 }
                 items(references, key = { it.targetId }) { claim ->
-                    ReferenceRow(claim, onOpenActor, onOpenPost, testTagPrefix)
+                    ReferenceRow(claim, openActor, openPost, testTagPrefix)
                 }
             }
         }
