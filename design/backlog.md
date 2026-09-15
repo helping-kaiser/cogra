@@ -2722,3 +2722,18 @@ Three ways out, each a ruling: the arrow becomes history after all (and
 the label with it), the page carries the label its route gives it, or
 the skip is accepted as the cost of a link. The tag round's reasoning
 for a link is real and this round did not disturb it.
+
+### 83 · The viewer grammar's two unrecorded rulings · *design* · **ruled + recorded**
+
+Filed 2026-09-15, after the census fabric closed with both rulings
+living only in its working log. The topic round's ruling 9
+(2026-09-14): a detail clip stops at its end with replay while a feed
+clip loops — jakob: "it also seperates once again from vertical videos
+that are to be watched in the reel scroller. (we have reels (insta)
+and videos (yt) in one platform and they are different medias so i
+think the sharp differences are good)". And the third blessing batch
+(2026-09-15): the pinned clip's chrome tap stays platform-native — web
+reveal-then-open under auto-hide, android direct — ruled deliberate
+when the implementation loop queued the asymmetry as a question. Both
+now stand in the readme's *viewer-grammar close*; nothing is drawn
+differently.
