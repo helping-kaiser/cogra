@@ -277,14 +277,25 @@ never an account fact (see the doc intro).
 
 When an authenticated actor generates an invite link, the server
 writes one `auth_invite_links` row
-([data-model.md](data-model.md)) carrying the inviter's identity,
-their **pre-filled** stance values, and the link's expiry. The
-link URL carries only the row id. Nothing binds at this point:
-the values are a suggestion the inviter can adjust at approval,
-and the approval itself is the priced act. Links are time-gated
-and, at the inviter's choice, single-use (one applicant slot) or
-multi-use (many applicants until expiry); the inviter can revoke
-a link at any time.
+([data-model.md](data-model.md)) carrying the inviter's identity
+and the link's expiry. The link URL carries only the row id.
+Nothing binds at this point, and the row carries no stance
+values: the inviter chooses them at approval, which is the priced
+act. Links are single-use (one applicant slot) unless the inviter
+opens them to multi-use (many applicants until expiry).
+
+**Expiry is the inviter's choice, with a floor worth respecting.**
+A link shorter than 24 hours can strand a registrant who is still
+verifying, since their own account expires on that clock
+("Expiry" below) — clients keep their presets at or above it.
+
+**Revocation stops new staging only.** Revoking a link sets
+`revoked_at`: no further applicant can register through it, and
+applications already staged stay approvable — the inviter's queue
+is not a consequence of the link still being live. Closing one of
+those applications is its own gesture (`rejectApplication`,
+[api-spec.md](api-spec.md)), never a side effect of revoking the
+link they arrived through.
 
 ### Link URLs
 
@@ -348,16 +359,28 @@ them).
 An application is **approvable** once the email is verified and
 a key is attached — the server enforces both at approval. The
 two proofs are independent; the app can run steps 3 and 4 in
-either order.
+either order. That transition is what notifies the inviter
+([notifications.md](notifications.md)): before it there is
+nothing for them to act on.
 
 **Expiry.** A never-verified account expires 24 hours after
 registration: the reaper deletes it — credentials, application,
 any uploaded backup — and frees the handle. Once verified, the
 account persists: a verified-but-never-approved applicant keeps
 their login indefinitely. The application row, not the account,
-is bounded by its link's expiry; a fresh invite link re-arms an
-expired application (`applyWithInvite`,
+is bounded by its link's expiry; a fresh invite link re-arms a
+closed application (`applyWithInvite`,
 [api-spec.md](api-spec.md)) without touching the account.
+
+**Rejection.** The inviter may close a staged application instead
+of approving it (`rejectApplication`, [api-spec.md](api-spec.md)),
+for applications in their own queue only. It sets `rejected_at`
+and ends the application the way expiry does — the row stays, the
+account persists with its login, its reads and its attached key,
+and a fresh invite link re-arms it through the ordinary
+`applyWithInvite` path. Nothing is deleted. Because it forecloses
+a join, the gesture is destructive in the product sense: clients
+ask for an explicit confirmation before sending it.
 
 An applicant can already **read** — the shared graph is public —
 but cannot act. Approval latency is a UX cost, not a correctness
@@ -375,9 +398,9 @@ advances the application runs app-scoped, above any one screen.
 
 ### Approval and landing
 
-The inviter approves per applicant or in batches, adjusting the
-pre-filled stance values if they choose. Approval is the
-deliberate, priced act that commits the inviter's vouch; the
+The inviter approves per applicant or in batches, choosing the
+stance values their Opinion carries as part of the act. Approval
+is the deliberate, priced act that commits the inviter's vouch; the
 backend then runs the admission sequence:
 
 1. **Funding** — the community-funded L0 burn to the applicant's
@@ -877,5 +900,7 @@ require.
   time.
 - [api-spec.md](api-spec.md) — the GraphQL auth & account
   mutations that consume the flows specified here.
+- [notifications.md](notifications.md) — the invite-flow kinds
+  the application lifecycle fires.
 - [open-questions.md Q15](../open-questions.md) — federation
   reconciliation.
