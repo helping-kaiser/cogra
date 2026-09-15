@@ -22,9 +22,11 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
 import com.cogra.network.graphql.CommentStanceQuery
+import com.cogra.network.graphql.HashtagStanceQuery
 import com.cogra.network.graphql.PostStanceQuery
 import com.cogra.network.graphql.PrepareSeveranceMutation
 import com.cogra.network.graphql.ProfileStanceQuery
@@ -42,6 +44,10 @@ import javax.inject.Singleton
  * Which stance-able root answered for a target id. The declaration
  * order is the probe order: a post is what a feed is made of, so it is
  * asked first.
+ *
+ * A topic is deliberately absent. This enum answers "which root holds
+ * this OPAQUE id", and a topic has no id in the question — it is
+ * addressed by name, which names its root outright.
  */
 private enum class TargetKind { POST, COMMENT, USER }
 
@@ -73,10 +79,13 @@ class StanceRepositoryImpl @Inject constructor(
      * reciprocation gesture stages its stance through the same call, and
      * one mutation deserves one implementation.
      */
-    override suspend fun prepareStance(target: String, pick: StancePair): Outcome<List<PreparedWriteView>> =
-        writes.prepareStance(target, pick.pDirected, pick.pInterest)
+    override suspend fun prepareStance(target: StanceTarget, pick: StancePair): Outcome<List<PreparedWriteView>> =
+        when (target) {
+            is StanceTarget.Node -> writes.prepareStance(target.id, pick.pDirected, pick.pInterest)
+            is StanceTarget.Topic -> writes.prepareTopicStance(target.name, pick.pDirected, pick.pInterest)
+        }
 
-    override suspend fun standing(target: String, includePending: Boolean): Outcome<StanceStanding> =
+    override suspend fun standing(target: StanceTarget, includePending: Boolean): Outcome<StanceStanding> =
         bundle(target, pick = null, includePending = includePending).map { fold ->
             StanceStanding(
                 target = target,
@@ -88,7 +97,7 @@ class StanceRepositoryImpl @Inject constructor(
         }
 
     override suspend fun projection(
-        target: String,
+        target: StanceTarget,
         pick: StancePair,
         includePending: Boolean,
     ): Outcome<StanceProjection> =
@@ -113,7 +122,7 @@ class StanceRepositoryImpl @Inject constructor(
             )
         }
 
-    override suspend fun severanceQuote(target: String, includePending: Boolean): Outcome<SeveranceQuote> =
+    override suspend fun severanceQuote(target: StanceTarget, includePending: Boolean): Outcome<SeveranceQuote> =
         bundle(target, pick = null, includePending = includePending).map { fold ->
             SeveranceQuote(
                 target = target,
@@ -129,8 +138,17 @@ class StanceRepositoryImpl @Inject constructor(
      * each its own priced act — the batch the confirm surface quoted,
      * handed to the signer in one go.
      */
-    override suspend fun prepareSeverance(target: String): Outcome<List<PreparedWriteView>> = guard.run {
-        client.mutation(PrepareSeveranceMutation(PrepareSeveranceInput(target = Optional.present(target))))
+    override suspend fun prepareSeverance(target: StanceTarget): Outcome<List<PreparedWriteView>> = guard.run {
+        // `PrepareSeveranceInput` is exactly-one-of, and the domain type
+        // is what makes the other field's absence structural rather than
+        // remembered: a topic is unfollowed by NAME — "unfollowing is
+        // severance toward the Type" — and there is no id to send even
+        // where one would be accepted.
+        val input = when (target) {
+            is StanceTarget.Node -> PrepareSeveranceInput(target = Optional.present(target.id))
+            is StanceTarget.Topic -> PrepareSeveranceInput(topicName = Optional.present(target.name))
+        }
+        client.mutation(PrepareSeveranceMutation(input))
             .payloadOutcome({ it.prepareSeverance.userErrors.map { e -> e.userErrorFields } }) {
                 it.prepareSeverance.writes?.map { w -> w.preparedWriteFields.toDomain() }
             }
@@ -146,20 +164,33 @@ class StanceRepositoryImpl @Inject constructor(
      * every read after it is a single document.
      */
     private suspend fun bundle(
-        target: String,
+        target: StanceTarget,
         pick: StancePair?,
         includePending: Boolean,
     ): Outcome<StanceBundleFields> = guard.run {
         val picked = Optional.presentIfNotNull(
             pick?.let { StancePickInput(it.pDirected, it.pInterest) },
         )
-        for (kind in kinds[target]?.let { listOf(it) } ?: TargetKind.entries) {
-            when (val read = ask(kind, target, picked, includePending)) {
+        // A name carries its own root, so the topic read is the one
+        // document and the probe below never runs for it. The probe is a
+        // consequence of an OPAQUE id, not of stance-ability.
+        if (target is StanceTarget.Topic) {
+            return@run when (val read = askTopic(target.name, picked, includePending)) {
+                is Outcome.Failed -> Outcome.Failed(read.cause)
+                is Outcome.Refused -> Outcome.Refused(read.errors)
+                is Outcome.Success -> read.value?.let { answer ->
+                    answer.bundle?.let { Outcome.Success(it) } ?: unauthenticatedRefusal()
+                } ?: notFound()
+            }
+        }
+        val id = (target as StanceTarget.Node).id
+        for (kind in kinds[id]?.let { listOf(it) } ?: TargetKind.entries) {
+            when (val read = ask(kind, id, picked, includePending)) {
                 is Outcome.Failed -> return@run Outcome.Failed(read.cause)
                 is Outcome.Refused -> return@run Outcome.Refused(read.errors)
                 is Outcome.Success -> {
                     val answer = read.value ?: continue
-                    kinds[target] = kind
+                    kinds[id] = kind
                     // A node that answered with a null bundle has an
                     // unauthenticated reader behind it, or one with no
                     // actor on the graph. The first is the common case
@@ -173,9 +204,25 @@ class StanceRepositoryImpl @Inject constructor(
         // Either the id names nothing stance-able, or a remembered
         // class went stale under a vanished node — forget it so the
         // next read probes again.
-        kinds.remove(target)
-        Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "no such stance target", listOf("target"))))
+        kinds.remove(id)
+        notFound()
     }
+
+    private fun <T> notFound(): Outcome<T> =
+        Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "no such stance target", listOf("target"))))
+
+    /**
+     * The topic's own root. `hashtag(name:)` resolves any well-formed
+     * name — a Type is anchored vacuously, so a topic nobody has tagged
+     * yet still answers — and a null here means the name is one the
+     * substrate cannot carry, not an empty bundle.
+     */
+    private suspend fun askTopic(
+        name: String,
+        pick: Optional<StancePickInput?>,
+        includePending: Boolean,
+    ): Outcome<RootAnswer?> = client.query(HashtagStanceQuery(name, pick, includePending)).fetch()
+        .map { data -> data.hashtag?.let { RootAnswer(it.viewerStance?.stanceBundleFields) } }
 
     /** One root's answer, or null where that root does not hold the id. */
     private suspend fun ask(
