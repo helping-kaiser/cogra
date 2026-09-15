@@ -58,6 +58,7 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.content.reply.ReplyTargetKind
@@ -127,7 +128,7 @@ fun PostDetailRoute(
         onReference = onReference,
         onShare = { id -> context.sharePost(viewModel.shareUrl(id)) },
         onBack = onBack,
-        stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
+        stanceControl = { target, tag -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag) },
         commentsSheet = { onDismiss ->
             CommentsSheetRoute(
                 postId = postId,
@@ -149,7 +150,7 @@ fun PostDetailRoute(
                 commentsReturn = commentsReturn,
                 onReturnConsumed = onCommentsReturnConsumed,
                 stanceControl = { target, tag ->
-                    StanceControlRoute(target = target, testTagPrefix = tag)
+                    StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
                 },
             )
         },
