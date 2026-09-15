@@ -50,12 +50,11 @@ fun centredWindow(width: Int, height: Int, targetRatio: Float): FloatArray {
 const val RATIO_SLACK = 0.02f
 
 /** Whether [ratio] is [targetRatio], allowing for the rounding. */
-fun isAtRatio(ratio: Float, targetRatio: Float): Boolean =
-    ratio.isFinite() &&
-        targetRatio.isFinite() &&
-        ratio > 0f &&
-        targetRatio > 0f &&
-        abs(ratio - targetRatio) <= RATIO_SLACK * targetRatio
+fun isAtRatio(ratio: Float, targetRatio: Float): Boolean {
+    if (!ratio.isFinite() || ratio <= 0f) return false
+    if (!targetRatio.isFinite() || targetRatio <= 0f) return false
+    return abs(ratio - targetRatio) <= RATIO_SLACK * targetRatio
+}
 
 /**
  * The largest [targetRatio] rectangle inside [rect], centred on it.
@@ -78,11 +77,13 @@ fun isAtRatio(ratio: Float, targetRatio: Float): Boolean =
 fun atTargetRatio(rect: FloatArray, targetRatio: Float): FloatArray {
     val wide = rect[2] - rect[0]
     val high = rect[3] - rect[1]
-    if (wide <= 0f || high <= 0f || !targetRatio.isFinite() || targetRatio <= 0f) return rect
-    if (isAtRatio(wide / high, targetRatio)) return rect
+    if (wide <= 0f || high <= 0f) return rect
+    if (!targetRatio.isFinite() || targetRatio <= 0f) return rect
+    val ratio = wide / high
+    if (isAtRatio(ratio, targetRatio)) return rect
 
-    val fitWide = if (wide / high > targetRatio) high * targetRatio else wide
-    val fitHigh = if (wide / high > targetRatio) high else wide / targetRatio
+    val fitWide = if (ratio > targetRatio) high * targetRatio else wide
+    val fitHigh = if (ratio > targetRatio) high else wide / targetRatio
     val centreX = (rect[0] + rect[2]) / 2f
     val centreY = (rect[1] + rect[3]) / 2f
     return floatArrayOf(
