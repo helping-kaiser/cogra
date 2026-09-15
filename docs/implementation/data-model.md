@@ -1200,13 +1200,14 @@ CREATE TABLE auth_applications (
     invite_link_id  UUID        REFERENCES auth_invite_links(id),
     ask_link_id     UUID        REFERENCES auth_ask_links(id),
     approved_at     TIMESTAMPTZ,
-    -- The approver's standalone close (auth.md "Rejection") — set
-    -- instead of approved_at, never by a link's revocation.
+    -- The approver's own close, of this row or of the link's whole
+    -- waiting queue (auth.md "Rejection") — set instead of
+    -- approved_at, never by a link's revocation.
     rejected_at     TIMESTAMPTZ,
     landed_at       TIMESTAMPTZ,
     -- Latched derived cache of an L1 fact: set when the record
     -- mirror confirms the joiner's reciprocal Opinion toward the
-    -- inviter (auth.md "Reciprocation is the joiner's own act").
+    -- approver (auth.md "Reciprocation is the joiner's own act").
     -- The accepted back-edge is permanent (invitations.md §2), so
     -- the latch cannot diverge; rebuildable from the mirror.
     reciprocated_at TIMESTAMPTZ,
