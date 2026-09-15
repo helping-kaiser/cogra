@@ -265,7 +265,10 @@ roles; 600–700 exist in the variable file for emphasis.
 A **4px base grid**. The web client's actual numbers: screen gutter
 24px, screen stack gap 16px, card padding 16px, card inner gap 12px,
 list gap 12px, content column `max-width: 42rem` centred. Touch targets
-never below **48px**, the stance control's resting state included.
+never below **48px**, the stance control's resting state included —
+the platform accessibility floor (48dp on Android; the web meets it at
+the same number), confirmed as the ruled minimum for every interactive
+control (jakob, 2026-09-15).
 
 Fixed elements: the bottom bar (64px, `surfaceContainer`, hairline top
 border, `env(safe-area-inset-bottom)` padding) and the collapsing top
