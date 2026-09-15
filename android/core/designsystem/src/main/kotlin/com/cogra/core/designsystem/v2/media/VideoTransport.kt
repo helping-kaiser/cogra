@@ -21,14 +21,13 @@ import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -178,9 +177,16 @@ private fun CentreCluster(
             onClick = { onSkip(-VideoStage.SKIP_MS) },
             testTag = "video_rewind",
         )
-        // PLAY · PAUSE · REPLAY — three states, three glyphs. The end of a clip
-        // that does not loop is a state of its own, and the control there offers
-        // to start it again rather than to resume it.
+        // PLAY · PAUSE · REPLAY. The end of a clip that does not loop is a state
+        // of its own, and the press there starts the clip again rather than
+        // resuming it — so the control SAYS so, which is what the labels in this
+        // transport are for ("labelled by what the press does, not by what the
+        // clip is doing").
+        //
+        // THE GLYPH STAYS THE PLAY ARROW, and that is a gap rather than a
+        // choice: `VideoControls.jsx` draws two states, and `Icon.jsx` holds no
+        // replay glyph to draw a third with. Exporting one is the design's call,
+        // not this lane's — raised for the design relay 2026-09-15.
         TransportButton(
             label = stringResource(
                 when {
@@ -189,11 +195,7 @@ private fun CentreCluster(
                     else -> R.string.designsystem_video_play
                 },
             ),
-            glyph = when {
-                playing -> Icons.Filled.Pause
-                ended -> Icons.Filled.Replay
-                else -> Icons.Filled.PlayArrow
-            },
+            glyph = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
             box = PLAY_DIAMETER,
             glyphSize = PLAY_GLYPH,
             plate = MediaOverlay.TransportPlate,

@@ -41,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.PlayerSurface
 import androidx.media3.ui.compose.state.rememberPresentationState
 import androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval
@@ -172,7 +173,6 @@ fun VideoPlayer(
     chromeInsets: PaddingValues = PaddingValues(0.dp),
     testTag: String? = null,
 ) {
-    val context = LocalContext.current
     val muted by VideoSound.muted.collectAsState()
     var playing by remember { mutableStateOf(false) }
     var ended by remember { mutableStateOf(false) }
@@ -189,60 +189,12 @@ fun VideoPlayer(
     // the detail continues from where the feed had it instead of
     // starting a second decoder at zero. See [VideoStage].
     val token = remember(url) { Any() }
-
-    // Claiming the stage is a side effect, so it happens after the
-    // composition that asked for it rather than inside it — the surface
-    // entering last is the one that ends up showing.
     val traced = remember(url) { VideoTrace.clip(url) }
-
-    // Tied to the lifecycle rather than to composition alone: the stage
-    // gives the decoder back when the app goes to the background
-    // ([VideoStageLifecycle]), and a surface still composed behind that
-    // has to ask for a player again when the app comes back — otherwise
-    // it sits on its poster forever, holding a token for a player that
-    // no longer exists.
-    LifecycleStartEffect(url, token) {
-        VideoStage.claim(context, url, token)
-        VideoStage.holding?.player?.let {
-            VideoTrace.handover(traced, "claimed", it.currentPosition, it.isPlaying)
-        }
-        onStopOrDispose {
-            // The player outlives this surface — surrendering is what
-            // hands it on, and releasing it here is what used to make
-            // the next screen start over.
-            VideoStage.holding?.player?.let {
-                VideoTrace.handover(traced, "surrender", it.currentPosition, it.isPlaying)
-            }
-            VideoStage.surrender(token)
-        }
-    }
-
-    // THE WAY BACK FROM A SURFACE THAT TOOK THE CLIP AND THEN LEFT (jakob
-    // 2026-09-15, hand test: returning from the fullscreen viewer left the
-    // detail's pinned clip a black box with no transport at all).
-    //
-    // The viewer claims the stage on the way in and surrenders on the way out,
-    // which leaves the clip on stage with NO OWNER. The detail's surface never
-    // stopped being composed, so its `LifecycleStartEffect` — keyed on the url
-    // and the token, over a lifecycle that never stopped — does not run again:
-    // it goes on holding a token the stage no longer recognises, `playerFor`
-    // answers null, the `PlayerSurface` has nothing bound to draw, and the
-    // transport is not drawn at all because there is no player to drive it.
-    //
-    // An unowned stage is a claim waiting to be made by whoever is still
-    // composed and still showing this clip. Claiming the clip already on stage
-    // keeps the very same player — no prepare, no seek — so what this costs is
-    // a token swap, and what it buys is the clip coming back alive where the
-    // reader left it.
-    val unowned = VideoStage.holding?.let { it.url == url && it.owner == null } == true
-    LaunchedEffect(unowned, url, token) {
-        if (unowned) VideoStage.claim(context, url, token)
-    }
 
     // Read from the stage rather than held: a second clip taking the
     // stage releases this one's player, and a surface holding its own
     // reference would go on talking to a released instance.
-    val player = VideoStage.playerFor(token, url)
+    val player = borrowFromStage(url, token, traced)
 
     // Whether the clip this surface is for is the one on stage — asked
     // separately from owning it, because during a navigation both
@@ -444,6 +396,59 @@ fun VideoPlayer(
             }
         }
     }
+}
+
+/**
+ * The player this surface may bind, borrowed from [VideoStage] — and the two
+ * effects that keep the borrowing honest.
+ *
+ * **Claiming is tied to the lifecycle rather than to composition alone.** The
+ * stage gives the decoder back when the app goes to the background
+ * ([VideoStageLifecycle]), and a surface still composed behind that has to ask
+ * for a player again when the app comes back — otherwise it sits on its poster
+ * forever, holding a token for a player that no longer exists. Claiming is a
+ * side effect, so it happens after the composition that asked for it: the
+ * surface entering last is the one that ends up showing.
+ *
+ * **An unowned stage is a claim waiting to be made** (jakob 2026-09-15, hand
+ * test: returning from the fullscreen viewer left the detail's pinned clip a
+ * black box with no transport at all). The viewer claims the stage on the way
+ * in and SURRENDERS on the way out, which leaves the clip on stage with nobody
+ * showing it. The surface underneath never stopped being composed, so nothing
+ * re-runs its start effect: it goes on holding a token the stage no longer
+ * recognises, `playerFor` answers null, the `PlayerSurface` has nothing bound
+ * to draw, and the transport is not drawn at all because there is no player to
+ * drive it. Claiming the clip already on stage keeps the very same player — no
+ * prepare, no seek — so this costs a token swap and buys the clip back alive
+ * where the reader left it.
+ */
+@OptIn(UnstableApi::class)
+@Composable
+private fun borrowFromStage(url: String, token: Any, traced: String): ExoPlayer? {
+    val context = LocalContext.current
+
+    LifecycleStartEffect(url, token) {
+        VideoStage.claim(context, url, token)
+        VideoStage.holding?.player?.let {
+            VideoTrace.handover(traced, "claimed", it.currentPosition, it.isPlaying)
+        }
+        onStopOrDispose {
+            // The player outlives this surface — surrendering is what
+            // hands it on, and releasing it here is what used to make
+            // the next screen start over.
+            VideoStage.holding?.player?.let {
+                VideoTrace.handover(traced, "surrender", it.currentPosition, it.isPlaying)
+            }
+            VideoStage.surrender(token)
+        }
+    }
+
+    val unowned = VideoStage.holding?.let { it.url == url && it.owner == null } == true
+    LaunchedEffect(unowned, url, token) {
+        if (unowned) VideoStage.claim(context, url, token)
+    }
+
+    return VideoStage.playerFor(token, url)
 }
 
 /**
