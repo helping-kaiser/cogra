@@ -814,6 +814,41 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.picked.single().altText).isEqualTo("A salt crust")
     }
 
+    // THE CITE SURVIVES THE OFFER (D20). The author reached this screen by
+    // asking to cite a node; the held draft answers a different question,
+    // and taking it up must not undo the gesture that opened the wizard.
+    @Test
+    fun continuingADraftKeepsTheNodeTheCiteAffordanceStaged() = runTest(dispatcher) {
+        drafts.held = ComposeDraft(DraftBodyKind.Words, body = "an older draft")
+        val vm = viewModel()
+        vm.start(referenceTargetId = "p9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.referenceSection.references.single().targetId).isEqualTo("p9")
+
+        vm.onContinueDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.body).isEqualTo("an older draft")
+        assertThat(vm.state.value.referenceSection.references.single().targetId).isEqualTo("p9")
+    }
+
+    // A prefill the lookup cannot type is still staged: the citation names
+    // its target by id, and the chip says so rather than silently dropping
+    // the author's gesture (the post composer's own rule).
+    @Test
+    fun discardingTheOfferKeepsTheStagedCiteToo() = runTest(dispatcher) {
+        drafts.held = ComposeDraft(DraftBodyKind.Words, body = "an older draft")
+        val vm = viewModel()
+        vm.start(referenceTargetId = "p9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onDiscardDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.referenceSection.references.single().targetId).isEqualTo("p9")
+    }
+
     @Test
     fun discardingTheOfferForgetsIt() = runTest(dispatcher) {
         drafts.held = ComposeDraft(DraftBodyKind.Words, body = "an older draft")
