@@ -3,7 +3,23 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { PostView } from "@/lib/api/content-api";
 import { renderWithProviders } from "@/test/providers";
+import { createTokenStore } from "@/lib/session/token-store";
 import { PostCard } from "./post-card";
+
+// The card's ⋮ rows navigate, so the card reaches the router the way every
+// other surface that pushes a route does.
+const routerPush = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: routerPush, replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+/** The viewer, for the ownership test the menu makes. */
+function storeFor(accountId: string) {
+  const store = createTokenStore();
+  store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId });
+  return store;
+}
 
 // The card's own rules — order, the XOR, the clamps, the opener — read
 // directly rather than through a surface: every one of them is a fact about
@@ -89,7 +105,11 @@ const tagged = () => ({
   ],
 });
 
-function mount(node: PostView, over: Record<string, unknown> = {}) {
+function mount(
+  node: PostView,
+  over: Record<string, unknown> = {},
+  options: Parameters<typeof renderWithProviders>[1] = {},
+) {
   return renderWithProviders(
     <PostCard
       post={node}
@@ -101,11 +121,13 @@ function mount(node: PostView, over: Record<string, unknown> = {}) {
       onLinkCopied={() => {}}
       {...over}
     />,
+    options,
   );
 }
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  routerPush.mockClear();
 });
 
 describe("PostCard", () => {
@@ -226,6 +248,84 @@ describe("PostCard", () => {
     mount(post(tagged()), { variant: "detail" });
     fireEvent.click(screen.getByTestId("card-topics"));
     expect(screen.getByTestId("card-refs-sheet")).toHaveAttribute("open");
+  });
+
+  // THE ⋮ IS ON EVERY NON-DETAIL CARD (`PostCard.jsx:257`). The rows are the
+  // detail's own — one menu for a post wherever it is drawn — so what these
+  // read is that the card picks the right set and names the author.
+  describe("the overflow menu", () => {
+    // `OWN_POST_MENU` (`_shared.jsx:369-375`): Save · Edit · Mark as
+    // sensitive · Remove · License terms.
+    it("gives the creator the own-post rows", () => {
+      mount(post(), {}, { store: storeFor("u1") });
+      fireEvent.click(screen.getByTestId("card-menu"));
+      expect(screen.getByTestId("card-menu-save")).toHaveTextContent("Save");
+      expect(screen.getByTestId("card-menu-edit")).toHaveTextContent("Edit");
+      expect(screen.getByTestId("card-menu-sensitive")).toHaveTextContent("Mark as sensitive");
+      expect(screen.getByTestId("card-menu-remove")).toHaveTextContent("Remove");
+      expect(screen.getByTestId("card-menu-license")).toHaveTextContent("License terms");
+      expect(screen.queryByTestId("card-menu-cite")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("card-menu-hide")).not.toBeInTheDocument();
+    });
+
+    // `READER_POST_MENU` (`_shared.jsx:376`): Save · Cite in a new post ·
+    // Hide @handle · License terms.
+    it("gives a reader the reader rows, naming the author in the hide row", () => {
+      mount(post(), {}, { store: storeFor("someone-else") });
+      fireEvent.click(screen.getByTestId("card-menu"));
+      expect(screen.getByTestId("card-menu-cite")).toHaveTextContent("Cite in a new post");
+      // `Hide @alice`, never "Hide this author" (`ActorChip.jsx:67`).
+      expect(screen.getByTestId("card-menu-hide")).toHaveTextContent("Hide @alice");
+      expect(screen.queryByTestId("card-menu-edit")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("card-menu-remove")).not.toBeInTheDocument();
+    });
+
+    // A signed-out reader is nobody's author, so the reader rows are what a
+    // card carries before anyone signs in.
+    it("gives a signed-out reader the reader rows", () => {
+      mount(post());
+      fireEvent.click(screen.getByTestId("card-menu"));
+      expect(screen.getByTestId("card-menu-cite")).toBeInTheDocument();
+      expect(screen.queryByTestId("card-menu-edit")).not.toBeInTheDocument();
+    });
+
+    // ON A DETAIL SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW
+    // (`_shared.jsx:337-341`): two dots would be two menus for one post.
+    it("yields the dot on the detail surface", () => {
+      mount(post(), { variant: "detail" }, { store: storeFor("u1") });
+      expect(screen.queryByTestId("card-menu")).not.toBeInTheDocument();
+    });
+
+    // A REMOVED POST HAS NO MENU AT ALL (`Removed.jsx:5-6`) — the ⋮ goes
+    // wholesale, not a row at a time.
+    it("drops the whole menu on a removed post", () => {
+      mount(post({ content: moderated(null, "REDACTED"), description: moderated(null, "REDACTED") }));
+      expect(screen.queryByTestId("card-menu")).not.toBeInTheDocument();
+    });
+
+    // The rows navigate from a card exactly as they do from the detail.
+    it("opens the edit route from the creator's Edit row", () => {
+      mount(post(), {}, { store: storeFor("u1") });
+      fireEvent.click(screen.getByTestId("card-menu"));
+      fireEvent.click(screen.getByTestId("card-menu-edit"));
+      expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
+    });
+
+    it("stages the post in the composer from the reader's Cite row", () => {
+      mount(post(), {}, { store: storeFor("someone-else") });
+      fireEvent.click(screen.getByTestId("card-menu"));
+      fireEvent.click(screen.getByTestId("card-menu-cite"));
+      expect(routerPush).toHaveBeenCalledWith("/compose?reference=p1");
+    });
+
+    // THE SHEETS THE ROWS OPEN RIDE THE CARD, the way the refs sheet does:
+    // the license reads on the surface the reader asked from.
+    it("raises the card's own license sheet from the license row", () => {
+      mount(post());
+      fireEvent.click(screen.getByTestId("card-menu"));
+      fireEvent.click(screen.getByTestId("card-menu-license"));
+      expect(screen.getByTestId("card-license-sheet")).toHaveAttribute("open");
+    });
   });
 
   it("keeps the affordance row on one line, in the ruled order", () => {
