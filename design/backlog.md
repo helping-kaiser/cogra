@@ -2954,7 +2954,7 @@ accessible path at via 2, the topic's own face at via 3, and on that
 face the same three outcomes — the press-and-hold self, the master pad
 with nothing held, and `GuestGate`.
 
-### 91 · The way back to the feed is spelled two ways · *design* · **open**
+### 91 · The way back to the feed is spelled two ways · *design* · **closed 2026-09-15**
 
 Surfaced 2026-09-15 while building the origin-noun table for the tag
 page's back label. Two spellings are drawn today and they disagree:
@@ -2975,6 +2975,15 @@ reader meets most often, so the split is the most visible one there is.
 Whichever wins, it wins in both places at once: the drawn `backLabel`s
 and the Reel's accessible name are the same words doing the same job,
 and `copy-voice.md`'s way-back vocabulary should list it once.
+
+**Ruled by jakob 2026-09-15: `Back to feed`.** The drawn spelling wins
+over the written rule, which is the right way round — the boards are
+where a reader meets the words. The feed is a named surface, like
+Explore and settings, not a common noun like the post or the wallet, so
+it takes no article; the rest of the noun table is untouched. The Reel's
+accessible name changes with it, copy-voice's entry carries the rule and
+the reason, and the sweep found no third spelling anywhere in the tree —
+both apps had already shipped the drawn one.
 
 ### 92 · The vouch-in ruling and the primitive spec name different people · *design* · **open — blocks a prose sweep**
 

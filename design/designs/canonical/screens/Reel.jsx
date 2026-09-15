@@ -40,7 +40,7 @@ export function Screen() {
         style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 260, background: "linear-gradient(to top, rgba(0,0,0,0.62), rgba(0,0,0,0))" }}
       />
 
-      <MediaDisc label="Back to the feed" glyph="arrow_back" corner="top-left" onClick={() => {}} />
+      <MediaDisc label="Back to feed" glyph="arrow_back" corner="top-left" onClick={() => {}} />
       <MediaDisc label="Turn sound on" glyph="volume_off" corner="top-right" pressed={false} onClick={() => {}} />
 
       <ReelRail
