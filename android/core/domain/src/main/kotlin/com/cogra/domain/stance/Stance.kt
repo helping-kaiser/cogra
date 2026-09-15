@@ -12,6 +12,33 @@
 package com.cogra.domain.stance
 
 /**
+ * What a stance points at. The schema's own split, carried verbatim:
+ * `PrepareStanceInput` and `PrepareSeveranceInput` each take **exactly
+ * one** of `target` and `topicName`, so a closed hierarchy is what makes
+ * "both" and "neither" unrepresentable here rather than a server-side
+ * refusal (Kotlin's sealed interfaces —
+ * https://kotlinlang.org/docs/sealed-classes.html).
+ *
+ * The two are not two spellings of one id. A Type is anchored vacuously
+ * and its id derives one-way from its name, so a topic nobody has tagged
+ * yet has no id to look up — and is followable anyway (`PrepareStanceInput.topicName`).
+ * Addressing it by name is the only address it has.
+ */
+sealed interface StanceTarget {
+    /** A node the graph already holds an id for: a post, a comment, a profile. */
+    data class Node(val id: String) : StanceTarget
+
+    /**
+     * A topic, by canonical name. The gesture toward one is an Affinity
+     * — "Affinity toward a Type, Opinion toward everything else"
+     * (`PrepareStanceInput.target`) — but it is the same ceremony, the
+     * same two slots, and the same face table; only the words at the
+     * edges belong to the family.
+     */
+    data class Topic(val name: String) : StanceTarget
+}
+
+/**
  * The two user parameters every record carries, each a continuous value
  * on the closed `[-1, +1]` ([edges.md §1]; design.md §8.1):
  * [pDirected] is valence — how you stand on it — and [pInterest] is
@@ -61,7 +88,7 @@ enum class StanceInputMode {
  * the bundle is read-side" (design.md §8.1).
  */
 data class StanceStanding(
-    val target: String,
+    val target: StanceTarget,
     /** Where the bundle sits now; the origin when nothing is authored. */
     val net: StancePair,
     /**
@@ -165,7 +192,7 @@ internal fun clipDimension(sum: Double): Double {
  * [records] is the cost the reader is asked to accept before signing.
  */
 data class SeveranceQuote(
-    val target: String,
+    val target: StanceTarget,
     /** The standing the batch would cancel, as the graph reads it. */
     val standing: StancePair,
     /**

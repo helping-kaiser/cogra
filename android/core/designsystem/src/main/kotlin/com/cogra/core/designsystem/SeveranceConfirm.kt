@@ -33,6 +33,8 @@ fun SeveranceConfirm(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
     testTagPrefix: String,
+    /** The family's words, so the ceremony asks what the pad asked. */
+    axes: StanceAxes = StanceAxes.Opinion,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -62,7 +64,7 @@ fun SeveranceConfirm(
                     text = if (prompt.raw.isZeroBundle) {
                         "${ZERO_BUNDLE_READOUT.emoji} ${stringResource(R.string.stance_standing_zero)}"
                     } else {
-                        "${stringResource(R.string.stance_standing_raw)}: ${prompt.raw.reading()}"
+                        "${stringResource(R.string.stance_standing_raw)}: ${prompt.raw.reading(axes)}"
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.testTag("${testTagPrefix}_severance_standing"),

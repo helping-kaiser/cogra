@@ -34,6 +34,24 @@
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
 
+  /* A dialog is held clear of the screen edge, and the gap is what says it is
+     floating rather than page (readme §11). Wider than the 24px gutter on
+     purpose; above the platform's 24dp floor and 280dp narrowest. */
+  --dialog-inset: var(--space-8);
+  --dialog-max-width: 20rem;
+
+  /* The ring the SYSTEM wears on a card it put in a reader's feed, against the
+     card the system merely carries (jakob 2026-09-15: "some gradient or sth..
+     making it obvious that this card (and potentially all system cards) are
+     cogra cards you should act on and not a normal part of the feed"). The
+     ground stays the feed card's own — the brand travels on the EDGE, which is
+     the story ring's grammar and the one mark a post card can never wear. The
+     recipe is the brand wash's own angle and the brand's own three warm fills,
+     so the edge reads as one family with the wallet's hero; it takes roles
+     rather than hex, so both themes are this one definition. */
+  --ring-task: linear-gradient(140deg, var(--primary) 0%, var(--primary-container) 46%, var(--secondary-container) 100%);
+  --ring-task-width: 2px;
+
   /* The resting stance face with no standing behind it: muted and translucent. */
   --opacity-resting-face: 0.4; /* @kind other */
   /* The stance face over media. The emoji is a mark, sized to the line face

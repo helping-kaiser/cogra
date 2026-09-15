@@ -2752,6 +2752,13 @@ exhausted kind is answered on the applicant's own boards. Its kinds
 include the Affinity, so a topic stance stays open to an applicant who
 has already staged an opinion.
 
+**One clause of this was overruled the same day**: "the empty page wires
+no face at all" fell to jakob's re-review, which gave `TagPageEmpty` the
+topic stance row and with it the face, the accessible path and the same
+`GuestGate` outcome its populated sibling carries — see item 90. Nothing
+else in the ruling moved: `TagPageHeld` still wires no gate, for the
+reason given.
+
 ### 82 · A tag page reached from Your topics goes back to the wrong place · *design* · **ruled + wired**
 
 Surfaced by the topic round 2026-09-14. The tag round ruled the page a
@@ -2789,3 +2796,357 @@ reveal-then-open under auto-hide, android direct — ruled deliberate
 when the implementation loop queued the asymmetry as a question. Both
 now stand in the readme's *viewer-grammar close*; nothing is drawn
 differently.
+
+### 84 · The invite short code · *design* · **retired 2026-09-15**
+
+Filed by the invites round and retired the same day by the ruling that
+took the code control off `InviteCreated` (jakob: "lets stick to just
+serving the link"). The item asked for a human-friendly code — short
+enough to read out over a phone, type from a sticker, or put at the end
+of a talk — because a 36-character UUID was being offered as one. No
+code is offered now. The capability has one shape on screen and it is
+the link, so there is no code block to shorten and no second thing for
+the docs to design a charset and a collision rate for.
+
+What would revive this is a PRODUCT need, not a drawing one: somebody
+deciding that an invite has to travel by voice or by print, where a
+link cannot go. That is a different item, and it starts at the backend
+the way this one said it would.
+
+### 86 · The door asks for a link and quietly accepts a code · *design* · **closed 2026-09-15**
+
+Surfaced by the invites round and answered the same day. The item's two
+options were: say both at the door (`Invite link or code`), or rule the
+bare id a thing the door tolerates and never a thing the product hands
+out. jakob took the second — `InviteCreated` serves the link alone —
+and the door's copy therefore stands exactly as drawn: `Enter your
+invite`, the field `Invite link`, the line `CoGra is invite-only. Paste
+your invite link to get started.`
+
+`extractInviteId` still reads a bare id out of whatever is pasted, and
+that is deliberately invisible: nothing on any surface hands a reader a
+bare id, so nothing on any surface has to explain that one would work.
+A tolerance at the door is documentation's business, not the screen's.
+
+### 87 · Two destructive dialogs disagree about colour · *design* · **closed 2026-09-15**
+
+Surfaced by the invites round 2026-09-15 while drawing `RejectConfirm`.
+readme §11 rules a destructive dialog takes **no new colour** —
+"severance is a deliberate act, not a failure" — and `SeveranceConfirm`
+says the same in its own board comment. `RemoveConfirm` nonetheless drew
+its `Remove` as a text button in `var(--error)`, the one board in the
+tree that did.
+
+Ruled by jakob the same day — "probabely non destructive? a removal is
+not an error no?" — so the colour comes off and §11 holds everywhere
+without an exception. The error role is for something that went wrong,
+and a reader removing their own post is doing what they meant to. The
+care in that dialog lives where the rule puts it: the safe answer takes
+the filled button, the removal stays a text button, and two sentences
+say what removal does before either is pressed.
+
+### 88 · `ProfileHeader` bans a word the two banned lists do not · *design* · **open**
+
+Surfaced by the invites round 2026-09-15 while drafting the empty
+state's teaching lines. `ProfileHeader.prompt.md` says: do not write
+"followers", "connections", or "network" — "the other two are banned
+vocabulary". *connection* is indeed on readme §3's list and on
+copy-voice's; **network is on neither**, and readme §2 itself calls the
+product Peer Network's next evolution.
+
+So a component's prompt is enforcing a third ban nobody else knows
+about. Either §3 and copy-voice grow the word — and then §2's own
+sentence wants a look — or the prompt's line is narrowed to the figure
+labels it was written about. The invites round sidestepped it by using
+the product's own blessed phrase (`brings them in`, from `VouchBack`,
+`ApplicantWaiting` and `VouchedIn`), which is better copy than either
+candidate, so again nothing is blocked.
+
+### 89 · Whose view does a turned-down applicant borrow · *design* · **narrowed 2026-09-15**
+
+Surfaced by the invites round's reject extension 2026-09-15, and
+answered provisionally on the board because a board cannot decline to
+draw something. The borrowed-vantage rule (readme §13) resolves to the
+most specific actor an arrival carries, and it ranks an applicant's own
+inviter above the bare fallback because that inviter "already chose
+them". After a rejection that clause is no longer true, and the rule
+does not say what happens next.
+
+`ApplicantRejected` keeps the rejecting inviter's view and changes only
+the band's line, on the reasoning that the ARRIVAL is unchanged — this
+reader came through @kel's link and is reading the feed that link
+carried — and that silently re-ranking somebody's whole feed as a side
+effect of being turned down would be a punishment the ruling is at
+pains not to impose. The alternative is the genesis fallback, on the
+reasoning that the specific rung's own justification has lapsed.
+
+Either is defensible and it is jakob's call. Whichever way it goes, the
+vantage rule in readme §13 wants the clause spelled out, because this
+is the first state that reaches past its last rung.
+
+**Half of this dissolved on 2026-09-15.** The item was built on the
+rule's own words — the applicant rung was justified as "their own
+inviter, the person who already chose them" — and that clause was
+simply wrong, for every applicant and not only a rejected one. Nobody
+has chosen an applicant: that is what the applicant days ARE, and
+[invitations.md §2](../docs/primitive/invitations.md) fixes the inviter
+at the vouch-back, not before. So the rung was never a vouch rung; it
+was the LINK's issuer all along, which is also exactly what the boards
+draw. §13 now says so.
+
+That settles the question this item asked. A rejection does not reach
+past the last rung, because the rung was never the rejecter's standing
+— it is the link the reader came through, and a closed application does
+not un-send a link. `ApplicantRejected` keeping @kel's view is right
+for a plainer reason than the one it was given.
+
+**What stays open is smaller and belongs to item 92**: whose name the
+vouch-back surface shows once a vouch does exist. That is the same
+question in its own right, and it cannot be answered while the ruling
+and the spec disagree about which edge fixes the inviter.
+
+### 90 · The empty tag page's missing stance row has no recorded reason · *design* · **ruled + drawn 2026-09-15**
+
+Surfaced 2026-09-15 while tightening `TagPageEmpty`'s rationale, which
+had been justifying the absence with "same as the populated page" — a
+premise the topic round retired when it gave `TagPage` its Affinity
+row. The ruling itself is on the record: item 81 says "the empty page
+wires no face at all", and the board is drawn that way. What is not on
+the record is WHY.
+
+The tension is real enough to want an answer. `TagPageEmpty`'s own
+prose says taking a position on an unused name is a perfectly good act
+— an Affinity toward a Type needs no Tag records to exist first — and
+the tag page is the one destination a Type has. If that holds, the
+reader who arrives at a name nobody has used yet is exactly the reader
+most likely to want to stake it, and the page offers them nothing.
+
+Two ways out, and it is jakob's call. Either the empty page gains the
+same row the populated one carries — the stance anatomy already travels
+as `TagPageBody`, so it is a reuse rather than a drawing — or the
+absence is deliberate and the reason gets written down, in which case
+the page probably owes the reader a word about where the gesture lives
+instead. What is not an option is leaving a ruled absence with no
+sentence behind it.
+
+**Ruled by jakob 2026-09-15, and the premise went with it**: "this
+should not exist.. a tag is born by its connection to sth.. it does not
+exist before its first connection.. so there is no page of tags that
+dont have posts yet.. i guess if someone unbind the post we have an
+empty page.. (its history would not be empty tho) but then we should add
+the stance here. no reason for it to not be there."
+
+The item's tension was the right one and the answer is its first way
+out — the page gains the row the populated one carries — but the board
+it lands on is not quite the board that asked. `TagPageEmpty` is no
+longer the page of a name nobody has used; it is the page everything was
+untagged out of, empty in its list and not in its history. The route
+settles it: nothing in the product hands a reader a name with no record
+behind it, because every route here is a chip, a result or a link.
+`hashtag(name)`'s vacuous anchoring still describes the READ — a typed
+URL for an unused name resolves as it always did — so the empty line
+states the present and promises no past, which is true either way.
+
+**This overrules item 81's "the empty page wires no face at all."** The
+row is `TopicStanceRow`, lifted out of `TagPageBody` so both states of
+the page draw one anatomy, and the wiring is the populated page's: the
+accessible path at via 2, the topic's own face at via 3, and on that
+face the same three outcomes — the press-and-hold self, the master pad
+with nothing held, and `GuestGate`.
+
+### 91 · The way back to the feed is spelled two ways · *design* · **closed 2026-09-15**
+
+Surfaced 2026-09-15 while building the origin-noun table for the tag
+page's back label. Two spellings are drawn today and they disagree:
+`Back to feed` on `DetailHeader` (so on every post detail, the
+references sheet, the reader's post menus and `ComposeLanded`) and on
+`Removed`, against `Back to the feed` as the Reel's accessible name,
+which `copy-voice.md` states as a rule in its own right.
+
+Neither is obviously the loser, which is why this is a ruling.
+Article-less matches `Back to Explore` and `Back to settings`, where
+the destination reads as a surface's name; the article matches `Back to
+the post`, `Back to the wallet`, `Back to the path`, which is most of
+the vocabulary and the shape the new noun table follows everywhere
+except this one entry. The feed is the one destination that can be read
+either way — a named place or a common noun — and it is the one the
+reader meets most often, so the split is the most visible one there is.
+
+Whichever wins, it wins in both places at once: the drawn `backLabel`s
+and the Reel's accessible name are the same words doing the same job,
+and `copy-voice.md`'s way-back vocabulary should list it once.
+
+**Ruled by jakob 2026-09-15: `Back to feed`.** The drawn spelling wins
+over the written rule, which is the right way round — the boards are
+where a reader meets the words. The feed is a named surface, like
+Explore and settings, not a common noun like the post or the wallet, so
+it takes no article; the rest of the noun table is untouched. The Reel's
+accessible name changes with it, copy-voice's entry carries the rule and
+the reason, and the sweep found no third spelling anywhere in the tree —
+both apps had already shipped the drawn one.
+
+### 92 · The vouch-in ruling and the primitive spec name different people · *design* · **ruled + swept 2026-09-15**
+
+Raised 2026-09-15, while applying the ruling that the vouch-back mask
+names the person whose vouch is in play. The ruling was relayed as "the
+first person pointing at you is your vouch in", confirmed against §2's
+≺-earliest back-edge. Those two are not the same rule, and the spec is
+the stricter of them.
+
+[invitations.md §2](../docs/primitive/invitations.md) reads: "Any
+number of members may point an Opinion toward the joiner's Profile …
+none of them is yet an invitation. The joiner **accepts by pointing
+back** … **The inviter is the single actor the joiner reciprocates
+first** — the ≺-earliest accepted back-edge." The edge that fixes the
+inviter is therefore the JOINER'S OUTBOUND one — whom they choose to
+reciprocate first — and the section says outright that a unilateral
+inbound edge never constitutes an invitation. "The first person
+pointing at you" is the other direction, and the spec rules it out by
+name.
+
+The two pick different people whenever more than one member points at a
+joiner and the joiner reciprocates out of arrival order — which is
+precisely the case the ask link exists to create. So the disagreement is
+not a corner.
+
+Three ways out. The ruling stands and §2 changes, which is a primitive
+edit and needs the L1 team; §2 stands and the mask names whoever the
+joiner reciprocates first, which is knowable only at the vouch-back
+itself; or the two are reconciled by ruling that the surfaces never
+name a chooser before one exists, which is close to where the boards
+already are.
+
+A stale-base artifact, corrected at integration: the branch's docs
+predate the merged contract. On master, `auth_applications` carries
+`approver_id` (either-or provenance with the link), the API has
+`Actor.approvalQueue`, and the batch-reject round already states that
+clients name the approver on the vouch-back surface. The contract can
+carry whatever the ruling settles; what remains open is only the
+design-side question above.
+
+Held back pending this, and enumerated so the sweep is one pass when it
+comes — every surface that names the link's issuer where it means
+whoever vouches: `ApplicantFeed`'s "before @mira can approve it";
+`ApplicantWaiting`'s "All set — waiting on your inviter" and "@mira's
+approval brings you in"; `ProfileApplicant`'s "Waiting on your inviter"
+and "Your application is with @mira"; the `VouchBack` / `VouchBackPad`
+/ `VouchedIn` fixtures, which hard-code the same `@mira` and
+`inviter.jpg` the invite-link boards use and so quietly assert the two
+roles are one person; the New invite sheet's "each person still needs
+your approval"; `copy-voice.md`'s "*vouched* is the inviter's word" and
+"`@mira approved your application` — the inviter's act"; and
+`ApprovePad`'s docblock, which says "the inviter's first opinion toward
+them" three times about a pad that `VouchAsk` opens for a member who
+issued no link at all.
+
+What did NOT wait, because both readings agree on it: the approver is
+not the issuer BY DEFINITION, so the borrowed-view band's rung and
+readme §13's vantage clause stop calling the applicant's rung "their
+own inviter" — see item 89.
+
+**Ruled by jakob 2026-09-15**: "yeah sweep — the other version where you
+can choose your inviter is a super corner case that will probabely never
+happen."
+
+So §2 stands untouched and the surfaces stop naming a chooser before one
+exists, which was the third way out and the one the boards were already
+closest to. The rule the sweep wrote: **a surface names the person whose
+approval is in play — the approver — and never the role "inviter"**,
+because an applicant has no inviter until their own back-edge makes one.
+The primitive's freedom to reciprocate anyone stays in §2, unmentioned on
+screen: no surface offers a choice of inviter, because no reader is asked
+to make one.
+
+The sweep, against this item's own enumeration. **Changed**:
+`ApplicantWaiting` now reads `All set — waiting on @mira` over `Their
+approval brings you in. Nothing else is needed from you.`;
+`ProfileApplicant` reads `Waiting on @mira` over `What you post now
+arrives with you.` — its middle sentence deleted rather than reworded,
+since the title carries the fact; `ApprovePad`'s docblock names an
+approver and says why the other word cannot be used on a pad `VouchAsk`
+opens for a member who issued no link; `VouchAsk` and `ApprovePadNote`
+stop calling a queue's owner an inviter; copy-voice's two entries become
+"belongs to the vouch-in" and "the approver's act", and the section
+carries the rule itself. **Already conform, and left alone**:
+`ApplicantFeed`'s "before @mira can approve it" and the New invite
+sheet's "each person still needs your approval" both name the approver
+already — the first by handle, the second by addressing the reader whose
+queue it is. **Fixtures untouched**, by the ruling: where one @mira
+issues the link and approves through it, which is the ordinary case, one
+person in the fixture is honest.
+
+**Four stragglers the sweep found outside the enumeration** and fixed on
+the same rule: readme's bell bullet ("the approval and the inviter's
+opinion both land on them"), the vouch-back ceremony's vantage sentence
+(still defining the borrowed rung by an inviter, the clause item 89
+retired), the invites round's `Set` signing "the inviter's Opinion", and
+the prefill's "the inviter's eventual Opinion" — that last one the
+ISSUER's, which is the word it wanted. `Notifications`' two docblocks
+took the same correction.
+
+### 95 · The compose flow has no staged-tags sheet · *design*
+
+Surfaced by the tags-overflow round 2026-09-15. The seal's tags row now
+folds into a counting door the way the References row does, but the two
+doors do not lead to the same KIND of place. A citation's door opens
+`ComposeCitations`, a sheet over the seal: the author checks the list and
+comes back with the seal never having left the screen. Tags have no such
+sheet anywhere in the composer — the only surface that manages the staged
+set is the details stage's Tags field block — so the tags door walks back
+a stage instead, and the seal the author was about to sign goes away.
+
+Three ways out, each a ruling: a staged-tags sheet is drawn (the true
+mirror of the citations sheet, and the only one that keeps the seal on
+screen), the walk back to the details stage is accepted as what managing
+tags means, or the seal's tags row stays a flat count with no door at all
+— which the acts card's own rule refuses, a count the reader cannot open
+being a number they cannot check. Wired to the details stage for now,
+because the round was told to use the surface that exists rather than
+invent the one that would match.
+
+### 96 · The system folds a tag list two different ways · *design*
+
+Surfaced by the same round. `TopicsLine`, on the reader's side, folds a
+tag list PARTIALLY: it keeps the chips that fit and appends the
+remainder as a count — "#fieldnotes #coastroad · 5 tags" — and the whole
+line opens the Tags & references sheet. The seal now folds the same list
+WHOLLY: past what the row holds, every chip goes and the row reads "7
+tags". Both are defensible where they stand — the feed line is a glance
+and the seal is a read-back the author checks before signing — but they
+are two answers to one question, and a reader meets both.
+
+Ruled the seal's way by jakob 2026-09-15 ("please have it the same as
+with references i guess?"), which is what the round drew. What is not
+ruled is whether the two folds should agree: either the seal keeps the
+chips that fit and counts the rest, or the difference is stated as
+deliberate and the reason recorded with both.
+### 97 · Both apps lag the draft offer's new shape · *implementation* · **open**
+
+Filed by the re-review 2026-09-15, when jakob ruled the compose entry's
+existing-draft state: "yes web everywhere... maybe we should make the
+draft more prominent.. right now it is easy to just wonder why you cant
+act.. i guess clicking the images should also start the discard process
+(open the popup).. else people might just click the images and wonder
+why nothing happens."
+
+The boards now draw all three parts and neither client has them.
+
+**Android** owes the shape itself. `ComposeWizardScreen.kt` dims the
+pick stage with `.alpha(DIMMED)` while `draftOffer != null` and leaves
+it operable, so a tap on a picture under an unanswered draft does
+something — which is exactly the divergence the ruling closed in web's
+favour. The region has to go out of reach the way `wizard-view.tsx`
+puts it (`inert`, which takes pointer, keyboard and AT reach together),
+with the shield over it.
+
+**Both** owe the other two. The draft card wears the brand ring
+`--ring-task` (design/tokens/semantic.css) — the same edge a task card
+wears, on the same reasoning. And the roll carries a shield: one
+transparent control across the whole region, accessible-named `Answer
+your draft before starting a new post`, raising `ComposeDraftDiscard` —
+`Discard your draft?` with `Discard it` and `Keep the draft`, the
+dialog anatomy already shared with `DiscardConfirm`. Web's own
+`DraftCard` and pick region are where both land.
+
+Nothing here is a design question; the boards are the contract and this
+is conformance work.
