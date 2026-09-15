@@ -132,8 +132,33 @@ export declare const INTEREST_LABEL: string;
 export interface AxisNames {
   directed?: string;
   interest?: string;
+  /** The family's own words for the way out; the default family's where absent. */
+  severance?: SeveranceWords;
 }
 export declare const STANCE_AXIS_NAMES: AxisNames;
+/**
+ * What a record family calls taking its bundle to nothing. A person is walked
+ * back; a topic is disconnected from. The sentences take what they name — the
+ * target, and for `sum` the figure the reader is being shown — so one object
+ * serves every target in the family.
+ */
+export interface SeveranceWords {
+  /** The pad's standing control, and the confirming button in its dialog. */
+  control: string;
+  title: (targetLabel: string) => string;
+  effect: (targetLabel: string) => string;
+  sum: (targetLabel: string, total: string) => string;
+  /** How a bundle already at nothing reads as a sentence. */
+  gone: (targetLabel: string) => string;
+  /** The same fact as a label beside a face. */
+  zero: string;
+  /** What the pad says a pick of (0, 0) would do. */
+  landing: string;
+  help: string;
+  helpAlternates: string;
+}
+export declare const STANCE_SEVERANCE_WORDS: SeveranceWords;
+export declare function severanceWords(names?: AxisNames): SeveranceWords;
 export declare function nearestAnchor(pair: StancePair): StancePair & { emoji: string; label: string };
 /** The nearest of the thirteen TAG anchors — the glyph a tag's pair reads as
  *  wherever it is drawn without the pad. */

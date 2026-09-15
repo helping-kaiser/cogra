@@ -95,7 +95,12 @@ query PostDetail(
     # OR would let a moderator's mark become the author's. The edit switch reads
     # this and nothing else. Selected here, on the single root post, and
     # deliberately outside `PostFields`, where every feed card would pay for it.
+    #
+    # The reason rides beside it for the same reason the mark does: the edit
+    # contract is complete state, so a save that re-states the mark without its
+    # reason silently clears the line a reader was shown on the veil.
     sensitiveSelfMark
+    sensitiveReason
     comments(
       first: $commentsFirst
       after: $commentsAfter

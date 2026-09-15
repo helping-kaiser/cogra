@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { RefsSheet, type TopicClaimNode } from "./refs-sheet";
@@ -127,6 +127,24 @@ describe("RefsSheet", () => {
       "href",
       "/topics/photography",
     );
+  });
+
+  // THE SHEET IS THE DOOR, NOT THE DESTINATION. Its opener remembers that it
+  // was raised, so a row that navigated with the sheet still open left Back
+  // restoring the surface AND the sheet over it — a trap with no way out but
+  // a second Back.
+  it("drops itself as a row is followed, so Back lands on the surface behind", () => {
+    const onClose = vi.fn();
+    open({ onClose });
+    fireEvent.click(screen.getByRole("link", { name: /photography/ }));
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("drops itself as a reference row is followed", () => {
+    const onClose = vi.fn();
+    open({ onClose });
+    fireEvent.click(screen.getByRole("link", { name: /@mira/ }));
+    expect(onClose).toHaveBeenCalled();
   });
 
   it("sends a reference row to the node it points at", () => {

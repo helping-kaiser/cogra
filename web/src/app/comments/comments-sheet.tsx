@@ -205,6 +205,8 @@ export function CommentsSheet({
   onOpenChange,
   post,
   store = identityStore,
+  onCount,
+  refreshToken = 0,
 }: {
   open: boolean;
   /**
@@ -217,6 +219,21 @@ export function CommentsSheet({
   post: PostView;
   /** Test injection, for the composer this sheet opens. */
   store?: IdentityStore;
+  /**
+   * THE COUNT THE CARD SHOWS IS THIS THREAD'S LENGTH. The card reads it with
+   * the post and the thread is read here, so a reply that landed moved one
+   * number and not the other: the reply appeared and the count above it did
+   * not. Every read hands the thread's own total back, and the surface shows
+   * that instead of the one it arrived with.
+   */
+  onCount?: (total: number) => void;
+  /**
+   * The surface's own re-pull. A thread binds once per post — which is what
+   * keeps unfolded branches across a trip to the composer — so without this a
+   * reader who pulled the page to refresh still raised the thread as it stood
+   * before the pull.
+   */
+  refreshToken?: number;
 }) {
   const client = useApolloClient();
   const router = useRouter();
@@ -398,6 +415,14 @@ export function CommentsSheet({
     [client],
   );
 
+  // The latest reporter, held rather than closed over: `read` is what the
+  // bind effect depends on, so a caller's inline lambda must not be able to
+  // make it a new function and send the thread round again.
+  const reportCount = useRef(onCount);
+  useEffect(() => {
+    reportCount.current = onCount;
+  }, [onCount]);
+
   const read = useCallback(
     (unfold: string | null = null) => {
       setLoading(true);
@@ -414,6 +439,8 @@ export function CommentsSheet({
         setComments(thread?.items ?? []);
         setEndCursor(thread?.endCursor ?? null);
         setHasMore(thread?.hasNextPage ?? false);
+        // The thread's own total, up to whatever surface is showing it.
+        if (thread) reportCount.current?.(thread.total);
         // A page is a snapshot, not a live view (api-spec.md): the refetched
         // thread is a new set of nodes, so unfolded branches start over rather
         // than hanging off ids this page may not carry.
@@ -441,6 +468,15 @@ export function CommentsSheet({
     place.current = TOP;
     read();
   }, [open, post.id, read]);
+
+  // THE SURFACE'S PULL REACHES THE THREAD. Zero is the token nobody pulled
+  // with, so a first composition does not read on top of the bind above.
+  const pulled = useRef(refreshToken);
+  useEffect(() => {
+    if (refreshToken === pulled.current) return;
+    pulled.current = refreshToken;
+    if (bound.current === post.id) read();
+  }, [refreshToken, post.id, read]);
 
   // PUT THE READER BACK, AND HOLD THEM THERE WHILE THE THREAD LANDS. The
   // refetch and the unfolding branch both arrive after the sheet is back up,

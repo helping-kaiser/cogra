@@ -20,10 +20,19 @@
    why a clip that came through the cover step shows no door — its face is
    chosen, and the step is one Back away.
 
-   THE CLIP ITSELF IS READ-ONLY HERE. No ×, no manager: a video is the whole
-   body, there is nothing to reorder, and the pick step that can take it away
-   is one Back away. The description row is the same one pictures wear, reading
-   the clip — one entry for the whole thing, never one for the cover. */
+   THE CLIP CARRIES ITS OWN ×, AND NO MANAGER (jakob's ruling 2026-09-15). A
+   video is the whole body, so there is nothing to reorder and no set for a
+   Show all sheet to open on — one clip is not a set. But a picture can be
+   taken out of the post from this stage, through the row that opens the
+   manager, and a clip has to be too: what an author most wants to revise here
+   is WHICH clip, and a stage that will not take the pick back sends them
+   hunting a Back arrow to undo it. So the tile wears the × the pick step's
+   tray already draws on this same clip — one gesture for one item, in the one
+   place the clip is drawn — and taking it away gives back the step that takes
+   picks, where another can be chosen.
+
+   The description row is the same one pictures wear, reading the clip — one
+   entry for the whole thing, never one for the cover. */
 export function Screen() {
   return (
     <>
@@ -31,7 +40,7 @@ export function Screen() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Video</FieldLabel>
-          <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} video />
+          <MediaThumb src="clip-lakeside.jpg" alt="" width={54} height={96} video onRemove={() => {}} removeLabel="Remove this video" />
           <DescribeCounter subject="video" described={0} total={1} onDescribe={() => {}} />
         </div>
 

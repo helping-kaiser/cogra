@@ -280,20 +280,60 @@ function FeedList({ children }) {
   );
 }
 
-/* An application step riding the feed as a card (readme §13, entry). */
+/* An application step riding the feed as a card (readme §13, entry).
+
+   IT IS THE PRODUCT SPEAKING, AND IT HAS TO LOOK LIKE IT (jakob 2026-09-15, on
+   `ApplicantRejected` and "maybe other of these aswell": "maybe some cogra
+   branding (color shade or sth at the corners?)"). Every other card in a feed
+   column is somebody's post — a person, with a handle and a face. These carry
+   no author because their author is CoGra, and in the feed card's own dress
+   they read as a text post from nobody, which is how a reader scrolls past the
+   one card in the column that is addressed to them.
+
+   THE BRAND RIDES THE EDGE, NOT THE GROUND (jakob 2026-09-15: "wash of the box
+   is not what i meant.. this just looks bad.. i was thinking about some
+   gradient"). A tinted ground reads as a stain on a card rather than a mark on
+   one, and it is the half of the card a reader is trying to read through. So
+   the ground goes back to the feed card's own colour and the card takes a
+   `--ring-task` edge instead: the brand's own sweep, at the brand wash's angle,
+   drawn as a hairline no post card in the column can wear. It is the story
+   ring's grammar — a ring around something ordinary is the one decoration every
+   reader already reads as "the system put this here".
+
+   THE RING NEEDS THE MARK BESIDE IT, so the mark stays. The ring says a card is
+   marked; only the mark says by WHOM, and a ring alone is exactly the signal a
+   reader could mistake for a post somebody had emphasised. It is `aria-hidden`
+   and carries no words — the title already says what the card is; the mark and
+   the ring are both for the eye mid-scroll.
+
+   THE TITLE KEEPS ITS ROW. The mark shares the heading's line rather than
+   taking one of its own, so a task card is the height it always was and the
+   column's rhythm does not change around it. `border-box` keeps the ring inside
+   the card's own width wherever the card is not a stretched feed child. */
 function TaskCard({ title, body, children }) {
   return (
-    <Card style={{ flex: "none" }}>
-      <h2
-        style={{
-          margin: 0,
-          fontSize: "var(--text-title-medium)",
-          lineHeight: "var(--text-title-medium--line-height)",
-          fontWeight: "var(--text-title-medium--font-weight)",
-        }}
-      >
-        {title}
-      </h2>
+    <Card
+      style={{
+        flex: "none",
+        boxSizing: "border-box",
+        border: "var(--ring-task-width) solid transparent",
+        background:
+          "linear-gradient(var(--surface-card), var(--surface-card)) padding-box, var(--ring-task) border-box",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <h2
+          style={{
+            margin: 0,
+            fontSize: "var(--text-title-medium)",
+            lineHeight: "var(--text-title-medium--line-height)",
+            fontWeight: "var(--text-title-medium--font-weight)",
+          }}
+        >
+          {title}
+        </h2>
+        <Icon name="mark" size={20} pickColor="var(--primary-container)" style={{ flex: "none", color: "var(--primary)" }} />
+      </div>
       <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>{body}</p>
       {children}
     </Card>
@@ -730,6 +770,12 @@ function ProfileOwnBody({ tail = null }) {
             stancesOn={9}
             stancesTaken={14}
             own
+            /* AN APPLICATION IS WAITING (the invites round). @rafa's proofs
+               are both in and nobody but Sol can act on it, so the row that
+               opens the queue wears the bell's dot. It is the one way the
+               queue's owner learns without going looking — and the count, which
+               would turn a fact into an errand, waits in the list itself. */
+            invitesWaiting
             onEdit={() => {}}
             onInvites={() => {}}
             onAvatarChange={() => {}}
@@ -866,6 +912,112 @@ function ReplyDraft() {
   );
 }
 
+/* THE COMPOSE WIZARD OPENED ON A DRAFT, whole. It lives here for `ReplyDraft`'s
+   reason — `ComposeDraftDiscard` draws this same stage under its dialog — and
+   for a second one: this is the shape both clients hold to, so a body copied
+   per board is a divergence waiting to be shipped twice.
+
+   THE SHAPE IS WEB'S, EVERYWHERE (jakob 2026-09-15: "yes web everywhere"). Web
+   dims the pick region AND takes it out of reach — pointer, keyboard and
+   assistive tech together — while Android dims it and leaves it tappable, so
+   the same screen answers a tap in two different ways. One of those is the
+   drawing: the region under an unanswered draft is not operable.
+
+   THE DRAFT IS PROMINENT, AND IT IS PROMINENT THE WAY EVERY OTHER CARD THE
+   PRODUCT SPEAKS THROUGH IS (jakob: "maybe we should make the draft more
+   prominent.. right now it is easy to just wonder why you cant act"). It wears
+   `--ring-task`, the same brand edge a `TaskCard` wears in a feed, because it
+   is the same fact: this card is the product addressing the reader, and it is
+   the one thing on the screen that can be acted on. The dim beneath it stays at
+   its blessed 0.55 — the ruling asked for a louder draft, not a fainter roll,
+   and both clients already hold that number.
+
+   AND A TAP ON THE ROLL ANSWERS (jakob: "i guess clicking the images should
+   also start the discard process (open the popup).. else people might just
+   click the images and wonder why nothing happens"). Inert content that
+   swallows taps is the failure the ruling names, so the roll carries a shield:
+   one transparent control over the whole region, named for what it will say,
+   raising the draft's own pair as a dialog. It is a CONTROL and not a handler
+   on a dead region, so the keyboard and a screen reader reach the same answer
+   the thumb does — and the tiles underneath stay unreachable, which is what
+   keeps the draft's pair the only pair on the board. */
+const DRAFT_TILE = { position: "relative", width: 125, height: 125 };
+const DRAFT_FILL = { width: "100%", height: "100%", objectFit: "cover", display: "block" };
+const DRAFT_SHADES = [
+  "var(--surface-container-low)",
+  "var(--surface-container)",
+  "var(--surface-container-high)",
+  "var(--surface-container-highest)",
+  "var(--surface-container)",
+  "var(--surface-container-highest)",
+  "var(--surface-container-low)",
+];
+
+function ComposeDraftBody() {
+  return (
+    <>
+      <WizardHeader title="New post" />
+
+      <Card
+        style={{
+          flex: "none",
+          margin: "8px 24px",
+          boxSizing: "border-box",
+          border: "var(--ring-task-width) solid transparent",
+          background:
+            "linear-gradient(var(--surface-card), var(--surface-card)) padding-box, var(--ring-task) border-box",
+        }}
+      >
+        <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
+          Your draft is here
+        </h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <MediaThumb src="post-photo.jpg" size={40} />
+          <span style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
+              Salt maps of the coast road
+            </span>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+              2 pictures — kept on this device
+            </span>
+          </span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <Button variant="text">Discard</Button>
+          <Button>Continue</Button>
+        </div>
+      </Card>
+
+      <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 8, padding: "8px 24px" }}>
+        <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
+          Or start fresh —
+        </p>
+      </div>
+
+      {/* The roll, waiting: dimmed and out of reach, with the shield over it. */}
+      <div style={{ position: "relative", flex: 1, display: "flex", overflow: "hidden" }}>
+        <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: 3, padding: "4px 4px 0", overflow: "hidden", alignContent: "flex-start", opacity: 0.55 }}>
+          <div style={{ ...DRAFT_TILE, overflow: "hidden" }}>
+            <img src="post-photo.jpg" alt="" style={DRAFT_FILL} />
+          </div>
+          <div style={{ ...DRAFT_TILE, overflow: "hidden" }}>
+            <img src="inviter.jpg" alt="" style={DRAFT_FILL} />
+          </div>
+          {DRAFT_SHADES.map((background, index) => (
+            <div key={index} style={{ ...DRAFT_TILE, background }} />
+          ))}
+        </div>
+        <button
+          type="button"
+          aria-label="Answer your draft before starting a new post"
+          className="cg-focus"
+          style={{ position: "absolute", inset: 0, border: 0, background: "none", padding: 0, cursor: "pointer" }}
+        />
+      </div>
+    </>
+  );
+}
+
 /* THE REPLY SEAL'S ADD-ROWS — a primary word where a value would sit, so what
    you could still add lines up with what you have already added. They are
    `ActsCard`'s action rows: the whole row is the control, because a word whose
@@ -918,6 +1070,49 @@ const citedRow = (count) => ({
   openLabel: `Manage the ${count} ${count === 1 ? "citation" : "citations"}`,
 });
 
+/* ── THE SEAL'S TAGS ROW, IN ITS TWO READINGS (jakob's ruling 2026-09-15) ────
+   THE CHIPS ARE THE READING WHILE THEY FIT. Two short names are shorter than
+   the sentence that would count them, and a seal is a read-back: what you
+   signed, in the words you chose. Past what the slot holds the row went on
+   drawing chips the value slot then clipped — two and a half pills beside a
+   count that said seven — which is the same defect `citedRow` closes one row
+   below, arriving from the other direction.
+
+   SO THE OVERFLOW IS THE REFERENCES' SHAPE, not a second invention of it:
+   "7 tags", one line, and the row a DOOR. The seal stays one screen tall at
+   any number of tags, and the count stays checkable — the pair of promises
+   that rule exists for.
+
+   THE NOUN IS THE READER'S. A `#name` is a TAG on screen and a topic in the
+   record (copy-voice.md, *Naming*), so the row counts tags — the word
+   `TopicsLine` already uses where the feed folds a tag list into its
+   remainder, said again on this side of the composer.
+
+   WHERE THE DOOR LEADS IS THE DETAILS STAGE, and it is the one place the two
+   rows do not match: a citation's door opens a sheet OVER the seal, a tag's
+   walks back to where tags are staged, because the compose flow has no
+   staged-tags sheet to open. Wired to the surface that exists rather than
+   inventing the one that would match (backlog item 95). */
+const tagsRow = (count) => ({
+  label: "Tags",
+  value: `${count} tags`,
+  count: String(count),
+  countNoun: "tag",
+  onOpen: () => {},
+  openLabel: `Manage the ${count} ${count === 1 ? "tag" : "tags"}`,
+});
+
+/* What the seal was drawn holding, and what a well-tagged post holds. Spelled
+   once because two states draw them: the row that reads the names back and
+   the row that counts them. */
+const SEAL_TAGS = ["fieldnotes", "coastroad"];
+const SEAL_TAGS_MANY = ["fieldnotes", "coastroad", "saltmaps", "tidal", "estuary", "cartography", "lowtide"];
+
+/* HOW MANY CHIPS THE ROW HOLDS — the capacity of the value slot the card
+   leaves between its 76px label and its count, not a taste. The fold begins
+   where the drawing stops being readable. */
+const TAGS_ROW_HOLDS = 2;
+
 /* The post's staged set past the first, written once: the seal that COUNTS
    these and the sheet that LISTS them are two boards of one moment, and a
    count drawn beside a list it disagreed with would be the very defect this
@@ -948,7 +1143,7 @@ const REPLY_CITATION = "Tide tables and the third headland";
 
 /* THE POST'S SEAL, whole — `ComposeSeal` itself, and what the opinion pad, the
    license sheet, the sensitive sheet and the "?" dialog stand on. */
-function ComposeSealBody({ cited = 1 }) {
+function ComposeSealBody({ cited = 1, tags = SEAL_TAGS }) {
   return (
     <>
       <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
@@ -958,17 +1153,20 @@ function ComposeSealBody({ cited = 1 }) {
         <ActsCard
           rows={[
             { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
-            {
-              label: "Tags",
-              value: (
-                <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
-                  <Chip label="#fieldnotes" tone="readout" />
-                  <Chip label="#coastroad" tone="readout" />
-                </span>
-              ),
-              count: "2",
-              countNoun: "tag",
-            },
+            tags.length > TAGS_ROW_HOLDS
+              ? tagsRow(tags.length)
+              : {
+                  label: "Tags",
+                  value: (
+                    <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
+                      {tags.map((tag) => (
+                        <Chip key={tag} label={`#${tag}`} tone="readout" />
+                      ))}
+                    </span>
+                  ),
+                  count: String(tags.length),
+                  countNoun: "tag",
+                },
             cited > 1
               ? citedRow(cited)
               : {
@@ -986,7 +1184,7 @@ function ComposeSealBody({ cited = 1 }) {
                   count: "1",
                 },
           ]}
-          total={`${3 + cited} things, signed together`}
+          total={`${1 + tags.length + cited} things, signed together`}
           note="They land together, or none does."
         />
 
@@ -1062,7 +1260,7 @@ function ReplyPadBody() {
           </span>
         </div>
 
-        <div role="group" aria-label="Opinion pad for the post you answer" style={{ alignSelf: "center", width: 240 }}>
+        <div role="group" aria-label="Opinion pad for the post you answer" style={{ alignSelf: "stretch" }}>
           <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
         </div>
 
@@ -2193,6 +2391,34 @@ const POST_OPINION_HOLDERS = [
    words, ruled 2026-09-15: each axis's question and its two ends, because a
    slider that says where a track stops still has to say what the track asks.
    The pad itself draws the four ends alone. */
+/* THE TOPIC'S WAY OUT IS ITS OWN WORD (jakob 2026-09-15): "nah thats all to
+   complicated for users.. instead of walk back we could just call it
+   'disconnect' or sth like this. and then we can say 'no opinion towards
+   #saltmaps' or sth similar.. we want human wording not this nerdy stuff!"
+
+   `Walk it back` is a sentence about a person — you walk back something you
+   said to somebody. A reader who has said they like a topic has not made a
+   promise to it, and the word for undoing that is the plain one everybody
+   already owns: they disconnect. The readouts follow the same rule — what a
+   reader is left with is not a state with a name, it is simply no opinion
+   towards the thing, said in those words.
+
+   PERSONS KEEP THEIR FAMILY. jakob objected to the topic's wording and only to
+   it, and `Walk it back` is right where there IS a relationship: it stands on
+   every profile, post and comment pad exactly as before. */
+const AFFINITY_SEVERANCE = {
+  control: "Disconnect",
+  title: (name) => `Disconnect from ${name}?`,
+  effect: (name) =>
+    `You end up with no opinion towards ${name}. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`,
+  sum: (name, total) => `Everything you've said about ${name} adds up to ${total}, and disconnecting clears all of it.`,
+  gone: (name) => `No opinion towards ${name}.`,
+  zero: "No opinion",
+  landing: "This leaves you with no opinion towards it.",
+  help: "Disconnect takes everything you've said about the topic to nothing. It has its own confirmation, and each thing you've said is cleared by its own signature.",
+  helpAlternates: "Disconnect takes everything to nothing, and each thing you've said is cleared by its own signature.",
+};
+
 const AFFINITY_AXES = {
   directed: "How much you like it",
   left: "Dislike",
@@ -2200,6 +2426,7 @@ const AFFINITY_AXES = {
   interest: "How close you want to be",
   bottom: "Far away",
   top: "Close to me",
+  severance: AFFINITY_SEVERANCE,
 };
 
 /* `stanceOpen`/`stanceDefaultPick` are `PostCard`'s two pass-throughs by
@@ -2208,21 +2435,32 @@ const AFFINITY_AXES = {
    server-rendered board asks the master for a state a click cannot reach
    instead of copying the pad. No `padInset` rides with them: the inset exists
    to lift the parked card clear of a bottom bar, and this page has none. */
+/* THE TOPIC'S OWN STANCE ROW, as one anatomy (the re-review, 2026-09-15). Both
+   states of the page carry it now — the populated one and the emptied one — and
+   a row drawn twice is a row that can disagree with itself about its padding,
+   its width or its axis words. So it is lifted here and the two boards differ
+   only in the name they hand it and whether anything is held. */
+function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick }) {
+  return (
+    <div style={{ padding: "4px 16px 8px" }}>
+      <StanceControl
+        wide
+        targetLabel={name}
+        axes={AFFINITY_AXES}
+        bundle={bundle}
+        defaultOpen={stanceOpen}
+        defaultPick={stanceDefaultPick}
+        onCommit={() => {}}
+      />
+    </div>
+  );
+}
+
 function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
   return (
     <>
       <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
-      <div style={{ padding: "4px 16px 8px" }}>
-        <StanceControl
-          wide
-          targetLabel="#saltmaps"
-          axes={AFFINITY_AXES}
-          bundle={bundle}
-          defaultOpen={stanceOpen}
-          defaultPick={stanceDefaultPick}
-          onCommit={() => {}}
-        />
-      </div>
+      <TopicStanceRow name="#saltmaps" bundle={bundle} stanceOpen={stanceOpen} stanceDefaultPick={stanceDefaultPick} />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
           <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
@@ -2288,3 +2526,338 @@ const CITING_ARTIFACTS = [
   { kind: "post", name: "Three mornings on the wall", pair: { pDirected: 0.15, pInterest: 0.9 } },
   { kind: "post", name: "A honey stand and a headland", pair: { pDirected: -0.3, pInterest: 0.35 } },
 ];
+
+/* ── THE INVITES SCREEN (the invites round, 2026-09-15) ────────────────────
+   Drawn once here because five boards stand on it: the list itself, the
+   create sheet and its expiry chooser, the fresh link, the approval pad and
+   the reject dialog. Everything above a sheet or a wash is the board's; the
+   page under it is this.
+
+   THE MOCK INVITE LINKS. `auth.md` (*Link URLs*) fixes the shape —
+   `https://<web-origin>/join/<link-id>` — and leaves the origin
+   per-environment, so the host below is invented the way the mock Liquid
+   addresses above are: the SHAPE is the product's, the letters are not. The id
+   is the capability and the link is the only shape it takes on screen; the
+   door's tolerance for a bare one stays at the door, where a reader never has
+   to think about it. */
+const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
+const SOL_INVITE_LINK = `https://cogra.social/join/${SOL_INVITE_ID}`;
+const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-6e0a85f37c24";
+
+/* THE ASK LINK — the invite link's mirror, and shaped as its mirror: the same
+   origin, its own path, one id. What it is NOT is the difference that matters.
+   An invite link points at a SLOT its issuer opened, so it expires and it can
+   be used up; an ask link points at a PERSON, so it does neither. It stands
+   for as long as the person is waiting to be let in, and every member who
+   opens it is answering the same standing question. */
+const ASK_LINK = "https://cogra.social/vouch/5d9e7a41-b062-4c38-8e5f-1a4703cbd926";
+
+/* THE ROW'S OWN CLOSE, the Saved list's `Unsave` one surface over: icon-only,
+   `ContentRow`'s `action` slot, `text-secondary`, its name only in the
+   accessibility tree. A row in this list has exactly two things a reader can
+   do to it — approve it, which is the row, and close it, which is this — so a
+   ⋮ would be a menu of one. The word it does not say is "reject": nothing is
+   deleted and the person keeps the account they made, so the glyph is `close`
+   and the name says what happens, not how it feels.
+
+   IT TAKES THE HANDLE, unlike `Unsave`, because a list of applications is a
+   list of PEOPLE and four identical "Close" buttons is four chances for a
+   screen reader to close the wrong one. */
+const CloseApplication = ({ handle }) => (
+  <button
+    type="button"
+    aria-label={`Close ${handle}'s application`}
+    className="cg-state cg-focus cg-hit"
+    style={{
+      display: "grid",
+      placeItems: "center",
+      height: "40px",
+      width: "40px",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      color: "var(--text-secondary)",
+      cursor: "pointer",
+      padding: 0,
+    }}
+  >
+    <Icon name="close" size={20} />
+  </button>
+);
+
+/* APPLICATIONS ARE GROUPED BY THE LINK THEY CAME THROUGH (jakob 2026-09-15:
+   "if someone bots us from the start it would be nice to have.. we add
+   batching.. batched by invite link?"). A link that leaks is the failure mode
+   this queue has, and it arrives as a burst of applications that are all the
+   same application — one link, one leak, one answer. Flat and undifferentiated,
+   the reader had to close them one at a time and could not even see that they
+   were one event.
+
+   THE GROUP CARRIES THE BATCH ACT, AND THE LINK CARD DOES NOT. `PayoutAddress`
+   is allowed exactly one inline word and a live link already spends it on
+   `Revoke` — a card with a second inline act stops reading as a string with a
+   home, which is that component's own rule. The group header is the other
+   place the batch belongs and it is the better one anyway: the count is right
+   there, so the gesture is next to the number it acts on.
+
+   THE LIST IS STILL ORDERED BY AGE. Grouping does not reorder by what the
+   reader can act on — the rule that matters — so groups sit in the order of
+   their oldest waiting application and rows sit by age inside them. The oldest
+   application in the queue is still the first row on the screen.
+
+   ONE WAITING GETS NO BATCH. `Close all 1` is the row's own close with a
+   longer name, so the header carries the label and the count and stops there.
+
+   THE COUNT IS WHAT IS WAITING, not what the link has ever let through: a
+   closed application is not closed again, and an approved one is gone. */
+const ApplicationGroup = ({ label, count }) => (
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "4px 4px 0" }}>
+    <span
+      style={{
+        fontSize: "var(--text-label-medium)",
+        lineHeight: "var(--text-label-medium--line-height)",
+        fontWeight: "var(--text-label-medium--font-weight)",
+        letterSpacing: "var(--text-label-medium--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      {label} · {count} waiting
+    </span>
+    {count > 1 && (
+      <Button variant="text" size="sm" ariaLabel={`Close all ${count} applications from this link`}>
+        Close all
+      </Button>
+    )}
+  </div>
+);
+
+/* ONE LINE OF A PAD'S NOTE. `VouchBackPad` drew it first and drew it alone;
+   the approval pad on the other side of the same handshake draws the identical
+   line, so it is written once here rather than twice on two boards that must
+   never disagree about what a pad's own voice looks like. */
+function PadLine({ children }) {
+  return (
+    <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+      {children}
+    </p>
+  );
+}
+
+/* THE PAD'S OWN LINES wherever a vouch is being given. They are not one-time
+   coaching the way `VouchBackPad`'s are: vouching somebody in is rare,
+   consequential and priced, and the two facts below are true every single time
+   it happens.
+
+   IT TAKES THE HANDLE because the same pad now opens from two places — a
+   queue of one's own, and an ask link a stranger to that queue sent — and the
+   act is identical from both. One note, two boards: the member who answers an
+   ask link is doing exactly what the queue's own reader would have done. */
+function ApprovePadNote({ handle }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <PadLine>Vouching is the act. Set signs your opinion on {handle} and brings them in.</PadLine>
+      <PadLine>It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.</PadLine>
+    </div>
+  );
+}
+
+/* THE PAGE ITSELF.
+
+   APPLICATIONS LEAD, LIVE LINKS FOLLOW. The queue is the only half that can
+   be waiting on the reader, and the half a dot on the profile sent them here
+   for; a link sitting quietly is a thing they made, not a thing they owe.
+
+   THE SECTION IS `Applications`, NOT "Waiting on you". Only one of these rows
+   is waiting on the reader — the other is waiting on its own applicant — and a
+   caption that says otherwise makes the second row a lie. Who is waited on is
+   the ROW's to say, on the second line, which is where `ContentRow` puts
+   status.
+
+   OLDEST ON TOP, BY AGE ALONE — AND GROUPING DOES NOT DISTURB IT. `@imke`
+   applied nine days ago and is not fully registered yet; `@rafa` applied three
+   days ago and is ready. The not-ready row standing first is the drawing that
+   records the rule: this list is ordered by how long someone has been waiting,
+   never by whether the reader can act on them. Since applications are now
+   grouped by the link they came through, the rule reaches one level up —
+   groups sit in the order of their OLDEST waiting application and rows sit by
+   age inside them — so the oldest application in the queue is still the first
+   row on the screen, and nothing has been sorted by how actionable it is.
+
+   AN APPLICANT HAS NO PICTURE, EVER. There is no Profile to carry one until
+   approval lands (`invitations.md` §4), so the disc is the monogram from the
+   handle — the designed placeholder, and here the only honest drawing. For the
+   same reason there is no display name: a handle is all the account has.
+
+   THE STATUS LINE IS THE READER'S FACT, NOT THE MECHANISM'S (jakob
+   2026-09-15). Which of the two proofs is still missing — a key, a confirmed
+   email — is the applicant's errand and no concern of the person deciding
+   whether to vouch for them. What the approver needs from this line is whether
+   they can act, so both states say the one thing that is true of both:
+   `Not fully registered yet`.
+
+   THE NOT-READY ROW IS STILL PRESSABLE, and answers with a snackbar in the
+   same words — `ProfileApplicant`'s locked rows, which say why rather than
+   refusing silently. An inert row beside a live close control would read as a
+   row that had stopped working.
+
+   DEAD LINKS ARE NOT HERE. A revoked or expired link leaves the list the
+   moment it stops working, so everything under `Live links` is a link someone
+   can still use — which is why the single-use card can say its slot is open
+   simply by being on the page.
+
+   `approving` SWAPS THE READY ROW'S CONTROL for the stance anchor the pad
+   blooms from. The row's one control is the row's one other act, and on the
+   approval board that act is the opinion being given; the close stands down
+   while it is open, under the wash, where it could not be pressed anyway. */
+function InvitesBody({ approving = false }) {
+  return (
+    <>
+      <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: "8px 0 0" }}>
+        {/* THE STANDING ENTRY POINT IS A NOUN, the empty state's action a verb
+            — the product's own split, kept: the bottom bar says `New post` and
+            the empty feed says `write the first post`. The sheet this opens is
+            titled `New invite` too, so the button and the surface it raises say
+            one thing; `Create invite` is the word for the act, and it belongs
+            on the button that performs it and on the empty state that has
+            nothing else to offer.
+
+            IT IS A FILLED BUTTON AND NOT A FLOATING ONE. This system has no
+            FAB — the bottom bar's compose action is the app's one floating
+            create, and this surface carries no bar — so the page's one
+            committing action stands in the column, at its head, where a long
+            queue can never bury it. */}
+        <div style={{ padding: "0 16px" }}>
+          <Button style={{ width: "100%" }}>New invite</Button>
+        </div>
+
+        <SectionLabel>Applications</SectionLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+          <ApplicationGroup label="Many uses" count={4} />
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            name="imke"
+            title="@imke"
+            second="Not fully registered yet"
+            trailing="9d"
+            action={<CloseApplication handle="@imke" />}
+            onOpen={() => {}}
+          />
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            name="vora81"
+            title="@vora81"
+            second="Not fully registered yet"
+            trailing="1d"
+            action={<CloseApplication handle="@vora81" />}
+            onOpen={() => {}}
+          />
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            name="vora82"
+            title="@vora82"
+            second="Not fully registered yet"
+            trailing="1d"
+            action={<CloseApplication handle="@vora82" />}
+            onOpen={() => {}}
+          />
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            name="vora83"
+            title="@vora83"
+            second="Not fully registered yet"
+            trailing="1d"
+            action={<CloseApplication handle="@vora83" />}
+            onOpen={() => {}}
+          />
+          <ApplicationGroup label="Single use" count={1} />
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            name="rafa"
+            title="@rafa"
+            second="Ready for your approval"
+            trailing="3d"
+            action={
+              approving ? (
+                <StanceControl
+                  targetLabel="@rafa"
+                  helpLabel="How vouching works"
+                  defaultOpen
+                  defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
+                  padNote={<ApprovePadNote handle="@rafa" />}
+                />
+              ) : (
+                <CloseApplication handle="@rafa" />
+              )
+            }
+            onOpen={() => {}}
+          />
+        </div>
+
+        <SectionLabel>Live links</SectionLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+          <PayoutAddress
+            label="Single use · not used yet"
+            address={SOL_INVITE_LINK}
+            onCopy={() => {}}
+            copyLabel="Copy the link"
+            onChange={() => {}}
+            changeLabel="Revoke"
+            caption="Expires in 7 days · 22.09.2026"
+          />
+          <PayoutAddress
+            label="Many uses"
+            address={SOL_INVITE_LINK_OPEN}
+            onCopy={() => {}}
+            copyLabel="Copy the link"
+            onChange={() => {}}
+            changeLabel="Revoke"
+            caption="Expires in 2 days · 17.09.2026"
+          />
+        </div>
+
+        <div style={{ flex: 1 }} />
+      </div>
+    </>
+  );
+}
+
+/* THE CREATE SHEET, shared the moment the expiry chooser opened over it — the
+   same rule the comments thread keeps under its own second sheet: a body drawn
+   on two boards is drawn once.
+
+   TWO DECISIONS AND NO MORE. A link carries no stance any more (the prefill is
+   gone from the mechanic), so what is left to choose is who may use it and how
+   long it lives. Anything else on this sheet would be a third decision invented
+   to fill it.
+
+   THE SWITCH IS WORDED AS THE RESTRICTION, so ON is the narrow thing and the
+   label alone says what ON does — which is why this row carries no status line
+   under it. What OFF does is the group's FOOTNOTE: the consequence is the thing
+   a reader needs once and never again, which is exactly what a footnote is for.
+
+   SINGLE USE IS THE DEFAULT. A targeted invite is the ordinary one and the safe
+   one — a leaked link stages at most one stranger (`invitations.md` §6) — so the
+   default sits where a reader who changes nothing is least exposed. */
+function NewInviteSheet() {
+  return (
+    <BottomSheet open ariaLabel="New invite">
+      <SheetTitle>New invite</SheetTitle>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px" }}>
+        <SettingsGroup footnote="With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time.">
+          <SettingsRow label="Only one person can use it" checked onOpen={() => {}} />
+          <SettingsRow label="Expires after" value="7 days" onOpen={() => {}} />
+        </SettingsGroup>
+
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <Button>Create invite</Button>
+        </div>
+      </div>
+    </BottomSheet>
+  );
+}

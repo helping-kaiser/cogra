@@ -127,7 +127,7 @@ export function Screen() {
             </span>
           </div>
 
-          <div role="group" aria-label="The pair this tag signs" style={{ alignSelf: "center", width: 240 }}>
+          <div role="group" aria-label="The pair this tag signs" style={{ alignSelf: "stretch" }}>
             <StancePad value={{ pDirected: 0.1, pInterest: 1 }} axes={TAG_AXES} ranges={TAG_RANGES} />
           </div>
 

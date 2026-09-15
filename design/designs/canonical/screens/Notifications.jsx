@@ -70,6 +70,31 @@ export function Screen() {
           trailing="1d"
           onOpen={() => {}}
         />
+        {/* THE EIGHTH KIND (the invites round, 2026-09-15): an application of
+            yours became approvable. It belongs to the set by the set's own
+            test — somebody else acted (the applicant attached their key, the
+            second of the two proofs) and the act reached something with an
+            owner, the invite that staged them. Nothing else can tell the
+            link's issuer this: a staged applicant who never gets approved is
+            the one failure mode the mechanic has, and it is entirely theirs
+            to notice.
+
+            IT WEARS THE MONOGRAM, not a picture, because there is no Profile
+            to carry one until the approval lands — the same rule the invites
+            list keeps for the same reason.
+
+            IT IS READ AND THE APPLICATION IS STILL WAITING, and that is not a
+            contradiction: the bell asks whether anything is new, and the
+            profile's Invites dot asks whether anybody is waiting. The second
+            outlives the first. */}
+        <ContentRow
+          variant="chronicle"
+          chevron={false}
+          name="rafa"
+          title="@rafa is ready for your approval"
+          trailing="2d"
+          onOpen={() => {}}
+        />
         <ContentRow
           variant="chronicle"
           chevron={false}
@@ -93,6 +118,30 @@ export function Screen() {
           image="inviter.jpg"
           title="@mira approved your application"
           trailing="12d"
+          onOpen={() => {}}
+        />
+        {/* THE NINTH KIND (the invites round's extension, 2026-09-15): a
+            member closed an application of yours. It is the eighth's twin and
+            had to be drawn beside it — a mechanic that notifies a yes and says
+            nothing about a no leaves the applicant waiting on a thing that has
+            already stopped happening, which is the one cruelty this flow can
+            commit by omission.
+
+            THE TWO ROWS TOGETHER ARE THE STORY, and the order tells it: @kel
+            closed an application fourteen days ago and @mira vouched them in
+            two days later. That is the ruled recovery path drawn as history —
+            one member declining is one member declining, and the ask link is
+            how the next one hears about it.
+
+            IT NAMES THE PERSON AND USES THE CONTROL'S OWN WORD. `closed` is
+            what the button said; a notification that softened it to something
+            else would be the product telling two stories about one act. */}
+        <ContentRow
+          variant="chronicle"
+          chevron={false}
+          name="Kel Moreau"
+          title="@kel closed your application"
+          trailing="14d"
           onOpen={() => {}}
         />
       </ChronicleList>

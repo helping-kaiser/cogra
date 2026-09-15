@@ -114,6 +114,34 @@
       "end": { "board": "VouchedIn", "via": 1 }
     },
     {
+      "name": "send-someone-an-invite",
+      "description": "Invites on your own profile makes a link — one person and seven days unless the reader says otherwise — and hands it straight to the platform's own share sheet.",
+      "start": { "board": "Profile", "via": 7, "to": "Invites" },
+      "waypoints": [
+        { "board": "Invites", "via": 2 },
+        { "board": "InviteNew", "via": 3 }
+      ],
+      "end": { "board": "InviteCreated", "via": 2, "case": "the platform's own share sheet" }
+    },
+    {
+      "name": "vouch-an-applicant-in",
+      "description": "A ready application in the invites queue opens the stance pad on the applicant; Set signs the inviter's opinion, which is the approval and the vouch in one act.",
+      "start": { "board": "Profile", "via": 7, "to": "Invites" },
+      "waypoints": [
+        { "board": "Invites", "via": 4 }
+      ],
+      "end": { "board": "ApprovePad", "via": 4, "case": "signed — the vouch lands, the row leaves the queue, and the approval notifies them" }
+    },
+    {
+      "name": "answer-someones-ask-link",
+      "description": "An ask link lands on the person who sent it; opening the stance affordance raises the pad, and Set signs the vouch that brings them in — the route a turned-down applicant still has.",
+      "start": { "board": "VouchAsk" },
+      "waypoints": [
+        { "board": "VouchAsk", "via": 3 }
+      ],
+      "end": { "board": "VouchAskPad", "via": 4, "case": "signed — the vouch lands and the person is now this member's to have vouched in" }
+    },
+    {
       "name": "restore-your-key",
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
       "start": { "control": "Restore the key", "except": ["Restore"] },
