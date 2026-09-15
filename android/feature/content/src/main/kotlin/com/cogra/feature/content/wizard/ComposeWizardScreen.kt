@@ -383,6 +383,9 @@ internal fun ComposeWizardScreen(
                             onRemovePick = onRemovePickAt,
                             onManagePictures = onManagePictures,
                             onDescribePictures = onDescribePictures,
+                            // The cover field's two states reach one place:
+                            // the stage behind this one.
+                            onCover = onBack,
                             topics = {
                                 // The 2.3 section, embedded rather than
                                 // rebuilt: only its surroundings changed.

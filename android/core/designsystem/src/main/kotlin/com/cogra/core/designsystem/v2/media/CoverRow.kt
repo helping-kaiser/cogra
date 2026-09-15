@@ -36,6 +36,12 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * that is.
  */
 sealed interface CoverPick {
+    /**
+     * No face yet — the row's opening state, and the one it keeps until
+     * a tile is tapped. Every tile draws unchosen; none wears the ring.
+     */
+    data object None : CoverPick
+
     data class Frame(val index: Int) : CoverPick
 
     data object OwnPicture : CoverPick
@@ -45,21 +51,20 @@ sealed interface CoverPick {
  * "Cover" — a strip of frames lifted from the clip, plus one dashed tile
  * that opens the device's own picker.
  *
- * One component at two scales. `ComposeCover` draws it as a stage of its
- * own at 76dp with the dashed tile captioned; `ReplyVideo` inlines it at
- * 56dp with the icon alone, because the comment composer is one screen
- * and the face is picked there rather than in a stage. The canvas keeps
- * the two boards separate — the frame strip is one picture framed three
- * ways, which no canvas component draws — but in Compose it is the same
- * row, and duplicating it would be two things to keep in step.
+ * One component, one drawing. `ComposeCover` gives it a stage and
+ * `ReplyVideo` inlines it in the composer, but both boards draw the same
+ * five 56dp tiles at an 8dp gap with the glyph alone in the dashed one —
+ * so there is nothing here that differs by scale.
+ *
+ * NOTHING HERE CHOOSES. The strip renders the offers it is handed and
+ * reports taps; a [picked] of anything but a tap is the caller's own
+ * doing, and a cover the author never picked is one nobody signed.
  *
  * @param frames what to draw in each frame tile, in offer order.
  * @param picked which tile wears the selection ring.
  * @param ownPicture the author's chosen cover, drawn in place of the
  *   dashed tile once there is one.
  * @param tileSize the strip's scale.
- * @param labelOwnPicture whether the dashed tile carries its caption —
- *   there is no room for it at comment scale.
  */
 @Composable
 fun CoverRow(
@@ -70,7 +75,6 @@ fun CoverRow(
     modifier: Modifier = Modifier,
     ownPicture: Any? = null,
     tileSize: Dp = CoverRowDefaults.TileSize,
-    labelOwnPicture: Boolean = true,
     testTagPrefix: String? = null,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Space.x2)) {
@@ -97,7 +101,6 @@ fun CoverRow(
                 model = ownPicture,
                 onClick = onPickOwnPicture,
                 tileSize = tileSize,
-                labelled = labelOwnPicture,
                 testTag = testTagPrefix?.let { "${it}_picture" },
             )
         }
@@ -136,7 +139,6 @@ private fun OwnPictureTile(
     model: Any?,
     onClick: () -> Unit,
     tileSize: Dp,
-    labelled: Boolean,
     testTag: String?,
 ) {
     if (model != null) {
@@ -169,28 +171,26 @@ private fun OwnPictureTile(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // THE GLYPH ALONE, on both boards: `cg-cover-own` holds a 20px
+        // picture icon and nothing else. The caption it used to wear is
+        // what pushed the tile past the drawn 56dp in the first place.
         Icon(
             imageVector = Icons.Filled.Image,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(CoverRowDefaults.GlyphSize),
         )
-        if (labelled) {
-            Text(
-                text = "A picture",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
     }
 }
 
 object CoverRowDefaults {
-    /** `ComposeCover`'s own stage scale. */
-    val TileSize = 76.dp
-
-    /** `ReplyVideo`'s inline scale — the comment composer is one screen. */
-    val CommentTileSize = 56.dp
+    /**
+     * ONE SCALE, BOTH SURFACES. `ComposeCover` and `ReplyVideo` draw the
+     * identical 56dp tile at an 8dp gap — five of them are 312dp, inside
+     * the 342dp the stage gives the strip. At 76dp the row measured
+     * 412dp and the `Row` clipped the picture tile to a sliver.
+     */
+    val TileSize = 56.dp
 
     val GlyphSize = 20.dp
 }

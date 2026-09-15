@@ -173,8 +173,12 @@ internal fun coverPreviewRatio(sourceRatio: Float?): Float =
     (sourceRatio?.takeIf { it.isFinite() && it > 0f } ?: MediaShape.Square.ratio)
         .cappedToTallestTile()
 
-/** What the preview draws: the chosen frame's bytes, the chosen picture, or nothing. */
-private fun ComposeWizardState.coverModel(): Any? = when (val choice = coverChoice) {
+/**
+ * The chosen face's bytes, the chosen picture, or null for no cover —
+ * what the stage's preview draws, and what the details field reads to
+ * know whether it is a door or a face.
+ */
+internal fun ComposeWizardState.coverModel(): Any? = when (val choice = coverChoice) {
     CoverChoice.None -> null
     is CoverChoice.Frame -> coverFrames.getOrNull(choice.index)?.picture?.bytes
     is CoverChoice.Picture -> choice.uri
@@ -187,14 +191,14 @@ private fun ComposeWizardState.coverModel(): Any? = when (val choice = coverChoi
  * has to upload it; the row only has to draw it, so the two shapes stay
  * separate and this is the seam between them.
  *
- * [CoverRow] has no "nothing chosen" ring of its own, but it never
- * needs one: [CoverChoice.None] only stands while [ComposeWizardState]
- * offers no frames to ring (loading, or extraction came back empty) or
- * once the author has moved past this stage — either way there is no
- * tile here that this sentinel could wrongly light up.
+ * NOTHING CHOSEN IS ITS OWN ANSWER, and the row has a shape for it.
+ * [CoverChoice.None] is what an author has for as long as they have not
+ * tapped a tile — with every offer on screen — so mapping it onto the
+ * first frame would ring a face nobody picked and make the screen lie
+ * about what the post is going to carry.
  */
 internal fun CoverChoice.toPick(): CoverPick = when (this) {
-    CoverChoice.None -> CoverPick.Frame(0)
+    CoverChoice.None -> CoverPick.None
     is CoverChoice.Frame -> CoverPick.Frame(index)
     is CoverChoice.Picture -> CoverPick.OwnPicture
 }

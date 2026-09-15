@@ -36,8 +36,10 @@ export function DetailsStep({
   mode,
   assets,
   previews,
+  clipFace,
   coverPreview,
   durationMs,
+  onCover,
   title,
   description,
   tags,
@@ -58,10 +60,14 @@ export function DetailsStep({
   mode: "words" | "media";
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
-  /** A video's chosen face — its own object URL, outside `previews`. */
+  /** The still that stands for the clip: its cover, or its own first frame. */
+  clipFace: string | null;
+  /** A video's CHOSEN face, and null while it has none — what the field reads. */
   coverPreview: string | null;
   /** The video's length, badged on its own thumbnail. Meaningless off a video post. */
   durationMs: number;
+  /** Opens the cover stage — one Back away, from either state of the field. */
+  onCover: () => void;
   title: string;
   description: string;
   tags: readonly TagDraft[];
@@ -86,13 +92,21 @@ export function DetailsStep({
         <BodyStrip
           assets={assets}
           previews={previews}
-          coverPreview={coverPreview}
+          clipFace={clipFace}
           durationMs={durationMs}
           onManage={onManage}
           onDescribe={onDescribe}
           onRetry={onRetry}
           onRemove={onRemove}
         />
+      )}
+
+      {/* The clip and its cover are TWO STANDALONE ASSETS, so the board gives
+          the cover its own field under the body rather than folding it into
+          the clip's tile. A gallery has no such field: its cover is its
+          order. */}
+      {mode === "media" && assets[0] !== undefined && kindOf(assets[0]) === "video" && (
+        <CoverField face={coverPreview} onOpen={onCover} />
       )}
 
       <TextField
@@ -164,10 +178,62 @@ export function thumbState(asset: PickedAsset): Pick<PickedThumb, "progress" | "
   }
 }
 
+/**
+ * The cover as the details board draws it — a FIELD with two states, never a
+ * second entrance (`ComposeDetailsVideo`, `CommentEditVideo`).
+ *
+ * Empty, it is the door: "Add a cover" over the line that says what a clip
+ * without one does. Filled, it is the face: the 56px still and "Change the
+ * cover". Both reach the same stage, which is one Back away — the cover is
+ * the clip's own standalone asset and this is where the post says whether
+ * there is one.
+ */
+function CoverField({ face, onOpen }: { face: string | null; onOpen: () => void }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-label-large">Cover</span>
+      {face === null ? (
+        <>
+          <button
+            type="button"
+            data-testid="wizard-cover-door"
+            onClick={onOpen}
+            className="cg-state cg-focus cg-hit m-0 cursor-pointer self-start border-0 bg-transparent p-0 text-label-small text-primary"
+          >
+            Add a cover
+          </button>
+          <p className="m-0 text-label-small text-on-surface-variant">
+            It plays the moment it is on screen, so it starts on its own first frame.
+          </p>
+        </>
+      ) : (
+        <div className="flex items-center gap-2">
+          {/* A plain `img`: an object URL for bytes already in memory. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={face}
+            alt=""
+            data-testid="wizard-cover-face"
+            className="size-14 flex-none rounded-small bg-surface-container-high object-cover"
+          />
+          <button
+            type="button"
+            data-testid="wizard-cover-change"
+            onClick={onOpen}
+            className="cg-state cg-focus min-h-8 cursor-pointer rounded-full border border-transparent bg-transparent px-4 py-1.5 text-label-large text-primary"
+          >
+            Change the cover
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BodyStrip({
   assets,
   previews,
-  coverPreview,
+  clipFace,
   durationMs,
   onManage,
   onDescribe,
@@ -176,7 +242,7 @@ function BodyStrip({
 }: {
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
-  coverPreview: string | null;
+  clipFace: string | null;
   durationMs: number;
   onManage: () => void;
   onDescribe: () => void;
@@ -193,11 +259,11 @@ function BodyStrip({
       <PickedRow
         items={assets.map((asset) => ({
           id: asset.id,
-          // A VIDEO'S TILE SHOWS ITS COVER, NOT THE CLIP'S OWN BYTES: the
-          // source preview is the video's blob URL, which an `<img>` cannot
-          // decode — the cover frame is the video's face and what the badge
-          // is for.
-          src: isVideo ? coverPreview : (previews[asset.id] ?? null),
+          // A VIDEO'S TILE STANDS FOR THE CLIP, and shows the clip's face:
+          // the source preview is the video's blob URL, which an `<img>`
+          // cannot decode, so the still is the chosen cover where there is
+          // one and the clip's own first frame where there is not.
+          src: isVideo ? clipFace : (previews[asset.id] ?? null),
           // The row draws the framing the author left the crop step with —
           // the source here would read as the crop having been discarded. A
           // video post never reaches the crop screen, so it has none to draw.
@@ -205,9 +271,14 @@ function BodyStrip({
           durationMs: isVideo ? durationMs : undefined,
           ...thumbState(asset),
         }))}
+        // THE BOARD NAMES THE CLIP, IT DOES NOT COUNT IT. A gallery reads
+        // "3 pictures — the body" because the count is the thing to know;
+        // a clip is the whole body and there is only ever one, so
+        // `ComposeDetailsVideo` labels it "Video" and leaves the counting
+        // to the path that has something to count.
         caption={
           isVideo
-            ? "1 video — the body"
+            ? "Video"
             : assets.length === 1
               ? "1 picture — the body"
               : `${assets.length} pictures — the body`
