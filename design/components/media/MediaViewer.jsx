@@ -22,11 +22,12 @@ import { useGlobalMute, PagerDots } from "./MediaAttachment.jsx";
      resolved against an indefinite height, a wide frame took its intrinsic size,
      and everything after it — the transport above all — was pushed outside the
      screen entirely.
-   · It is a place you back out of: an X, a swipe DOWN, Escape, and the backdrop
-     all close it, and it never changes the underlying route. The X rather than
-     a back arrow, because the reader is dismissing a layer, not walking a step
-     of a journey — and the swipe is the gesture every full-screen media layer
-     is dismissed with.
+   · It is a place you back out of: the X, a swipe DOWN, and back — Escape on
+     a keyboard — close it, and it never changes the underlying route. A TAP IS
+     NOT A WAY OUT, neither on the frame nor on the ground beside it. The X
+     rather than a back arrow, because the reader is dismissing a layer, not
+     walking a step of a journey — and the swipe is the gesture every
+     full-screen media layer is dismissed with.
    · A PICTURE PINCH-ZOOMS, and the gallery's swipe carries over: the set is
      paged here exactly as it is in the card, DOTS AND ALL — dots only, no
      arrows (item 21's pager ruling). Arrows would be a second vocabulary for a
@@ -133,7 +134,6 @@ export function MediaViewer({
       role="dialog"
       aria-modal="true"
       aria-label="Media"
-      onClick={onClose}
       style={{
         position: "absolute",
         inset: 0,
@@ -143,9 +143,8 @@ export function MediaViewer({
       }}
     >
       {/* THE STAGE. Absolutely inset, the frame fitted inside it — so what is
-          drawn is bounded by the screen whatever shape the frame is. The
-          click-stop keeps a tap ON the media from closing what was just opened. */}
-      <div className="cg-viewer-stage" onClick={(event) => event.stopPropagation()} style={{ position: "absolute", inset: 0 }}>
+          drawn is bounded by the screen whatever shape the frame is. */}
+      <div className="cg-viewer-stage" style={{ position: "absolute", inset: 0 }}>
         {media}
         {/* The transport is the product's own, not the browser's default set:
             one control vocabulary across the detail view, the stream and here,
@@ -165,7 +164,8 @@ export function MediaViewer({
       </div>
       {dots}
       {/* The way out. Top-left, over the frame: the chrome belongs to the
-          surface, not to the picture. */}
+          surface, not to the picture. What it is offset from on a real device
+          is the readme's, under *the viewer-grammar close*. */}
       <div
         style={{
           position: "absolute",

@@ -17,6 +17,13 @@ export interface MediaThumbProps {
   radius?: string;
   /** The "Cover" badge — the first picture; the badge travels with reorder. */
   cover?: boolean;
+  /** A clip's chosen cover, drawn as the frame itself: an inset thumb in the
+   *  same bottom-left corner, a third of the tile's short side (28px floor)
+   *  with a hairline ring. A tile is a picture's or a clip's, never both. */
+  coverSrc?: string;
+  /** The chosen frame's own framing inside the mark, the way `CoverRow`'s
+   *  frames carry it — a strip of frames is one picture shown several ways. */
+  coverTransform?: string;
   /** 0..1 — the upload ring on a scrim. Omit when the upload is done. */
   progress?: number;
   /** Dims the picture and wears the error badge; the words live in `UploadErrorLine`. */

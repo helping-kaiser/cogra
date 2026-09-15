@@ -15,6 +15,9 @@
  */
 export interface VideoTransportProps {
   playing?: boolean;
+  /** The clip has run to its end. A detail clip stops there rather than
+   *  looping, and the play/pause slot becomes Replay. Wins over `playing`. */
+  ended?: boolean;
   /** Both are already-formatted times — the component never does arithmetic. */
   elapsed?: string;
   duration?: string;

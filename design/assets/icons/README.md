@@ -21,6 +21,7 @@ fill="none"/>` rect is stripped, per the product's own convention.
 | chat-bubble.svg | chat_bubble | the comments affordance on a card |
 | volume-up.svg / volume-off.svg | volume_up, volume_off | a video's sound toggle |
 | play-arrow.svg / pause.svg | play_arrow, pause | the video transport; the play disc on a suppressed-autoplay card |
+| replay.svg | replay | the video transport's ended state, in the play/pause slot |
 | share.svg | share | handing a post to the OS share sheet |
 | fast-rewind.svg / fast-forward.svg | fast_rewind, fast_forward | the transport's skips, flanking play/pause |
 | fullscreen.svg | fullscreen | the transport's hand-off to the fullscreen viewer |
