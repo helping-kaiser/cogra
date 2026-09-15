@@ -1479,7 +1479,7 @@ where it stands rather than left to be guessed. `brings them in` is
 lifted from `VouchBack`, `ApplicantWaiting` and `VouchedIn` — the
 boards already had the right words, and the rounder phrasings for what
 a new member joins are either banned vocabulary or a word
-`ProfileHeader` rules out (backlog 87).
+`ProfileHeader` rules out (backlog 88).
 
 **The sections are `Applications` and `Live links`.** Not "Waiting on
 you": only one of those rows is waiting on the reader and the other is
@@ -1551,3 +1551,51 @@ profile row's mark speaks as `Invites — someone is waiting`.
 `Invite revoked` when a card leaves, and `@imke has to make their key
 before you can approve` when a not-ready row is pressed — the locked
 row answering with a reason, `ProfileApplicant`'s own manner.
+
+### The reject extension's lines — same round, same day
+
+**The dialog says both effects.** `Close @imke's application?` then
+`It leaves your list and @imke is told. Their account stays exactly as
+it is — signed in, and free to keep reading.` and `This is your call
+and nobody else's. Any member can still vouch them in, and @imke gets a
+link to ask with.` The first sentence is the one a reader would
+otherwise assume away: closing is not private, and a product that let
+somebody press it thinking it was would be lying by omission. The
+second is what stops the first from reading as expulsion.
+
+**The rejected applicant's card**: title `@kel closed your
+application`, body `That was @kel's call, and it is the only thing it
+decides. Your account stays exactly as it is, you can keep reading, and
+any member you know can vouch you in instead.` *closed* is the control's
+own word, carried through from the button to the dialog to the
+notification to this card — four surfaces, one verb, so the product
+never tells two stories about one act.
+
+**The ask link is labelled by what to do with it**, not by what it is:
+`Ask someone you know to vouch for you`, with `Send it to anyone who is
+already in. It does not expire, and it works however many people you
+send it to.` underneath. The caption is doing the work the invite
+link's expiry caption does — saying what kind of link this is — and
+both of its facts are the differences from an invite link, said as
+reassurance rather than as spec. Its copy control is `Copy your ask
+link`; the snackbar is `Link copied`, the same one the invite link's
+copy gives, because it is the same act on the same kind of thing.
+
+**The band's line changes and the band does not**: `Browsing from
+@kel's view — your own starts when someone vouches you in.` The old
+line promised an approval that is not coming; the new one keeps the
+vantage honest and says what would end it.
+
+**The member-side landing**: the page is titled `A vouch, asked for`,
+the card reads `@noor is asking to be vouched in` over `They have an
+account and can read; what they do not have yet is anyone standing for
+them. Your opinion is what brings them in.` No inviter is named and no
+reason is given — an ask link carries a person, not a case file. `Not
+now` leaves it standing, which costs the asker nothing, because the
+link does not expire and is not used up.
+
+**The ninth notification**: `@kel closed your application`. A plain
+report in the same shape as `@mira approved your application`, and
+deliberately not softened: the two rows sit in one list and a reader
+comparing them should see one mechanism, not a cheerful one and an
+apologetic one.
