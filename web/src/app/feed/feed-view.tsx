@@ -42,6 +42,7 @@ import { useScrollHost } from "@/lib/ui/scroll-host";
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
+import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import { recallFeed, rememberFeed, rememberFeedPlace } from "./feed-memory";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
@@ -152,6 +153,17 @@ export function FeedView({
   // The band's chats affordance, signed out: the guest gate the canvas
   // draws (`graph.json` "FeedBare" → `GuestGate`) — ask, never bounce.
   const [chatsPrompting, setChatsPrompting] = useState(false);
+  // WHOSE THREAD IS UP. A card's comment count raises the one comments
+  // surface over this list (jakob 2026-09-15) — a layer, never a destination,
+  // so the feed keeps its pages and its place underneath and the composer the
+  // sheet opens comes back to the thread, not to the feed.
+  //
+  // The post OUTLIVES the flag, the way the license block does on the detail:
+  // the sheet is still on screen through its own exit animation, and a sheet
+  // whose post vanished mid-exit would blank out. It is also what lets a
+  // second raise of the same thread keep what the reader had already unfolded.
+  const [commentsPost, setCommentsPost] = useState<PostView | null>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
 
   // Effect-invoked, so no synchronous setState here; the retry button
   // resets the loading state in its own handler. The fault reflects
@@ -356,6 +368,13 @@ export function FeedView({
               authorTestId={`feed-author-${post.id}`}
               stanceTestId={`feed-stance-${post.id}`}
               comments={post.comments.totalCount}
+              // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
+              // edge advances to `ReplyEntry`) — the card's own tap opens the
+              // post, which is the different intent.
+              onOpenComments={() => {
+                setCommentsPost(post);
+                setCommentsOpen(true);
+              }}
               onLinkCopied={() => setLinkCopied(true)}
             />
           </li>
@@ -406,6 +425,17 @@ export function FeedView({
           mounted unconditionally alongside a post card's own gate collides
           on it the moment both ride the same tree. */}
       {chatsPrompting && <JoinPrompt open onClose={() => setChatsPrompting(false)} />}
+      {/* THE ONE COMMENTS SURFACE, over the feed. It owns its own read, so a
+          card's count raises the same full-function thread the detail's does —
+          and the reader comes back to this list exactly where they left it. */}
+      {commentsPost !== null && (
+        <CommentsSheet
+          open={commentsOpen}
+          onOpenChange={setCommentsOpen}
+          post={commentsPost}
+          store={store}
+        />
+      )}
     </main>
   );
 }
