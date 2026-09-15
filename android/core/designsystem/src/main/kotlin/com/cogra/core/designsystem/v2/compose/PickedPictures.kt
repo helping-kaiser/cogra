@@ -47,6 +47,10 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  * @param uploading an upload in flight, for the thumbnail's ring.
  * @param progress how far it has got, where the transport can say.
  * @param failed the upload did not go through.
+ * @param duration a clip's running time, already written the way the
+ *   boards write it. Its presence is what turns the tile into the
+ *   composer's video anatomy, so a video body never reads as a picture
+ *   one; pictures leave it null.
  */
 data class PickedPicture(
     val item: MediaItem,
@@ -54,6 +58,7 @@ data class PickedPicture(
     val uploading: Boolean = false,
     val progress: Float? = null,
     val failed: Boolean = false,
+    val duration: String? = null,
 ) {
     internal fun badge(cover: Boolean): ThumbBadge? = when {
         failed -> ThumbBadge.Failed
@@ -97,6 +102,7 @@ fun PickedRow(
                 badge = picture.badge(cover = false),
                 uploading = picture.uploading,
                 progress = picture.progress,
+                duration = picture.duration,
                 // The row is one control; its thumbnails are not each a
                 // separate thing to find.
                 contentDescription = null,
