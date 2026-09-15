@@ -223,9 +223,11 @@ fun ProfileEditScreen(
                     }
                     Button(
                         onClick = onSubmit,
-                        // A picture still on its way has no id to name,
-                        // so saving would silently drop it.
-                        enabled = !state.submitting && !state.imagesPending,
+                        // A picture still on its way has no id to name, and
+                        // an over-cap field disables Save too (the counter
+                        // law) — `canSubmit` only makes visible what the
+                        // ViewModel's own submit gate already refuses.
+                        enabled = state.canSubmit,
                         modifier = Modifier.testTag("profile_edit_save"),
                     ) {
                         Text(stringResource(R.string.profile_edit_save))
