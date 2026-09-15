@@ -244,7 +244,10 @@ private class CropBinding {
         val state = state ?: return
         val whole = view.wholeImageRect ?: return
         val rect = view.cropRect ?: return
-        state.onWindowChanged(CropWindowMath.framingOf(rect, whole))
+        state.onWindowChanged(
+            CropWindowMath.framingOf(rect, whole),
+            whole.width().toFloat() / whole.height().toFloat(),
+        )
     }
 }
 
