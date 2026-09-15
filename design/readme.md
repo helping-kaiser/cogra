@@ -815,6 +815,21 @@ weights every choice equally. Instead:
   it just stops being the default-looking one. No new colour: severance
   is a deliberate act, not a failure.
 
+**A dialog is inset from the screen, and the gap is what makes it a
+dialog** (jakob 2026-09-15: "popups should not be full width (if they
+dont need to).. it makes them standout more"). `DialogSurface` centres
+every dialog at `--dialog-max-width` (20rem) and keeps it at least
+`--dialog-inset` (32px) from either edge. The inset is the load-bearing
+number and it is deliberately wider than the 24px screen gutter: a
+dialog whose edges line up with the body text behind it reads as part of
+that body, which is the one thing a dialog must not read as. The
+platform's own floor is 24dp and its narrowest dialog 280dp, so this
+sits inside the idiom rather than beside it. **One width, for all of
+them** — the shell was extracted so the dialogs could not drift, and a
+per-board width is exactly that drift; `width` overrides the max for a
+dialog that genuinely cannot live at the house size, and no dialog in
+the product does.
+
 ### The stance control
 
 **A stance reads as face + pair, never face + words + pair.** Three

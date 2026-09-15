@@ -34,6 +34,12 @@
   --border-field: var(--outline);
   --scrim-dialog: color-mix(in srgb, var(--scrim) 50%, transparent);
 
+  /* A dialog is held clear of the screen edge, and the gap is what says it is
+     floating rather than page (readme §11). Wider than the 24px gutter on
+     purpose; above the platform's 24dp floor and 280dp narrowest. */
+  --dialog-inset: var(--space-8);
+  --dialog-max-width: 20rem;
+
   /* The resting stance face with no standing behind it: muted and translucent. */
   --opacity-resting-face: 0.4; /* @kind other */
   /* The stance face over media. The emoji is a mark, sized to the line face
