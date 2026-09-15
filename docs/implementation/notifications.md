@@ -189,9 +189,11 @@ to carry `readAt`.
 `APPLICATION_REJECTED` have no record to ingest: the first is
 written when the second approvability proof completes, the second
 when the inviter's approval commits, the third when the approver
-closes the entry. Each transition happens once per application row
-and writes one notification, so none of them repeats and none has
-anything to collapse.
+closes the entry — on its own or as one of a link's whole waiting
+queue, which is that many closes and that many addressees. Each
+transition happens once per application row and writes one
+notification, so none of them repeats and none has anything to
+collapse.
 
 **One act, one row.** A record that reaches the viewer two ways —
 a comment on your post that also mentions you — writes the row for
