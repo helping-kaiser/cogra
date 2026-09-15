@@ -637,3 +637,323 @@ async fn an_unanchored_read_serves_an_empty_page(pool: PgPool) {
         "in either direction"
     );
 }
+
+/// What the inbound "Cited by" surface reads, asked exactly as a client
+/// asks it: the cited node's own `incomingRecords`, narrowed to
+/// `REFERENCE`.
+///
+/// A Reference is a hyper act — Actor → citing artifact → target
+/// (layer1-interface.md §9) — so it lays two legs, and a node can sit on
+/// the target end of either one. On the artifact it cites *from*, the
+/// author's A leg lands; on the artifact it cites *at*, the T leg does.
+/// Both are "incoming" to the anchoring rule, which is why the surface
+/// names the source kind: the A leg's far end is an actor address and the
+/// T leg's is the citing artifact, so `fromKind` is what separates
+/// "citations of this" from "this one's own citations".
+const CITED_BY_QUERY: &str = r#"
+query CitedBy($id: UUID!, $fromKind: NodeKind, $first: Int, $after: String) {
+  node(id: $id) {
+    ... on Post {
+      incomingRecords(family: REFERENCE, fromKind: $fromKind,
+                      first: $first, after: $after) {
+        edges {
+          cursor
+          node {
+            id pDirected pInterest landingEpoch
+            author { handle }
+            target {
+              __typename
+              ... on Post { id title { value } }
+              ... on Comment { id content { value } }
+            }
+            terminal { __typename ... on Post { id } }
+          }
+        }
+        pageInfo { hasNextPage endCursor }
+      }
+    }
+  }
+}
+"#;
+
+/// The same question asked of the top-level chronicle, which can name the
+/// leg directly (`terminal` matches the terminal leg). Kept beside the
+/// node-anchored read so the two shapes can be compared on one fixture.
+const TERMINAL_QUERY: &str = r#"
+query CitedByTerminal($id: UUID!, $first: Int) {
+  records(terminal: $id, family: REFERENCE, first: $first) {
+    totalCount
+    edges {
+      node {
+        id pDirected pInterest
+        target {
+          __typename
+          ... on Post { id title { value } }
+          ... on Comment { id content { value } }
+        }
+      }
+    }
+    pageInfo { hasNextPage endCursor }
+  }
+}
+"#;
+
+/// The citing artifact of each edge, as the row would name it.
+fn citing_titles(connection: &Value) -> Vec<String> {
+    connection["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|e| {
+            let target = &e["node"]["target"];
+            target["title"]["value"]
+                .as_str()
+                .or_else(|| target["content"]["value"].as_str())
+                .expect("a citing artifact CoGra can name")
+                .to_string()
+        })
+        .collect()
+}
+
+impl Chronicle {
+    /// Signs every write of a batch, then closes one epoch over the lot —
+    /// a creation that carries citations stages the minting act and one
+    /// act per citation, and they land together.
+    async fn land_all(&self, prepared: &content::PreparedContent, key: &ActorKey) {
+        for write in &prepared.writes {
+            self.sign_and_relay(write.id, key).await;
+        }
+        self.close_and_ingest().await;
+    }
+
+    async fn post_citing(
+        &self,
+        actor: Uuid,
+        key: &ActorKey,
+        title: &str,
+        cites: Uuid,
+        relevance: f64,
+        support: f64,
+    ) -> Uuid {
+        let prepared = content::prepare_post(
+            &self.pool,
+            &self.boundary,
+            GC,
+            actor,
+            PostDraft {
+                title: Some(title.into()),
+                description: None,
+                content: Some("body".into()),
+                license: license(),
+                p_directed: None,
+                tags: vec![],
+                references: vec![api::references::ReferenceDraft {
+                    target: cites,
+                    relevance: Some(relevance),
+                    support: Some(support),
+                }],
+                attachments: vec![],
+                sensitive: Default::default(),
+            },
+        )
+        .await
+        .expect("prepares citing post");
+        self.land_all(&prepared, key).await;
+        prepared.node
+    }
+
+    async fn comment_citing(
+        &self,
+        actor: Uuid,
+        key: &ActorKey,
+        target: Uuid,
+        body: &str,
+        cites: Uuid,
+    ) -> Uuid {
+        let prepared = content::prepare_comment(
+            &self.pool,
+            &self.boundary,
+            GC,
+            actor,
+            CommentDraft {
+                target,
+                content: body.into(),
+                license: license(),
+                p_directed: None,
+                p_interest: None,
+                tags: vec![],
+                references: vec![api::references::ReferenceDraft {
+                    target: cites,
+                    relevance: Some(-0.3),
+                    support: Some(0.35),
+                }],
+                attachments: vec![],
+                sensitive: Default::default(),
+            },
+        )
+        .await
+        .expect("prepares citing comment");
+        self.land_all(&prepared, key).await;
+        prepared.node
+    }
+}
+
+/// The cited-by read, proven against the graph it is meant to describe.
+///
+/// The fixture makes the distinction that matters visible: Alice's post
+/// both cites something and is cited, so its unfiltered inbound
+/// `REFERENCE` page carries its own outbound citation beside the two
+/// aimed at it. `fromKind` is therefore not an optimisation on this
+/// surface but the read itself — a POST-and-COMMENT union is what the
+/// list holds, and the A leg's actor far end is what it must not.
+///
+/// The pair each row shows is the record's published one, which the
+/// contract reads off the A leg: `pDirected` is the author's effort and
+/// `pInterest` their enthusiasm, the two values the composer signed.
+///
+/// A cited node reads what points at it off the terminal leg, newest first and carrying the pair each citing author signed, where its own outbound citation rides the anchored read instead.
+/// ´claim:chronicle:the-cited-side-reads-its-citations´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_cited_side_reads_its_citations(pool: PgPool) {
+    let rig = Chronicle::new(pool).await;
+    let (alice, alice_key) = rig.funded_actor("alice").await;
+    let (bob, bob_key) = rig.funded_actor("bob").await;
+    let (carol, carol_key) = rig.funded_actor("carol").await;
+
+    let older = rig.post(alice, &alice_key, "An older piece").await;
+    let cited = rig
+        .post_citing(alice, &alice_key, "The cited post", older, 0.2, 0.2)
+        .await;
+    let citing_post = rig
+        .post_citing(bob, &bob_key, "Where the salt goes", cited, 0.7, 0.5)
+        .await;
+    let citing_comment = rig
+        .comment_citing(carol, &carol_key, citing_post, "Answering the tide", cited)
+        .await;
+
+    let unfiltered = rig.gql(CITED_BY_QUERY, json!({ "id": cited })).await;
+    let unfiltered = &unfiltered["node"]["incomingRecords"];
+    assert_eq!(
+        citing_titles(unfiltered),
+        vec![
+            "Answering the tide",
+            "Where the salt goes",
+            "The cited post"
+        ],
+        "unfiltered, the cited node's own outbound citation rides along on \
+         the A leg that lands here — which is why this surface filters"
+    );
+
+    let from_posts = rig
+        .gql(CITED_BY_QUERY, json!({ "id": cited, "fromKind": "POST" }))
+        .await;
+    let from_posts = &from_posts["node"]["incomingRecords"];
+    assert_eq!(
+        citing_titles(from_posts),
+        vec!["Where the salt goes"],
+        "the posts that cite this one, and not the citation it made itself"
+    );
+    let from_comments = rig
+        .gql(
+            CITED_BY_QUERY,
+            json!({ "id": cited, "fromKind": "COMMENT" }),
+        )
+        .await;
+    assert_eq!(
+        citing_titles(&from_comments["node"]["incomingRecords"]),
+        vec!["Answering the tide"],
+        "and the comments that cite it, on the same anchoring"
+    );
+
+    let row = &from_posts["edges"][0]["node"];
+    assert_eq!(
+        row["author"]["handle"], "bob",
+        "the act's author is the person who cited"
+    );
+    assert_eq!(
+        row["target"]["id"].as_str().expect("citing artifact id"),
+        citing_post.to_string(),
+        "`target` is the middle node — the artifact the citation was built into"
+    );
+    assert_eq!(
+        row["terminal"]["id"].as_str().expect("cited id"),
+        cited.to_string(),
+        "and `terminal` is this post, the end the T leg arrives at"
+    );
+    assert_eq!(row["pDirected"], json!(0.7), "effort, as signed");
+    assert_eq!(row["pInterest"], json!(0.5), "enthusiasm, as signed");
+
+    let ordered = rig
+        .gql(
+            CITED_BY_QUERY,
+            json!({ "id": cited, "first": 1, "fromKind": null }),
+        )
+        .await;
+    let first_page = &ordered["node"]["incomingRecords"];
+    assert_eq!(
+        citing_titles(first_page),
+        vec!["Answering the tide"],
+        "newest first — the page opens on what has just arrived"
+    );
+    assert_eq!(
+        first_page["pageInfo"]["hasNextPage"],
+        json!(true),
+        "and says there is more behind it"
+    );
+    let cursor = first_page["pageInfo"]["endCursor"]
+        .as_str()
+        .expect("end cursor");
+    let second = rig
+        .gql(
+            CITED_BY_QUERY,
+            json!({ "id": cited, "first": 1, "after": cursor }),
+        )
+        .await;
+    assert_eq!(
+        citing_titles(&second["node"]["incomingRecords"]),
+        vec!["Where the salt goes"],
+        "the walk continues down the chronicle, one page at a time"
+    );
+
+    assert!(
+        citing_titles(
+            &rig.gql(
+                CITED_BY_QUERY,
+                json!({ "id": older, "fromKind": "COMMENT" })
+            )
+            .await["node"]["incomingRecords"]
+        )
+        .is_empty(),
+        "a node nothing of that kind cites reads an empty page, never an error"
+    );
+
+    let by_terminal = rig.gql(TERMINAL_QUERY, json!({ "id": cited })).await;
+    assert_eq!(
+        citing_titles(&by_terminal["records"]),
+        vec!["Answering the tide", "Where the salt goes"],
+        "naming the leg answers the same question in one page, both kinds \
+         together and the node's own citation left out"
+    );
+    assert_eq!(
+        by_terminal["records"]["totalCount"],
+        json!(2),
+        "the count counts what the filter matched"
+    );
+    let one = rig
+        .gql(TERMINAL_QUERY, json!({ "id": cited, "first": 1 }))
+        .await;
+    assert_eq!(
+        one["records"]["totalCount"],
+        json!(2),
+        "and does not move with the cursor — one page, the whole count"
+    );
+
+    let uncited = rig.post(bob, &bob_key, "Nobody cites this").await;
+    assert_eq!(
+        rig.gql(TERMINAL_QUERY, json!({ "id": uncited })).await["records"]["totalCount"],
+        json!(0),
+        "zero is a number the count states, which is what lets a line know \
+         not to draw itself"
+    );
+    let _ = citing_comment;
+}

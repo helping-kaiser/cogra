@@ -281,6 +281,7 @@ label.
 | `test:integration:the-chronicle-filters-compose-and-carriage-is-idempotent`                 | the_chronicle_filters_compose_and_carriage_is_idempotent                 |
 | `test:integration:the-chronicle-omits-a-pending-record-until-it-lands`                      | the_chronicle_omits_a_pending_record_until_it_lands                      |
 | `test:integration:the-citation-cap-refuses-the-batch-as-a-batch`                            | the_citation_cap_refuses_the_batch_as_a_batch                            |
+| `test:integration:the-cited-side-reads-its-citations`                                       | the_cited_side_reads_its_citations                                       |
 | `test:integration:the-corpora-carry-the-operations-they-are-read-for`                       | the_corpora_carry_the_operations_they_are_read_for                       |
 | `test:integration:the-dev-budgets-admit-every-client-operation`                             | the_dev_budgets_admit_every_client_operation                             |
 | `test:integration:the-dev-budgets-admit-the-standard-introspection-query`                   | the_dev_budgets_admit_the_standard_introspection_query                   |
