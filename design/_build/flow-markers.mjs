@@ -818,6 +818,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: "+ Add a tag", tag: "button" },
     { n: 8, find: "+ Cite something", tag: "button" },
     { n: 9, find: ">Next</button>", tag: "button" },
+    { n: 10, find: 'aria-label="Remove this video"', tag: "button" },
   ],
   ReplyVideoFailed: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
