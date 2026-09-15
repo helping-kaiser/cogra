@@ -561,7 +561,12 @@ The screen top collapses: scrolling down hides the top app bar,
 and about a third of a screen of accumulated upward scroll
 brings it back — never the first upward pixel, so a short
 correction toward a post's top summons nothing, and any
-downward scroll resets the tally. Android gates M3's
+downward scroll resets the tally. **The post detail's bar is
+pinned instead** (jakob 2026-09-15): it is the only place the
+post's menu and its way back stand — the card yields its own ⋮
+on a detail surface — so a collapse takes every act on the post
+off screen mid-read. Which of the remaining surfaces collapse
+and which pin is undrawn, and owed (`design/backlog.md` item 98). Android gates M3's
 `enterAlways` behind that tally (`rememberCollapsingTop` in the
 design system), with the bar pinned to `surface` instead of
 M3's on-scroll container tint — the collapsing region reads as

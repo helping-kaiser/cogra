@@ -24,6 +24,7 @@ export function ListRow({
   trailing,
   testId,
   onOpen,
+  onNavigate,
   onDismiss,
   dismissLabel,
 }: {
@@ -38,6 +39,12 @@ export function ListRow({
    * `onOpen` stays for a row that acts rather than navigates.
    */
   href?: string;
+  /**
+   * Fired as a linked row is followed — what a sheet uses to drop itself on
+   * the way out, so the surface it was raised over is what Back comes back
+   * to. A row that acts has `onOpen` for the same moment.
+   */
+  onNavigate?: () => void;
   trailing?: ReactNode;
   testId?: string;
   onOpen?: () => void;
@@ -65,6 +72,7 @@ export function ListRow({
       {href !== undefined ? (
         <Link
           href={href}
+          onClick={onNavigate}
           className="cg-state cg-focus flex min-w-0 flex-1 items-center gap-2 rounded-small text-left"
         >
           {body}

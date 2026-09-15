@@ -1,15 +1,11 @@
 /* The first vouch — the MASTER pad, parked open over the vouch card. The card,
    its readouts, the "?" and the buttons are all StanceControl's own anatomy;
    this screen contributes only the one-time coaching lines (`padNote`) and the
-   wash. */
-function PadLine({ children }) {
-  return (
-    <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
-      {children}
-    </p>
-  );
-}
+   wash.
 
+   `PadLine` LIVES IN `_shared.jsx` (the invites round): the approval pad on
+   the other side of this same handshake draws the identical line, and a pad's
+   own voice written twice is a pad's own voice that drifts. */
 export function Screen() {
   return (
     <>

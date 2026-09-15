@@ -4,14 +4,21 @@
    header; the chronicle holds the acts already staged, each marked as still
    settling (the ruling: an applicant stages each kind of act once). Invites
    are the one dead control: the tap answers with the snackbar, drawn here —
-   an informational line, never a gate screen (jakob 2026-09-01). */
+   an informational line, never a gate screen (jakob 2026-09-01).
+
+   THE CARD NAMES THE APPROVER (the approver sweep, 2026-09-15). "Waiting on
+   your inviter" named a person this reader does not have — the inviter is
+   fixed at the vouch-back — so the title names whoever's approval is in play,
+   and the sentence that repeated it under a second verb is gone rather than
+   rewritten. What is left is the fact the title cannot carry: acts staged now
+   arrive with the reader. */
 export function Screen() {
   return (
     <>
       <ProfileBand />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "8px 16px 0" }}>
-          <TaskCard title="Waiting on your inviter" body="Your application is with @mira. What you post now arrives with you." />
+          <TaskCard title="Waiting on @mira" body="What you post now arrives with you." />
         </div>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader

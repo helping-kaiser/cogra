@@ -5,7 +5,7 @@ import { Snackbar } from "../core/Snackbar.jsx";
 import { JoinPrompt } from "../core/JoinPrompt.jsx";
 import { StancePad, STANCE_AXES } from "./StancePad.jsx";
 import { StanceAlternates } from "./StanceAlternates.jsx";
-import { StanceCoachMark, STANCE_PAD_HELP, HelpLine, helpKey } from "./StanceCoachMark.jsx";
+import { StanceCoachMark, padHelp, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { SeveranceConfirm } from "./SeveranceConfirm.jsx";
 import {
   bundleReadout,
@@ -14,6 +14,7 @@ import {
   localLanding,
   ORIGIN,
   RESTING_FACE_EMOJI,
+  severanceWords,
   signedLine,
   StanceLandingLine,
   StanceStanding,
@@ -489,7 +490,7 @@ export function StanceControl({
                 and Cancel away from the thumb defeats the parking. */}
             {explaining ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-                {STANCE_PAD_HELP.map((line) => (
+                {padHelp(axes).map((line) => (
                   <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
                     <HelpLine line={line} />
                   </p>
@@ -522,7 +523,7 @@ export function StanceControl({
                   className={BUTTON_CLASS}
                   style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}
                 >
-                  Walk it back
+                  {severanceWords(axes).control}
                 </button>
               )}
               <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>
