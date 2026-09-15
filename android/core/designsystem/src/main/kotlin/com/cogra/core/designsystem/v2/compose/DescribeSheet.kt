@@ -29,6 +29,7 @@ import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.media.MediaItem
+import com.cogra.core.designsystem.v2.media.imageModel
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.MediaOverlay
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -96,7 +97,15 @@ fun DescribeSheet(
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             AsyncImage(
-                model = item.url,
+                // THE PICTURE THE POST WILL CARRY, not the one it came from.
+                // The caller hands the author's own framing down for exactly
+                // this ([MediaItem.framing] — "a preview drawn before the
+                // cropped bytes exist"); drawing the plain `url` showed the
+                // whole original instead, so an author checking their
+                // description was checking it against a frame they had
+                // already cropped away. `imageModel` is what the rest of the
+                // media layer draws a framed item through.
+                model = item.imageModel(),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize(),
