@@ -805,6 +805,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Write words instead</button>", tag: "button" },
     { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
   ],
+  // The same step once a cover exists: one anatomy, so one marker list.
+  ComposePickVideoCover: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Write words instead</button>", tag: "button" },
+    { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
+  ],
   CoverCrop: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
