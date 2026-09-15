@@ -293,6 +293,24 @@ class WriteRepositoryImpl @Inject constructor(private val client: ApolloClient, 
         }
     }
 
+    override suspend fun prepareTopicStance(
+        topicName: String,
+        pDirected: Double,
+        pInterest: Double,
+    ): Outcome<List<PreparedWriteView>> = guard.run {
+        client.mutation(
+            PrepareStanceMutation(
+                PrepareStanceInput(
+                    topicName = Optional.present(topicName),
+                    pDirected = pDirected,
+                    pInterest = pInterest,
+                ),
+            ),
+        ).payloadOutcome({ it.prepareStance.userErrors.map { e -> e.userErrorFields } }) {
+            it.prepareStance.writes?.map { w -> w.preparedWriteFields.toDomain() }
+        }
+    }
+
     override suspend fun submitProposal(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> =
         guard.run {
             client.mutation(

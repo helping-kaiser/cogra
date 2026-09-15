@@ -36,6 +36,7 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.topics.TagClaim
 import java.time.Instant
@@ -93,6 +94,24 @@ interface WriteRepository {
     suspend fun hostPublicKey(): Outcome<ByteArray>
 
     suspend fun prepareStance(targetId: String, pDirected: Double, pInterest: Double): Outcome<List<PreparedWriteView>>
+
+    /**
+     * The same prepare addressed by NAME rather than by id — the topic
+     * leg of `PrepareStanceInput`, whose `target` and `topicName` are
+     * exactly-one-of.
+     *
+     * Its own method rather than a nullable id beside the existing one,
+     * because the two are not two spellings of one address: a Type is
+     * anchored vacuously and its id derives one-way from its name, so a
+     * topic nobody has tagged yet has no id at all and is followable
+     * anyway. Naming it here registers the name, as any record that
+     * references it does.
+     */
+    suspend fun prepareTopicStance(
+        topicName: String,
+        pDirected: Double,
+        pInterest: Double,
+    ): Outcome<List<PreparedWriteView>>
 
     suspend fun submitProposal(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView>
 
@@ -372,10 +391,10 @@ interface StanceRepository {
      * carries the two values verbatim — the client never computes a
      * delta against the bundle (design.md §8.1).
      */
-    suspend fun prepareStance(target: String, pick: StancePair): Outcome<List<PreparedWriteView>>
+    suspend fun prepareStance(target: StanceTarget, pick: StancePair): Outcome<List<PreparedWriteView>>
 
     /** The viewer's current netted stance toward [target]. */
-    suspend fun standing(target: String, includePending: Boolean = true): Outcome<StanceStanding>
+    suspend fun standing(target: StanceTarget, includePending: Boolean = true): Outcome<StanceStanding>
 
     /**
      * Where [pick] would land the viewer's bundle toward [target] — the
@@ -388,20 +407,20 @@ interface StanceRepository {
      * answer for any surface that needs one rather than a live readout.
      */
     suspend fun projection(
-        target: String,
+        target: StanceTarget,
         pick: StancePair,
         includePending: Boolean = true,
     ): Outcome<StanceProjection>
 
     /** What reaching `(0, 0)` toward [target] would take — the confirm's read side. */
-    suspend fun severanceQuote(target: String, includePending: Boolean = true): Outcome<SeveranceQuote>
+    suspend fun severanceQuote(target: StanceTarget, includePending: Boolean = true): Outcome<SeveranceQuote>
 
     /**
      * Stages the severance batch: the counter-records that net the
      * viewer's bundle toward [target] to `(0, 0)`, each its own priced
      * act for this device to sign.
      */
-    suspend fun prepareSeverance(target: String): Outcome<List<PreparedWriteView>>
+    suspend fun prepareSeverance(target: StanceTarget): Outcome<List<PreparedWriteView>>
 }
 
 /**
@@ -455,10 +474,12 @@ interface ProfileRepository {
  * than by id, since a Type anchors vacuously and a topic nobody has
  * tagged yet has no id to look up (D4).
  *
- * Follow/unfollow reuse the generic stance machinery `StanceRepository`
- * already exposes for posts, comments, and profiles; the difference is
- * only the target shape (a name, not a UUID) and the plain toggle this
- * slice ships instead of the pad (D10 — the redesign pass revisits).
+ * Following reuses the generic stance machinery `StanceRepository`
+ * already exposes for posts, comments, and profiles — the same ceremony,
+ * the same pad, the same face table — through
+ * [StanceTarget.Topic]. The difference is the address (a name, not a
+ * UUID) and the words at the axes' edges, which belong to the Affinity
+ * family rather than to the control.
  */
 interface TopicRepository {
     /** Null only for a name the substrate cannot carry (D3's ASCII charset). */
