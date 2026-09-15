@@ -1,12 +1,18 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceHandlers } from "@/test/stance";
 import { TopicView } from "./topic-view";
+
+// The post cards on this page carry the ⋮, whose rows navigate.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const server = startMswServer(...stanceHandlers());
 

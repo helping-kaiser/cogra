@@ -1856,6 +1856,21 @@ Object.assign(FLOW_MARKERS, {
   /* The same page with the topic held \u2014 the same markers, one find apart: an
      anchor with a bundle behind it says so in its own accessible name. */
   TagPageHeld: tagPageBody({ topicStance: 'aria-label="Your opinion on #saltmaps' }),
+  /* The topic's own pad, bloomed over the held page. `PadStanding`'s five
+     numbers exactly — same anatomy, the walk-away taking the third and the two
+     decisions shifting past it — because the record family changes the words
+     at the edges and nothing else. Only the PAD's controls are stamped: the
+     page beneath is drawn whole and its own controls are `TagPageHeld`'s, read
+     on that board. The "?" keeps the ordinary control's name, since a named
+     pad belongs to a board that named it (ruling A7) and this one does not. */
+  TagPageHeldPad: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion pad for #saltmaps"', tag: "div" },
+    { n: 2, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
+    { n: 3, find: ">Walk it back</button>", tag: "button" },
+    { n: 4, find: ">Cancel</button>", tag: "button" },
+    { n: 5, find: ">Set</button>", tag: "button" },
+  ],
   TagPageEmpty: [
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
   ],

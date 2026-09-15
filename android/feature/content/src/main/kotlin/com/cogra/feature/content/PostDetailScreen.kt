@@ -192,6 +192,11 @@ fun PostDetailScreen(
     // one sheet for the screen, raised by whichever menu row asked for it —
     // the post's own or any comment's.
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
+    // The post's row raises it over the page; a comment's raises it over the
+    // comments thread — a sheet over a sheet, `stacked`
+    // (`CommentLicense.jsx`, design/readme.md:2364). The one mount below
+    // answers for whichever menu asked, so this tracks which case it was.
+    var licenseStacked by remember { mutableStateOf(false) }
     var removeOpen by remember { mutableStateOf(false) }
     // SAVED, not merely remembered: the composer and the comment editor are
     // their own destinations, so the thread is left and re-entered rather than
@@ -237,7 +242,11 @@ fun PostDetailScreen(
                         onEdit = onEdit,
                         onCite = onReference,
                         onRemove = { removeOpen = true },
-                        onLicense = { licenseShown = it },
+                        // Over the page — never stacked.
+                        onLicense = { license ->
+                            licenseShown = license
+                            licenseStacked = false
+                        },
                     )
                 },
             )
@@ -356,13 +365,17 @@ fun PostDetailScreen(
             onOpenActor = onOpenActor,
             onOpenTopic = onOpenTopic,
             onReference = onReference,
-            onLicense = { licenseShown = it },
+            // Over the comments thread's own sheet — stacked.
+            onLicense = { license ->
+                licenseShown = license
+                licenseStacked = true
+            },
             onSignInOrJoin = onSignInOrJoin,
             stanceControl = stanceControl,
         )
     }
     licenseShown?.let { license ->
-        LicenseSheet(license = license, onDismiss = { licenseShown = null })
+        LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = licenseStacked)
     }
     // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
     // slice 8's, whole — "we need to do erasure right so it should be one
@@ -382,6 +395,9 @@ fun PostDetailScreen(
  * A REMOVED POST HAS NO MENU LEFT — back is the whole header
  * (`Removed.jsx:5-6`). There is nothing of it to edit, cite or license, and
  * the skeleton that holds the thread's place is not a thing a reader keeps.
+ *
+ * It lives in the top bar, over the plain page — never over the comments
+ * thread — so it stays unstacked, unlike the comment's own menu.
  */
 @Composable
 private fun DetailMenu(
@@ -403,6 +419,7 @@ private fun DetailMenu(
             onCite = { onCite(post.id) },
             onRemove = onRemove,
             onLicense = { onLicense(post.license) },
+            testTagPrefix = "detail_menu",
         ),
         contentDescription = stringResource(R.string.content_menu_post),
         testTag = "detail_menu",
@@ -809,65 +826,6 @@ private fun CommentsFoot(
 }
 
 /**
- * THE ROWS THE ONE MENU HOLDS — the author's post vs someone else's
- * (`_shared.jsx:369-376`). Both keep the card's order: the acts the menu
- * was opened for lead, and the license closes it, the license being the
- * rarest read in the product.
- *
- * ROWS WHOSE DESTINATION IS NOT BUILT YET STAND ANYWAY and do nothing
- * (jakob 2026-09-14, the introduced-but-inert law): a menu that grew a
- * row per slice would be a different menu every release, and the row
- * order is ruled. `Save` waits on slice 2.6's `setBookmark`, the hide
- * row on its `hideActor`; `Mark as sensitive` and `Remove` wait on the
- * slices that own them — removal whole, in slice 8's erasure half.
- */
-@Composable
-private fun postMenuRows(
-    own: Boolean,
-    handle: String?,
-    license: LicenseChoice?,
-    onEdit: () -> Unit,
-    onCite: () -> Unit,
-    onRemove: () -> Unit,
-    onLicense: () -> Unit,
-): List<MenuRow> = buildList {
-    add(MenuRow(stringResource(R.string.content_menu_save), "detail_menu_save") {})
-    if (own) {
-        add(MenuRow(stringResource(R.string.content_edit), "detail_menu_edit", onEdit))
-        // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
-        // post sensitive is always a signed action changing the post — an
-        // edit — so there is no standalone commit path and this row is a
-        // door into the edit flow rather than a sheet of its own. Edit is
-        // the general door; this is the intentioned one. When the edit
-        // surface's drawn Sensitive row lands (CW-46) the link can focus it.
-        add(
-            MenuRow(
-                stringResource(R.string.content_menu_sensitive),
-                "detail_menu_sensitive",
-                onEdit,
-            ),
-        )
-        add(MenuRow(stringResource(R.string.content_menu_remove), "detail_menu_remove", onRemove))
-    } else {
-        add(MenuRow(stringResource(R.string.content_menu_cite), "detail_menu_cite", onCite))
-        // THE HIDE ROW NAMES ITS PERSON (`ActorChip.jsx:67`): the handle is
-        // what a reader recognises, and the word they will look for again
-        // under Hidden accounts. A redacted author has none.
-        val hide = if (handle == null) {
-            stringResource(R.string.content_menu_hide_account)
-        } else {
-            stringResource(R.string.content_menu_hide_actor, "@$handle")
-        }
-        add(MenuRow(hide, "detail_menu_hide") {})
-    }
-    // The license rode the payload, so a redacted record has none to show
-    // (`PostCard.jsx:142`).
-    if (license != null) {
-        add(MenuRow(stringResource(R.string.content_menu_license), "detail_menu_license", onLicense))
-    }
-}
-
-/**
  * THE COMMENT'S ROWS (`_shared.jsx:392`) — Save · Cite in a new post ·
  * Opinions on this · License terms.
  *
@@ -1021,6 +979,10 @@ private fun CommentThread(
                         onLicense = { onLicense(comment.license) },
                     ),
                     menuContentDescription = stringResource(R.string.content_menu_comment),
+                    // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`):
+                    // the thread already lives in a sheet, so this menu is a
+                    // sheet on a sheet (design/readme.md:2364).
+                    stacked = true,
                 )
                 // A comment is text **plus** optional media (D16),
                 // so its body is never the exclusive-or a post's

@@ -2641,42 +2641,61 @@ its own drawing could not reach.
 parked edge clears a bottom bar, are facts about the screen the card
 stands on. Nothing about the pad's appearance is decided by them.
 
-### 78 · The Affinity pad is never drawn · *design*
+### 78 · The Affinity pad is never drawn · *design* · **drawn 2026-09-15**
 
 Filed by the topic round 2026-09-14. The round gave the Affinity family
-its own four pole words — `Not mine` / `Mine` for association,
-`Away` / `Toward` for attraction — and the mechanism to carry them
-(`StanceControl`'s `axes`, through to the field and the alternates
-alike). No board draws that pad. `TagPage` and `TagPageHeld` draw the
-ROW; the tap's edge points at `VouchBackPad`, the pad's master board,
-and says in its own `case` that the Affinity family's poles are not
-drawn there.
+words of its own and the mechanism to carry them (`StanceControl`'s
+`axes`, through to the field and the alternates alike), and no board
+drew the pad they live in. `TagPage` and `TagPageHeld` draw the ROW,
+whose anchor is a face and a pair; the tap's edge pointed at
+`VouchBackPad`, whose field says `Against / For`. So the words were
+recorded as prose and reviewable only as prose, which is the weaker half
+of a canvas review — changing all six of them moved not one rendered
+board.
 
-So the words are recorded (copy-voice, *the topic round*) and reviewable
-as prose, but not as a drawing, which is the weaker half of a canvas
-review. Once jakob blesses the poles, the family wants a parked-pad
-board of its own — `VouchBackPad`'s anatomy over the tag page, with
-`Walk it back` standing, which is also the only place the severance door
-from a held topic could be seen.
+**Drawn**: `TagPageHeldPad`, at the feed page's `x: 1440, y: 2120`,
+beside the three tag-page boards. `VouchBackPad`'s anatomy over the tag
+page with the topic held, which is `PadStanding`'s four controls rather
+than the master's three — held, the pad carries `Walk it back`, and
+that is the severance door out of a held topic, visible on no other
+board. `TagPageBody` grew `stanceOpen` and `stanceDefaultPick`,
+`PostCard`'s two pass-throughs from item 77 by another name: whether the
+pad is bloomed and where its knob is parked are facts about the board,
+so a server-rendered state asks the master for it instead of copying the
+pad. The frame is the phone's 844 rather than the tag page's own 1344 —
+what this board records is a parked pad, and parking is a fact about the
+bottom edge of a screen.
 
-### 79 · The Affinity pad's axis NAMES are still the opinion's · *design*
+### 79 · The Affinity pad's axis NAMES are still the opinion's · *design* · **ruled + recorded**
 
 Filed by the topic round 2026-09-14, and named in the round's own
-copy-voice entry. The poles travel with the record family now; the two
-AXIS names above the alternates' sliders do not — they are still
-`For or against` and `How much reaches you` (`DIRECTED_LABEL`,
-`INTEREST_LABEL`), which name the Opinion family's parameters on a
-record that is not one. A screen reader on the accessible route hears
-the wrong question.
+copy-voice entry. The poles travelled with the record family and the two
+AXIS names did not — they were `For or against` and `How much reaches
+you` (`DIRECTED_LABEL`, `INTEREST_LABEL`), the Opinion family's
+parameters named on a record that is not one, so a screen reader on the
+accessible route heard the wrong question. `TagPad` is the precedent for
+the answer: a family filling these two slots names its axes in the
+reader's words beside its own poles.
 
-The tag pad's precedent is what the answer looks like: `TagPad` names
-its two axes `How much it is about this` and `How sure you are`, in the
-reader's words, beside its own poles. Association and attraction want
-the same treatment. It is a copy ruling, which is why the round flagged
-it rather than inventing one. The poles themselves were blessed
-2026-09-15; the axis names are the half still owed.
+**Ruled by jakob 2026-09-15**, together with the poles themselves, and
+the ruling replaces the four words the topic round had proposed. The
+Affinity family carries six words: association asks
+`How much you like it` and runs `Dislike` / `Like`; attraction asks
+`How close you want to be` and runs `Far away` / `Close to me`. The
+deciding argument is ease of grasp — the pair names how much a reader
+likes a topic and how much of it they want to see, which is what a
+stance toward a topic is.
 
-### 80 · `readme.md` §3 says the stance parameters have two labels and nothing else · *design*
+**The mechanism is the poles' own.** `axes` carries the questions
+alongside the ends; the field reads the four ends and ignores the rest,
+because a pad draws ends and never questions. The questions reach the
+sliders, the direct-entry labels, the severance confirm and the three
+spoken readouts, each taking the same object as `names` — so no surface
+can name an axis one way while its neighbour names it another. Recorded
+in copy-voice and readme §13; drawn on `TagPageHeldPad` (item 78),
+which is the first board where any of the six words render.
+
+### 80 · `readme.md` §3 says the stance parameters have two labels and nothing else · *design* · **ruled + recorded**
 
 Surfaced by the topic round 2026-09-14 while giving the Affinity family
 its pole words. §3 reads: "The two stance parameters are labelled **For
@@ -2684,7 +2703,7 @@ or against** and **How much reaches you** on screen, and nothing else."
 Taken at face value that forbids what three record families already do —
 a tag's pair editor says `How much it is about this` / `How sure you
 are`, a citation's field says `Barely` / `Entirely`, and now an
-Affinity's says `Not mine` / `Mine`.
+Affinity's says `Dislike` / `Like`.
 
 The rule is not wrong, it is scoped to the wrong noun: what may not be
 renamed is the OPINION's two parameters, and what a different record
@@ -2693,7 +2712,15 @@ family fills the same two slots with is that family's to name
 saying so, and copy-voice's *vocabulary that stays off the screen*
 probably wants the same clause. A tightening pass, not a decision.
 
-### 81 · A guest on a tag page has no ruled outcome · *design*
+Tightened 2026-09-15 — jakob confirmed it needed no ruling. §3 now names
+the noun: an OPINION's two stance parameters carry those two labels and
+nothing else, and another record family filling the same two slots names
+them its own. copy-voice's *vocabulary that stays off the screen* carries
+the same clause with the three families' words beside it, the long
+version's job. Both borrow the citation round's own formulation — the
+control owns the geometry, the record family owns the words.
+
+### 81 · A guest on a tag page has no ruled outcome · *design* · **ruled + wired**
 
 Surfaced by the topic round 2026-09-14. `TagPage`'s three stance faces
 (two posts, a comment) carry no guest outcome in `graph.json`, and the
@@ -2709,7 +2736,23 @@ already answers correctly whatever the graph says (`signedIn=false`
 opens `JoinPrompt`); what is missing is the wiring, and the edges cannot
 be half-right on one face and silent on three.
 
-### 82 · A tag page reached from Your topics goes back to the wrong place · *design*
+Ruled by jakob 2026-09-15: a guest is not special here. Any reader who
+taps a tag reaches the page — a connection to it or none — and sees what
+is tagged; the only thing a guest lacks is an opinion of the topic, so
+the stance face wears the no-opinion 🫥 and the borrowed vantage ranks
+what they read, post scores included. `TagPage`'s three stance-face
+edges gain the `GuestGate` outcome `Reel` spells for a shared board.
+`TagPageHeld` and `TagPageEmpty` do not: held is a record no guest can
+carry, and the empty page wires no face at all. The accessible path
+needs no outcome either — `StanceControl` renders that button behind
+`signedIn`, so for a guest it is not on the page. No board of its own,
+by the stream ruling. The applicant's once-each rule reaches this page
+unwired, as it reaches `Reel` and every other shared destination: an
+exhausted kind is answered on the applicant's own boards. Its kinds
+include the Affinity, so a topic stance stays open to an applicant who
+has already staged an opinion.
+
+### 82 · A tag page reached from Your topics goes back to the wrong place · *design* · **ruled + wired**
 
 Surfaced by the topic round 2026-09-14. The tag round ruled the page a
 subpage of search, so its arrow is a LINK back to Explore rather than
@@ -2722,6 +2765,15 @@ Three ways out, each a ruling: the arrow becomes history after all (and
 the label with it), the page carries the label its route gives it, or
 the skip is accepted as the cost of a link. The tag round's reasoning
 for a link is real and this round did not disturb it.
+
+Ruled by jakob 2026-09-15 — back goes where the reader came from, and
+the label names that origin: `Back to Explore`, `Back to Your topics`,
+`Back to feed`. A cold entry with no history, which is what a shared URL
+is, falls back to `Back to Explore`. The whole family carries it —
+`TagPage`, `TagPageHeld`, `TagPageEmpty` — as the graph's `back`
+terminal, the same one every other returning arrow uses. The boards keep
+drawing `Back to Explore`, because a board draws one state and the cold
+entry's is the one that stands without a route behind it.
 
 ### 83 · The viewer grammar's two unrecorded rulings · *design* · **ruled + recorded**
 

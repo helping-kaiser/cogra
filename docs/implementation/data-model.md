@@ -1125,13 +1125,14 @@ CREATE INDEX auth_refresh_tokens_user_idx
 
 -- Invite links: pure service-side staging UX (invitations.md §4).
 -- A link never authors anything and nothing here binds: the
--- inviter's approval is the priced act, and the stance values are
--- PRE-FILLED, not pre-committed — the inviter can adjust them at
--- approval. The link URL carries only the row id. Time-gated and,
--- at the inviter's choice, single-use (one applicant slot) or
--- multi-use (many applicants stage through the same link until
--- expiry — the queue scales, the vouching never does). Revocation
--- sets revoked_at.
+-- inviter's approval is the priced act, and the stance values it
+-- commits are chosen there, so no row here carries any. The link
+-- URL carries only the row id. Time-gated and single-use (one
+-- applicant slot) unless the inviter opens it to multi-use (many
+-- applicants stage through the same link until expiry — the queue
+-- scales, the vouching never does). Revocation sets revoked_at and
+-- stops new staging only: applications already staged stay
+-- approvable (auth.md "Invite-link generation").
 --
 -- inviter_id identifies the inviting actor (FK to actors) — the
 -- actual actor whose Opinion the approval commits, never a system
@@ -1139,9 +1140,7 @@ CREATE INDEX auth_refresh_tokens_user_idx
 CREATE TABLE auth_invite_links (
     id           UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     inviter_id   UUID         NOT NULL REFERENCES actors(id),
-    prefill_dim1 REAL         NOT NULL CHECK (prefill_dim1 BETWEEN -1.0 AND 1.0),
-    prefill_dim2 REAL         NOT NULL CHECK (prefill_dim2 BETWEEN -1.0 AND 1.0),
-    single_use   BOOLEAN      NOT NULL DEFAULT FALSE,
+    single_use   BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     expires_at   TIMESTAMPTZ  NOT NULL,
     revoked_at   TIMESTAMPTZ
@@ -1149,7 +1148,21 @@ CREATE TABLE auth_invite_links (
 CREATE INDEX auth_invite_links_inviter_idx
     ON auth_invite_links (inviter_id);
 
--- Applications: one row per application attempt — the invite-link
+-- Ask links: the invite link's mirror, held by the applicant
+-- (auth.md "The ask link"). The same nothing-binds property — an
+-- ask link authors nothing, it routes an applicant to a would-be
+-- inviter (invitations.md §4) — and the URL carries only the row
+-- id. One row per account, written at registration. It points at a
+-- person rather than a slot, so it stands: no expiry, no use
+-- count, no revocation column. What is bounded is the application
+-- it stages.
+CREATE TABLE auth_ask_links (
+    id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    account_id  UUID         NOT NULL UNIQUE REFERENCES actors(id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+-- Applications: one row per application attempt — the staging
 -- provenance and the approval/landing bookkeeping for an account
 -- in the applicant state (auth.md §Application). The account
 -- itself (actors + user_credentials) exists from registration;
@@ -1161,18 +1174,35 @@ CREATE INDEX auth_invite_links_inviter_idx
 -- The joiner's reciprocation is their own client-signed act after
 -- landing, not application state.
 --
--- expires_at is bounded by the link's expiry. An expired,
--- never-approved application stops being approvable but deletes
--- nothing — a fresh invite re-arms the account with a new row
--- (applyWithInvite, api-spec.md). At most one live application
--- per account is enforced at applyWithInvite, not by constraint —
--- liveness is time-dependent. Never-verified accounts are deleted
--- whole by the reaper, applications included (auth.md "Expiry").
+-- approver_id is the actor being asked to vouch — whose queue the
+-- row sits in and whose Opinion an approval commits. It is set at
+-- staging, from whichever end of the funnel staged the row; the
+-- two provenance columns record which end that was, and exactly
+-- one of them is set. invite_link_id: the applicant came through
+-- that link, and approver_id is its inviter. ask_link_id: a member
+-- took the applicant up from the other end (auth.md "The ask
+-- link"), and approver_id is that member.
+--
+-- expires_at bounds the row, never the account: the link's expiry
+-- for a link staging, the staging member's chosen window for an
+-- ask-link one. A closed, never-approved application — expired, or
+-- rejected by the approver (rejected_at) — stops being approvable
+-- but deletes nothing: either end of the funnel re-arms the
+-- account with a new row (applyWithInvite, stageApplicant,
+-- api-spec.md). At most one live application per account is
+-- enforced at those mutations, not by constraint — liveness is
+-- time-dependent. Never-verified accounts are deleted whole by the
+-- reaper, applications included (auth.md "Expiry").
 CREATE TABLE auth_applications (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     account_id      UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
-    invite_link_id  UUID        NOT NULL REFERENCES auth_invite_links(id),
+    approver_id     UUID        NOT NULL REFERENCES actors(id),
+    invite_link_id  UUID        REFERENCES auth_invite_links(id),
+    ask_link_id     UUID        REFERENCES auth_ask_links(id),
     approved_at     TIMESTAMPTZ,
+    -- The approver's standalone close (auth.md "Rejection") — set
+    -- instead of approved_at, never by a link's revocation.
+    rejected_at     TIMESTAMPTZ,
     landed_at       TIMESTAMPTZ,
     -- Latched derived cache of an L1 fact: set when the record
     -- mirror confirms the joiner's reciprocal Opinion toward the
@@ -1181,8 +1211,11 @@ CREATE TABLE auth_applications (
     -- the latch cannot diverge; rebuildable from the mirror.
     reciprocated_at TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expires_at      TIMESTAMPTZ NOT NULL
+    expires_at      TIMESTAMPTZ NOT NULL,
+    CHECK ((invite_link_id IS NULL) <> (ask_link_id IS NULL))
 );
+CREATE INDEX auth_applications_approver_idx
+    ON auth_applications (approver_id, approved_at);
 CREATE INDEX auth_applications_link_idx
     ON auth_applications (invite_link_id, approved_at);
 CREATE INDEX auth_applications_account_idx

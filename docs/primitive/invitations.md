@@ -56,6 +56,11 @@ Layer 1 is its truth home:
   first** — the ≺-earliest accepted back-edge. One inviter per
   member, fixed by public record order, permanent.
 
+That *any number* is what the **ask link** of §4 routes: a person
+still waiting can point a would-be inviter at themselves, and
+nothing here moves — whoever they reciprocate first is still the
+inviter.
+
 A unilateral edge never constitutes an invitation: otherwise
 actors could be linked, unconsented, to reap inviter benefits.
 Acceptance is the joiner's own authored act — the same
@@ -160,9 +165,9 @@ The flow:
    commits the inviter's stance: the backend then runs the
    admission sequence — the funded burn, the Registration
    grounding the new Actor + Profile, and the inviter's Opinion
-   toward the new Profile. The link's stance values are
-   **pre-filled, not pre-committed** — the inviter can adjust
-   them at approval.
+   toward the new Profile. **The link carries no stance values**:
+   the inviter chooses `(p_d, p_i)` at approval, the moment the
+   act is priced and the only moment anything reads them.
 3. **The joiner accepts by reciprocating** (§2) — their own
    Opinion toward the inviter's Profile completes the pair and
    the membership.
@@ -172,13 +177,14 @@ the shared graph is public — they just cannot act. Approval
 latency (an inviter who doesn't check their phone for hours) is
 a UX cost, not a correctness problem.
 
-**Link modes.** When generating a link, the inviter picks
-**single-use or multi-use**; both are time-gated and revocable at
-any time.
+**Link modes.** A link is **single-use by default**; the inviter
+opens it to multi-use when generating it. Both are time-gated and
+revocable at any time.
 
-- **Single-use.** One applicant slot. Best for targeted invites —
-  a specific link to a specific person; a leaked link stages at
-  most one stranger, and approval still gates the join.
+- **Single-use.** One applicant slot — the default, and what a
+  targeted invite wants: a specific link to a specific person; a
+  leaked link stages at most one stranger, and approval still
+  gates the join.
 - **Multi-use.** Many applicants can stage through the same link
   until its timer expires — the shared-funnel mode influencers
   and public communities need, where the inviter does not know in
@@ -186,9 +192,28 @@ any time.
   vouching: each join still costs the inviter one explicit,
   priced approval.
 
+**The ask link — the funnel from the other end.** An applicant can
+also generate a link of their own and hand it to someone they
+know. An ask link authors nothing either: it is **pure
+service-side UX that routes an applicant to a would-be inviter**,
+and the approval is still the priced act. It points at a person
+rather than a slot, so it **stands** — no timer, no use count. A
+member who opens it sees whose it is and may take up the
+application, approving it exactly as they approve anyone staged
+through their own link, choosing `(p_d, p_i)` in the same gesture.
+The two links are one funnel from its two ends: the inviter
+reaching for a person, the person reaching for an inviter.
+
+Nothing in §2 moves — any number of members may point an Opinion
+at a joiner, and the inviter is whichever one the joiner
+reciprocates first; the ask link only decides who gets asked. A
+mass-shared ask link therefore buys nothing a mass-shared invite
+link didn't: approving is still the priced act, and §6's mis-vouch
+economics carry its cost either way.
+
 Registration mechanics — email verification, applicant handling,
-the client-signed admission handshake — live in
-[auth.md](../implementation/auth.md).
+the ask link's own lifecycle, the client-signed admission
+handshake — live in [auth.md](../implementation/auth.md).
 
 ---
 
@@ -216,8 +241,9 @@ cluster**. The approval gate (§4) doesn't remove the hazard —
 carelessly batch-approving unknown applicants *is* mis-vouching —
 it makes the mis-vouch an explicit, priced act. The same mechanic
 that gives the inviter reach — and lifetime referral earnings —
-concentrates the cost onto them. Single-use links sidestep this
-by construction.
+concentrates the cost onto them. Single-use links sidestep the
+hazard by construction, which is why they are the default: the
+ordinary invite aims at one person.
 
 The system tolerates the multi-use case because public links are
 necessary for high-reach onboarding, and the abuse is

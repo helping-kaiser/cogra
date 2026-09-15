@@ -479,6 +479,7 @@ enum ErrorCode {
   # Expected business failures — carried in UserError.code
   INVALID_CREDENTIALS          # email / password pair did not match
   INVITE_UNUSABLE              # invite link invalid, expired, revoked, or consumed
+  ASK_LINK_UNUSABLE            # ask link unknown, or its applicant is landed or already staged
   HANDLE_TAKEN                 # the requested handle is already in use
   WEAK_PASSWORD                # under the length floor or in the breach corpus
   EMAIL_IN_USE                 # the email already belongs to an account
@@ -604,6 +605,13 @@ interface Actor implements Node {
    the issuing actor (or, for a Collective, its authorized
    members); null otherwise."
   inviteLinks(first: Int, after: String, last: Int, before: String): InviteLinkConnection
+  "Applications waiting on this actor's vouch — the approval queue
+   itself, spanning both ends of the funnel: applicants staged
+   through this actor's invite links, and applicants this actor
+   took up from an ask link (auth.md). Field-level like inviteLinks:
+   resolves only for the approving actor (or, for a Collective, its
+   authorized members); null otherwise."
+  approvalQueue(first: Int, after: String, last: Int, before: String): ApplicationConnection
 }
 
 "Network-scope role. MEMBER and MODERATOR are person-accountability
@@ -838,7 +846,8 @@ readable, interface fields are **implied and omitted** from each
 body: the `Node` fields (`id`, `createdAt`, `updatedAt`,
 `outgoingRecords`, `incomingRecords`) on every type, and the
 `Actor` fields (`handle`, `displayName`, `avatar`, `websiteUrl`,
-`networkRole`, `payoutAddress`, `moderationStatus`, `inviteLinks`)
+`networkRole`, `payoutAddress`, `moderationStatus`, `inviteLinks`,
+`approvalQueue`)
 on the actor types. Only fields beyond the implemented interfaces
 are shown.
 
@@ -976,9 +985,15 @@ type User implements Node & Actor {
   "The account's latest application — the applicant's own view of
    its progress; null when the account has none."
   application: Application
-  "The actor whose invite this account came through — landing
+  "The account's own ask link — the standing capability that lets
+   any member it is handed take up the application (auth.md \"The
+   ask link\"). Holding the id is holding the link, so this
+   resolves only for the account itself; null for accounts that
+   never applied."
+  askLink: UUID
+  "The actor whose vouch this account came through — landing
    provenance for the reciprocation gesture (the graph's own record
-   of the vouch is the inviter's Opinion). Null for accounts
+   of the vouch is that actor's Opinion). Null for accounts
    without an application trace (genesis actors)."
   invitedBy: Actor
   "Whether the viewer's reciprocal Opinion toward invitedBy exists —
@@ -1448,21 +1463,17 @@ type UserPreferences {
 }
 
 "An outstanding invite link issued by an actor — service-side
- staging UX (invitations.md §4, auth.md). Nothing binds at issue:
- the stance values are PRE-FILLED suggestions the inviter can
- adjust at approval, and the approval itself is the priced act.
- Time-gated and, at the issuer's choice, single-use (one applicant
- slot) or multi-use. Its id is the link capability, so it is
- issuer-visible only."
+ staging UX (invitations.md §4, auth.md). Nothing binds at issue
+ and the link carries no stance values: the inviter chooses them
+ at approval, which is the priced act. Time-gated, single-use
+ unless the issuer opened it to multi-use, and revocable —
+ revoking stops new staging and leaves staged applications
+ approvable (auth.md \"Invite-link generation\"). Its id is the
+ link capability, so it is issuer-visible only."
 type InviteLink {
   id: UUID!
   "The issuing actor (User or Collective)."
   inviter: Actor!
-  "Pre-filled p_d for the inviter's approval-time Opinion — a
-   suggestion, never a commitment."
-  prefillPDirected: Dimension!
-  "Pre-filled p_i for that Opinion."
-  prefillPInterest: Dimension!
   "Whether the link admits one applicant slot (single-use) or many
    applicants until expiry (multi-use)."
   singleUse: Boolean!
@@ -1471,15 +1482,16 @@ type InviteLink {
   "When the link was revoked; null if still live."
   revokedAt: DateTime
   "Applications currently staged through this link, with their
-   status — the inviter's approval queue."
+   status — this link's share of the issuer's approval queue, the
+   whole of which is Actor.approvalQueue."
   applications(first: Int, after: String, last: Int, before: String): ApplicationConnection
 }
 
-"An application attempt — the invite-link provenance and
+"An application attempt — the staging provenance and
  approval/landing bookkeeping of an account in the applicant
- state (auth.md \"Application\"). Visible to the issuing inviter
- (their approval queue) and to the applying account itself
- (User.application)."
+ state (auth.md \"Application\"). Visible to the actor whose vouch
+ it waits on (their approval queue) and to the applying account
+ itself (User.application)."
 type Application {
   id: UUID!
   "The applying account's handle."
@@ -1492,6 +1504,12 @@ type Application {
   keyAttached: Boolean!
   "When the inviter's priced approval happened; null while pending."
   approvedAt: DateTime
+  "When the approver closed the application without approving it
+   (rejectApplication); null otherwise. A rejected application
+   ends like an expired one — the entry closes, the account
+   persists, and either re-arm path opens a new one (auth.md
+   \"Rejection\")."
+  rejectedAt: DateTime
   "When the Registration confirmed and the account became a
    member; null before."
   landedAt: DateTime
@@ -2066,6 +2084,11 @@ type Query {
    gate the registration form and the key ceremony on a usable
    capability. Null when the id references no link."
   inviteLinkCheck(id: UUID!): InviteLinkCheck
+
+  "Anonymous pre-stage check of an ask link, so a member following
+   one sees who is asking before anything is written, and the app
+   can gate the staging call. Null when the id references no link."
+  askLinkCheck(id: UUID!): AskLinkCheck
 
   "The governed network parameters, from the operational carrier —
    all of them, or the named keys. The catalog is network.md's; the
@@ -4002,6 +4025,12 @@ Opinion toward the inviter's Profile, completing the mutual
 pair — is an ordinary graph act after landing (`prepareStance`),
 prompted at first login; auth's involvement ends at landing.
 
+The same funnel runs the other way from an applicant-held
+capability: a member who follows someone's **ask link** sees who is
+asking (`askLinkCheck`) and stages them into their own queue
+(`stageApplicant`), from where approval is the ordinary path
+([auth.md "The ask link"](auth.md#the-ask-link-applicant-side)).
+
 ```graphql
 "Register through an invite link. Creates the account — the
  actor row (no key yet) and its credentials, in the applicant
@@ -4049,34 +4078,76 @@ input AttachActorKeyInput {
 }
 type AttachActorKeyPayload { user: User }
 
-"Re-arm an expired, never-approved application with a fresh
- invite link — a new application row for the viewer's account
- (auth.md \"Expiry\"). BAD_INPUT while a live application exists;
- INVITE_UNUSABLE for a dead link."
+"Re-arm a closed, never-approved application — expired or
+ rejected — with a fresh invite link: a new application row for
+ the viewer's account (auth.md \"Expiry\", \"Rejection\"). One of
+ the two re-arm paths; the other is a member taking up the
+ account's ask link (stageApplicant). BAD_INPUT while a live
+ application exists; INVITE_UNUSABLE for a dead link."
 input ApplyWithInviteInput { inviteLink: UUID! }
 type ApplyWithInvitePayload { application: Application }
 
+"Take up an ask link: stage its applicant as an application in the
+ caller's own approval queue — the ask direction's answer to
+ register and applyWithInvite, and a deliberate call rather than a
+ side effect of opening the link (auth.md \"The ask link\"). The
+ account already exists, so this writes only the queue entry;
+ approving it is the ordinary approveApplicants act, with the
+ stance values chosen there. Keep expiresAt at or above the
+ 24-hour verification window, as for an invite link (auth.md
+ \"Expiry floor\"). ASK_LINK_UNUSABLE when the id is unknown, the
+ applicant has already landed, or a live application is already
+ waiting on someone else."
+input StageApplicantInput {
+  askLink: UUID!
+  "How long the staged application stays approvable."
+  expiresAt: DateTime!
+  "Act as this Collective; null = the viewer stages."
+  actAs: UUID
+}
+type StageApplicantPayload { application: Application }
+
 "Approve staged applicants — the inviter's deliberate, priced act:
- per applicant or in batch, with the pre-filled stance values
- adjusted at will. Runs the admission sequence backend-side —
+ per applicant or in batch, each carrying the stance values the
+ inviter picks for it. Runs the admission sequence backend-side —
  the funding burn, then the staged Registration — inside the
  approval, guarded so a retried or concurrent approval can never
  double-fund; landing waits only on the Registration confirming.
  Returns the inviter's own Opinion records to sign — the vouch is
  the inviter's signature, not a server write. Approval requires an
  approvable application — email verified and key attached; an
- already-approved, expired, or foreign-queue application refuses
- with BAD_INPUT pinned to its entry."
+ already-approved, rejected, expired, or foreign-queue application
+ refuses with BAD_INPUT pinned to its entry."
 input ApproveApplicantsInput {
   approvals: [ApplicationApprovalInput!]!
 }
 input ApplicationApprovalInput {
   application: UUID!
-  "The inviter's stance toward the joiner — pre-filled from the
-   link, committed here."
+  "The inviter's stance toward the joiner, chosen here — approval
+   is where the values are picked and where they commit."
   pDirected: Dimension!
   pInterest: Dimension!
 }
+
+"Close a staged application without approving it — the approver's
+ own gesture, never a side effect of revoking the link the
+ applicant arrived through (auth.md \"Rejection\"). It closes this
+ queue entry, not the person: the row is marked rejected, the
+ account keeps its login, its reads and its attached key, and
+ either re-arm path opens it again — a fresh invite link through
+ applyWithInvite, or a member taking up the account's ask link.
+ Nothing is deleted, and deletion is never the way out of a
+ rejection. Writes the applicant an APPLICATION_REJECTED
+ notification, since a refusal they could only infer from a status
+ field going quiet would leave them waiting on a queue they have
+ left. Singular where approval is batched — it is a decision about
+ one person and it reaches them, so it is taken one at a time and
+ the client owns the explicit confirmation. An already-approved,
+ already-rejected, expired, or foreign-queue application refuses
+ with BAD_INPUT."
+input RejectApplicationInput { application: UUID! }
+"The application in its closed state."
+type RejectApplicationPayload { application: Application }
 
 input LogInInput {
   email: String!
@@ -4210,15 +4281,15 @@ input UploadKeyBackupInput {
 }
 type UploadKeyBackupPayload { ok: Boolean }
 
-"Issue a time-gated invite link — single-use or multi-use, the
- issuer's choice — carrying the inviter's PRE-FILLED stance values
- (a suggestion; the approval commits)."
+"Issue a time-gated invite link. It carries no stance values —
+ the inviter picks those at approval, the priced act. Keep
+ expiresAt at or above the 24-hour verification window, which a
+ shorter link can strand a registrant inside (auth.md \"Expiry
+ floor\")."
 input CreateInviteLinkInput {
   expiresAt: DateTime!
-  prefillPDirected: Dimension!
-  prefillPInterest: Dimension!
   "One applicant slot when true; many applicants otherwise.
-   Defaults to multi-use."
+   Defaults to single-use."
   singleUse: Boolean
   "Act as this Collective; null = the viewer issues."
   actAs: UUID
@@ -4228,6 +4299,9 @@ type CreateInviteLinkPayload {
   inviteLink: InviteLink
 }
 
+"Stop a link from staging anyone new. Applications already staged
+ through it stay approvable — closing one is rejectApplication
+ (auth.md \"Invite-link generation\")."
 input RevokeInviteLinkInput { inviteLink: UUID! }
 "An unknown, foreign, or already-revoked link refuses with a
  NOT_FOUND userError — the one place NOT_FOUND rides the userError
@@ -4246,6 +4320,19 @@ type InviteLinkCheck {
   "The issuing actor's handle."
   inviterHandle: String!
   expiresAt: DateTime!
+}
+
+"The anonymous pre-stage view of an ask link (the `askLinkCheck`
+ query) — who is asking, and whether they can be taken up right
+ now. Holding the id is holding the link."
+type AskLinkCheck {
+  "Whether the link can stage its applicant now — the account is
+   still an applicant and has no live application already waiting
+   on someone else (auth.md \"The ask link\"). An ask link itself
+   never expires."
+  usable: Boolean!
+  "The asking account's handle."
+  applicantHandle: String!
 }
 
 "Remove the payload of a record the viewer authored — the
@@ -4295,7 +4382,9 @@ extend type Mutation {
   resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
   attachActorKey(input: AttachActorKeyInput!): AttachActorKeyPayload!
   applyWithInvite(input: ApplyWithInviteInput!): ApplyWithInvitePayload!
+  stageApplicant(input: StageApplicantInput!): StageApplicantPayload!
   approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
+  rejectApplication(input: RejectApplicationInput!): RejectApplicationPayload!
   logIn(input: LogInInput!): LogInPayload!
   refreshSession(input: RefreshSessionInput!): RefreshPayload!
   "Revoke one session (the current one if no id is given)."
