@@ -18,8 +18,10 @@ export interface CoverRowProps {
    *  the capture-fails state: the gallery tile stands alone, and `caption`
    *  says why. */
   frames?: CoverFrame[];
-  /** Index of the outlined frame; the rest sit at 65%. */
-  selected?: number;
+  /** Index of the outlined frame; the rest sit at 65%. Defaults to `null` —
+   *  no cover chosen, no outline and nothing dimmed, because choosing a cover
+   *  is always a willing act. */
+  selected?: number | null;
   caption?: string;
 }
 

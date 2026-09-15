@@ -46,6 +46,7 @@ export function Screen() {
             { src: "post-photo.jpg", transform: "scale(1.5)" },
             { src: "post-photo.jpg", transform: "scale(1.8) translateY(6%)" },
           ]}
+          selected={0}
         />
 
         <div style={{ flex: 1 }} />

@@ -15,6 +15,8 @@ The strip that picks a video's face — frames from the clip, or a picture of yo
 
 **Selection is an outline, not a badge.** The tiles are 56px, and a check badge at that size covers the thing being chosen. The unchosen frames sit at 65%, so the strip reads as one picture framed several ways.
 
+**Nothing is chosen until someone chooses.** `selected` defaults to `null` — no outline, nothing dimmed, four equal candidates — because choosing a cover is always a willing act. Pass an index only where a cover really has been picked; a row that opens pre-selected hands the author a decision they never made.
+
 **The dashed tile is the gallery, and it is drawn as not-a-photograph** — same square, no image, the picture glyph in secondary. A picture chosen there goes through `CropViewport` before it comes back: a frame already carries the clip's shape, and only a picture of your own can disagree with it.
 
 The row carries its own label and its own line because the three never appear apart. The comment composer inlines it beneath the clip; the post wizard gives it a stage.
