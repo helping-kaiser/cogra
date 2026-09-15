@@ -1,10 +1,26 @@
-// The topic screen (hashtag.md; roadmap "Slice 2.3"): a topic's name
-// and the content currently tagged with it, the fold read from the
-// Type's own side (`Hashtag.taggedContent`). Shipped deliberately
-// plain: a visual redesign pass over slice 2 is coming and this
-// screen is built once for it to reach (rulings.md, redesign note).
-// Following a topic is a slice-3 surface (roadmap): the backend
-// accepts the stance, the client offers no control for it yet.
+// The topic screen (hashtag.md; roadmap "Slice 2.3"): a topic's name,
+// the stance row, and the content currently tagged with it — the fold
+// read from the Type's own side (`Hashtag.taggedContent`).
+//
+// THE TITLE CARRIES NO CONTROL AND THE ROW BELOW IT DOES (`TagPage`,
+// the topic round 2026-09-14). A stance anchor on the bar's trailing
+// edge read as a stance readout for the post the reader arrived from;
+// a row of its own, under the title and above anything belonging to a
+// post, cannot. THE GESTURE IS AN AFFINITY — the same ceremony every
+// stance uses, wearing the family's own words (`StanceAxes.Affinity`)
+// — so there is no toggle and no one-tap follow, and the word "follow"
+// is not on the screen.
+//
+// THE ROW IS A SLOT, not a control this module builds. `feature:topics`
+// depends on `core:domain` and never on a feature it would have to
+// reach through — the shell owns what a signed-out tap does, so the
+// shell passes the whole row in (android/CLAUDE.md, "Navigation is
+// hoisted"). It is also why a guest reaches this page like anyone else:
+// the page is public, the face wears the same no-standing affordance a
+// reader with nothing said wears, and the tap raises the join prompt.
+//
+// THE EMPTY PAGE WIRES NO FACE AT ALL (backlog item 81, ruled
+// 2026-09-15), which is why the row sits inside the populated branch.
 
 package com.cogra.feature.topics
 
@@ -54,6 +70,7 @@ fun TopicRoute(
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onBack: () -> Unit,
+    stanceControl: (@Composable () -> Unit)? = null,
     viewModel: TopicViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -65,6 +82,7 @@ fun TopicRoute(
         onOpenPost = onOpenPost,
         onOpenActor = onOpenActor,
         onBack = onBack,
+        stanceControl = stanceControl,
     )
 }
 
@@ -77,6 +95,12 @@ fun TopicScreen(
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onBack: () -> Unit,
+    /**
+     * The page's one action, drawn by the shell. Null while the auth
+     * state is still unknown — the signed-in and signed-out readings
+     * differ, and guessing puts the wrong action on the tap for a frame.
+     */
+    stanceControl: (@Composable () -> Unit)? = null,
 ) {
     Scaffold(
         topBar = {
@@ -124,32 +148,47 @@ fun TopicScreen(
                         Text(stringResource(R.string.topics_retry))
                     }
                 }
-                else -> LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .testTag("topic_list"),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    if (!state.contentLoading && state.content.isEmpty()) {
-                        item {
-                            Text(
-                                stringResource(R.string.topics_content_empty),
-                                modifier = Modifier.testTag("topic_content_empty"),
-                            )
+                else -> Column(modifier = Modifier.fillMaxSize()) {
+                    // Under the title, above anything belonging to a
+                    // post — outside the list, so it does not scroll
+                    // away from the page it acts on.
+                    if (stanceControl != null && state.content.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                .testTag("topic_stance_row"),
+                        ) {
+                            stanceControl()
                         }
                     }
-                    items(state.content, key = { "${it.kind}:${it.id}" }) { entry ->
-                        TaggedContentCard(entry, onOpenPost = onOpenPost, onOpenActor = onOpenActor)
-                    }
-                    if (state.contentLoading) {
-                        item {
-                            CircularProgressIndicator(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp)
-                                    .testTag("topic_content_loading"),
-                            )
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag("topic_list"),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        if (!state.contentLoading && state.content.isEmpty()) {
+                            item {
+                                Text(
+                                    stringResource(R.string.topics_content_empty),
+                                    modifier = Modifier.testTag("topic_content_empty"),
+                                )
+                            }
+                        }
+                        items(state.content, key = { "${it.kind}:${it.id}" }) { entry ->
+                            TaggedContentCard(entry, onOpenPost = onOpenPost, onOpenActor = onOpenActor)
+                        }
+                        if (state.contentLoading) {
+                            item {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                        .testTag("topic_content_loading"),
+                                )
+                            }
                         }
                     }
                 }

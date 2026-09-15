@@ -11,6 +11,7 @@ import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.localLanding
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.SealingWriteRepository
@@ -27,7 +28,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-private const val TARGET = "post-1"
+private val TARGET = StanceTarget.Node("post-1")
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class StanceViewModelTest {
@@ -58,19 +59,22 @@ class StanceViewModelTest {
         var gate: CompletableDeferred<Unit>? = null
 
         override suspend fun prepareStance(
-            target: String,
+            target: StanceTarget,
             pick: StancePair,
         ): Outcome<List<PreparedWriteView>> {
             gate?.await()
             staged += pick
-            return prepareOutcome ?: writes.prepareStance(target, pick.pDirected, pick.pInterest)
+            return prepareOutcome ?: when (target) {
+                is StanceTarget.Node -> writes.prepareStance(target.id, pick.pDirected, pick.pInterest)
+                is StanceTarget.Topic -> writes.prepareTopicStance(target.name, pick.pDirected, pick.pInterest)
+            }
         }
 
         var standingCalls = 0
         var standingFails = false
         val standingPending = mutableListOf<Boolean>()
 
-        override suspend fun standing(target: String, includePending: Boolean): Outcome<StanceStanding> {
+        override suspend fun standing(target: StanceTarget, includePending: Boolean): Outcome<StanceStanding> {
             standingCalls += 1
             standingPending += includePending
             if (standingFails) return Outcome.Failed(IllegalStateException("no route to host"))
@@ -86,7 +90,7 @@ class StanceViewModelTest {
          * stays empty.
          */
         override suspend fun projection(
-            target: String,
+            target: StanceTarget,
             pick: StancePair,
             includePending: Boolean,
         ): Outcome<StanceProjection> {
@@ -94,7 +98,7 @@ class StanceViewModelTest {
             return Outcome.Success(localLanding(raw ?: net, pick))
         }
 
-        override suspend fun severanceQuote(target: String, includePending: Boolean): Outcome<SeveranceQuote> =
+        override suspend fun severanceQuote(target: StanceTarget, includePending: Boolean): Outcome<SeveranceQuote> =
             Outcome.Success(
                 SeveranceQuote(
                     target = target,
@@ -105,7 +109,7 @@ class StanceViewModelTest {
                 ),
             )
 
-        override suspend fun prepareSeverance(target: String): Outcome<List<PreparedWriteView>> {
+        override suspend fun prepareSeverance(target: StanceTarget): Outcome<List<PreparedWriteView>> {
             severanceCalls += 1
             return severanceOutcome ?: Outcome.Success(List(records) { writes.stage() })
         }
@@ -487,9 +491,9 @@ class StanceViewModelTest {
     fun dismissingAnUnknownTargetCreatesNothing() = runTest(dispatcher) {
         val vm = viewModel()
 
-        vm.onDismissPad("never-seen")
+        vm.onDismissPad(StanceTarget.Node("never-seen"))
 
-        assertThat(vm.state.value.targets).doesNotContainKey("never-seen")
+        assertThat(vm.state.value.targets).doesNotContainKey(StanceTarget.Node("never-seen"))
     }
 
     @Test
@@ -670,7 +674,7 @@ class StanceViewModelTest {
         val vm = viewModel()
 
         vm.observe(TARGET)
-        vm.observe("post-2")
+        vm.observe(StanceTarget.Node("post-2"))
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.coachTarget).isNull()
@@ -742,7 +746,7 @@ class StanceViewModelTest {
 
         // Reading, picking, scrolling: none of it closes the lesson.
         vm.onPick(TARGET, StancePair(0.4, 0.2))
-        vm.observe("post-2")
+        vm.observe(StanceTarget.Node("post-2"))
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.coachTarget).isEqualTo(TARGET)
 

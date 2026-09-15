@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertContentDescriptionContains
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -67,7 +68,15 @@ class StancePadTest {
     /** What the pad was standing at when Set was pressed, on the live holder. */
     private var committedPick: StancePoint? = null
 
-    private fun show(state: StanceControlState) {
+    /**
+     * A bundle with something in it. The walk-away stands only where
+     * there is something to walk back (`TagPageHeldPad`: the pad over a
+     * topic nobody holds has three controls, the held one four), so
+     * every test about the severance route opens from a held standing.
+     */
+    private val heldStanding = StancePoint(0.6, 0.35)
+
+    private fun show(state: StanceControlState, axes: StanceAxes = StanceAxes.Opinion, targetLabel: String? = null) {
         compose.setContent {
             // Centred, so a drag has room on every side of the target.
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -86,6 +95,8 @@ class StancePadTest {
                     onCoachMarkDismissed = { coachDismissed++ },
                     onConfirmationShown = { confirmationsShown++ },
                     testTagPrefix = TAG,
+                    axes = axes,
+                    targetLabel = targetLabel,
                 )
             }
         }
@@ -757,7 +768,9 @@ class StancePadTest {
 
     @Test
     fun theParkedPadCarriesTheAlternatesAndTheSeveranceRoute() {
-        show(StanceControlState(pad = StancePadMode.STICKY))
+        // Held, because the walk-away only stands where there is
+        // something to walk back (`TagPageHeldPad`, ruled 2026-09-15).
+        show(StanceControlState(pad = StancePadMode.STICKY, standing = heldStanding))
 
         compose.onNodeWithTag("${TAG}_stance_exact").performScrollTo().performClick()
         assertThat(exactToggled).isEqualTo(1)
@@ -848,7 +861,14 @@ class StancePadTest {
     fun anAlternateKeepsTheSeveranceRouteFindable() {
         // The pad never opens for this reader, so severance has to be
         // reachable from the surface that replaced it (design.md §8.5).
-        show(StanceControlState(pad = StancePadMode.STICKY, inputMode = StanceInputSurface.SLIDERS))
+        // Held, per the walk-away's own rule (`TagPageHeldPad`).
+        show(
+            StanceControlState(
+                pad = StancePadMode.STICKY,
+                standing = heldStanding,
+                inputMode = StanceInputSurface.SLIDERS,
+            ),
+        )
 
         compose.onNodeWithTag("${TAG}_stance_sever").performScrollTo().performClick()
 
@@ -1021,18 +1041,91 @@ class StancePadTest {
     fun theDragGestureHasNonDragEquivalents() {
         // Every drag gesture has a non-drag equivalent (design.md §10):
         // the click action commits the default, and the alternates and
-        // the severance route ride custom accessibility actions.
-        show(StanceControlState())
+        // the severance route ride custom accessibility actions. Held,
+        // because the walk-away is offered on the same terms it is
+        // drawn on (`TagPageHeldPad`).
+        show(StanceControlState(standing = heldStanding))
 
         val node = compose.onNodeWithTag("${TAG}_stance")
         node.performSemanticsAction(SemanticsActions.OnClick)
         assertThat(tapped).isEqualTo(1)
 
         val actions = node.fetchSemanticsNode().config[SemanticsActions.CustomActions]
-        assertThat(actions.map { it.label }).containsExactly("Pick exactly", "Sever this")
+        assertThat(actions.map { it.label }).containsExactly("Pick exactly", "Walk it back")
 
-        compose.runOnUiThread { actions.first { it.label == "Sever this" }.action() }
+        compose.runOnUiThread { actions.first { it.label == "Walk it back" }.action() }
         compose.waitForIdle()
         assertThat(severOpened).isEqualTo(1)
+    }
+
+    // -- The walk-away, the family's words, and what the control names --
+
+    @Test
+    fun withNothingSaidThereIsNoWalkAwayToOffer() {
+        // The pad over a topic nobody holds has three controls; the pad
+        // over a held one has four (`TagPageHeldPad`, ruled 2026-09-15;
+        // the web control spells the same test as `records > 0`, #760).
+        // A button whose only destination is a dialog saying there is
+        // nothing to walk back is not a button.
+        show(StanceControlState(pad = StancePadMode.STICKY, standing = null))
+
+        compose.onNodeWithTag("${TAG}_stance_sever").assertDoesNotExist()
+        val actions = compose.onNodeWithTag("${TAG}_stance")
+            .fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        assertThat(actions.map { it.label }).containsExactly("Pick exactly")
+    }
+
+    @Test
+    fun theAffinityFamilyAsksItsOwnTwoQuestions() {
+        // One gesture, one face table, one ceremony — what belongs to
+        // the family is the words at the axes (jakob 2026-09-14, the
+        // six ruled 2026-09-15). The questions reach the sliders, the
+        // typed fields and every spoken readout, so the accessible
+        // route asks what the drawn one asks.
+        show(
+            StanceControlState(
+                pad = StancePadMode.STICKY,
+                standing = heldStanding,
+                inputMode = StanceInputSurface.SLIDERS,
+            ),
+            axes = StanceAxes.Affinity,
+        )
+
+        compose.onNodeWithTag("${TAG}_stance_slider_directed")
+            .assertContentDescriptionEquals("How much you like it")
+        compose.onNodeWithTag("${TAG}_stance_slider_interest")
+            .assertContentDescriptionEquals("How close you want to be")
+        // And nothing of the opinion's wording survives on the surface.
+        compose.onNodeWithTag("${TAG}_stance_standing", useUnmergedTree = true)
+            .assertTextContains("How much you like it", substring = true)
+    }
+
+    @Test
+    fun anOpinionKeepsItsOwnWordsWhenNoFamilyNamesTheAxes() {
+        // The default is what every surface had before families named
+        // theirs: the axes are a parameter, not a replacement.
+        show(
+            StanceControlState(
+                pad = StancePadMode.STICKY,
+                standing = heldStanding,
+                inputMode = StanceInputSurface.SLIDERS,
+            ),
+        )
+
+        compose.onNodeWithTag("${TAG}_stance_slider_directed")
+            .assertContentDescriptionEquals("How you stand")
+        compose.onNodeWithTag("${TAG}_stance_slider_interest")
+            .assertContentDescriptionEquals("In your world")
+    }
+
+    @Test
+    fun aLabelledTargetNamesWhatItStances() {
+        // More than one stance control can stand on a page, and the
+        // face's accessible name is what says which is which
+        // (`TagPage`: "AND IT NAMES WHAT IT STANCES").
+        show(StanceControlState(standing = heldStanding), targetLabel = "#saltmaps")
+
+        compose.onNodeWithTag("${TAG}_stance")
+            .assertContentDescriptionContains("#saltmaps", substring = true)
     }
 }

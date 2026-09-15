@@ -55,6 +55,7 @@ import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.crypto.Family
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.stance.StanceControlRoute
 import kotlinx.coroutines.launch
 
@@ -107,7 +108,7 @@ fun ProfileRoute(
         onBack = onBack,
         keyBanner = keyBanner,
         banners = banners,
-        stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
+        stanceControl = { target, tag -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag) },
     )
 }
 

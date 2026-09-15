@@ -244,6 +244,35 @@ class CograNavGraphTest {
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
+    // The topic page is the reader's one action on a topic, and it is a
+    // public page: a guest reaches it like anyone else, the face wears
+    // the same no-standing affordance, and the tap asks rather than
+    // bounces (backlog item 81, ruled 2026-09-15 — the drawn join-gate
+    // pattern, and what web's control already does behind `signedIn`).
+    @Test
+    fun aGuestTapOnTheTopicsStanceRowOpensTheJoinGate() {
+        content.listing = listOf(
+            com.cogra.domain.testing.testPost("p1").copy(
+                topics = listOf(com.cogra.domain.testing.testTopicClaim("rust")),
+            ),
+        )
+        // The row sits inside the populated branch, so the topic needs
+        // something tagged for it to stand at all.
+        topics.content["rust"] = listOf(com.cogra.domain.testing.testTaggedContent("p1"))
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed_post_p1_topic_rust")
+        compose.onNodeWithTag("feed_post_p1_topic_rust").performClick()
+        waitForTag("topic_stance_row")
+
+        compose.onNodeWithTag("topic_affinity_stance").performClick()
+
+        waitForTag("join_prompt")
+        // Asked, never bounced: the reader is still on the topic page.
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
+    }
+
     // Backlog item 68, ruled 2026-09-14: chats moved down the release
     // order but the band's chats affordance stays on the root, and a
     // signed-in tap now reaches the coming-soon destination rather than
