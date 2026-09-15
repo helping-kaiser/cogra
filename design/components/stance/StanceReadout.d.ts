@@ -40,6 +40,8 @@ export interface StanceReadoutProps {
   kind?: "pick" | "standing";
   /** Wording for a bundle at exactly (0, 0) — "Walked back" or "No opinion yet". */
   zeroLabel?: string;
+  /** The record family's axis questions, for the spoken reading. */
+  names?: AxisNames;
   style?: React.CSSProperties;
 }
 
@@ -75,12 +77,16 @@ export interface StanceStandingProps {
   bundle: StanceBundle | null | undefined;
   /** Already in the reader's words — "this post", "@ada". */
   targetLabel: string;
+  /** The record family's axis questions, for the two spoken readings. */
+  names?: AxisNames;
 }
 
 export declare function StanceStanding(props: StanceStandingProps): JSX.Element;
 /** The landing line — the one line below the field. */
 export interface StanceLandingLineProps {
   landing: StanceLanding | null;
+  /** The record family's axis questions, for the spoken reading. */
+  names?: AxisNames;
 }
 
 export declare function StanceLandingLine(props: StanceLandingLineProps): JSX.Element;
@@ -116,13 +122,25 @@ export declare const ORIGIN: StancePair;
 export declare const TAP_DEFAULT: StancePair;
 export declare const DIRECTED_LABEL: string;
 export declare const INTEREST_LABEL: string;
+/**
+ * What each axis ASKS, as opposed to where it ends. The stance family's pair is
+ * the default; a family filling the same two slots with other quantities passes
+ * its own, so the spoken route never asks a question the drawn one did not.
+ * `PadAxes` carries these alongside the poles, and every readout below takes
+ * the same object.
+ */
+export interface AxisNames {
+  directed?: string;
+  interest?: string;
+}
+export declare const STANCE_AXIS_NAMES: AxisNames;
 export declare function nearestAnchor(pair: StancePair): StancePair & { emoji: string; label: string };
 /** The nearest of the thirteen TAG anchors — the glyph a tag's pair reads as
  *  wherever it is drawn without the pad. */
 export declare function nearestTagAnchor(pair: StancePair): StancePair & { emoji: string; label: string };
 export declare function bundleReadout(pair: StancePair, zeroLabel?: string): { emoji: string; label: string };
 export declare function formatStancePair(pair: StancePair): string;
-export declare function formatStanceWords(pair: StancePair): string;
+export declare function formatStanceWords(pair: StancePair, names?: AxisNames): string;
 /** Always signed, two decimals, the negative arm on U+2212 MINUS (readme §3). */
 export declare function formatDimension(value: number): string;
 /** Two decimals, no sign — for an axis whose range has no negative half. */
@@ -138,8 +156,8 @@ export declare function severanceParts(
   targetLabel: string,
 ): { sentence: string } | { raw: string; folded: string; capped: boolean };
 /** The bundle and the landing, split for layout: a sentence, or a labelled readout. */
-export declare function standingParts(bundle: StanceBundle | null | undefined, targetLabel: string): object;
-export declare function landingParts(landing: StanceLanding | null): object;
+export declare function standingParts(bundle: StanceBundle | null | undefined, targetLabel: string, names?: AxisNames): object;
+export declare function landingParts(landing: StanceLanding | null, names?: AxisNames): object;
 export declare const DIRECTED_POLES: readonly string[];
 export declare const INTEREST_POLES: readonly string[];
 export declare const PICK_LABEL: string;
@@ -154,7 +172,7 @@ export declare const ZERO_BUNDLE_EMOJI: string;
 export declare const RESTING_FACE_EMOJI: string;
 /** Visually hidden, still read aloud — where the anchors' words live. */
 export declare const SR_ONLY: React.CSSProperties;
-export declare function signedLine(standing: StancePair, records: number, severed: boolean, targetLabel: string): string;
+export declare function signedLine(standing: StancePair, records: number, severed: boolean, targetLabel: string, names?: AxisNames): string;
 export declare function clampPair(pair: StancePair, ranges?: PadRanges): StancePair;
 export declare function clampDimension(value: number, min?: number, max?: number): number;
 

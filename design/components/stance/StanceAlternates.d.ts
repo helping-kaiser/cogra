@@ -29,9 +29,10 @@ export interface StanceAlternatesProps {
    */
   helpLabel?: string;
   /**
-   * The two tracks' pole words, defaulting to `STANCE_AXES` — the same prop the
+   * The two tracks' words, defaulting to `STANCE_AXES` — the same prop the
    * field takes, so a record family that names its own ends names them on both
-   * routes. The axis names above the tracks are still the stance family's.
+   * routes. The object's `directed` and `interest` label the tracks themselves,
+   * which is the one thing this surface says and the field does not.
    */
   axes?: PadAxes;
 }

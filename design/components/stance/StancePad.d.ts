@@ -19,7 +19,8 @@ export interface StancePadProps {
    * What the four poles are called. Defaults to `STANCE_AXES` — Against / For,
    * Less / More. Another record family whose two parameters are both signed
    * (a citation's relevance and support) fills the same two slots with its own
-   * words.
+   * words. The field reads the four poles and ignores the axis questions the
+   * same object may carry.
    */
   axes?: PadAxes;
   /**
@@ -31,15 +32,25 @@ export interface StancePadProps {
   ranges?: PadRanges;
 }
 
-/** The pad's four poles, named: horizontal is `pDirected`, vertical `pInterest`. */
+/**
+ * A record family's words for the two axes: horizontal is `pDirected`, vertical
+ * `pInterest`. The poles say where each axis ENDS; `directed` and `interest`
+ * say what it ASKS. The field draws the ends only — the questions are for the
+ * surfaces that name an axis out loud, the sliders, the direct entry and the
+ * spoken readouts. A family that draws only the field may omit them.
+ */
 export interface PadAxes {
   left: string;
   right: string;
   top: string;
   bottom: string;
+  /** The question `pDirected` answers — "For or against" for a stance. */
+  directed?: string;
+  /** The question `pInterest` answers — "How much reaches you" for a stance. */
+  interest?: string;
 }
 
-/** The stance's four poles — the pad's default. */
+/** The stance's own six — the pad's default. */
 export declare const STANCE_AXES: PadAxes;
 
 export declare function StancePad(props: StancePadProps): JSX.Element;
