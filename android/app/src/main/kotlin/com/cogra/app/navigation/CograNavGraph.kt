@@ -58,6 +58,8 @@ import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
 import com.cogra.feature.auth.RestoreRoute
 import com.cogra.feature.content.ChatsComingSoonRoute
+import com.cogra.feature.content.CommentsReturn
+import com.cogra.feature.content.CommentsScroll
 import com.cogra.feature.content.ComposePostRoute
 import com.cogra.feature.content.wizard.ComposeWizardRoute
 import com.cogra.feature.content.FeedRoute
@@ -211,14 +213,64 @@ private val handleChangedKey = NavResultKey("handle_changed", false)
 private val contentSignedKey = NavResultKey("content_signed", false)
 
 /**
- * The (ReplyWizard|CommentEdit)→PostDetail result key: a comment or an
- * edit signed, so the thread re-reads and says so once.
+ * The (ReplyWizard|CommentEdit)→thread result key: a comment or an edit
+ * signed, so the thread re-reads and says so once.
  *
- * Distinct from [contentSignedKey] because the thread answers them
- * differently — a signed comment earns the snackbar, a returning post
- * edit only the refetch.
+ * Distinct from [contentSignedKey] because the surfaces answer them
+ * differently — a signed comment earns the thread's snackbar, a
+ * returning post edit only the refetch.
  */
 private val commentSignedKey = NavResultKey("comment_signed", false)
+
+/**
+ * THE OTHER HALF OF THE SHEET'S RETURN (jakob 2026-09-15): which comment
+ * the reply that just landed hangs under, so its branch unfolds and the
+ * author sees what they wrote. Null is a comment on the post itself.
+ *
+ * "A comment landed" alone cannot draw the return — a reply arrives one
+ * level down, behind a count that was collapsed when the reader left —
+ * which is why this rides beside [commentSignedKey] rather than being
+ * folded into it.
+ */
+private val commentParentKey = NavResultKey<String?>("comment_parent", null)
+
+/**
+ * …and where the reader was in the thread when it gave way.
+ *
+ * Reported by the surface to ITSELF on the way out, not by the composer
+ * on the way back: the place is the sheet's own fact, and the composer
+ * never knew it. It rides the same savedStateHandle the results do, so
+ * it survives process death exactly as they do.
+ *
+ * A LazyColumn's place is two ints and an `IntArray` is what a Bundle
+ * carries without a Parcelable of its own; [CommentsScroll] is the shape
+ * everything above this layer speaks.
+ */
+private val commentsPlaceKey = NavResultKey<IntArray?>("comments_place", null)
+
+private fun IntArray?.asCommentsScroll(): CommentsScroll? =
+    this?.takeIf { it.size == 2 }?.let { CommentsScroll(it[0], it[1]) }
+
+/**
+ * `ReplyEntry` 5 and 7 — the composer, pinned to whatever the thread
+ * said it answers.
+ *
+ * One route for both surfaces that raise the thread: the sheet over the
+ * feed opens the same composer the sheet over the detail does, and two
+ * copies of this call would be two chances for them to drift.
+ */
+private fun NavController.openReplyWizard(target: ReplyTarget) {
+    navigate(
+        ReplyWizard(
+            targetId = target.id,
+            isComment = target.kind == ReplyTargetKind.Comment,
+            title = target.title,
+            snippet = target.snippet,
+            authorHandle = target.authorHandle,
+            avatarUrl = target.avatarUrl,
+        ),
+    )
+}
 
 /**
  * The Wizard→Feed result key: a staged act was collected before it
@@ -585,8 +637,36 @@ private fun CograNavGraphContent(
                 val (signedResult, consumeSigned) = entry.navResult(contentSignedKey)
                 val (actorRestored, consumeRestored) = entry.navResult(actorRestoredKey)
                 val (expiredLabel, consumeExpired) = entry.navResult(contentExpiredKey)
+                // THE COMMENTS SHEET IS RAISED HERE TOO, so the feed reads
+                // the thread's return exactly as the detail does: the
+                // return belongs to the sheet, not to the surface under it.
+                val (commentSigned, consumeCommentSigned) = entry.navResult(commentSignedKey)
+                val (commentParent, consumeCommentParent) = entry.navResult(commentParentKey)
+                val (commentsPlace, consumeCommentsPlace) = entry.navResult(commentsPlaceKey)
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
                 FeedRoute(
+                    signedIn = signedIn,
+                    onReply = { target -> navController.openReplyWizard(target) },
+                    onEditComment = { commentId, parentTitle ->
+                        navController.navigate(EditComment(commentId, parentTitle))
+                    },
+                    onSignInOrJoin = { navController.navigate(Login) },
+                    commentsReturn = CommentsReturn(
+                        scroll = commentsPlace.asCommentsScroll(),
+                        landed = commentSigned,
+                        parentCommentId = commentParent,
+                    ),
+                    onCommentsReturnConsumed = {
+                        consumeCommentSigned()
+                        consumeCommentParent()
+                        consumeCommentsPlace()
+                    },
+                    onCommentsDepart = { scroll ->
+                        navController.reportToCurrent(
+                            commentsPlaceKey,
+                            intArrayOf(scroll.index, scroll.offset),
+                        )
+                    },
                     expiredLabel = expiredLabel,
                     onExpiredDismissed = consumeExpired,
                     onOpenDraft = {
@@ -679,6 +759,8 @@ private fun CograNavGraphContent(
             composable<PostDetail> { entry ->
                 val (signedResult, consumeSigned) = entry.navResult(contentSignedKey)
                 val (commentSigned, consumeCommentSigned) = entry.navResult(commentSignedKey)
+                val (commentParent, consumeCommentParent) = entry.navResult(commentParentKey)
+                val (commentsPlace, consumeCommentsPlace) = entry.navResult(commentsPlaceKey)
                 val accountId by authState.accountId.collectAsStateWithLifecycle()
                 PostDetailRoute(
                     postId = entry.toRoute<PostDetail>().postId,
@@ -687,18 +769,7 @@ private fun CograNavGraphContent(
                     onEdit = { id -> navController.navigate(ComposePost(id)) },
                     // `ReplyEntry` 5 and 7 — the composer, pinned to
                     // whatever the thread said it answers.
-                    onReply = { target ->
-                        navController.navigate(
-                            ReplyWizard(
-                                targetId = target.id,
-                                isComment = target.kind == ReplyTargetKind.Comment,
-                                title = target.title,
-                                snippet = target.snippet,
-                                authorHandle = target.authorHandle,
-                                avatarUrl = target.avatarUrl,
-                            ),
-                        )
-                    },
+                    onReply = { target -> navController.openReplyWizard(target) },
                     // `ReplyMedia` 6 — `CommentEdit`, on an own comment.
                     onEditComment = { commentId, parentTitle ->
                         navController.navigate(EditComment(commentId, parentTitle))
@@ -716,8 +787,22 @@ private fun CograNavGraphContent(
                     onBack = { navController.navigateUp() },
                     refreshSignal = signedResult,
                     onRefreshSignalConsumed = consumeSigned,
-                    commentSignedSignal = commentSigned,
-                    onCommentSignedSignalConsumed = consumeCommentSigned,
+                    commentsReturn = CommentsReturn(
+                        scroll = commentsPlace.asCommentsScroll(),
+                        landed = commentSigned,
+                        parentCommentId = commentParent,
+                    ),
+                    onCommentsReturnConsumed = {
+                        consumeCommentSigned()
+                        consumeCommentParent()
+                        consumeCommentsPlace()
+                    },
+                    onCommentsDepart = { scroll ->
+                        navController.reportToCurrent(
+                            commentsPlaceKey,
+                            intArrayOf(scroll.index, scroll.offset),
+                        )
+                    },
                 )
             }
             composable<ReplyWizard> { entry ->
@@ -736,9 +821,16 @@ private fun CograNavGraphContent(
                         avatarUrl = route.avatarUrl,
                     ),
                     // Signed lands back on the thread it answers, which
-                    // re-reads and shows the comment settling.
+                    // re-reads and shows the comment settling — and, for
+                    // a reply, unfolds the branch it settled into. The
+                    // wizard's own target IS that branch's comment, so
+                    // the parent is known here and nowhere else.
                     onSigned = {
                         navController.report(commentSignedKey, true)
+                        navController.report(
+                            commentParentKey,
+                            route.targetId.takeIf { route.isComment },
+                        )
                         navController.navigateUp()
                     },
                     // Leaving keeps nothing: comments have no drafts

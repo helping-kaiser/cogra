@@ -12,6 +12,7 @@ import com.cogra.domain.ApplicationStatus
 import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.CommentForEdit
+import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
 import com.cogra.domain.InviteCheck
 import com.cogra.domain.InviteLinkInfo
@@ -66,6 +67,7 @@ import com.cogra.network.graphql.KeyBackupQuery
 import com.cogra.network.graphql.LogInMutation
 import com.cogra.network.graphql.MeQuery
 import com.cogra.network.graphql.MyProfileQuery
+import com.cogra.network.graphql.PostCommentsQuery
 import com.cogra.network.graphql.PostDetailQuery
 import com.cogra.network.graphql.PostSelfMarkQuery
 import com.cogra.network.graphql.PostsQuery
@@ -589,13 +591,30 @@ class ContentRepositoryImpl @Inject constructor(private val client: ApolloClient
         first: Int,
         after: String?,
         includePending: Boolean,
-    ): Outcome<Page<CommentView>> =
-        post(postId, first, after, includePending).flatMap { detail ->
-            when (detail) {
-                null -> Outcome.Failed(IllegalStateException("post vanished under its thread"))
-                else -> Outcome.Success(detail.comments)
+    ): Outcome<CommentPage?> = guard.run {
+        client.query(
+            PostCommentsQuery(
+                id = postId,
+                first = first,
+                after = Optional.presentIfNotNull(after),
+                includePending = Optional.present(includePending),
+            ),
+        ).fetch().map { data ->
+            data.post?.let { post ->
+                CommentPage(
+                    page = Page(
+                        items = post.comments.edges.map { edge ->
+                            edge.node.commentFields.toDomain()
+                                .copy(replyCount = edge.node.replies.totalCount)
+                        },
+                        endCursor = post.comments.pageInfo.endCursor,
+                        hasNextPage = post.comments.pageInfo.hasNextPage,
+                    ),
+                    total = post.comments.totalCount,
+                )
             }
         }
+    }
 
     override suspend fun preparePost(
         title: String?,
