@@ -2192,20 +2192,42 @@ const POST_OPINION_HOLDERS = [
    than one stance control stands. The face's accessible name and the skip-link
    beside it both read it, so the three on the page say which is which.
 
-   THE POLES ARE THE AFFINITY FAMILY'S, NOT THE STANCE'S. Following a topic IS
+   THE WORDS ARE THE AFFINITY FAMILY'S, NOT THE STANCE'S. Following a topic IS
    the stance gesture (jakob, 2026-09-14) — one gesture, one ceremony, one face
    table — but the two slots it fills are association and attraction
-   (`layer1-interface.md` §9.5), and their ends are not "Against / For". They
-   are proposed here and NOT YET BLESSED; copy-voice carries them with that
-   mark. */
-const AFFINITY_AXES = { left: "Not mine", right: "Mine", bottom: "Away", top: "Toward" };
+   (`layer1-interface.md` §9.5), and their ends are not "Against / For". Six
+   words, ruled 2026-09-15: each axis's question and its two ends, because a
+   slider that says where a track stops still has to say what the track asks.
+   The pad itself draws the four ends alone. */
+const AFFINITY_AXES = {
+  directed: "How much you like it",
+  left: "Dislike",
+  right: "Like",
+  interest: "How close you want to be",
+  bottom: "Far away",
+  top: "Close to me",
+};
 
-function TagPageBody({ bundle } = {}) {
+/* `stanceOpen`/`stanceDefaultPick` are `PostCard`'s two pass-throughs by
+   another name (item 77): whether the topic's pad is bloomed, and where its
+   knob is parked, are facts about the BOARD rather than about the page — a
+   server-rendered board asks the master for a state a click cannot reach
+   instead of copying the pad. No `padInset` rides with them: the inset exists
+   to lift the parked card clear of a bottom bar, and this page has none. */
+function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
   return (
     <>
       <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
       <div style={{ padding: "4px 16px 8px" }}>
-        <StanceControl wide targetLabel="#saltmaps" axes={AFFINITY_AXES} bundle={bundle} onCommit={() => {}} />
+        <StanceControl
+          wide
+          targetLabel="#saltmaps"
+          axes={AFFINITY_AXES}
+          bundle={bundle}
+          defaultOpen={stanceOpen}
+          defaultPick={stanceDefaultPick}
+          onCommit={() => {}}
+        />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
         <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>

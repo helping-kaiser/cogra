@@ -146,9 +146,11 @@ service did something on the reader's behalf.
 **Implementation vocabulary stays off the screen.** Banned in
 user-facing copy: graph, node, edge, vertex, tensor, weight, parameter,
 decentralized, protocol, token, crypto — and the repo's own internal
-words *valence*, *connection*, `p_d`, `p_i`. The two stance parameters
-are labelled **"For or against"** and **"How much reaches you"** on
-screen, and nothing else.
+words *valence*, *connection*, `p_d`, `p_i`. An **opinion's** two stance
+parameters are labelled **"For or against"** and **"How much reaches
+you"** on screen, and nothing else; another record family filling the
+same two slots names them its own — the control owns the geometry, the
+record family owns the words.
 
 The rule is "as little as possible, as much as needed", not a word ban:
 where the format *is* the content, name it exactly. A key export says
@@ -664,8 +666,9 @@ CoGra's signature interaction, and the thing to get right. Full rules in
 `guidelines/stance-control.md`; the short version:
 
 Every interaction authors two independent continuous values in `[−1, +1]`
-— on screen, **"For or against"** and **"How much reaches you"**. All
-four quadrants are legitimate.
+— on screen, **"For or against"** and **"How much reaches you"** for an
+opinion; another record family filling the same two slots names them its
+own (§3). All four quadrants are legitimate.
 
 - **At rest** the target shows the opinion: the face and the exact
   pair. A viewer with no opinion sees a **muted, translucent 🫥** —
@@ -3188,10 +3191,9 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   word under it — because staging a tag and staging a citation are the
   same errand and two shapes for it was an accident of when each was
   drawn. The nine also collapse the marker table's two pins into one.
-- **The page is a subpage of search**, so its arrow is a link to
-  Explore and it carries no bottom bar — the settings round's rule for
-  a surface a reader arrives at, reads and leaves. Its title is the tag
-  with its `#`.
+- **The page is a subpage of search** and carries no bottom bar — the
+  settings round's rule for a surface a reader arrives at, reads and
+  leaves. Its title is the tag with its `#`.
 - **No order control, and the contract is the reason.** `taggedContent`
   is limit-bounded and returns a plain list, newest claim first; the
   schema says a Relay connection "would promise a pagination the read
@@ -4943,16 +4945,20 @@ slice-3 remainders beside it. The round's premise is one sentence:
   `targetLabel` is the tag itself (item 46.1's mechanism, built for this
   page), and `STANCE_ANCHORS` is reused unchanged — **one gesture, one
   face table**. An Affinity is not a second kind of feeling.
-- **BUT THE FOUR POLE WORDS ARE THE FAMILY'S**, as a tag's and a
-  citation's already are. The slots hold association and attraction
+- **BUT THE WORDS ARE THE FAMILY'S**, as a tag's and a citation's
+  already are. The slots hold association and attraction
   (`layer1-interface.md` §9.5), so `StanceControl` grew `axes` — the
   field's own prop, passed through to the field AND to the alternates,
   because a slider naming the ends differently from the pad would make
-  the accessible route a different question. The words are
-  `Not mine` / `Mine` and `Away` / `Toward` (blessed 2026-09-15);
-  backlog 78 notes that no board yet draws the pad they belong to, and
-  backlog 79 notes that the two axis NAMES above the sliders are still
-  the opinion's.
+  the accessible route a different question. It carries **six** words,
+  ruled 2026-09-15: each axis's question and its two ends. Association
+  asks `How much you like it` and runs `Dislike` / `Like`; attraction
+  asks `How close you want to be` and runs `Far away` / `Close to me`.
+  The field draws the four ends; the two questions reach the sliders,
+  the typed fields and every spoken readout, because a route that heard
+  one family's question about another family's record is the accessible
+  route asking something the drawn one never asked. `TagPageHeldPad`
+  draws the pad they belong to.
 - **"YOUR TOPICS" IS A SUBPAGE OFF EXPLORE, NOT A SECTION IN IT.** The
   held set has no bound, and an unbounded list inlined in the tab would
   push the recents under the fold and turn Explore into a list page. The
@@ -5024,7 +5030,7 @@ slice-3 remainders beside it. The round's premise is one sentence:
   a seal's acts card is a different anatomy with its own totals.
 - **The clip ruling, for context only** (implementation owns it): a
   detail clip stops at its end with replay; a feed clip loops.
-- **The gate**: boards **194 → 200** (`TagPageHeld`, `YourTopics`,
+- **The gate**: boards **188 → 194** (`TagPageHeld`, `YourTopics`,
   `FeedTopic`, `CitedBy`, `CommentCitedByEmpty`, `EditComposeUnchanged`),
   edges **1372 → 1429**, gaps hold at **15**, flows hold at **63/61/2**
   with **2** journey-stopping — every new board joins an existing
@@ -5059,6 +5065,98 @@ viewer lane).
   queued the asymmetry: each platform keeps its own player's reflex,
   and one grammar forced across both would break the reflex on one of
   them.
+### The tag-page smalls — 2026-09-15
+
+Three items the topic round left standing, all about the tag page and
+none of them needing a board. Ruled by jakob the same day.
+
+- **The no-rename rule names the OPINION's parameters.** §3 forbade
+  anything but `For or against` and `How much reaches you`, which three
+  record families already contradict — a tag's pair editor, a citation's
+  field, an Affinity's. The rule was right and its noun was wrong. §3
+  and copy-voice now carry the scope: the control owns the geometry, the
+  record family owns the words. A tightening pass, not a decision.
+- **A guest on the tag page is not special.** Any reader who taps a tag
+  reaches the page — a connection to it or none — and sees what is
+  tagged. The only thing a guest lacks is an opinion of the topic, so
+  the stance face wears the no-opinion 🫥 and the borrowed vantage
+  (genesis, for a bare arrival) ranks what they read, post scores
+  included. `TagPage`'s three stance faces take the `GuestGate` outcome
+  `Reel` already spells for a shared board; `TagPageHeld` takes none,
+  because no guest can hold a topic. No guest board of its own, by the
+  stream ruling. An applicant may stage one of each kind here, the
+  Affinity among them — a feel of belonging before the vouch — and the
+  applicant boards already answer an exhausted kind, so the page needs
+  no wiring of its own for it.
+- **Back from the tag page is history.** Back to where you came from,
+  and the label names it: `Back to Explore`, `Back to Your topics`,
+  `Back to feed`. A shared URL with no history behind it falls back to
+  `Back to Explore`. This replaces the tag round's link to Explore — a
+  second route to the page turned that link into a skip over the place
+  the reader actually stood. The whole family takes the `back` terminal;
+  the boards keep drawing `Back to Explore`, the cold entry's state
+  being the one that stands with no route behind it.
+- **The guest close, ruled the same evening.** Guests reach every
+  reading page and it is always the same: the stance face wears the
+  unset 🫥 and the scores come from the genesis vantage. So every
+  guest-reachable stance face carries the `GuestGate` outcome on the
+  face itself — `ReplyEntry`, `FeedGallery`, `PostDetail`,
+  `PostDetailVideo` and `ProfileOther` join `TagPage` and `Reel` — and
+  the arriving-edge spelling (`Main`/`FeedBare`'s author chips carried
+  "acts join-gate" as a note on the way in) is retired: one fact, one
+  idiom, on the face that gates. `RefsSheet` draws no stance face and
+  carries nothing. `YourTopics`' back arrow takes the tag pages'
+  history ruling with them — the feed filter is its second route, and
+  the Explore link was the same skip.
+- **The gate**: no board added and none redrawn — **194** screens
+  render as before, edges hold at **1461**, gaps at **14**, flows at
+  **63/61/2**. Eight outcomes join existing rows and
+  two destinations become terminals, so `flows.resolved.json` is
+  byte-identical and nothing needed re-blessing. Reachable filter
+  summaries hold at **370**, **0** over the band's 154px, widest
+  unchanged at `Chats · text · + removed`, 153.9px. The maps and the
+  feed canvas manifest follow the edges.
+### The Affinity pad round — 2026-09-15
+
+The topic round left the Affinity family words nobody could look at and
+a pad nobody could open. This round rules the words and draws the pad.
+
+- **THE FAMILY'S SIX WORDS, IN THE PLAINEST READING.** jakob:
+  "this is about your stance towards tags right? sooo we have how much
+  you like a tag and how close you wanna be (how often / how much you
+  want to see contents with this tag) we need to find easy words for
+  that" — and then the words themselves, "i think this wording will
+  just be easier to grasp". Association asks **How much you like it**
+  and runs **Dislike** / **Like**; attraction asks **How close you want
+  to be** and runs **Far away** / **Close to me**. Ease of grasp is the
+  deciding argument: the pair names two things a reader already knows
+  they feel about a topic, and needs no gloss to be answered correctly
+  the first time.
+- **AN AXIS'S QUESTION TRAVELS WITH ITS POLES** (backlog item 79). The
+  poles had moved to the record family and the two axis NAMES had not,
+  so a screen reader on a topic's pad heard the opinion's questions —
+  `For or against`, `How much reaches you` — about a record that is not
+  one. `axes` now carries both: the field draws the four ends, and the
+  questions reach the sliders, the typed fields, the severance confirm
+  and the three spoken readouts. One object holds a family's words, and
+  the drawn route and the accessible one cannot ask different questions.
+- **AND THE PAD IS DRAWN** (backlog item 78). `TagPageHeldPad` is
+  `VouchBackPad`'s anatomy over the tag page with the topic held —
+  `PadStanding`'s four controls, the family's words at the edges — and
+  changing all six words had until now moved not one rendered board,
+  which is what a canvas review cannot catch. It is also the only board
+  where the way out of a held topic is visible: held, the pad carries
+  `Walk it back`, and that is the severance ceremony at this topic's own
+  price. The row cannot show it and *Your topics* deliberately offers no
+  per-row removal, so without this board the door existed in the code
+  and nowhere on the canvas.
+- **The gate**: boards **194 → 195** (`TagPageHeldPad`), edges
+  **1461 → 1466**, gaps hold at **14**, flows hold at **63/61/2** with
+  **2** journey-stopping — the new board joins the topic row's existing
+  edge and reroutes nothing. The feed canvas sits at **57/200 files**
+  (72% headroom). Reachable filter summaries hold at **370**, **0** over
+  the band's 154px, widest unchanged at `Chats · text · + removed`,
+  153.9px: a parked pad adds no filter reading.
 
 ### The invites round — 2026-09-15
 

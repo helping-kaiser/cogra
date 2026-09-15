@@ -377,7 +377,7 @@
     {
       "name": "take-a-stance-on-a-person",
       "description": "Press and hold the stance anchor on a profile and the same pad blooms; the stance concludes where it was taken.",
-      "start": { "control": "the stance anchor" },
+      "start": { "control": "the stance anchor", "to": "VouchBackPad" },
       "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
     },
     {
