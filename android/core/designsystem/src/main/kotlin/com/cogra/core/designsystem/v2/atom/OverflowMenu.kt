@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,6 +49,11 @@ import com.cogra.core.designsystem.v2.token.Space
  *
  * A menu with no rows draws no trigger: a ⋮ that opens an empty sheet
  * teaches the reader the card lies.
+ *
+ * [stacked] is true for the one board this ⋮ also draws stacked
+ * (`CommentMenu.jsx`, design/readme.md:2364): the comment's menu, over the
+ * comments thread's own sheet. The post's menu and a feed card's stay
+ * unstacked — both open over the plain page.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +62,7 @@ fun CograOverflowMenu(
     contentDescription: String,
     testTag: String,
     modifier: Modifier = Modifier,
+    stacked: Boolean = false,
 ) {
     if (items.isEmpty()) return
     var open by remember { mutableStateOf(false) }
@@ -76,6 +83,11 @@ fun CograOverflowMenu(
         ModalBottomSheet(
             onDismissRequest = { open = false },
             sheetState = state,
+            containerColor = sheetContainerColor(
+                stacked,
+                MaterialTheme.colorScheme,
+                BottomSheetDefaults.ContainerColor,
+            ),
             modifier = Modifier.testTag("${testTag}_sheet"),
         ) {
             // NO TITLE. The rows are the sheet, and the name the trigger

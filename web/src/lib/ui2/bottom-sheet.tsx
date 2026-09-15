@@ -27,6 +27,7 @@ export function BottomSheet({
   foot,
   children,
   testId = "bottom-sheet",
+  stacked = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -69,6 +70,16 @@ export function BottomSheet({
   foot?: ReactNode;
   children: ReactNode;
   testId?: string;
+  /**
+   * This sheet opens over another sheet — the comment's menu and the
+   * comment's license, both over the comments thread (design/readme.md:2364).
+   * It takes the next tonal rung, `surfaceContainerHighest`: elevation is
+   * tonal, and two surfaces at one rung claim one elevation. The native
+   * `<dialog>` stacking already lets a later `showModal()` layer above an
+   * earlier one with its own backdrop between them, so only the tone is
+   * wired here — the dimming is the platform's top layer, not this prop.
+   */
+  stacked?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
   // A DISMISSAL EXITS THE EDGE IT ENTERED FROM (design/tokens/transitions.css).
@@ -117,7 +128,9 @@ export function BottomSheet({
       // keep a strip of the surface behind visible.
       className={`${closing ? "cg-sheet-out" : "cg-sheet-in"} ${
         height === "full" ? "h-[calc(100dvh-72px)]" : "max-h-[92dvh]"
-      } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 bg-surface-container-high p-0 text-on-surface backdrop:bg-scrim/50`}
+      } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 ${
+        stacked ? "bg-surface-container-highest" : "bg-surface-container-high"
+      } p-0 text-on-surface backdrop:bg-scrim/50`}
     >
       <div className={`flex flex-col ${height === "full" ? "h-full" : "max-h-[92dvh]"}`}>
         {/* The drag handle is drawn but not a control: the sheet is dropped

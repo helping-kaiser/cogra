@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
@@ -30,6 +31,21 @@ import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.core.designsystem.v2.token.ThemePreviews
+
+/**
+ * A SHEET OVER A SHEET TAKES THE NEXT TONAL RUNG (design/readme.md:2364):
+ * "its surface moves to `surfaceContainerHighest` — elevation is tonal, and
+ * two surfaces at one rung claim one elevation." Plain rather than
+ * `@Composable` so the rung itself — not just its use inside a sheet — is
+ * unit-testable against a [ColorScheme] built with no composition running,
+ * the way `fieldCountReading` pins the late counter's own arithmetic.
+ *
+ * An unstacked sheet keeps whatever container colour it already draws —
+ * [default] rides through untouched, since the base rung is this sheet's own
+ * concern, not this one's to redraw.
+ */
+fun sheetContainerColor(stacked: Boolean, colors: ColorScheme, default: Color): Color =
+    if (stacked) colors.surfaceContainerHighest else default
 
 /**
  * The bottom sheet's *surface*, extracted from its presentation.
