@@ -5383,6 +5383,21 @@ inherited. Ruled by jakob the same day.
   `answer-someones-ask-link` ends on the other one. The seam between
   them is time — and, for the ask link, two different people — not a
   missing design.
+- **The gate**: 194 → **203 boards**, 1461 → **1511 edges**, gaps 14 →
+  **13** and flows 63 → **66 declared · 64 resolved**, the two blocked
+  ones unchanged. The gap count falls because `Profile/7` closed and no
+  new one opened. The witness moved only where it should: three flows
+  added, the new boards joining the index, `Profile` gaining two of
+  them, `ApplicantRejected` joining the origin lists every shell board
+  with a post card and a bar belongs to — the way `FeedUnread` did —
+  and no existing flow rerouted a single step.
+
+### The re-review — 2026-09-15
+
+Six rulings off jakob's pass over the round above, and one of them
+overturns a ruling from the same day. Nothing here is a new surface
+except the board the last one needed.
+
 - **A system card is marked on its edge, not washed through its ground
   (jakob, re-reviewing the first attempt: "wash of the box is not what i
   meant.. this just looks bad.. i was thinking about some gradient or
@@ -5486,14 +5501,17 @@ inherited. Ruled by jakob the same day.
   `Discard` already stands inert behind the wash. The scrim is the third
   answer nobody has to spell. Android's divergence is implementation's
   to close (backlog 97).
-- **The gate**: 194 → **203 boards**, 1461 → **1511 edges**, gaps 14 →
-  **13** and flows 63 → **66 declared · 64 resolved**, the two blocked
-  ones unchanged. The gap count falls because `Profile/7` closed and no
-  new one opened. The witness moved only where it should: three flows
-  added, the new boards joining the index, `Profile` gaining two of
-  them, `ApplicantRejected` joining the origin lists every shell board
-  with a post card and a bar belongs to — the way `FeedUnread` did —
-  and no existing flow rerouted a single step.
+- **The gate**: one board added — `ComposeDraftDiscard`, the only
+  surface any of the six needed — and edges **1522 → 1527**: two wiring
+  the emptied tag page's new stance row, three the draft's shield and
+  its dialog. Gaps hold at **13** and flows at **66 declared · 64
+  resolved · 2 blocked**, `flows.resolved.json` byte-identical, so
+  nothing needed re-blessing: no journey was rerouted, only answered in
+  more places. Reachable filter summaries hold at **370**, **0** over
+  the band's 154px, widest unchanged at `Chats · text · + removed`,
+  153.9px. The compose canvas takes the new board at **79/200 files**
+  (61% headroom). Every board in the tree re-rendered, because two of
+  the six moved a token and a component the whole tree reads.
 
 ---
 
