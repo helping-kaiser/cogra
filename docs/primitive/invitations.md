@@ -56,6 +56,11 @@ Layer 1 is its truth home:
   first** — the ≺-earliest accepted back-edge. One inviter per
   member, fixed by public record order, permanent.
 
+That *any number* is what the **ask link** of §4 routes: a person
+still waiting can point a would-be inviter at themselves, and
+nothing here moves — whoever they reciprocate first is still the
+inviter.
+
 A unilateral edge never constitutes an invitation: otherwise
 actors could be linked, unconsented, to reap inviter benefits.
 Acceptance is the joiner's own authored act — the same
@@ -187,9 +192,28 @@ revocable at any time.
   vouching: each join still costs the inviter one explicit,
   priced approval.
 
+**The ask link — the funnel from the other end.** An applicant can
+also generate a link of their own and hand it to someone they
+know. An ask link authors nothing either: it is **pure
+service-side UX that routes an applicant to a would-be inviter**,
+and the approval is still the priced act. It points at a person
+rather than a slot, so it **stands** — no timer, no use count. A
+member who opens it sees whose it is and may take up the
+application, approving it exactly as they approve anyone staged
+through their own link, choosing `(p_d, p_i)` in the same gesture.
+The two links are one funnel from its two ends: the inviter
+reaching for a person, the person reaching for an inviter.
+
+Nothing in §2 moves — any number of members may point an Opinion
+at a joiner, and the inviter is whichever one the joiner
+reciprocates first; the ask link only decides who gets asked. A
+mass-shared ask link therefore buys nothing a mass-shared invite
+link didn't: approving is still the priced act, and §6's mis-vouch
+economics carry its cost either way.
+
 Registration mechanics — email verification, applicant handling,
-the client-signed admission handshake — live in
-[auth.md](../implementation/auth.md).
+the ask link's own lifecycle, the client-signed admission
+handshake — live in [auth.md](../implementation/auth.md).
 
 ---
 

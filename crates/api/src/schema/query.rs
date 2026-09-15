@@ -14,9 +14,9 @@ use uuid::Uuid;
 
 use super::types::{
     Actor, CommentType, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType, Record,
-    RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User,
-    borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
-    keyset_page, list_cost, list_limit, record_cursor, resolve_reference_target,
+    RecordConnection, RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType,
+    User, borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
+    keyset_page, list_cost, list_limit, record_connection, resolve_reference_target,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -326,7 +326,7 @@ impl Query {
         before: Option<String>,
         first: Option<i32>,
         last: Option<i32>,
-    ) -> async_graphql::Result<KeysetConnection<Record>> {
+    ) -> async_graphql::Result<RecordConnection> {
         let pool = ctx.data::<PgPool>()?;
         let page = keyset_page(first, after, last, before)?;
         let mut filter = mirror::RecordFilter {
@@ -340,7 +340,7 @@ impl Query {
             match crate::nodes::address_of(pool, author).await? {
                 Some(address) => filter.author = Some(address),
                 None => {
-                    return Ok(keyset_connection(Vec::new(), &page, record_cursor, Record));
+                    return Ok(record_connection(Vec::new(), &page, None));
                 }
             }
         }
@@ -348,7 +348,7 @@ impl Query {
             match uuid_to_node_string(pool, target).await? {
                 Some(node) => filter.target = Some(node),
                 None => {
-                    return Ok(keyset_connection(Vec::new(), &page, record_cursor, Record));
+                    return Ok(record_connection(Vec::new(), &page, None));
                 }
             }
         }
@@ -356,7 +356,7 @@ impl Query {
             match uuid_to_node_string(pool, terminal).await? {
                 Some(node) => filter.terminal = Some(node),
                 None => {
-                    return Ok(keyset_connection(Vec::new(), &page, record_cursor, Record));
+                    return Ok(record_connection(Vec::new(), &page, None));
                 }
             }
         }
@@ -369,7 +369,7 @@ impl Query {
         )
         .await
         .map_err(|e| async_graphql::Error::new(e.to_string()))?;
-        Ok(keyset_connection(rows, &page, record_cursor, Record))
+        Ok(record_connection(rows, &page, Some(filter)))
     }
 
     /// Candidate targets for the reference picker.

@@ -4,10 +4,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
@@ -30,6 +36,8 @@ import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
 import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.PostView
+import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.MediaAssetView
 import com.cogra.core.designsystem.v2.media.PINNED_CLIP_TAG
 import com.cogra.domain.ModeratedField
@@ -71,6 +79,8 @@ class ContentScreensTest {
         viewerId: String? = null,
         onEditPost: (String) -> Unit = {},
         onCitePost: (String) -> Unit = {},
+        thread: CommentsUiState = CommentsUiState(loading = false),
+        onThreadRaised: (String) -> Unit = {},
     ) {
         compose.setContent {
             FeedScreen(
@@ -88,6 +98,30 @@ class ContentScreensTest {
                 viewerId = viewerId,
                 onEditPost = onEditPost,
                 onCitePost = onCitePost,
+                // The same stateless sheet the detail mounts: the feed
+                // supplies the slot, and the thread state stands in for
+                // the holder the route would bind.
+                commentsSheet = { postId, onDismiss ->
+                    onThreadRaised(postId)
+                    CommentsSheet(
+                        state = thread,
+                        viewerId = viewerId,
+                        signedIn = true,
+                        onDismiss = onDismiss,
+                        onLoadMoreComments = {},
+                        onAddComment = {},
+                        onReplyTo = {},
+                        onEditComment = {},
+                        onCommentSignedShown = {},
+                        onLoadMoreReplies = {},
+                        onReveal = { _, _ -> },
+                        onOpenActor = onOpenActor,
+                        onOpenTopic = onOpenTopic,
+                        onReference = onCitePost,
+                        onLicense = {},
+                        onSignInOrJoin = {},
+                    )
+                },
             )
         }
     }
@@ -671,7 +705,7 @@ class ContentScreensTest {
     }
 
     private fun renderDetail(
-        state: PostDetailUiState,
+        state: DetailFixture,
         viewerId: String? = null,
         signedIn: Boolean? = true,
         onEdit: (String) -> Unit = {},
@@ -688,32 +722,111 @@ class ContentScreensTest {
         onReference: (String) -> Unit = {},
         onShare: (String) -> Unit = {},
         onOpenPost: (String) -> Unit = {},
+        onCommentsDepart: (CommentsScroll) -> Unit = {},
     ) {
         compose.setContent {
+            // The license sheet the comment menus raise stands OUTSIDE the
+            // thread's own window, exactly as `CommentsSheetRoute` holds it.
+            var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
             PostDetailScreen(
                 stanceControl = { target, tag -> onStance(target, tag) },
-                state = state,
+                state = state.detail,
                 viewerId = viewerId,
-                signedIn = signedIn,
                 onRefresh = onRefresh,
-                onLoadMoreComments = onLoadMoreComments,
-                onCommentSignedShown = {},
-                onLoadMoreReplies = onLoadMoreReplies,
                 onEdit = onEdit,
-                onAddComment = onAddComment,
-                onReplyTo = onReplyTo,
-                onEditComment = onEditComment,
                 onOpenActor = onOpenActor,
                 onOpenPost = onOpenPost,
                 onOpenTopic = onOpenTopic,
                 onReference = onReference,
                 onShare = onShare,
-                onSignInOrJoin = onSignInOrJoin,
                 onReveal = { _, _ -> },
                 onBack = {},
+                // The sheet is its own state holder now, so the detail
+                // test drives it as the app does: through the slot, with
+                // the thread's own state beside the post's.
+                commentsSheet = { onDismiss ->
+                    CommentsSheet(
+                        state = state.comments,
+                        viewerId = viewerId,
+                        signedIn = signedIn,
+                        onDismiss = onDismiss,
+                        onLoadMoreComments = onLoadMoreComments,
+                        onAddComment = onAddComment,
+                        onReplyTo = onReplyTo,
+                        onEditComment = onEditComment,
+                        onCommentSignedShown = {},
+                        onLoadMoreReplies = onLoadMoreReplies,
+                        onReveal = { _, _ -> },
+                        onOpenActor = onOpenActor,
+                        onOpenTopic = onOpenTopic,
+                        onReference = onReference,
+                        onLicense = { licenseShown = it },
+                        onSignInOrJoin = onSignInOrJoin,
+                        onDepart = onCommentsDepart,
+                        stanceControl = { target, tag -> onStance(target, tag) },
+                    )
+                },
             )
+            // Stacked, as `CommentsSheetRoute` mounts it: only a COMMENT's
+            // terms reach this mount, and they stand over the thread's own
+            // sheet (design/readme.md:2364).
+            licenseShown?.let { license ->
+                LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = true)
+            }
         }
     }
+
+    /**
+     * A detail surface and the thread its sheet stands on.
+     *
+     * The two are separate state holders since the sheet became the one
+     * comments surface and took its thread with it — but a test that
+     * renders a post WITH comments is describing both, so the fixture
+     * builds both from the one call the tests already make.
+     */
+    private data class DetailFixture(val detail: PostDetailUiState, val comments: CommentsUiState)
+
+    private fun detailFixture(
+        loading: Boolean = true,
+        refreshing: Boolean = false,
+        post: PostView? = null,
+        includePending: Boolean = true,
+        notFound: Boolean = false,
+        transportFault: TransportFault? = null,
+        reveals: Map<String, SensitiveMark> = emptyMap(),
+        comments: List<com.cogra.domain.CommentView> = emptyList(),
+        commentsEndCursor: String? = null,
+        commentsHaveMore: Boolean = false,
+        loadingMore: Boolean = false,
+        commentSigned: Boolean = false,
+        replyThreads: Map<String, ReplyThread> = emptyMap(),
+    ) = DetailFixture(
+        detail = PostDetailUiState(
+            loading = loading,
+            refreshing = refreshing,
+            post = post,
+            includePending = includePending,
+            notFound = notFound,
+            transportFault = transportFault,
+            reveals = reveals,
+        ),
+        comments = CommentsUiState(
+            // A fixture describes a thread that has ARRIVED: the tests
+            // that care about the read being out say so through the
+            // sheet's own state instead.
+            loading = false,
+            comments = comments,
+            total = comments.size,
+            endCursor = commentsEndCursor,
+            hasMore = commentsHaveMore,
+            loadingMore = loadingMore,
+            includePending = includePending,
+            transportFault = transportFault,
+            reveals = reveals,
+            commentSigned = commentSigned,
+            replyThreads = replyThreads,
+        ),
+    )
 
     // Post cards, the post itself, and every comment carry the stance
     // control (design.md §6), each on its own target.
@@ -741,7 +854,7 @@ class ContentScreensTest {
     fun theDetailCarriesAStanceControlForThePostAndForEveryComment() {
         val stanced = mutableListOf<String>()
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(testComment("c1"), testComment("c2")),
@@ -755,7 +868,7 @@ class ContentScreensTest {
     @Test
     fun thePostAndItsThreadRender() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(testComment("c1")),
@@ -775,7 +888,7 @@ class ContentScreensTest {
     @Test
     fun theThreadStandsInASheetTheCountRaises() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(testComment("c1")),
@@ -790,6 +903,142 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_add_comment").assertExists()
     }
 
+    /**
+     * THE SHEET IS THE ONE COMMENTS SURFACE (jakob 2026-09-15): a feed
+     * card's count raises the same thread the detail's does, and raises
+     * it FULL-FUNCTION — the composer's door and every comment's own
+     * affordances, not a read-only preview.
+     *
+     * The card's TAP still opens the post; only the count raises the
+     * thread, which is the master's own split.
+     */
+    @Test
+    fun aFeedCardsCommentCountRaisesTheSameThreadTheDetailDoes() {
+        val opened = mutableListOf<String>()
+        val raised = mutableListOf<String>()
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            onOpenPost = { opened += it },
+            thread = CommentsUiState(loading = false, comments = listOf(testComment("c1"))),
+            onThreadRaised = { raised += it },
+            viewerId = "viewer",
+        )
+        compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
+
+        compose.onNodeWithTag("feed_post_p1_comments").performClick()
+        compose.waitForIdle()
+
+        assertThat(raised).containsExactly("p1")
+        // The count raised the thread rather than navigating away.
+        assertThat(opened).isEmpty()
+        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("detail_comment_c1").assertExists()
+        // Full-function: the composer's door and the comment's own ⋮.
+        compose.onNodeWithTag("detail_add_comment").assertExists()
+        compose.onNodeWithTag("comment_c1_menu").assertExists()
+        compose.onNodeWithTag("comment_reply_c1").assertExists()
+    }
+
+    /**
+     * THE READER COMES BACK WHERE THEY LEFT (jakob 2026-09-15). Signing a
+     * reply is a round trip through a destination, so the sheet is drawn
+     * again from nothing — and the place it was left in is half of what
+     * the return carries.
+     */
+    @Config(qualifiers = "+h1600dp")
+    @Test
+    fun theSheetComesBackWhereTheReaderLeftIt() {
+        val comments = (1..12).map { testComment("c$it") }
+        var restored = 0
+        renderSheet(
+            CommentsUiState(loading = false, comments = comments),
+            restoreTo = CommentsScroll(index = 9, offset = 0),
+            onRestored = { restored += 1 },
+        )
+        compose.waitForIdle()
+
+        // The thread stands at the comment the reader was looking at, not
+        // at the top it would otherwise be drawn from.
+        compose.onNodeWithTag("detail_comment_c10").assertIsDisplayed()
+        compose.onNodeWithTag("detail_comment_c1").assertIsNotDisplayed()
+        // And the place is consumed, so it cannot jump a second time.
+        assertThat(restored).isEqualTo(1)
+    }
+
+    /** A thread that came back empty consumes the place all the same. */
+    @Test
+    fun anEmptyThreadStillConsumesThePlaceItCameBackWith() {
+        var restored = 0
+        renderSheet(
+            CommentsUiState(loading = false, comments = emptyList()),
+            restoreTo = CommentsScroll(index = 4, offset = 0),
+            onRestored = { restored += 1 },
+        )
+        compose.waitForIdle()
+
+        compose.onNodeWithTag("detail_no_comments").assertExists()
+        assertThat(restored).isEqualTo(1)
+    }
+
+    /**
+     * …and the place is reported on the way OUT, by the only thing that
+     * knows it. Every door out of the thread reports it: the composer is
+     * reached from a comment's Reply and from the foot's entry row alike.
+     */
+    @Test
+    fun everyDoorIntoTheComposerReportsTheReadersPlaceFirst() {
+        val departures = mutableListOf<CommentsScroll>()
+        var replied = 0
+        renderSheet(
+            CommentsUiState(loading = false, comments = listOf(testComment("c1"))),
+            onDepart = { departures += it },
+            onReplyTo = { replied += 1 },
+        )
+        compose.onNodeWithTag("comment_reply_c1").performClick()
+        compose.waitForIdle()
+        assertThat(departures).hasSize(1)
+        assertThat(replied).isEqualTo(1)
+
+        compose.onNodeWithTag("detail_add_comment").performClick()
+        compose.waitForIdle()
+        assertThat(departures).hasSize(2)
+    }
+
+    /** The sheet on its own, as both surfaces mount it. */
+    private fun renderSheet(
+        state: CommentsUiState,
+        restoreTo: CommentsScroll? = null,
+        onRestored: () -> Unit = {},
+        onDepart: (CommentsScroll) -> Unit = {},
+        onReplyTo: (com.cogra.domain.CommentView) -> Unit = {},
+        onAddComment: () -> Unit = {},
+        viewerId: String? = "viewer",
+    ) {
+        compose.setContent {
+            CommentsSheet(
+                state = state,
+                viewerId = viewerId,
+                signedIn = true,
+                onDismiss = {},
+                onLoadMoreComments = {},
+                onAddComment = onAddComment,
+                onReplyTo = onReplyTo,
+                onEditComment = {},
+                onCommentSignedShown = {},
+                onLoadMoreReplies = {},
+                onReveal = { _, _ -> },
+                onOpenActor = {},
+                onOpenTopic = {},
+                onReference = {},
+                onLicense = {},
+                onSignInOrJoin = {},
+                onDepart = onDepart,
+                restoreTo = restoreTo,
+                onRestored = onRestored,
+            )
+        }
+    }
+
     // Pull-to-refresh belongs to the top of the thread: a reader
     // correcting upward from the middle of a long post is scrolling,
     // not asking for a re-read.
@@ -797,7 +1046,7 @@ class ContentScreensTest {
     fun anUpwardDragAwayFromTheTopScrollsInsteadOfRefreshing() {
         var refreshes = 0
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 // A post long enough to scroll: the thread stands in its own
                 // sheet now, so the page's own length is the post's.
@@ -824,7 +1073,7 @@ class ContentScreensTest {
     @Test
     fun theSettlingMarkerFollowsTheNodeThatIsPending() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1", landing = Landing.landed(2)),
                 comments = listOf(
@@ -843,7 +1092,7 @@ class ContentScreensTest {
     @Test
     fun aPendingPostIsMarkedOnItsDetail() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1", landing = Landing.Pending),
                 comments = emptyList(),
@@ -862,7 +1111,7 @@ class ContentScreensTest {
     @Test
     fun theLicenseLeavesThePostAndEveryCommentForTheMenusSheet() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1", license = LicenseChoice(attribution = 1.0, provenance = 0.0)),
                 comments = listOf(testComment("c1")),
@@ -883,7 +1132,7 @@ class ContentScreensTest {
     @Test
     fun theLicenseBlockSpeaksToTheReuserOnBothAxes() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1", license = LicenseChoice(attribution = 1.0, provenance = 0.0)),
             ),
@@ -905,7 +1154,7 @@ class ContentScreensTest {
     @Test
     fun theBothAxesZeroPairIsNamedOnTheCaptionLine() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1", license = LicenseChoice(attribution = 0.0, provenance = 0.0)),
             ),
@@ -922,7 +1171,7 @@ class ContentScreensTest {
     @Test
     fun aNonCreatorGetsTheReaderMenuAndNoEditRow() {
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1")),
+            detailFixture(loading = false, post = testPost("p1")),
             viewerId = "someone-else",
         )
         compose.onNodeWithTag("detail_menu").performClick()
@@ -939,7 +1188,7 @@ class ContentScreensTest {
     fun theCreatorGetsTheOwnPostMenuAndEditOpensFromIt() {
         var editing: String? = null
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1")),
+            detailFixture(loading = false, post = testPost("p1")),
             viewerId = "author-1",
             onEdit = { editing = it },
         )
@@ -963,7 +1212,7 @@ class ContentScreensTest {
     fun markAsSensitiveIsADoorIntoTheEditFlow() {
         var editing: String? = null
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1")),
+            detailFixture(loading = false, post = testPost("p1")),
             viewerId = "author-1",
             onEdit = { editing = it },
         )
@@ -978,7 +1227,7 @@ class ContentScreensTest {
     @Test
     fun aCommentCarriesSaveCiteOpinionsAndLicenseButNoHide() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(testComment("c1")),
@@ -993,12 +1242,59 @@ class ContentScreensTest {
         compose.onNodeWithTag("comment_menu_hide_c1").assertDoesNotExist()
     }
 
+    // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the thread
+    // already lives in a sheet, so the comment's own menu is a sheet on a
+    // sheet — both stand at once (design/readme.md:2364). The tonal rung
+    // itself is pinned in SheetContainerColorTest; this pins the mount.
+    @Test
+    fun theCommentsMenuStandsOverTheThreadsOwnSheet() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        openComments()
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("comment_c1_menu_sheet").assertExists()
+    }
+
+    // The post's own menu opens over the plain page — no sheet stands
+    // beneath it, so it never stacks (design/readme.md:2364).
+    @Test
+    fun thePostsOwnMenuOpensOverThePageAlone() {
+        renderDetail(detailFixture(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("detail_menu_sheet").assertExists()
+    }
+
+    // ONE SHEET, TWO MENUS (`CommentLicense.jsx:9-10`): raised from a
+    // comment's row it comes up over the thread, still a sheet on a sheet.
+    @Test
+    fun aCommentsLicenseComesUpOverTheThreadsOwnSheet() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1"),
+                comments = listOf(testComment("c1")),
+            ),
+        )
+        openComments()
+        compose.onNodeWithTag("comment_c1_menu").performClick()
+        compose.onNodeWithTag("comment_menu_license_c1").performClick()
+        compose.onNodeWithTag("comments_sheet").assertExists()
+        compose.onNodeWithTag("license_sheet_terms").assertExists()
+    }
+
     // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination
     // is not built yet stands and does nothing.
     @Test
     fun theRowsWithoutDestinationsStandAndDoNothing() {
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1")),
+            detailFixture(loading = false, post = testPost("p1")),
             viewerId = "someone-else",
         )
         compose.onNodeWithTag("detail_menu").performClick()
@@ -1017,7 +1313,7 @@ class ContentScreensTest {
     @Test
     fun aVideoPostsDetailPinsTheClipAboveTheCardAndNotInsideIt() {
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1").copy(attachments = listOf(clip()))),
+            detailFixture(loading = false, post = testPost("p1").copy(attachments = listOf(clip()))),
         )
 
         val pinned = compose.onNodeWithTag(PINNED_CLIP_TAG).getUnclippedBoundsInRoot()
@@ -1032,7 +1328,7 @@ class ContentScreensTest {
     @Test
     fun aPostOfPicturesKeepsItsGalleryInTheCard() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1").copy(
                     attachments = listOf(
@@ -1050,7 +1346,7 @@ class ContentScreensTest {
     @Test
     fun aRemovedVideoPostPinsNothing() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1").copy(
                     attachments = listOf(clip(status = FieldStatus.REDACTED)),
@@ -1079,7 +1375,7 @@ class ContentScreensTest {
     @Test
     fun removeOpensTheThinkTwiceDialogAndRemovesNothing() {
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1")),
+            detailFixture(loading = false, post = testPost("p1")),
             viewerId = "author-1",
         )
         compose.onNodeWithTag("detail_menu").performClick()
@@ -1101,7 +1397,7 @@ class ContentScreensTest {
     fun theThreadsFootOpensTheComposerPinnedToThePost() {
         var opened = false
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1")),
+            detailFixture(loading = false, post = testPost("p1")),
             onAddComment = { opened = true },
         )
         openComments()
@@ -1114,7 +1410,7 @@ class ContentScreensTest {
     fun theCommentComposerSwapsForTheSignInEntryForAGuest() {
         var joining = false
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1")),
+            detailFixture(loading = false, post = testPost("p1")),
             signedIn = false,
             onSignInOrJoin = { joining = true },
         )
@@ -1127,7 +1423,7 @@ class ContentScreensTest {
     @Test
     fun aResolvingPhaseShowsNeitherCommentAffordance() {
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1")),
+            detailFixture(loading = false, post = testPost("p1")),
             signedIn = null,
         )
         openComments()
@@ -1137,7 +1433,7 @@ class ContentScreensTest {
 
     @Test
     fun anUnknownPostRendersNotFound() {
-        renderDetail(PostDetailUiState(loading = false, notFound = true))
+        renderDetail(detailFixture(loading = false, notFound = true))
         compose.onNodeWithTag("detail_not_found").assertExists()
     }
 
@@ -1145,7 +1441,7 @@ class ContentScreensTest {
     fun aRefreshFaultKeepsTheThreadReadable() {
         var retried = false
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(testComment("c1")),
@@ -1167,7 +1463,7 @@ class ContentScreensTest {
     fun aFailedCommentsPageSurfacesAtItsLoadMoreSlot() {
         var more = false
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(testComment("c1")),
@@ -1204,7 +1500,7 @@ class ContentScreensTest {
     @Test
     fun theViewersOwnCommentOffersEditOthersDoNot() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("mine", authorId = "viewer"), comment("theirs")),
@@ -1219,7 +1515,7 @@ class ContentScreensTest {
     @Test
     fun anEditedCommentCarriesTheSoftMarker() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("c1", edited = true), comment("c2")),
@@ -1235,7 +1531,7 @@ class ContentScreensTest {
     fun theEditAffordanceOpensTheEditScreen() {
         var editing: com.cogra.domain.CommentView? = null
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("mine", authorId = "viewer")),
@@ -1252,7 +1548,7 @@ class ContentScreensTest {
     @Test
     fun theThreadHoldsNoInlineEditor() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("mine", authorId = "viewer")),
@@ -1273,7 +1569,7 @@ class ContentScreensTest {
     @Test
     fun aBranchIsCollapsedBehindItsCount() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("c1", replyCount = 2)),
@@ -1288,7 +1584,7 @@ class ContentScreensTest {
     @Test
     fun aBranchlessCommentOffersNoReplyLine() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("c1", replyCount = 0)),
@@ -1302,7 +1598,7 @@ class ContentScreensTest {
     @Test
     fun anOpenedBranchNestsItsReplies() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("c1", replyCount = 1)),
@@ -1317,7 +1613,7 @@ class ContentScreensTest {
 
     @Test
     fun theReplyAffordanceIsSignedInOnly() {
-        val state = PostDetailUiState(
+        val state = detailFixture(
             loading = false,
             post = testPost("p1"),
             comments = listOf(comment("c1")),
@@ -1338,7 +1634,7 @@ class ContentScreensTest {
     fun replyOpensTheComposerPreTargetedAtThatComment() {
         var replied: com.cogra.domain.CommentView? = null
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("c1"), comment("c2")),
@@ -1353,7 +1649,7 @@ class ContentScreensTest {
     @Test
     fun theThreadHoldsNoInlineReplyComposer() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("c1")),
@@ -1367,7 +1663,7 @@ class ContentScreensTest {
     @Test
     fun authorChipsRenderOnPostAndComments() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("c1")),
@@ -1395,14 +1691,14 @@ class ContentScreensTest {
 
     @Test
     fun theDetailDrawsThePostAsACard() {
-        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        renderDetail(detailFixture(loading = false, post = testPost("p1")))
         compose.onNodeWithTag("detail_card").assertExists()
     }
 
     /** PEOPLE FIRST: the author leads, above the title and the body. */
     @Test
     fun theAuthorLeadsTheDetailRatherThanTrailingIt() {
-        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        renderDetail(detailFixture(loading = false, post = testPost("p1")))
 
         val author = compose.onNodeWithTag("detail_author", useUnmergedTree = true)
             .fetchSemanticsNode().positionInRoot.y
@@ -1418,7 +1714,7 @@ class ContentScreensTest {
     @Test
     fun theDetailTitleIsTheCardsHeadingAndNotTheBands() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1").copy(
                     title = ModeratedField("Salt maps", FieldStatus.NORMAL),
@@ -1435,7 +1731,7 @@ class ContentScreensTest {
     /** The license rode the payload, so a redacted record has none to show. */
     @Test
     fun aRemovedPostPrintsNoLicenseAndNoTopics() {
-        renderDetail(PostDetailUiState(loading = false, post = removedPost()))
+        renderDetail(detailFixture(loading = false, post = removedPost()))
 
         // The body region carries the caller's own tag, so the mark is
         // read by the line it draws.
@@ -1451,7 +1747,7 @@ class ContentScreensTest {
     @Test
     fun aRemovedOwnPostLosesItsWholeMenu() {
         renderDetail(
-            PostDetailUiState(loading = false, post = removedPost()),
+            detailFixture(loading = false, post = removedPost()),
             viewerId = "author-1",
         )
         compose.onNodeWithTag("detail_menu").assertDoesNotExist()
@@ -1460,7 +1756,7 @@ class ContentScreensTest {
     /** The skeleton survives: author, age, stance, comments, share. */
     @Test
     fun aRemovedPostKeepsItsSkeleton() {
-        renderDetail(PostDetailUiState(loading = false, post = removedPost().copy(commentCount = 2)))
+        renderDetail(detailFixture(loading = false, post = removedPost().copy(commentCount = 2)))
 
         compose.onNodeWithTag("detail_author", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag("detail_age", useUnmergedTree = true).assertExists()
@@ -1505,7 +1801,7 @@ class ContentScreensTest {
     @Test
     fun theDetailCarriesNoOpener() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1").copy(
                     content = ModeratedField(LONG_BODY, FieldStatus.NORMAL),
@@ -1546,7 +1842,7 @@ class ContentScreensTest {
     @Test
     fun aCommentWearsItsAgeToo() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("c1")),
@@ -1592,23 +1888,41 @@ class ContentScreensTest {
             .assertTextEquals()
     }
 
-    /** On the feed the count opens the post — the master's own fallback. */
+    /**
+     * On the feed the count raises the thread, and the card's own tap is
+     * what opens the post.
+     *
+     * It used to do both: the count fell back to the card's tap because
+     * the thread had nowhere to stand over a feed. It has one now (jakob
+     * 2026-09-15), so the count reaches its drawn destination and the two
+     * intents are two controls again.
+     */
     @Test
-    fun theCommentCountOpensThePostFromTheFeed() {
+    fun theCommentCountRaisesTheThreadFromTheFeedAndTheCardsTapOpensThePost() {
         var opened: String? = null
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 2))),
             onOpenPost = { opened = it },
+            thread = CommentsUiState(loading = false, comments = listOf(testComment("c1"))),
         )
-        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true).performClick()
+        // The card's own tap: "read the post".
+        compose.onNodeWithTag("feed_post_p1").performClick()
         assertThat(opened).isEqualTo("p1")
+
+        // The count, a different intent: "read the replies" — answered
+        // over the feed rather than by leaving it.
+        opened = null
+        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+        assertThat(opened).isNull()
+        compose.onNodeWithTag("comments_sheet").assertExists()
     }
 
     /** On the detail the count raises the thread's own sheet (`ReplyEntry`). */
     @Test
     fun theCommentCountRaisesTheThreadOnTheDetail() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1").copy(commentCount = 2),
                 comments = listOf(testComment("c1")),
@@ -1632,7 +1946,7 @@ class ContentScreensTest {
 
     @Test
     fun theShareControlNamesWhatItShares() {
-        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        renderDetail(detailFixture(loading = false, post = testPost("p1")))
         compose.onNodeWithTag("detail_post_share", useUnmergedTree = true)
             .assertContentDescriptionEquals("Share this post")
     }
@@ -1802,7 +2116,7 @@ class ContentScreensTest {
     fun aChipInsideTheDetailsLineOpensTheSheetInstead() {
         var opened: String? = null
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1").copy(topics = listOf(testTopicClaim("rust"))),
             ),
@@ -1817,7 +2131,7 @@ class ContentScreensTest {
     @Test
     fun aCommentWearsTheSameTopicsLine() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(
@@ -1871,7 +2185,7 @@ class ContentScreensTest {
     @Test
     fun theWholeLineOpensTheSheetOnTheDetail() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1").copy(
                     references = listOf(
@@ -1900,7 +2214,7 @@ class ContentScreensTest {
     @Test
     fun theSheetIsWhereASettlingActSaysSo() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1").copy(
                     topics = listOf(testTopicClaim("coastroad", pending = true)),
@@ -1922,7 +2236,7 @@ class ContentScreensTest {
     @Test
     fun theSheetCountsACitationItCannotType() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1").copy(references = listOf(testReferenceClaim(null))),
             ),
@@ -1939,7 +2253,7 @@ class ContentScreensTest {
     @Test
     fun aCommentsCountsOpenNoSecondSheet() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(
@@ -2184,7 +2498,7 @@ class ContentScreensTest {
     fun thePostsMenuCitesThePostItWasOpenedOn() {
         val referenced = mutableListOf<String>()
         renderDetail(
-            PostDetailUiState(loading = false, post = testPost("p1"), comments = emptyList()),
+            detailFixture(loading = false, post = testPost("p1"), comments = emptyList()),
             viewerId = "someone-else",
             onReference = { referenced += it },
         )
@@ -2197,7 +2511,7 @@ class ContentScreensTest {
     fun aCommentsMenuCitesTheCommentItWasOpenedOn() {
         val referenced = mutableListOf<String>()
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(comment("c1")),

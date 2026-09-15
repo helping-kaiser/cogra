@@ -292,10 +292,58 @@ or above it.
 **Revocation stops new staging only.** Revoking a link sets
 `revoked_at`: no further applicant can register through it, and
 applications already staged stay approvable — the inviter's queue
-is not a consequence of the link still being live. Closing one of
-those applications is its own gesture (`rejectApplication`,
-[api-spec.md](api-spec.md)), never a side effect of revoking the
-link they arrived through.
+is not a consequence of the link still being live. Closing those
+applications is its own gesture — one at a time
+(`rejectApplication`) or the link's whole waiting queue at once
+(`rejectLinkApplications`, [api-spec.md](api-spec.md)) — never a
+side effect of revoking the link they arrived through.
+
+### The ask link (applicant side)
+
+The mirror of invite-link generation, and the applicant's own way
+to reach someone who might vouch: one `auth_ask_links` row per
+account
+([data-model.md](data-model.md)), written at registration and
+carrying nothing but the account it points at. The link URL
+carries only the row id, and the applicant can copy it from their
+client at any time — it is not a consolation handed out after a
+refusal, it is simply there.
+
+**It stands.** An invite link is a slot the inviter holds open for
+a while; an ask link points at a *person*, and a person does not
+expire — so there is no timer, no use count, and nothing to spend.
+What is bounded is the application it stages, never the capability.
+
+**Opening is a look; staging is an act.** A member who follows the
+URL first sees who is asking, through the anonymous `askLinkCheck`
+query — the applicant's handle, plus whether the link can stage
+right now — the same shape `inviteLinkCheck` gives the other
+direction. Putting the application in their queue is then a
+separate call, `stageApplicant` ([api-spec.md](api-spec.md)).
+Staging is deliberately not a side effect of opening: every other
+staging in this flow is an explicit call (`register`,
+`applyWithInvite`), reading a link has never written anything, and
+a member who follows a shared link out of curiosity must not
+acquire a queue entry for doing it. The staged entry is bounded
+like any other application — the staging member's client sets its
+window the way it sets an invite link's expiry, under the same
+floor above — and from there the entry is an ordinary one: the
+same approval, the same rejection, the same expiry.
+
+**One live application at a time.** The account rule does not bend
+here: while an application is live the ask link stages nobody new,
+and `askLinkCheck` reports that before a member commits to
+anything. An applicant asks one person at a time, and the answer —
+approval, rejection, or the window running out — is what frees the
+link again. The graph is untouched by any of it: several members
+vouching is the primitive's own case
+([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)),
+and the queue being serial is a service constraint, not a
+statement about who may point an Opinion at whom.
+
+**Landing retires it.** A member has no application to stage; the
+row stays — nothing here is deleted — and the check reports it
+unusable.
 
 ### Link URLs
 
@@ -305,6 +353,7 @@ reach, and one URL opens the app where one is installed
 (Android App Links on the same paths):
 
 - Invite: `https://<web-origin>/join/<link-id>`
+- Ask: `https://<web-origin>/vouch/<link-id>`
 - Email verification: `https://<web-origin>/verify?token=<token>`
 - Password reset: `https://<web-origin>/reset?token=<token>`
 
@@ -368,19 +417,51 @@ registration: the reaper deletes it — credentials, application,
 any uploaded backup — and frees the handle. Once verified, the
 account persists: a verified-but-never-approved applicant keeps
 their login indefinitely. The application row, not the account,
-is bounded by its link's expiry; a fresh invite link re-arms a
-closed application (`applyWithInvite`,
-[api-spec.md](api-spec.md)) without touching the account.
+is bounded by its link's expiry. A closed application re-arms
+without touching the account, from either end of the funnel: a
+fresh invite link through `applyWithInvite`
+([api-spec.md](api-spec.md)), or a member taking up the account's
+ask link ("The ask link" above).
 
-**Rejection.** The inviter may close a staged application instead
+**Rejection.** The approver may close a staged application instead
 of approving it (`rejectApplication`, [api-spec.md](api-spec.md)),
 for applications in their own queue only. It sets `rejected_at`
 and ends the application the way expiry does — the row stays, the
-account persists with its login, its reads and its attached key,
-and a fresh invite link re-arms it through the ordinary
-`applyWithInvite` path. Nothing is deleted. Because it forecloses
-a join, the gesture is destructive in the product sense: clients
-ask for an explicit confirmation before sending it.
+account persists with its login, its reads and its attached key.
+Nothing is deleted.
+
+What it closes is **this inviter's queue entry, not the person.**
+One member declining to vouch is not the network's answer: the
+account goes on reading, and both re-arm paths above stay open.
+Deleting the account is never the way out of a rejection, and no
+surface offers it as one — which is also what makes rejection
+cheap enough to use on a queue full of applicants nobody invited.
+
+**The applicant is told.** Rejection writes them an
+`APPLICATION_REJECTED` notification
+([notifications.md](notifications.md)) pointing at their own
+application state, where both ways back are offered. The
+alternative — a refusal discovered only by watching a status field
+go quiet — would leave someone waiting on a queue they have
+already left. Because it is a decision about a person and it
+reaches them, clients ask for an explicit confirmation before
+sending it.
+
+**A flood is closed by the link.** A link that escapes into the
+wrong hands stages applicants by the hundred, and a queue that
+size is not one anyone closes a row at a time. The answer takes
+the invite link and closes every application still waiting
+through it (`rejectLinkApplications`,
+[api-spec.md](api-spec.md)). The grouping is the link rather than
+an arbitrary selection, because the link is what the flood came
+through — the one thing a queue of strangers can be judged by.
+Each entry closes as an ordinary rejection and each applicant is
+told separately: the act reaches each of them, so each gets their
+own notification. Clients name the count in the confirmation,
+the sweep's size being the fact worth confirming. Someone real
+swept up with the rest loses the wait, not the way in — their ask
+link puts them back, one application at a time ("The ask link"
+above), and that second look is what the link is for.
 
 An applicant can already **read** — the shared graph is public —
 but cannot act. Approval latency is a UX cost, not a correctness
@@ -439,11 +520,15 @@ that never land are garbage-collected per the write path
 
 **Reciprocation is the joiner's own act.** Membership completes
 when the joiner points back — their own client-signed Opinion
-toward the inviter's Profile, prompted at first login
+toward the approver's Profile, prompted at first login
 ([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)).
 The prompt's target comes from the viewer-only `User.invitedBy`
-field — landing provenance kept on the application row. It is a
-graph act, not an auth step; auth's involvement ends at landing.
+field — landing provenance kept on the application row: the
+approver whose Opinion admitted the account, which on the
+ask-link side is the member who took the applicant up rather than
+whoever issued a link they once registered through. Clients name
+that person on the vouch-back surface. It is a graph act, not an
+auth step; auth's involvement ends at landing.
 
 The prompt derives from the graph, not from client state: the
 viewer-only `User.hasReciprocated` field is true iff the joiner's
@@ -476,7 +561,7 @@ accounts past their 24-hour bound — actor row, credentials,
 application, any key backup — freeing the handle and email.
 Deletion is legitimate exactly because nothing has touched L1: a
 pre-member account is pure L2 service state. Verified accounts
-are never reaped; an application whose link expired simply stops
+are never reaped; an application past its window simply stops
 being approvable ("Expiry" above). The reaper is the normal
 cleanup path; it does not run as part of any user-facing request.
 

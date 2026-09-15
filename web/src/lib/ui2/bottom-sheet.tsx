@@ -13,7 +13,7 @@
 // without any of them being reimplemented — which is the documented platform
 // answer and the same one `join-prompt` already takes in the 1.0 layer.
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 
 import { exitDuration, SHEET_OUT_MS } from "@/lib/ui/motion";
 
@@ -26,7 +26,9 @@ export function BottomSheet({
   height = "content",
   foot,
   children,
+  bodyRef,
   testId = "bottom-sheet",
+  stacked = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -68,7 +70,26 @@ export function BottomSheet({
    */
   foot?: ReactNode;
   children: ReactNode;
+  /**
+   * The scrolling body itself, for a sheet that has to know where its reader
+   * was. The body is the scroller — not the dialog — and a closed dialog is
+   * `display: none`, which drops the offset the browser was holding. A sheet
+   * that gives way to a composer and takes the reader back therefore has to
+   * measure and restore the place itself, and this is the element it does it
+   * on (`scroll-pin.ts` says why a place is an anchor, not a number).
+   */
+  bodyRef?: RefObject<HTMLDivElement | null>;
   testId?: string;
+  /**
+   * This sheet opens over another sheet — the comment's menu and the
+   * comment's license, both over the comments thread (design/readme.md:2364).
+   * It takes the next tonal rung, `surfaceContainerHighest`: elevation is
+   * tonal, and two surfaces at one rung claim one elevation. The native
+   * `<dialog>` stacking already lets a later `showModal()` layer above an
+   * earlier one with its own backdrop between them, so only the tone is
+   * wired here — the dimming is the platform's top layer, not this prop.
+   */
+  stacked?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
   // A DISMISSAL EXITS THE EDGE IT ENTERED FROM (design/tokens/transitions.css).
@@ -117,7 +138,9 @@ export function BottomSheet({
       // keep a strip of the surface behind visible.
       className={`${closing ? "cg-sheet-out" : "cg-sheet-in"} ${
         height === "full" ? "h-[calc(100dvh-72px)]" : "max-h-[92dvh]"
-      } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 bg-surface-container-high p-0 text-on-surface backdrop:bg-scrim/50`}
+      } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 ${
+        stacked ? "bg-surface-container-highest" : "bg-surface-container-high"
+      } p-0 text-on-surface backdrop:bg-scrim/50`}
     >
       <div className={`flex flex-col ${height === "full" ? "h-full" : "max-h-[92dvh]"}`}>
         {/* The drag handle is drawn but not a control: the sheet is dropped
@@ -133,6 +156,8 @@ export function BottomSheet({
           </div>
         )}
         <div
+          ref={bodyRef}
+          data-testid={`${testId}-body`}
           className={`min-h-0 flex-1 overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
         >
           {children}

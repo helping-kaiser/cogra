@@ -1,5 +1,10 @@
 <resources>
     <string name="content_feed_empty">Nothing here yet — write the first post.</string>
+    <!-- The blessed line (design/guidelines/copy-voice.md "The coming-soon
+         surfaces"; the Sky card's own construction: the thing, an em dash,
+         the promise, then what will be there). Verbatim — never retyped. -->
+    <string name="content_chats_title">Chats</string>
+    <string name="content_chats_coming_soon">Chats — coming soon. Your conversations will be here.</string>
     <string name="content_feed_compose">Write a post</string>
     <string name="content_feed_load_more">Load more</string>
     <string name="content_compose_title">New post</string>

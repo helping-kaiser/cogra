@@ -94,10 +94,9 @@ function isFolded(media: boolean, words: string | null, description: string | nu
  * accessible name and zero showing the glyph alone.
  *
  * "Read the replies" is a different intent from "read the post", so it does not
- * hide behind the card tap. Its ruled destination is the comments sheet, which
- * is not drawn here yet — so on a card it goes to the thread's current home
- * (the post page) and on the detail it takes the reader to the thread already
- * on the page. Neither is a control that goes nowhere.
+ * hide behind the card tap. Its ruled destination is the comments sheet, over
+ * whichever surface the card is on (jakob 2026-09-15) — the same full-function
+ * thread from a feed card as from the detail.
  */
 function CommentCount({
   count,
@@ -144,6 +143,8 @@ export function PostCard({
   commentsHref,
   onOpenComments,
   onLinkCopied,
+  citedBy = 0,
+  onOpenCitedBy,
   mediaPinned = false,
   onOpenMedia,
 }: {
@@ -158,12 +159,22 @@ export function PostCard({
   stanceTestId: string;
   /** The whole thread's count, off `Post.comments.totalCount`. */
   comments: number;
-  /** Where the count leads on a summary card. */
+  /** Where the count leads on a card with no thread to raise. */
   commentsHref?: string;
-  /** What it does on the detail, where the thread is already on the page. */
+  /** The count's ruled destination: the comments sheet, over this surface. */
   onOpenComments?: () => void;
   /** Says `Link copied` where the browser has no platform share sheet. */
   onLinkCopied: () => void;
+  /**
+   * How many artifacts cite this one — the INBOUND mirror of `references`,
+   * which counts what this post points at. DETAIL VARIANT ONLY, and only above
+   * zero. Never folded into the references count: that number is the
+   * tags-and-references sheet's length, and this is a different list by
+   * different authors, in a different order.
+   */
+  citedBy?: number;
+  /** Opens the cited-by sheet. */
+  onOpenCitedBy?: () => void;
   /**
    * The surface is already showing this post's media above the card, so the
    * card draws none — the video detail, where "THE CLIP IS PINNED ABOVE THE
@@ -418,6 +429,30 @@ export function PostCard({
           />
         </>
       )}
+      {/* WHAT CITES THIS, as a count that opens the list holding them
+          (`screens/CitedBy.jsx`; readme item 55).
+
+          IT IS NOT THE REFERENCES LINE GROWN A SECOND NUMBER. That line's count
+          is the tags-and-references sheet's length — a law this leaves where it
+          stands. Inbound citations are a different list, by different authors,
+          in a different order, and folding them into one count would make
+          neither number checkable.
+
+          AT ZERO THERE IS NO ROW — a tap that can only open an empty list is a
+          tap spent on nothing. The comment's door is its ⋮, where the row
+          stands whatever the count is, and that is where the empty sheet
+          lives. */}
+      {!redacted && detail && citedBy > 0 && (
+        <button
+          type="button"
+          className="w-full text-left text-body-small text-on-surface-variant"
+          data-testid={`${testId}-cited-by`}
+          aria-label="Cited by"
+          onClick={onOpenCitedBy}
+        >
+          Cited by {citedBy}
+        </button>
+      )}
       {/* Shown in full, marked quietly (design.md §9) — a pending post is real
           content whose place in the order is not yet fixed. */}
       {isPending(post) && <PendingMarker testId={`${testId}-pending`} />}
@@ -434,7 +469,13 @@ export function PostCard({
         />
         <CommentCount
           count={comments}
-          href={detail ? undefined : (commentsHref ?? href)}
+          // THE SHEET WINS WHEREVER IT IS OFFERED. A card handed a door to the
+          // thread opens the thread; the route is the fallback for a card
+          // mounted where no sheet is (a link is still better than a control
+          // that goes nowhere).
+          href={
+            detail || onOpenComments !== undefined ? undefined : (commentsHref ?? href)
+          }
           onOpen={onOpenComments}
           testId={`${testId}-comments`}
         />

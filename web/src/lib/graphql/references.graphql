@@ -102,3 +102,69 @@ mutation PrepareReferenceWithdrawal($input: PrepareReferenceWithdrawalInput!) {
     }
   }
 }
+
+# WHAT CITES THIS — the inbound mirror of the references a node declares
+# (design/readme.md item 55, `screens/CitedBy.jsx`). Read from the
+# TERMINAL leg: a Reference is a hyper act, Actor -> citing artifact ->
+# target (layer1-interface.md §9), so the artifacts pointing AT this node
+# are exactly the records whose terminal leg lands on it. A node-anchored
+# read cannot say that on its own — it also matches the A leg of the
+# node's OWN citations, and its source-kind filter takes one kind where
+# this list holds both.
+#
+# Newest-first is the server's own order here, and a deliberate departure
+# from the opinions sheet's strongest-first: this is a chronicle of acts,
+# where no citation outranks another and what a reader comes for is what
+# just arrived.
+#
+# INBOUND RECORDS ARE DISPLAY ONLY. Nothing read here reaches a feed —
+# per the ranking model only viewer-rooted forward paths do.
+query CitedBy($id: UUID!, $first: Int!, $after: String) {
+  records(terminal: $id, family: REFERENCE, first: $first, after: $after) {
+    totalCount
+    edges {
+      node {
+        id
+        pDirected
+        pInterest
+        # The middle node of the hyper act: the artifact the citation was
+        # built into, which is what the row names.
+        target {
+          __typename
+          ... on Post {
+            id
+            title {
+              value
+            }
+          }
+          ... on Comment {
+            id
+            content {
+              value
+            }
+            target {
+              __typename
+              ... on Post {
+                id
+              }
+            }
+          }
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+
+# The count alone, for the detail card's line — which draws only above
+# zero, so it needs the number before the list. `first: 0` is the same
+# collapsed-count read a post's comment thread already uses for its
+# replies: one aggregate, no edges, priced at zero.
+query CitedByCount($id: UUID!) {
+  records(terminal: $id, family: REFERENCE, first: 0) {
+    totalCount
+  }
+}
