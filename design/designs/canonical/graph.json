@@ -1773,7 +1773,7 @@
 
     { "from": "Invites", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the row was" }] },
     { "from": "Invites", "via": 2, "kind": "advance", "label": "New invite", "to": [{ "board": "InviteNew", "case": "the create sheet — two decisions and a button" }] },
-    { "from": "Invites", "via": 3, "kind": "detour", "label": "an application still waiting on its applicant", "to": [{ "terminal": "self", "case": "the snackbar names what is outstanding — @imke has to make their key before you can approve", "info": true }] },
+    { "from": "Invites", "via": 3, "kind": "detour", "label": "an application still waiting on its applicant", "to": [{ "terminal": "self", "case": "the snackbar says what the row says — @imke has to finish registering before you can approve", "info": true }] },
     { "from": "Invites", "via": 4, "kind": "advance", "label": "an application ready for you", "to": [{ "board": "ApprovePad", "case": "the pad blooms on them — approving is the vouch" }] },
     { "from": "Invites", "via": 5, "kind": "advance", "label": "a row's close", "to": [{ "board": "RejectConfirm", "case": "the think-twice dialog, named on the row it was raised from" }] },
     { "from": "Invites", "via": 6, "kind": "advance", "label": "a link's copy", "to": [{ "terminal": "self", "case": "the link lands on the clipboard — Link copied" }] },
