@@ -523,6 +523,10 @@ class ContentScreensTest {
         state: ComposePostUiState,
         onSubmit: () -> Unit = {},
         onLicenseChange: (LicenseChoice) -> Unit = {},
+        onOpenSensitive: () -> Unit = {},
+        onCloseSensitive: () -> Unit = {},
+        onSensitiveChange: (Boolean) -> Unit = {},
+        onSensitiveReasonChange: (String) -> Unit = {},
         onTagInputChange: (String) -> Unit = {},
         onAddTag: () -> Unit = {},
         onRemoveTag: (String) -> Unit = {},
@@ -550,6 +554,10 @@ class ContentScreensTest {
                 onDescriptionChange = {},
                 onBodyChange = {},
                 onLicenseChange = onLicenseChange,
+                onOpenSensitive = onOpenSensitive,
+                onCloseSensitive = onCloseSensitive,
+                onSensitiveChange = onSensitiveChange,
+                onSensitiveReasonChange = onSensitiveReasonChange,
                 onTagInputChange = onTagInputChange,
                 onAddTag = onAddTag,
                 onRemoveTag = onRemoveTag,
@@ -631,6 +639,65 @@ class ContentScreensTest {
         compose.onNodeWithTag("compose_media").assertDoesNotExist()
     }
 
+    // THE EDIT SURFACE'S OWN SENSITIVE ROW (`_shared.jsx:1390`), where the
+    // menu's `Mark as sensitive` lands. A creation marks at its seal
+    // instead, which is where the license it can still choose also lives.
+    @Test
+    fun theEditSurfaceCarriesTheSensitiveRow() {
+        renderComposer(ComposePostUiState(editingId = "p1", body = "Salt maps"))
+        compose.onNodeWithTag("compose_sensitive").performScrollTo().assertExists()
+    }
+
+    /** A creation marks at its seal instead, which is also where the
+     *  license it can still choose lives. */
+    @Test
+    fun aCreationCarriesTheLicenseControlsAndNoSensitiveRow() {
+        renderComposer(ComposePostUiState(body = "Salt maps"))
+        compose.onNodeWithTag("compose_sensitive").assertDoesNotExist()
+    }
+
+    /** The row reads the mark it stands on, and offers the word that moves it. */
+    @Test
+    fun theSensitiveRowReadsTheMarkItStands() {
+        renderComposer(ComposePostUiState(editingId = "p1", body = "Salt maps"))
+        compose.onNodeWithTag("compose_sensitive").performScrollTo().assertExists()
+        compose.onNodeWithText("Sensitive").assertExists()
+        compose.onNodeWithText("Not marked").assertExists()
+        compose.onNodeWithText("Mark").assertExists()
+    }
+
+    @Test
+    fun aMarkedPostsRowSaysSoAndOffersTheChange() {
+        renderComposer(
+            ComposePostUiState(editingId = "p1", body = "Salt maps", sensitive = true),
+        )
+        compose.onNodeWithTag("compose_sensitive").performScrollTo().assertExists()
+        compose.onNodeWithText("Marked").assertExists()
+        compose.onNodeWithText("Change").assertExists()
+    }
+
+    /** The row's action asks for the sheet; it never marks by itself. */
+    @Test
+    fun theSensitiveRowsActionAsksForTheSheet() {
+        var opened = 0
+        renderComposer(
+            ComposePostUiState(editingId = "p1", body = "Salt maps"),
+            onOpenSensitive = { opened++ },
+        )
+        compose.onNodeWithText("Mark").performScrollTo().performClick()
+        assertThat(opened).isEqualTo(1)
+    }
+
+    /** It is the seal's own sheet — one sheet for every surface that
+     *  marks (ruling 42), so the words are the same in both places. */
+    @Test
+    fun theOpenMarkIsTheSealsOwnSheet() {
+        renderComposer(
+            ComposePostUiState(editingId = "p1", body = "Salt maps", sensitiveOpen = true),
+        )
+        compose.onNodeWithTag("compose_sensitive_sheet").assertExists()
+        compose.onNodeWithTag("compose_sensitive_switch").assertExists()
+    }
 
     @Test
     fun createModeCarriesTheLicenseControls() {
