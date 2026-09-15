@@ -143,16 +143,38 @@ describe("picking a video", () => {
     expect(screen.queryByTestId("wizard-shape-tall")).toBeNull();
   });
 
-  it("offers the frames it took, with the first one already the face", async () => {
+  // EXTRACTION OFFERS; IT NEVER CHOOSES (HT-COVER). The offers arriving is
+  // not a decision: a cover is optional and its own standalone asset, so
+  // until the author taps one nothing is the face.
+  it("offers the frames it took, and none of them is the face yet", async () => {
     render();
     await pickFiles([aVideo()]);
     fireEvent.click(await screen.findByTestId("wizard-next"));
 
     const first = await screen.findByTestId("wizard-cover-frame-0");
-    expect(first).toHaveAttribute("aria-pressed", "true");
+    expect(first).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByTestId("wizard-cover-frame-2")).toHaveAttribute("aria-pressed", "false");
     // The board's own escape hatch, beside the offers.
     expect(screen.getByTestId("wizard-cover-picture")).toBeInTheDocument();
+  });
+
+  // THE JOURNEY THE OLD NET NEVER WALKED (HT-COVER): the coverless tests
+  // drove the reducer, where no capture runs, so nothing asked what the
+  // screen does once the frames have landed and the author simply presses
+  // Next. Leaving the stage untouched leaves the clip faceless.
+  it("leaves the clip faceless when the stage is walked without a tap", async () => {
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+
+    // The offers are on screen — this is not the race that used to pass.
+    expect(await screen.findByTestId("wizard-cover-frame-3")).toBeInTheDocument();
+    expect(screen.getByTestId("wizard-next")).not.toBeDisabled();
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    // Details: the clip is the body and the cover field is still its door.
+    expect(await screen.findByTestId("wizard-cover-door")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-cover-face")).toBeNull();
   });
 
   // CW-13 (CoverRow.jsx: "FOUR FRAMES, NOT THREE"): the 1s-clamped opening

@@ -28,7 +28,6 @@ import com.cogra.core.designsystem.v2.compose.DescribeSubject
 import com.cogra.core.designsystem.v2.compose.UploadErrorLine
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.core.designsystem.v2.media.CoverRow
-import com.cogra.core.designsystem.v2.media.CoverRowDefaults
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.media.ThumbBadge
@@ -246,9 +245,6 @@ private fun ReplyClip(
         onPickFrame = onPickCoverFrame,
         onPickOwnPicture = onPickCoverPicture,
         ownPicture = (state.coverChoice as? CoverChoice.Picture)?.uri,
-        tileSize = CoverRowDefaults.CommentTileSize,
-        // No room for the caption at comment scale; the icon carries it.
-        labelOwnPicture = false,
         testTagPrefix = "reply_cover",
     )
 }

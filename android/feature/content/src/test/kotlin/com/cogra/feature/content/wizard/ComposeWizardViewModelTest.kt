@@ -987,14 +987,22 @@ class ComposeWizardViewModelTest {
 
     // -- The video path --
 
-    /** Picks a clip and walks the wizard to the far side of the cover stage. */
-    private fun ComposeWizardViewModel.toDetailsWithVideo() {
+    /**
+     * Picks a clip and walks the wizard to the far side of the cover
+     * stage, letting the frames land on the way through.
+     *
+     * [pickCover] is what a test asking about a cover has to say out
+     * loud: walking the stage does not choose one, so a test that wants
+     * a face has to tap for it exactly as an author does.
+     */
+    private fun ComposeWizardViewModel.toDetailsWithVideo(pickCover: Boolean = false) {
         start()
         dispatcher.scheduler.advanceUntilIdle()
         onTogglePick("clip-1")
         dispatcher.scheduler.advanceUntilIdle()
         onNext() // body -> cover
         dispatcher.scheduler.advanceUntilIdle()
+        if (pickCover) onPickCoverFrame(0)
         onNext() // cover -> details, which is where the upload starts
         dispatcher.scheduler.advanceUntilIdle()
     }
@@ -1002,7 +1010,7 @@ class ComposeWizardViewModelTest {
     @Test
     fun theCoverGoesUpBeforeTheClipItFronts() = runTest(dispatcher) {
         val vm = viewModel()
-        vm.toDetailsWithVideo()
+        vm.toDetailsWithVideo(pickCover = true)
 
         // The cheap leg first: a refused cover is learned in a second
         // rather than after the whole clip has gone up.
@@ -1026,6 +1034,35 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.step).isEqualTo(WizardStep.Cover)
         assertThat(vm.state.value.coverFrames)
             .hasSize(ComposeWizardViewModel.COVER_FRAME_COUNT)
+        // Offers, not a choice: the frames arriving settles nothing.
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+    }
+
+    /**
+     * THE JOURNEY THE OLD NET NEVER WALKED (HT-COVER). The coverless
+     * tests around this one either raced extraction or forced it to
+     * come back empty, so nothing asked what happens on the ordinary
+     * path: frames land while the author is on the stage, and the
+     * author presses Next without touching one. That is the default,
+     * and the default is bare — no cover is chosen, none is uploaded,
+     * and the placement names none.
+     */
+    @Test
+    fun aClipTheAuthorNeverGaveAFaceGoesUpBare() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        assertThat(vm.state.value.coverFrames)
+            .hasSize(ComposeWizardViewModel.COVER_FRAME_COUNT)
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(media.order).containsExactly("video")
+
+        vm.onNext() // details -> seal
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastAttachments.single().coverMediaId).isNull()
     }
 
     /**
@@ -1127,7 +1164,7 @@ class ComposeWizardViewModelTest {
     fun aClipThatWillNotTranscodeNeverReachesTheWire() = runTest(dispatcher) {
         video.untranscodable = true
         val vm = viewModel()
-        vm.toDetailsWithVideo()
+        vm.toDetailsWithVideo(pickCover = true)
 
         assertThat(media.order).containsExactly("still")
         val upload = vm.state.value.picked.single().upload
@@ -1150,7 +1187,7 @@ class ComposeWizardViewModelTest {
     @Test
     fun aChosenCoverPictureReplacesTheFrameAndDropsTheOldId() = runTest(dispatcher) {
         val vm = viewModel()
-        vm.toDetailsWithVideo()
+        vm.toDetailsWithVideo(pickCover = true)
         assertThat(vm.state.value.coverMediaId).isNotNull()
 
         vm.onPickCoverPicture("my-own.jpg")
@@ -1220,7 +1257,7 @@ class ComposeWizardViewModelTest {
     fun aClipIsWeighedAfterItsTranscodeRatherThanBefore() = runTest(dispatcher) {
         video.outputBytes = ComposeWizardViewModel.MAX_VIDEO_BYTES + 1
         val vm = viewModel()
-        vm.toDetailsWithVideo()
+        vm.toDetailsWithVideo(pickCover = true)
 
         // The cover went up; the clip did not, because what would have
         // been sent is over the cap.
@@ -1236,7 +1273,7 @@ class ComposeWizardViewModelTest {
         // refuse a post the ruling means to allow.
         video.outputBytes = 20L * 1024 * 1024
         val vm = viewModel()
-        vm.toDetailsWithVideo()
+        vm.toDetailsWithVideo(pickCover = true)
 
         assertThat(vm.state.value.refused).isEmpty()
         assertThat(media.order).containsExactly("still", "video").inOrder()
@@ -1309,7 +1346,7 @@ class ComposeWizardViewModelTest {
     @Test
     fun theClipIsTheWholeGalleryItAttaches() = runTest(dispatcher) {
         val vm = viewModel()
-        vm.toDetailsWithVideo()
+        vm.toDetailsWithVideo(pickCover = true)
         vm.onNext() // details -> seal
         dispatcher.scheduler.advanceUntilIdle()
         vm.onSign()
