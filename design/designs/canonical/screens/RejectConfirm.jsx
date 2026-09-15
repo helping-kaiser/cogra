@@ -35,7 +35,7 @@ export function Screen() {
     <>
       <InvitesBody />
 
-      <DialogSurface ariaLabel="Close @imke's application?" width="22rem">
+      <DialogSurface ariaLabel="Close @imke's application?">
         <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
           Close @imke's application?
         </h2>

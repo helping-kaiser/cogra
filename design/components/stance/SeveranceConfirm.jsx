@@ -58,7 +58,7 @@ export function SeveranceConfirm({
   const pickAnchor = pick === null ? null : bundleReadout(pick);
   const read = severanceParts(bundle, targetLabel);
   return (
-    <DialogSurface ariaLabel="Walk it all back?" inline={inline} onScrimPress={onCancel} width="22rem">
+    <DialogSurface ariaLabel="Walk it all back?" inline={inline} onScrimPress={onCancel}>
       <h2
         style={{
           margin: 0,

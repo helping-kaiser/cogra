@@ -110,7 +110,7 @@ export function StanceAlternates({
     if (measured) setSlotHeight(measured);
   }, [explaining, showing]);
   return (
-    <DialogSurface ariaLabel="Choose your opinion" inline={inline} onScrimPress={onCancel} width="24rem">
+    <DialogSurface ariaLabel="Choose your opinion" inline={inline} onScrimPress={onCancel}>
       <div style={{ position: "relative" }}>
         <button
           type="button"
