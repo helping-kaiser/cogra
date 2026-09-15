@@ -8,6 +8,13 @@ import { Icon } from "../navigation/Icon.jsx";
 
    · `cover` — the "Cover" badge, bottom-left. The first picture is the cover;
      the badge travels with reorder, never with a separate control.
+   · `coverSrc` — a CLIP's chosen cover, shown as the picture rather than the
+     word: the frame itself, inset in the same bottom-left corner the badge
+     owns, because a cover is a property of the clip and never a second thing
+     that was picked. A third of the tile's short side (28px at the least),
+     with a hairline ring, which is what keeps a small frame legible over
+     whatever photograph it lands on. A tile is a picture's or a clip's, so
+     the badge and the mark never meet.
    · `progress` — the upload ring on a scrim. Upload starts AFTER the crop:
      the crop happens on the device and only the cropped export is ever
      uploaded (jakob 2026-08-31 — the original frame can hold what the author
@@ -61,6 +68,7 @@ export function MediaThumb({
   fit = "cover",
   radius = "var(--radius-small)",
   cover = false,
+  coverSrc,
   progress,
   failed = false,
   video = false,
@@ -77,6 +85,9 @@ export function MediaThumb({
      absence, and a play control drawn on nothing reads as chrome — the
      duration stays, because the clip's length is known either way. */
   const playable = video && src && !failed && typeof progress !== "number";
+  /* The cover mark scales with the tile so it reads the same on the tray's
+     114×64 and on a larger one, and never falls under its own floor. */
+  const coverMark = Math.max(28, Math.round(edge / 3));
   return (
     <div
       style={{
@@ -174,6 +185,24 @@ export function MediaThumb({
         >
           Cover
         </span>
+      )}
+      {coverSrc && (
+        <img
+          src={coverSrc}
+          alt="Cover"
+          style={{
+            position: "absolute",
+            left: "3px",
+            bottom: "3px",
+            width: `${coverMark}px`,
+            height: `${coverMark}px`,
+            objectFit: "cover",
+            display: "block",
+            borderRadius: "var(--radius-small)",
+            border: "1px solid var(--outline-variant)",
+            boxSizing: "border-box",
+          }}
+        />
       )}
       {typeof progress === "number" && !failed && (
         <span
