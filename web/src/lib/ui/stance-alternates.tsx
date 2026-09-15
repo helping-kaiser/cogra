@@ -19,7 +19,7 @@ import { useEffect, useId, useRef } from "react";
 import { clampDimension, type StancePair } from "@/lib/stance/model";
 import type { StanceInputMode } from "@/lib/stance/input-mode";
 import { buttonClassName } from "@/lib/ui/button";
-import { DIRECTED_LABEL, INTEREST_LABEL } from "@/lib/ui/stance-format";
+import { STANCE_AXES, type StanceAxes } from "@/lib/ui/stance-format";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 
 function DirectEntry({
@@ -62,6 +62,8 @@ export function StanceAlternates({
   onCommit,
   onCancel,
   onSever,
+  severable = true,
+  axes = STANCE_AXES,
   busy = false,
   children,
   landing,
@@ -77,6 +79,17 @@ export function StanceAlternates({
    * here instead.
    */
   onSever: () => void;
+  /**
+   * Whether there is anything to walk back. The walk-away needs something
+   * to sever: with no records and nothing severed there is no relationship
+   * to leave, and the control led only to a dialog saying so.
+   */
+  severable?: boolean;
+  /**
+   * The record family's own words. They reach the sliders and the typed
+   * fields — the accessible route asks what the drawn one asks.
+   */
+  axes?: StanceAxes;
   busy?: boolean;
   /** The standing, rendered above the inputs the way it sits above the pad. */
   children?: React.ReactNode;
@@ -105,13 +118,13 @@ export function StanceAlternates({
         {showSliders && (
           <>
             <StanceSlider
-              label={DIRECTED_LABEL}
+              label={axes.directed}
               value={pick.pDirected}
               onChange={(pDirected) => onPick({ ...pick, pDirected })}
               testId="stance-alt-directed"
             />
             <StanceSlider
-              label={INTEREST_LABEL}
+              label={axes.interest}
               value={pick.pInterest}
               onChange={(pInterest) => onPick({ ...pick, pInterest })}
               testId="stance-alt-interest"
@@ -121,13 +134,13 @@ export function StanceAlternates({
         {showEntry && (
           <>
             <DirectEntry
-              label={DIRECTED_LABEL}
+              label={axes.directed}
               value={pick.pDirected}
               onChange={(pDirected) => onPick({ ...pick, pDirected })}
               testId="stance-entry-directed"
             />
             <DirectEntry
-              label={INTEREST_LABEL}
+              label={axes.interest}
               value={pick.pInterest}
               onChange={(pInterest) => onPick({ ...pick, pInterest })}
               testId="stance-entry-interest"
@@ -137,14 +150,16 @@ export function StanceAlternates({
       </div>
       {landing}
       <div className="mt-6 flex items-center justify-end gap-2">
-        <button
-          type="button"
-          data-testid="stance-alt-sever"
-          onClick={onSever}
-          className={`mr-auto ${buttonClassName({ variant: "text", size: "sm" })}`}
-        >
-          Sever
-        </button>
+        {severable && (
+          <button
+            type="button"
+            data-testid="stance-alt-sever"
+            onClick={onSever}
+            className={`mr-auto ${buttonClassName({ variant: "text", size: "sm" })}`}
+          >
+            Walk it back
+          </button>
+        )}
         <button
           type="button"
           data-testid="stance-alt-cancel"

@@ -78,7 +78,7 @@ import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { StanceAlternates } from "@/lib/ui/stance-alternates";
 import { StanceCoachMark, STANCE_EXPLANATION } from "@/lib/ui/stance-coach-mark";
-import { formatStancePair } from "@/lib/ui/stance-format";
+import { formatStancePair, STANCE_AXES, type StanceAxes } from "@/lib/ui/stance-format";
 import {
   NO_STANDING_LABEL,
   SEVERED_LABEL,
@@ -115,6 +115,7 @@ export function StanceControl({
   target,
   bundle: suppliedBundle,
   testIdPrefix,
+  axes = STANCE_AXES,
 }: {
   target: StanceTargetRef;
   /**
@@ -125,6 +126,13 @@ export function StanceControl({
    */
   bundle?: StanceBundle | null;
   testIdPrefix: string;
+  /**
+   * The record family's own words for the two slots it fills. The control
+   * owns the geometry; the family owns the words, and they are passed
+   * through unchanged to the readouts and the alternates alike so the
+   * drawn route and the accessible one never name the same axis two ways.
+   */
+  axes?: StanceAxes;
 }) {
   const data = useStanceData();
   const phase = useAuthPhase();
@@ -278,7 +286,7 @@ export function StanceControl({
     setBusy(false);
     if (outcome.kind !== "success") return false;
     setSigned(
-      signedLine(landed.landing, outcome.value.records, landed.severed, target.label),
+      signedLine(landed.landing, outcome.value.records, landed.severed, target.label, axes),
     );
     readBundle({ fresh: true });
     return true;
@@ -290,7 +298,7 @@ export function StanceControl({
     const outcome = await data.sever(seamTarget);
     setBusy(false);
     if (outcome.kind !== "success") return false;
-    setSigned(signedLine(SEVERED.landing, outcome.value.records, true, target.label));
+    setSigned(signedLine(SEVERED.landing, outcome.value.records, true, target.label, axes));
     readBundle({ fresh: true });
     return true;
   };
@@ -456,6 +464,14 @@ export function StanceControl({
   const restingFace = restingPair === null ? null : bundleReadout(restingPair, SEVERED_LABEL);
   const knob = padPercentOf(pick);
 
+  // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (design's `StanceControl`,
+  // and the pair `TagPage` / `TagPageHeldPad` draws: the pad over a topic
+  // nobody holds has three controls and the pad over a held one has four).
+  // With no records and nothing severed there is no relationship to leave,
+  // and the button led only to a dialog saying so.
+  const severable =
+    bundle !== null && bundle !== undefined && (bundle.records > 0 || bundle.severed);
+
   const padBody = (
     <>
       {/* Above the pad, never under the knob (§8.4). */}
@@ -464,6 +480,7 @@ export function StanceControl({
         bundle={bundle}
         targetLabel={target.label}
         testIdPrefix={testIdPrefix}
+        axes={axes}
       />
       {/* A soft rounded square, and the drawn field IS the value
           space: its corners are (±1, ±1) and the knob never leaves
@@ -669,14 +686,16 @@ export function StanceControl({
                 {STANCE_EXPLANATION}
               </p>
             )}
-            <button
-              type="button"
-              data-testid={`${testIdPrefix}-sever`}
-              onClick={openSeverance}
-              className={buttonClassName({ variant: "text", size: "sm" })}
-            >
-              Sever
-            </button>
+            {severable && (
+              <button
+                type="button"
+                data-testid={`${testIdPrefix}-sever`}
+                onClick={openSeverance}
+                className={buttonClassName({ variant: "text", size: "sm" })}
+              >
+                Walk it back
+              </button>
+            )}
           </div>
         </>
       )}
@@ -690,6 +709,8 @@ export function StanceControl({
           onCommit={() => void commitChecked(pick)}
           onCancel={closeAll}
           onSever={openSeverance}
+          severable={severable}
+          axes={axes}
           landing={<StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} />}
         >
           <StanceStanding
@@ -697,6 +718,7 @@ export function StanceControl({
             bundle={bundle}
             targetLabel={target.label}
             testIdPrefix={testIdPrefix}
+            axes={axes}
           />
         </StanceAlternates>
       )}
