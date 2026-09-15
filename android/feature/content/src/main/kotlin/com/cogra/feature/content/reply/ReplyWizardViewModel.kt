@@ -166,15 +166,10 @@ class ReplyWizardViewModel @Inject constructor(
      * because there is no stage: the comment composer is one screen and
      * the cover row is inlined on it.
      *
-     * A successful extraction settles [CoverChoice.None] on the first
-     * offered frame — but only while the author is still on the
-     * composer and has not chosen anything else. An author who moved on
-     * to the seal before extraction finished meant to go without a
-     * face, and this must not reach back and give them one after the
-     * fact; an author who tapped a frame or a picture already has their
-     * own answer to keep. Extraction coming back empty leaves
-     * [CoverChoice.None] standing — there is nothing here to settle it
-     * on.
+     * EXTRACTION OFFERS; IT NEVER CHOOSES. The frames land in the state
+     * and nothing else moves: [CoverChoice.None] is what an author who
+     * has not tapped anything has, and it is what they keep — a face
+     * nobody picked is a face nobody signed.
      */
     private fun acceptClip(uri: String, clip: VideoInfo) {
         _state.update {
@@ -184,16 +179,7 @@ class ReplyWizardViewModel @Inject constructor(
             val frames = video.coverFrames(uri, COVER_FRAME_COUNT)
             _state.update { current ->
                 if (current.video?.uri != uri) return@update current
-                val settledChoice = if (
-                    current.step == ReplyStep.Compose &&
-                    current.coverChoice is CoverChoice.None &&
-                    frames.isNotEmpty()
-                ) {
-                    CoverChoice.Frame(0)
-                } else {
-                    current.coverChoice
-                }
-                current.copy(coverFrames = frames, coverChoice = settledChoice)
+                current.copy(coverFrames = frames)
             }
         }
         transcode(uri)
