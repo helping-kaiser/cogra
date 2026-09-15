@@ -5299,6 +5299,15 @@ inherited. Ruled by jakob the same day.
   of act would invent a difference the mechanic does not have. The
   screen names no inviter and no reason: who turned somebody down is
   theirs to tell, and an ask link carries a person, not a case file.
+- **The link lands on the page, not on the pad** (jakob). A reader who
+  taps a link has arrived, not asked, and a stance is opened by the
+  reader's own gesture everywhere else in the tree; an arrival from
+  outside the app is the last place to make the exception. `VouchAsk`
+  is the landing with the affordance closed and `VouchAskPad` the state
+  past the press. It is a board rather than a wire to `ApprovePad`
+  because the queue's pad cancels and signs back to `Invites`, which is
+  what sits behind *it* — sending an ask-link reader to the invites list
+  to say "not now" would answer a question they never asked.
 - **`PayoutAddress` grew `bare`.** The rejected applicant's ask link,
   held inside the card whose words explain what it is for, wants the
   card's anatomy without the card: `SettingsGroup`'s shape, and

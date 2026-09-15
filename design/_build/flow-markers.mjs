@@ -1781,10 +1781,13 @@ Object.assign(FLOW_MARKERS, {
    dismissal it replaced was using. A board that renumbers what it inherited
    makes two boards of one anatomy disagree for no reason.
 
-   `VouchAsk` IS `ApprovePad`'S, for the same reason: the same pad doing the
+   `VouchAskPad` IS `ApprovePad`'S, for the same reason: the same pad doing the
    same act, so the same four numbers in the same order. Its card's `Not now`
    and its way back sit under the wash and carry none, exactly as
-   `VouchBackPad`'s do. */
+   `VouchBackPad`'s do — they carry their numbers one board earlier instead, on
+   `VouchAsk`, which is the same surface with the pad closed and nothing
+   dimmed. The landing numbers what a landing has: the way back, the decline,
+   and the affordance that opens the pad. */
 Object.assign(FLOW_MARKERS, {
   ApplicantRejected: [
     ...post({ author: 1, menu: 2, media: 3, more: 4, topic: 5, refs: 6, stance: 7, score: 8, comments: 9 }),
@@ -1793,6 +1796,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 17, find: 'aria-label="Copy your ask link"', tag: "button" },
   ],
   VouchAsk: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Not now</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Give your opinion on @noor"', tag: "button" },
+    { n: 3, find: ">Choose your opinion on @noor</button>", tag: "button" },
+  ],
+  VouchAskPad: [
     { n: 1, find: 'aria-label="How vouching works"', tag: "button" },
     { n: 2, find: 'aria-label="Opinion', tag: "div" },
     { n: 2, find: ">Choose your opinion on @noor</button>", tag: "button" },
