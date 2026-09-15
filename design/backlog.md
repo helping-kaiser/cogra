@@ -2975,11 +2975,13 @@ itself; or the two are reconciled by ruling that the surfaces never
 name a chooser before one exists, which is close to where the boards
 already are.
 
-Also part of this: the confirmation cited "the contract's
-`approver_id`". **There is no such field** — not in `schema.graphql`,
-not in the docs, not in the design tree. The only place the whole tree
-uses the word "approver" is one line of `_shared.jsx`. Whatever the
-ruling settles, something has to carry it in the contract.
+A stale-base artifact, corrected at integration: the branch's docs
+predate the merged contract. On master, `auth_applications` carries
+`approver_id` (either-or provenance with the link), the API has
+`Actor.approvalQueue`, and the batch-reject round already states that
+clients name the approver on the vouch-back surface. The contract can
+carry whatever the ruling settles; what remains open is only the
+design-side question above.
 
 Held back pending this, and enumerated so the sweep is one pass when it
 comes — every surface that names the link's issuer where it means
