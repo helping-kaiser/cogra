@@ -623,6 +623,19 @@ data class Page<T>(
 )
 
 /**
+ * One page of a post's thread, and the whole thread's size.
+ *
+ * The size is not the page's: the sheet states the count the reader
+ * tapped to raise it, which is cursor-independent and does not shrink
+ * as pages arrive. It rides the page because the thread read is the
+ * only place both are known at once.
+ */
+data class CommentPage(
+    val page: Page<CommentView>,
+    val total: Int,
+)
+
+/**
  * The author's own sensitive mark on one node, read on its own.
  *
  * Not part of [PostView]: the veil a reader sees is the OR of this mark

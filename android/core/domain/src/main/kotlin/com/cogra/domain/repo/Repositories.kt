@@ -186,13 +186,19 @@ interface ContentRepository {
         includePending: Boolean = true,
     ): Outcome<PostDetail?>
 
-    /** A further comments page of one post. */
+    /**
+     * One post's thread, on its own — the read the comments sheet makes.
+     *
+     * Thread-scoped rather than a slice of [post]: the sheet is raised
+     * over the feed as well as over the detail, and there the post is
+     * already on the device. Null for an unknown post.
+     */
     suspend fun comments(
         postId: String,
         first: Int,
         after: String?,
         includePending: Boolean = true,
-    ): Outcome<Page<CommentView>>
+    ): Outcome<CommentPage?>
 
     /**
      * [tags] are the topics declared at creation (post.md §3, D15: no
