@@ -5203,14 +5203,17 @@ inherited. Ruled by jakob the same day.
   sheet — `24 hours · 7 days · 30 days`, no custom date: a calendar here
   would answer a question nobody asks in months, and it would be the
   third decision the sheet was kept clear of.
-- **The code is the link with the link taken off.** `auth.md`'s *Link
-  URLs* makes the id the capability and the product's own
-  `extractInviteId` already takes a bare one, so `InviteCreated` offers
-  both — the link as the primary share, the code as a quieter control
-  beneath it, mono and whole, with `Code copied` against the link's
-  `Link copied`. The word **token** never reaches the screen. The code
-  is a UUID and is meant to stay one until the docs design a short one
-  (backlog 84).
+- **The capability has one shape on screen, and it is the link
+  (jakob).** `auth.md`'s *Link URLs* makes the id the capability and
+  the product's own `extractInviteId` reads a bare one out of whatever
+  is pasted — but that is a TOLERANCE at the door, not a second way to
+  invite somebody. `InviteCreated` therefore serves the link alone,
+  mono and whole, with `Link copied` as its one snackbar, and the entry
+  door still says `Paste your invite link` because the field accepting
+  a pasted link is the whole of what a reader has to know. Two
+  spellings of one capability made the sender choose at the moment they
+  were trying to send, and the choice bought them nothing: the same
+  door opens either way. The word **token** never reaches the screen.
 - **The card is the wallet's.** An invite link and a payout address are
   the same reading problem — a long string nobody can check by eye, held
   whole — so `PayoutAddress` draws both. Only its copy button's
@@ -5281,13 +5284,11 @@ inherited. Ruled by jakob the same day.
   of act would invent a difference the mechanic does not have. The
   screen names no inviter and no reason: who turned somebody down is
   theirs to tell, and an ask link carries a person, not a case file.
-- **`PayoutAddress` grew `bare`**, the prop `InviteCreated`'s own
-  comment predicted one commit earlier — the invite code beneath its
-  link wanted the card's anatomy without the card, and the ask link
-  inside the card that explains it wanted the same thing for the same
-  reason. `SettingsGroup`'s shape, and `SettingsGroup`'s reasoning: a
-  container inside a container of the same tonal rung is two containers
-  saying one thing.
+- **`PayoutAddress` grew `bare`.** The rejected applicant's ask link,
+  held inside the card whose words explain what it is for, wants the
+  card's anatomy without the card: `SettingsGroup`'s shape, and
+  `SettingsGroup`'s reasoning — a container inside a container of the
+  same tonal rung is two containers saying one thing.
 - **The ninth notification kind is the eighth's twin.** A mechanic that
   notifies a yes and says nothing about a no leaves the applicant
   waiting on something that already stopped happening, which is the one

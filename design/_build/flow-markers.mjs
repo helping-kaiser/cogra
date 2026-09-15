@@ -1993,7 +1993,8 @@ export function applyFlowMarkers(name, html) {
    A REPEATED CONTROL KEEPS ONE NUMBER, the rule the feed's post cards and the
    Saved list's Unsave already follow. Two live-link cards means two copies and
    two Revokes, and on `InviteCreated` a third copy inside the sheet: one act,
-   one outcome, one edge.
+   one outcome, one edge. The sheet carries one copy control and it is the
+   link's: the link is the only shape the capability takes on screen.
 
    THE CLOSE IS ONE CONTROL ON TWO ROWS, so one edge covers it — and the dialog
    it raises names one of them, the way `SeveranceConfirm` names one target for
@@ -2028,8 +2029,7 @@ Object.assign(FLOW_MARKERS, {
   InviteCreated: [
     { n: 1, find: 'aria-label="Copy the link"', tag: "button", all: true },
     { n: 2, find: ">Share link</button>", tag: "button" },
-    { n: 3, find: 'aria-label="Copy the code"', tag: "button" },
-    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // The pad's own anatomy, `VouchBackPad`'s numbering exactly — the same four
   // controls in the same order, because it is the same master doing the same

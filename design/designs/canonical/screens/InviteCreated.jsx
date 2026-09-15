@@ -18,23 +18,24 @@
    own — and where a platform has none, the link is copied and the snackbar
    says `Link copied`.
 
-   THE CODE IS THE SAME INVITE SAID AGAIN, so it is not a second card. The id
-   in the link IS the invite code (`auth.md`, *Link URLs*), and the door takes
-   either — a pasted URL or the bare id, which is what the product's own
-   `extractInviteId` already reads. Drawing it in its own `surface-card`
-   container would claim a second thing exists; drawing it on the sheet's own
-   ground says it is the first thing with the link taken off. That is
-   `PayoutAddress` with `bare` — the shape `SettingsGroup` already has for
-   exactly this reason, and the rejected applicant's ask link is the second
-   surface that asked for it.
+   THE SHEET SERVES THE LINK AND NOTHING ELSE (jakob 2026-09-15: "lets stick
+   to just serving the link and the link also works when pasted into the code
+   field (on the invitation page)... two options for just 1 invite flow is
+   confusing"). The id inside the link IS the capability (`auth.md`, *Link
+   URLs*) and the door still reads a bare one — `extractInviteId` takes the id
+   out of whatever is pasted — but that is a TOLERANCE at the door, not a
+   second way to invite somebody. Offering both here made the reader pick
+   between two spellings of one thing at the moment they were trying to send
+   it, and the pick bought them nothing: whichever they sent, the same door
+   opens on the other side. So the capability has one shape on screen, and the
+   shape is the link.
 
-   MONO AND WHOLE, both of them. A UUID read aloud or typed by hand is checked
-   character by character, and the one place this system allows truncation is
-   the wallet's at-rest row, which is an entry point rather than a checking
-   surface. Neither of these is.
+   MONO AND WHOLE. A link is checked character by character or not at all, and
+   the one place this system allows truncation is the wallet's at-rest row,
+   which is an entry point rather than a checking surface. This is not one.
 
    THE WORD "token" NEVER APPEARS. The record calls this a link capability and
-   the API calls the field an id; on screen it is a link and a code. */
+   the API calls the field an id; on screen it is a link. */
 export function Screen() {
   return (
     <>
@@ -52,15 +53,6 @@ export function Screen() {
           />
 
           <Button style={{ width: "100%" }}>Share link</Button>
-
-          <PayoutAddress
-            bare
-            label="Invite code"
-            address={SOL_INVITE_ID}
-            onCopy={() => {}}
-            copyLabel="Copy the code"
-            caption="The same invite with the link taken off — the door takes either."
-          />
         </div>
       </BottomSheet>
     </>

@@ -2304,9 +2304,10 @@ const CITING_ARTIFACTS = [
    THE MOCK INVITE LINKS. `auth.md` (*Link URLs*) fixes the shape —
    `https://<web-origin>/join/<link-id>` — and leaves the origin
    per-environment, so the host below is invented the way the mock Liquid
-   addresses above are: the SHAPE is the product's, the letters are not. The
-   id is a UUID and it is also the invite code, which is why the same string
-   appears twice on `InviteCreated` and is drawn whole both times. */
+   addresses above are: the SHAPE is the product's, the letters are not. The id
+   is the capability and the link is the only shape it takes on screen; the
+   door's tolerance for a bare one stays at the door, where a reader never has
+   to think about it. */
 const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
 const SOL_INVITE_LINK = `https://cogra.social/join/${SOL_INVITE_ID}`;
 const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-6e0a85f37c24";
