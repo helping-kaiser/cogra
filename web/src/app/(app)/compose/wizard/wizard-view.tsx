@@ -170,6 +170,11 @@ export function ComposeWizard({
   // author's own picture — so the details thumbnail and the cover row's own
   // tile can both show it rather than the video's bytes or a bare outline.
   const coverPreview = useObjectUrl(cover?.file ?? null);
+  // THE COVERLESS CLIP'S FACE IS ITS FIRST FRAME (design/readme.md, the
+  // video-cover round). An `img` cannot decode the clip's own bytes, so the
+  // tile that stands for the video needs a still either way: the chosen face
+  // when there is one, and otherwise the opening frame already in hand.
+  const clipFace = coverPreview ?? framePreviews[0] ?? null;
 
   // The badge's number AND the clip's shape, read off the clip as soon as it is
   // picked rather than waiting for the cover screen — the details row shows the
@@ -212,16 +217,10 @@ export function ComposeWizard({
           frames: taken,
           urls: taken.map((frame) => URL.createObjectURL(frame)),
         });
-        // The board opens with the first offer selected, so the author's only
-        // job is to change it. `coverIfUnset` is what keeps that default from
-        // overwriting a face a restored draft already carries.
-        const first = taken[0];
-        if (first !== undefined) {
-          dispatch({
-            type: "coverIfUnset",
-            cover: { id: newComposeId(), file: first, frame: 0, upload: { kind: "waiting" } },
-          });
-        }
+        // EXTRACTION OFFERS; IT NEVER CHOOSES. The frames arriving changes
+        // what the author can pick and not what they have picked — a cover
+        // is optional and its own standalone asset, so a face nobody tapped
+        // is a face nobody signed, and it would upload on the way out.
       })
       .catch(() => {
         // No frames is a state the screen draws: "A picture" still works, and a
@@ -708,8 +707,10 @@ export function ComposeWizard({
           mode={state.mode}
           assets={state.assets}
           previews={previews}
+          clipFace={clipFace}
           coverPreview={coverPreview}
           durationMs={durationMs}
+          onCover={() => dispatch({ type: "back" })}
           title={state.title}
           description={state.description}
           tags={state.tags}

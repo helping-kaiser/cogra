@@ -248,7 +248,6 @@ export type ReplyAction =
   | { type: "pick"; assets: readonly { id: string; file: Blob; kind?: MediaKind }[] }
   | { type: "unpick"; id: string }
   | { type: "cover"; cover: CoverAsset | null }
-  | { type: "coverIfUnset"; cover: CoverAsset }
   | { type: "coverUpload"; upload: AssetUpload }
   | { type: "altText"; id: string; altText: string }
   | { type: "upload"; id: string; upload: AssetUpload }
@@ -281,11 +280,6 @@ export function replyReducer(state: ReplyState, action: ReplyAction): ReplyState
 
     case "cover":
       return { ...state, cover: action.cover };
-
-    case "coverIfUnset":
-      // The first offered frame is the opening default, but never over a face
-      // the author already chose.
-      return state.cover === null ? { ...state, cover: action.cover } : state;
 
     case "coverUpload":
       return state.cover === null

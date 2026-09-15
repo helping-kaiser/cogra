@@ -4,8 +4,8 @@
 // the reply composer at comment scale (design/backlog.md item 31).
 //
 // ONE COMPONENT FOR BOTH because it is one design element: the frames pulled
-// off the clip with the first selected, a dashed "A picture" tile beside them
-// for a face of the author's own, and one line of help under it. The post gives
+// off the clip, a dashed picture tile beside them for a face of the author's
+// own, and one line of help under it. The post gives
 // it a whole screen and a comment gives it a row in the composer, but what the
 // author chooses between is identical — and a second copy would be the place
 // the two silently drift apart.
@@ -51,7 +51,11 @@ export function CoverRow({
   return (
     <div className="flex flex-col gap-2">
       {heading && <span className="text-label-large">Cover</span>}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* ONE LINE, NEVER TWO. Both boards draw five 56px tiles at `flex:none`
+          in an 8px-gapped row — 312px, inside the 342px the stage gives it.
+          Wrapping was the old 76px tiles overflowing and folding the picture
+          tile onto a second line, which reads as a different control. */}
+      <div className="flex items-center gap-2">
         {framePreviews.map((src, index) => (
           // Keyed by position: the offers are a fixed list taken from one clip,
           // and two frames of an unchanging shot can produce identical bytes.
@@ -90,6 +94,7 @@ export function CoverRow({
         <button
           type="button"
           data-testid={`${testIdPrefix}-cover-picture`}
+          aria-label="A picture of your own"
           aria-pressed={ownPictureChosen}
           onClick={() => input.current?.click()}
           style={
@@ -97,7 +102,7 @@ export function CoverRow({
               ? { outline: "2px solid var(--primary)", outlineOffset: "1px" }
               : undefined
           }
-          className="cg-state cg-focus relative flex size-19 flex-none cursor-pointer flex-col items-center justify-center gap-0.5 overflow-hidden rounded-small border border-dashed border-outline bg-transparent text-on-surface-variant"
+          className="cg-state cg-focus relative flex size-14 flex-none cursor-pointer flex-col items-center justify-center overflow-hidden rounded-small border border-dashed border-outline bg-transparent text-on-surface-variant"
         >
           {/* THE TILE SHOWS THE PICTURE ONCE ONE IS CHOSEN — an outline alone
               left the author unable to tell which picture they had picked.
@@ -112,12 +117,13 @@ export function CoverRow({
               className="absolute inset-0 size-full object-cover"
             />
           ) : (
-            <>
-              <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
-                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-              </svg>
-              <span className="text-label-small">A picture</span>
-            </>
+            // THE GLYPH ALONE, at both scales: `cg-cover-own` carries a 20px
+            // picture icon and nothing else on ComposeCover and ReplyVideo
+            // alike. The caption it used to wear is what pushed the tile past
+            // the board's 56px in the first place.
+            <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
+              <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+            </svg>
           )}
         </button>
       </div>
@@ -151,7 +157,7 @@ function FrameTile({
       aria-pressed={selected}
       onClick={onPick}
       style={selected ? { outline: "2px solid var(--primary)", outlineOffset: "1px" } : undefined}
-      className={`cg-focus size-19 flex-none cursor-pointer overflow-hidden rounded-small border-0 p-0 ${
+      className={`cg-focus size-14 flex-none cursor-pointer overflow-hidden rounded-small border-0 p-0 ${
         selected ? "" : "opacity-65"
       }`}
     >
