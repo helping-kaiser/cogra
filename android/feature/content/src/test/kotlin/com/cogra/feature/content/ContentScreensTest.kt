@@ -767,8 +767,11 @@ class ContentScreensTest {
                     )
                 },
             )
+            // Stacked, as `CommentsSheetRoute` mounts it: only a COMMENT's
+            // terms reach this mount, and they stand over the thread's own
+            // sheet (design/readme.md:2364).
             licenseShown?.let { license ->
-                LicenseSheet(license = license, onDismiss = { licenseShown = null })
+                LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = true)
             }
         }
     }
@@ -1246,7 +1249,7 @@ class ContentScreensTest {
     @Test
     fun theCommentsMenuStandsOverTheThreadsOwnSheet() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(testComment("c1")),
@@ -1262,7 +1265,7 @@ class ContentScreensTest {
     // beneath it, so it never stacks (design/readme.md:2364).
     @Test
     fun thePostsOwnMenuOpensOverThePageAlone() {
-        renderDetail(PostDetailUiState(loading = false, post = testPost("p1")))
+        renderDetail(detailFixture(loading = false, post = testPost("p1")))
         compose.onNodeWithTag("detail_menu").performClick()
         compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
         compose.onNodeWithTag("detail_menu_sheet").assertExists()
@@ -1273,7 +1276,7 @@ class ContentScreensTest {
     @Test
     fun aCommentsLicenseComesUpOverTheThreadsOwnSheet() {
         renderDetail(
-            PostDetailUiState(
+            detailFixture(
                 loading = false,
                 post = testPost("p1"),
                 comments = listOf(testComment("c1")),
