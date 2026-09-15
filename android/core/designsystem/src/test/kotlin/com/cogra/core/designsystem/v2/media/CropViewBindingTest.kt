@@ -80,7 +80,7 @@ class CropViewBindingTest {
      * `setBitmap` and then the uri-complete listener, with no timing in
      * it at all.
      */
-    private fun CropImageView.completeDecode(url: String, size: Int) {
+    private fun CropImageView.completeDecode(url: String, wide: Int, high: Int) {
         val resultType = Class.forName("com.canhub.cropper.BitmapLoadingWorkerJob\$Result")
         val result = resultType.getConstructor(
             Uri::class.java,
@@ -92,7 +92,7 @@ class CropViewBindingTest {
             Exception::class.java,
         ).newInstance(
             Uri.parse(url),
-            Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888),
+            Bitmap.createBitmap(wide, high, Bitmap.Config.ARGB_8888),
             1,
             0,
             false,
@@ -116,8 +116,8 @@ class CropViewBindingTest {
         compose.activity.window.decorView.findCropView(),
     ) { "the crop stage is not showing a CropImageView" }
 
-    private fun decode(url: String) {
-        compose.runOnUiThread { cropView().completeDecode(url, PICTURE) }
+    private fun decode(url: String, wide: Int = PICTURE, high: Int = PICTURE) {
+        compose.runOnUiThread { cropView().completeDecode(url, wide, high) }
         compose.waitForIdle()
     }
 
@@ -355,12 +355,142 @@ class CropViewBindingTest {
         assertThat(shown.width).isWithin(TOLERANCE).of(settled.width)
     }
 
+    // ---- Bug three: the recorded framing is a framing (HT-CROP) --------
+
+    /**
+     * "the crop is cosmetic" — jakob's 4:5 post kept the untouched
+     * original, 426 × 1080, because the window the state recorded covered
+     * the whole picture.
+     *
+     * The view is held to a fixed aspect ratio, so no drag can produce
+     * that window; it comes from the view being asked what it is showing
+     * before it has a settled layout to answer against. The state must
+     * not take it as the author's framing.
+     */
+    @Test
+    fun aWindowCoveringThePictureIsNotTakenAsAFraming() {
+        val state = CropState(CropFraming.Whole)
+
+        compose.setContent {
+            Cogra2PreviewTheme {
+                MediaCrop(
+                    item = MediaItem(PICTURE_ONE, TALL_RATIO, "a very tall picture"),
+                    shape = MediaShape.Tall,
+                    state = state,
+                    modifier = Modifier.width(STAGE),
+                    bleed = 0.dp,
+                    testTag = "crop",
+                )
+            }
+        }
+        compose.waitForIdle()
+        decode(PICTURE_ONE, wide = TALL_WIDE, high = TALL_HIGH)
+
+        // The stage opened on the largest 4:5 window the picture allows.
+        val opened = state.framing
+        assertThat(opened.shapeOn(TALL_RATIO)).isWithin(SHAPE_TOLERANCE).of(MediaShape.Tall.ratio)
+
+        compose.runOnUiThread {
+            state.onWindowChanged(CropFraming.Whole, TALL_RATIO)
+            state.onWindowChanged(CropFraming(0f, 0f, 1f, NEARLY), TALL_RATIO)
+        }
+
+        assertThat(state.framing).isEqualTo(opened)
+        assertThat(state.framing.shapeOn(TALL_RATIO)).isWithin(SHAPE_TOLERANCE)
+            .of(MediaShape.Tall.ratio)
+    }
+
+    /** A framing the author really made is still recorded, unchanged. */
+    @Test
+    fun aFramingOfTheRightShapeIsStillRecorded() {
+        val state = CropState(CropFraming.Whole)
+
+        compose.setContent {
+            Cogra2PreviewTheme {
+                MediaCrop(
+                    item = MediaItem(PICTURE_ONE, TALL_RATIO, "a very tall picture"),
+                    shape = MediaShape.Tall,
+                    state = state,
+                    modifier = Modifier.width(STAGE),
+                    bleed = 0.dp,
+                    testTag = "crop",
+                )
+            }
+        }
+        compose.waitForIdle()
+        decode(PICTURE_ONE, wide = TALL_WIDE, high = TALL_HIGH)
+
+        // The same shape, slid to the top of the picture.
+        val opened = state.framing
+        val moved = CropFraming(opened.left, 0f, opened.right, opened.height)
+        compose.runOnUiThread { state.onWindowChanged(moved, TALL_RATIO) }
+
+        assertThat(state.framing).isEqualTo(moved)
+    }
+
+    /**
+     * A stale window of the wrong shape must not be restored on re-entry
+     * either — that is the "opens already zoomed into a small section on
+     * a fresh post" half of the same report.
+     */
+    @Test
+    fun aStaleWindowOfTheWrongShapeIsNotReopenedOn() {
+        var onStage by mutableStateOf(true)
+        // What a previous life recorded before this guard existed.
+        val stale = CropFraming(0f, 0f, SLIVER, SLIVER)
+        lateinit var state: CropState
+
+        compose.setContent {
+            Cogra2PreviewTheme {
+                if (onStage) {
+                    val entered = remember(onStage) { CropState(stale) }
+                    state = entered
+                    MediaCrop(
+                        item = MediaItem(PICTURE_ONE, TALL_RATIO, "a very tall picture"),
+                        shape = MediaShape.Tall,
+                        state = entered,
+                        modifier = Modifier.width(STAGE),
+                        bleed = 0.dp,
+                        testTag = "crop",
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+        decode(PICTURE_ONE, wide = TALL_WIDE, high = TALL_HIGH)
+
+        // The stage opened on the shape's own largest window, not on the
+        // sliver it was handed.
+        assertThat(state.framing).isNotEqualTo(stale)
+        assertThat(state.framing.width).isGreaterThan(SLIVER)
+        assertThat(state.framing.shapeOn(TALL_RATIO)).isWithin(SHAPE_TOLERANCE)
+            .of(MediaShape.Tall.ratio)
+    }
+
+    /** The window's shape in pixels: its own shape times the picture's. */
+    private fun CropFraming.shapeOn(pictureRatio: Float): Float =
+        width / height * pictureRatio
+
     private companion object {
         const val PICTURE_ONE = "content://cogra.test/picture-one"
         const val PICTURE_TWO = "content://cogra.test/picture-two"
 
         /** A square picture, so a square window stays square. */
         const val PICTURE = 400
+
+        /** The shape jakob's post kept: 426 × 1080, far taller than 4:5. */
+        const val TALL_WIDE = 426
+        const val TALL_HIGH = 1080
+        const val TALL_RATIO = TALL_WIDE.toFloat() / TALL_HIGH
+
+        /** Whole but for a rounding — the window that slipped the old guard. */
+        const val NEARLY = 0.9998f
+
+        /** A window nobody dragged: a corner of the picture. */
+        const val SLIVER = 0.12f
+
+        /** The window's two integer trips, as a share of the shape. */
+        const val SHAPE_TOLERANCE = 0.03f
 
         val STAGE = 300.dp
 
