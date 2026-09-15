@@ -146,6 +146,15 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantRejected.dc.html",
+      "title": "Applicant · turned down",
+      "x": 2400,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "SignIn.dc.html",
       "title": "Sign in",
       "x": 0,
@@ -455,6 +464,15 @@
       "file": "ComposeDraft.dc.html",
       "title": "Compose · draft kept",
       "x": 480,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "ComposeDraftDiscard.dc.html",
+      "title": "Compose · the draft's discard, asked from the roll",
+      "x": 2400,
       "y": 2120,
       "w": 390,
       "h": 844,
@@ -1263,10 +1281,10 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -1870,
+      "x": -2160,
       "y": 0,
-      "w": 1450,
-      "h": 3782,
+      "w": 1740,
+      "h": 3800,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1293,7 +1311,7 @@
       "x": -3900,
       "y": 0,
       "w": 3480,
-      "h": 2693,
+      "h": 2732,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1353,10 +1371,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -3030,
+      "x": -3320,
       "y": 0,
-      "w": 2610,
-      "h": 3761,
+      "w": 2900,
+      "h": 4323,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1613,15 +1631,6 @@
       "page": "feed"
     },
     {
-      "file": "TagPageHeldPad.dc.html",
-      "title": "A tag's page · the pad, topic held",
-      "x": 1440,
-      "y": 2120,
-      "w": 390,
-      "h": 844,
-      "page": "feed"
-    },
-    {
       "file": "TagPicker.dc.html",
       "title": "Add a tag",
       "x": 3360,
@@ -1766,6 +1775,96 @@
       "page": "profile"
     },
     {
+      "file": "Invites.dc.html",
+      "title": "Invites · waiting and live",
+      "x": 0,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "InvitesEmpty.dc.html",
+      "title": "Invites · none out yet",
+      "x": 480,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "InviteNew.dc.html",
+      "title": "Invites · a new link",
+      "x": 960,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "InviteExpiry.dc.html",
+      "title": "Invites · how long it lasts",
+      "x": 1440,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "InviteCreated.dc.html",
+      "title": "Invites · the link is ready",
+      "x": 1920,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ApprovePad.dc.html",
+      "title": "Invites · approving is vouching",
+      "x": 2400,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "RejectConfirm.dc.html",
+      "title": "Invites · closing an application",
+      "x": 2880,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "VouchAsk.dc.html",
+      "title": "Invites · someone asked you to vouch",
+      "x": 3360,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "VouchAskPad.dc.html",
+      "title": "Invites · answering the ask",
+      "x": 3840,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "RejectAllConfirm.dc.html",
+      "title": "Invites · closing a link's applications",
+      "x": 4320,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "FeedEntry.dc.html",
       "title": "Post score · why it reached you",
       "x": 0,
@@ -1854,6 +1953,15 @@
       "w": 390,
       "h": 844,
       "page": "comments"
+    },
+    {
+      "file": "TagPageHeldPad.dc.html",
+      "title": "A tag's page · the pad, topic held",
+      "x": 1440,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
     }
   ],
   "annotations": [

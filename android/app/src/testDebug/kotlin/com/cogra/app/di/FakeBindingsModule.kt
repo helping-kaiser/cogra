@@ -24,6 +24,7 @@ import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
+import com.cogra.domain.CommentPage
 import com.cogra.domain.Page
 import com.cogra.domain.PostDetail
 import com.cogra.domain.PostView
@@ -48,6 +49,7 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
@@ -152,6 +154,20 @@ class ScriptedContentRepository : ThrowingContentRepository() {
         commentsAfter: String?,
         includePending: Boolean,
     ): Outcome<PostDetail?> = Outcome.Success(details[id])
+
+    /**
+     * The thread, read on its own — what the comments sheet asks for on
+     * either surface it stands over. Scripted from the same [details]
+     * the post read serves, so a test scripts one post and gets both.
+     */
+    override suspend fun comments(
+        postId: String,
+        first: Int,
+        after: String?,
+        includePending: Boolean,
+    ): Outcome<CommentPage?> = Outcome.Success(
+        details[postId]?.let { CommentPage(it.comments, total = it.comments.items.size) },
+    )
 }
 
 /** Scriptable profile surface: the viewer's own, others by handle,
@@ -240,17 +256,20 @@ class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingSt
     var records = 0
 
     override suspend fun prepareStance(
-        target: String,
+        target: StanceTarget,
         pick: StancePair,
-    ): Outcome<List<PreparedWriteView>> = writes.prepareStance(target, pick.pDirected, pick.pInterest)
+    ): Outcome<List<PreparedWriteView>> = when (target) {
+        is StanceTarget.Node -> writes.prepareStance(target.id, pick.pDirected, pick.pInterest)
+        is StanceTarget.Topic -> writes.prepareTopicStance(target.name, pick.pDirected, pick.pInterest)
+    }
 
-    override suspend fun standing(target: String, includePending: Boolean): Outcome<StanceStanding> =
+    override suspend fun standing(target: StanceTarget, includePending: Boolean): Outcome<StanceStanding> =
         Outcome.Success(
             StanceStanding(target, net, raw ?: net, records, includePending = includePending),
         )
 
     override suspend fun projection(
-        target: String,
+        target: StanceTarget,
         pick: StancePair,
         includePending: Boolean,
     ): Outcome<StanceProjection> = Outcome.Success(
@@ -263,7 +282,7 @@ class ScriptedStanceRepository(private val writes: WriteRepository) : ThrowingSt
         ),
     )
 
-    override suspend fun severanceQuote(target: String, includePending: Boolean): Outcome<SeveranceQuote> =
+    override suspend fun severanceQuote(target: StanceTarget, includePending: Boolean): Outcome<SeveranceQuote> =
         Outcome.Success(
             SeveranceQuote(
                 target = target,

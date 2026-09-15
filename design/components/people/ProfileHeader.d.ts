@@ -46,6 +46,11 @@ export interface ProfileHeaderProps {
    *  `placement="row"`. No band carries a ⋮ (the band law), so a profile's
    *  rare acts hang off the row that holds its other acts. */
   menu?: React.ReactNode;
+  /** An application has become approvable and is waiting on this person: the
+   *  Invites button wears the bell's dot and its accessible name says so. A
+   *  dot and never a count — the button says something is waiting, the list it
+   *  opens says how many. */
+  invitesWaiting?: boolean;
   /**
    * A deleted account (`erasure.md` §2–3). The header is unchanged — the same
    * counts, the same tabs and chronicle under it, the same actions row — and

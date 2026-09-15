@@ -18,8 +18,17 @@
    else on this canvas — not on the row, which is one anchor, and not in Your
    topics, which offers no per-row removal on purpose (a × is the affordance
    of a thing that costs nothing, and this costs a signature). So the board
-   draws `Walk it back` standing, and its edge leads to the severance ceremony
-   at this topic's own price.
+   draws the way out standing, and its edge leads to the same ceremony every
+   held record has, at this topic's own price.
+
+   AND THE WAY OUT IS CALLED `Disconnect` (jakob 2026-09-15: "instead of walk
+   back we could just call it 'disconnect' or sth like this.. we want human
+   wording not this nerdy stuff!"). `Walk it back` is a sentence about a
+   person — you walk back something you said to somebody — and a reader who
+   liked a topic made it no promise. The dialog the control opens speaks the
+   same family: `Disconnect from #saltmaps?`, and what it leaves behind reads
+   `No opinion towards #saltmaps`. Persons keep `Walk it back`, which
+   `PadStanding` goes on drawing.
 
    THE SIX WORDS ARE THE FAMILY'S (jakob's ruling, 2026-09-15). Association
    runs `Dislike` to `Like` and asks `How much you like it`; attraction runs

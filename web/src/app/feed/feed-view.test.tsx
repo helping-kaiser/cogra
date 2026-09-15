@@ -196,17 +196,99 @@ describe("FeedView", () => {
 
   // The affordance row: stance, then the comment count, then share — one
   // line, glyph plus number, the count spoken by the accessible name.
-  it("carries the comments affordance, leading to the thread", async () => {
+  //
+  // THE COUNT RAISES THE THREAD, it does not travel to it (jakob 2026-09-15):
+  // the sheet is the one comments surface, over this list, so the card's own
+  // tap is what still opens the post.
+  it("raises the thread from the comments affordance, over the feed", async () => {
     server.use(
       graphql.query("Posts", () =>
         HttpResponse.json({ data: postsPage([post("p1", "First", false, [], 2)], null, false) }),
+      ),
+      graphql.query("PostComments", () =>
+        HttpResponse.json({
+          data: {
+            post: {
+              __typename: "Post",
+              id: "p1",
+              comments: {
+                __typename: "CommentConnection",
+                totalCount: 0,
+                edges: [],
+                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+              },
+            },
+          },
+        }),
       ),
     );
     renderWithProviders(<FeedView />);
     const comments = await screen.findByTestId("feed-post-p1-comments");
     expect(comments).toHaveAccessibleName("2 comments");
-    expect(comments).toHaveAttribute("href", "/posts/p1");
     expect(comments).toHaveTextContent("2");
+    // A control, not a link: its destination is a layer over this surface.
+    expect(comments).not.toHaveAttribute("href");
+    fireEvent.click(comments);
+    const sheet = await screen.findByTestId("comments-sheet");
+    expect(sheet).toBeVisible();
+    expect(sheet).toHaveAccessibleName("Comments");
+    // ...and the feed is still underneath it, pages and all.
+    expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
+  });
+
+  // THE SHEET IS A LAYER, NOT A DESTINATION. The feed is never left, so its
+  // pages and the reader's place in them stand through a raise, a dismissal,
+  // and the composer the thread opens on top of it.
+  it("keeps the reader's place in the feed through the thread and its composer", async () => {
+    server.use(
+      graphql.query("Posts", () =>
+        HttpResponse.json({ data: postsPage([post("p1", "First", false, [], 1)], null, false) }),
+      ),
+      graphql.query("PostComments", () =>
+        HttpResponse.json({
+          data: {
+            post: {
+              __typename: "Post",
+              id: "p1",
+              comments: {
+                __typename: "CommentConnection",
+                totalCount: 0,
+                edges: [],
+                pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+              },
+            },
+          },
+        }),
+      ),
+      meHandler(),
+    );
+    const scroller = document.createElement("div");
+    document.body.append(scroller);
+    const host = { current: scroller };
+    renderWithProviders(
+      <ScrollHostProvider value={host}>
+        <FeedView store={fakeIdentityStore({ keyOnDevice: true })} />
+      </ScrollHostProvider>,
+      { store: signedInStore() },
+    );
+    await screen.findByTestId("feed-post-p1");
+    scroller.scrollTop = 1240;
+    fireEvent.scroll(scroller);
+    await waitFor(() => expect(recallFeed()?.place.offset).toBe(1240));
+
+    fireEvent.click(screen.getByTestId("feed-post-p1-comments"));
+    const sheet = await screen.findByTestId("comments-sheet");
+    // The same full-function thread the detail raises: its own composer door.
+    fireEvent.click(await screen.findByTestId("comment-add"));
+    await screen.findByTestId("reply-wizard");
+    await waitFor(() => expect(sheet).not.toBeVisible());
+    fireEvent.click(screen.getByTestId("header-back"));
+    await waitFor(() => expect(screen.getByTestId("comments-sheet")).toBeVisible());
+    fireEvent.keyDown(sheet, { key: "Escape" });
+
+    expect(scroller.scrollTop).toBe(1240);
+    expect(recallFeed()?.place.offset).toBe(1240);
+    scroller.remove();
   });
 
   it("shows the comments glyph alone where there are none", async () => {

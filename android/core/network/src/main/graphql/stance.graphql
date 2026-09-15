@@ -20,6 +20,13 @@
 # is probed post → comment → user, at most three of these documents
 # once. A node never changes class, so every read after the first asks
 # one root (StanceRepositoryImpl remembers the answer).
+#
+# A TOPIC IS NOT IN THAT PROBE AND CANNOT BE. It is addressed by NAME —
+# `hashtag(name:)`, not an id — because a Type is anchored vacuously and
+# its id derives one-way from its name, so a topic nobody has tagged yet
+# has no id to look up and is followable anyway
+# (`PrepareStanceInput.topicName`). The name says which root to ask, so
+# this read never probes: it is the one document, always.
 
 fragment StanceBundleFields on StanceBundle {
   pDirected
@@ -61,6 +68,14 @@ query CommentStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean
 
 query ProfileStance($id: UUID!, $pick: StancePickInput, $includePending: Boolean!) {
   user(id: $id) {
+    viewerStance(pick: $pick, includePending: $includePending) {
+      ...StanceBundleFields
+    }
+  }
+}
+
+query HashtagStance($name: String!, $pick: StancePickInput, $includePending: Boolean!) {
+  hashtag(name: $name) {
     viewerStance(pick: $pick, includePending: $includePending) {
       ...StanceBundleFields
     }

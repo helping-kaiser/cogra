@@ -98,6 +98,7 @@ export function ProfileHeader({
   onAvatarChange,
   onCounts,
   menu,
+  invitesWaiting = false,
   redacted = false,
   showHandle = true,
 }) {
@@ -179,7 +180,34 @@ export function ProfileHeader({
         {own ? (
           <>
             {onEdit && <Button variant="outline" size="sm" onClick={onEdit} style={{ flex: 1 }}>Edit profile</Button>}
-            {onInvites && <Button variant="outline" size="sm" onClick={onInvites} style={{ flex: 1 }}>Invites</Button>}
+            {onInvites && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onInvites}
+                ariaLabel={invitesWaiting ? "Invites — someone is waiting" : undefined}
+                style={{ flex: 1 }}
+              >
+                Invites
+                {/* THE WAITING MARK IS THE BELL'S DOT (the invites round,
+                    2026-09-15). An application that has become approvable is
+                    waiting on this person and on nobody else, so the one place
+                    it can be learned is the row that opens the queue. It is a
+                    DOT and not a count, the bell's own ruling reused rather
+                    than a second badge vocabulary invented beside it — what
+                    the button honestly says is "something is waiting", and the
+                    list two taps away is where the number belongs. `--primary`
+                    at 8px, `ContentRow`'s unread geometry, and the button's
+                    accessible name changes with it: a marker a listener cannot
+                    hear is not a marker. */}
+                {invitesWaiting && (
+                  <span
+                    aria-hidden="true"
+                    style={{ width: 8, height: 8, flex: "none", borderRadius: "var(--radius-full)", background: "var(--primary)" }}
+                  />
+                )}
+              </Button>
+            )}
           </>
         ) : (
           <>
