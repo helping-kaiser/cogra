@@ -575,6 +575,7 @@ private fun CograNavGraphContent(
                 val (signedResult, consumeSigned) = entry.navResult(contentSignedKey)
                 val (actorRestored, consumeRestored) = entry.navResult(actorRestoredKey)
                 val (expiredLabel, consumeExpired) = entry.navResult(contentExpiredKey)
+                val accountId by authState.accountId.collectAsStateWithLifecycle()
                 FeedRoute(
                     expiredLabel = expiredLabel,
                     onExpiredDismissed = consumeExpired,
@@ -585,6 +586,14 @@ private fun CograNavGraphContent(
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
                     onOpenTopic = { name -> navController.navigate(Topic(name)) },
+                    // The card's ⋮ reaches the same two destinations the
+                    // detail's menu does: a feed card's rows are the post's
+                    // rows, so they cannot lead somewhere else.
+                    viewerId = accountId,
+                    onEditPost = { id -> navController.navigate(ComposePost(id)) },
+                    onCitePost = { id ->
+                        navController.navigate(ComposePost(referenceTargetId = id))
+                    },
                     // The chats affordance the band carries (jakob
                     // 2026-09-01). A signed-out tap opens the guest gate,
                     // which is the edge the canvas draws; the signed-in
