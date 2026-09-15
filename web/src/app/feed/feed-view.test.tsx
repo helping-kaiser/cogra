@@ -305,7 +305,7 @@ describe("FeedView", () => {
 
   // One slot the row is drawn with and cannot fill yet, absent rather than
   // dead: the Post Score has no field on the contract until slice 3's ranker.
-  // The ⋮ beside it is drawn — `PostCard.jsx:257` puts it on every non-detail
+  // The ⋮ beside it is drawn — `PostCard.jsx:262` puts it on every non-detail
   // card — and the rows it holds are read on the card's own suite.
   it("draws the overflow ⋮ but not the Post Score, whose field does not exist", async () => {
     server.use(

@@ -200,7 +200,7 @@ export function PostView({
   // fault) is exactly where the back arrow matters most.
   //
   // ON A DETAIL SURFACE THE MENU LIVES UP HERE and the card's own dot yields
-  // (`_shared.jsx:337-341` — `PostCard` hides it in `detail`): two dots would
+  // (`_shared.jsx:341-346` — `PostCard` hides it in `detail`): two dots would
   // be two menus for one post.
   const header = (menu: readonly MenuItem[] | null) => (
     <PageHeader

@@ -77,7 +77,15 @@ import { MultiActionConfirm, SignedActionsIndicator } from "@/lib/ui/signed-acti
 import { SigningPending } from "@/lib/ui/signing-pending";
 import { TagEntryField } from "@/lib/ui/tag-entry-field";
 import { TextField } from "@/lib/ui/text-field";
-import { bodyProblem, descriptionProblem, titleProblem } from "@/lib/compose/wizard";
+import {
+  bodyProblem,
+  descriptionProblem,
+  sensitiveReasonProblem,
+  titleProblem,
+} from "@/lib/compose/wizard";
+import { SensitiveSheet } from "@/lib/ui2/compose/sensitive-sheet";
+import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
+import { TextAction } from "@/lib/ui2/pill-button";
 import { TransportError } from "@/lib/ui/transport-error";
 
 export function ComposeForm({
@@ -135,9 +143,21 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const [transportFailed, setTransportFailed] = useState(false);
   const [confirmMultiAction, setConfirmMultiAction] = useConfirmMultiAction();
   const [confirming, setConfirming] = useState(false);
-  // What the post being edited carries today; re-stated on the edit so a
-  // complete-state write does not drop it.
+  // The author's own mark this edit will leave standing — read when the
+  // form opened, and theirs to move from the Sensitive row below.
+  //
+  // An edit is COMPLETE STATE, so a write that does not re-state the mark
+  // removes it: the form has to know the mark it starts from before it
+  // can offer to change it, and the reason has to ride beside the switch
+  // or saving would clear the line the veil shows.
   const [sensitive, setSensitive] = useState(false);
+  const [sensitiveReason, setSensitiveReason] = useState("");
+  const [loadedMark, setLoadedMark] = useState<{
+    sensitive: boolean;
+    reason: string;
+  } | null>(null);
+  const [sensitiveOpen, setSensitiveOpen] = useState(false);
+  const [help, setHelp] = useState<HelpTopic | null>(null);
   // The post as it stands, kept for the one thing this surface cannot author:
   // its gallery, which the edit has to carry through and show.
   const [loadedPost, setLoadedPost] = useState<PostDetailView | null>(null);
@@ -172,6 +192,11 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         // verdict as the author's own, which is the one thing this switch must
         // never do.
         setSensitive(post.sensitiveSelfMark);
+        setSensitiveReason(post.sensitiveReason ?? "");
+        setLoadedMark({
+          sensitive: post.sensitiveSelfMark,
+          reason: post.sensitiveReason ?? "",
+        });
         // A pending claim is a current tag too — the author declared it.
         const current = post.topics.map((claim) => ({
           name: claim.hashtag.name.value ?? "",
@@ -241,11 +266,22 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const changes = editingId === null ? [] : tagChanges(loadedTags, tags);
   const refChanges =
     editingId === null ? [] : referenceChanges(loadedReferences, references);
+  // Moving the mark is a whole edit. The record states the post's
+  // complete content state, so the mark is one of the things it carries —
+  // an author who only marks their post has changed it, and a gate that
+  // read the words alone would let the submit stage nothing at all. The
+  // reason only counts while the mark stands: the contract refuses a
+  // reason without it.
+  const markChanged =
+    loadedMark !== null &&
+    (sensitive !== loadedMark.sensitive ||
+      (sensitive && sensitiveReason !== loadedMark.reason));
   const contentChanged =
     loadedContent === null ||
     title !== loadedContent.title ||
     description !== loadedContent.description ||
-    body !== loadedContent.body;
+    body !== loadedContent.body ||
+    markChanged;
 
   // What pressing submit right now would sign (F4). Creating mints the
   // post and batches one act per drafted topic and per drafted
@@ -331,6 +367,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
           content: body,
           attachments,
           sensitive,
+          sensitiveReason,
         }),
       );
       if (prepared.kind === "failed") {
@@ -449,6 +486,8 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
   const titleTooLong = titleProblem(title);
   const descriptionTooLong = descriptionProblem(description);
   const bodyTooLong = mediaBody ? null : bodyProblem(body);
+  // Unmarked, the reason cannot ride and so cannot refuse.
+  const reasonTooLong = sensitive ? sensitiveReasonProblem(sensitiveReason) : null;
 
   const onSubmit = async () => {
     if (submitting) return;
@@ -578,8 +617,35 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
         cap={editingId === null ? REFERENCE_BATCH_CAP : null}
         testIdPrefix="compose"
       />
-      {editingId === null && (
+      {editingId === null ? (
         <LicenseChooser value={license} onChange={setLicense} testIdPrefix="compose" />
+      ) : (
+        /* THE EDIT SURFACE'S OWN SENSITIVE ROW — the control, not a door
+           to one. The menu's `Mark as sensitive` row leads here because
+           marking a published post is a signed act changing the post, and
+           this is the surface that signs it (jakob 2026-09-14).
+
+           It is the seal's row unchanged (`_shared.jsx:1390` draws the
+           same `FactRow` the seal draws at `:1003`), last in the stack and
+           opening the same sheet (`graph.json:991`). Unlike the license
+           the mark is never locked: a license is fixed by contract at
+           signing, while the mark is the author's ongoing judgment about
+           their own words (design/backlog.md item 25 part 2). */
+        <div className="flex min-h-11 items-center gap-2 border-y border-outline-variant">
+          <span className="flex-1 text-body-medium">Sensitive</span>
+          <span
+            className="text-body-medium text-on-surface-variant"
+            data-testid="compose-sensitive-value"
+          >
+            {sensitive ? "Marked" : "Not marked"}
+          </span>
+          <TextAction
+            testId="compose-open-sensitive"
+            onClick={() => setSensitiveOpen(true)}
+          >
+            {sensitive ? "Change" : "Mark"}
+          </TextAction>
+        </div>
       )}
       {refusedMessage && (
         <p role="alert" data-testid="compose-refused" className="text-body-medium text-error">
@@ -600,7 +666,8 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
           signedActions === 0 ||
           titleTooLong !== null ||
           descriptionTooLong !== null ||
-          bodyTooLong !== null
+          bodyTooLong !== null ||
+          reasonTooLong !== null
         }
       >
         {editingId === null ? "Sign and publish" : "Sign the edit"}
@@ -616,6 +683,32 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
             setConfirming(false);
             void run();
           }}
+        />
+      )}
+      {/* The post seal's own sheet, raised by the row above — one sheet
+          for every surface that marks (ruling 42), so the words an author
+          meets at the seal are the words they meet again in an edit. */}
+      <SensitiveSheet
+        open={sensitiveOpen}
+        marked={sensitive}
+        reason={sensitiveReason}
+        onMarked={(next) => {
+          setSensitive(next);
+          // The contract refuses a reason without the mark, so a reason
+          // left behind could only be a refusal waiting at the submit.
+          if (!next) setSensitiveReason("");
+        }}
+        onReason={setSensitiveReason}
+        onClose={() => setSensitiveOpen(false)}
+        onHelp={() => setHelp(HELP_TOPICS.markingAsSensitive)}
+        testIdPrefix="compose"
+      />
+      {help && (
+        <HelpDialog
+          open
+          topic={help}
+          onClose={() => setHelp(null)}
+          testId="compose-help-dialog"
         />
       )}
     </main>

@@ -18,6 +18,15 @@
     <string name="content_edit_media_heading">Pictures</string>
     <string name="content_edit_media_body_xor">A post\'s body is words or media, never both.</string>
 
+    <!-- CW-46: the edit surface's own Sensitive control. The words the
+         comment edit's row wears, because it is the same row (ruling 42
+         puts one sheet behind every surface that marks). -->
+    <string name="content_sensitive_label">Sensitive</string>
+    <string name="content_sensitive_marked">Marked</string>
+    <string name="content_sensitive_unmarked">Not marked</string>
+    <string name="content_sensitive_change">Change</string>
+    <string name="content_sensitive_mark">Mark</string>
+
     <!-- The tags section, on the composer and the edit screen
          (hashtag.md; D15: no autocomplete). -->
     <string name="content_topics_heading">Topics</string>
