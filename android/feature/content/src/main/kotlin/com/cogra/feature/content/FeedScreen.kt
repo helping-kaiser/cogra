@@ -447,11 +447,6 @@ private fun PostCard(
     onReveal: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
-    // THE SHEETS THE ⋮'s ROWS OPEN RIDE THE CARD, the way the refs sheet
-    // already does: a feed is a list of cards and the terms a reader asked
-    // for belong to the one they asked from.
-    var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
-    var removeOpen by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -464,32 +459,12 @@ private fun PostCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            // A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is
-            // nothing of it to edit, cite or license, so the ⋮ goes wholesale
-            // rather than a row at a time. An empty list draws no trigger.
-            val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
-            ContentCardHeader(
-                author = post.author,
-                at = post.createdAt,
+            CardMenuHeader(
+                post = post,
+                viewerId = viewerId,
                 onOpenActor = onOpenActor,
-                testTagPrefix = "feed_${post.id}",
-                menu = if (removed) {
-                    emptyList()
-                } else {
-                    postMenuRows(
-                        own = viewerId != null && post.author?.id == viewerId,
-                        handle = post.author?.handle,
-                        license = post.license,
-                        onEdit = { onEdit(post.id) },
-                        onCite = { onCite(post.id) },
-                        onRemove = { removeOpen = true },
-                        onLicense = { licenseShown = post.license },
-                        // The rows sit under the trigger's own tag, which
-                        // `ContentCardHeader` derives the same way.
-                        testTagPrefix = "feed_${post.id}_menu",
-                    )
-                },
-                menuContentDescription = stringResource(R.string.content_menu_post),
+                onEdit = onEdit,
+                onCite = onCite,
             )
             SummaryTitle(post)
             PostBody(
@@ -534,6 +509,53 @@ private fun PostCard(
             }
         }
     }
+}
+
+/**
+ * THE CARD'S HEADER AND THE ⋮ IT CARRIES, with the sheets its rows raise.
+ *
+ * The menu OWNS ITS OWN STATE here rather than the screen's, the way
+ * `CardTopicsLine` owns the refs sheet beside it: a feed is a list of cards,
+ * and the terms a reader asked for belong to the card they asked from — a
+ * screen-level sheet would show one card's license over another's.
+ */
+@Composable
+private fun CardMenuHeader(
+    post: PostView,
+    viewerId: String?,
+    onOpenActor: (String) -> Unit,
+    onEdit: (String) -> Unit,
+    onCite: (String) -> Unit,
+) {
+    var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
+    var removeOpen by remember { mutableStateOf(false) }
+    // A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is nothing
+    // of it to edit, cite or license, so the ⋮ goes wholesale rather than a
+    // row at a time. An empty list draws no trigger.
+    val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
+    ContentCardHeader(
+        author = post.author,
+        at = post.createdAt,
+        onOpenActor = onOpenActor,
+        testTagPrefix = "feed_${post.id}",
+        menu = if (removed) {
+            emptyList()
+        } else {
+            postMenuRows(
+                own = viewerId != null && post.author?.id == viewerId,
+                handle = post.author?.handle,
+                license = post.license,
+                onEdit = { onEdit(post.id) },
+                onCite = { onCite(post.id) },
+                onRemove = { removeOpen = true },
+                onLicense = { licenseShown = post.license },
+                // The rows sit under the trigger's own tag, which
+                // `ContentCardHeader` derives the same way.
+                testTagPrefix = "feed_${post.id}_menu",
+            )
+        },
+        menuContentDescription = stringResource(R.string.content_menu_post),
+    )
     licenseShown?.let { license ->
         LicenseSheet(license = license, onDismiss = { licenseShown = null })
     }
