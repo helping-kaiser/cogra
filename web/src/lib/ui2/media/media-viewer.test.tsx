@@ -250,6 +250,33 @@ describe("pinch to zoom", () => {
   });
 });
 
+// THE LAYER REACHES THE EDGES; THE CHROME DOES NOT (jakob 2026-09-15, hand
+// test). The document opts into `viewport-fit: cover`, so a fixed layer draws
+// under the notch and over the home indicator — which is what makes the black
+// ground reach the edges, and what puts the controls out of reach unless they
+// are placed against `env(safe-area-inset-*)`.
+describe("the safe area", () => {
+  it("keeps the X clear of the notch and the status bar", () => {
+    open();
+    const chrome = screen.getByTestId("media-viewer-close").parentElement as HTMLElement;
+    expect(chrome.style.paddingTop).toBe("calc(0.5rem + env(safe-area-inset-top))");
+    expect(chrome.style.paddingLeft).toBe("calc(0.5rem + env(safe-area-inset-left))");
+  });
+
+  it("keeps the dot row clear of the home indicator", () => {
+    open();
+    const dots = screen.getByTestId("media-viewer-dots").parentElement as HTMLElement;
+    expect(dots.style.bottom).toBe("calc(16px + env(safe-area-inset-bottom))");
+  });
+
+  it("hands the same safe area to the clip's transport", () => {
+    render(<MediaViewer items={[CLIP]} onClose={() => {}} />);
+    const bar = screen.getByTestId("media-viewer-video-transport-timeline")
+      .parentElement as HTMLElement;
+    expect(bar.style.bottom).toBe("calc(16px + env(safe-area-inset-bottom))");
+  });
+});
+
 describe("focus", () => {
   it("lands on the way out, and goes back where it came from", () => {
     const opener = document.createElement("button");

@@ -51,6 +51,18 @@ const PLAY_PLATE = "rgba(0,0,0,0.35)";
 const TRACK = "rgba(255,255,255,0.32)";
 const WASH = "linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0))";
 
+/**
+ * THE TARGET IS 48px EVEN WHERE THE DISC IS DRAWN AT 28.
+ *
+ * "Touch targets never below 48px" (design/readme.md §4), and this bar's sound
+ * and fullscreen discs are drawn at 28 while the skips are drawn at 44 — all
+ * three under it. The board's geometry is not the thing to change, the TARGET
+ * is, which is exactly what `cg-hit` exists for: a transparent overlay centred
+ * on the control reaches `--touch-target-min` on both axes while the ink stays
+ * put, and its `min-*: 100%` keeps it from ever shrinking one that is already
+ * larger. The same trade `Button`'s small rung and `Chip` already make, and the
+ * same one android takes from Material's `minimumInteractiveComponentSize`.
+ */
 function TransportButton({
   label,
   glyph,
@@ -80,7 +92,7 @@ function TransportButton({
         event.stopPropagation();
         onClick();
       }}
-      className="cg-state cg-focus grid flex-none cursor-pointer place-items-center rounded-full border-0 p-0"
+      className="cg-state cg-focus cg-hit relative grid flex-none cursor-pointer place-items-center rounded-full border-0 p-0"
       style={{
         width: `${box}px`,
         height: `${box}px`,
@@ -223,6 +235,7 @@ export function Timeline({
  */
 export function VideoTransport({
   playing,
+  ended = false,
   elapsed,
   duration,
   progress,
@@ -233,9 +246,24 @@ export function VideoTransport({
   onSkip,
   onFullscreen,
   inset = GESTURE_ZONE,
+  safeArea = false,
   testId = "video-transport",
 }: {
   playing: boolean;
+  /**
+   * Whether the clip has run out.
+   *
+   * A clip under this transport STOPS at its end rather than looping, so the
+   * stopped state needs a control that says what pressing it does: at the end
+   * the play button is a REPLAY (jakob 2026-09-15, hand test). One glyph for
+   * "resume where you paused" and "start this again from nothing" is one
+   * picture for two different offers.
+   *
+   * It changes the LABEL and not the glyph, and that is a gap rather than a
+   * choice: `VideoControls.jsx` draws two states, and `Icon.jsx` holds no
+   * replay glyph to draw a third with. Exporting one is the design's call.
+   */
+  ended?: boolean;
   elapsed: string;
   duration: string;
   progress: number;
@@ -253,8 +281,24 @@ export function VideoTransport({
    */
   onFullscreen?: () => void;
   inset?: number;
+  /**
+   * Whether this transport reaches the BOTTOM OF THE SCREEN.
+   *
+   * [GESTURE_ZONE] is the board's own allowance and it is measured in CSS
+   * pixels from the frame's edge — which is the right number inside a framed
+   * clip and the wrong one in a fullscreen layer, where the phone's home
+   * indicator sits below it and the app-switcher swipe owns that strip (jakob
+   * 2026-09-15, hand test: the timeline was in it). `env(safe-area-inset-*)` is
+   * the platform's own answer for how much the browser is keeping
+   * (https://developer.mozilla.org/en-US/docs/Web/CSS/env), and the document
+   * already opts into it with `viewport-fit: cover`.
+   */
+  safeArea?: boolean;
   testId?: string;
 }) {
+  const bottom = safeArea
+    ? `calc(${inset}px + env(safe-area-inset-bottom))`
+    : `${inset}px`;
   return (
     <div className="absolute inset-0 z-[2]" data-testid={testId}>
       {/* The wash: a gradient rather than a bar, so nothing cuts the frame. */}
@@ -279,7 +323,7 @@ export function VideoTransport({
           testId={`${testId}-rewind`}
         />
         <TransportButton
-          label={playing ? "Pause" : "Play"}
+          label={playing ? "Pause" : ended ? "Replay" : "Play"}
           glyph={playing ? "pause" : "play_arrow"}
           size={34}
           box={64}
@@ -299,7 +343,7 @@ export function VideoTransport({
       {/* THE BAR, held clear of the gesture zone. */}
       <div
         className="absolute flex items-center"
-        style={{ left: "12px", right: "12px", bottom: `${inset}px`, gap: "var(--space-2)" }}
+        style={{ left: "12px", right: "12px", bottom, gap: "var(--space-2)" }}
       >
         <span
           className="flex-none text-label-small tabular-nums"

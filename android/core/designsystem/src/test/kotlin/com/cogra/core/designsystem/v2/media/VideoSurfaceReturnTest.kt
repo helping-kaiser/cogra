@@ -148,12 +148,50 @@ class VideoSurfaceReturnTest {
         compose.onNodeWithTag(POSTER_TAG).assertIsDisplayed()
     }
 
+    /**
+     * AND IT TAKES THE CLIP BACK WHEN THE STAGE IS LEFT UNOWNED.
+     *
+     * This is the return from the fullscreen viewer (jakob 2026-09-15, hand
+     * test): the viewer claims the stage on the way in and surrenders on the
+     * way out, so the clip is left on stage with nobody showing it. The detail's
+     * surface never stopped being composed, so nothing re-runs its start
+     * effect — and it went on holding a token the stage no longer knew, which
+     * is a `PlayerSurface` with no player bound, a black box, and no transport
+     * drawn at all.
+     */
+    @Test
+    fun theSurfaceTakesTheClipBackFromASurfaceThatGaveItUp() {
+        val screen = FakeLifecycleOwner()
+        compose.setContent {
+            CompositionLocalProvider(LocalLifecycleOwner provides screen) {
+                Clip(controls = VideoControls.Full)
+            }
+        }
+        compose.runOnIdle { screen.registry.currentState = Lifecycle.State.RESUMED }
+        val player = VideoStage.holding?.player
+
+        // The viewer opens on the same clip, and then closes.
+        val viewer = Any()
+        compose.runOnIdle { VideoStage.claim(context, clip, viewer) }
+        compose.runOnIdle { VideoStage.surrender(viewer) }
+        compose.waitForIdle()
+
+        // The same decoder, back on the surface that is still showing it —
+        // and the transport with it, because the transport is drawn from a
+        // player rather than from a clip.
+        assertThat(VideoStage.holding?.player).isSameInstanceAs(player)
+        assertThat(VideoStage.holding?.owner).isNotNull()
+        compose.onNodeWithTag(SURFACE_TAG).assertExists()
+        compose.onNodeWithTag(TRANSPORT_TAG, useUnmergedTree = true).assertExists()
+    }
+
     @Composable
-    private fun Clip() {
+    private fun Clip(controls: VideoControls = VideoControls.SoundOnly) {
         VideoPlayer(
             url = clip,
             posterUrl = null,
             autoplay = true,
+            controls = controls,
             modifier = Modifier.size(FRAME),
         )
     }
