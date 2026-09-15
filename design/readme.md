@@ -5085,6 +5085,14 @@ viewer lane).
   queued the asymmetry: each platform keeps its own player's reflex,
   and one grammar forced across both would break the reflex on one of
   them.
+- **The drawn edge offsets are the inset-zero case.** Boards draw a
+  notchless 390×844, so the viewer's X at the top and the 16px gesture
+  zone at the bottom (*the reel round*) sit exactly where a real phone
+  spends its system insets. On a device the two offsets STACK ON TOP of
+  those insets rather than being measured from the screen's edge — what
+  the boards draw is what remains when both insets are zero. A rule and
+  not a token: `--safe-area-top` stays retired.
+
 ### The tag-page smalls — 2026-09-15
 
 Three items the topic round left standing, all about the tag page and
