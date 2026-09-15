@@ -89,7 +89,10 @@ export function Screen() {
           <span aria-hidden="true" style={{ flex: "none", width: 50, textAlign: "right", whiteSpace: "nowrap", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             Against
           </span>
-          <span style={{ position: "relative", width: 148, height: 72, borderRadius: "var(--radius-large)", background: "var(--surface-container-highest)", touchAction: "none" }}>
+          {/* 192, not the earlier 148 — jakob (2026-09-15): the one-axis track
+              was "quite small"; it takes the row's slack, stopping short of
+              pushing the gutter words into the card's sides. */}
+          <span style={{ position: "relative", width: 192, height: 72, borderRadius: "var(--radius-large)", background: "var(--surface-container-highest)", touchAction: "none" }}>
             <span aria-hidden="true" style={{ position: "absolute", left: 8, right: 8, top: "50%", height: 1, background: "var(--border-hairline)" }} />
             <span aria-hidden="true" style={{ position: "absolute", left: "50%", top: 8, bottom: 8, width: 1, background: "var(--border-hairline)" }} />
             <span aria-hidden="true" style={{ position: "absolute", left: "55%", top: "50%", width: 24, height: 24, margin: "-12px 0 0 -12px", borderRadius: "var(--radius-full)", background: "var(--surface-loud)", border: "1px solid var(--on-surface-loud)" }} />
