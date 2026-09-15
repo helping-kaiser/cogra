@@ -5333,6 +5333,25 @@ inherited. Ruled by jakob the same day.
   of act would invent a difference the mechanic does not have. The
   screen names no inviter and no reason: who turned somebody down is
   theirs to tell, and an ask link carries a person, not a case file.
+- **Applications are grouped by the link they came through, and the
+  group carries a batch close** (jakob: "if someone bots us from the
+  start it would be nice to have.. we add batching.. batched by invite
+  link?"). A leaked link is the failure mode this queue has, and it
+  arrives as a burst that is really one event; flat, the reader closed
+  it one row at a time and could not see it was one event at all. The
+  batch act sits on the GROUP HEADER and not on the link card, because
+  `PayoutAddress` is allowed one inline word and a live link already
+  spends it on `Revoke` — and the header is the better home anyway,
+  since the count is right beside the gesture that acts on it. Grouping
+  does not reorder the queue by what the reader can act on: groups sit
+  by their oldest waiting application, rows by age inside them.
+  `RejectAllConfirm` is the confirm, and it puts the COUNT in its
+  title, because the count is the risk — it names no handles, since a
+  dialog that grows with the burst stops being readable exactly when
+  the burst is worst. The sweep passes over applications already
+  closed, so the number named is the number that changes. One waiting
+  gets no batch control: `Close all 1` is the row's own close with a
+  longer name.
 - **The link lands on the page, not on the pad** (jakob). A reader who
   taps a link has arrived, not asked, and a stance is opened by the
   reader's own gesture everywhere else in the tree; an arrival from

@@ -61,6 +61,7 @@
     "VouchAskPad": "the scrim wash covers the ask — the card's Not now and the way back are inactive in this state; only the parked pad is live",
     "ApprovePad": "the scrim wash covers the invites list — its semantic elements (the page's New invite, the rows, the close controls and the link cards) are inactive in this state; only the parked pad is live",
     "RejectConfirm": "the think-twice dialog covers the invites list — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "RejectAllConfirm": "the batch think-twice dialog covers the invites list — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
     "NetworkError": "the fault in place — a pattern exemplar drawn on the seal, where the retry the failure offers is the only thing this board is about; the seal's own header, facts and way back are `ComposeSeal`'s controls, wired on that board",
     "ProfileMoreFailed": "the page that didn't come — exempt for `NetworkError`'s reason, cited: the failed next page is the only thing this board is about, and the band, the header, the chronicle tabs, the rows and the five nav slots are `Profile`'s controls, wired on that board"
   },
@@ -1777,6 +1778,7 @@
     { "from": "Invites", "via": 4, "kind": "advance", "label": "an application ready for you", "to": [{ "board": "ApprovePad", "case": "the pad blooms on them — approving is the vouch" }] },
     { "from": "Invites", "via": 5, "kind": "advance", "label": "a row's close", "to": [{ "board": "RejectConfirm", "case": "the think-twice dialog, named on the row it was raised from" }] },
     { "from": "Invites", "via": 6, "kind": "advance", "label": "a link's copy", "to": [{ "terminal": "self", "case": "the link lands on the clipboard — Link copied" }] },
+    { "from": "Invites", "via": 8, "kind": "advance", "label": "a group's Close all", "to": [{ "board": "RejectAllConfirm", "case": "the think-twice dialog for the whole group, naming the count it is about to act on" }] },
     { "from": "Invites", "via": 7, "kind": "advance", "label": "a link's Revoke", "to": [{ "terminal": "self", "case": "no dialog and no Undo — none could be honest, since nothing un-revokes a link. The card leaves with Invite revoked, and anyone already staged through it stays approvable" }, { "board": "InvitesEmpty", "case": "the last live link, with nobody waiting either" }] },
 
     { "from": "InvitesEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the row was" }] },
@@ -1802,6 +1804,10 @@
     { "from": "RejectConfirm", "via": 1, "kind": "advance", "label": "Close it", "to": [{ "board": "Invites", "case": "the row leaves this inviter's list and the applicant is told — their account stays a signed-in reader, and any other member can still vouch them in" }] },
     { "from": "RejectConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the application is still waiting" }] },
     { "from": "RejectConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing closed" }] },
+
+    { "from": "RejectAllConfirm", "via": 1, "kind": "advance", "label": "Close them", "to": [{ "board": "Invites", "case": "every application still waiting on that link leaves this list at once and each person is told — the sweep passes over the ones already closed, and any member can still vouch any of them in" }] },
+    { "from": "RejectAllConfirm", "via": 2, "kind": "cancel", "label": "Keep them", "to": [{ "terminal": "back", "case": "the dialog closes — the group is still waiting, all of it" }] },
+    { "from": "RejectAllConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing closed" }] },
 
     { "from": "ApplicantRejected", "via": 1, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "ApplicantRejected", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },

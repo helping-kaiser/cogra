@@ -1500,6 +1500,16 @@ states read `Not fully registered yet`, and ready reads `Ready for
 your approval`, the same words the notification uses, so the list and
 the bell cannot describe one state two ways.
 
+**A group of applications is labelled by its link and its count** —
+`Many uses · 4 waiting`, `Single use · 1 waiting` — and the count says
+WAITING because that is the number the batch acts on: one already
+closed is not closed again. The batch control is `Close all`, named in
+full for the accessibility tree as `Close all 4 applications from this
+link`, and it is absent at one waiting. Its dialog puts the count in
+the title — `Close all 4 applications from this link?` — and names no
+handles; its buttons are the plural of the row's, `Close them` and
+`Keep them`.
+
 **The row's close says what happens, not how it feels.** Its name is
 `Close @imke's application`, never "Reject" or "Decline": nothing is
 deleted and the person keeps the account they made. The dialog behind

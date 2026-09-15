@@ -2376,6 +2376,52 @@ const CloseApplication = ({ handle }) => (
   </button>
 );
 
+/* APPLICATIONS ARE GROUPED BY THE LINK THEY CAME THROUGH (jakob 2026-09-15:
+   "if someone bots us from the start it would be nice to have.. we add
+   batching.. batched by invite link?"). A link that leaks is the failure mode
+   this queue has, and it arrives as a burst of applications that are all the
+   same application — one link, one leak, one answer. Flat and undifferentiated,
+   the reader had to close them one at a time and could not even see that they
+   were one event.
+
+   THE GROUP CARRIES THE BATCH ACT, AND THE LINK CARD DOES NOT. `PayoutAddress`
+   is allowed exactly one inline word and a live link already spends it on
+   `Revoke` — a card with a second inline act stops reading as a string with a
+   home, which is that component's own rule. The group header is the other
+   place the batch belongs and it is the better one anyway: the count is right
+   there, so the gesture is next to the number it acts on.
+
+   THE LIST IS STILL ORDERED BY AGE. Grouping does not reorder by what the
+   reader can act on — the rule that matters — so groups sit in the order of
+   their oldest waiting application and rows sit by age inside them. The oldest
+   application in the queue is still the first row on the screen.
+
+   ONE WAITING GETS NO BATCH. `Close all 1` is the row's own close with a
+   longer name, so the header carries the label and the count and stops there.
+
+   THE COUNT IS WHAT IS WAITING, not what the link has ever let through: a
+   closed application is not closed again, and an approved one is gone. */
+const ApplicationGroup = ({ label, count }) => (
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "4px 4px 0" }}>
+    <span
+      style={{
+        fontSize: "var(--text-label-medium)",
+        lineHeight: "var(--text-label-medium--line-height)",
+        fontWeight: "var(--text-label-medium--font-weight)",
+        letterSpacing: "var(--text-label-medium--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      {label} · {count} waiting
+    </span>
+    {count > 1 && (
+      <Button variant="text" size="sm" ariaLabel={`Close all ${count} applications from this link`}>
+        Close all
+      </Button>
+    )}
+  </div>
+);
+
 /* ONE LINE OF A PAD'S NOTE. `VouchBackPad` drew it first and drew it alone;
    the approval pad on the other side of the same handshake draws the identical
    line, so it is written once here rather than twice on two boards that must
@@ -2418,10 +2464,15 @@ function ApprovePadNote({ handle }) {
    the ROW's to say, on the second line, which is where `ContentRow` puts
    status.
 
-   OLDEST ON TOP, BY AGE ALONE. `@imke` applied nine days ago and is not fully
-   registered yet; `@rafa` applied three days ago and is ready. The not-ready row standing
-   first is the drawing that records the rule: this list is ordered by how long
-   someone has been waiting, never by whether the reader can act on them.
+   OLDEST ON TOP, BY AGE ALONE — AND GROUPING DOES NOT DISTURB IT. `@imke`
+   applied nine days ago and is not fully registered yet; `@rafa` applied three
+   days ago and is ready. The not-ready row standing first is the drawing that
+   records the rule: this list is ordered by how long someone has been waiting,
+   never by whether the reader can act on them. Since applications are now
+   grouped by the link they came through, the rule reaches one level up —
+   groups sit in the order of their OLDEST waiting application and rows sit by
+   age inside them — so the oldest application in the queue is still the first
+   row on the screen, and nothing has been sorted by how actionable it is.
 
    AN APPLICANT HAS NO PICTURE, EVER. There is no Profile to carry one until
    approval lands (`invitations.md` §4), so the disc is the monogram from the
@@ -2473,6 +2524,7 @@ function InvitesBody({ approving = false }) {
 
         <SectionLabel>Applications</SectionLabel>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+          <ApplicationGroup label="Many uses" count={4} />
           <ContentRow
             variant="chronicle"
             chevron={false}
@@ -2483,6 +2535,37 @@ function InvitesBody({ approving = false }) {
             action={<CloseApplication handle="@imke" />}
             onOpen={() => {}}
           />
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            name="vora81"
+            title="@vora81"
+            second="Not fully registered yet"
+            trailing="1d"
+            action={<CloseApplication handle="@vora81" />}
+            onOpen={() => {}}
+          />
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            name="vora82"
+            title="@vora82"
+            second="Not fully registered yet"
+            trailing="1d"
+            action={<CloseApplication handle="@vora82" />}
+            onOpen={() => {}}
+          />
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            name="vora83"
+            title="@vora83"
+            second="Not fully registered yet"
+            trailing="1d"
+            action={<CloseApplication handle="@vora83" />}
+            onOpen={() => {}}
+          />
+          <ApplicationGroup label="Single use" count={1} />
           <ContentRow
             variant="chronicle"
             chevron={false}
