@@ -150,6 +150,11 @@ export function RefsSheet({
   references: readonly ReferenceClaimNode[];
   testId?: string;
 }) {
+  // THE SHEET IS THE DOOR, NOT THE DESTINATION. A row that navigated left the
+  // sheet open behind it, and the opener remembers that flag — so Back
+  // restored the surface AND raised the sheet over it again, with no way out
+  // but a second Back. Dropping it as the row is followed is what makes Back
+  // land where the reader opened it from.
   return (
     <BottomSheet open={open} onClose={onClose} title={TITLE} testId={testId}>
       {topics.length > 0 && <SectionLabel>{TAGS_LABEL}</SectionLabel>}
@@ -167,6 +172,7 @@ export function RefsSheet({
             // `RefsSheet` 1: a tag row goes to the tag's page, the one
             // destination a chip's tap already has on every other surface.
             href={`/topics/${name}`}
+            onNavigate={onClose}
             trailing={
               <PairReadout
                 emoji={anchor.emoji}
@@ -203,6 +209,7 @@ export function RefsSheet({
             // client can address are the profile and the post; a citation whose
             // far end it cannot type has no destination and stays a plain row.
             href={href ?? undefined}
+            onNavigate={onClose}
             trailing={
               <PairReadout
                 emoji={anchor.emoji}

@@ -17,6 +17,7 @@ import com.cogra.domain.ReferenceClaimView
 import com.cogra.domain.SelfMarkView
 import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
+import com.cogra.domain.content.MAX_SENSITIVE_REASON_CHARS
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
@@ -672,6 +673,86 @@ class ComposePostViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(content.editCalls).isEqualTo(0)
         assertThat(vm.state.value.saved).isFalse()
+    }
+
+    // -- The edit surface's own Sensitive row --
+
+    /**
+     * MOVING THE MARK IS A WHOLE EDIT. An edit record states the post's
+     * complete content state, so the mark is one of the things it
+     * carries: an author who only marks their post has changed it, and
+     * a gate that read the words alone would let the submit stage
+     * nothing at all.
+     */
+    @Test
+    fun markingAPostAloneStagesTheEditAndCostsOneAct() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+
+        vm.onSensitiveChange(true)
+        vm.onSensitiveReasonChange("One rubbing includes a dead seabird.")
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+        assertThat(vm.state.value.canSubmit).isTrue()
+
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.editCalls).isEqualTo(1)
+        assertThat(content.lastEditMark)
+            .isEqualTo(true to "One rubbing includes a dead seabird.")
+        // The words the edit did not touch ride through unchanged.
+        assertThat(content.lastEdit[3]).isEqualTo("Loaded body")
+    }
+
+    /** Clearing a mark is the same act in the other direction. */
+    @Test
+    fun clearingAMarkStagesTheEditAndDropsTheReasonWithIt() = runTest(dispatcher) {
+        content.selfMark = SelfMarkView(sensitive = true, reason = "graphic injury")
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.signedActionCount).isEqualTo(0)
+
+        vm.onSensitiveChange(false)
+        assertThat(vm.state.value.signedActionCount).isEqualTo(1)
+
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+        // The contract refuses a reason without the mark, so a reason
+        // left behind could only be a refusal waiting at the submit.
+        assertThat(content.lastEditMark).isEqualTo(false to null)
+    }
+
+    /** Re-typing the same reason is not a change, and stages nothing. */
+    @Test
+    fun anUntouchedMarkStillStagesNothing() = runTest(dispatcher) {
+        content.selfMark = SelfMarkView(sensitive = true, reason = "graphic injury")
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onSensitiveReasonChange("graphic injury")
+        assertThat(vm.state.value.nothingToSign).isTrue()
+        assertThat(content.editCalls).isEqualTo(0)
+    }
+
+    /** The reason wears the same cap every authored field does. */
+    @Test
+    fun anOverLongReasonHoldsTheSubmitShut() = runTest(dispatcher) {
+        val vm = viewModelWithoutConfirm()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onSensitiveChange(true)
+        vm.onSensitiveReasonChange("x".repeat(MAX_SENSITIVE_REASON_CHARS + 1))
+        assertThat(vm.state.value.sensitiveReasonTooLong).isTrue()
+        assertThat(vm.state.value.canSubmit).isFalse()
+
+        // Unmarked, the reason cannot ride and cannot refuse.
+        vm.onSensitiveChange(false)
+        assertThat(vm.state.value.sensitiveReasonTooLong).isFalse()
     }
 
     // -- Error routing (F2) --

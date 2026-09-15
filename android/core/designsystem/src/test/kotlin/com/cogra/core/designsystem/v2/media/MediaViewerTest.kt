@@ -1,9 +1,15 @@
 package com.cogra.core.designsystem.v2.media
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.google.common.truth.Truth.assertThat
@@ -57,20 +63,70 @@ class MediaViewerTest {
         assertThat(closed).isTrue()
     }
 
+    /**
+     * A TAP IS NOT A WAY OUT (jakob 2026-09-15, hand test).
+     *
+     * The surface used to close on a press anywhere, which made every reach for
+     * a control a dismissal. The X, the swipe down and the system back are the
+     * ways out; a tap on the ground is not one of them.
+     */
     @Test
-    fun `the ground around the frame closes it`() {
+    fun `a tap on the surface does not collapse the viewer`() {
         var closed = false
         compose.setContent {
             Cogra2PreviewTheme { MediaViewer(items = pictures.take(4), onClose = { closed = true }) }
         }
         compose.onNodeWithTag(VIEWER_TAG).performClick()
-        assertThat(closed).isTrue()
+        assertThat(closed).isFalse()
     }
 
-    // The backdrop takes the whole surface as ONE click target, so it merges
-    // its descendants: everything inside the viewer is read from the unmerged
-    // tree. That merge is the point — the ground closes the viewer, and a
-    // reader is not meant to find seven separate things to press out there.
+    /**
+     * And on a clip it toggles the chrome instead — the rule web has had since
+     * the transport landed.
+     */
+    @Test
+    fun `a tap on a clip takes the transport away and brings it back`() {
+        compose.setContent { Cogra2PreviewTheme { MediaViewer(items = listOf(clip), onClose = {}) } }
+        node(TRANSPORT_TAG).assertExists()
+
+        // A CORNER OF THE FRAME, not its middle: the transport's play button
+        // stands exactly at the centre, and a press there is that control's.
+        // Only the frame around the controls is the frame's.
+        tapTheFrame()
+        node(TRANSPORT_TAG).assertDoesNotExist()
+
+        tapTheFrame()
+        node(TRANSPORT_TAG).assertExists()
+    }
+
+    private fun tapTheFrame() =
+        node("${VIEWER_TAG}_video").performTouchInput { click(Offset(1f, 1f)) }
+
+    /**
+     * THE X LANDS INSIDE THE SAFE AREA (jakob 2026-09-15, hand test: it sat
+     * behind the status bar's clock, which is a way out nobody can reach).
+     *
+     * The window draws under the system bars on purpose — the black ground has
+     * to reach the edges — so the chrome is what has to move, by the device's
+     * own inset rather than by a number a board could hold.
+     */
+    @Test
+    fun `the X clears the system bars rather than hiding behind them`() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                MediaViewer(
+                    items = pictures.take(4),
+                    onClose = {},
+                    insets = WindowInsets(top = STATUS_BAR, bottom = NAV_BAR),
+                )
+            }
+        }
+        compose.onNodeWithTag("${VIEWER_TAG}_close")
+            .assertTopPositionInRootIsEqualTo(STATUS_BAR + CHROME_GAP)
+    }
+
+    // Read from the unmerged tree: the transport and the dots are chrome laid
+    // over the frame, and a merged read would answer about the surface instead.
     private fun node(tag: String) = compose.onNodeWithTag(tag, useUnmergedTree = true)
 
     @Test
@@ -157,5 +213,14 @@ class MediaViewerTest {
         compose.onNodeWithTag("${VIEWER_TAG}_close").assertExists()
         node(TRANSPORT_TAG).assertDoesNotExist()
         node("video_mute").assertDoesNotExist()
+    }
+
+    private companion object {
+        /** A phone's own bars, as a test can state them. */
+        val STATUS_BAR = 24.dp
+        val NAV_BAR = 48.dp
+
+        /** `padding: "8px"` around the X (`MediaViewer.jsx:175`). */
+        val CHROME_GAP = 8.dp
     }
 }

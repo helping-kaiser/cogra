@@ -105,6 +105,26 @@ media3 = "1.11.0"
 # (SmartToolFactory, easycrop) have not released in years.
 androidImageCropper = "4.7.0"
 
+# The fullscreen viewer's pinch-zoom, by the same D20 standard — and by the
+# standing law that we do not re-invent known gestures
+# (jakob 2026-09-15: "we don't re-invent the wheel with the UX, gestures and
+# known motions… we should use what the open-sources already have").
+#
+# usuiat/Zoomable (Apache-2.0) is the one candidate that documents the exact
+# problem this viewer has: a zoomable frame INSIDE a `HorizontalPager`, with
+# `scrollGesturePropagation` deciding when a drag belongs to the picture and
+# when to the pager (https://github.com/usuiat/Zoomable). Telephoto is the
+# other serious option and was rejected on one concrete point: its
+# `Modifier.zoomable` "consumes all tap gestures making it incompatible with
+# `Modifier.clickable()`" (saket.github.io/telephoto/zoomable), and the viewer
+# needs the surface tap for the chrome toggle.
+#
+# 2.9.0 rather than the newest, for the reason the Coil pin gives: 2.10.0 moves
+# to Compose 1.10.0 and 2.11.0 to AGP 9 / Kotlin 2.3.10, which do not resolve
+# under our AGP 8.13.2 + Compose BOM 2025.10.01. Moving up rides the same
+# toolchain migration Coil's bump waits on.
+zoomable = "2.9.0"
+
 # Crypto — Tink backs the encrypted token store (EncryptedSharedPreferences
 # is deprecated in current androidx.security-crypto). BouncyCastle's
 # lightweight API backs the signing crypto in core:crypto: Tink's own
@@ -192,6 +212,7 @@ apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", 
 
 # Images
 android-image-cropper = { group = "com.vanniktech", name = "android-image-cropper", version.ref = "androidImageCropper" }
+zoomable = { group = "net.engawapg.lib", name = "zoomable", version.ref = "zoomable" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 coil-test = { group = "io.coil-kt.coil3", name = "coil-test", version.ref = "coil" }

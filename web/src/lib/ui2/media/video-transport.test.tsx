@@ -202,6 +202,49 @@ describe("the transport's own controls", () => {
 // ONE CLIP PLAYS AT A TIME, however it was started (FE-28). The card's clip
 // claims the stage by scrolling into view; the detail's claims it by being
 // pressed, and a press that did not claim would leave two clips running.
+describe("the reach", () => {
+  // "Touch targets never below 48px" (design/readme.md §4). This bar draws the
+  // sound and fullscreen discs at 28 and the skips at 44, so the ink stays and
+  // the TARGET is expanded — the `cg-hit` trade `Button` and `Chip` already
+  // make, rather than a geometry this component invents for itself.
+  it("answers to the 48px target on every control without redrawing one", () => {
+    transportPlayer({ onOpenViewer: () => {} });
+
+    for (const control of ["play", "rewind", "forward", "sound", "fullscreen"]) {
+      const button = screen.getByTestId(`video-player-transport-${control}`);
+      expect(button.className, `${control} does not reach the target`).toContain("cg-hit");
+      // `cg-hit` centres its overlay on the control, so the control has to be
+      // the positioned ancestor or the reach lands somewhere else entirely.
+      expect(button.className).toContain("relative");
+    }
+  });
+
+  it("leaves the drawn discs at the sizes the board gives them", () => {
+    transportPlayer({ onOpenViewer: () => {} });
+    expect(screen.getByTestId("video-player-transport-play").style.width).toBe("64px");
+    expect(screen.getByTestId("video-player-transport-rewind").style.width).toBe("44px");
+    expect(screen.getByTestId("video-player-transport-sound").style.width).toBe("28px");
+  });
+
+  // NOTHING SITS IN THE STRIP THE SYSTEM OWNS (jakob 2026-09-15, hand test: the
+  // timeline was in the bottom gesture zone, so the app-switcher swipe took
+  // every drag along it). The board's inset is measured from the FRAME; a
+  // fullscreen layer's frame is the screen, and only the browser knows how much
+  // of it the phone is keeping.
+  it("clears the phone's own bottom strip where the transport is the screen", () => {
+    render(<VideoPlayer src={CLIP} surface="transport" safeArea testId="fs" />);
+    const bar = screen.getByTestId("fs-transport-timeline").parentElement as HTMLElement;
+    expect(bar.style.bottom).toBe("calc(16px + env(safe-area-inset-bottom))");
+  });
+
+  it("leaves a framed clip's bar on the board's own inset", () => {
+    transportPlayer();
+    const bar = screen.getByTestId("video-player-transport-timeline")
+      .parentElement as HTMLElement;
+    expect(bar.style.bottom).toBe("16px");
+  });
+});
+
 describe("the stage", () => {
   it("is claimed by a press on the transport, which pauses whatever held it", () => {
     render(

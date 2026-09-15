@@ -401,7 +401,7 @@ class ContentScreensTest {
         assertThat(more).isTrue()
     }
 
-    // -- The feed card's ⋮ (`PostCard.jsx:257`) --
+    // -- The feed card's ⋮ (`PostCard.jsx:262`) --
 
     /** The rows are `READER_POST_MENU` (`_shared.jsx:376`), on a card. */
     @Test
@@ -523,6 +523,10 @@ class ContentScreensTest {
         state: ComposePostUiState,
         onSubmit: () -> Unit = {},
         onLicenseChange: (LicenseChoice) -> Unit = {},
+        onOpenSensitive: () -> Unit = {},
+        onCloseSensitive: () -> Unit = {},
+        onSensitiveChange: (Boolean) -> Unit = {},
+        onSensitiveReasonChange: (String) -> Unit = {},
         onTagInputChange: (String) -> Unit = {},
         onAddTag: () -> Unit = {},
         onRemoveTag: (String) -> Unit = {},
@@ -550,6 +554,10 @@ class ContentScreensTest {
                 onDescriptionChange = {},
                 onBodyChange = {},
                 onLicenseChange = onLicenseChange,
+                onOpenSensitive = onOpenSensitive,
+                onCloseSensitive = onCloseSensitive,
+                onSensitiveChange = onSensitiveChange,
+                onSensitiveReasonChange = onSensitiveReasonChange,
                 onTagInputChange = onTagInputChange,
                 onAddTag = onAddTag,
                 onRemoveTag = onRemoveTag,
@@ -629,6 +637,66 @@ class ContentScreensTest {
         renderComposer(ComposePostUiState(editingId = "p1", body = "Salt maps"))
         compose.onNodeWithTag("compose_body").assertExists()
         compose.onNodeWithTag("compose_media").assertDoesNotExist()
+    }
+
+    // THE EDIT SURFACE'S OWN SENSITIVE ROW (`_shared.jsx:1390`), where the
+    // menu's `Mark as sensitive` lands. A creation marks at its seal
+    // instead, which is where the license it can still choose also lives.
+    @Test
+    fun theEditSurfaceCarriesTheSensitiveRow() {
+        renderComposer(ComposePostUiState(editingId = "p1", body = "Salt maps"))
+        compose.onNodeWithTag("compose_sensitive").performScrollTo().assertExists()
+    }
+
+    /** A creation marks at its seal instead, which is also where the
+     *  license it can still choose lives. */
+    @Test
+    fun aCreationCarriesTheLicenseControlsAndNoSensitiveRow() {
+        renderComposer(ComposePostUiState(body = "Salt maps"))
+        compose.onNodeWithTag("compose_sensitive").assertDoesNotExist()
+    }
+
+    /** The row reads the mark it stands on, and offers the word that moves it. */
+    @Test
+    fun theSensitiveRowReadsTheMarkItStands() {
+        renderComposer(ComposePostUiState(editingId = "p1", body = "Salt maps"))
+        compose.onNodeWithTag("compose_sensitive").performScrollTo().assertExists()
+        compose.onNodeWithText("Sensitive").assertExists()
+        compose.onNodeWithText("Not marked").assertExists()
+        compose.onNodeWithText("Mark").assertExists()
+    }
+
+    @Test
+    fun aMarkedPostsRowSaysSoAndOffersTheChange() {
+        renderComposer(
+            ComposePostUiState(editingId = "p1", body = "Salt maps", sensitive = true),
+        )
+        compose.onNodeWithTag("compose_sensitive").performScrollTo().assertExists()
+        compose.onNodeWithText("Marked").assertExists()
+        compose.onNodeWithText("Change").assertExists()
+    }
+
+    /** The row's action asks for the sheet; it never marks by itself. */
+    @Test
+    fun theSensitiveRowsActionAsksForTheSheet() {
+        var opened = 0
+        renderComposer(
+            ComposePostUiState(editingId = "p1", body = "Salt maps"),
+            onOpenSensitive = { opened++ },
+        )
+        compose.onNodeWithText("Mark").performScrollTo().performClick()
+        assertThat(opened).isEqualTo(1)
+    }
+
+    /** It is the seal's own sheet — one sheet for every surface that
+     *  marks (ruling 42), so the words are the same in both places. */
+    @Test
+    fun theOpenMarkIsTheSealsOwnSheet() {
+        renderComposer(
+            ComposePostUiState(editingId = "p1", body = "Salt maps", sensitiveOpen = true),
+        )
+        compose.onNodeWithTag("compose_sensitive_sheet").assertExists()
+        compose.onNodeWithTag("compose_sensitive_switch").assertExists()
     }
 
     @Test
@@ -1042,6 +1110,15 @@ class ContentScreensTest {
     // Pull-to-refresh belongs to the top of the thread: a reader
     // correcting upward from the middle of a long post is scrolling,
     // not asking for a re-read.
+    //
+    // NATIVE GRAPHICS, or there is no long post: Robolectric's default
+    // draw path measures text to nothing, so the body below would lay out
+    // shorter than the screen and the swipes would move a list already at
+    // both ends of itself (the same reason the gallery test asks for it).
+    // The premise is asserted below rather than assumed, because a list
+    // that cannot scroll makes the correction a pull FROM the top — which
+    // is the gesture that SHOULD refresh.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
     fun anUpwardDragAwayFromTheTopScrollsInsteadOfRefreshing() {
         var refreshes = 0
@@ -1055,9 +1132,15 @@ class ContentScreensTest {
             onRefresh = { refreshes++ },
         )
         // Down the post, well past the header…
+        val titleAtRest = compose.onNodeWithTag("detail_title").getUnclippedBoundsInRoot().top
         repeat(3) {
             compose.onNodeWithTag("detail_list").performTouchInput { swipeUp() }
         }
+        // …which is the premise the rest of this test rests on, so it is
+        // asserted rather than assumed: a list that never moved would make
+        // the correction below a pull from the top, which SHOULD refresh.
+        val titleScrolled = compose.onNodeWithTag("detail_title").getUnclippedBoundsInRoot().top
+        assertThat(titleScrolled.value).isLessThan(titleAtRest.value)
         // …then a correction back up that the thread itself absorbs.
         compose.onNodeWithTag("detail_list").performTouchInput {
             down(center)
@@ -1066,6 +1149,29 @@ class ContentScreensTest {
             up()
         }
         assertThat(refreshes).isEqualTo(0)
+    }
+
+    // THE DETAIL'S BAR IS PINNED (jakob 2026-09-15). Collapsing the top is
+    // the reading roots' motion, not every page's: this bar carries the
+    // post's one menu and its way back (`_shared.jsx:341-346` — the card's
+    // own ⋮ yields here), so a bar that left with the scroll would take
+    // every act on the post off screen mid-read.
+    @Test
+    fun theDetailsTopBarStaysPutUnderScroll() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1", body = "Body p1. ".repeat(400)),
+            ),
+        )
+        val before = compose.onNodeWithTag("detail_menu").getUnclippedBoundsInRoot()
+        repeat(3) {
+            compose.onNodeWithTag("detail_list").performTouchInput { swipeUp() }
+        }
+        compose.onNodeWithTag("detail_menu").assertIsDisplayed()
+        compose.onNodeWithTag("detail_back").assertIsDisplayed()
+        val after = compose.onNodeWithTag("detail_menu").getUnclippedBoundsInRoot()
+        assertThat(after.top.value).isEqualTo(before.top.value)
     }
 
     // Landing is per node: a landed post can carry a comment that is
@@ -2175,6 +2281,32 @@ class ContentScreensTest {
             .assertTextEquals("+0.40 / 0.90")
         compose.onNodeWithTag("feed_post_p1_refs_topic_photography_face", useUnmergedTree = true)
             .assertTextEquals("🔗")
+    }
+
+    /**
+     * THE SHEET IS THE DOOR, NOT THE DESTINATION (`CograOverflowMenu`'s own
+     * rule). The opener remembers that it was raised (`rememberSaveable`), so
+     * a row that navigated with the sheet still standing left Back restoring
+     * the surface AND the sheet over it — a trap with no way out but a second
+     * Back. The row drops the sheet as it acts.
+     */
+    @Test
+    fun aTagRowDropsTheSheetOnItsWayOut() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(
+                        topics = listOf(testTopicClaim("photography", relevance = 0.4, confidence = 0.9)),
+                        references = listOf(testReferenceClaim(testMentionTarget("mira"))),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("feed_post_p1_refs_sheet").assertExists()
+        compose.onNodeWithTag("feed_post_p1_refs_topic_photography").performClick()
+        compose.onNodeWithTag("feed_post_p1_refs_sheet").assertDoesNotExist()
     }
 
     /**

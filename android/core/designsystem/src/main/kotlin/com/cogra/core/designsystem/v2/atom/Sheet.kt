@@ -9,17 +9,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +81,10 @@ fun CograSheetSurface(
             .fillMaxWidth()
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            // The surface reaches the screen's edge; only its content steps
+            // clear of the navigation bar. [CograSheetHost] hands the sheet no
+            // insets of its own, so the drawn background is what covers them.
+            .navigationBarsPadding()
             .padding(start = Space.x6, end = Space.x6, top = Space.x2, bottom = Space.x6)
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
@@ -91,6 +101,46 @@ fun CograSheetSurface(
         }
         content()
     }
+}
+
+/**
+ * THE PRESENTATION FOR A [CograSheetSurface] — and the reason a wizard sheet
+ * is ONE sheet rather than two.
+ *
+ * [CograSheetSurface] draws the whole drawn sheet: the 28dp top corners, the
+ * `surfaceContainerHigh` surface, and the 32×4 handle. Material's
+ * `ModalBottomSheet` draws all three as well, from its own defaults — so a
+ * host that takes those defaults and puts a surface inside stacks two
+ * chromes, and the reader sees a handle over a handle and a rounded surface
+ * inside a rounded surface.
+ *
+ * The geometry lives in ONE place, which [CograSheetSurface]'s own contract
+ * already names ("a screen never restates the geometry"): this host therefore
+ * keeps only what Material is here for — the scrim, the drag behaviour, the
+ * back handling and the window — and draws nothing. Transparent container, no
+ * handle, no insets of its own; the surface inside is the sheet.
+ *
+ * [skipPartiallyExpanded] defaults to true, as every reader-side sheet
+ * already asks for it: a sheet opens showing its own top, not at a half
+ * detent the reader has to drag out of.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CograSheetHost(
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        modifier = modifier,
+        sheetState = sheetState,
+        containerColor = Color.Transparent,
+        dragHandle = null,
+        contentWindowInsets = { WindowInsets(0) },
+        content = content,
+    )
 }
 
 /**

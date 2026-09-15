@@ -217,6 +217,9 @@
          screen reader announces on a button. -->
     <string name="designsystem_video_play">Play</string>
     <string name="designsystem_video_pause">Pause</string>
+    <!-- A clip under the full transport stops at its end, so the press
+         there starts it again rather than resuming it. -->
+    <string name="designsystem_video_replay">Replay</string>
     <string name="designsystem_video_mute">Mute</string>
     <string name="designsystem_video_unmute">Unmute</string>
 
