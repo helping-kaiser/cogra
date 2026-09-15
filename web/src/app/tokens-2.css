@@ -117,7 +117,11 @@
 @keyframes cg-nav-out { from { opacity: 1; transform: none } to { opacity: 0; transform: translateX(calc(var(--nav-travel) * -0.5)) } }
 @keyframes cg-nav-back-in { from { opacity: 0; transform: translateX(calc(var(--nav-travel) * -0.5)) } to { opacity: 1; transform: none } }
 @keyframes cg-nav-back-out { from { opacity: 1; transform: none } to { opacity: 0; transform: translateX(var(--nav-travel)) } }
-@keyframes cg-sheet-in { from { transform: translateY(100%) } to { transform: none } }
+/* A SHEET THAT HAS ARRIVED STILL FOLLOWS THE FINGER. `both` fill-mode holds
+   the last keyframe's `transform` after the animation, which an inline style
+   cannot outrank — so the resting transform reads a custom property instead,
+   and the pull-to-dismiss gesture writes `--cg-sheet-drag` on the sheet. */
+@keyframes cg-sheet-in { from { transform: translateY(100%) } to { transform: translateY(var(--cg-sheet-drag, 0px)) } }
 @keyframes cg-sheet-out { from { transform: none } to { transform: translateY(100%) } }
 @keyframes cg-dialog-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
 @keyframes cg-fade-in { from { opacity: 0 } to { opacity: 1 } }

@@ -164,11 +164,19 @@ export function PostView({
   // full-screen scrolling root", ruled 2026-09-10). It goes through
   // the same fetch the first arrival takes, so a fault it raises
   // surfaces in the same place.
+  // What the thread last said its length was — the card arrives with the
+  // count the post was read with, and a reply landing moves this one.
+  const [liveComments, setLiveComments] = useState<number | null>(null);
+  const [threadToken, setThreadToken] = useState(0);
   const onPull = useCallback(() => {
     setRefreshing(true);
+    setThreadToken((n) => n + 1);
     refresh();
   }, [refresh]);
-  usePullToRefresh({ host, onPull });
+  // The thread is the sheet's own read, so the page's pull has to say so to
+  // both owners — and it stands down entirely while the sheet is raised, so
+  // one drag is not also a refetch of the page underneath.
+  usePullToRefresh({ host, onPull, enabled: !commentsOpen });
 
   const openLicense = (license: License) => {
     setLicenseShown(license);
@@ -330,7 +338,7 @@ export function PostView({
           testId="post"
           authorTestId="post-author"
           stanceTestId="post-stance"
-          comments={post.comments.totalCount}
+          comments={liveComments ?? post.comments.totalCount}
           // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
           // edge advances to `ReplyEntry`), here as on every other board that
           // carries it.
@@ -348,6 +356,8 @@ export function PostView({
         onOpenChange={setCommentsOpen}
         post={post}
         store={store}
+        onCount={setLiveComments}
+        refreshToken={threadToken}
       />
       {/* ONE LICENSE SHEET FOR THE PAGE, raised by the post's own menu row. */}
       {licenseShown !== null && (
