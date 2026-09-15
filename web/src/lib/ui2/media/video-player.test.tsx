@@ -225,7 +225,11 @@ describe("looping", () => {
     expect(screen.getByTestId("pinned")).toHaveProperty("loop", false);
   });
 
-  it("leaves the transport at Play when the clip runs out", () => {
+  // THE END IS ITS OWN REST (jakob 2026-09-15, hand test). "Play" is the offer
+  // to resume where the reader paused; at the end the same press starts the
+  // clip over, and the control says so rather than leaving one word to mean
+  // both.
+  it("stands the transport at Replay when the clip runs out", () => {
     render(<VideoPlayer src={CLIP} surface="transport" testId="pinned" />);
     const video = screen.getByTestId("pinned") as HTMLVideoElement;
     act(() => intersect(true));
@@ -234,7 +238,14 @@ describe("looping", () => {
     act(() => {
       video.dispatchEvent(new Event("ended"));
     });
-    expect(screen.getByTestId("pinned-transport-play")).toHaveAttribute("aria-label", "Play");
+    expect(screen.getByTestId("pinned-transport-play")).toHaveAttribute("aria-label", "Replay");
+
+    // And it is Play again the moment the clip is running, so the word never
+    // outlives the state it describes.
+    act(() => {
+      video.dispatchEvent(new Event("play"));
+    });
+    expect(screen.getByTestId("pinned-transport-play")).toHaveAttribute("aria-label", "Pause");
   });
 
   it("replays from the start when Play is pressed on a clip that ended", () => {

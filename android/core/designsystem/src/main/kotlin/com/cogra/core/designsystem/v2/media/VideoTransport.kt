@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,6 +88,25 @@ fun VideoTransport(
     onSkip: (Long) -> Unit,
     onToggleMute: () -> Unit,
     /**
+     * Whether the clip has run out.
+     *
+     * A clip under this transport STOPS at its end rather than looping, so the
+     * stopped state needs a control that says what pressing it does: at the end
+     * the play button is a REPLAY (jakob 2026-09-15, hand test). A Play glyph
+     * there is the same picture for "resume where you paused" and "start this
+     * again from nothing", which are not the same offer.
+     */
+    ended: Boolean = false,
+    /**
+     * What the device's bars take under this bar, where the transport reaches
+     * the bottom of the screen.
+     *
+     * Zero on a framed surface; the fullscreen viewer hands down its own safe
+     * area, because [GESTURE_ZONE] alone is the board's allowance for the
+     * gesture strip and says nothing about a navigation bar.
+     */
+    chromeInsets: PaddingValues = PaddingValues(0.dp),
+    /**
      * The way into the fullscreen viewer (`VideoControls.jsx:231-233`).
      *
      * Drawn only where it is handed one, which is the master's own condition
@@ -110,6 +131,7 @@ fun VideoTransport(
         )
         CentreCluster(
             playing = playing,
+            ended = ended,
             onTogglePlay = onTogglePlay,
             onSkip = onSkip,
             modifier = Modifier.align(Alignment.Center),
@@ -122,6 +144,7 @@ fun VideoTransport(
             onSeek = onSeek,
             onToggleMute = onToggleMute,
             onFullscreen = onFullscreen,
+            chromeInsets = chromeInsets,
             modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
@@ -136,6 +159,7 @@ fun VideoTransport(
 @Composable
 private fun CentreCluster(
     playing: Boolean,
+    ended: Boolean,
     onTogglePlay: () -> Unit,
     onSkip: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -153,9 +177,23 @@ private fun CentreCluster(
             onClick = { onSkip(-VideoStage.SKIP_MS) },
             testTag = "video_rewind",
         )
+        // PLAY · PAUSE · REPLAY. The end of a clip that does not loop is a state
+        // of its own, and the press there starts the clip again rather than
+        // resuming it — so the control SAYS so, which is what the labels in this
+        // transport are for ("labelled by what the press does, not by what the
+        // clip is doing").
+        //
+        // THE GLYPH STAYS THE PLAY ARROW, and that is a gap rather than a
+        // choice: `VideoControls.jsx` draws two states, and `Icon.jsx` holds no
+        // replay glyph to draw a third with. Exporting one is the design's call,
+        // not this lane's — raised for the design relay 2026-09-15.
         TransportButton(
             label = stringResource(
-                if (playing) R.string.designsystem_video_pause else R.string.designsystem_video_play,
+                when {
+                    playing -> R.string.designsystem_video_pause
+                    ended -> R.string.designsystem_video_replay
+                    else -> R.string.designsystem_video_play
+                },
             ),
             glyph = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
             box = PLAY_DIAMETER,
@@ -185,13 +223,18 @@ private fun Bar(
     onSeek: (Float) -> Unit,
     onToggleMute: () -> Unit,
     onFullscreen: (() -> Unit)?,
+    chromeInsets: PaddingValues,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = Space.x3)
-            .padding(bottom = GESTURE_ZONE),
+            // The board's own allowance for the gesture strip, on top of
+            // whatever the device says its bars actually take. Either alone is
+            // wrong: the board cannot know the bar, and the bar is not the
+            // whole of the swipe zone the board was drawn against.
+            .padding(bottom = GESTURE_ZONE + chromeInsets.calculateBottomPadding()),
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -314,6 +357,16 @@ private fun TransportButton(
 ) {
     Box(
         modifier = Modifier
+            // THE TARGET IS 48dp EVEN WHERE THE DISC IS DRAWN AT 28 — the
+            // product's own floor ("touch targets never below 48px",
+            // design/readme.md §4) and Material's ("touch targets should be at
+            // least 48 x 48 dp",
+            // developer.android.com/develop/ui/compose/accessibility). This is
+            // Compose's own way to honour it: the plate the board drew keeps its
+            // size and only what the finger can hit grows, so the bar reads as
+            // drawn and the sound and fullscreen discs stop being a near miss.
+            // Web makes the same trade through `cg-hit`.
+            .minimumInteractiveComponentSize()
             .size(box)
             .clip(RoundedCornerShape(box / 2))
             .background(plate)
