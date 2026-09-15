@@ -54,6 +54,11 @@
     "ReplyPadHelp": "the \"?\" dialog covers the parked pad, which covers the reply's seal — two washes deep, and only the dialog (and its scrim) is live",
     "DiscardConfirm": "the discard dialog covers the composer it was raised from — everything beneath the scrim is inactive in this state; only the dialog's own pair is live",
     "PadKeyAbsent": "the wash covers the feed — the band, the post card and nav beneath it are inactive in this state; only the parked pad and the key notice inside it are live",
+    "InviteNew": "the create sheet covers the invites list — the page's own New invite, its rows, its close controls and its link cards are inactive in this state; only the sheet (and its scrim) is live",
+    "InviteExpiry": "the expiry chooser covers the create sheet, which covers the list — two sheets deep, the create sheet dimmed under the chooser's own wash, and only the top sheet (and that wash) is live",
+    "InviteCreated": "the fresh link's sheet covers the invites list — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ApprovePad": "the scrim wash covers the invites list — its semantic elements (the page's New invite, the rows, the close controls and the link cards) are inactive in this state; only the parked pad is live",
+    "RejectConfirm": "the think-twice dialog covers the invites list — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
     "NetworkError": "the fault in place — a pattern exemplar drawn on the seal, where the retry the failure offers is the only thing this board is about; the seal's own header, facts and way back are `ComposeSeal`'s controls, wired on that board",
     "ProfileMoreFailed": "the page that didn't come — exempt for `NetworkError`'s reason, cited: the failed next page is the only thing this board is about, and the band, the header, the chronicle tabs, the rows and the five nav slots are `Profile`'s controls, wired on that board"
   },
@@ -1462,7 +1467,7 @@
     { "from": "Profile", "via": 4, "kind": "advance", "label": "avatar change badge", "to": [{ "board": "AvatarCrop", "case": "the system picker, then the crop — the standalone shortcut" }] },
     { "from": "Profile", "via": 5, "kind": "advance", "label": "the figures row", "to": [{ "board": "ProfileStances" }] },
     { "from": "Profile", "via": 6, "kind": "advance", "label": "Edit profile", "to": [{ "board": "ProfileEdit" }] },
-    { "from": "Profile", "via": 7, "kind": "advance", "label": "Invites", "to": [{ "gap": "the invites screen (not designed)" }] },
+    { "from": "Profile", "via": 7, "kind": "advance", "label": "Invites", "to": [{ "board": "Invites", "case": "links out, people waiting, or both" }, { "board": "InvitesEmpty", "case": "nothing out yet — the teaching state, and the common one" }] },
     { "from": "Profile", "via": 8, "kind": "advance", "label": "chronicle tabs", "to": [{ "board": "ProfilePosts", "case": "Posts — the cards (master, drawn on @ada's)" }, { "board": "ProfileComments", "case": "Comments — the cards (master)" }, { "terminal": "self", "case": "Everything — the chronicle, this board" }] },
     { "from": "Profile", "via": 9, "kind": "advance", "label": "a chronicle row", "to": [{ "board": "PostDetail" }] },
     { "from": "Profile", "via": 10, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
@@ -1696,6 +1701,7 @@
     { "from": "Notifications", "via": 11, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "Notifications", "via": 12, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
     { "from": "Notifications", "via": 13, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "Notifications", "via": 14, "kind": "advance", "label": "an application of yours became approvable", "to": [{ "board": "Invites", "case": "the queue, where the approving happens" }] },
 
     { "from": "NotificationsEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "the root the bell was tapped on" }] },
     { "from": "NotificationsEmpty", "via": 2, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
@@ -1752,6 +1758,39 @@
 
     { "from": "CitedBy", "via": 1, "kind": "advance", "label": "a citing row", "to": [{ "board": "PostDetail", "case": "the citing post opens" }, { "board": "ReplyEntry", "case": "a citing comment — its thread opens on the post it answers" }] },
     { "from": "CitedBy", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the post is still open beneath it" }] },
-    { "from": "CommentCitedByEmpty", "via": 1, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the thread is still open beneath it" }] }
+    { "from": "CommentCitedByEmpty", "via": 1, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the thread is still open beneath it" }] },
+
+    { "from": "Invites", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the row was" }] },
+    { "from": "Invites", "via": 2, "kind": "advance", "label": "New invite", "to": [{ "board": "InviteNew", "case": "the create sheet — two decisions and a button" }] },
+    { "from": "Invites", "via": 3, "kind": "detour", "label": "an application still waiting on its applicant", "to": [{ "terminal": "self", "case": "the snackbar names what is outstanding — @imke has to make their key before you can approve", "info": true }] },
+    { "from": "Invites", "via": 4, "kind": "advance", "label": "an application ready for you", "to": [{ "board": "ApprovePad", "case": "the pad blooms on them — approving is the vouch" }] },
+    { "from": "Invites", "via": 5, "kind": "advance", "label": "a row's close", "to": [{ "board": "RejectConfirm", "case": "the think-twice dialog, named on the row it was raised from" }] },
+    { "from": "Invites", "via": 6, "kind": "advance", "label": "a link's copy", "to": [{ "terminal": "self", "case": "the link lands on the clipboard — Link copied" }] },
+    { "from": "Invites", "via": 7, "kind": "advance", "label": "a link's Revoke", "to": [{ "terminal": "self", "case": "no dialog and no Undo — none could be honest, since nothing un-revokes a link. The card leaves with Invite revoked, and anyone already staged through it stays approvable" }, { "board": "InvitesEmpty", "case": "the last live link, with nobody waiting either" }] },
+
+    { "from": "InvitesEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the row was" }] },
+    { "from": "InvitesEmpty", "via": 2, "kind": "advance", "label": "Create invite", "to": [{ "board": "InviteNew", "case": "the create sheet (master, drawn over the populated list)" }] },
+
+    { "from": "InviteNew", "via": 1, "kind": "advance", "label": "Only one person can use it", "to": [{ "terminal": "self", "case": "off — anyone holding the link can apply until it expires, and each of them still needs a separate approval" }] },
+    { "from": "InviteNew", "via": 2, "kind": "advance", "label": "Expires after", "to": [{ "board": "InviteExpiry", "case": "the chooser, stacked over this sheet" }] },
+    { "from": "InviteNew", "via": 3, "kind": "advance", "label": "Create invite", "to": [{ "board": "InviteCreated", "case": "the link exists — the same sheet, now holding it" }] },
+    { "from": "InviteNew", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Invites", "case": "the sheet closes — nothing was made" }] },
+
+    { "from": "InviteExpiry", "via": 1, "kind": "advance", "label": "a length", "to": [{ "board": "InviteNew", "case": "the chooser closes — the row reads the new length. Picking is the commit; a three-row chooser needs no Done" }] },
+    { "from": "InviteExpiry", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "InviteNew", "case": "the chooser closes — the length is what it was" }] },
+
+    { "from": "InviteCreated", "via": 1, "kind": "advance", "label": "the link's copy", "to": [{ "terminal": "self", "case": "the link lands on the clipboard — Link copied" }] },
+    { "from": "InviteCreated", "via": 2, "kind": "advance", "label": "Share link", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }, { "terminal": "self", "case": "no platform share — the link is copied instead, Link copied", "info": true }] },
+    { "from": "InviteCreated", "via": 3, "kind": "advance", "label": "the code's copy", "to": [{ "terminal": "self", "case": "the id alone lands on the clipboard — Code copied. The door takes it as readily as the link" }] },
+    { "from": "InviteCreated", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Invites", "case": "the sheet closes — the new link is the first card under Live links" }] },
+
+    { "from": "ApprovePad", "via": 1, "kind": "detour", "label": "? — how vouching works", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
+    { "from": "ApprovePad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick — it opens at the standing low default, never at a value the link carried" }] },
+    { "from": "ApprovePad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "Invites", "case": "nothing signed — the application is still waiting" }] },
+    { "from": "ApprovePad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands, the row leaves the queue, and the approval notifies them" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master)" }] },
+
+    { "from": "RejectConfirm", "via": 1, "kind": "advance", "label": "Close it", "to": [{ "board": "Invites", "case": "the row leaves — their account stays a signed-in reader, and a fresh link puts them back" }] },
+    { "from": "RejectConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the application is still waiting" }] },
+    { "from": "RejectConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing closed" }] }
   ]
 }

@@ -1033,7 +1033,10 @@ const ownProfile = () => [
   { n: 4, find: 'aria-label="Change your picture"', tag: "button" },
   { n: 5, find: 'aria-label="Your opinions, both directions"', tag: "button" },
   { n: 6, find: ">Edit profile</button>", tag: "button" },
-  { n: 7, find: ">Invites</button>", tag: "button" },
+  // The waiting dot rides inside the button (the invites round), so the label
+  // is no longer the last thing before the closing tag: the find stops at the
+  // word, which matches the applicant's dotless button just as well.
+  { n: 7, find: ">Invites<", tag: "button" },
   { n: 8, find: 'aria-label="Posts"', tag: "button" },
   { n: 8, find: 'aria-label="Comments"', tag: "button" },
   { n: 8, find: 'aria-label="Everything"', tag: "button" },
@@ -1635,6 +1638,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: ">@juno landed through your invite<", tag: "button" },
     { n: 8, find: ">@mira approved your application<", tag: "button" },
     ...nav(9),
+    // The eighth kind arrived after the list was numbered, and a row inserted
+    // mid-list would renumber five nav edges to say nothing new: the badge is
+    // an identity, not a position (the settings page's own rule).
+    { n: 14, find: ">@rafa is ready for your approval<", tag: "button" },
   ],
   /* ── The Post score’s drill-down (backlog item 13) ─────────────────────
      The path rows and the step rows carry one number each: they are one control
@@ -1923,3 +1930,70 @@ export function applyFlowMarkers(name, html) {
   }
   return html;
 }
+
+/* THE INVITES ROUND'S SEVEN BOARDS (2026-09-15).
+
+   `Invites` IS THE ONLY ONE THAT SCANS. The other five over it are `scanExempt`
+   — a sheet, a wash or a dialog covers the page, and what is covered is inert —
+   so they number the surface on top and nothing beneath it.
+
+   A REPEATED CONTROL KEEPS ONE NUMBER, the rule the feed's post cards and the
+   Saved list's Unsave already follow. Two live-link cards means two copies and
+   two Revokes, and on `InviteCreated` a third copy inside the sheet: one act,
+   one outcome, one edge.
+
+   THE CLOSE IS ONE CONTROL ON TWO ROWS, so one edge covers it — and the dialog
+   it raises names one of them, the way `SeveranceConfirm` names one target for
+   the two routes into it. */
+Object.assign(FLOW_MARKERS, {
+  Invites: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">New invite</button>", tag: "button" },
+    { n: 3, find: ">@imke<", tag: "button" },
+    { n: 4, find: ">@rafa<", tag: "button" },
+    { n: 5, find: 'aria-label="Close @imke&#x27;s application"', tag: "button" },
+    { n: 5, find: 'aria-label="Close @rafa&#x27;s application"', tag: "button" },
+    { n: 6, find: 'aria-label="Copy the link"', tag: "button", all: true },
+    { n: 7, find: ">Revoke</button>", tag: "button", all: true },
+  ],
+  InvitesEmpty: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">Create invite</button>", tag: "button" },
+  ],
+  InviteNew: [
+    { n: 1, find: ">Only one person can use it</span>", tag: "button" },
+    { n: 2, find: ">Expires after</span>", tag: "button" },
+    { n: 3, find: ">Create invite</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // Two sheets, two washes, one number: outside the sheet is outside it
+  // (`CommentMenu`'s own rule, cited).
+  InviteExpiry: [
+    { n: 1, find: 'name="invite-expiry"', tag: "label", all: true },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div", all: true },
+  ],
+  InviteCreated: [
+    { n: 1, find: 'aria-label="Copy the link"', tag: "button", all: true },
+    { n: 2, find: ">Share link</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Copy the code"', tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The pad's own anatomy, `VouchBackPad`'s numbering exactly — the same four
+  // controls in the same order, because it is the same master doing the same
+  // job from the other side of the handshake. No `Walk it back`: a first vouch
+  // has no bundle to walk back, so the third number is Cancel here as it is
+  // there. The wash carries no edge, likewise: it is a wash, and the pad's own
+  // Cancel is the way out.
+  ApprovePad: [
+    { n: 1, find: 'aria-label="How vouching works"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 2, find: ">Choose your opinion on @rafa</button>", tag: "button" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+  ],
+  RejectConfirm: [
+    { n: 1, find: ">Close it</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+});
