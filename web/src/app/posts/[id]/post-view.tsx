@@ -226,6 +226,11 @@ export function PostView({
   const [viewerAt, setViewerAt] = useState<number | null>(null);
   const [licenseShown, setLicenseShown] = useState<License | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
+  // ONE SHEET, TWO MENUS (`PostLicense.jsx:11-12`): the post's own row raises
+  // it over the page, a comment's row raises it over the comments thread —
+  // a sheet over a sheet, `stacked` (design/readme.md:2364). The one mount
+  // below answers for whichever menu asked, so this tracks which case it is.
+  const [licenseStacked, setLicenseStacked] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
   // Stable, so the snackbar's own timer is not restarted by every render of
@@ -587,9 +592,10 @@ export function PostView({
   /** The dialog's own numbers and the run it stands in front of. */
   const confirmed = () => ({ count: editActions, busy: editSubmitting, run: runEdit });
 
-  const openLicense = (license: License) => {
+  const openLicense = (license: License, stacked: boolean) => {
     setLicenseShown(license);
     setLicenseOpen(true);
+    setLicenseStacked(stacked);
   };
 
   /**
@@ -621,7 +627,9 @@ export function PostView({
       handle,
       license,
       navigate: (href) => router.push(href),
-      openLicense,
+      // The post's own menu lives in the page header, over the page — never
+      // over the comments thread, so its license row is never stacked.
+      openLicense: (license) => openLicense(license, false),
       openRemove: () => setRemoveOpen(true),
       testIdPrefix: "post-menu",
     });
@@ -717,7 +725,9 @@ export function PostView({
     if (comment.license !== null && comment.license !== undefined) {
       rows.push({
         label: "License terms",
-        onSelect: () => openLicense(comment.license),
+        // Raised from inside the comments thread — a sheet over a sheet
+        // (`CommentLicense.jsx`, design/readme.md:2364).
+        onSelect: () => openLicense(comment.license, true),
         testId: `comment-menu-license-${comment.id}`,
       });
     }
@@ -767,11 +777,15 @@ export function PostView({
                 pointed at the comment — beside the age, where the master draws
                 it. NO HIDE ROW, and the absence is ruled (jakob 2026-09-12):
                 hiding is an act on an ACTOR, and the route to it is the
-                commenter's own profile, one tap away through their chip. */}
+                commenter's own profile, one tap away through their chip.
+                IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`): the
+                thread already lives in a sheet, so this menu is a sheet on a
+                sheet (design/readme.md:2364). */}
             <OverflowMenu
               items={commentMenuItems(comment)}
               ariaLabel="More on this comment"
               testId={`comment-menu-${comment.id}`}
+              stacked
             />
           </div>
               {/* A comment is text PLUS optional media — the XOR is the post's
@@ -1167,13 +1181,17 @@ export function PostView({
       </BottomSheet>
       {/* ONE LICENSE SHEET FOR THE PAGE, raised by whichever menu row asked —
           the post's own or any comment's. The terms of a node read the same
-          whichever menu asked for them (`PostLicense.jsx:7-9`). */}
+          whichever menu asked for them (`PostLicense.jsx:7-9`). Which one
+          asked also decides whether this comes up over the page or over the
+          comments thread, so `stacked` rides the same state as the license
+          itself (`CommentLicense.jsx`, design/readme.md:2364). */}
       {licenseShown !== null && (
         <LicenseSheet
           open={licenseOpen}
           onClose={() => setLicenseOpen(false)}
           license={licenseShown}
           testId="license-sheet"
+          stacked={licenseStacked}
         />
       )}
       {/* THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is

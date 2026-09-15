@@ -26,14 +26,29 @@ export function LicenseSheet({
   onClose,
   license,
   testId,
+  stacked = false,
 }: {
   open: boolean;
   onClose: () => void;
   license: License;
   testId: string;
+  /**
+   * Raised from a comment's menu, this sheet comes up over the comments
+   * thread — a sheet over a sheet — rather than over the plain post page
+   * (`CommentLicense.jsx`, design/readme.md:2364). The one sheet answers for
+   * whichever menu asked, so the caller says which case this is.
+   */
+  stacked?: boolean;
 }) {
   return (
-    <BottomSheet open={open} onClose={onClose} title="License terms" titleHidden testId={testId}>
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title="License terms"
+      titleHidden
+      testId={testId}
+      stacked={stacked}
+    >
       <LicenseTerms license={license} testId={`${testId}-terms`} />
     </BottomSheet>
   );
