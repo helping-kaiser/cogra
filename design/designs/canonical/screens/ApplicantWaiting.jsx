@@ -1,4 +1,11 @@
-/* Applicant days, everything done — waiting on the inviter's approval.
+/* Applicant days, everything done — waiting on an approval.
+
+   THE CARD NAMES THE APPROVER, NOT A ROLE (the approver sweep, 2026-09-15).
+   It used to wait on "your inviter", a person this reader does not have yet:
+   the inviter is fixed at the vouch-back (`invitations.md` §2), and nothing
+   has been vouched. What is in play is one member's approval, so the card
+   says whose — and the body then says what it does, in a pronoun, because a
+   handle twice in three lines is a handle a reader stops reading.
 
    THE CARD CAN BE PUT AWAY (jakob 2026-09-09). Every other task card names
    something to do; this one names something to wait for, and a card that asks
@@ -13,7 +20,7 @@ export function Screen() {
         <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view while your application lands." />
       </CograBand>
       <FeedList>
-        <TaskCard title="All set — waiting on your inviter" body="@mira's approval brings you in. Nothing else is needed from you.">
+        <TaskCard title="All set — waiting on @mira" body="Their approval brings you in. Nothing else is needed from you.">
           <Button variant="outline" selfStart>
             Got it
           </Button>

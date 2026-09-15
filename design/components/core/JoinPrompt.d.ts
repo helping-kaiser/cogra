@@ -13,13 +13,16 @@ export interface JoinPromptProps {
 
 export declare function JoinPrompt(props: JoinPromptProps): JSX.Element | null;
 
-/** The bare dialog surface — surfaceContainerHigh, extra-large rung, 24px padding. */
+/** The bare dialog surface — surfaceContainerHigh, extra-large rung, 24px
+ *  padding, and `--dialog-max-width` held clear of the screen edge by
+ *  `--dialog-inset`. */
 export interface DialogSurfaceProps {
   children?: React.ReactNode;
   ariaLabel?: string;
   inline?: boolean;
   onScrimPress?: () => void;
-  /** Max width; the product uses 20rem for prompts and 22rem for severance. */
+  /** Overrides the max only — the inset still holds, so no dialog reaches the
+   *  edge. Every product dialog uses the default. */
   width?: string;
 }
 
