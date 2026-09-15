@@ -1705,7 +1705,7 @@
     { "from": "Notifications", "via": 5, "kind": "advance", "label": "a mention of you", "to": [{ "board": "PostDetail", "case": "the post that mentions you" }] },
     { "from": "Notifications", "via": 6, "kind": "advance", "label": "a citation of your content", "to": [{ "board": "PostDetail", "case": "the post that cites it" }] },
     { "from": "Notifications", "via": 7, "kind": "advance", "label": "someone landed through your invite", "to": [{ "board": "ProfileOther", "case": "the new member" }] },
-    { "from": "Notifications", "via": 8, "kind": "advance", "label": "your application approved", "to": [{ "board": "ProfileOther", "case": "the inviter who vouched" }] },
+    { "from": "Notifications", "via": 8, "kind": "advance", "label": "your application approved", "to": [{ "board": "ProfileOther", "case": "the member who vouched" }] },
     { "from": "Notifications", "via": 9, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
     { "from": "Notifications", "via": 10, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
     { "from": "Notifications", "via": 11, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },

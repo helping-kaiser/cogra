@@ -2855,7 +2855,7 @@ the product's own blessed phrase (`brings them in`, from `VouchBack`,
 `ApplicantWaiting` and `VouchedIn`), which is better copy than either
 candidate, so again nothing is blocked.
 
-### 89 · Whose view does a turned-down applicant borrow · *design* · **open**
+### 89 · Whose view does a turned-down applicant borrow · *design* · **narrowed 2026-09-15**
 
 Surfaced by the invites round's reject extension 2026-09-15, and
 answered provisionally on the board because a board cannot decline to
@@ -2876,6 +2876,27 @@ reasoning that the specific rung's own justification has lapsed.
 Either is defensible and it is jakob's call. Whichever way it goes, the
 vantage rule in readme §13 wants the clause spelled out, because this
 is the first state that reaches past its last rung.
+
+**Half of this dissolved on 2026-09-15.** The item was built on the
+rule's own words — the applicant rung was justified as "their own
+inviter, the person who already chose them" — and that clause was
+simply wrong, for every applicant and not only a rejected one. Nobody
+has chosen an applicant: that is what the applicant days ARE, and
+[invitations.md §2](../docs/primitive/invitations.md) fixes the inviter
+at the vouch-back, not before. So the rung was never a vouch rung; it
+was the LINK's issuer all along, which is also exactly what the boards
+draw. §13 now says so.
+
+That settles the question this item asked. A rejection does not reach
+past the last rung, because the rung was never the rejecter's standing
+— it is the link the reader came through, and a closed application does
+not un-send a link. `ApplicantRejected` keeping @kel's view is right
+for a plainer reason than the one it was given.
+
+**What stays open is smaller and belongs to item 92**: whose name the
+vouch-back surface shows once a vouch does exist. That is the same
+question in its own right, and it cannot be answered while the ruling
+and the spec disagree about which edge fixes the inviter.
 
 ### 90 · The empty tag page's missing stance row has no recorded reason · *design* · **open**
 
@@ -2922,3 +2943,60 @@ reader meets most often, so the split is the most visible one there is.
 Whichever wins, it wins in both places at once: the drawn `backLabel`s
 and the Reel's accessible name are the same words doing the same job,
 and `copy-voice.md`'s way-back vocabulary should list it once.
+
+### 92 · The vouch-in ruling and the primitive spec name different people · *design* · **open — blocks a prose sweep**
+
+Raised 2026-09-15, while applying the ruling that the vouch-back mask
+names the person whose vouch is in play. The ruling was relayed as "the
+first person pointing at you is your vouch in", confirmed against §2's
+≺-earliest back-edge. Those two are not the same rule, and the spec is
+the stricter of them.
+
+[invitations.md §2](../docs/primitive/invitations.md) reads: "Any
+number of members may point an Opinion toward the joiner's Profile …
+none of them is yet an invitation. The joiner **accepts by pointing
+back** … **The inviter is the single actor the joiner reciprocates
+first** — the ≺-earliest accepted back-edge." The edge that fixes the
+inviter is therefore the JOINER'S OUTBOUND one — whom they choose to
+reciprocate first — and the section says outright that a unilateral
+inbound edge never constitutes an invitation. "The first person
+pointing at you" is the other direction, and the spec rules it out by
+name.
+
+The two pick different people whenever more than one member points at a
+joiner and the joiner reciprocates out of arrival order — which is
+precisely the case the ask link exists to create. So the disagreement is
+not a corner.
+
+Three ways out. The ruling stands and §2 changes, which is a primitive
+edit and needs the L1 team; §2 stands and the mask names whoever the
+joiner reciprocates first, which is knowable only at the vouch-back
+itself; or the two are reconciled by ruling that the surfaces never
+name a chooser before one exists, which is close to where the boards
+already are.
+
+Also part of this: the confirmation cited "the contract's
+`approver_id`". **There is no such field** — not in `schema.graphql`,
+not in the docs, not in the design tree. The only place the whole tree
+uses the word "approver" is one line of `_shared.jsx`. Whatever the
+ruling settles, something has to carry it in the contract.
+
+Held back pending this, and enumerated so the sweep is one pass when it
+comes — every surface that names the link's issuer where it means
+whoever vouches: `ApplicantFeed`'s "before @mira can approve it";
+`ApplicantWaiting`'s "All set — waiting on your inviter" and "@mira's
+approval brings you in"; `ProfileApplicant`'s "Waiting on your inviter"
+and "Your application is with @mira"; the `VouchBack` / `VouchBackPad`
+/ `VouchedIn` fixtures, which hard-code the same `@mira` and
+`inviter.jpg` the invite-link boards use and so quietly assert the two
+roles are one person; the New invite sheet's "each person still needs
+your approval"; `copy-voice.md`'s "*vouched* is the inviter's word" and
+"`@mira approved your application` — the inviter's act"; and
+`ApprovePad`'s docblock, which says "the inviter's first opinion toward
+them" three times about a pad that `VouchAsk` opens for a member who
+issued no link at all.
+
+What did NOT wait, because both readings agree on it: the approver is
+not the issuer BY DEFINITION, so the borrowed-view band's rung and
+readme §13's vantage clause stop calling the applicant's rung "their
+own inviter" — see item 89.

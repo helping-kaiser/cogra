@@ -82,8 +82,9 @@ What that means for design work:
   for members, applicants, and guests. A slot that needs an account asks
   on tap — it never bounces the reader out of the read.
 - **Membership is by invitation.** A new account is an *applicant* until
-  its inviter approves it; applicant vs member is expressed as cards in
-  the shell, never as different navigation.
+  a member vouches for it — not necessarily the one whose link they came
+  through; applicant vs member is expressed as cards in the shell, never
+  as different navigation.
 - **Writes are signed on the device.** A post, a comment, an edit, and a
   stance are each a signed, priced act. The UI's honesty obligations
   (§9 of `design.md`, §8 below) follow from that.
@@ -1071,14 +1072,18 @@ may serve any actor's view of the shared record to any reader. So:
   already carry.
 - **The borrowed view persists through the applicant days** and hands
   over to the member's own view the moment their first stance exists —
-  the vouch-back — which the inviter seeded anyway, so the feed barely
-  moves at the handover.
+  the vouch-back.
 - **The vantage resolves to the most specific actor available**, and
-  the band names whichever one it lands on. An invite-link visitor
-  borrows the inviter. An applicant borrows their own inviter — the
-  person who already chose them, and whose stances their first
-  vouch-back will echo. A bare visitor borrows genesis, strictly as the
-  fallback when nobody more particular is known. The order matters more
+  the band names whichever one it lands on. Anyone who arrived through
+  an invite link borrows that link's ISSUER, and an applicant is still
+  one of those: the rung is the link, not a vouch. Nobody has vouched
+  for an applicant yet — that is what the applicant days are — so the
+  issuer is the only actor their arrival carries, and calling that rung
+  "their own inviter, who already chose them" claimed a relationship
+  that does not exist until the vouch-back fixes it
+  ([invitations.md §2](../docs/primitive/invitations.md)). A bare
+  visitor borrows genesis, strictly as the fallback when nobody more
+  particular is known. The order matters more
   than any single rung: a reader should be shown the nearest real
   perspective the arrival carries, and genesis is what is left when the
   arrival carries none.
