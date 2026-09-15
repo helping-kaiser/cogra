@@ -631,6 +631,7 @@ class ContentScreensTest {
         compose.onNodeWithTag("compose_media").assertDoesNotExist()
     }
 
+
     @Test
     fun createModeCarriesTheLicenseControls() {
         var license: LicenseChoice? = null
@@ -1066,6 +1067,29 @@ class ContentScreensTest {
             up()
         }
         assertThat(refreshes).isEqualTo(0)
+    }
+
+    // THE DETAIL'S BAR IS PINNED (jakob 2026-09-15). Collapsing the top is
+    // the reading roots' motion, not every page's: this bar carries the
+    // post's one menu and its way back (`_shared.jsx:341-346` — the card's
+    // own ⋮ yields here), so a bar that left with the scroll would take
+    // every act on the post off screen mid-read.
+    @Test
+    fun theDetailsTopBarStaysPutUnderScroll() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1", body = "Body p1. ".repeat(400)),
+            ),
+        )
+        val before = compose.onNodeWithTag("detail_menu").getUnclippedBoundsInRoot()
+        repeat(3) {
+            compose.onNodeWithTag("detail_list").performTouchInput { swipeUp() }
+        }
+        compose.onNodeWithTag("detail_menu").assertIsDisplayed()
+        compose.onNodeWithTag("detail_back").assertIsDisplayed()
+        val after = compose.onNodeWithTag("detail_menu").getUnclippedBoundsInRoot()
+        assertThat(after.top.value).isEqualTo(before.top.value)
     }
 
     // Landing is per node: a landed post can carry a comment that is
