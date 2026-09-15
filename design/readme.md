@@ -5154,20 +5154,67 @@ inherited. Ruled by jakob the same day.
   it is permanent, and putting it on the surface where a reader decides
   whom to vouch for would price the decision in the one currency it
   must not be priced in.
+- **A rejection is one member's refusal, not a verdict (jakob, the same
+  day, extending the round).** Closing an application takes it out of
+  THAT inviter's queue and tells the applicant; the account persists,
+  reads on, and can be vouched in by anybody else. So the dialog names
+  both effects — it leaves your list, AND they are told — because a
+  reader not told the second is pressing it as though it were private,
+  and it names the recovery in the same breath so the first does not
+  read as expulsion. Deletion is not mentioned anywhere in the flow,
+  because nothing is deleted anywhere in the flow.
+- **The ask link is the invite link's mirror, and the mirror is exact
+  except where it must not be.** Same card, same copy control, same
+  mono block — but an invite link points at a SLOT its issuer opened,
+  and an ask link points at a PERSON. So it has no expiry, no slot
+  state, and no limit on how many people it goes to: it stands for as
+  long as somebody is waiting to be let in, and every member who opens
+  it is answering one standing question. `ApplicantRejected` is
+  `ApplicantWaiting` with the card flipped and nothing else taken away
+  — the shell, the band, the borrowed feed and the bar all stay, which
+  is the drawing that says the account survived. Its card cannot be put
+  away: the sibling earned its `Got it` by naming something to wait
+  for, and this one names the only route forward there is.
+- **Answering an ask link is the same act as approving, so it is the
+  same pad.** `VouchAsk` reuses `ApprovePad`'s `StanceControl` and its
+  note rather than forking either — which is why that note now takes a
+  handle. A member answering a link is doing exactly what the inviter
+  would have done from their own queue, and drawing it as a second kind
+  of act would invent a difference the mechanic does not have. The
+  screen names no inviter and no reason: who turned somebody down is
+  theirs to tell, and an ask link carries a person, not a case file.
+- **`PayoutAddress` grew `bare`**, the prop `InviteCreated`'s own
+  comment predicted one commit earlier — the invite code beneath its
+  link wanted the card's anatomy without the card, and the ask link
+  inside the card that explains it wanted the same thing for the same
+  reason. `SettingsGroup`'s shape, and `SettingsGroup`'s reasoning: a
+  container inside a container of the same tonal rung is two containers
+  saying one thing.
+- **The ninth notification kind is the eighth's twin.** A mechanic that
+  notifies a yes and says nothing about a no leaves the applicant
+  waiting on something that already stopped happening, which is the one
+  cruelty this flow can commit by omission. The two rows together are
+  the ruled recovery path drawn as history: `@kel closed your
+  application` fourteen days ago, `@mira approved your application`
+  twelve — one member declining is one member declining.
 - **Two flows, not one.** The round meant to declare a single inviter's
   journey — make a link, share it, approve the person. The graph refused
   it honestly: a sheet's scrim is a `back` edge, the search walks
   `advance` alone, and after handing the link to the platform's share
   sheet the reader genuinely leaves and comes back days later when the
   notification arrives. `send-someone-an-invite` ends on the share,
-  `vouch-an-applicant-in` ends on the signature. The seam between them
-  is time, not a missing design.
-- **The gate**: 194 → **201 boards**, 1461 → **1488 edges**, gaps 14 →
-  **13** and flows 63 → **65 declared · 63 resolved**, the two blocked
+  `vouch-an-applicant-in` ends on the signature, and the extension's
+  `answer-someones-ask-link` ends on the other one. The seam between
+  them is time — and, for the ask link, two different people — not a
+  missing design.
+- **The gate**: 194 → **203 boards**, 1461 → **1511 edges**, gaps 14 →
+  **13** and flows 63 → **66 declared · 64 resolved**, the two blocked
   ones unchanged. The gap count falls because `Profile/7` closed and no
-  new one opened. The witness moved only where it should: two flows
-  added, the new boards joining the index, `Profile` gaining both, and
-  no existing flow rerouted a single step.
+  new one opened. The witness moved only where it should: three flows
+  added, the new boards joining the index, `Profile` gaining two of
+  them, `ApplicantRejected` joining the origin lists every shell board
+  with a post card and a bar belongs to — the way `FeedUnread` did —
+  and no existing flow rerouted a single step.
 
 ---
 

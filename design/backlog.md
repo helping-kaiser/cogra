@@ -2762,7 +2762,7 @@ and it is honest about being long. When the short code is designed,
 this surface changes in one place — the code block on `InviteCreated`
 — and the link beside it does not move.
 
-### 85 · The door asks for a link and quietly accepts a code · *design* · **open**
+### 86 · The door asks for a link and quietly accepts a code · *design* · **open**
 
 Surfaced by the invites round 2026-09-15. `InviteEntry` is titled
 `Enter your invite`, its field is labelled `Invite link`, and its line
@@ -2779,7 +2779,7 @@ and its line say both (`Invite link or code`), or the code is ruled a
 thing you send and never a thing you type, and `InviteCreated`'s
 caption stops saying the door takes either.
 
-### 86 · Two destructive dialogs disagree about colour · *design* · **open**
+### 87 · Two destructive dialogs disagree about colour · *design* · **open**
 
 Surfaced by the invites round 2026-09-15 while drawing `RejectConfirm`.
 readme §11 rules a destructive dialog takes **no new colour** —
@@ -2795,7 +2795,7 @@ rule holds everywhere. `RejectConfirm` took the rule as written and
 carries no colour, which is doubly right there — nothing is destroyed —
 so nothing is blocked on this.
 
-### 87 · `ProfileHeader` bans a word the two banned lists do not · *design* · **open**
+### 88 · `ProfileHeader` bans a word the two banned lists do not · *design* · **open**
 
 Surfaced by the invites round 2026-09-15 while drafting the empty
 state's teaching lines. `ProfileHeader.prompt.md` says: do not write
@@ -2811,3 +2811,25 @@ labels it was written about. The invites round sidestepped it by using
 the product's own blessed phrase (`brings them in`, from `VouchBack`,
 `ApplicantWaiting` and `VouchedIn`), which is better copy than either
 candidate, so again nothing is blocked.
+
+### 89 · Whose view does a turned-down applicant borrow · *design* · **open**
+
+Surfaced by the invites round's reject extension 2026-09-15, and
+answered provisionally on the board because a board cannot decline to
+draw something. The borrowed-vantage rule (readme §13) resolves to the
+most specific actor an arrival carries, and it ranks an applicant's own
+inviter above the bare fallback because that inviter "already chose
+them". After a rejection that clause is no longer true, and the rule
+does not say what happens next.
+
+`ApplicantRejected` keeps the rejecting inviter's view and changes only
+the band's line, on the reasoning that the ARRIVAL is unchanged — this
+reader came through @kel's link and is reading the feed that link
+carried — and that silently re-ranking somebody's whole feed as a side
+effect of being turned down would be a punishment the ruling is at
+pains not to impose. The alternative is the genesis fallback, on the
+reasoning that the specific rung's own justification has lapsed.
+
+Either is defensible and it is jakob's call. Whichever way it goes, the
+vantage rule in readme §13 wants the clause spelled out, because this
+is the first state that reaches past its last rung.
