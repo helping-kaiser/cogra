@@ -135,6 +135,39 @@ export function withinImage(area: CropArea, imageWidth: number, imageHeight: num
 }
 
 /**
+ * The largest `ratio` rectangle inside `area`, centred on it.
+ *
+ * WHY THE SHAPE IS TAKEN RATHER THAN TRUSTED. The post's shape is the
+ * post's (D17, `aspect.ts`): every picture is cropped to it and the stored bytes
+ * ARE the cropped bytes. A measured area arrives from a cropper, through state,
+ * possibly through a clamp, and the one thing that must not depend on all of
+ * that going right is the shape of what is uploaded — at the limit, an area
+ * covering the whole picture uploads the untouched original, which is the defect
+ * this closes. `withinImage` is the local example: it holds each axis inside the
+ * picture independently, so a rectangle overhanging one edge comes back a
+ * different shape than it went in.
+ *
+ * An area already at the ratio is returned as it is, so the author's own framing
+ * survives to the pixel.
+ */
+export function atRatio(area: CropArea, ratio: number): CropArea {
+  if (!Number.isFinite(ratio) || ratio <= 0) return area;
+  if (!(area.width > 0) || !(area.height > 0)) return area;
+  // The two round trips through integer pixels put an exact match out of reach;
+  // a thousandth is far under the distance between any two post shapes.
+  if (Math.abs(area.width / area.height - ratio) <= ratio / 1000) return area;
+
+  const wide = area.width / area.height > ratio ? area.height * ratio : area.width;
+  const high = area.width / area.height > ratio ? area.height : area.width / ratio;
+  return {
+    x: area.x + (area.width - wide) / 2,
+    y: area.y + (area.height - high) / 2,
+    width: wide,
+    height: high,
+  };
+}
+
+/**
  * The scaled size for a source, honouring both caps and never enlarging.
  *
  * Upscaling a small picture wastes bytes and invents detail that is not there,
@@ -226,11 +259,14 @@ export async function encodeForUpload(
     // rectangle the cropper shows at rest for this shape; otherwise — no shape
     // at all — the picture whole.
     const area = options.crop?.area;
-    const from = usableArea(area)
+    const measured = usableArea(area)
       ? withinImage(area, bitmap.width, bitmap.height)
       : options.ratio === undefined
         ? { x: 0, y: 0, width: bitmap.width, height: bitmap.height }
         : sourceRect(bitmap.width, bitmap.height, options.ratio);
+    // The shape is the post's, not the measurement's. A picture with no shape
+    // at all — a comment's attachment, a video's cover — keeps its own.
+    const from = options.ratio === undefined ? measured : atRatio(measured, options.ratio);
     // The caps apply to what is being WRITTEN, so they read the cropped size:
     // a wide crop out of a tall original is a wide picture, and capping the
     // original's dimensions instead would shrink it for a height it no longer
