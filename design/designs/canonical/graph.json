@@ -1074,7 +1074,7 @@
     { "from": "RefPair", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the staged row carries the pair it was given" }] },
     { "from": "RefPair", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
 
-    { "from": "TagPage", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Explore", "case": "the search surface this is a subpage of" }] },
+    { "from": "TagPage", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from, and the label names it — `Back to Explore`, `Back to Your topics`, `Back to feed`; a cold entry with no history falls back to `Back to Explore`, the state the family's boards draw" }] },
     { "from": "TagPage", "via": 2, "kind": "advance", "label": "choose your stance (the accessible path)", "to": [{ "terminal": "self", "case": "the alternates open on whichever stance it belongs to" }, { "board": "VouchBackPad", "case": "the pad, where that is the reader's chosen input (master board)" }] },
     { "from": "TagPage", "via": 3, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "TagPage", "via": 4, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
@@ -1090,7 +1090,7 @@
     { "from": "TagPage", "via": 14, "kind": "advance", "label": "stance face (the comment)", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }, { "board": "GuestGate", "case": "signed out — the join prompt over the tag page (master)" }] },
     { "from": "TagPage", "via": 15, "kind": "advance", "label": "stance face (the topic)", "to": [{ "terminal": "self", "case": "press-and-hold — a positive Affinity lands, and the topic is held" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board; the Affinity family's own four pole words are not drawn there)" }, { "board": "GuestGate", "case": "signed out — the join prompt over the tag page (master)" }] },
 
-    { "from": "TagPageHeld", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Explore", "case": "the search surface this is a subpage of" }] },
+    { "from": "TagPageHeld", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from, and the label names it — `Back to Explore`, `Back to Your topics`, `Back to feed`; a cold entry with no history falls back to `Back to Explore`, the state the family's boards draw" }] },
     { "from": "TagPageHeld", "via": 2, "kind": "advance", "label": "choose your stance (the accessible path)", "to": [{ "terminal": "self", "case": "the alternates open on whichever stance it belongs to" }, { "board": "VouchBackPad", "case": "the pad, where that is the reader's chosen input (master board)" }] },
     { "from": "TagPageHeld", "via": 3, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "TagPageHeld", "via": 4, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
@@ -1106,7 +1106,7 @@
     { "from": "TagPageHeld", "via": 14, "kind": "advance", "label": "stance face (the comment)", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }] },
     { "from": "TagPageHeld", "via": 15, "kind": "advance", "label": "stance face (the topic, held)", "to": [{ "terminal": "self", "case": "press-and-hold — another positive Affinity joins the bundle" }, { "board": "VouchBackPad", "case": "tap — the pad blooms over the held topic (master board), and held it carries `Walk it back`: the existing severance ceremony, at this topic's own price" }] },
 
-    { "from": "TagPageEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Explore", "case": "the search surface this is a subpage of" }] },
+    { "from": "TagPageEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from, and the label names it — `Back to Explore`, `Back to Your topics`, `Back to feed`; a cold entry with no history falls back to `Back to Explore`, the state the family's boards draw" }] },
 
     { "from": "YourTopics", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Explore", "case": "the search surface this is a subpage of" }] },
     { "from": "YourTopics", "via": 2, "kind": "advance", "label": "topic rows", "to": [{ "board": "TagPageHeld", "case": "the topic's own page — held, which every row on this list is" }] },

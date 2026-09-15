@@ -3190,10 +3190,9 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   word under it — because staging a tag and staging a citation are the
   same errand and two shapes for it was an accident of when each was
   drawn. The nine also collapse the marker table's two pins into one.
-- **The page is a subpage of search**, so its arrow is a link to
-  Explore and it carries no bottom bar — the settings round's rule for
-  a surface a reader arrives at, reads and leaves. Its title is the tag
-  with its `#`.
+- **The page is a subpage of search** and carries no bottom bar — the
+  settings round's rule for a surface a reader arrives at, reads and
+  leaves. Its title is the tag with its `#`.
 - **No order control, and the contract is the reason.** `taggedContent`
   is limit-bounded and returns a plain list, newest claim first; the
   schema says a Relay connection "would promise a pagination the read
@@ -5038,6 +5037,46 @@ slice-3 remainders beside it. The round's premise is one sentence:
   `Chats · text · + removed`, 153.9px — the new axis costs the pill
   nothing, because a topic that will not fit leaves the summary instead
   of stretching it.
+
+### The tag-page smalls — 2026-09-15
+
+Three items the topic round left standing, all about the tag page and
+none of them needing a board. Ruled by jakob the same day.
+
+- **The no-rename rule names the OPINION's parameters.** §3 forbade
+  anything but `For or against` and `How much reaches you`, which three
+  record families already contradict — a tag's pair editor, a citation's
+  field, an Affinity's. The rule was right and its noun was wrong. §3
+  and copy-voice now carry the scope: the control owns the geometry, the
+  record family owns the words. A tightening pass, not a decision.
+- **A guest on the tag page is not special.** Any reader who taps a tag
+  reaches the page — a connection to it or none — and sees what is
+  tagged. The only thing a guest lacks is an opinion of the topic, so
+  the stance face wears the no-opinion 🫥 and the borrowed vantage
+  (genesis, for a bare arrival) ranks what they read, post scores
+  included. `TagPage`'s three stance faces take the `GuestGate` outcome
+  `Reel` already spells for a shared board; `TagPageHeld` takes none,
+  because no guest can hold a topic. No guest board of its own, by the
+  stream ruling. An applicant may stage one of each kind here, the
+  Affinity among them — a feel of belonging before the vouch — and the
+  applicant boards already answer an exhausted kind, so the page needs
+  no wiring of its own for it.
+- **Back from the tag page is history.** Back to where you came from,
+  and the label names it: `Back to Explore`, `Back to Your topics`,
+  `Back to feed`. A shared URL with no history behind it falls back to
+  `Back to Explore`. This replaces the tag round's link to Explore — a
+  second route to the page turned that link into a skip over the place
+  the reader actually stood. The whole family takes the `back` terminal;
+  the boards keep drawing `Back to Explore`, the cold entry's state
+  being the one that stands with no route behind it.
+- **The gate**: no board added and none redrawn — **194** screens
+  render as before, edges hold at **1461**, gaps at **14**, flows at
+  **63/61/2**. Three outcomes join existing rows and
+  one destination becomes a terminal, so `flows.resolved.json` is
+  byte-identical and nothing needed re-blessing. Reachable filter
+  summaries hold at **370**, **0** over the band's 154px, widest
+  unchanged at `Chats · text · + removed`, 153.9px. The maps and the
+  feed canvas manifest follow the edges.
 
 ---
 

@@ -2733,7 +2733,7 @@ exhausted kind is answered on the applicant's own boards. Its kinds
 include the Affinity, so a topic stance stays open to an applicant who
 has already staged an opinion.
 
-### 82 · A tag page reached from Your topics goes back to the wrong place · *design*
+### 82 · A tag page reached from Your topics goes back to the wrong place · *design* · **ruled + wired**
 
 Surfaced by the topic round 2026-09-14. The tag round ruled the page a
 subpage of search, so its arrow is a LINK back to Explore rather than
@@ -2746,3 +2746,12 @@ Three ways out, each a ruling: the arrow becomes history after all (and
 the label with it), the page carries the label its route gives it, or
 the skip is accepted as the cost of a link. The tag round's reasoning
 for a link is real and this round did not disturb it.
+
+Ruled by jakob 2026-09-15 — back goes where the reader came from, and
+the label names that origin: `Back to Explore`, `Back to Your topics`,
+`Back to feed`. A cold entry with no history, which is what a shared URL
+is, falls back to `Back to Explore`. The whole family carries it —
+`TagPage`, `TagPageHeld`, `TagPageEmpty` — as the graph's `back`
+terminal, the same one every other returning arrow uses. The boards keep
+drawing `Back to Explore`, because a board draws one state and the cold
+entry's is the one that stands without a route behind it.
