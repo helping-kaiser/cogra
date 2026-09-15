@@ -25,7 +25,12 @@
 import { bundleReadout, nearestAnchor, ZERO_BUNDLE_EMOJI } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
 import type { StanceBundle, StanceLanding } from "@/lib/stance/stance-data";
-import { formatStancePair, formatStanceWords } from "@/lib/ui/stance-format";
+import {
+  formatStancePair,
+  formatStanceWords,
+  STANCE_AXES,
+  type StanceAxes,
+} from "@/lib/ui/stance-format";
 
 /**
  * What the shrug is called where a bundle stands at zero (design.md
@@ -102,20 +107,23 @@ export function standingLine(bundle: BundleState, targetLabel: string): string {
  *
  * The axes are named rather than compacted: a transient surface is read
  * away from the pad that would otherwise say which number is which, so
- * it takes the same words Android's `stance_signed` is handed.
+ * it takes the same words Android's `stance_signed` is handed — and it
+ * takes the FAMILY's words, so a signed Affinity is confirmed in the
+ * same six the pad asked with.
  */
 export function signedLine(
   standing: StancePair,
   records: number,
   severed: boolean,
   targetLabel: string,
+  axes: StanceAxes = STANCE_AXES,
 ): string {
   const acts = records === 1 ? "Signed" : `Signed ${records} actions`;
   // Severance says itself; a pair at the origin would read as a stance
   // taken rather than one walked back.
   const where = severed
     ? `You've severed ${targetLabel}.`
-    : `Where you stand now: ${formatStanceWords(standing)}`;
+    : `Where you stand now: ${formatStanceWords(standing, axes)}`;
   return `${acts}, still settling. ${where}`;
 }
 
@@ -152,11 +160,14 @@ export function StanceStanding({
   bundle,
   targetLabel,
   testIdPrefix,
+  axes = STANCE_AXES,
 }: {
   pick: StancePair;
   bundle: BundleState;
   targetLabel: string;
   testIdPrefix: string;
+  /** The record family's own words for the two slots. */
+  axes?: StanceAxes;
 }) {
   return (
     <div aria-live="polite" className="flex flex-col gap-1">
@@ -175,7 +186,7 @@ export function StanceStanding({
           of them to say which number is which. */}
       <p data-testid={`${testIdPrefix}-exact`} className="text-body-small text-on-surface-variant">
         <span aria-hidden="true">{formatStancePair(pick)}</span>
-        <span className="sr-only">{formatStanceWords(pick)}</span>
+        <span className="sr-only">{formatStanceWords(pick, axes)}</span>
       </p>
     </div>
   );
