@@ -1,7 +1,15 @@
 import React from "react";
 import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
-import { bundleReadout, severanceParts, formatStancePair, formatStanceWords, STANCE_AXIS_NAMES, SR_ONLY } from "./StanceReadout.jsx";
+import {
+  bundleReadout,
+  severanceParts,
+  severanceWords,
+  formatStancePair,
+  formatStanceWords,
+  STANCE_AXIS_NAMES,
+  SR_ONLY,
+} from "./StanceReadout.jsx";
 
 // The severance confirmation (design.md §8.5). It serves both routes to (0, 0):
 // the explicit gesture, and an ordinary pick that happens to land the bundle
@@ -12,7 +20,14 @@ import { bundleReadout, severanceParts, formatStancePair, formatStanceWords, STA
 // The order is fixed (Android parity): title · the pick line when it was reached
 // by a pick · the consequences · what the reader has said in total (and, only when
 // it exceeds the clip, the cap as an aside) · the cost · the failure line when one
-// exists · Walk it back, Keep it.
+// exists · the way out, Keep it.
+//
+// EVERY WORD OF IT IS THE RECORD FAMILY'S (jakob 2026-09-15). The dialog's
+// title, its two sentences and the button that confirms come from the family's
+// own severance words, the way its axes already do: a person is walked back, a
+// topic is disconnected from, and neither register is made to serve the other.
+// The SHAPE is the control's and does not vary — same order, same safe action
+// on the right, same raw-total-first arithmetic.
 //
 // THE RAW TOTAL LEADS. §8.3 requires the raw sums on every surface that explains
 // cost, because they are what a walk back to zero actually walks — but stating the
@@ -25,7 +40,7 @@ import { bundleReadout, severanceParts, formatStancePair, formatStanceWords, STA
 // buttons of equal weight. On a destructive dialog that is a coin flip — two
 // identical-looking words, one of which is irreversible and priced. Here the SAFE
 // action carries the emphasis (filled) and keeps the right-hand slot the thumb
-// goes to by habit, while `Walk it back` stays a text button on the left. It is still
+// goes to by habit, while the way out stays a text button on the left. It is still
 // reachable in one tap, so the control still never prevents the choice; it just
 // stops being the default-looking one. No new colour is introduced — severance is
 // a deliberate act, not a failure, so `error` stays off this surface (§2.4).
@@ -55,10 +70,12 @@ export function SeveranceConfirm({
   /* A pick at exactly (0, 0) never speaks through the table (readme §8): here
      it IS the walk-back, so the zero readout's own pair — 🤷, "Walked back" —
      is its honest face. */
-  const pickAnchor = pick === null ? null : bundleReadout(pick);
+  const sever = severanceWords(names);
+  const title = sever.title(targetLabel);
+  const pickAnchor = pick === null ? null : bundleReadout(pick, sever.zero);
   const read = severanceParts(bundle, targetLabel);
   return (
-    <DialogSurface ariaLabel="Walk it all back?" inline={inline} onScrimPress={onCancel} width="22rem">
+    <DialogSurface ariaLabel={title} inline={inline} onScrimPress={onCancel}>
       <h2
         style={{
           margin: 0,
@@ -67,7 +84,7 @@ export function SeveranceConfirm({
           fontWeight: "var(--text-headline-small--font-weight)",
         }}
       >
-        Walk it all back?
+        {title}
       </h2>
       {pickAnchor !== null && (
         <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)" }}>
@@ -78,8 +95,7 @@ export function SeveranceConfirm({
         </p>
       )}
       <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }}>
-        Your opinion of {targetLabel} drops to nothing. It stops reaching your feed, you stop earning from it, and
-        nothing passes on through you.
+        {sever.effect(targetLabel)}
       </p>
       {/* The RAW total leads and the cap is derived from it. The other order — the
           fold first, the sum second — reads as arithmetic that does not work: "my
@@ -89,7 +105,7 @@ export function SeveranceConfirm({
       ) : (
         <>
           <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
-            Everything you&apos;ve said about {targetLabel} adds up to {read.raw}, and that is what this walks back.
+            {sever.sum(targetLabel, read.raw)}
           </p>
           {read.capped && (
             <p style={{ margin: "4px 0 0", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
@@ -114,7 +130,7 @@ export function SeveranceConfirm({
           className={BUTTON_CLASS}
           style={buttonStyle({ variant: "text", size: "sm", disabled: busy || alreadySevered })}
         >
-          Walk it back
+          {sever.control}
         </button>
         <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "primary", size: "sm" })}>
           Keep it

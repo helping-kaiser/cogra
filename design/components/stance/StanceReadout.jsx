@@ -91,6 +91,45 @@ export const PICK_LABEL = "Your pick";
 
 export const SEVERED_LABEL = "Walked back";
 export const NO_STANDING_LABEL = "No opinion yet";
+
+/* THE WAY OUT IS THE FAMILY'S WORD TOO (jakob 2026-09-15). The poles and the
+   questions already travel per record family; the walk-away did not, and it
+   showed — a topic pad offered `Walk it back` and read `Walked back`, which is
+   the vocabulary of a relationship with a person. jakob, refusing three tidier
+   variants of the same register: "nah thats all to complicated for users..
+   instead of walk back we could just call it 'disconnect' or sth like this. and
+   then we can say 'no opinion towards #saltmaps' or sth similar.. we want human
+   wording not this nerdy stuff!"
+
+   SO A FAMILY MAY NAME ITS OWN SEVERANCE, through the same object it names its
+   axes with, and where it does not these words stand — the person family's, and
+   the default for everything else. The sentences are FUNCTIONS of what they
+   name: the target, and for one of them the figure the reader is being shown.
+   That keeps the words where a designer reads them and the arithmetic where the
+   control computes it, and it means a family's object carries no target of its
+   own — one constant serves every topic page there will ever be. */
+export const STANCE_SEVERANCE_WORDS = {
+  /** The pad's standing control, and the confirming button in its dialog. */
+  control: "Walk it back",
+  title: () => "Walk it all back?",
+  effect: (targetLabel) =>
+    `Your opinion of ${targetLabel} drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`,
+  sum: (targetLabel, total) =>
+    `Everything you've said about ${targetLabel} adds up to ${total}, and that is what this walks back.`,
+  /** How a bundle already at nothing reads, wherever it is read as a sentence. */
+  gone: (targetLabel) => `You've walked ${targetLabel} back to nothing.`,
+  /** The same fact as a LABEL, beside a face, where no sentence fits. */
+  zero: SEVERED_LABEL,
+  /** What the pad says a pick of (0, 0) would do. */
+  landing: "This takes you back to zero.",
+  help: "Walk it back takes everything you've said to nothing. It has its own confirmation, and each thing you've said is walked back by its own signature.",
+  helpAlternates: "Walk it back takes everything to nothing, and each thing you've said is walked back by its own signature.",
+};
+
+/** A family's severance words, or the default family's. */
+export function severanceWords(names) {
+  return (names && names.severance) || STANCE_SEVERANCE_WORDS;
+}
 /** What a bundle at exactly (0, 0) reads as. */
 export const ZERO_BUNDLE_EMOJI = "🤷";
 /** The face an unauthored target wears at rest — the dotted-line face, deliberately
@@ -409,9 +448,9 @@ export function severanceParts(bundle, targetLabel) {
   return { raw, folded, capped: raw !== folded };
 }
 
-export function landingLine(landing) {
+export function landingLine(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return "Adding it up…";
-  if (landing.severed) return "This takes you back to zero.";
+  if (landing.severed) return severanceWords(names).landing;
   if (landing.inert) {
     const directedInert = landing.landing.pDirected === 0;
     const interestInert = landing.landing.pInterest === 0;
@@ -435,8 +474,9 @@ export function landingLine(landing) {
    The severed line has no pair to show and stays a plain string. */
 export function signedLine(standing, records, severed, targetLabel, names = STANCE_AXIS_NAMES) {
   const acts = records === 1 ? "Signed" : `Signed ${records} things`;
-  if (severed) return `${acts}, still settling. You've walked ${targetLabel} back to nothing.`;
-  const readout = bundleReadout(standing);
+  const sever = severanceWords(names);
+  if (severed) return `${acts}, still settling. ${sever.gone(targetLabel)}`;
+  const readout = bundleReadout(standing, sever.zero);
   return (
     <>
       <span aria-hidden="true">
@@ -499,10 +539,11 @@ export function OwnStanceReadout({ pDirected, style }) {
 
 /** The bundle, split for rendering: either a sentence, or a readout to lay out. */
 export function standingParts(bundle, targetLabel, names = STANCE_AXIS_NAMES) {
+  const sever = severanceWords(names);
   if (bundle === undefined) return { sentence: "Checking your current opinion…" };
   if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
-  if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} You've walked ${targetLabel} back to nothing.` };
-  const readout = bundleReadout(bundle.current);
+  if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} ${sever.gone(targetLabel)}` };
+  const readout = bundleReadout(bundle.current, sever.zero);
   return {
     label: "Current opinion",
     emoji: readout.emoji,
@@ -514,8 +555,8 @@ export function standingParts(bundle, targetLabel, names = STANCE_AXIS_NAMES) {
 /** The landing, split the same way. */
 export function landingParts(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return { sentence: "Adding it up…" };
-  if (landing.severed || landing.inert) return { sentence: landingLine(landing) };
-  const readout = bundleReadout(landing.landing);
+  if (landing.severed || landing.inert) return { sentence: landingLine(landing, names) };
+  const readout = bundleReadout(landing.landing, severanceWords(names).zero);
   return {
     label: "Resulting opinion",
     emoji: readout.emoji,

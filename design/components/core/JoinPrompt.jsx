@@ -16,14 +16,30 @@ import { buttonStyle, BUTTON_CLASS } from "./Button.jsx";
    It is still an ask, not a wall: nothing behind it is destroyed, the reader can
    dismiss it, and the read they were in the middle of is still there. */
 
-export function DialogSurface({ children, ariaLabel, inline = false, onScrimPress, width = "20rem" }) {
+/* THE SHELL SETS THE WIDTH, AND ONE WIDTH IS THE POINT (jakob 2026-09-15:
+   "popups should not be full width (if they dont need to).. it makes them
+   standout more ... it almost looks like it is part of the normal pages body
+   which is not how it should be"). A dialog is the only thing on screen that
+   the reader must answer, and what says so before a word is read is the gap
+   around it. The clamp this shell used to carry left 5% a side, which on a
+   phone is nineteen pixels — narrower than the page's own gutter, so the
+   widest dialogs came out WIDER than the column of body text behind them and
+   read as another block of page. `--dialog-inset` is that gap now, and it is
+   larger than the gutter on purpose.
+
+   `width` OVERRIDES THE MAX AND NOTHING ELSE. The inset holds whatever is
+   passed, so no caller can reach the edge; it exists for the rare dialog whose
+   content genuinely cannot live at the house width, and every product dialog
+   today is at the house width. Three shells drifting to three widths is what
+   extracting this one was meant to stop. */
+export function DialogSurface({ children, ariaLabel, inline = false, onScrimPress, width = "var(--dialog-max-width)" }) {
   const surface = (
     <div
       role="dialog"
       aria-modal={inline ? undefined : "true"}
       aria-label={ariaLabel}
       style={{
-        width: `min(90vw, ${width})`,
+        width: `min(calc(100vw - 2 * var(--dialog-inset)), ${width})`,
         borderRadius: "var(--radius-extra-large)",
         background: "var(--surface-dialog)",
         color: "var(--on-surface)",

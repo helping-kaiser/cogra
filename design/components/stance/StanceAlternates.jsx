@@ -2,9 +2,9 @@ import React from "react";
 import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { StanceSlider } from "./StanceSlider.jsx";
-import { STANCE_ALTERNATES_HELP, HelpLine, helpKey } from "./StanceCoachMark.jsx";
+import { alternatesHelp, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { STANCE_AXES } from "./StancePad.jsx";
-import { clampDimension } from "./StanceReadout.jsx";
+import { clampDimension, severanceWords } from "./StanceReadout.jsx";
 
 /* The alternate inputs (design.md §8.6) — paired sliders and direct entry. Same
    machinery as the pad, different surface: they write the same two values, and the
@@ -110,7 +110,7 @@ export function StanceAlternates({
     if (measured) setSlotHeight(measured);
   }, [explaining, showing]);
   return (
-    <DialogSurface ariaLabel="Choose your opinion" inline={inline} onScrimPress={onCancel} width="24rem">
+    <DialogSurface ariaLabel="Choose your opinion" inline={inline} onScrimPress={onCancel}>
       <div style={{ position: "relative" }}>
         <button
           type="button"
@@ -172,7 +172,7 @@ export function StanceAlternates({
             gap: "var(--space-2)",
           }}
         >
-          {STANCE_ALTERNATES_HELP.map((line) => (
+          {alternatesHelp(axes).map((line) => (
             <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
               <HelpLine line={line} />
             </p>
@@ -234,7 +234,7 @@ export function StanceAlternates({
       )}
       <div style={{ marginTop: "var(--space-6)", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
         <button type="button" onClick={onSever} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}>
-          Walk it back
+          {severanceWords(axes).control}
         </button>
         <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>
           Cancel

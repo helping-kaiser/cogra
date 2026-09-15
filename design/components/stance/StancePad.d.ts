@@ -10,9 +10,10 @@ export interface StancePadProps {
   /** Omit for a static specimen; pass to make the field draggable. */
   onChange?: (pair: StancePair) => void;
   fieldRef?: React.RefObject<HTMLDivElement | null>;
-  /**
-   * The four edge labels. On by default: a blank square says nothing about which
-   * direction means what.
+/**
+   * The four pole words, drawn in gutters AROUND the field. On by default: a
+   * blank square says nothing about which direction means what. Off drops the
+   * gutters with them, so the component's box is the field alone.
    */
   showAxes?: boolean;
   /**
@@ -54,6 +55,15 @@ export interface PadAxes {
 export declare const STANCE_AXES: PadAxes;
 
 export declare function StancePad(props: StancePadProps): JSX.Element;
+
+/**
+ * The ring the pole words sit in, outside the field. The knob travels every
+ * point the field has, so a word drawn inside it is a word the knob eventually
+ * covers — the words live outside instead, and the component sizes the field
+ * to what they leave.
+ */
+export declare const AXIS_GUTTER_X_PX: number;
+export declare const AXIS_GUTTER_Y_PX: number;
 
 export declare const FIELD_CORNER_RADIUS_PX: number;
 export declare const KNOB_DIAMETER_PX: number;
