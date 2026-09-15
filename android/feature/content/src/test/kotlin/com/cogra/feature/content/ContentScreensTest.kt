@@ -401,7 +401,7 @@ class ContentScreensTest {
         assertThat(more).isTrue()
     }
 
-    // -- The feed card's ⋮ (`PostCard.jsx:257`) --
+    // -- The feed card's ⋮ (`PostCard.jsx:262`) --
 
     /** The rows are `READER_POST_MENU` (`_shared.jsx:376`), on a card. */
     @Test
