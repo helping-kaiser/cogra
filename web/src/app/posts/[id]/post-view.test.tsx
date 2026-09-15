@@ -39,6 +39,12 @@ vi.mock("next/navigation", async (importOriginal) => ({
 // unmarked by default, and a test that cares says so with its own handler.
 const server = startMswServer(
   ...stanceHandlers(),
+  // The detail card asks what cites the post on every open. Nothing cites it
+  // by default — which is the state that draws no line at all — so a test that
+  // cares says so with its own handler.
+  graphql.query("CitedByCount", () =>
+    HttpResponse.json({ data: { records: { __typename: "RecordConnection", totalCount: 0 } } }),
+  ),
   graphql.query("CommentSelfMark", ({ variables }) =>
     HttpResponse.json({
       data: {
@@ -461,7 +467,10 @@ describe("PostView", () => {
   // The comment's rows are `COMMENT_MENU` (`_shared.jsx:392`) — and the missing
   // Hide row is RULED (jakob 2026-09-12): hiding names an actor, and its route
   // is the commenter's own profile.
-  it("gives a comment Save · Cite · Opinions · License, and no Hide", async () => {
+  // INBOUND BEFORE OPINIONS (`_shared.jsx:397-413`): `Cited by` sits between
+  // the acts and the license, because it is a fact about the artifact where the
+  // row under it is a fact about people.
+  it("gives a comment Save · Cite · Cited by · Opinions · License, and no Hide", async () => {
     server.use(
       graphql.query("PostDetail", () =>
         HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
@@ -473,9 +482,58 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId("comment-menu-c1"));
     expect(screen.getByTestId("comment-menu-save-c1")).toHaveTextContent("Save");
     expect(screen.getByTestId("comment-menu-cite-c1")).toHaveTextContent("Cite in a new post");
+    expect(screen.getByTestId("comment-menu-cited-by-c1")).toHaveTextContent("Cited by");
     expect(screen.getByTestId("comment-menu-opinions-c1")).toHaveTextContent("Opinions on this");
     expect(screen.getByTestId("comment-menu-license-c1")).toHaveTextContent("License terms");
     expect(screen.queryByTestId("comment-menu-hide-c1")).not.toBeInTheDocument();
+  });
+
+  // A comment has no count line of its own, so its ⋮ row stands whatever the
+  // count is — and is therefore the only door a reader can walk through and
+  // find nothing behind it (`CommentCitedByEmpty.jsx`).
+  it("opens the cited-by sheet from a comment's menu, stacked over the thread", async () => {
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
+      ),
+      graphql.query("CitedBy", () =>
+        HttpResponse.json({
+          data: {
+            records: {
+              __typename: "RecordConnection",
+              totalCount: 0,
+              edges: [],
+              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+            },
+          },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    await openComments();
+    await screen.findByTestId("post-body");
+    fireEvent.click(screen.getByTestId("comment-menu-c1"));
+    fireEvent.click(screen.getByTestId("comment-menu-cited-by-c1"));
+    expect(await screen.findByTestId("cited-by-sheet-empty")).toHaveTextContent(
+      "Nothing cites this yet — yours would be the first.",
+    );
+    expect(screen.getByTestId("cited-by-sheet").className).toContain(
+      "bg-surface-container-highest",
+    );
+  });
+
+  // AT ZERO THERE IS NO ROW, and above it the line opens what it counts.
+  it("draws the post's cited-by line only above zero", async () => {
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+      graphql.query("CitedByCount", () =>
+        HttpResponse.json({
+          data: { records: { __typename: "RecordConnection", totalCount: 4 } },
+        }),
+      ),
+    );
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+    expect(await screen.findByTestId("post-cited-by")).toHaveTextContent("Cited by 4");
   });
 
   // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination is
