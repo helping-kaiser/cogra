@@ -173,7 +173,18 @@ class ComposeWizardViewModel @Inject constructor(
         // permission effect fires on a *change* of permission, and
         // answering the offer changes none, so a wiped grid was never
         // refilled and the stage kept only its photos-app tile.
-        _state.value = ComposeWizardState.from(held).copy(deviceMedia = current.deviceMedia)
+        //
+        // THE CITATION CROSSES TOO, and for a sharper reason: the author
+        // reached this screen by asking to cite a node (D20), and the
+        // draft is the answer to a different question — what they were
+        // writing last week. Restoring it must not undo the gesture that
+        // opened the wizard, or `Cite in a new post` silently opens an
+        // ordinary composer. A draft carries no citations of its own
+        // (`ComposeDraft`), so nothing is overwritten by keeping it.
+        _state.value = ComposeWizardState.from(held).copy(
+            deviceMedia = current.deviceMedia,
+            referenceSection = current.referenceSection,
+        )
         armed = true
         // A restored media draft re-reads every asset's shape: the crop
         // preview needs it, and the URIs may no longer resolve.

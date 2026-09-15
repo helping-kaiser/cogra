@@ -250,7 +250,7 @@ describe("PostCard", () => {
     expect(screen.getByTestId("card-refs-sheet")).toHaveAttribute("open");
   });
 
-  // THE ⋮ IS ON EVERY NON-DETAIL CARD (`PostCard.jsx:257`). The rows are the
+  // THE ⋮ IS ON EVERY NON-DETAIL CARD (`PostCard.jsx:262`). The rows are the
   // detail's own — one menu for a post wherever it is drawn — so what these
   // read is that the card picks the right set and names the author.
   describe("the overflow menu", () => {
@@ -290,7 +290,7 @@ describe("PostCard", () => {
     });
 
     // ON A DETAIL SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW
-    // (`_shared.jsx:337-341`): two dots would be two menus for one post.
+    // (`_shared.jsx:341-346`): two dots would be two menus for one post.
     it("yields the dot on the detail surface", () => {
       mount(post(), { variant: "detail" }, { store: storeFor("u1") });
       expect(screen.queryByTestId("card-menu")).not.toBeInTheDocument();

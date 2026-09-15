@@ -538,6 +538,87 @@ describe("the compose wizard", () => {
     );
   });
 
+  // -- The Reference affordance (D20) --
+
+  // "Cite in a new post" STAGES the node, it does not merely offer it: the
+  // chip is on the details step when the author gets there, removable like
+  // any picked one.
+  it("stages the node the cite affordance sent it, and resolves its label", async () => {
+    searchParams = new URLSearchParams("reference=p-quoted");
+    server.use(
+      graphql.query("ReferenceCandidates", () =>
+        HttpResponse.json({
+          data: {
+            referenceCandidates: [
+              {
+                __typename: "ReferenceCandidate",
+                targetId: "p-quoted",
+                target: {
+                  __typename: "Post",
+                  id: "p-quoted",
+                  title: { __typename: "ModeratedText", value: "On folding" },
+                  content: { __typename: "ModeratedText", value: "body" },
+                  author: { __typename: "User", handle: "carol" },
+                },
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    render();
+
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    expect(await screen.findByTestId("wizard-reference-0")).toHaveTextContent(
+      "@carol: On folding",
+    );
+  });
+
+  // A TARGET THE LOOKUP CANNOT TYPE IS STILL STAGED: the citation names its
+  // target by id, so dropping the author's gesture silently would be worse
+  // than a chip with no label.
+  it("stages an unresolvable cite target by its id", async () => {
+    searchParams = new URLSearchParams("reference=p-quoted");
+    server.use(
+      graphql.query("ReferenceCandidates", () =>
+        HttpResponse.json({ data: { referenceCandidates: [] } }),
+      ),
+    );
+    render();
+
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    expect(await screen.findByTestId("wizard-reference-0")).toHaveTextContent("p-quoted");
+  });
+
+  // The draft answers a different question — what the author was writing
+  // last week — so taking it up must not undo the gesture that opened the
+  // wizard.
+  it("keeps the staged cite when a held draft is taken up", async () => {
+    searchParams = new URLSearchParams("reference=p-quoted");
+    server.use(
+      graphql.query("ReferenceCandidates", () =>
+        HttpResponse.json({ data: { referenceCandidates: [] } }),
+      ),
+    );
+    const held: WizardState = {
+      ...emptyWizard(),
+      mode: "words",
+      words: "an unfinished thought",
+      step: "details",
+    };
+    render(fakeDrafts(held));
+
+    fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+    expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+    expect(screen.getByTestId("wizard-reference-0")).toHaveTextContent("p-quoted");
+  });
+
   it("restores a held draft on the step it was left on", async () => {
     const held: WizardState = {
       ...emptyWizard(),

@@ -3162,3 +3162,63 @@ draws the landing: the sheet at the reader's own scroll offset with
 their just-signed reply on its expanded parent. One state board (a
 `ReplyEntry` variant or its own drawing, the round's call) closes it;
 the edit-return twin ruled the same evening lands on the same anatomy.
+### 98 · Which headers collapse, and which pin · *design* · **needs a ruling**
+
+Filed 2026-09-15 by the detail-actions lane, after jakob's hand test:
+the post detail's header hiding on scroll "is not a behavior shared for
+all pages". The detail's bar is now pinned on android — it carries the
+post's one menu and its way back, and a collapse takes every act on the
+post off screen mid-read. Web's detail header was never in
+`CollapsingTop`, so it still scrolls away with the flow rather than
+pinning; the two platforms now disagree about what "pinned" means here.
+
+**No board says.** `PostDetail.jsx:29` draws `DetailHeader` bare, and
+`CollapsingTop` is mounted by no canonical board at all — the rule lives
+only in `components/navigation/CollapsingTop.prompt.md:1,11` and
+`PageHeader.prompt.md:8` ("Place it inside `CollapsingTop` on any
+surface that scrolls"), which would sweep the detail in. The artboards
+cannot express it: `DetailColumn` (`_shared.jsx:685-691`) is
+`overflow: hidden`.
+
+What is owed is one table: per surface, collapse or pin. Today's
+implementations read — collapsing: feed, profile, settings, compose;
+pinned: the post detail (android). Everything else — the topic page,
+chats, invites, the key surfaces, profile edit — is un-wrapped on web
+and unexamined on android. Whether "pinned" means `position: sticky` on
+web or simply not collapsing is part of the same ruling.
+
+### 99 · The Sensitive row's marked state is undrawn · *design* · **needs a drawing**
+
+Filed 2026-09-15 by the detail-actions lane, which built the row on both
+edit surfaces. All eleven `Sensitive` `FactRow`s in the tree read
+`value="Not marked" action="Mark"` — the seal's (`_shared.jsx:1003`),
+every edit surface's (`_shared.jsx:1390`, `EditWords.jsx:66`,
+`EditComposeVideo.jsx:77`, `CommentEdit.jsx:49`,
+`CommentEditVideo.jsx:80`). The *sheet's* on-state is drawn
+(`ComposeSensitive.jsx`, switch checked, reason filled); the *row's* is
+not. The clients ship `Marked` / `Change`, following the comment edit's
+shipped choice, which is a guess wearing the confidence of a shipped
+string. Also open: whether clearing gets its own word.
+
+### 100 · Three menu contradictions the code has to choose between · *design* · **needs rulings**
+
+Filed 2026-09-15 by the detail-actions lane's row-by-row audit.
+
+**Mark as sensitive.** `graph.json:1127` draws the own-post menu's row
+opening the `ComposeSensitive` sheet directly; jakob ruled 2026-09-14
+that it is a door into the edit flow, because marking a published post
+is a signed act changing the post and there is no standalone commit
+path. The clients follow the ruling. Either the edge is stale or the
+ruling is.
+
+**Cite on your own post.** `OWN_POST_MENU` (`_shared.jsx:373-379`) has
+no `Cite in a new post`, while `CARD_MENU`'s own docblock
+(`_shared.jsx:169-176`) says citing "rides the same menu on every
+content… whoever wrote it" — the argument that *was* applied to Save
+(`readme.md:4272-4276`). Self-citation is meaningful here and nothing
+forbids it. The clients follow the constant.
+
+**Share on a narrow phone.** `ReaderPostMenuNarrow.jsx:30` leads the
+reader menu with `Share` at 320px, the card dropping its own
+(`showShare={false}`). Neither client implements the breakpoint, so the
+narrow board is undelivered; what width triggers it is undrawn.

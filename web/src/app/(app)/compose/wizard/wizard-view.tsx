@@ -23,6 +23,8 @@ import { preparePost } from "@/lib/api/content-api";
 import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
 import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
+import { newReferenceDraft } from "@/lib/references/draft";
+import { untypedTargetView } from "@/lib/references/normalize";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -99,7 +101,25 @@ export function ComposeWizard({
   const signer = useWriteSigner();
   const keyOnDevice = useKeyOnDevice(store);
 
-  const [state, setState] = useState<WizardState>(emptyWizard);
+  // The Reference affordance (D20): a detail surface sends the author here
+  // with the node it wants cited, and the chip arrives STAGED — not merely
+  // offered. It is INITIAL STATE rather than an effect: the citation is
+  // part of what this wizard opened as, and the id alone is enough to
+  // stage it. The label is filled in behind it, below.
+  //
+  // A TARGET THE LOOKUP CANNOT TYPE IS STILL STAGED: the citation names
+  // its target by id, so the write stands whatever this instance can
+  // render, and dropping the gesture silently would be worse than a chip
+  // with no label (`ReferenceClaim.target` is nullable for exactly this).
+  const prefill = useSearchParams().get("reference");
+  const [state, setState] = useState<WizardState>(() =>
+    prefill === null
+      ? emptyWizard()
+      : {
+          ...emptyWizard(),
+          references: [newReferenceDraft(prefill, untypedTargetView(prefill))],
+        },
+  );
   const dispatch = useCallback((action: WizardAction) => {
     setState((current) => wizardReducer(current, action));
   }, []);
@@ -272,22 +292,24 @@ export function ComposeWizard({
     });
   };
 
-  // The Reference affordance: a detail surface sends the author here with the
-  // node it wants cited, and the chip arrives prefilled. It resolves through
-  // the finder's own lookup, so a miss simply leaves the section empty.
-  const prefill = useSearchParams().get("reference");
+  // The staged citation's label, which the finder's own lookup answers —
+  // so the affordance needs no second endpoint and the chip reads the same
+  // as a picked one. A miss leaves the chip standing on its id.
   useEffect(() => {
     if (prefill === null) return;
     let cancelled = false;
     void fetchReferenceCandidates(client, prefill, 1).then((outcome) => {
       if (cancelled || outcome.kind !== "success") return;
       const candidate = outcome.value[0];
-      if (candidate === undefined) return;
-      setState((current) =>
-        current.references.some((reference) => reference.targetId === candidate.targetId)
-          ? current
-          : { ...current, references: [...current.references, candidate] },
-      );
+      if (candidate === undefined || candidate.targetId !== prefill) return;
+      setState((current) => ({
+        ...current,
+        references: current.references.map((reference) =>
+          reference.targetId === prefill
+            ? { ...reference, target: candidate.target }
+            : reference,
+        ),
+      }));
     });
     return () => {
       cancelled = true;
@@ -602,7 +624,27 @@ export function ComposeWizard({
           draft={offered}
           previews={offeredPreviews}
           onContinue={() => {
-            setState(offered);
+            // THE CITATION CROSSES THE RESTORE. The author reached this
+            // screen by asking to cite a node (D20), and the draft answers
+            // a different question — what they were writing last week.
+            // Taking it up must not undo the gesture that opened the
+            // wizard, or `Cite in a new post` silently opens an ordinary
+            // composer.
+            setState((current) => ({
+              ...offered,
+              references: current.references.some(
+                (reference) => reference.targetId === prefill,
+              )
+                ? [
+                    ...offered.references.filter(
+                      (reference) => reference.targetId !== prefill,
+                    ),
+                    ...current.references.filter(
+                      (reference) => reference.targetId === prefill,
+                    ),
+                  ]
+                : offered.references,
+            }));
             setOffered(null);
           }}
           onDiscard={() => {

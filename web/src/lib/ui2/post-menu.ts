@@ -1,7 +1,7 @@
 // The rows a post's overflow menu holds, for every surface that draws one.
 //
-// THE MENU IS THE POST'S, NOT THE SCREEN'S. `PostCard.jsx:257` puts the ⋮ on
-// every non-detail card and `_shared.jsx:337-341` takes it off the detail's,
+// THE MENU IS THE POST'S, NOT THE SCREEN'S. `PostCard.jsx:262` puts the ⋮ on
+// every non-detail card and `_shared.jsx:341-346` takes it off the detail's,
 // where the page header carries the one menu instead — so the same two row
 // sets are built by a card in a feed and by a page header on a detail. They
 // live here rather than in either caller, because a second copy is how the
@@ -35,11 +35,11 @@ export type PostMenuContext = {
 
 /**
  * THE ROWS THE ONE MENU HOLDS — the author's post vs someone else's
- * (`_shared.jsx:369-376`). Both keep the card's order: the acts the menu was
+ * (`_shared.jsx:372-380`). Both keep the card's order: the acts the menu was
  * opened for lead, and the license row closes it, the license being the
  * rarest read in the product. The license row is dropped when there is none
  * to show: the license rode the payload, so a redacted record has none
- * (`PostCard.jsx:142`).
+ * (`PostCard.jsx:146-148`).
  *
  * ROWS WHOSE DESTINATION IS NOT BUILT STAND ANYWAY and do nothing (jakob
  * 2026-09-14, the introduced-but-inert law): a menu that grew a row per slice
