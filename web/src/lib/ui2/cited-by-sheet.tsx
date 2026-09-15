@@ -28,6 +28,7 @@ import type { ReactNode } from "react";
 
 import type { CitingRecordView } from "@/lib/api/references-api";
 import { nearestAnchor } from "@/lib/stance/anchors";
+import { EmptyState } from "@/lib/ui/empty-state";
 import { Icon } from "@/lib/ui/icons";
 import { formatReferenceParamWords } from "@/lib/ui/reference-format";
 import { formatStancePair } from "@/lib/ui/stance-format";
@@ -124,12 +125,9 @@ export function CitedBySheet({
   return (
     <BottomSheet open={open} onClose={onClose} title={TITLE} stacked={stacked} testId={testId}>
       {records.length === 0 && (
-        <p
-          className="px-6 pb-2 text-body-medium text-on-surface-variant"
-          data-testid={`${testId}-empty`}
-        >
-          {EMPTY}
-        </p>
+        <div className="px-6 pb-2">
+          <EmptyState title={EMPTY} testId={`${testId}-empty`} />
+        </div>
       )}
       {records.map((record) => {
         const view = citingView(record.target);
