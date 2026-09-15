@@ -40,6 +40,13 @@
   --dialog-inset: var(--space-8);
   --dialog-max-width: 20rem;
 
+  /* The card the SYSTEM puts in a reader's feed, against the card the system
+     merely carries (jakob 2026-09-15). At the feed card's own colour it read as
+     one more post; the wash is brand rather than warning, because none of these
+     cards is an alarm. Kept faint on purpose — it has to survive being two rows
+     from a post card without turning the column into a poster. */
+  --surface-task: color-mix(in srgb, var(--primary) 7%, var(--surface-card));
+
   /* The resting stance face with no standing behind it: muted and translucent. */
   --opacity-resting-face: 0.4; /* @kind other */
   /* The stance face over media. The emoji is a mark, sized to the line face

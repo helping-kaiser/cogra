@@ -280,20 +280,43 @@ function FeedList({ children }) {
   );
 }
 
-/* An application step riding the feed as a card (readme §13, entry). */
+/* An application step riding the feed as a card (readme §13, entry).
+
+   IT IS THE PRODUCT SPEAKING, AND IT HAS TO LOOK LIKE IT (jakob 2026-09-15, on
+   `ApplicantRejected` and "maybe other of these aswell": "maybe some cogra
+   branding (color shade or sth at the corners?)"). Every other card in a feed
+   column is somebody's post — a person, with a handle and a face. These carry
+   no author because their author is CoGra, and in the feed card's own dress
+   they read as a text post from nobody, which is how a reader scrolls past the
+   one card in the column that is addressed to them.
+
+   TWO MARKS, BOTH QUIET. The ground takes `--surface-task`, a faint brand wash
+   — a shade and not a highlight, because none of these cards is an alarm and
+   one of them is bad news. The mark takes the trailing corner, which is the
+   half that answers "who is telling me this": a wash alone could be a post
+   somebody had emphasised, and the mark cannot be read as anything but the
+   product. It is `aria-hidden` and carries no words — the title already says
+   what the card is; the mark is for the eye mid-scroll.
+
+   THE TITLE KEEPS ITS ROW. The mark shares the heading's line rather than
+   taking one of its own, so a task card is the height it always was and the
+   column's rhythm does not change around it. */
 function TaskCard({ title, body, children }) {
   return (
-    <Card style={{ flex: "none" }}>
-      <h2
-        style={{
-          margin: 0,
-          fontSize: "var(--text-title-medium)",
-          lineHeight: "var(--text-title-medium--line-height)",
-          fontWeight: "var(--text-title-medium--font-weight)",
-        }}
-      >
-        {title}
-      </h2>
+    <Card style={{ flex: "none", background: "var(--surface-task)" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <h2
+          style={{
+            margin: 0,
+            fontSize: "var(--text-title-medium)",
+            lineHeight: "var(--text-title-medium--line-height)",
+            fontWeight: "var(--text-title-medium--font-weight)",
+          }}
+        >
+          {title}
+        </h2>
+        <Icon name="mark" size={20} pickColor="var(--primary-container)" style={{ flex: "none", color: "var(--primary)" }} />
+      </div>
       <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>{body}</p>
       {children}
     </Card>
