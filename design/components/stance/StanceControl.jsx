@@ -121,7 +121,13 @@ function parkedPadStyle(inset = 16) {
    UNCHANGED to the field and to the alternates alike, so the drawn route and
    the accessible one never name the same axis two ways. It restyles no pixel
    and moves no geometry: one gesture, one face table, one ceremony — only the
-   words at the edges belong to the family. */
+   words at the edges belong to the family.
+
+   IT CARRIES THE AXIS NAMES TOO (backlog item 79, ruled 2026-09-15). The same
+   object now names what each axis ASKS as well as where it ends, and the
+   control hands that on to every surface that says a question out loud — the
+   sliders, the direct entry, and the three spoken readouts. The pad's own
+   field is not one of them: it draws ends, never questions. */
 export function StanceControl({
   targetLabel = "this post",
   bundle: supplied,
@@ -197,7 +203,7 @@ export function StanceControl({
       severance: { records: landed.severed ? 0 : bundle.records + 1 },
     };
     setBundle(next);
-    setSigned(signedLine(landed.landing, records, landed.severed, targetLabel));
+    setSigned(signedLine(landed.landing, records, landed.severed, targetLabel, axes));
     if (onCommit) onCommit(clampPair(chosen), next);
   };
 
@@ -460,7 +466,7 @@ export function StanceControl({
                 ?
               </span>
             </button>
-            <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} style={{ paddingRight: "40px" }} />
+            <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} names={axes} style={{ paddingRight: "40px" }} />
             {/* THE COACH RIDES THE FIRST OPEN, INSIDE THE PAD. It is a note on
                 the surface it explains rather than a card floating beside the
                 anchor — the anchor may be anywhere on the screen and the pad is
@@ -501,7 +507,7 @@ export function StanceControl({
               <>
                 <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} axes={axes} />
                 {padNote}
-                <StanceLandingLine landing={landing} />
+                <StanceLandingLine landing={landing} names={axes} />
               </>
             )}
             {/* One row: the walk-away on the left, the two decisions on the right.
@@ -543,11 +549,11 @@ export function StanceControl({
           onCommit={() => commitChecked(pick)}
           onCancel={closeAll}
           onSever={openSeverance}
-          landing={<StanceLandingLine landing={landing} />}
+          landing={<StanceLandingLine landing={landing} names={axes} />}
           helpLabel={helpLabel}
           axes={axes}
         >
-          <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} />
+          <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} names={axes} />
         </StanceAlternates>
       )}
 
@@ -558,6 +564,7 @@ export function StanceControl({
           bundle={bundle}
           records={Math.max(1, confirming.records)}
           alreadySevered={confirming.alreadySevered === true}
+          names={axes}
           onCancel={() => setConfirming(null)}
           onConfirm={() => {
             apply(confirming.pick ?? ORIGIN, confirming.landed, Math.max(1, confirming.records));
