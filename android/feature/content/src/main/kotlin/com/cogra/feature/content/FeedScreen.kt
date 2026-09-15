@@ -54,6 +54,7 @@ import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
 import com.cogra.feature.content.R
+import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.stance.StanceControlRoute
 
 @Composable
@@ -91,6 +92,17 @@ fun FeedRoute(
     onEditPost: (String) -> Unit = {},
     /** The ⋮'s Cite row — the composer, with the post staged. */
     onCitePost: (String) -> Unit = {},
+    /** Null while the auth phase resolves; the thread's affordances wait. */
+    signedIn: Boolean? = null,
+    /** The composer the thread's own affordances open (`ReplyEntry` 5, 7). */
+    onReply: (ReplyTarget) -> Unit = {},
+    /** `ReplyMedia` 6 — `CommentEdit`, on an own comment. */
+    onEditComment: (commentId: String, parentTitle: String) -> Unit = { _, _ -> },
+    onSignInOrJoin: () -> Unit = {},
+    /** The sheet's two-value return — see `CommentsReturn`. */
+    commentsReturn: CommentsReturn = CommentsReturn(),
+    onCommentsReturnConsumed: () -> Unit = {},
+    onCommentsDepart: (CommentsScroll) -> Unit = {},
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -100,6 +112,32 @@ fun FeedRoute(
         viewModel.refresh()
     }
     FeedScreen(
+        commentsSheet = { postId, onDismiss ->
+            val post = state.posts.firstOrNull { it.id == postId }
+            CommentsSheetRoute(
+                postId = postId,
+                viewerId = viewerId,
+                signedIn = signedIn,
+                onDismiss = onDismiss,
+                onReply = { request ->
+                    val target = request.comment?.asReplyTarget() ?: post?.asReplyTarget()
+                    target?.let(onReply)
+                },
+                onEditComment = { commentId ->
+                    onEditComment(commentId, post?.title?.value.orEmpty())
+                },
+                onOpenActor = onOpenActor,
+                onOpenTopic = onOpenTopic,
+                onReference = onCitePost,
+                onSignInOrJoin = onSignInOrJoin,
+                onDepart = onCommentsDepart,
+                commentsReturn = commentsReturn,
+                onReturnConsumed = onCommentsReturnConsumed,
+                stanceControl = { target, tag ->
+                    StanceControlRoute(target = target, testTagPrefix = tag)
+                },
+            )
+        },
         onShare = { postId -> context.sharePost(viewModel.shareUrl(postId)) },
         state = state,
         expiredLabel = expiredLabel,
@@ -151,7 +189,19 @@ fun FeedScreen(
      * the screen stays free of DI and previewable.
      */
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    /**
+     * THE THREAD, OVER THE FEED. A card's comment count raises the same
+     * full-function sheet the detail's count does (jakob 2026-09-15) —
+     * a layer over this list, never a destination, so the feed keeps its
+     * scroll and its pages underneath.
+     */
+    commentsSheet: @Composable (postId: String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
 ) {
+    // Which post's thread is raised, or null for none. SAVED, not merely
+    // remembered: the composer the sheet opens is its own destination,
+    // so the feed is left and re-entered rather than covered — and the
+    // thread has to be standing again when the reader comes back.
+    var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
     // The collapsing top (design.md §6): the bar hides scrolling down
     // and returns after a third of a screen of upward scroll; the
     // borrowed-view band and the key banner ride the same region and
@@ -291,6 +341,7 @@ fun FeedScreen(
                                 PostCard(
                                     post = post,
                                     onClick = { onOpenPost(post.id) },
+                                    onOpenComments = { commentsFor = post.id },
                                     onOpenPost = onOpenPost,
                                     onOpenActor = onOpenActor,
                                     onOpenTopic = onOpenTopic,
@@ -342,6 +393,9 @@ fun FeedScreen(
                 }
             }
         }
+    }
+    commentsFor?.let { postId ->
+        commentsSheet(postId) { commentsFor = null }
     }
 }
 
@@ -431,6 +485,8 @@ private fun SummaryTitle(post: PostView) {
 private fun PostCard(
     post: PostView,
     onClick: () -> Unit,
+    /** The count's own destination: the comments sheet, over the feed. */
+    onOpenComments: () -> Unit,
     /** A post cited from the tags-and-references sheet. */
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
@@ -496,12 +552,13 @@ private fun PostCard(
                 onOpenPost = onOpenPost,
             )
             // Stance, comment, share — the master's row, minus the two
-            // it gates (see `PostAffordanceRow`). The comment count
-            // opens the post, which is the master's own fallback and is
-            // where this app's thread lives until W3's sheet.
+            // it gates (see `PostAffordanceRow`). THE COUNT RAISES THE
+            // THREAD (graph.json: every `comment count` edge advances to
+            // `ReplyEntry`), which is the master's own destination — the
+            // card's tap, its fallback, opens the post instead.
             PostAffordanceRow(
                 commentCount = post.commentCount,
-                onOpenComments = onClick,
+                onOpenComments = onOpenComments,
                 onShare = { onShare(post.id) },
                 testTagPrefix = "feed_post_${post.id}",
             ) {

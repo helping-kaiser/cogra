@@ -11,6 +11,7 @@ import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.CommentForEdit
+import com.cogra.domain.CommentPage
 import com.cogra.domain.CommentView
 import com.cogra.domain.HashtagView
 import com.cogra.domain.ProfileView
