@@ -1504,11 +1504,12 @@ type Application {
   keyAttached: Boolean!
   "When the inviter's priced approval happened; null while pending."
   approvedAt: DateTime
-  "When the approver closed the application without approving it
-   (rejectApplication); null otherwise. A rejected application
-   ends like an expired one — the entry closes, the account
-   persists, and either re-arm path opens a new one (auth.md
-   \"Rejection\")."
+  "When the approver closed the application without approving it —
+   on its own (rejectApplication) or with its link's whole waiting
+   queue (rejectLinkApplications); null otherwise. A rejected
+   application ends like an expired one — the entry closes, the
+   account persists, and either re-arm path opens a new one
+   (auth.md \"Rejection\")."
   rejectedAt: DateTime
   "When the Registration confirmed and the account became a
    member; null before."
@@ -1980,9 +1981,10 @@ type Query {
    in the viewer's own outgoing stances, so a reader with none is
    served someone else's, and the borrowed-view band names it
    (design/readme.md §13). An anonymous reader borrows the Genesis
-   Moderator's view; an applicant keeps their inviter's from the
-   moment the account exists; a landed member has their own, and
-   null is that rule rather than missing data."
+   Moderator's view; an applicant keeps their approver's — the
+   actor their application waits on — from the moment the account
+   exists; a landed member has their own, and null is that rule
+   rather than missing data."
   borrowedView: Actor
 
   "Fetch any node by id. The generic accessor for heterogeneous ids
@@ -4140,14 +4142,43 @@ input ApplicationApprovalInput {
  rejection. Writes the applicant an APPLICATION_REJECTED
  notification, since a refusal they could only infer from a status
  field going quiet would leave them waiting on a queue they have
- left. Singular where approval is batched — it is a decision about
- one person and it reaches them, so it is taken one at a time and
- the client owns the explicit confirmation. An already-approved,
- already-rejected, expired, or foreign-queue application refuses
- with BAD_INPUT."
+ left. One person at a time — a decision about someone, which
+ reaches them, so the client owns the explicit confirmation;
+ closing a whole invite link's waiting queue in one gesture is
+ rejectLinkApplications. An already-approved, already-rejected,
+ expired, or foreign-queue application refuses with BAD_INPUT."
 input RejectApplicationInput { application: UUID! }
 "The application in its closed state."
 type RejectApplicationPayload { application: Application }
+
+"Close every application waiting in the viewer's queue through one
+ invite link (auth.md \"Rejection\"). Grouped by link because that
+ is the shape a flood has: a link handed around stages applicants
+ nobody vouched for, and a queue of hundreds is not one anybody
+ closes one row at a time. Each entry closes as an ordinary
+ rejection — marked rejected, the account keeping its login, its
+ reads and its attached key, nothing deleted — and each applicant
+ gets their own APPLICATION_REJECTED notification, since the act
+ reaches each of them separately. Someone swept up by mistake
+ comes back the ordinary way: either re-arm path opens a new
+ application (applyWithInvite, stageApplicant), and the second
+ look is the ask link's whole purpose. Scoped to what is waiting —
+ applications already approved, rejected, or expired are passed
+ over rather than refusing the call, because a queue that moves
+ under a flood must not defeat the sweep. A revoked link still
+ sweeps: revocation stops new staging and leaves the queue
+ standing. The client owns the explicit confirmation, which names
+ how many applications the sweep closes."
+input RejectLinkApplicationsInput { inviteLink: UUID! }
+"An unknown or foreign link refuses with a NOT_FOUND userError,
+ the same expected outcome revokeInviteLink names; a link with
+ nothing waiting succeeds with a zero count."
+type RejectLinkApplicationsPayload {
+  "How many applications the sweep closed."
+  rejectedCount: Int
+  "The link, for re-reading its share of the queue."
+  inviteLink: InviteLink
+}
 
 input LogInInput {
   email: String!
@@ -4300,8 +4331,9 @@ type CreateInviteLinkPayload {
 }
 
 "Stop a link from staging anyone new. Applications already staged
- through it stay approvable — closing one is rejectApplication
- (auth.md \"Invite-link generation\")."
+ through it stay approvable — closing one is rejectApplication and
+ closing them all is rejectLinkApplications (auth.md
+ \"Invite-link generation\")."
 input RevokeInviteLinkInput { inviteLink: UUID! }
 "An unknown, foreign, or already-revoked link refuses with a
  NOT_FOUND userError — the one place NOT_FOUND rides the userError
@@ -4385,6 +4417,7 @@ extend type Mutation {
   stageApplicant(input: StageApplicantInput!): StageApplicantPayload!
   approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
   rejectApplication(input: RejectApplicationInput!): RejectApplicationPayload!
+  rejectLinkApplications(input: RejectLinkApplicationsInput!): RejectLinkApplicationsPayload!
   logIn(input: LogInInput!): LogInPayload!
   refreshSession(input: RefreshSessionInput!): RefreshPayload!
   "Revoke one session (the current one if no id is given)."
