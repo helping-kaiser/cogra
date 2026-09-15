@@ -630,10 +630,7 @@ data class Page<T>(
  * as pages arrive. It rides the page because the thread read is the
  * only place both are known at once.
  */
-data class CommentPage(
-    val page: Page<CommentView>,
-    val total: Int,
-)
+data class CommentPage(val page: Page<CommentView>, val total: Int)
 
 /**
  * The author's own sensitive mark on one node, read on its own.

@@ -781,10 +781,7 @@ class ContentScreensTest {
      * renders a post WITH comments is describing both, so the fixture
      * builds both from the one call the tests already make.
      */
-    private data class DetailFixture(
-        val detail: PostDetailUiState,
-        val comments: CommentsUiState,
-    )
+    private data class DetailFixture(val detail: PostDetailUiState, val comments: CommentsUiState)
 
     private fun detailFixture(
         loading: Boolean = true,

@@ -370,13 +370,6 @@ class PostDetailViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(content.includePendingAsked).containsExactly(true, false).inOrder()
     }
-
-    /**
-     * A comment signed on the wizard comes back as a signal, and the
-     * thread re-reads rather than merging the new entry into the page it
-     * already holds — the refetched page is what carries the pending
-     * marker the fresh comment wears.
-     */
 }
 
 /** The build's web origin, as the share link is built from it. */
