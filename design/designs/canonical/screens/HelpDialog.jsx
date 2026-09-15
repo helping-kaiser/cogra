@@ -18,7 +18,7 @@ export function Screen() {
     <>
       <ComposeSealBody />
 
-      <DialogSurface ariaLabel="How signing works" width="21rem">
+      <DialogSurface ariaLabel="How signing works">
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
             How signing works

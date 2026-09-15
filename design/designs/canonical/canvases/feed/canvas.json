@@ -338,7 +338,7 @@
       "x": -3900,
       "y": 0,
       "w": 3480,
-      "h": 2693,
+      "h": 2732,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -364,15 +364,6 @@
       "file": "TagPageEmpty.dc.html",
       "title": "A tag nothing carries yet",
       "x": 480,
-      "y": 2120,
-      "w": 390,
-      "h": 844,
-      "page": "feed"
-    },
-    {
-      "file": "TagPageHeldPad.dc.html",
-      "title": "A tag's page · the pad, topic held",
-      "x": 1440,
       "y": 2120,
       "w": 390,
       "h": 844,
@@ -440,6 +431,15 @@
       "w": 390,
       "h": 844,
       "page": "comments"
+    },
+    {
+      "file": "TagPageHeldPad.dc.html",
+      "title": "A tag's page · the pad, topic held",
+      "x": 1440,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
     }
   ],
   "annotations": [
