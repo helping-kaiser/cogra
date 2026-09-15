@@ -292,10 +292,11 @@ or above it.
 **Revocation stops new staging only.** Revoking a link sets
 `revoked_at`: no further applicant can register through it, and
 applications already staged stay approvable — the inviter's queue
-is not a consequence of the link still being live. Closing one of
-those applications is its own gesture (`rejectApplication`,
-[api-spec.md](api-spec.md)), never a side effect of revoking the
-link they arrived through.
+is not a consequence of the link still being live. Closing those
+applications is its own gesture — one at a time
+(`rejectApplication`) or the link's whole waiting queue at once
+(`rejectLinkApplications`, [api-spec.md](api-spec.md)) — never a
+side effect of revoking the link they arrived through.
 
 ### The ask link (applicant side)
 
@@ -422,7 +423,7 @@ fresh invite link through `applyWithInvite`
 ([api-spec.md](api-spec.md)), or a member taking up the account's
 ask link ("The ask link" above).
 
-**Rejection.** The inviter may close a staged application instead
+**Rejection.** The approver may close a staged application instead
 of approving it (`rejectApplication`, [api-spec.md](api-spec.md)),
 for applications in their own queue only. It sets `rejected_at`
 and ends the application the way expiry does — the row stays, the
@@ -445,6 +446,22 @@ go quiet — would leave someone waiting on a queue they have
 already left. Because it is a decision about a person and it
 reaches them, clients ask for an explicit confirmation before
 sending it.
+
+**A flood is closed by the link.** A link that escapes into the
+wrong hands stages applicants by the hundred, and a queue that
+size is not one anyone closes a row at a time. The answer takes
+the invite link and closes every application still waiting
+through it (`rejectLinkApplications`,
+[api-spec.md](api-spec.md)). The grouping is the link rather than
+an arbitrary selection, because the link is what the flood came
+through — the one thing a queue of strangers can be judged by.
+Each entry closes as an ordinary rejection and each applicant is
+told separately: the act reaches each of them, so each gets their
+own notification. Clients name the count in the confirmation,
+the sweep's size being the fact worth confirming. Someone real
+swept up with the rest loses the wait, not the way in — their ask
+link puts them back, one application at a time ("The ask link"
+above), and that second look is what the link is for.
 
 An applicant can already **read** — the shared graph is public —
 but cannot act. Approval latency is a UX cost, not a correctness
@@ -503,11 +520,15 @@ that never land are garbage-collected per the write path
 
 **Reciprocation is the joiner's own act.** Membership completes
 when the joiner points back — their own client-signed Opinion
-toward the inviter's Profile, prompted at first login
+toward the approver's Profile, prompted at first login
 ([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)).
 The prompt's target comes from the viewer-only `User.invitedBy`
-field — landing provenance kept on the application row. It is a
-graph act, not an auth step; auth's involvement ends at landing.
+field — landing provenance kept on the application row: the
+approver whose Opinion admitted the account, which on the
+ask-link side is the member who took the applicant up rather than
+whoever issued a link they once registered through. Clients name
+that person on the vouch-back surface. It is a graph act, not an
+auth step; auth's involvement ends at landing.
 
 The prompt derives from the graph, not from client state: the
 viewer-only `User.hasReciprocated` field is true iff the joiner's
