@@ -4943,16 +4943,20 @@ slice-3 remainders beside it. The round's premise is one sentence:
   `targetLabel` is the tag itself (item 46.1's mechanism, built for this
   page), and `STANCE_ANCHORS` is reused unchanged — **one gesture, one
   face table**. An Affinity is not a second kind of feeling.
-- **BUT THE FOUR POLE WORDS ARE THE FAMILY'S**, as a tag's and a
-  citation's already are. The slots hold association and attraction
+- **BUT THE WORDS ARE THE FAMILY'S**, as a tag's and a citation's
+  already are. The slots hold association and attraction
   (`layer1-interface.md` §9.5), so `StanceControl` grew `axes` — the
   field's own prop, passed through to the field AND to the alternates,
   because a slider naming the ends differently from the pad would make
-  the accessible route a different question. The words are
-  `Not mine` / `Mine` and `Away` / `Toward` (blessed 2026-09-15);
-  backlog 78 notes that no board yet draws the pad they belong to, and
-  backlog 79 notes that the two axis NAMES above the sliders are still
-  the opinion's.
+  the accessible route a different question. It carries **six** words,
+  ruled 2026-09-15: each axis's question and its two ends. Association
+  asks `How much you like it` and runs `Dislike` / `Like`; attraction
+  asks `How close you want to be` and runs `Far away` / `Close to me`.
+  The field draws the four ends; the two questions reach the sliders,
+  the typed fields and every spoken readout, because a route that heard
+  one family's question about another family's record is the accessible
+  route asking something the drawn one never asked. `TagPageHeldPad`
+  draws the pad they belong to.
 - **"YOUR TOPICS" IS A SUBPAGE OFF EXPLORE, NOT A SECTION IN IT.** The
   held set has no bound, and an unbounded list inlined in the tab would
   push the recents under the fold and turn Explore into a list page. The
@@ -5036,6 +5040,48 @@ slice-3 remainders beside it. The round's premise is one sentence:
   `Chats · text · + removed`, 153.9px — the new axis costs the pill
   nothing, because a topic that will not fit leaves the summary instead
   of stretching it.
+
+### The Affinity pad round — 2026-09-15
+
+The topic round left the Affinity family words nobody could look at and
+a pad nobody could open. This round rules the words and draws the pad.
+
+- **THE FAMILY'S SIX WORDS, IN THE PLAINEST READING.** jakob:
+  "this is about your stance towards tags right? sooo we have how much
+  you like a tag and how close you wanna be (how often / how much you
+  want to see contents with this tag) we need to find easy words for
+  that" — and then the words themselves, "i think this wording will
+  just be easier to grasp". Association asks **How much you like it**
+  and runs **Dislike** / **Like**; attraction asks **How close you want
+  to be** and runs **Far away** / **Close to me**. Ease of grasp is the
+  deciding argument: the pair names two things a reader already knows
+  they feel about a topic, and needs no gloss to be answered correctly
+  the first time.
+- **AN AXIS'S QUESTION TRAVELS WITH ITS POLES** (backlog item 79). The
+  poles had moved to the record family and the two axis NAMES had not,
+  so a screen reader on a topic's pad heard the opinion's questions —
+  `For or against`, `How much reaches you` — about a record that is not
+  one. `axes` now carries both: the field draws the four ends, and the
+  questions reach the sliders, the typed fields, the severance confirm
+  and the three spoken readouts. One object holds a family's words, and
+  the drawn route and the accessible one cannot ask different questions.
+- **AND THE PAD IS DRAWN** (backlog item 78). `TagPageHeldPad` is
+  `VouchBackPad`'s anatomy over the tag page with the topic held —
+  `PadStanding`'s four controls, the family's words at the edges — and
+  changing all six words had until now moved not one rendered board,
+  which is what a canvas review cannot catch. It is also the only board
+  where the way out of a held topic is visible: held, the pad carries
+  `Walk it back`, and that is the severance ceremony at this topic's own
+  price. The row cannot show it and *Your topics* deliberately offers no
+  per-row removal, so without this board the door existed in the code
+  and nowhere on the canvas.
+- **The gate**: boards **194 → 195** (`TagPageHeldPad`), edges
+  **1461 → 1466**, gaps hold at **14**, flows hold at **63/61/2** with
+  **2** journey-stopping — the new board joins the topic row's existing
+  edge and reroutes nothing. The feed canvas sits at **57/200 files**
+  (72% headroom). Reachable filter summaries hold at **370**, **0** over
+  the band's 154px, widest unchanged at `Chats · text · + removed`,
+  153.9px: a parked pad adds no filter reading.
 
 ---
 
