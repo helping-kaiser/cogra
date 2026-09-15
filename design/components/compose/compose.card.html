@@ -5,7 +5,9 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <script src="../../_ds_bundle.js"></script>
-<style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:360px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
+<style>body{padding:16px}.row{display:flex;gap:24px;align-items:flex-start}.col{display:flex;flex-direction:column;gap:10px;width:360px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}
+.states{display:flex;gap:16px;align-items:flex-start}.state{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.statelbl{font-size:11px;color:var(--text-secondary);max-width:114px;line-height:1.35}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
 const { MediaThumb, PickPrompt, PickTray, PickedRow, DescribeCounter, PickedSheet, CitedSheet, DescribeSheet, CropViewport, CoverRow, Caret, UploadStatusLine, UploadErrorLine, ActsCard, ActsFooter, SealFooter, WizardFooter, TopicRemovable, StagedReference, RefusedFile, WizardHeader, Button, HelpDot, InlineAction } = window.CoGraDesignSystem_9084ba;
@@ -40,6 +42,17 @@ function Demo(){return (
     <PickTray count={1} caption="A video is the whole post. Its cover comes next.">
       <MediaThumb src={P+"03-landscape-16x9.jpg"} alt="" width={114} height={64} video onRemove={()=>{}} removeLabel="Remove this video"/>
     </PickTray>
+    <span className="lbl">The clip's tile before and after a cover exists — the cover rides the clip, never a tile of its own</span>
+    <div className="states">
+      <div className="state">
+        <MediaThumb src={P+"03-landscape-16x9.jpg"} alt="" width={114} height={64} video onRemove={()=>{}} removeLabel="Remove this video"/>
+        <span className="statelbl">the cover comes next</span>
+      </div>
+      <div className="state">
+        <MediaThumb src={P+"03-landscape-16x9.jpg"} alt="" width={114} height={64} video coverSrc={P+"03-landscape-16x9.jpg"} coverTransform="scale(1.5)" onRemove={()=>{}} removeLabel="Remove this video"/>
+        <span className="statelbl">the chosen frame, in the corner the Cover badge owns</span>
+      </div>
+    </div>
     <span className="lbl">PickedRow — the whole row opens Show all; no crop/edit links, ever</span>
     <PickedRow items={[{src:P+"01-landscape-4x3.jpg",cover:true},{src:P+"04-square-1x1.jpg",progress:0.65},{src:P+"10-square-1x1.jpg",failed:true}]} caption="3 pictures — the body" onManage={()=>{}}/>
     <UploadErrorLine onRetry={()=>{}} onRemove={()=>{}}/>
