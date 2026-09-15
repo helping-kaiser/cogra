@@ -432,8 +432,10 @@ class ReplyWizardScreenTest {
         val door = compose.onNodeWithTag("reply_seal_cited")
         door.assertExists()
         compose.onNodeWithText("2 cited").assertExists()
+        // The door's name folds the count in — "Manage the N citations", and at
+        // one "Manage the 1 citation" (copy-voice.md:409-419).
         assertThat(door.fetchSemanticsNode().config[SemanticsActions.OnClick].label)
-            .isEqualTo("Manage the citations")
+            .isEqualTo("Manage the 2 citations")
         compose.onNodeWithTag("reply_seal_cite").assertExists()
 
         door.performClick()
