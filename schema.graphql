@@ -277,6 +277,22 @@ type Comment implements Node {
 	Where this comment stands relative to L1 finality.
 	"""
 	landing: Landing!
+	"""
+	Records authored from this node — for an actor, their outgoing
+	chronicle; the generic way to read any relationship before named
+	convenience views exist. Filter by family, by the kind of node
+	on the far end, by parameter sign (e.g. only vouch-positive
+	Opinions, or (0,0) update records), payload-marked state, and/or
+	a landing-epoch window.
+	"""
+	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	"""
+	Records pointing at this node. Exposed as public topology / an
+	inbound-attention surface only — per the feed-ranking model,
+	inbound records never shape this node's own feed. Same filters
+	as outgoingRecords; fromKind selects the source kind.
+	"""
+	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 	content: ModeratedText!
 	"""
 	The author's own sensitive mark, alone — the state an edit switch
@@ -1268,6 +1284,34 @@ interface Node {
 	Where this node stands relative to L1 finality — landing is a substrate fact about every minted node.
 	"""
 	landing: Landing!
+	"""
+	Records authored from this node — for an actor, their outgoing chronicle; the generic way to read any relationship before named convenience views exist. Filter by family, by the kind of node on the far end, by parameter sign (e.g. only vouch-positive Opinions, or (0,0) update records), payload-marked state, and/or a landing-epoch window.
+	"""
+	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	"""
+	Records pointing at this node. Exposed as public topology / an inbound-attention surface only — per the feed-ranking model, inbound records never shape this node's own feed. Same filters as outgoingRecords; fromKind selects the source kind.
+	"""
+	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+}
+
+"""
+The kind of a node — used to filter record endpoints by the type
+of node on the far end (e.g. only a User's records that point at
+Posts). PROPOSAL and CAMPAIGN are CoGra's typed views over
+Content anchor nodes; OFFER is the Bid-minted settlement node.
+"""
+enum NodeKind {
+	USER
+	COLLECTIVE
+	POST
+	COMMENT
+	CHAT
+	CHAT_MESSAGE
+	ITEM
+	HASHTAG
+	PROPOSAL
+	CAMPAIGN
+	OFFER
 }
 
 """
@@ -1317,6 +1361,22 @@ type Post implements Node {
 	Where this post stands relative to L1 finality.
 	"""
 	landing: Landing!
+	"""
+	Records authored from this node — for an actor, their outgoing
+	chronicle; the generic way to read any relationship before named
+	convenience views exist. Filter by family, by the kind of node
+	on the far end, by parameter sign (e.g. only vouch-positive
+	Opinions, or (0,0) update records), payload-marked state, and/or
+	a landing-epoch window.
+	"""
+	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	"""
+	Records pointing at this node. Exposed as public topology / an
+	inbound-attention surface only — per the feed-ranking model,
+	inbound records never shape this node's own feed. Same filters
+	as outgoingRecords; fromKind selects the source kind.
+	"""
+	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 	title: ModeratedText!
 	description: ModeratedText!
 	"""
@@ -2322,6 +2382,17 @@ type Session {
 	isCurrent: Boolean!
 }
 
+"""
+The sign of an authored parameter, for filtering records by
+valence or by the inert (0) state. POSITIVE: > 0. NEGATIVE: < 0.
+ZERO: exactly 0.
+"""
+enum Sign {
+	POSITIVE
+	NEGATIVE
+	ZERO
+}
+
 type StagedWrite {
 	id: UUID!
 	state: StagedWriteState!
@@ -2627,6 +2698,22 @@ type User implements Node & Actor {
 	and that record landing.
 	"""
 	landing: Landing!
+	"""
+	Records authored from this node — for an actor, their outgoing
+	chronicle; the generic way to read any relationship before named
+	convenience views exist. Filter by family, by the kind of node
+	on the far end, by parameter sign (e.g. only vouch-positive
+	Opinions, or (0,0) update records), payload-marked state, and/or
+	a landing-epoch window.
+	"""
+	outgoingRecords(family: RecordFamily, toKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
+	"""
+	Records pointing at this node. Exposed as public topology / an
+	inbound-attention surface only — per the feed-ranking model,
+	inbound records never shape this node's own feed. Same filters
+	as outgoingRecords; fromKind selects the source kind.
+	"""
+	incomingRecords(family: RecordFamily, fromKind: NodeKind, pDirectedSign: Sign, pInterestSign: Sign, payloadMarked: Boolean, sinceEpoch: Int, untilEpoch: Int, first: Int, after: String, last: Int, before: String): RecordConnection!
 	"""
 	The account's name in the one actor namespace: 3–30 characters of
 	[a-z0-9_], case-folded.

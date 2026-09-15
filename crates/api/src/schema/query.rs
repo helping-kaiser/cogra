@@ -13,10 +13,10 @@ use postgres_store::{PgPool, auth as store, content as content_store, genesis, m
 use uuid::Uuid;
 
 use super::types::{
-    Actor, CommentType, CursorKey, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType,
+    Actor, CommentType, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType,
     Record, RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User,
     borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
-    keyset_page, list_cost, list_limit, resolve_reference_target,
+    keyset_page, list_cost, list_limit, record_cursor, resolve_reference_target,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -473,18 +473,6 @@ impl Query {
             |p| content_cursor_key(p.sort_key(), p.id),
             PostType,
         ))
-    }
-}
-
-/// A chronicle entry's cursor. The record set carries no pending
-/// namespace — a record is in the chronicle exactly when it is ordered
-/// fact — so the landing-order key alone identifies the position.
-fn record_cursor(r: &mirror::RecordFull) -> CursorKey {
-    CursorKey {
-        epoch: r.epoch,
-        act_time: r.act_time,
-        position: r.position,
-        id: None,
     }
 }
 
