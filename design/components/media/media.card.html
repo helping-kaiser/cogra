@@ -11,10 +11,12 @@
 .dotrow{display:flex;flex-direction:column;align-items:center;gap:6px}
 .dotlbl{font-size:11px;color:rgba(255,255,255,0.55)}
 .dots.cardtone{background:var(--surface-container);border:1px solid var(--border-hairline)}
-.dots.cardtone .dotlbl{color:var(--text-secondary)}</style>
+.dots.cardtone .dotlbl{color:var(--text-secondary)}
+.tstage{position:relative;width:260px;height:220px;border-radius:var(--radius-md);overflow:hidden}
+.tstage img{width:100%;height:100%;object-fit:cover;display:block}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { PostCard, PagerDots } = window.CoGraDesignSystem_9084ba;
+const { PostCard, PagerDots, VideoTransport } = window.CoGraDesignSystem_9084ba;
 const ada = { handle: "ada", displayName: "Ada Okonkwo" };
 const mira = { handle: "mira_l", displayName: "Mira Lindqvist" };
 const b = (d,i,n) => ({current:{pDirected:d,pInterest:i},rawSum:{pDirected:d,pInterest:i},records:n,severed:false,severance:{records:n}});
@@ -34,6 +36,18 @@ function Demo(){return (
     <PostCard author={mira} timestamp="5h" score="8" license={{attribution:0,provenance:0}} menuItems={menuFor(mira.handle)} comments={0}
       content="Six seconds of the shelf not falling over. Taller than 4:5 centre-crops to it rather than standing tall in a card — the whole frame is one tap away."
       media={[{src:P+"08-portrait-9x16.jpg",alt:"A man standing at the edge of a lake",ratio:"tall"}]}/>
+    <span className="lbl">The transport's centre slot — three states, and no board carries the third</span>
+    <div className="dots">
+      {[["playing — the control says Pause",{playing:true}],["paused — it says Play",{playing:false}],["ended — it says Replay",{ended:true}]].map(([label,state])=>(
+        <div className="dotrow" key={label}>
+          <div className="tstage">
+            <img src={P+"03-landscape-16x9.jpg"} alt=""/>
+            <VideoTransport {...state} elapsed="0:14" duration="0:41" progress={0.34} fullscreen={false}/>
+          </div>
+          <span className="dotlbl">{label}</span>
+        </div>
+      ))}
+    </div>
   </div>
   <div className="col">
     <span className="lbl">Gallery — the pager: one frame, one shape, dots only, pending</span>
@@ -94,7 +108,7 @@ function Demo(){return (
       <li><b><code>PinnedClip</code></b> — the top of a video post's detail view, and what the stream's squish morph leaves behind: the clip above the card, still playing, carrying the full transport on black. The post goes into <code>PostCard</code> beneath it <i>without</i> its media.</li>
       <li><b><code>MediaViewer</code></b> — the whole surface on black with nothing behind it, its stage positioned so the frame is bounded by the screen whatever shape it is. Dots for a set (never arrows; the count is spoken, not drawn), the X top-left, no acts, no description.</li>
       <li><b>The dot row is windowed at seven</b> (2026-09-14, drawn on the two tiles above). Both pagers draw it — the card's gallery and the viewer page the same set with the same gesture, so one marker serves both, in the page's ink on a card and in white over the scrim. Up to seven pictures the row is the set. Past that it is a window onto it: the window slides centred on where the reader is and clamps at the set's two ends, and <b>the edge dot on a side the set keeps going is drawn smaller</b> — that shrunk dot is the whole of how the row admits what it is not showing. One smaller size and not a ladder of them: at a 6px dot a third size is noise, and the ten-picture authoring cap never hides more than three. The active dot is never the shrunk one, and every slot keeps its pitch so nothing reflows under a swipe. A row that grew with the set would stop being a position marker and become a ruler to count.</li>
-      <li><b><code>VideoTransport</code> / <code>SeekLine</code></b> — the ladder above the card's sound disc, at the platform player's anatomy: centred play/pause flanked by the skips, the bar inset from the bottom edge with elapsed, total and the fullscreen toggle. <b>Nothing touches the bottom edge</b> — the system gesture zone lives there, and a control in it is a swipe that closes the app.</li>
+      <li><b><code>VideoTransport</code> / <code>SeekLine</code></b> — the ladder above the card's sound disc, at the platform player's anatomy: centred play/pause flanked by the skips, the bar inset from the bottom edge with elapsed, total and the fullscreen toggle, its row 48px tall. The centre slot has a <b>third state</b>: once the clip has run out it says <b>Replay</b>, because a detail clip stops at its end rather than looping — no board draws an ended clip, so all three are drawn above. <b>Nothing touches the bottom edge</b> — the system gesture zone lives there, and a control in it is a swipe that closes the app.</li>
       <li><b><code>ReelRail</code> / <code>ReelCaption</code></b> — the stream's chrome: the action row turned on its side (author · stance · comments · share · score, the score last because it is the way out) and the post's words in the card's own budget. White at 28px with a shadow, never a token colour and never a plate — on photography "quiet" and "invisible" are the same thing.</li>
     </ul>
   </div>
