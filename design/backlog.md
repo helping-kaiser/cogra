@@ -2821,21 +2821,22 @@ that is deliberately invisible: nothing on any surface hands a reader a
 bare id, so nothing on any surface has to explain that one would work.
 A tolerance at the door is documentation's business, not the screen's.
 
-### 87 · Two destructive dialogs disagree about colour · *design* · **open**
+### 87 · Two destructive dialogs disagree about colour · *design* · **closed 2026-09-15**
 
 Surfaced by the invites round 2026-09-15 while drawing `RejectConfirm`.
 readme §11 rules a destructive dialog takes **no new colour** —
 "severance is a deliberate act, not a failure" — and `SeveranceConfirm`
-says the same in its own board comment. `RemoveConfirm` nonetheless
-draws its `Remove` as a text button in `var(--error)`, which is the one
-board in the tree that does.
+says the same in its own board comment. `RemoveConfirm` nonetheless drew
+its `Remove` as a text button in `var(--error)`, the one board in the
+tree that did.
 
-One of the two is wrong and it is a ruling, not a tidy-up: either
-removing a post is the case that earns the colour and §11 wants the
-exception written down, or the colour comes off `RemoveConfirm` and the
-rule holds everywhere. `RejectConfirm` took the rule as written and
-carries no colour, which is doubly right there — nothing is destroyed —
-so nothing is blocked on this.
+Ruled by jakob the same day — "probabely non destructive? a removal is
+not an error no?" — so the colour comes off and §11 holds everywhere
+without an exception. The error role is for something that went wrong,
+and a reader removing their own post is doing what they meant to. The
+care in that dialog lives where the rule puts it: the safe answer takes
+the filled button, the removal stays a text button, and two sentences
+say what removal does before either is pressed.
 
 ### 88 · `ProfileHeader` bans a word the two banned lists do not · *design* · **open**
 

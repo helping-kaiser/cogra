@@ -1,4 +1,12 @@
-/* Remove — the think-twice dialog. The SAFE action is the filled one. */
+/* Remove — the think-twice dialog. The SAFE action is the filled one.
+
+   AND `Remove` CARRIES NO COLOUR (jakob 2026-09-15: "probabely non
+   destructive? a removal is not an error no?"). §11's rule needs no exception
+   here: the error role is for something that went wrong, and a reader removing
+   their own post is doing exactly what they meant to. What makes this dialog
+   careful is the emphasis — the safe action filled, the removal a text button
+   — and the two sentences above it, not a red word. `SeveranceConfirm` and
+   `RejectConfirm` were already drawn this way. */
 export function Screen() {
   return (
     <>
@@ -13,9 +21,7 @@ export function Screen() {
         </p>
         <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>This is immediate and permanent.</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <Button variant="text" style={{ color: "var(--error)" }}>
-            Remove
-          </Button>
+          <Button variant="text">Remove</Button>
           <Button>Keep it</Button>
         </div>
       </DialogSurface>
