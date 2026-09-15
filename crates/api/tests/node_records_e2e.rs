@@ -676,6 +676,27 @@ query CitedBy($id: UUID!, $fromKind: NodeKind, $first: Int, $after: String) {
 }
 "#;
 
+/// The same question asked of the top-level chronicle, which can name the
+/// leg directly (`terminal` matches the terminal leg). Kept beside the
+/// node-anchored read so the two shapes can be compared on one fixture.
+const TERMINAL_QUERY: &str = r#"
+query CitedByTerminal($id: UUID!, $first: Int) {
+  records(terminal: $id, family: REFERENCE, first: $first) {
+    edges {
+      node {
+        id pDirected pInterest
+        target {
+          __typename
+          ... on Post { id title { value } }
+          ... on Comment { id content { value } }
+        }
+      }
+    }
+    pageInfo { hasNextPage endCursor }
+  }
+}
+"#;
+
 /// The citing artifact of each edge, as the row would name it.
 fn citing_titles(connection: &Value) -> Vec<String> {
     connection["edges"]
@@ -813,7 +834,11 @@ async fn the_cited_side_reads_its_citations(pool: PgPool) {
     let unfiltered = &unfiltered["node"]["incomingRecords"];
     assert_eq!(
         citing_titles(unfiltered),
-        vec!["Answering the tide", "Where the salt goes", "The cited post"],
+        vec![
+            "Answering the tide",
+            "Where the salt goes",
+            "The cited post"
+        ],
         "unfiltered, the cited node's own outbound citation rides along on \
          the A leg that lands here — which is why this surface filters"
     );
@@ -828,7 +853,10 @@ async fn the_cited_side_reads_its_citations(pool: PgPool) {
         "the posts that cite this one, and not the citation it made itself"
     );
     let from_comments = rig
-        .gql(CITED_BY_QUERY, json!({ "id": cited, "fromKind": "COMMENT" }))
+        .gql(
+            CITED_BY_QUERY,
+            json!({ "id": cited, "fromKind": "COMMENT" }),
+        )
         .await;
     assert_eq!(
         citing_titles(&from_comments["node"]["incomingRecords"]),
@@ -888,11 +916,22 @@ async fn the_cited_side_reads_its_citations(pool: PgPool) {
 
     assert!(
         citing_titles(
-            &rig.gql(CITED_BY_QUERY, json!({ "id": older, "fromKind": "COMMENT" }))
-                .await["node"]["incomingRecords"]
+            &rig.gql(
+                CITED_BY_QUERY,
+                json!({ "id": older, "fromKind": "COMMENT" })
+            )
+            .await["node"]["incomingRecords"]
         )
         .is_empty(),
         "a node nothing of that kind cites reads an empty page, never an error"
+    );
+
+    let by_terminal = rig.gql(TERMINAL_QUERY, json!({ "id": cited })).await;
+    assert_eq!(
+        citing_titles(&by_terminal["records"]),
+        vec!["Answering the tide", "Where the salt goes"],
+        "naming the leg answers the same question in one page, both kinds \
+         together and the node's own citation left out"
     );
     let _ = citing_comment;
 }
