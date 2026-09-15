@@ -4910,6 +4910,156 @@ closes a place where the canvas knew a rule and had never drawn it.
   one kind — a start that now stands on one more board and lands where it
   always did.
 
+### The topic round — 2026-09-14
+
+jakob's rulings on what a topic is to a reader, closing the tag round's
+last open item (46.5, "the follow gesture has no surface") and the
+slice-3 remainders beside it. The round's premise is one sentence:
+**there is no follow in this product.**
+
+- **FOLLOWING A TOPIC IS THE STANCE GESTURE.** It is an **Affinity**
+  record, Actor → Type, both parameters signed over `[−1, +1]`, bundling
+  NET like every other stance — and a walk-back to `(0, 0)` is priced
+  severance through the existing ceremony. No toggle, no one-tap follow,
+  ever. A gesture that costs nothing on one surface and a signature on
+  every other would teach a reader that the price is arbitrary.
+- **HELD IS THE PREDICATE**: a topic is held while the viewer's netted
+  bundle is not `(0, 0)`. The TOPIC FEED is narrower than that — it
+  admits positive association only. A negative Affinity stands as a
+  public record and stands on *Your topics*; its topic simply never
+  enters a feed. The two rules are deliberately not the same rule, and
+  only one surface shows the difference (the filter's own hint).
+- **AFFINITY IS ITS OWN KIND** under the applicant once-each rule.
+- **THE WORD "FOLLOW" NEVER APPEARS ON SCREEN.** copy-voice's ban
+  (written for the notifications round) extends to topics and is now
+  unconditional. Docs and dev vocabulary keep the word; boards and
+  copy-voice may not. The list is **Your topics**.
+- **THE TAG PAGE GAINS A STANCE ROW** — `StanceControl` `wide`, the
+  profile's one-primary-action idiom, under the title and above the
+  list. That position is the whole fix for item 46.5: the tag round drew
+  this gesture on the header's trailing edge and jakob's review removed
+  it, because beside the entrance post's context it read as that post's
+  readout. A row of its own, above anything belonging to a post, cannot.
+  `targetLabel` is the tag itself (item 46.1's mechanism, built for this
+  page), and `STANCE_ANCHORS` is reused unchanged — **one gesture, one
+  face table**. An Affinity is not a second kind of feeling.
+- **BUT THE FOUR POLE WORDS ARE THE FAMILY'S**, as a tag's and a
+  citation's already are. The slots hold association and attraction
+  (`layer1-interface.md` §9.5), so `StanceControl` grew `axes` — the
+  field's own prop, passed through to the field AND to the alternates,
+  because a slider naming the ends differently from the pad would make
+  the accessible route a different question. The words are
+  `Not mine` / `Mine` and `Away` / `Toward` (blessed 2026-09-15);
+  backlog 78 notes that no board yet draws the pad they belong to, and
+  backlog 79 notes that the two axis NAMES above the sliders are still
+  the opinion's.
+- **"YOUR TOPICS" IS A SUBPAGE OFF EXPLORE, NOT A SECTION IN IT.** The
+  held set has no bound, and an unbounded list inlined in the tab would
+  push the recents under the fold and turn Explore into a list page. The
+  deciding argument is the filter's: a topic narrowing carries a way to
+  the full list, and a door needs somewhere to lead. Explore gets a
+  `ContentRow` `door` between the Sky and the recents, its disc marked
+  with the `#` every topic already wears — `NodeMark`'s own rule, read
+  by a second row master, because no icon set has a topic glyph and §5
+  forbids drawing one.
+- **THE ROWS ARE `ReferenceRow`, AND THEIR PAIR IS AN AFFINITY'S.** The
+  row had decided the pair's family from its `kind`, which is right
+  everywhere else: a topic row usually carries a TAG. Here the same kind
+  carries a stance, so `pairFamily` names it outright and the kind still
+  answers by default. The anchor's WORD comes with it, by the rule's own
+  test — a stance anchor's word is true of a stance, and the citation is
+  the one family it is withheld from.
+- **NO PER-ROW REMOVAL.** The row opens the topic's page, where the one
+  control stands; a × at the end of a list row is the affordance of a
+  thing that costs nothing, and this costs a signature.
+- **THE ORDER IS STRONGEST-ASSOCIATION FIRST** (ruled 2026-09-15): the
+  order `ProfileStances` set and `PostOpinions` mirrored. Alphabetical
+  is a shelf's order and this is a set of positions.
+- **A TOPIC FEED IS JUST ANOTHER FEED SETTING**, so it is a section of
+  the feed's own filter sheet and not a surface. One topic at a time —
+  every other axis combines because combining is what those axes mean,
+  while two topics widen a read rather than narrow it. The section
+  offers only what is held FOR, and its hint says where the rest went.
+  The door out of it is the full list.
+- **THE TOPIC RIDES THE EXTRAS, NEVER THE HEAD.** Two reasons agree: the
+  head spells KINDS and a topic is not one (`Tags` is already a kind and
+  means the Type as ranked content), and the head is the half the
+  collapse cannot take away. A tag name is the reader's, bounded only by
+  the contract's 128 ASCII bytes, so a name the pill cannot hold has to
+  be able to LEAVE the pill — which only an extra can.
+- **INBOUND "CITED BY" MIRRORS THE OPINIONS ROUND** (item 55), and is
+  explicitly **not** a `RefsSheet` extension: that count is the
+  references list's length, and that law stands untouched. Two lists, by
+  different authors, in different orders — folded together, neither
+  number would be checkable. The doors are the opinions round's two: a
+  count line on the post's detail, absent at zero, and the comment's ⋮,
+  which stands at any count and is therefore the only way to the empty
+  sheet.
+- **AND IT IS NEWEST-FIRST — a ruled, deliberate departure** from
+  opinions' strongest-first. An opinions list is a STANDING, a set of
+  positions that hold, where the strongest is the one worth reading. This
+  is a CHRONICLE of other people's acts: each one happened at a moment,
+  no citation outranks another, and what a reader comes for is what has
+  just arrived. Two lists that look alike are ordered differently because
+  they answer different questions, and this line exists so the next
+  reader does not "fix" one of them.
+- **THE UNCHANGED-EDIT GUARD IS THE ACTS BATCH, NOT A BYTE
+  COMPARISON.** An edit signs when there is something in its batch.
+  Comparing bytes would refuse an author who typed a word and took it
+  back, accept one whose only change is whitespace no record carries, and
+  have to be re-derived on every platform. The batch is what is actually
+  signed, and what the footer already counts.
+- **SO THE SIGN GOES INERT AND THE FOOT SPEAKS THE ZERO.** The caps
+  round's disabled idiom — the control stays, disabled, and the edge says
+  it goes nowhere — with `Nothing to sign yet` under it saying why, in
+  the one place the author's eye is already going. **At zero the footer
+  stops being a button**, the menus round's rule: the acts sheet it opens
+  would be empty. `ActsFooter`'s unruled singular closes with it —
+  `1 thing`, taken from `ActsCard`'s blessed total rather than decided
+  fresh, because the short form and the long form are one sentence at two
+  lengths. **THE RULE IS THE FAMILY'S**: `EditCompose`,
+  `EditComposeVideo`, `EditWords`, `CommentEdit` and `CommentEditVideo`
+  all carry the same foot over the same batch, so all five carry the
+  guard; one board draws it. Seal-shaped edits are out of this round —
+  a seal's acts card is a different anatomy with its own totals.
+- **The clip ruling, for context only** (implementation owns it): a
+  detail clip stops at its end with replay; a feed clip loops.
+- **The gate**: boards **194 → 200** (`TagPageHeld`, `YourTopics`,
+  `FeedTopic`, `CitedBy`, `CommentCitedByEmpty`, `EditComposeUnchanged`),
+  edges **1372 → 1429**, gaps hold at **15**, flows hold at **63/61/2**
+  with **2** journey-stopping — every new board joins an existing
+  control-selector start and none of them reroutes a flow, which is the
+  whole of the re-blessing diff. The compose canvas sits at **77/200
+  files** (62% headroom), the feed at 55/200. Reachable filter summaries
+  **325 → 370** with the topic axis enumerated at three states, **0**
+  over the band's 154px, and the widest reading unchanged at
+  `Chats · text · + removed`, 153.9px — the new axis costs the pill
+  nothing, because a topic that will not fit leaves the summary instead
+  of stretching it.
+
+### The viewer-grammar close — 2026-09-15
+
+Two rulings from the census fabric that had no design home until now
+(backlog item 83; the clip half surfaced by the implementation loop's
+viewer lane).
+
+- **A detail clip stops at its end and offers replay; a feed clip
+  loops.** jakob's reasoning, kept whole: "it also seperates once again
+  from vertical videos that are to be watched in the reel scroller. (we
+  have reels (insta) and videos (yt) in one platform and they are
+  different medias so i think the sharp differences are good)". The
+  stop belongs to the reel-vs-video split, not to playback plumbing: a
+  looping detail clip would blur the one line the two medias keep
+  sharp.
+- **The pinned clip's chrome tap stays platform-native.** Web opens the
+  viewer only while the transport chrome is up — a tap with the chrome
+  hidden reveals it first, else the transport would be unreachable
+  under auto-hide; Android, which never hides the transport there,
+  takes the tap directly. Ruled deliberate when the implementation loop
+  queued the asymmetry: each platform keeps its own player's reflex,
+  and one grammar forced across both would break the reflex on one of
+  them.
+
 ---
 
 ## 14. The canvases

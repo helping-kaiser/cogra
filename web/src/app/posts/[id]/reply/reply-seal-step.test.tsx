@@ -107,7 +107,9 @@ describe("ReplySealStep — the citations' three readings", () => {
     // Seen bare, heard whole (item 73): the digit is drawn, the reading spoken.
     expect(door.lastElementChild?.firstElementChild?.textContent).toBe("2");
     expect(within(door).getByText("2 citations")).toHaveClass("sr-only");
-    expect(screen.getByRole("button", { name: "Manage the citations" })).toBe(door);
+    // The door's name folds the count in — "Manage the N citations", and at
+    // one "Manage the 1 citation" (copy-voice.md:409-419).
+    expect(screen.getByRole("button", { name: "Manage the 2 citations" })).toBe(door);
     // The add-row survives the count.
     expect(screen.getByTestId("reply-open-references")).toBeInTheDocument();
     fireEvent.click(door);

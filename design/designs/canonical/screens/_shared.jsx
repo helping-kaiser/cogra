@@ -393,7 +393,24 @@ const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSel
    was opened for and closes on the license (`CARD_MENU`'s order); reading who
    holds an opinion is not an act, so it falls between them. */
 const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {} };
-const COMMENT_MENU = [...CARD_MENU, OPINIONS_ROW, LICENSE_ROW];
+/* ── WHAT CITES THIS (the topic round, 2026-09-14) ─────────────────────────
+   The inbound mirror of the opinions round (backlog item 55), and the same two
+   doors: a count line on the post's detail, and the comment's ⋮ — because a
+   comment has no detail surface of its own, and its ⋮ is where every other act
+   on it already lives.
+
+   THE ROW STANDS AT ANY COUNT, the menus round's rule: a count LINE drops away
+   at zero because a tap that can only open an empty list is a tap spent on
+   nothing, while a menu row that came and went with a number would make the
+   menu a different menu every time. So the empty sheet is reachable only here.
+
+   IT SITS BESIDE THE OPINIONS ROW, between the acts and the license, for that
+   row's reason: reading who has pointed at this is not an act. Inbound before
+   opinions, because it is a fact about the artifact and the other is a fact
+   about people. */
+const CITED_BY_ROW = { label: "Cited by", onSelect: () => {} };
+
+const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
 /* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
    from the bottom edge over the surface the reader asked from, and go back to
    it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
@@ -1301,7 +1318,14 @@ function ComposeDetailsBody({
    stands where the gallery is. It states the body's rule, not a lock — take
    the last picture away in the manager and the words field is what the edit
    becomes (`EditWords`). */
-function EditComposeBody() {
+/* `unchanged` IS THE GUARD, AND THE GATE IS THE BATCH (the topic round,
+   2026-09-14): an edit signs when its acts batch has something in it, never
+   when the bytes happen to differ. A byte comparison would refuse an author who
+   typed a word and took it back — and, worse, would accept one whose only
+   change was whitespace the record does not carry. The batch already knows: it
+   is what the acts sheet lists and what the footer counts, so the guard reads
+   the number that was always there. */
+function EditComposeBody({ unchanged = false } = {}) {
   return (
     <>
       <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
@@ -1368,8 +1392,8 @@ function EditComposeBody() {
 
         <div style={{ flex: 1 }} />
 
-        <ActsFooter count={3} />
-        <Button style={{ width: "100%" }}>Sign the edit</Button>
+        <ActsFooter count={unchanged ? 0 : 3} />
+        <Button style={{ width: "100%" }} disabled={unchanged}>Sign the edit</Button>
       </div>
     </>
   );
@@ -2143,3 +2167,102 @@ const POST_OPINION_HOLDERS = [
   { name: JUNO.displayName, handle: JUNO.handle, pDirected: -0.55, pInterest: 0.25 },
 ];
 
+
+/* ── THE TAG PAGE, WHOLE (the topic round, 2026-09-14) ─────────────────────
+   Shared for `ProfileOtherBody`'s reason: the held state is a STATE of this
+   page, not a second page, and a body drawn twice would drift. One prop, one
+   difference — the bundle the row's anchor reads.
+
+   THE ROW IS THE PAGE'S ONE ACTION, so it wears the profile's one-primary-
+   action idiom: `StanceControl` `wide`, stretched to the column, under the
+   title and above the list. Item 46.5 is what it closes — the tag round drew
+   this gesture on the header's trailing edge and jakob's review removed it,
+   because beside the entrance post's context it read as that post's stance
+   readout. A row of its own, below the title and above anything belonging to
+   a post, cannot be read as any post's anything.
+
+   AND IT NAMES WHAT IT STANCES. `targetLabel` is the tag itself, hash and all
+   — the mechanism backlog item 46.1 added for exactly this page, where more
+   than one stance control stands. The face's accessible name and the skip-link
+   beside it both read it, so the three on the page say which is which.
+
+   THE POLES ARE THE AFFINITY FAMILY'S, NOT THE STANCE'S. Following a topic IS
+   the stance gesture (jakob, 2026-09-14) — one gesture, one ceremony, one face
+   table — but the two slots it fills are association and attraction
+   (`layer1-interface.md` §9.5), and their ends are not "Against / For". They
+   are proposed here and NOT YET BLESSED; copy-voice carries them with that
+   mark. */
+const AFFINITY_AXES = { left: "Not mine", right: "Mine", bottom: "Away", top: "Toward" };
+
+function TagPageBody({ bundle } = {}) {
+  return (
+    <>
+      <PageHeader title="#saltmaps" backHref="#" backLabel="Back to Explore" />
+      <div style={{ padding: "4px 16px 8px" }}>
+        <StanceControl wide targetLabel="#saltmaps" axes={AFFINITY_AXES} bundle={bundle} onCommit={() => {}} />
+      </div>
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "4px 0 0" }}>
+        <TaggedRow pair={{ pDirected: 0.1, pInterest: 1 }} pending>
+          <PostCard attach {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
+        </TaggedRow>
+
+        <TaggedRow pair={{ pDirected: 0.55, pInterest: 1 }}>
+          <PostCard attach {...SOL_POST} bundle={mkBundle(0.1, 0.1)} />
+        </TaggedRow>
+
+        <TaggedRow pair={{ pDirected: 0.4, pInterest: 0.9 }}>
+          <CommentCard
+            attach
+            author={ADA}
+            content="Low tide is kinder to the rubbings than noon ever was."
+            timestamp="4d"
+            license={{ attribution: 0, provenance: 0 }}
+            bundle={mkBundle(0.1, 0.1)}
+            target="“Salt maps of the coast road” — @sol"
+            onOpenTarget={() => {}}
+          />
+        </TaggedRow>
+      </div>
+    </>
+  );
+}
+
+/* ── THE TOPICS THE READER HOLDS (the topic round, 2026-09-14) ─────────────
+   The set behind Explore's door and behind the feed filter's topic narrowing,
+   so both read one fixture and the door's count cannot drift from the list it
+   counts. Held means the netted Affinity is not (0, 0) — `#wellness` is held
+   against, which is exactly as held, and exactly as public.
+
+   THE ORDER IS THE BOARD'S CLAIM: strongest association first, down past
+   nothing into the ones held against (`ProfileStances`' order). */
+const HELD_TOPICS = [
+  { name: "#saltmaps", pair: { pDirected: 0.6, pInterest: 0.35 } },
+  { name: "#coastroad", pair: { pDirected: 0.45, pInterest: 0.7 } },
+  { name: "#fieldnotes", pair: { pDirected: 0.3, pInterest: 0.15 }, pending: true },
+  { name: "#tidetables", pair: { pDirected: 0.15, pInterest: 0.5 } },
+  { name: "#wellness", pair: { pDirected: -0.65, pInterest: -0.3 } },
+];
+
+/* WHAT THE FEED FILTER MAY NARROW TO — derived, never listed twice. The topic
+   feed admits POSITIVE association only (jakob's predicate), so the section's
+   chips are the held set minus the ones held against; deriving it here means
+   the filter and Your topics can never disagree about who is missing and why. */
+const FEED_TOPICS = HELD_TOPICS.filter((topic) => topic.pair.pDirected > 0).map((topic) => topic.name);
+
+/* THE INBOUND LIST ITSELF, NEWEST FIRST — a ruled departure from the opinions
+   sheet's strongest-first, and deliberate (jakob, 2026-09-14). The opinions
+   list is a standing: a set of positions that hold, where the strongest is the
+   one worth reading. This is a CHRONICLE of other people's acts — each one
+   happened at a moment, and what a reader wants from it is what has just
+   arrived. Strength is not the question a chronicle answers.
+
+   THE ROWS ARE `ReferenceRow`, the shape every reference in this system wears:
+   the kind's mark, the citing artifact, and the pair its author signed on the
+   citation — a citation's pair, both axes signed, read through the twenty
+   faces. The count on the post's line IS this list's length. */
+const CITING_ARTIFACTS = [
+  { kind: "post", name: "Where the salt goes in winter", src: "post-photo.jpg", pair: { pDirected: 0.7, pInterest: 0.5 } },
+  { kind: "comment", name: "Answering the tide-market piece", pair: { pDirected: 0.4, pInterest: 0.65 }, pending: true },
+  { kind: "post", name: "Three mornings on the wall", pair: { pDirected: 0.15, pInterest: 0.9 } },
+  { kind: "post", name: "A honey stand and a headland", pair: { pDirected: -0.3, pInterest: 0.35 } },
+];

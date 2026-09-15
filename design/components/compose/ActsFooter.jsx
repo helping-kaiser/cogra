@@ -25,17 +25,47 @@ import { BUTTON_CLASS } from "../core/Button.jsx";
    would be right. The button adds no box: no border, no background, no
    padding, the type spelled out because a button inherits none of it — so
    the line is drawn exactly as before, and the state layer, the focus ring
-   and the 48px target arrive with `BUTTON_CLASS`. */
+   and the 48px target arrive with `BUTTON_CLASS`.
+
+   ZERO AND ONE ARE RULED NOW (the topic round, 2026-09-14) — this file said
+   they were not, and an unruled wording is a wording every consumer invents.
+
+   AT ONE IT SAYS `1 thing`, which is not a new decision: `ActsCard`'s own total
+   already reads `1 thing, signed` on four boards. The two are the same sentence
+   at two lengths, and a footer pluralizing where the card does not would make
+   the short form say something the long form denies.
+
+   AT ZERO IT STOPS BEING A BUTTON, and that is the load-bearing half. The
+   sentence becomes `Nothing to sign yet`, the chevron goes, and the line is a
+   plain span — because the acts sheet it would open has nothing in it, and the
+   menus round already ruled what to do about a tap that can only open an empty
+   list: it is a tap spent on nothing, so it is not offered. The line still
+   speaks, because a foot gone silent would read as a fault rather than as a
+   state; what it stops doing is promising a detail that isn't there. */
 
 export function ActsFooter({ count, onOpen }) {
+  const line =
+    count === 0 ? "Nothing to sign yet" : count === 1 ? "You're signing 1 thing" : `You're signing ${count} things`;
+  const style = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    border: 0,
+    background: "none",
+    padding: 0,
+    fontFamily: "var(--font-sans)",
+    fontSize: "var(--text-label-small)",
+    lineHeight: "var(--text-label-small--line-height)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
+    color: "var(--text-secondary)",
+  };
+
+  if (count === 0) return <span style={style}>{line}</span>;
+
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className={BUTTON_CLASS}
-      style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4, border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
-    >
-      You're signing {count} things
+    <button type="button" onClick={onOpen} className={BUTTON_CLASS} style={{ ...style, cursor: "pointer" }}>
+      {line}
       <span style={{ display: "inline-flex" }}>
         <Icon name="expand_more" size={16} />
       </span>

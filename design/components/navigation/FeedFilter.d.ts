@@ -10,6 +10,14 @@ export interface FeedFilterValue {
   seen?: boolean;
   /** What the feed also admits: "sensitive", "removed". */
   also?: readonly string[];
+  /**
+   * The one topic the feed is narrowed to — its name, hash and all — or null.
+   * A topic feed is another feed setting (jakob, 2026-09-14): content reaching
+   * the viewer over Tag records toward that Type. Only a topic the viewer holds
+   * with POSITIVE association can sit here; one at a time, because two topics
+   * would widen the read rather than narrow it.
+   */
+  topic?: string | null;
 }
 
 /**
@@ -29,6 +37,14 @@ export interface FeedFilterProps {
   /** Render with the sheet already open — for static boards. */
   defaultOpen?: boolean;
   ariaLabel?: string;
+  /**
+   * The topics the viewer may narrow to — held, and held FOR. Names, hash and
+   * all. Empty (the default) and the section is absent: a section offering
+   * nothing is a row spent on nothing.
+   */
+  topics?: readonly string[];
+  /** Opens the full "Your topics" list — everything held, including against. */
+  onOpenTopics?: () => void;
 }
 
 export declare function FeedFilter(props: FeedFilterProps): JSX.Element;
@@ -51,6 +67,10 @@ export interface FeedFilterSheetProps {
    *  this stays pinned under them. Omitted, the sheet is the feed's: the
    *  filter applies live and there is nothing to commit. */
   foot?: JSX.Element;
+  /** The topics the viewer may narrow to — see `FeedFilterProps.topics`. */
+  topics?: readonly string[];
+  /** Opens the full "Your topics" list. */
+  onOpenTopics?: () => void;
 }
 
 export declare function FeedFilterSheet(props: FeedFilterSheetProps): JSX.Element;

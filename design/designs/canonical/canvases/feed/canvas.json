@@ -199,6 +199,15 @@
       "page": "feed"
     },
     {
+      "file": "YourTopics.dc.html",
+      "title": "Your topics",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "ExploreNone.dc.html",
       "title": "Explore · nothing found",
       "x": 1440,
@@ -229,6 +238,15 @@
       "file": "FeedNarrowed.dc.html",
       "title": "Feed · narrowed",
       "x": 960,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedTopic.dc.html",
+      "title": "The feed, narrowed to one topic",
+      "x": 5280,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -317,10 +335,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -3610,
+      "x": -3900,
       "y": 0,
-      "w": 3190,
-      "h": 2442,
+      "w": 3480,
+      "h": 2563,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -330,7 +348,16 @@
       "x": 0,
       "y": 2120,
       "w": 390,
-      "h": 1280,
+      "h": 1344,
+      "page": "feed"
+    },
+    {
+      "file": "TagPageHeld.dc.html",
+      "title": "A tag's page, the topic held",
+      "x": 960,
+      "y": 2120,
+      "w": 390,
+      "h": 1344,
       "page": "feed"
     },
     {
@@ -391,6 +418,15 @@
       "file": "CommentOpinionsEmpty.dc.html",
       "title": "Comment · opinions on it, none yet",
       "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "CommentCitedByEmpty.dc.html",
+      "title": "Comment · what cites it, nothing yet",
+      "x": 3360,
       "y": 0,
       "w": 390,
       "h": 844,

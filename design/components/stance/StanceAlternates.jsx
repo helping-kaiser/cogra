@@ -3,7 +3,8 @@ import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { StanceSlider } from "./StanceSlider.jsx";
 import { STANCE_ALTERNATES_HELP, HelpLine, helpKey } from "./StanceCoachMark.jsx";
-import { clampDimension, DIRECTED_LABEL, DIRECTED_POLES, INTEREST_LABEL, INTEREST_POLES } from "./StanceReadout.jsx";
+import { STANCE_AXES } from "./StancePad.jsx";
+import { clampDimension, DIRECTED_LABEL, INTEREST_LABEL } from "./StanceReadout.jsx";
 
 /* The alternate inputs (design.md §8.6) — paired sliders and direct entry. Same
    machinery as the pad, different surface: they write the same two values, and the
@@ -25,7 +26,15 @@ import { clampDimension, DIRECTED_LABEL, DIRECTED_POLES, INTEREST_LABEL, INTERES
    routes exist, not that both are on screen at once.
 
    Severance is findable from the open pad; for anyone whose input is an alternate
-   the pad never opens, so it is findable here instead. */
+   the pad never opens, so it is findable here instead.
+
+   THE POLES TRAVEL WITH THE RECORD FAMILY, exactly as they do on the field
+   (`STANCE_AXES`, StancePad.jsx). The alternates are the SAME gesture through
+   other controls, so a family that names its own poles must name them here too
+   — a field reading `Not mine / Mine` beside a slider reading `Against / For`
+   would make the accessible route a different question from the drawn one. The
+   two axis NAMES above the tracks are still the stance family's; see the topic
+   round's note in the backlog. */
 
 /* THE BOUND IS A PROP HERE TOO, for `StanceSlider`'s reason: the typed route and
    the dragged one must not disagree about what a value may be. A field that
@@ -74,6 +83,7 @@ export function StanceAlternates({
   landing,
   inline = false,
   helpLabel = "How opinions work",
+  axes = STANCE_AXES,
 }) {
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
@@ -183,15 +193,15 @@ export function StanceAlternates({
           <>
             <StanceSlider
               label={DIRECTED_LABEL}
-              minLabel={DIRECTED_POLES[0]}
-              maxLabel={DIRECTED_POLES[1]}
+              minLabel={axes.left}
+              maxLabel={axes.right}
               value={pick.pDirected}
               onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })}
             />
             <StanceSlider
               label={INTEREST_LABEL}
-              minLabel={INTEREST_POLES[0]}
-              maxLabel={INTEREST_POLES[1]}
+              minLabel={axes.bottom}
+              maxLabel={axes.top}
               value={pick.pInterest}
               onChange={(pInterest) => onPick && onPick({ ...pick, pInterest })}
             />
