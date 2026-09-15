@@ -5,9 +5,10 @@ import { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_AXIS_NAMES, S
    (design.md §8.3). The knob travels exactly the field, the corners are the two
    axes' own ends — (±1, ±1) for a stance, (0, 0) to (1, 1) for a tag — and the
    knob never leaves the drawn shape, so what the finger sees is what the value
-   does. Horizontal runs Against → For, vertical runs Less → More, and those four
-   words are drawn on the field; screen y grows downward and connection grows
-   upward, so the vertical mapping inverts.
+   does. Horizontal is the directed slot and vertical the interest slot, and the
+   record family's four pole words are drawn at their ends — Against → For and
+   Less → More for a stance, the family's own otherwise; screen y grows downward
+   and the upper slot grows upward, so the vertical mapping inverts.
 
    Containment is STRUCTURAL, not arithmetic: the knob's centre travels a box inset
    from the field, and the inset is the smallest one that keeps a 20px knob inside
