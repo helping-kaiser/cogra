@@ -17,6 +17,12 @@ import { Icon } from "../navigation/Icon.jsx";
    65% so the strip reads as one picture framed several ways, which is what it
    is.
 
+   AND NOTHING IS CHOSEN UNTIL SOMEONE CHOOSES (jakob 2026-09-15): "choosing a
+   cover is always a willing act". The default is no cover, so the row opens
+   with no outline and nothing dimmed — four equal candidates. The dim is what
+   the rest of a strip does around a frame that was picked, and until one is
+   picked there is no rest.
+
    THE LAST TILE IS A DIFFERENT KIND OF THING and says so by not being a
    photograph: a dashed square with the picture glyph, the same shape as the
    frames so the row still scans as one strip. It is the way out to the gallery,
@@ -53,9 +59,10 @@ const FILL = { width: "100%", height: "100%", objectFit: "cover", display: "bloc
 export function CoverRow({
   label = "Cover",
   frames = [],
-  selected = 0,
+  selected = null,
   caption = "A frame, or a picture of your own.",
 }) {
+  const chosen = selected !== null && selected !== undefined;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <span
@@ -76,7 +83,9 @@ export function CoverRow({
             style={
               index === selected
                 ? { ...TILE, outline: "2px solid var(--primary)", outlineOffset: 1 }
-                : { ...TILE, opacity: 0.65 }
+                : chosen
+                  ? { ...TILE, opacity: 0.65 }
+                  : TILE
             }
           >
             <img src={frame.src} alt="" style={frame.transform ? { ...FILL, transform: frame.transform } : FILL} />
