@@ -302,9 +302,10 @@ export function detailsGate(state: WizardState): Gate {
  * The cover screen's own gate. A faceless video is not a wall: the contract,
  * the database, and the backend all accept a placement naming no cover, so
  * nothing here should refuse what the rest of the system already allows (jakob,
- * 2026-09-10 — "going without a cover is always possible"). Capture still
- * auto-fills the first frame the moment it succeeds; this gate just stops
- * treating its absence as a reason to hold the reader on the screen.
+ * 2026-09-10 — "going without a cover is always possible"). Nothing about the
+ * stage's own progress narrows it either: whether the frames are still being
+ * read, have arrived, or never came, Next is live and no cover is the default
+ * it carries ("Next stays live: a post can always go without a cover").
  */
 export function coverGate(): Gate {
   return ALLOWED;
@@ -455,8 +456,6 @@ export type WizardAction =
   | { type: "pick"; assets: readonly { id: string; file: Blob; kind?: MediaKind }[] }
   | { type: "unpick"; id: string }
   | { type: "cover"; cover: CoverAsset | null }
-  /** The opening default: the first offer, but never over a choice already made. */
-  | { type: "coverIfUnset"; cover: CoverAsset }
   | { type: "coverUpload"; upload: AssetUpload }
   | { type: "reorder"; from: number; to: number }
   | { type: "focus"; index: number }
@@ -558,12 +557,6 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
 
     case "cover":
       return { ...state, cover: action.cover };
-
-    case "coverIfUnset":
-      // A restored draft arrives with its face already chosen, and the frames
-      // are re-captured behind it — without this guard the first offer would
-      // quietly overwrite what the author picked last time.
-      return state.cover === null ? { ...state, cover: action.cover } : state;
 
     case "coverUpload":
       return state.cover === null

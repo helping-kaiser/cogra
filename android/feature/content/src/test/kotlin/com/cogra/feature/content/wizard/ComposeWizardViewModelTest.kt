@@ -1129,7 +1129,7 @@ class ComposeWizardViewModelTest {
     fun aClipThatWillNotTranscodeNeverReachesTheWire() = runTest(dispatcher) {
         video.untranscodable = true
         val vm = viewModel()
-        vm.toDetailsWithVideo()
+        vm.toDetailsWithVideo(pickCover = true)
 
         assertThat(media.order).containsExactly("still")
         val upload = vm.state.value.picked.single().upload
@@ -1152,7 +1152,7 @@ class ComposeWizardViewModelTest {
     @Test
     fun aChosenCoverPictureReplacesTheFrameAndDropsTheOldId() = runTest(dispatcher) {
         val vm = viewModel()
-        vm.toDetailsWithVideo()
+        vm.toDetailsWithVideo(pickCover = true)
         assertThat(vm.state.value.coverMediaId).isNotNull()
 
         vm.onPickCoverPicture("my-own.jpg")
@@ -1238,7 +1238,7 @@ class ComposeWizardViewModelTest {
         // refuse a post the ruling means to allow.
         video.outputBytes = 20L * 1024 * 1024
         val vm = viewModel()
-        vm.toDetailsWithVideo()
+        vm.toDetailsWithVideo(pickCover = true)
 
         assertThat(vm.state.value.refused).isEmpty()
         assertThat(media.order).containsExactly("still", "video").inOrder()

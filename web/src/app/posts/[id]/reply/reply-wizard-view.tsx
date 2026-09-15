@@ -171,13 +171,8 @@ export function ReplyWizard({
           frames: taken,
           urls: taken.map((frame) => URL.createObjectURL(frame)),
         });
-        const first = taken[0];
-        if (first !== undefined) {
-          dispatch({
-            type: "coverIfUnset",
-            cover: { id: crypto.randomUUID(), file: first, frame: 0, upload: { kind: "waiting" } },
-          });
-        }
+        // EXTRACTION OFFERS; IT NEVER CHOOSES — the row grows its offers
+        // and the author's (non-)choice stands untouched.
       })
       .catch(() => {
         // No frames is a state the row draws: "A picture" still works, and a
