@@ -1448,21 +1448,17 @@ type UserPreferences {
 }
 
 "An outstanding invite link issued by an actor — service-side
- staging UX (invitations.md §4, auth.md). Nothing binds at issue:
- the stance values are PRE-FILLED suggestions the inviter can
- adjust at approval, and the approval itself is the priced act.
- Time-gated and, at the issuer's choice, single-use (one applicant
- slot) or multi-use. Its id is the link capability, so it is
- issuer-visible only."
+ staging UX (invitations.md §4, auth.md). Nothing binds at issue
+ and the link carries no stance values: the inviter chooses them
+ at approval, which is the priced act. Time-gated, single-use
+ unless the issuer opened it to multi-use, and revocable —
+ revoking stops new staging and leaves staged applications
+ approvable (auth.md \"Invite-link generation\"). Its id is the
+ link capability, so it is issuer-visible only."
 type InviteLink {
   id: UUID!
   "The issuing actor (User or Collective)."
   inviter: Actor!
-  "Pre-filled p_d for the inviter's approval-time Opinion — a
-   suggestion, never a commitment."
-  prefillPDirected: Dimension!
-  "Pre-filled p_i for that Opinion."
-  prefillPInterest: Dimension!
   "Whether the link admits one applicant slot (single-use) or many
    applicants until expiry (multi-use)."
   singleUse: Boolean!
@@ -1492,6 +1488,11 @@ type Application {
   keyAttached: Boolean!
   "When the inviter's priced approval happened; null while pending."
   approvedAt: DateTime
+  "When the inviter closed the application without approving it
+   (rejectApplication); null otherwise. A rejected application
+   ends like an expired one — the account persists (auth.md
+   \"Rejection\")."
+  rejectedAt: DateTime
   "When the Registration confirmed and the account became a
    member; null before."
   landedAt: DateTime
@@ -4049,34 +4050,49 @@ input AttachActorKeyInput {
 }
 type AttachActorKeyPayload { user: User }
 
-"Re-arm an expired, never-approved application with a fresh
- invite link — a new application row for the viewer's account
- (auth.md \"Expiry\"). BAD_INPUT while a live application exists;
+"Re-arm a closed, never-approved application — expired or
+ rejected — with a fresh invite link: a new application row for
+ the viewer's account (auth.md \"Expiry\", \"Rejection\").
+ BAD_INPUT while a live application exists;
  INVITE_UNUSABLE for a dead link."
 input ApplyWithInviteInput { inviteLink: UUID! }
 type ApplyWithInvitePayload { application: Application }
 
 "Approve staged applicants — the inviter's deliberate, priced act:
- per applicant or in batch, with the pre-filled stance values
- adjusted at will. Runs the admission sequence backend-side —
+ per applicant or in batch, each carrying the stance values the
+ inviter picks for it. Runs the admission sequence backend-side —
  the funding burn, then the staged Registration — inside the
  approval, guarded so a retried or concurrent approval can never
  double-fund; landing waits only on the Registration confirming.
  Returns the inviter's own Opinion records to sign — the vouch is
  the inviter's signature, not a server write. Approval requires an
  approvable application — email verified and key attached; an
- already-approved, expired, or foreign-queue application refuses
- with BAD_INPUT pinned to its entry."
+ already-approved, rejected, expired, or foreign-queue application
+ refuses with BAD_INPUT pinned to its entry."
 input ApproveApplicantsInput {
   approvals: [ApplicationApprovalInput!]!
 }
 input ApplicationApprovalInput {
   application: UUID!
-  "The inviter's stance toward the joiner — pre-filled from the
-   link, committed here."
+  "The inviter's stance toward the joiner, chosen here — approval
+   is where the values are picked and where they commit."
   pDirected: Dimension!
   pInterest: Dimension!
 }
+
+"Close a staged application without approving it — the inviter's
+ own gesture, never a side effect of revoking the link the
+ applicant arrived through (auth.md \"Rejection\"). Ends the
+ application the way expiry does: the row is marked rejected, the
+ account keeps its login, its reads and its attached key, and a
+ fresh invite link re-arms it through applyWithInvite. Nothing is
+ deleted. Singular where approval is batched — a foreclosing act
+ is taken one at a time, and the client owns the explicit
+ confirmation. An already-approved, already-rejected, expired, or
+ foreign-queue application refuses with BAD_INPUT."
+input RejectApplicationInput { application: UUID! }
+"The application in its closed state."
+type RejectApplicationPayload { application: Application }
 
 input LogInInput {
   email: String!
@@ -4210,15 +4226,14 @@ input UploadKeyBackupInput {
 }
 type UploadKeyBackupPayload { ok: Boolean }
 
-"Issue a time-gated invite link — single-use or multi-use, the
- issuer's choice — carrying the inviter's PRE-FILLED stance values
- (a suggestion; the approval commits)."
+"Issue a time-gated invite link. It carries no stance values —
+ the inviter picks those at approval, the priced act. An expiry
+ under 24 hours can strand a registrant mid-verification, whose
+ own account expires on that clock (auth.md \"Expiry\")."
 input CreateInviteLinkInput {
   expiresAt: DateTime!
-  prefillPDirected: Dimension!
-  prefillPInterest: Dimension!
   "One applicant slot when true; many applicants otherwise.
-   Defaults to multi-use."
+   Defaults to single-use."
   singleUse: Boolean
   "Act as this Collective; null = the viewer issues."
   actAs: UUID
@@ -4228,6 +4243,9 @@ type CreateInviteLinkPayload {
   inviteLink: InviteLink
 }
 
+"Stop a link from staging anyone new. Applications already staged
+ through it stay approvable — closing one is rejectApplication
+ (auth.md \"Invite-link generation\")."
 input RevokeInviteLinkInput { inviteLink: UUID! }
 "An unknown, foreign, or already-revoked link refuses with a
  NOT_FOUND userError — the one place NOT_FOUND rides the userError
@@ -4296,6 +4314,7 @@ extend type Mutation {
   attachActorKey(input: AttachActorKeyInput!): AttachActorKeyPayload!
   applyWithInvite(input: ApplyWithInviteInput!): ApplyWithInvitePayload!
   approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
+  rejectApplication(input: RejectApplicationInput!): RejectApplicationPayload!
   logIn(input: LogInInput!): LogInPayload!
   refreshSession(input: RefreshSessionInput!): RefreshPayload!
   "Revoke one session (the current one if no id is given)."
