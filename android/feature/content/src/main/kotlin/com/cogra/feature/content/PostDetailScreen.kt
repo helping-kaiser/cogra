@@ -403,6 +403,7 @@ private fun DetailMenu(
             onCite = { onCite(post.id) },
             onRemove = onRemove,
             onLicense = { onLicense(post.license) },
+            testTagPrefix = "detail_menu",
         ),
         contentDescription = stringResource(R.string.content_menu_post),
         testTag = "detail_menu",
@@ -805,65 +806,6 @@ private fun CommentsFoot(
         ) {
             Text(stringResource(R.string.content_comment_signin))
         }
-    }
-}
-
-/**
- * THE ROWS THE ONE MENU HOLDS — the author's post vs someone else's
- * (`_shared.jsx:369-376`). Both keep the card's order: the acts the menu
- * was opened for lead, and the license closes it, the license being the
- * rarest read in the product.
- *
- * ROWS WHOSE DESTINATION IS NOT BUILT YET STAND ANYWAY and do nothing
- * (jakob 2026-09-14, the introduced-but-inert law): a menu that grew a
- * row per slice would be a different menu every release, and the row
- * order is ruled. `Save` waits on slice 2.6's `setBookmark`, the hide
- * row on its `hideActor`; `Mark as sensitive` and `Remove` wait on the
- * slices that own them — removal whole, in slice 8's erasure half.
- */
-@Composable
-private fun postMenuRows(
-    own: Boolean,
-    handle: String?,
-    license: LicenseChoice?,
-    onEdit: () -> Unit,
-    onCite: () -> Unit,
-    onRemove: () -> Unit,
-    onLicense: () -> Unit,
-): List<MenuRow> = buildList {
-    add(MenuRow(stringResource(R.string.content_menu_save), "detail_menu_save") {})
-    if (own) {
-        add(MenuRow(stringResource(R.string.content_edit), "detail_menu_edit", onEdit))
-        // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
-        // post sensitive is always a signed action changing the post — an
-        // edit — so there is no standalone commit path and this row is a
-        // door into the edit flow rather than a sheet of its own. Edit is
-        // the general door; this is the intentioned one. When the edit
-        // surface's drawn Sensitive row lands (CW-46) the link can focus it.
-        add(
-            MenuRow(
-                stringResource(R.string.content_menu_sensitive),
-                "detail_menu_sensitive",
-                onEdit,
-            ),
-        )
-        add(MenuRow(stringResource(R.string.content_menu_remove), "detail_menu_remove", onRemove))
-    } else {
-        add(MenuRow(stringResource(R.string.content_menu_cite), "detail_menu_cite", onCite))
-        // THE HIDE ROW NAMES ITS PERSON (`ActorChip.jsx:67`): the handle is
-        // what a reader recognises, and the word they will look for again
-        // under Hidden accounts. A redacted author has none.
-        val hide = if (handle == null) {
-            stringResource(R.string.content_menu_hide_account)
-        } else {
-            stringResource(R.string.content_menu_hide_actor, "@$handle")
-        }
-        add(MenuRow(hide, "detail_menu_hide") {})
-    }
-    // The license rode the payload, so a redacted record has none to show
-    // (`PostCard.jsx:142`).
-    if (license != null) {
-        add(MenuRow(stringResource(R.string.content_menu_license), "detail_menu_license", onLicense))
     }
 }
 
