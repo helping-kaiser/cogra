@@ -146,9 +146,11 @@ service did something on the reader's behalf.
 **Implementation vocabulary stays off the screen.** Banned in
 user-facing copy: graph, node, edge, vertex, tensor, weight, parameter,
 decentralized, protocol, token, crypto — and the repo's own internal
-words *valence*, *connection*, `p_d`, `p_i`. The two stance parameters
-are labelled **"For or against"** and **"How much reaches you"** on
-screen, and nothing else.
+words *valence*, *connection*, `p_d`, `p_i`. An **opinion's** two stance
+parameters are labelled **"For or against"** and **"How much reaches
+you"** on screen, and nothing else; another record family filling the
+same two slots names them its own — the control owns the geometry, the
+record family owns the words.
 
 The rule is "as little as possible, as much as needed", not a word ban:
 where the format *is* the content, name it exactly. A key export says
