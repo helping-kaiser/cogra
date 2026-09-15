@@ -16,5 +16,5 @@ What holds:
 - **A failed tile dims and wears the badge; its words live beside the row** (`UploadErrorLine` — "One picture didn't upload. Retry · Remove it"). Never cram retry into 48px.
 - The remove X hides on a failed tile — the line owns that tile's ways out.
 - **`video` draws the composer's video preview** — the play disc on the frame, the duration on the trailing corner (the pill needs an 80px tile). This is authoring-side only: a reading surface never draws play/pause, where presence on screen is the policy (`MediaAttachment`).
-- **`coverSrc` marks a clip that has a cover** — the chosen frame inset in the bottom-left corner, the same corner the "Cover" badge owns, at a third of the tile's short side (28px floor) behind a hairline ring. A cover belongs to the clip, so it rides the clip's own tile rather than standing beside it as a second attachment.
+- **`coverSrc` marks a clip that has a cover** — the chosen frame inset in the bottom-left corner, the same corner the "Cover" badge owns, at a third of the tile's short side (28px floor) behind a hairline ring. A cover belongs to the clip, so it rides the clip's own tile rather than standing beside it as a second attachment. `coverTransform` carries the chosen frame's own framing, the way `CoverRow`'s tiles carry theirs.
 - Default is a 48px square at the small (8px) rung; the Show all sheet uses 56.

@@ -10,7 +10,9 @@
    carry.
 
    THE COVER RIDES THE CLIP'S OWN TILE — `MediaThumb`'s `coverSrc`, the chosen
-   frame inset in the bottom-left corner behind a hairline ring. ONE
+   frame inset in the bottom-left corner behind a hairline ring. It is the
+   strip's THIRD frame, carrying its own framing, so the mark reads as a face
+   that was picked rather than as a miniature of the tile under it. ONE
    ATTACHMENT IS ONE TILE: a cover standing beside the clip would read as a
    second thing the author picked, and they picked one thing. The corner is
    the one the "Cover" badge already owns on a picture, so the tray says cover
@@ -33,6 +35,7 @@ export function Screen() {
           height={64}
           video
           coverSrc="post-photo.jpg"
+          coverTransform="scale(1.5)"
           onRemove={() => {}}
           removeLabel="Remove this video"
         />
