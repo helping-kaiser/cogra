@@ -246,7 +246,7 @@ fun PostDetailScreen(
             // THE DETAIL'S BAR IS PINNED (jakob 2026-09-15): collapsing the
             // top is the READING SURFACES' motion, not every page's, and
             // this bar is the only place the post's one menu and its way
-            // back live (`_shared.jsx:337-341` takes the ⋮ off the card
+            // back live (`_shared.jsx:341-346` takes the ⋮ off the card
             // here). A bar that leaves with the scroll takes the post's
             // whole set of acts off screen mid-read, which is not a cost
             // the collapse was ever meant to buy.
@@ -415,7 +415,7 @@ fun PostDetailScreen(
 
 /**
  * ON A DETAIL SURFACE THE MENU LIVES UP HERE and the card's own dot yields
- * (`_shared.jsx:337-341`): two dots would be two menus for one post.
+ * (`_shared.jsx:341-346`): two dots would be two menus for one post.
  *
  * A REMOVED POST HAS NO MENU LEFT — back is the whole header
  * (`Removed.jsx:5-6`). There is nothing of it to edit, cite or license, and
