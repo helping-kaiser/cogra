@@ -1,9 +1,9 @@
 // The gate on the feed-filter trigger's width, and the census behind it
 // (backlog items 60 + 64, ruled 2026-09-14).
 //
-// `feedFilterSummary` (FeedFilter.jsx) composes the trigger's words from five
-// independent axes — kinds, forms, order, seen, also — and collapses to a
-// change-count once the spelled sentence outgrows the band's 154px. Nothing
+// `feedFilterSummary` (FeedFilter.jsx) composes the trigger's words from six
+// independent axes — kinds, topic, forms, order, seen, also — and collapses to
+// a change-count once the spelled sentence outgrows the band's 154px. Nothing
 // here re-implements that: every candidate summary is produced by calling the
 // real master function and measured with the master's own
 // `measureTriggerText`, the way check-readouts.mjs calls the real formatters
@@ -27,6 +27,25 @@
 //     same point, and passes or fails this gate together.
 // Permutations still spell distinct STRINGS, so the count below is a lower
 // bound on distinct readings; every width they can produce is measured.
+//
+// THE TOPIC AXIS IS THE ONE WHOSE VALUE SPACE IS THE READER'S (the topic
+// round, 2026-09-14): a tag name, not a declared label. It is still finite and
+// still exactly gated, for two reasons the contract gives and one the master
+// does:
+//   - the name's grammar is ASCII `[A-Za-z0-9._-]`, 1 to 128 bytes
+//     (hashtag.md §2), so no name can reach outside the measured alphabet and
+//     none can be longer than the widest one below;
+//   - the topic is spelled as an EXTRA, never in the head, and an extra is
+//     exactly what the collapse takes away — so a name too wide to spell
+//     leaves the summary entirely rather than stretching it;
+//   - `feedFilterSummary` returns the spelled sentence only after measuring it
+//     against the budget, so the spelled branch can never be the overflow. The
+//     only branch this gate can fail on is the collapse, `head · N changes`,
+//     and that string carries no name at all.
+// So three states cover it exactly: absent; a representative name, which
+// exercises the spelled branch; and the WIDEST NAME THE GRAMMAR ALLOWS, which
+// forces the collapse branch in every combination — including the ones a short
+// name would still spell. Enumerating more names would add strings, not widths.
 //
 // WIDTH, PRECISELY: real `figtree.ttf` advance summing AT THE TRIGGER'S OWN
 // RENDER WEIGHT — cmap (format 4) to glyph id, hmtx to the font-unit advance
@@ -454,13 +473,29 @@ const alsoSubsets = subsetsInOrder(ds.FEED_ALSO); // 2^2
 const orderValues = ds.FEED_ORDER.map((o) => o.value); // ["ranked", "newest"]
 const seenValues = [false, true];
 
+// The topic axis, three states — see the header for why three is exact. The
+// widest name the grammar allows is 128 bytes of the table's widest character
+// (plus the `#` every topic wears), which is far past any budget and therefore
+// forces the collapse wherever a topic is set at all.
+const TAG_NAME_MAX_BYTES = 128; // hashtag.md §2
+// A canonical name is ASCII-lowercased, so this is its whole alphabet; the
+// widest character in it is found by asking the master's own stick, rather than
+// named here, so the worst case cannot go stale against the font.
+const TAG_NAME_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789._-";
+const widestNameCharacter = [...TAG_NAME_ALPHABET].reduce((widest, character) =>
+  ds.measureTriggerText(character) > ds.measureTriggerText(widest) ? character : widest,
+);
+const topicValues = [null, "#saltmaps", "#" + widestNameCharacter.repeat(TAG_NAME_MAX_BYTES)];
+
 const summaries = new Set();
 for (const kinds of kindsSubsets) {
-  for (const forms of formsSubsets) {
-    for (const order of orderValues) {
-      for (const seen of seenValues) {
-        for (const also of alsoSubsets) {
-          summaries.add(ds.feedFilterSummary({ kinds, forms, order, seen, also }));
+  for (const topic of topicValues) {
+    for (const forms of formsSubsets) {
+      for (const order of orderValues) {
+        for (const seen of seenValues) {
+          for (const also of alsoSubsets) {
+            summaries.add(ds.feedFilterSummary({ kinds, topic, forms, order, seen, also }));
+          }
         }
       }
     }

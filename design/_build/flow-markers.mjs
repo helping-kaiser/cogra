@@ -235,6 +235,21 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">#saltmaps</span>", tag: "button" },
     { n: 2, find: ">coast road</span>", tag: "button" },
     ...nav(3),
+    /* The topics door takes the board's next free number, the way the band's
+       chats and bell and the card's share all did — the page's numbering is
+       append-only, so a row added above the recents does not renumber them. */
+    { n: 10, find: ">Your topics</span>", tag: "button" },
+  ],
+  /* Every row on Your topics opens the same page, so they share one via —
+       the tag page in its HELD state, because a row on this list is held by
+       definition. */
+  YourTopics: [
+    { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
+    { n: 2, find: ">#saltmaps<", tag: "button" },
+    { n: 2, find: ">#coastroad<", tag: "button" },
+    { n: 2, find: ">#fieldnotes<", tag: "button" },
+    { n: 2, find: ">#tidetables<", tag: "button" },
+    { n: 2, find: ">#wellness<", tag: "button" },
   ],
   ExploreSearch: [
     { n: 14, find: ">saltmaps<", tag: "button" },
@@ -263,6 +278,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: 'aria-label="1 comment"', tag: "button" },
     ...nav(11),
   ],
+  /* The sheet's chips all share via 2, the topic chips included (the topic
+     round): every chip in here applies live and in place, which is one act
+     whatever it narrows, and WHICH feed the reader lands on is what via 6 —
+     the way out — enumerates. The door to the full list is the one new
+     control, so it is the one new number. */
   FeedSheet: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
     { n: 2, find: 'role="switch"', tag: "button", all: true },
@@ -270,6 +290,17 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "already seen", tag: "label" },
     { n: 5, find: ">Reset</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 7, find: ">All your topics</button>", tag: "button" },
+  ],
+  /* The feed narrowed to one topic. Neither card carries a reference, so the
+     numbering closes over the slot `FeedNarrowed` keeps for one. */
+  FeedTopic: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 7, score: 8 }),
+    { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 9, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 9, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(10),
   ],
   FeedNarrowed: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
@@ -483,6 +514,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">License terms</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
+    { n: 6, find: ">Cited by</button>", tag: "button" },
   ],
   ProfileMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },
@@ -944,6 +976,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: 'aria-label="Share this post"', tag: "button" },
     ...nav(10),
     { n: 15, find: 'aria-label="Opinions on this post"', tag: "button" },
+    { n: 16, find: 'aria-label="Cited by"', tag: "button" },
   ],
   PostDetailVideo: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1497,6 +1530,29 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
   ],
+  /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
+     control that stops being one. The acts footer is a plain span at zero, so
+     it carries no number and has no edge; the Sign is still a button, disabled,
+     and its edge says out loud that it goes nowhere. */
+  EditComposeUnchanged: [
+    { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="Editing"', tag: "button" },
+    { n: 4, find: 'aria-label="Manage the pictures"', tag: "button" },
+    { n: 5, find: 'data-field="Title"', tag: "div" },
+    { n: 6, find: 'data-field="Description"', tag: "div" },
+    { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 7, find: 'aria-label="Remove #saltmaps"', tag: "button" },
+    { n: 8, find: "+ Add a tag", tag: "button" },
+    { n: 9, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 10, find: "+ Cite something", tag: "button" },
+    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    { n: 13, find: ">Mark</button>", tag: "button" },
+    { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+    { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
+  ],
   // Show all over the edit. The sheet is the same `PickedSheet` ComposePicked
   // draws, so the markers are its markers — but the REMOVE anchors are spelled
   // exactly rather than by the "Remove" prefix, because the edit beneath this
@@ -1622,6 +1678,15 @@ Object.assign(FLOW_MARKERS, {
   CommentOpinionsEmpty: [
     { n: 1, find: `class="cg-scrim-in"`, tag: "div", all: true },
   ],
+  /* The inbound sheet and its empty twin — the opinions pair's anatomy exactly,
+     because they are the same two doors onto a different list. */
+  CitedBy: [
+    { n: 1, find: "min-height:var(--touch-target-min);width:100%;border:0", tag: "button", all: true },
+    { n: 2, find: `class="cg-scrim-in"`, tag: "div", all: true },
+  ],
+  CommentCitedByEmpty: [
+    { n: 1, find: `class="cg-scrim-in"`, tag: "div", all: true },
+  ],
   NotificationsEmpty: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
   /* The chats coming-soon screen (item 68) numbers like the bell's empty list:
      the same back-plus-nav anatomy, because it is the same list surface with
@@ -1702,7 +1767,7 @@ const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 8,
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
-  FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15,
+  FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
   FeedGallery: 15, FeedCover: 17,
   Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
   WalletGuest: 8, WalletApplicant: 6,
@@ -1721,7 +1786,7 @@ const BAND_BELL = {
   ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
   ComposeExpired: 20, Explore: 9,
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
-  FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17,
+  FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
   FeedCover: 19,
   Wallet: 15, WalletEmpty: 10, WalletSetup: 9, WalletKeyAbsent: 11,
   WalletApplicant: 7,
@@ -1738,7 +1803,7 @@ for (const [board, n] of Object.entries(BAND_BELL)) {
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
   KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
-  FeedNarrowed: 17, FeedScrolled: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16,
+  FeedNarrowed: 17, FeedScrolled: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16, FeedTopic: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
 };
 for (const [board, n] of Object.entries(CARD_SHARE)) {
@@ -1755,26 +1820,42 @@ for (const [board, n] of Object.entries(CARD_SHARE)) {
    posts, one comment) no longer share one anonymous "Choose your opinion". The
    VIA NUMBERING ITSELF is unchanged here: it is still one edge for all three,
    where each FACE keeps its own (a post's, a comment's). Splitting the via to
-   match is a graph.json call, left standing for jakob to rule on. */
+   match is a graph.json call, left standing for jakob to rule on. THE TOPIC'S
+   OWN skip-link (the topic round, 2026-09-14) joins via 2 under that same
+   convention \u2014 it is the page's accessible path, and the page has one; its
+   FACE takes the next free number, 15, because every other face on the page
+   has its own.
+
+   BOTH STATES OF THE PAGE READ THE SAME LIST. The body is one helper
+   (`TagPageBody`), so the markers are one list too: `topicStance` is the only
+   thing the held state changes, since an anchor with a bundle behind it says so
+   in its accessible name. */
+const tagPageBody = ({ topicStance }) => [
+  { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
+  { n: 2, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
+  { n: 2, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+  { n: 2, find: ">Choose your opinion on this comment</button>", tag: "button" },
+  { n: 3, find: '<a href="/u/', tag: "a", all: true },
+  { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
+  { n: 5, find: ">More</button>", tag: "button", all: true },
+  { n: 6, find: "scroll-snap-type:x mandatory", tag: "div" },
+  { n: 7, find: '<a href="/t/', tag: "a", all: true },
+  { n: 8, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+  { n: 9, find: ">Post score</span>", tag: "button", all: true },
+  { n: 10, find: 'aria-label="2 comments"', tag: "button" },
+  { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+  { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
+  { n: 12, find: ">On \u201c", tag: "button", all: true },
+  { n: 13, find: 'aria-label="More on this comment"', tag: "button" },
+  { n: 14, find: 'aria-label="Your opinion on this comment', tag: "button" },
+  { n: 15, find: topicStance, tag: "button" },
+];
+
 Object.assign(FLOW_MARKERS, {
-  TagPage: [
-    { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
-    { n: 2, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
-    { n: 2, find: ">Choose your opinion on this comment</button>", tag: "button" },
-    { n: 3, find: '<a href="/u/', tag: "a", all: true },
-    { n: 4, find: 'aria-label="More on this post"', tag: "button", all: true },
-    { n: 5, find: ">More</button>", tag: "button", all: true },
-    { n: 6, find: "scroll-snap-type:x mandatory", tag: "div" },
-    { n: 7, find: '<a href="/t/', tag: "a", all: true },
-    { n: 8, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
-    { n: 9, find: ">Post score</span>", tag: "button", all: true },
-    { n: 10, find: 'aria-label="2 comments"', tag: "button" },
-    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
-    { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
-    { n: 12, find: ">On \u201c", tag: "button", all: true },
-    { n: 13, find: 'aria-label="More on this comment"', tag: "button" },
-    { n: 14, find: 'aria-label="Your opinion on this comment', tag: "button" },
-  ],
+  TagPage: tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }),
+  /* The same page with the topic held \u2014 the same markers, one find apart: an
+     anchor with a bundle behind it says so in its own accessible name. */
+  TagPageHeld: tagPageBody({ topicStance: 'aria-label="Your opinion on #saltmaps' }),
   TagPageEmpty: [
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
   ],

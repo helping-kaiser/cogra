@@ -72,7 +72,14 @@ const TONES = {
   primary: { background: "var(--primary)", color: "var(--on-primary)" },
 };
 
-function Disc({ image, imageShape, name, face, glyph, tone }) {
+/* `letter` IS THE MARK A KIND WITH NO ICON WEARS (the topic round, 2026-09-14).
+   `NodeMark` already rules this: a topic's mark is the `#` its chip wears and a
+   text post's is a `T`, because no icon set has a glyph for either and §5
+   forbids drawing one. The rule is the system's; this is the second row master
+   to read it, so a door into the topics is marked the way every topic on every
+   other surface already is — and nothing new was invented to mark it. It sits
+   where the glyph sits, in the same 40px disc, at the disc's own tone. */
+function Disc({ image, imageShape, name, face, letter, glyph, tone }) {
   if (image) {
     return (
       <img
@@ -102,6 +109,18 @@ function Disc({ image, imageShape, name, face, glyph, tone }) {
     >
       {face ? (
         <StanceValue pDirected={face.pDirected} pInterest={face.pInterest} showPair={false} />
+      ) : letter ? (
+        <span
+          aria-hidden="true"
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: "var(--text-title-medium)",
+            lineHeight: 1,
+            fontWeight: "var(--text-title-medium--font-weight)",
+          }}
+        >
+          {letter}
+        </span>
       ) : (
         <Icon name={glyph ?? "wallet"} size={20} />
       )}
@@ -119,6 +138,7 @@ export function ContentRow({
   image,
   name,
   face,
+  letter,
   glyph,
   direction,
   chevron = true,
@@ -173,7 +193,7 @@ export function ContentRow({
       style={action ? { ...box, width: "auto", flex: 1, minWidth: 0, background: "none", paddingRight: 0 } : box}
     >
       <span style={{ position: "relative", flex: "none", width: "40px", height: "40px" }}>
-        <Disc image={image} imageShape={shape.image} name={name} face={face} glyph={glyph} tone={shape.disc} />
+        <Disc image={image} imageShape={shape.image} name={name} face={face} letter={letter} glyph={glyph} tone={shape.disc} />
         {direction && (
           <span
             aria-hidden="true"

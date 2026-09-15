@@ -3,7 +3,7 @@ import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { Snackbar } from "../core/Snackbar.jsx";
 import { JoinPrompt } from "../core/JoinPrompt.jsx";
-import { StancePad } from "./StancePad.jsx";
+import { StancePad, STANCE_AXES } from "./StancePad.jsx";
 import { StanceAlternates } from "./StanceAlternates.jsx";
 import { StanceCoachMark, STANCE_PAD_HELP, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { SeveranceConfirm } from "./SeveranceConfirm.jsx";
@@ -111,7 +111,17 @@ function parkedPadStyle(inset = 16) {
    button's clothes, and — divergence from the card anchor, deliberate — the
    words drawn beside the face, because here the opinion IS the row's one action
    and a lone face at full width reads as lost. Tap, hold, pad, severance: all
-   unchanged — the variant restyles the anchor and nothing else. */
+   unchanged — the variant restyles the anchor and nothing else.
+
+   `axes` (the topic round, 2026-09-14) NAMES THE FOUR POLES, for the reason
+   `StancePad` already takes them as a prop: this control is not the stance
+   family's alone. An Affinity toward a Type — the gesture the topic page wears
+   — fills the same two signed slots with association and attraction, and its
+   ends are not "Against / For". The prop is `StancePad`'s own, passed through
+   UNCHANGED to the field and to the alternates alike, so the drawn route and
+   the accessible one never name the same axis two ways. It restyles no pixel
+   and moves no geometry: one gesture, one face table, one ceremony — only the
+   words at the edges belong to the family. */
 export function StanceControl({
   targetLabel = "this post",
   bundle: supplied,
@@ -125,6 +135,7 @@ export function StanceControl({
   wide = false,
   overMedia = false,
   helpLabel = "How opinions work",
+  axes = STANCE_AXES,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -488,7 +499,7 @@ export function StanceControl({
               </div>
             ) : (
               <>
-                <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} />
+                <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} axes={axes} />
                 {padNote}
                 <StanceLandingLine landing={landing} />
               </>
@@ -534,6 +545,7 @@ export function StanceControl({
           onSever={openSeverance}
           landing={<StanceLandingLine landing={landing} />}
           helpLabel={helpLabel}
+          axes={axes}
         >
           <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} />
         </StanceAlternates>

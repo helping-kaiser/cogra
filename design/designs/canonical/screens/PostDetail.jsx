@@ -15,13 +15,19 @@
    THE OPINIONS ROW IS THE DETAIL'S OWN (backlog item 55, the score-and-opinions
    round): a quiet count under the tags line, opening the sheet that lists who
    holds one. It is drawn from the post's own count, so every board that draws
-   this surface draws it too. */
+   this surface draws it too.
+
+   AND `Cited by 4` UNDER IT (the topic round, 2026-09-14) — the inbound mirror,
+   in the same register and for the same reason. The tags line above says what
+   this post points AT; this says what points BACK. Two lists, two counts,
+   neither folded into the other: the references count is the tags-and-
+   references sheet's length and stays exactly that. */
 export function Screen() {
   return (
     <>
       <DetailHeader items={READER_POST_MENU} />
       <DetailColumn>
-        <PostCard {...MIRA_GALLERY_POST} variant="detail" onOpenOpinions={() => {}} />
+        <PostCard {...MIRA_GALLERY_POST} variant="detail" onOpenOpinions={() => {}} citedBy={CITING_ARTIFACTS.length} onOpenCitedBy={() => {}} />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
