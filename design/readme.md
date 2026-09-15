@@ -5060,6 +5060,115 @@ viewer lane).
   and one grammar forced across both would break the reflex on one of
   them.
 
+### The invites round — 2026-09-15
+
+The last gap off a root page. `Profile via 7` had pointed at "the invites
+screen (not designed)" since the profile round; seven boards close it,
+and closing it forced the mechanic itself to be ruled rather than
+inherited. Ruled by jakob the same day.
+
+- **The screen has two halves and they must not look alike.** Staging is
+  free and revocable — a link is a thing the reader made, revoked with
+  one quiet word, and nothing about it touches the record. Vouching is
+  signed and priced. Drawing them in one register would let a reader
+  reach the second while thinking they were doing the first, which is
+  the only way this mechanic can hurt someone.
+- **Approving IS the vouch (jakob), so approving happens on the pad.**
+  The row opens `StanceControl`, parked open at the standing default,
+  and `Set` signs the inviter's Opinion toward the new Profile. A button
+  labelled "Approve" would have hidden a signed, priced stance behind a
+  word that sounds like moderation. `ApprovePad` is `VouchBackPad`
+  mirrored: the handshake has two halves and the tree now draws both,
+  with the same master, the same anatomy and the same low defaults.
+- **No `Walk it back` on it.** That control exists where there is a
+  bundle to undo, and a first vouch has none — nothing has been signed
+  toward this person by anyone, because their Profile did not exist
+  until this act made it possible.
+- **The prefill is gone from the whole mechanic (jakob).** A link used
+  to carry suggested stance values for the inviter's eventual Opinion.
+  It asked for a number at the moment the reader knows least, about
+  somebody who did not exist yet, and the answer was re-asked at
+  approval anyway. The opinion is picked once, on the pad, when there is
+  a person to have it about. `invitations.md` §4 and `api-spec.md`'s
+  `InviteLink` still described the prefill when these boards were drawn
+  and are being rewritten to match the ruling; no surface in this tree
+  ever drew one.
+- **Single use is the default (jakob).** A targeted invite is the
+  ordinary one and the safe one — a leaked link stages at most one
+  stranger — so the default sits where a reader who changes nothing is
+  least exposed. The switch is worded as the RESTRICTION, `Only one
+  person can use it`, which is why that row carries no status line: the
+  label already says what ON does, and what OFF does is the group's
+  footnote.
+- **Two decisions on the create sheet and no third.** Who may use it,
+  and how long it lives. Expiry is a three-row chooser stacked over the
+  sheet — `24 hours · 7 days · 30 days`, no custom date: a calendar here
+  would answer a question nobody asks in months, and it would be the
+  third decision the sheet was kept clear of.
+- **The code is the link with the link taken off.** `auth.md`'s *Link
+  URLs* makes the id the capability and the product's own
+  `extractInviteId` already takes a bare one, so `InviteCreated` offers
+  both — the link as the primary share, the code as a quieter control
+  beneath it, mono and whole, with `Code copied` against the link's
+  `Link copied`. The word **token** never reaches the screen. The code
+  is a UUID and is meant to stay one until the docs design a short one
+  (backlog 84).
+- **The card is the wallet's.** An invite link and a payout address are
+  the same reading problem — a long string nobody can check by eye, held
+  whole — so `PayoutAddress` draws both. Only its copy button's
+  accessible name had to open up (`copyLabel`): a button announcing
+  "Copy the address" over an invite link lies to the one reader who
+  depends on it.
+- **Revoking has no dialog and no Undo (jakob).** None could be honest:
+  nothing un-revokes a link. The card leaves with a snackbar, and it
+  never touches applicants already staged through it — they stay
+  approvable, because closing the door is not the same as turning
+  someone away at it. Dead links leave the list entirely; what is on
+  screen is what can still be used.
+- **Closing an application is a dialog, and it deletes nothing.** The
+  applicant staged service-side, so there is no act to undo and no mark
+  to leave. The person keeps the account they made and keeps reading
+  with it. The safe action is filled and holds the right-hand slot
+  (§11), there is no `error` colour — `SeveranceConfirm`'s own rule —
+  and the way back is named rather than offered: a fresh link puts the
+  same person back in this list.
+- **The queue is ordered by waiting, never by readiness**, and the
+  board draws that: a nine-day application still short of its key
+  stands above a three-day one that is ready. The section is
+  `Applications` and not "Waiting on you", because only one of those
+  rows is; who is waited on is the row's own second line. An applicant
+  wears a monogram and never a picture — there is no Profile to carry
+  one until the approval lands.
+- **A staged applicant now notifies, and it is the eighth kind.** It
+  passes the set's own test: somebody else acted — the applicant
+  attached their key, the second of the two proofs — and the act
+  reached something with an owner. Nothing else can tell an inviter
+  this, and a staged applicant nobody approves is the one failure mode
+  the mechanic has.
+- **The Invites row wears the bell's dot (jakob: the inviter must learn
+  someone is waiting).** A dot and not a count, the bell's ruling reused
+  rather than a second badge vocabulary invented beside it: the button
+  says something is waiting, and the list two taps away is where a
+  number means anything. Its accessible name changes with it.
+- **The inviter reward appears nowhere on this screen.** It is real and
+  it is permanent, and putting it on the surface where a reader decides
+  whom to vouch for would price the decision in the one currency it
+  must not be priced in.
+- **Two flows, not one.** The round meant to declare a single inviter's
+  journey — make a link, share it, approve the person. The graph refused
+  it honestly: a sheet's scrim is a `back` edge, the search walks
+  `advance` alone, and after handing the link to the platform's share
+  sheet the reader genuinely leaves and comes back days later when the
+  notification arrives. `send-someone-an-invite` ends on the share,
+  `vouch-an-applicant-in` ends on the signature. The seam between them
+  is time, not a missing design.
+- **The gate**: 194 → **201 boards**, 1461 → **1488 edges**, gaps 14 →
+  **13** and flows 63 → **65 declared · 63 resolved**, the two blocked
+  ones unchanged. The gap count falls because `Profile/7` closed and no
+  new one opened. The witness moved only where it should: two flows
+  added, the new boards joining the index, `Profile` gaining both, and
+  no existing flow rerouted a single step.
+
 ---
 
 ## 14. The canvases

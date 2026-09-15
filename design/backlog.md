@@ -2737,3 +2737,77 @@ reveal-then-open under auto-hide, android direct — ruled deliberate
 when the implementation loop queued the asymmetry as a question. Both
 now stand in the readme's *viewer-grammar close*; nothing is drawn
 differently.
+
+### 84 · The invite short code · *design* · **open**
+
+Filed by the invites round 2026-09-15. `InviteCreated` offers an
+`Invite code` beside the link, and the code it offers is the link's
+UUID — 36 characters, correct, and unsayable. A human-friendly code is
+the thing that would make it worth having: short enough to read out
+over a phone, type from a sticker, or put at the end of a talk.
+
+It is a BACKEND mechanic before it is a drawing, which is why this is
+filed rather than drawn. The docs have to design the charset (which
+letters and digits survive being read aloud and written down), the
+length against the collision rate a public funnel actually sees,
+whether the short code is a second capability on the same link or a
+different capability with its own revocation, and what the door does
+with one that is expired versus one that never existed. None of that
+is a design decision, and drawing a short code before it exists would
+put a promise on a board the product cannot keep.
+
+The UUID ships as the code meanwhile: it is the capability, the door
+already accepts a bare one (`extractInviteId`, `auth.md` *Link URLs*),
+and it is honest about being long. When the short code is designed,
+this surface changes in one place — the code block on `InviteCreated`
+— and the link beside it does not move.
+
+### 85 · The door asks for a link and quietly accepts a code · *design* · **open**
+
+Surfaced by the invites round 2026-09-15. `InviteEntry` is titled
+`Enter your invite`, its field is labelled `Invite link`, and its line
+reads `CoGra is invite-only. Paste your invite link to get started.`
+The product accepts more than that: `extractInviteId` takes the last
+UUID out of whatever is pasted, so a bare id works today, and `auth.md`
+(*Link URLs*) says the native apps take "the pasted link or bare token
+directly" on purpose.
+
+So the invites round can hand a reader a code with nowhere on screen
+that admits it is accepted. The fix is a copy ruling on a blessed
+board, which is why this is filed rather than taken: either the field
+and its line say both (`Invite link or code`), or the code is ruled a
+thing you send and never a thing you type, and `InviteCreated`'s
+caption stops saying the door takes either.
+
+### 86 · Two destructive dialogs disagree about colour · *design* · **open**
+
+Surfaced by the invites round 2026-09-15 while drawing `RejectConfirm`.
+readme §11 rules a destructive dialog takes **no new colour** —
+"severance is a deliberate act, not a failure" — and `SeveranceConfirm`
+says the same in its own board comment. `RemoveConfirm` nonetheless
+draws its `Remove` as a text button in `var(--error)`, which is the one
+board in the tree that does.
+
+One of the two is wrong and it is a ruling, not a tidy-up: either
+removing a post is the case that earns the colour and §11 wants the
+exception written down, or the colour comes off `RemoveConfirm` and the
+rule holds everywhere. `RejectConfirm` took the rule as written and
+carries no colour, which is doubly right there — nothing is destroyed —
+so nothing is blocked on this.
+
+### 87 · `ProfileHeader` bans a word the two banned lists do not · *design* · **open**
+
+Surfaced by the invites round 2026-09-15 while drafting the empty
+state's teaching lines. `ProfileHeader.prompt.md` says: do not write
+"followers", "connections", or "network" — "the other two are banned
+vocabulary". *connection* is indeed on readme §3's list and on
+copy-voice's; **network is on neither**, and readme §2 itself calls the
+product Peer Network's next evolution.
+
+So a component's prompt is enforcing a third ban nobody else knows
+about. Either §3 and copy-voice grow the word — and then §2's own
+sentence wants a look — or the prompt's line is narrowed to the figure
+labels it was written about. The invites round sidestepped it by using
+the product's own blessed phrase (`brings them in`, from `VouchBack`,
+`ApplicantWaiting` and `VouchedIn`), which is better copy than either
+candidate, so again nothing is blocked.

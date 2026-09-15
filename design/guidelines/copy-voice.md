@@ -1450,3 +1450,104 @@ master itself recorded as unruled:
   blessed total (`1 thing, signed`) rather than decided fresh. The short
   form and the long form are one sentence at two lengths and may not
   disagree about the plural.
+
+## Awaiting blessing — the invites round
+
+Every line the invites round drew: the queue, the teaching empty state,
+the create sheet, the fresh link, the approval pad and the close
+dialog. Ruled by jakob 2026-09-15; the words are this round's and up
+for review in the same pass.
+
+**The screen is `Invites`**, titled by the profile row that opens it,
+and its arrow says `Back to your profile` like every other private
+surface off that page.
+
+**The standing entry point is a noun and the empty state's action is a
+verb.** `New invite` on the populated list, `Create invite` on the
+empty state and on the sheet's own commit — the product's own split,
+the one the bottom bar (`New post`) and the empty feed (`write the
+first post`) already keep. The button and the sheet it raises say one
+word between them.
+
+**The empty state carries the whole mechanic in three sentences**:
+`No invites out yet. A link lets someone make an account. Your vouch —
+the opinion you sign when you approve them — is what brings them in.`
+The two halves are said APART because every other product conflates
+them and a reader who does will be surprised by the second. *Vouch* is
+the product's word and a reader's unfamiliar one, so it is explained
+where it stands rather than left to be guessed. `brings them in` is
+lifted from `VouchBack`, `ApplicantWaiting` and `VouchedIn` — the
+boards already had the right words, and the rounder phrasings for what
+a new member joins are either banned vocabulary or a word
+`ProfileHeader` rules out (backlog 87).
+
+**The sections are `Applications` and `Live links`.** Not "Waiting on
+you": only one of those rows is waiting on the reader and the other is
+waiting on its own applicant, so a caption claiming both would make the
+second row a lie. Who is waited on is the ROW's to say.
+
+**An application's second line is its status and names the proof that
+is outstanding** — `Waiting on their key`, and `Their email isn't
+confirmed` for the other of the two. Ready reads `Ready for your
+approval`, the same words the notification uses, so the list and the
+bell cannot describe one state two ways.
+
+**The row's close says what happens, not how it feels.** Its name is
+`Close @imke's application`, never "Reject" or "Decline": nothing is
+deleted and the person keeps the account they made. The dialog behind
+it opens `Close @imke's application?` and answers in two sentences —
+`Their account stays exactly as it is — signed in, and free to keep
+reading. The application just stops waiting on you.` and `A fresh
+invite link puts them back in this list.` The buttons are `Close it`
+and `Keep it`, `Keep it` being the house word for *don't*, from
+`RemoveConfirm` and `SeveranceConfirm`.
+
+**A live link's label is what it is, and its caption is when it dies.**
+`Single use · not used yet` and `Many uses`; the slot state rides the
+single-use label only, because a multi-use link has no slot to be in a
+state. `Revoke` is the card's one inline word. Copy is named for what
+it copies — `Copy the link`, `Copy the code` — because the button
+carries no word on screen and its accessible name is its only one.
+
+**The create sheet's switch is worded as the RESTRICTION**: `Only one
+person can use it`. That is what makes the label alone enough, and why
+the row carries no status line under it. What OFF does is the group's
+footnote: `With it off, anyone holding the link can apply until it
+expires. Either way each person still needs your approval, one at a
+time.` The second sentence is the one that matters — what scales is the
+queue, never the vouching.
+
+**Expiry is a DURATION and not a moment, so it does not take the
+forward ladder.** The row reads `Expires after` · `7 days` and the
+chooser's rows are `24 hours` · `7 days` · `30 days` — bare lengths,
+because the reader is choosing how long, not naming a date. The ladder
+governs the card's caption instead, where a real moment is being
+reported: `Expires in 7 days · 22.09.2026`, `WalletCampaign`'s blessed
+`Ends in 6 days · 08.09.2026` one surface over.
+
+**The fresh link's sheet is `Your invite link`**, its primary is `Share
+link`, and the quieter control beneath it is `Invite code` with the
+line `The same invite with the link taken off — the door takes either.`
+Two snackbars, deliberately different so a reader knows which control
+they hit: `Link copied` and `Code copied`. **The word "token" appears
+nowhere** — the record calls this a link capability and the API calls
+the field an id; on screen it is a link and a code.
+
+**The approval pad's two lines state what `Set` does, every time.**
+`Approving is vouching. Set signs your opinion on @rafa and brings them
+in.` and `It is one signed, priced act — and it is theirs to answer:
+their opinion back completes the pair.` They are not `VouchBackPad`'s
+one-time coaching: approving is rare and priced, and §3's honesty rule
+wants anything priced to say so before it is signed. The pad's "?" is
+named `How vouching works`.
+
+**The eighth notification reads `@rafa is ready for your approval`** —
+a state rather than an act, and the one row in that list that is. What
+happened is that a second proof landed, which is nothing a reader can
+picture; what they need is the errand and the name, in that order. The
+profile row's mark speaks as `Invites — someone is waiting`.
+
+**Two snackbars the list owes, drawn nowhere and named in the graph**:
+`Invite revoked` when a card leaves, and `@imke has to make their key
+before you can approve` when a not-ready row is pressed — the locked
+row answering with a reason, `ProfileApplicant`'s own manner.
