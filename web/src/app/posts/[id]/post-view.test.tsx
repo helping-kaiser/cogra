@@ -230,13 +230,54 @@ function detail(
   };
 }
 
+/** Whatever shape a test's own fixture builder hands back. */
+type PostPayload = { post?: Record<string, unknown> | null };
+
+/** The thread's own read, projected off a post fixture so the two agree. */
+function commentsOf(data: PostPayload) {
+  const post = data.post;
+  if (post === null || post === undefined) return { post: null };
+  return { post: { __typename: "Post", id: post.id, comments: post.comments } };
+}
+
+/** Both reads from one payload, for a test that builds its own fixture. */
+function threadFrom(build: () => PostPayload) {
+  return [
+    graphql.query("PostDetail", () => HttpResponse.json({ data: build() })),
+    graphql.query("PostComments", () => HttpResponse.json({ data: commentsOf(build()) })),
+  ];
+}
+
+/**
+ * THE TWO READS ONE POST FIXTURE ANSWERS.
+ *
+ * The thread arrives on its own operation, because the sheet is raised from
+ * feed cards with no post read behind them at all — so a fixture has to answer
+ * `PostComments` as well as `PostDetail` to reach the screen. Projecting both
+ * from one payload is what keeps them agreeing.
+ */
+function thread(...args: Parameters<typeof detail>) {
+  const data = detail(...args);
+  return [
+    graphql.query("PostDetail", () => HttpResponse.json({ data })),
+    graphql.query("PostComments", () => HttpResponse.json({ data: commentsOf(data) })),
+  ];
+}
+
 /**
  * THE THREAD IS A SHEET (`_shared.jsx:1247-1257`), so a test that reads it
  * opens it the way a reader does — through the affordance row's count.
  */
 async function openComments() {
   fireEvent.click(await screen.findByTestId("post-comments"));
-  return screen.findByTestId("comments-sheet");
+  const sheet = await screen.findByTestId("comments-sheet");
+  // THE THREAD READS WHEN IT IS RAISED — it is the sheet's own read now, not
+  // a slice of the post's — so opening it means waiting for that read, the
+  // way a reader waits for the list to land.
+  await waitFor(() =>
+    expect(screen.queryByTestId("comments-loading")).not.toBeInTheDocument(),
+  );
+  return sheet;
 }
 
 function storeFor(accountId: string) {
@@ -253,9 +294,7 @@ describe("PostView", () => {
 
   it("renders the post with its thread", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -267,11 +306,7 @@ describe("PostView", () => {
 
   it("carries a stance control on the post and on every comment", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("u1", [{ id: "c1", body: "First!", replyCount: 1 }]),
-        }),
-      ),
+      ...threadFrom(() => detail("u1", [{ id: "c1", body: "First!", replyCount: 1 }])),
       graphql.query("CommentReplies", () =>
         HttpResponse.json({
           data: {
@@ -308,11 +343,7 @@ describe("PostView", () => {
     // §8.3: at rest the target shows the standing — on every surface
     // that carries a control, not only on the one it was built for.
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("u1", [{ id: "c1", body: "First!" }]),
-        }),
-      ),
+      ...threadFrom(() => detail("u1", [{ id: "c1", body: "First!" }])),
       ...stanceHandlers({
         p1: { pDirected: 0.9, pInterest: 0.25, recordCount: 3 },
         c1: { pDirected: -0.55, pInterest: 0.25, recordCount: 1 },
@@ -335,9 +366,7 @@ describe("PostView", () => {
   // full either way, and only its place in the order is unsettled.
   it("marks a pending post and a pending comment, leaving landed ones unmarked", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail(
+      ...threadFrom(() => detail(
             "u1",
             [
               { id: "c1", body: "Just signed", pending: true },
@@ -345,9 +374,7 @@ describe("PostView", () => {
             ],
             { hasNextPage: false, endCursor: null },
             true,
-          ),
-        }),
-      ),
+          )),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -360,9 +387,7 @@ describe("PostView", () => {
 
   it("leaves a landed post unmarked", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("post-title")).toBeInTheDocument();
@@ -377,9 +402,7 @@ describe("PostView", () => {
   // surface the reader asked from, rather than sitting on the post.
   it("keeps the license off the surface, and raises it from the menu's row", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -399,9 +422,7 @@ describe("PostView", () => {
 
   it("raises a comment's own terms from the comment's menu", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -425,7 +446,7 @@ describe("PostView", () => {
   // sensitive · Remove · License terms.
   it("gives the creator the own-post menu, Edit among its rows", async () => {
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("acct-1", []) })),
+      ...thread("acct-1", []),
     );
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("acct-1"),
@@ -446,7 +467,7 @@ describe("PostView", () => {
   // post · Hide @handle · License terms.
   it("gives a non-creator the reader menu, naming the author in its hide row", async () => {
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("someone-else", []) })),
+      ...thread("someone-else", []),
     );
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("acct-1"),
@@ -472,9 +493,7 @@ describe("PostView", () => {
   // row under it is a fact about people.
   it("gives a comment Save · Cite · Cited by · Opinions · License, and no Hide", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -493,9 +512,7 @@ describe("PostView", () => {
   // find nothing behind it (`CommentCitedByEmpty.jsx`).
   it("opens the cited-by sheet from a comment's menu, stacked over the thread", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
       graphql.query("CitedBy", () =>
         HttpResponse.json({
           data: {
@@ -525,7 +542,7 @@ describe("PostView", () => {
   // AT ZERO THERE IS NO ROW, and above it the line opens what it counts.
   it("draws the post's cited-by line only above zero", async () => {
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("u1", []) })),
+      ...thread("u1", []),
       graphql.query("CitedByCount", () =>
         HttpResponse.json({
           data: { records: { __typename: "RecordConnection", totalCount: 4 } },
@@ -541,7 +558,7 @@ describe("PostView", () => {
   // per slice.
   it("renders the rows whose destinations are not built yet, and they do nothing", async () => {
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("someone-else", []) })),
+      ...thread("someone-else", []),
     );
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("acct-1"),
@@ -560,7 +577,7 @@ describe("PostView", () => {
   // slice 8's, whole).
   it("opens the think-twice dialog from Remove, and removes nothing", async () => {
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("acct-1", []) })),
+      ...thread("acct-1", []),
     );
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("acct-1"),
@@ -579,16 +596,14 @@ describe("PostView", () => {
   });
 
   it("serves not-found for an unknown id", async () => {
-    server.use(graphql.query("PostDetail", () => HttpResponse.json({ data: { post: null } })));
+    server.use(...threadFrom(() => ({ post: null })));
     renderWithProviders(<PostView postId="gone" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("post-not-found")).toBeInTheDocument();
   });
 
   it("reads without a session and swaps the comment box for the sign-in entry", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -601,17 +616,17 @@ describe("PostView", () => {
 
   it("keeps the thread readable and faults at the load-more slot when a comments page fails", async () => {
     let calls = 0;
+    const page = detail("u1", [{ id: "c1", body: "First!" }], {
+      hasNextPage: true,
+      endCursor: "cur1",
+    });
     server.use(
-      graphql.query("PostDetail", () => {
+      graphql.query("PostDetail", () => HttpResponse.json({ data: page })),
+      // The thread pages on its OWN read, so the ask that fails is the
+      // second one of those — the post underneath is never re-read for it.
+      graphql.query("PostComments", () => {
         calls += 1;
-        return calls === 1
-          ? HttpResponse.json({
-              data: detail("u1", [{ id: "c1", body: "First!" }], {
-                hasNextPage: true,
-                endCursor: "cur1",
-              }),
-            })
-          : HttpResponse.error();
+        return calls === 1 ? HttpResponse.json({ data: commentsOf(page) }) : HttpResponse.error();
       }),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
@@ -628,19 +643,17 @@ describe("PostView", () => {
 
   it("clears the load-more error when a retried comments page succeeds", async () => {
     let calls = 0;
+    const first = detail("u1", [{ id: "c1", body: "First!" }], {
+      hasNextPage: true,
+      endCursor: "cur1",
+    });
+    const second = detail("u1", [{ id: "c2", body: "Second!" }]);
     server.use(
-      graphql.query("PostDetail", () => {
+      graphql.query("PostDetail", () => HttpResponse.json({ data: first })),
+      graphql.query("PostComments", () => {
         calls += 1;
         if (calls === 2) return HttpResponse.error();
-        return HttpResponse.json({
-          data:
-            calls === 1
-              ? detail("u1", [{ id: "c1", body: "First!" }], {
-                  hasNextPage: true,
-                  endCursor: "cur1",
-                })
-              : detail("u1", [{ id: "c2", body: "Second!" }]),
-        });
+        return HttpResponse.json({ data: commentsOf(calls === 1 ? first : second) });
       }),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
@@ -671,7 +684,7 @@ describe("PostView", () => {
   });
 
   it("backs to the feed from every branch", async () => {
-    server.use(graphql.query("PostDetail", () => HttpResponse.json({ data: { post: null } })));
+    server.use(...threadFrom(() => ({ post: null })));
     renderWithProviders(<PostView postId="gone" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("post-not-found")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Back to feed" })).toHaveAttribute("href", "/feed");
@@ -679,14 +692,10 @@ describe("PostView", () => {
 
   it("marks an edited comment softly and offers the edit to its creator only", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("author-1", [
+      ...threadFrom(() => detail("author-1", [
             { id: "c1", body: "mine", authorId: "acct-1", edited: true },
             { id: "c2", body: "theirs" },
-          ]),
-        }),
-      ),
+          ])),
     );
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("acct-1"),
@@ -702,11 +711,7 @@ describe("PostView", () => {
   it("edits a comment inline and signs the update", async () => {
     let variables: unknown;
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("author-1", [{ id: "c1", body: "old words", authorId: "acct-1" }]),
-        }),
-      ),
+      ...threadFrom(() => detail("author-1", [{ id: "c1", body: "old words", authorId: "acct-1" }])),
       graphql.mutation("PrepareCommentEdit", ({ variables: v }) => {
         variables = v;
         return HttpResponse.json({
@@ -760,11 +765,7 @@ describe("PostView", () => {
   // the nodes arrive only for the reader who unfolds one.
   it("collapses a branch behind its count and unfolds it on request", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("author-1", [{ id: "c1", body: "top", replyCount: 2 }]),
-        }),
-      ),
+      ...threadFrom(() => detail("author-1", [{ id: "c1", body: "top", replyCount: 2 }])),
       graphql.query("CommentReplies", () =>
         HttpResponse.json({
           data: {
@@ -806,11 +807,7 @@ describe("PostView", () => {
   // composer prefilled, not something this view generates.
   it("flattens a reply-to-a-reply to the same indent as its parent", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("author-1", [{ id: "c1", body: "top", replyCount: 1 }]),
-        }),
-      ),
+      ...threadFrom(() => detail("author-1", [{ id: "c1", body: "top", replyCount: 1 }])),
       graphql.query("CommentReplies", ({ variables }) => {
         const parentId = variables.id as string;
         if (parentId === "c1") {
@@ -870,11 +867,7 @@ describe("PostView", () => {
 
   it("says one reply in the singular", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("author-1", [{ id: "c1", body: "top", replyCount: 1 }]),
-        }),
-      ),
+      ...threadFrom(() => detail("author-1", [{ id: "c1", body: "top", replyCount: 1 }])),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -883,9 +876,7 @@ describe("PostView", () => {
 
   it("draws no unfold line on a comment nobody answered", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("author-1", [{ id: "c1", body: "top" }]) }),
-      ),
+      ...thread("author-1", [{ id: "c1", body: "top" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -931,9 +922,7 @@ describe("PostView", () => {
       });
 
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
       graphql.mutation("RefreshSession", () =>
         HttpResponse.json({
           data: {
@@ -975,9 +964,7 @@ describe("PostView", () => {
 
   it("shows the read-only chip row for a post the viewer doesn't own", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: {
+      ...threadFrom(() => ({
             ...detail("author-1", []),
             post: {
               ...detail("author-1", []).post,
@@ -995,9 +982,7 @@ describe("PostView", () => {
                 },
               ],
             },
-          },
-        }),
-      ),
+          })),
     );
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("acct-1"),
@@ -1019,9 +1004,7 @@ describe("PostView", () => {
   // read-only for the author too — the Edit affordance is the way in.
   it("shows read-only chips on the viewer's OWN post, with no tag gestures", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: {
+      ...threadFrom(() => ({
             post: {
               ...detail("acct-1", []).post,
               topics: [
@@ -1034,9 +1017,7 @@ describe("PostView", () => {
                 },
               ],
             },
-          },
-        }),
-      ),
+          })),
     );
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("acct-1"),
@@ -1064,7 +1045,7 @@ describe("PostView", () => {
   // sheet with a commit of its own.
   it("sends Mark as sensitive into the edit flow", async () => {
     server.use(
-      graphql.query("PostDetail", () => HttpResponse.json({ data: detail("acct-1", []) })),
+      ...thread("acct-1", []),
     );
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("acct-1"),
@@ -1077,33 +1058,31 @@ describe("PostView", () => {
 
   it("shows read-only chips on the viewer's own COMMENT too", async () => {
     server.use(
-      graphql.query("PostDetail", () => {
+      ...threadFrom(() => {
         const base = detail("author-1", [{ id: "c1", body: "mine", authorId: "acct-1" }]);
-        return HttpResponse.json({
-          data: {
-            post: {
-              ...base.post,
-              comments: {
-                ...base.post.comments,
-                edges: base.post.comments.edges.map((edge) => ({
-                  ...edge,
-                  node: {
-                    ...edge.node,
-                    topics: [
-                      {
-                        __typename: "TopicClaim",
-                        hashtag: { __typename: "Hashtag", id: "ht-1", name: moderated("rust") },
-                        relevance: 0.1,
-                        confidence: 1,
-                        pending: false,
-                      },
-                    ],
-                  },
-                })),
-              },
+        return {
+          post: {
+            ...base.post,
+            comments: {
+              ...base.post.comments,
+              edges: base.post.comments.edges.map((edge) => ({
+                ...edge,
+                node: {
+                  ...edge.node,
+                  topics: [
+                    {
+                      __typename: "TopicClaim",
+                      hashtag: { __typename: "Hashtag", id: "ht-1", name: moderated("rust") },
+                      relevance: 0.1,
+                      confidence: 1,
+                      pending: false,
+                    },
+                  ],
+                },
+              })),
             },
           },
-        });
+        };
       }),
     );
     renderWithProviders(<PostView postId="p1" />, {
@@ -1119,9 +1098,7 @@ describe("PostView", () => {
   // title is the card's heading rather than the app bar's.
   it("draws the post as a card, the author leading it", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     const { container } = renderWithProviders(<PostView postId="p1" />, {
       writeSigner: fakeWriteSigner(),
@@ -1144,9 +1121,7 @@ describe("PostView", () => {
   // `comment count` edge advances to `ReplyEntry`).
   it("carries the comments affordance, counting the whole thread", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     const comments = await screen.findByTestId("post-comments");
@@ -1156,7 +1131,9 @@ describe("PostView", () => {
     fireEvent.click(comments);
     expect(sheet).toBeVisible();
     expect(sheet).toHaveAccessibleName("Comments");
-    expect(sheet).toContainElement(screen.getByTestId("post-comment-c1"));
+    // The thread is the sheet's own read, made when it is raised — so the
+    // comments arrive a moment after the drawer does.
+    expect(sheet).toContainElement(await screen.findByTestId("post-comment-c1"));
     // The foot rides the sheet whichever way the write affordance swapped —
     // this reader has no session, so it is the join entry.
     expect(sheet).toContainElement(screen.getByTestId("comment-signin"));
@@ -1166,9 +1143,7 @@ describe("PostView", () => {
   // is where dropping it lands — never a page whose thread scrolled away.
   it("drops the thread again, leaving the post where it was", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     const sheet = await openComments();
@@ -1183,9 +1158,7 @@ describe("PostView", () => {
   // than standing behind it.
   it("yields the sheet to the composer and takes it back on the way out", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, {
       store: storeFor("u2"),
@@ -1204,9 +1177,7 @@ describe("PostView", () => {
   // of it.
   it("carries every comment's age beside its author", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -1217,9 +1188,7 @@ describe("PostView", () => {
 
   it("links authors as chips into their profiles", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("author-1", [{ id: "c1", body: "top" }]) }),
-      ),
+      ...thread("author-1", [{ id: "c1", body: "top" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -1234,15 +1203,11 @@ describe("PostView", () => {
   // boards do not carry.
   it("states the post's topics on one line, the rest as a count", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("u1", [], { hasNextPage: false, endCursor: null }, false, [
+      ...threadFrom(() => detail("u1", [], { hasNextPage: false, endCursor: null }, false, [
             topicClaim("rust", 0.4, 0.9),
             topicClaim("wasm", 0.2, 0.8),
             topicClaim("axum", 0.1, 0.7),
-          ]),
-        }),
-      ),
+          ])),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("post-topic-rust")).toBeInTheDocument();
@@ -1254,17 +1219,13 @@ describe("PostView", () => {
 
   it("gives every comment the same line", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail(
+      ...threadFrom(() => detail(
             "u1",
             [{ id: "c1", body: "First!", topics: [topicClaim("wasm", -0.25, 0.5)] }],
             { hasNextPage: false, endCursor: null },
             false,
             [topicClaim("rust", 0.4, 0.9)],
-          ),
-        }),
-      ),
+          )),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
@@ -1327,9 +1288,7 @@ describe("PostView", () => {
 
     it("opens the editor on the claims the comment actually carries", async () => {
       server.use(
-        graphql.query("PostDetail", () =>
-          HttpResponse.json({ data: ownComment([topicClaim("rust", 0.4, 0.8)]) }),
-        ),
+        ...threadFrom(() => ownComment([topicClaim("rust", 0.4, 0.8)])),
       );
       renderWithProviders(<PostView postId="p1" />, {
         store: storeFor("acct-1"),
@@ -1354,7 +1313,7 @@ describe("PostView", () => {
     it("carries the author's own sensitive mark on an edit, never a moderator's", async () => {
       let sent: { sensitive?: boolean } | null = null;
       server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        ...threadFrom(() => ownComment([])),
         // The reader sees a veiled comment — but that veil is the moderator's.
         graphql.query("CommentSelfMark", () =>
           HttpResponse.json({
@@ -1395,7 +1354,7 @@ describe("PostView", () => {
     it("the mark row alone stages the edit, and the reason travels with it", async () => {
       let sent: { sensitive?: boolean; sensitiveReason?: string | null } | null = null;
       server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        ...threadFrom(() => ownComment([])),
         graphql.mutation("PrepareCommentEdit", ({ variables }) => {
           sent = (variables.input as typeof sent) ?? null;
           return HttpResponse.json({ data: editPayload() });
@@ -1431,7 +1390,7 @@ describe("PostView", () => {
     it("carries a reason the comment already had through an untouched edit", async () => {
       let sent: { sensitiveReason?: string | null } | null = null;
       server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        ...threadFrom(() => ownComment([])),
         graphql.query("CommentSelfMark", () =>
           HttpResponse.json({
             data: {
@@ -1471,7 +1430,7 @@ describe("PostView", () => {
     // The words answer to the same cap a fresh comment does — mirrored so an
     // over-length edit never reaches the seal a refusal would otherwise waste.
     it("holds the save shut on words past the cap", async () => {
-      server.use(graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })));
+      server.use(...threadFrom(() => ownComment([])));
       renderWithProviders(<PostView postId="p1" />, {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
@@ -1490,7 +1449,7 @@ describe("PostView", () => {
     // place that cap is checked — and only while the mark is on, exactly as
     // the compose surfaces' own seal.
     it("holds the save shut on a sensitive reason past the cap, only while marked", async () => {
-      server.use(graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })));
+      server.use(...threadFrom(() => ownComment([])));
       renderWithProviders(<PostView postId="p1" />, {
         store: storeFor("acct-1"),
         writeSigner: fakeWriteSigner(),
@@ -1524,9 +1483,7 @@ describe("PostView", () => {
       const tagInputs: Record<string, unknown>[] = [];
       let editCalled = false;
       server.use(
-        graphql.query("PostDetail", () =>
-          HttpResponse.json({ data: ownComment([topicClaim("wasm", 0.1, 1)]) }),
-        ),
+        ...threadFrom(() => ownComment([topicClaim("wasm", 0.1, 1)])),
         graphql.mutation("PrepareCommentEdit", () => {
           editCalled = true;
           return HttpResponse.json({ data: editPayload() });
@@ -1564,7 +1521,7 @@ describe("PostView", () => {
     it("stages no edit record when only the tags moved", async () => {
       let editCalled = false;
       server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        ...threadFrom(() => ownComment([])),
         graphql.mutation("PrepareCommentEdit", () => {
           editCalled = true;
           return HttpResponse.json({ data: editPayload() });
@@ -1590,9 +1547,7 @@ describe("PostView", () => {
     it("stages a re-tune as its own Tag act", async () => {
       const tagInputs: Record<string, unknown>[] = [];
       server.use(
-        graphql.query("PostDetail", () =>
-          HttpResponse.json({ data: ownComment([topicClaim("rust", 0.4, 0.8)]) }),
-        ),
+        ...threadFrom(() => ownComment([topicClaim("rust", 0.4, 0.8)])),
         graphql.mutation("PrepareTag", ({ variables }) => {
           tagInputs.push(variables.input as Record<string, unknown>);
           return HttpResponse.json({ data: tagPayload("w-tag-1") });
@@ -1621,7 +1576,7 @@ describe("PostView", () => {
     // nothing signed at all.
     it("signs nothing when a Tag act is refused", async () => {
       server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        ...threadFrom(() => ownComment([])),
         graphql.mutation("PrepareCommentEdit", () => HttpResponse.json({ data: editPayload() })),
         graphql.mutation("PrepareTag", () =>
           HttpResponse.json({
@@ -1664,9 +1619,7 @@ describe("PostView", () => {
 
     it("counts the edit as the record only when the text moved", async () => {
       server.use(
-        graphql.query("PostDetail", () =>
-          HttpResponse.json({ data: ownComment([topicClaim("wasm", 0.1, 1)]) }),
-        ),
+        ...threadFrom(() => ownComment([topicClaim("wasm", 0.1, 1)])),
       );
       renderWithProviders(<PostView postId="p1" />, {
         store: storeFor("acct-1"),
@@ -1693,7 +1646,7 @@ describe("PostView", () => {
     it("asks before an edit that signs more than one action", async () => {
       writeConfirmMultiAction(true);
       server.use(
-        graphql.query("PostDetail", () => HttpResponse.json({ data: ownComment([]) })),
+        ...threadFrom(() => ownComment([])),
         graphql.mutation("PrepareCommentEdit", () => HttpResponse.json({ data: editPayload() })),
         graphql.mutation("PrepareTag", () => HttpResponse.json({ data: tagPayload("w-tag-1") })),
       );
@@ -1848,14 +1801,10 @@ describe("PostView — references", () => {
   // pair — is the topics-and-references sheet's, which is not drawn yet.
   it("states the post's references as a count, never as chips", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("u1", [], undefined, false, [], [
+      ...threadFrom(() => detail("u1", [], undefined, false, [], [
             referenceClaim(userTarget("u-ada", "ada"), 0.4, -0.2),
             referenceClaim(postTarget("p-quoted", "On folding")),
-          ]),
-        }),
-      ),
+          ])),
     );
     renderWithProviders(<PostView postId="p1" />);
 
@@ -1866,17 +1815,13 @@ describe("PostView — references", () => {
 
   it("counts a comment's own references the same way", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("u1", [
+      ...threadFrom(() => detail("u1", [
             {
               id: "c1",
               body: "First!",
               references: [referenceClaim(userTarget("u-ada", "ada"))],
             },
-          ]),
-        }),
-      ),
+          ])),
     );
     renderWithProviders(<PostView postId="p1" />);
     await openComments();
@@ -1891,9 +1836,7 @@ describe("PostView — references", () => {
   // chip. The word is the menu's own: `Cite in a new post`.
   it("sends the composer the node the menu's cite row was opened on", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u2", [{ id: "c1", body: "First!" }]) }),
-      ),
+      ...thread("u2", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
     await openComments();
@@ -1912,18 +1855,14 @@ describe("PostView — references", () => {
     writeConfirmMultiAction(true);
     let withdrawalInput: Record<string, unknown> | undefined;
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("u2", [
+      ...threadFrom(() => detail("u2", [
             {
               id: "c1",
               body: "First!",
               authorId: "u1",
               references: [referenceClaim(userTarget("u-ada", "ada"), 1, 1, false, 2)],
             },
-          ]),
-        }),
-      ),
+          ])),
       graphql.mutation("PrepareReferenceWithdrawal", ({ variables }) => {
         withdrawalInput = variables;
         return HttpResponse.json({
@@ -1962,18 +1901,14 @@ describe("PostView — references", () => {
 
   it("stages nothing for an untouched reference section on a comment edit", async () => {
     server.use(
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({
-          data: detail("u2", [
+      ...threadFrom(() => detail("u2", [
             {
               id: "c1",
               body: "First!",
               authorId: "u1",
               references: [referenceClaim(userTarget("u-ada", "ada"))],
             },
-          ]),
-        }),
-      ),
+          ])),
     );
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
     await openComments();
@@ -2011,16 +1946,14 @@ describe("PostView — references", () => {
     });
 
     const withBody = (body: Parameters<typeof detail>[6]) =>
-      graphql.query("PostDetail", () =>
-        HttpResponse.json({ data: detail("u1", [], undefined, false, [], [], body) }),
-      );
+      thread("u1", [], undefined, false, [], [], body);
 
     // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
     // the clip is PINNED ABOVE THE CARD, not inside it, and it wears the full
     // transport. A post of pictures keeps the gallery in its body.
     describe("a video post", () => {
       it("pins the clip above the card and leaves the card without it", async () => {
-        server.use(withBody({ content: null, attachments: [clip("m1")] }));
+        server.use(...withBody({ content: null, attachments: [clip("m1")] }));
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
         const pinned = await screen.findByTestId("post-pinned-clip");
@@ -2037,7 +1970,7 @@ describe("PostView — references", () => {
       });
 
       it("gives the pinned clip the transport, not the disc", async () => {
-        server.use(withBody({ content: null, attachments: [clip("m1")] }));
+        server.use(...withBody({ content: null, attachments: [clip("m1")] }));
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
         await screen.findByTestId("post-pinned-clip");
@@ -2046,7 +1979,7 @@ describe("PostView — references", () => {
       });
 
       it("leaves a post of pictures exactly where it was", async () => {
-        server.use(withBody({ content: null, attachments: [picture("m1", null)] }));
+        server.use(...withBody({ content: null, attachments: [picture("m1", null)] }));
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
         expect(await screen.findByTestId("post-media")).toBeInTheDocument();
@@ -2057,7 +1990,7 @@ describe("PostView — references", () => {
       // the card is the skeleton and there is nothing left to pin above it.
       it("pins nothing when the clip was removed", async () => {
         server.use(
-          withBody({
+          ...withBody({
             content: null,
             attachments: [clip("m1", "REDACTED")],
           }),
@@ -2071,7 +2004,7 @@ describe("PostView — references", () => {
 
     it("renders a media post's gallery and no words body", async () => {
       server.use(
-        withBody({
+        ...withBody({
           content: null,
           description: "Rubbings from three weekends.",
           attachments: [picture("m1", "paper against the salt crust"), picture("m2", null)],
@@ -2093,7 +2026,7 @@ describe("PostView — references", () => {
     // skeleton, which is the point.
     it("shows the Removed mark in place of the whole payload", async () => {
       server.use(
-        withBody({
+        ...withBody({
           content: null,
           attachments: [picture("m1", null, "REDACTED")],
           attachmentsStatus: "REDACTED",
@@ -2121,7 +2054,7 @@ describe("PostView — references", () => {
 
     it("names a platform removal differently from an author's own", async () => {
       server.use(
-        withBody({
+        ...withBody({
           content: null,
           attachments: [picture("m1", null, "REDACTED")],
           attachmentsStatus: "REDACTED",
@@ -2137,7 +2070,7 @@ describe("PostView — references", () => {
 
     it("veils the body as one and leaves the title readable", async () => {
       server.use(
-        withBody({
+        ...withBody({
           description: "Rubbings from three weekends.",
           attachments: [picture("m1", null)],
           attachmentsStatus: "SENSITIVE",
@@ -2160,13 +2093,9 @@ describe("PostView — references", () => {
 
     it("renders a comment's picture beside its words, which a comment keeps", async () => {
       server.use(
-        graphql.query("PostDetail", () =>
-          HttpResponse.json({
-            data: detail("u1", [
+        ...threadFrom(() => detail("u1", [
               { id: "c1", body: "Look at this", attachments: [picture("mc", "a salt flat")] },
-            ]),
-          }),
-        ),
+            ])),
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
       await openComments();
@@ -2186,11 +2115,7 @@ describe("PostView — references", () => {
         options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: null },
       };
       server.use(
-        graphql.query("PostDetail", () =>
-          HttpResponse.json({
-            data: detail("u1", [{ id: "c1", body: "Look at this", attachments: [tallPicture] }]),
-          }),
-        ),
+        ...threadFrom(() => detail("u1", [{ id: "c1", body: "Look at this", attachments: [tallPicture] }])),
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
       await openComments();
