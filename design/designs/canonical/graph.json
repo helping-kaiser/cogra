@@ -875,6 +875,7 @@
     { "from": "ComposeDetailsVideo", "via": 7, "kind": "advance", "label": "+ Add a tag", "to": [{ "board": "TagPicker" }] },
     { "from": "ComposeDetailsVideo", "via": 8, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "ComposeDetailsVideo", "via": 9, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeSeal" }, { "board": "ComposeSealUploading", "case": "the clip is still going up — the gated seal waits on it (master on the media page)" }] },
+    { "from": "ComposeDetailsVideo", "via": 10, "kind": "advance", "label": "remove video ×", "to": [{ "board": "ComposePick", "case": "the clip leaves — the step takes picks again, so another can be chosen" }] },
 
     { "from": "CoverCrop", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — the cover row that asked, the picture unused" }] },
     { "from": "CoverCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
