@@ -811,7 +811,7 @@ impl Chronicle {
 /// contract reads off the A leg: `pDirected` is the author's effort and
 /// `pInterest` their enthusiasm, the two values the composer signed.
 ///
-/// An inbound citation reads from the cited node with `fromKind` naming the citing artifact's kind, newest first, carrying the pair its author signed.
+/// A cited node reads what points at it off the terminal leg, newest first and carrying the pair each citing author signed, where its own outbound citation rides the anchored read instead.
 /// ´claim:chronicle:the-cited-side-reads-its-citations´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_cited_side_reads_its_citations(pool: PgPool) {
