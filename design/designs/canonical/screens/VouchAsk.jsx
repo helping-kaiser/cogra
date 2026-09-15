@@ -1,19 +1,29 @@
 /* SOMEONE ASKED YOU TO VOUCH — where an ask link lands the member who opens
    it (jakob 2026-09-15).
 
+   THE PAD IS CLOSED WHEN THE LINK LANDS (jakob 2026-09-15: "we should also
+   show the page without the pad no? i dont think the pad should be open
+   already when clicking the link"). A reader who taps a link has not asked for
+   anything yet — they have arrived. Opening the pad for them would have the
+   screen make the first move in a ceremony this product is careful to keep
+   deliberate: a stance is opened by the reader's own gesture everywhere else
+   in the tree, and an arrival from outside the app is the last place to make
+   an exception. So the landing states who is asking and what a signature
+   would do, and the stance affordance sits there closed until it is pressed.
+   `VouchAskPad` is the state past that press.
+
    IT IS THE SAME ACT AS `ApprovePad`, SO IT IS THE SAME PAD. `StanceControl`
-   parked open at the standing low default, and `ApprovePadNote` — the shared
-   note, which is why that helper takes a handle rather than spelling one. A
-   member answering an ask link is doing precisely what the inviter would have
-   done from their own queue; drawing it as a second kind of act would invent a
-   difference the mechanic does not have.
+   and `ApprovePadNote` — the shared note, which is why that helper takes a
+   handle rather than spelling one. A member answering an ask link is doing
+   precisely what the inviter would have done from their own queue; drawing it
+   as a second kind of act would invent a difference the mechanic does not
+   have.
 
    THE SURFACE IS SMALL ON PURPOSE. It is reached from outside the app, by
    somebody who was handed a link and has one question to answer, so it carries
    a card and a way back and nothing else — no band, no bar, no feed to fall
    into. `VouchBackPad`'s shape, one seat over: the card names who, the line
-   says what signing does, `Not now` leaves it unanswered, and the pad is
-   already open because answering is the only reason the screen exists.
+   says what signing does, and `Not now` leaves it unanswered.
 
    IT NAMES NO INVITER AND NO REASON. Who turned @noor down is @noor's to tell
    and not this screen's to publish — the ask link carries a person, not a
@@ -47,7 +57,6 @@ export function Screen() {
             <StanceControl
               targetLabel="@noor"
               helpLabel="How vouching works"
-              defaultOpen
               defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
               padNote={<ApprovePadNote handle="@noor" />}
             />
@@ -55,9 +64,6 @@ export function Screen() {
         </Card>
         <div style={{ flex: 1 }} />
       </div>
-
-      {/* The wash sits over the shell; the parked pad (fixed, above it) stays sharp. */}
-      <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "var(--scrim-dialog)" }} />
     </>
   );
 }

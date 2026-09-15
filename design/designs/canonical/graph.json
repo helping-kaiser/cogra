@@ -58,7 +58,7 @@
     "InviteNew": "the create sheet covers the invites list — the page's own New invite, its rows, its close controls and its link cards are inactive in this state; only the sheet (and its scrim) is live",
     "InviteExpiry": "the expiry chooser covers the create sheet, which covers the list — two sheets deep, the create sheet dimmed under the chooser's own wash, and only the top sheet (and that wash) is live",
     "InviteCreated": "the fresh link's sheet covers the invites list — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
-    "VouchAsk": "the scrim wash covers the ask — the card's Not now and the way back are inactive in this state; only the parked pad is live",
+    "VouchAskPad": "the scrim wash covers the ask — the card's Not now and the way back are inactive in this state; only the parked pad is live",
     "ApprovePad": "the scrim wash covers the invites list — its semantic elements (the page's New invite, the rows, the close controls and the link cards) are inactive in this state; only the parked pad is live",
     "RejectConfirm": "the think-twice dialog covers the invites list — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
     "NetworkError": "the fault in place — a pattern exemplar drawn on the seal, where the retry the failure offers is the only thing this board is about; the seal's own header, facts and way back are `ComposeSeal`'s controls, wired on that board",
@@ -1822,9 +1822,13 @@
     { "from": "ApplicantRejected", "via": 17, "kind": "advance", "label": "copy your ask link", "to": [{ "terminal": "self", "case": "the ask link lands on the clipboard — Link copied. It does not expire and it is not used up, so the same one goes to as many members as the reader knows" }] },
     { "from": "ApplicantRejected", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
-    { "from": "VouchAsk", "via": 1, "kind": "detour", "label": "? — how vouching works", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
-    { "from": "VouchAsk", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick — the same standing low default the queue's own pad opens at" }] },
-    { "from": "VouchAsk", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "terminal": "back", "case": "nothing signed — the ask still stands, and the same link opens it again" }] },
-    { "from": "VouchAsk", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands and the person is now this member's to have vouched in" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master)" }] }
+    { "from": "VouchAsk", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "out of the ask unanswered — an ask link is not used up, so the same one opens it again" }] },
+    { "from": "VouchAsk", "via": 2, "kind": "cancel", "label": "Not now", "to": [{ "terminal": "back", "case": "nothing signed — the ask still stands, and the same link opens it again" }] },
+    { "from": "VouchAsk", "via": 3, "kind": "advance", "label": "the stance affordance", "to": [{ "board": "VouchAskPad", "case": "the pad blooms over the ask — it opens at the standing low default, never at a value the link carried" }] },
+
+    { "from": "VouchAskPad", "via": 1, "kind": "detour", "label": "? — how vouching works", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
+    { "from": "VouchAskPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick — the same standing low default the queue's own pad opens at" }] },
+    { "from": "VouchAskPad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "VouchAsk", "case": "the pad closes — nothing signed, and the ask is still there to answer" }] },
+    { "from": "VouchAskPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands and the person is now this member's to have vouched in" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master)" }] }
   ]
 }

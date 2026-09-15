@@ -134,9 +134,12 @@
     },
     {
       "name": "answer-someones-ask-link",
-      "description": "An ask link opens on the person who sent it, with the pad already there; Set signs the vouch that brings them in — the route a turned-down applicant still has.",
+      "description": "An ask link lands on the person who sent it; opening the stance affordance raises the pad, and Set signs the vouch that brings them in — the route a turned-down applicant still has.",
       "start": { "board": "VouchAsk" },
-      "end": { "board": "VouchAsk", "via": 4, "case": "signed — the vouch lands and the person is now this member's to have vouched in" }
+      "waypoints": [
+        { "board": "VouchAsk", "via": 3 }
+      ],
+      "end": { "board": "VouchAskPad", "via": 4, "case": "signed — the vouch lands and the person is now this member's to have vouched in" }
     },
     {
       "name": "restore-your-key",
