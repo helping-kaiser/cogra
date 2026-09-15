@@ -1921,7 +1921,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
     { n: 2, find: 'aria-label="Opinion pad for #saltmaps"', tag: "div" },
     { n: 2, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
-    { n: 3, find: ">Walk it back</button>", tag: "button" },
+    { n: 3, find: ">Disconnect</button>", tag: "button" },
     { n: 4, find: ">Cancel</button>", tag: "button" },
     { n: 5, find: ">Set</button>", tag: "button" },
   ],

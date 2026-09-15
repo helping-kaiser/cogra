@@ -1,3 +1,5 @@
+import type { AxisNames } from "./StanceReadout";
+
 /** The one-time coach mark: the first tap ever teaches and stages nothing. */
 export interface StanceCoachMarkProps {
   onDismiss?: () => void;
@@ -24,3 +26,11 @@ export declare const STANCE_PAD_HELP: readonly string[];
  * carries two values, not one.
  */
 export declare const STANCE_ALTERNATES_HELP: readonly string[];
+
+/**
+ * The same four lines with the last one in the record family's own words — the
+ * only line that names the way out. A family that names no severance of its own
+ * gets the two constants above unchanged.
+ */
+export declare function padHelp(names?: AxisNames): readonly string[];
+export declare function alternatesHelp(names?: AxisNames): readonly string[];
