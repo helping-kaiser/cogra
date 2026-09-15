@@ -4,7 +4,7 @@ Use `ActsCard` on every "What you sign" surface — the seal's list of what one 
 <ActsCard
   rows={[
     { label: "Post", value: "Sunday at the tide market", count: "1", countNoun: "post" },
-    { label: "Topics", value: <TopicChips />, count: "2", countNoun: "tag" },
+    { label: "Tags", value: <TopicChips />, count: "2", countNoun: "tag" },
   ]}
   total="3 things, signed together"
 />

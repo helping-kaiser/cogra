@@ -127,6 +127,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeSealTagged.dc.html",
+      "title": "Seal · seven tags",
+      "x": 3360,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "ComposeWords.dc.html",
       "title": "Compose · words body",
       "x": 0,
@@ -139,6 +148,15 @@
       "file": "ComposeDraft.dc.html",
       "title": "Compose · draft kept",
       "x": 480,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "ComposeDraftDiscard.dc.html",
+      "title": "Compose · the draft's discard, asked from the roll",
+      "x": 2400,
       "y": 2120,
       "w": 390,
       "h": 844,
@@ -518,7 +536,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 2841,
+      "h": 2893,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -527,7 +545,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 3151,
+      "h": 3194,
       "page": "media",
       "title": "Media · flow map"
     },
