@@ -19,6 +19,10 @@ import { Icon } from "../navigation/Icon.jsx";
    · The BIG CENTRED PLAY/PAUSE, flanked by skip-back and skip-forward. Centred,
      because the thumb that reaches for it is not aiming at a corner, and it is
      the control the reader wants most often.
+   · AND THE SLOT'S THIRD STATE IS REPLAY. A detail clip stops at its end rather
+     than looping (readme, *the viewer-grammar close*), so what held play/pause
+     becomes `replay`, labelled "Replay" — the same glyph at the same size in
+     the same place, because the thumb that wants it is already there.
    · The BAR ALONG THE BOTTOM, INSET FROM THE EDGE: elapsed · the timeline ·
      total, with the fullscreen toggle at its right end.
    · NOTHING TOUCHES THE BOTTOM EDGE. Android's system gesture zone lives in the
@@ -153,6 +157,7 @@ export function Timeline({ progress = 0, elapsed, duration, thin = false }) {
    so it is bounded by the frame and never by the page. */
 export function VideoTransport({
   playing = true,
+  ended = false,
   elapsed = "0:00",
   duration = "0:00",
   progress = 0,
@@ -195,8 +200,8 @@ export function VideoTransport({
       >
         <TransportButton label="Back ten seconds" glyph="fast_rewind" size={26} box={44} onClick={onSkip} />
         <TransportButton
-          label={playing ? "Pause" : "Play"}
-          glyph={playing ? "pause" : "play_arrow"}
+          label={ended ? "Replay" : playing ? "Pause" : "Play"}
+          glyph={ended ? "replay" : playing ? "pause" : "play_arrow"}
           size={34}
           box={64}
           onClick={onTogglePlay}
