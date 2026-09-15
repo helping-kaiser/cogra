@@ -10,7 +10,7 @@ Use `PayoutAddress` for any LONG OPAQUE STRING that needs a home — the witness
 <PayoutAddress address={inviteLink} label="Single use · not used yet"
   onCopy={copy} copyLabel="Copy the link"
   onChange={revoke} changeLabel="Revoke"
-  caption="Expires in 6 days · 21.09.2026" />
+  caption="Expires in 7 days · 22.09.2026" />
 ```
 
 ```jsx

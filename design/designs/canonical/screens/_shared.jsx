@@ -2266,3 +2266,208 @@ const CITING_ARTIFACTS = [
   { kind: "post", name: "Three mornings on the wall", pair: { pDirected: 0.15, pInterest: 0.9 } },
   { kind: "post", name: "A honey stand and a headland", pair: { pDirected: -0.3, pInterest: 0.35 } },
 ];
+
+/* ── THE INVITES SCREEN (the invites round, 2026-09-15) ────────────────────
+   Drawn once here because five boards stand on it: the list itself, the
+   create sheet and its expiry chooser, the fresh link, the approval pad and
+   the reject dialog. Everything above a sheet or a wash is the board's; the
+   page under it is this.
+
+   THE MOCK INVITE LINKS. `auth.md` (*Link URLs*) fixes the shape —
+   `https://<web-origin>/join/<link-id>` — and leaves the origin
+   per-environment, so the host below is invented the way the mock Liquid
+   addresses above are: the SHAPE is the product's, the letters are not. The
+   id is a UUID and it is also the invite code, which is why the same string
+   appears twice on `InviteCreated` and is drawn whole both times. */
+const SOL_INVITE_ID = "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15";
+const SOL_INVITE_LINK = `https://cogra.social/join/${SOL_INVITE_ID}`;
+const SOL_INVITE_LINK_OPEN = "https://cogra.social/join/c47b19e0-3a52-4f68-b1d9-6e0a85f37c24";
+
+/* THE ROW'S OWN CLOSE, the Saved list's `Unsave` one surface over: icon-only,
+   `ContentRow`'s `action` slot, `text-secondary`, its name only in the
+   accessibility tree. A row in this list has exactly two things a reader can
+   do to it — approve it, which is the row, and close it, which is this — so a
+   ⋮ would be a menu of one. The word it does not say is "reject": nothing is
+   deleted and the person keeps the account they made, so the glyph is `close`
+   and the name says what happens, not how it feels.
+
+   IT TAKES THE HANDLE, unlike `Unsave`, because a list of applications is a
+   list of PEOPLE and four identical "Close" buttons is four chances for a
+   screen reader to close the wrong one. */
+const CloseApplication = ({ handle }) => (
+  <button
+    type="button"
+    aria-label={`Close ${handle}'s application`}
+    className="cg-state cg-focus cg-hit"
+    style={{
+      display: "grid",
+      placeItems: "center",
+      height: "40px",
+      width: "40px",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      color: "var(--text-secondary)",
+      cursor: "pointer",
+      padding: 0,
+    }}
+  >
+    <Icon name="close" size={20} />
+  </button>
+);
+
+/* THE PAD'S OWN LINES on the approval board. They are not one-time coaching
+   the way `VouchBackPad`'s are: approving is rare, consequential and priced,
+   and the two facts below are true every single time it happens. */
+function ApprovePadNote() {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+      <PadLine>Approving is vouching. Set signs your opinion on @rafa and brings them in.</PadLine>
+      <PadLine>It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.</PadLine>
+    </div>
+  );
+}
+
+/* THE PAGE ITSELF.
+
+   APPLICATIONS LEAD, LIVE LINKS FOLLOW. The queue is the only half that can
+   be waiting on the reader, and the half a dot on the profile sent them here
+   for; a link sitting quietly is a thing they made, not a thing they owe.
+
+   THE SECTION IS `Applications`, NOT "Waiting on you". Only one of these rows
+   is waiting on the reader — the other is waiting on its own applicant — and a
+   caption that says otherwise makes the second row a lie. Who is waited on is
+   the ROW's to say, on the second line, which is where `ContentRow` puts
+   status.
+
+   OLDEST ON TOP, BY AGE ALONE. `@imke` applied nine days ago and still has no
+   key; `@rafa` applied three days ago and is ready. The not-ready row standing
+   first is the drawing that records the rule: this list is ordered by how long
+   someone has been waiting, never by whether the reader can act on them.
+
+   AN APPLICANT HAS NO PICTURE, EVER. There is no Profile to carry one until
+   approval lands (`invitations.md` §4), so the disc is the monogram from the
+   handle — the designed placeholder, and here the only honest drawing. For the
+   same reason there is no display name: a handle is all the account has.
+
+   THE NOT-READY ROW IS STILL PRESSABLE, and answers with a snackbar naming
+   what is outstanding — `ProfileApplicant`'s locked rows, which say why rather
+   than refusing silently. An inert row beside a live close control would read
+   as a row that had stopped working.
+
+   DEAD LINKS ARE NOT HERE. A revoked or expired link leaves the list the
+   moment it stops working, so everything under `Live links` is a link someone
+   can still use — which is why the single-use card can say its slot is open
+   simply by being on the page.
+
+   `approving` SWAPS THE READY ROW'S CONTROL for the stance anchor the pad
+   blooms from. The row's one control is the row's one other act, and on the
+   approval board that act is the opinion being given; the close stands down
+   while it is open, under the wash, where it could not be pressed anyway. */
+function InvitesBody({ approving = false }) {
+  return (
+    <>
+      <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: "8px 0 0" }}>
+        <div style={{ padding: "0 16px" }}>
+          <Button style={{ width: "100%" }}>Create invite</Button>
+        </div>
+
+        <SectionLabel>Applications</SectionLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            name="imke"
+            title="@imke"
+            second="Waiting on their key"
+            trailing="9d"
+            action={<CloseApplication handle="@imke" />}
+            onOpen={() => {}}
+          />
+          <ContentRow
+            variant="chronicle"
+            chevron={false}
+            name="rafa"
+            title="@rafa"
+            second="Ready for your approval"
+            trailing="3d"
+            action={
+              approving ? (
+                <StanceControl
+                  targetLabel="@rafa"
+                  helpLabel="How vouching works"
+                  defaultOpen
+                  defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
+                  padNote={<ApprovePadNote />}
+                />
+              ) : (
+                <CloseApplication handle="@rafa" />
+              )
+            }
+            onOpen={() => {}}
+          />
+        </div>
+
+        <SectionLabel>Live links</SectionLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
+          <PayoutAddress
+            label="Single use · not used yet"
+            address={SOL_INVITE_LINK}
+            onCopy={() => {}}
+            copyLabel="Copy the link"
+            onChange={() => {}}
+            changeLabel="Revoke"
+            caption="Expires in 7 days · 22.09.2026"
+          />
+          <PayoutAddress
+            label="Many uses"
+            address={SOL_INVITE_LINK_OPEN}
+            onCopy={() => {}}
+            copyLabel="Copy the link"
+            onChange={() => {}}
+            changeLabel="Revoke"
+            caption="Expires in 2 days · 17.09.2026"
+          />
+        </div>
+
+        <div style={{ flex: 1 }} />
+      </div>
+    </>
+  );
+}
+
+/* THE CREATE SHEET, shared the moment the expiry chooser opened over it — the
+   same rule the comments thread keeps under its own second sheet: a body drawn
+   on two boards is drawn once.
+
+   TWO DECISIONS AND NO MORE. A link carries no stance any more (the prefill is
+   gone from the mechanic), so what is left to choose is who may use it and how
+   long it lives. Anything else on this sheet would be a third decision invented
+   to fill it.
+
+   THE SWITCH IS WORDED AS THE RESTRICTION, so ON is the narrow thing and the
+   label alone says what ON does — which is why this row carries no status line
+   under it. What OFF does is the group's FOOTNOTE: the consequence is the thing
+   a reader needs once and never again, which is exactly what a footnote is for.
+
+   SINGLE USE IS THE DEFAULT. A targeted invite is the ordinary one and the safe
+   one — a leaked link stages at most one stranger (`invitations.md` §6) — so the
+   default sits where a reader who changes nothing is least exposed. */
+function NewInviteSheet() {
+  return (
+    <BottomSheet open ariaLabel="New invite">
+      <SheetTitle>New invite</SheetTitle>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px" }}>
+        <SettingsGroup footnote="With it off, anyone holding the link can apply until it expires. Either way each person still needs your approval, one at a time.">
+          <SettingsRow label="Only one person can use it" checked onOpen={() => {}} />
+          <SettingsRow label="Expires after" value="7 days" onOpen={() => {}} />
+        </SettingsGroup>
+
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <Button>Create invite</Button>
+        </div>
+      </div>
+    </BottomSheet>
+  );
+}
