@@ -2752,6 +2752,13 @@ exhausted kind is answered on the applicant's own boards. Its kinds
 include the Affinity, so a topic stance stays open to an applicant who
 has already staged an opinion.
 
+**One clause of this was overruled the same day**: "the empty page wires
+no face at all" fell to jakob's re-review, which gave `TagPageEmpty` the
+topic stance row and with it the face, the accessible path and the same
+`GuestGate` outcome its populated sibling carries — see item 90. Nothing
+else in the ruling moved: `TagPageHeld` still wires no gate, for the
+reason given.
+
 ### 82 · A tag page reached from Your topics goes back to the wrong place · *design* · **ruled + wired**
 
 Surfaced by the topic round 2026-09-14. The tag round ruled the page a
@@ -2898,7 +2905,7 @@ vouch-back surface shows once a vouch does exist. That is the same
 question in its own right, and it cannot be answered while the ruling
 and the spec disagree about which edge fixes the inviter.
 
-### 90 · The empty tag page's missing stance row has no recorded reason · *design* · **open**
+### 90 · The empty tag page's missing stance row has no recorded reason · *design* · **ruled + drawn 2026-09-15**
 
 Surfaced 2026-09-15 while tightening `TagPageEmpty`'s rationale, which
 had been justifying the absence with "same as the populated page" — a
@@ -2921,6 +2928,31 @@ absence is deliberate and the reason gets written down, in which case
 the page probably owes the reader a word about where the gesture lives
 instead. What is not an option is leaving a ruled absence with no
 sentence behind it.
+
+**Ruled by jakob 2026-09-15, and the premise went with it**: "this
+should not exist.. a tag is born by its connection to sth.. it does not
+exist before its first connection.. so there is no page of tags that
+dont have posts yet.. i guess if someone unbind the post we have an
+empty page.. (its history would not be empty tho) but then we should add
+the stance here. no reason for it to not be there."
+
+The item's tension was the right one and the answer is its first way
+out — the page gains the row the populated one carries — but the board
+it lands on is not quite the board that asked. `TagPageEmpty` is no
+longer the page of a name nobody has used; it is the page everything was
+untagged out of, empty in its list and not in its history. The route
+settles it: nothing in the product hands a reader a name with no record
+behind it, because every route here is a chip, a result or a link.
+`hashtag(name)`'s vacuous anchoring still describes the READ — a typed
+URL for an unused name resolves as it always did — so the empty line
+states the present and promises no past, which is true either way.
+
+**This overrules item 81's "the empty page wires no face at all."** The
+row is `TopicStanceRow`, lifted out of `TagPageBody` so both states of
+the page draw one anatomy, and the wiring is the populated page's: the
+accessible path at via 2, the topic's own face at via 3, and on that
+face the same three outcomes — the press-and-hold self, the master pad
+with nothing held, and `GuestGate`.
 
 ### 91 · The way back to the feed is spelled two ways · *design* · **open**
 

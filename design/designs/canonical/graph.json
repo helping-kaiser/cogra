@@ -68,7 +68,7 @@
   "entries": {
     "TagPageHeld": "the same tag page, opened by a reader whose netted Affinity on this topic is not (0, 0) — a state the record brings, not a different tap",
     "EditComposeUnchanged": "the same edit, opened and left as it was found — the state an empty acts batch leaves it in; content, not a tap",
-    "TagPageEmpty": "a tag whose authors have declared nothing — the contract guarantees every well-formed name resolves, so this is the same page any chip opens, in the state an unused name leaves it; content, not a tap",
+    "TagPageEmpty": "a tag everything has been untagged out of — the same page any chip opens, in the state an unbinding leaves it: the list empty, the topic's history not (jakob 2026-09-15); content, not a tap",
     "FeedEntryMoved": "a post whose paths have all aged out — the same screen the score opens, in the state the dust floor leaves it once every path’s last opinion has decayed past it; content, not a tap",
     "Main": "arrival through an invite link — the inviter's borrowed view",
     "FeedBare": "app open, signed out, no link — the bare borrowed view",
@@ -1123,6 +1123,8 @@
     { "from": "TagPageHeldPad", "via": 5, "kind": "advance", "label": "Set", "to": [{ "terminal": "back", "case": "signed — the Affinity joins the bundle, back on the tag page" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }, { "board": "SeveranceConfirm", "case": "the pick nets the held bundle to nothing — severance, confirmed with its cost and never refused" }] },
 
     { "from": "TagPageEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from, and the label names that origin by the noun table (readme, the tag-page smalls) — `Back to Explore`, `Back to the search`, `Back to Your topics`, `Back to feed`, `Back to the post`, `Back to the comments`, `Back to the profile`, `Back to #<thattag>`; a cold entry with no history falls back to `Back to Explore`, the state the family's boards draw" }] },
+    { "from": "TagPageEmpty", "via": 2, "kind": "advance", "label": "choose your stance (the accessible path)", "to": [{ "terminal": "self", "case": "the alternates open on the topic's own stance — the page has no other" }, { "board": "VouchBackPad", "case": "the pad, where that is the reader's chosen input (master board)" }] },
+    { "from": "TagPageEmpty", "via": 3, "kind": "advance", "label": "stance face (the topic)", "to": [{ "terminal": "self", "case": "press-and-hold — a positive Affinity lands, and the topic is held" }, { "board": "VouchBackPad", "case": "tap — the pad blooms, and with nothing held it is the master's three controls (the Affinity family's own words are drawn on `TagPageHeldPad`, the state that has a walk-away)" }, { "board": "GuestGate", "case": "signed out — the join prompt over the tag page (master)" }] },
 
     { "from": "YourTopics", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from, and the label names that origin by the same noun table — two surfaces reach this page, so `Back to Explore` and `Back to feed`; a cold entry falls back to `Back to Explore`, the state the board draws" }] },
     { "from": "YourTopics", "via": 2, "kind": "advance", "label": "topic rows", "to": [{ "board": "TagPageHeld", "case": "the topic's own page — held, which every row on this list is" }] },
