@@ -468,7 +468,10 @@ async fn the_filters_narrow_the_anchored_page(pool: PgPool) {
     );
 
     let zero = rig
-        .gql(ACTOR_QUERY, json!({ "id": f.alice, "pd": "ZERO", "pi": "ZERO" }))
+        .gql(
+            ACTOR_QUERY,
+            json!({ "id": f.alice, "pd": "ZERO", "pi": "ZERO" }),
+        )
         .await;
     assert_eq!(
         families(&zero["user"]["outgoingRecords"]),

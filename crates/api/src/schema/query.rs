@@ -13,8 +13,8 @@ use postgres_store::{PgPool, auth as store, content as content_store, genesis, m
 use uuid::Uuid;
 
 use super::types::{
-    Actor, CommentType, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType,
-    Record, RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User,
+    Actor, CommentType, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType, Record,
+    RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User,
     borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
     keyset_page, list_cost, list_limit, record_cursor, resolve_reference_target,
 };
