@@ -1,6 +1,6 @@
 /** One stance dimension as a range input — the non-drag equivalent of the pad. */
 export interface StanceSliderProps {
-  /** Use DIRECTED_LABEL / INTEREST_LABEL, never the repo's own words. */
+  /** The record family's own question for this axis, never the repo's words. */
   label: string;
   value: number;
   onChange?: (value: number) => void;

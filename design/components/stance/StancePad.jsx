@@ -1,5 +1,5 @@
 import React from "react";
-import { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_RANGES } from "./StanceReadout.jsx";
+import { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_AXIS_NAMES, STANCE_RANGES } from "./StanceReadout.jsx";
 
 /* The pad's field: a SOFT ROUNDED SQUARE, and THE DRAWN FIELD IS THE VALUE SPACE
    (design.md §8.3). The knob travels exactly the field, the corners are the two
@@ -24,8 +24,16 @@ import { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_RANGES } from
    api-spec.md), and they mean different things in the same two slots, so the
    words that name the poles travel with the record family rather than living
    in the control. The default is the stance's four, because the stance is what
-   this pad was drawn for. */
+   this pad was drawn for.
+
+   THE OBJECT CARRIES THE QUESTION AS WELL AS THE ENDS (backlog item 79). A
+   family that names its own poles has to name its own axes too, or the two
+   halves of one route disagree: a slider labelled `For or against` above a
+   track running `Dislike` to `Like` asks about a record the reader is not
+   editing. `directed` and `interest` name the two slots the way the pair does,
+   and the field ignores them — a pad draws ends, never questions. */
 export const STANCE_AXES = {
+  ...STANCE_AXIS_NAMES,
   left: DIRECTED_POLES[0],
   right: DIRECTED_POLES[1],
   bottom: INTEREST_POLES[0],

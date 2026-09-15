@@ -1,7 +1,7 @@
 import React from "react";
 import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
-import { bundleReadout, severanceParts, formatStancePair, formatStanceWords, SR_ONLY } from "./StanceReadout.jsx";
+import { bundleReadout, severanceParts, formatStancePair, formatStanceWords, STANCE_AXIS_NAMES, SR_ONLY } from "./StanceReadout.jsx";
 
 // The severance confirmation (design.md §8.5). It serves both routes to (0, 0):
 // the explicit gesture, and an ordinary pick that happens to land the bundle
@@ -46,6 +46,7 @@ export function SeveranceConfirm({
   onConfirm,
   onCancel,
   inline = false,
+  names = STANCE_AXIS_NAMES,
 }) {
   /* THE COST IS COUNTED IN THINGS, NOT IN ACTIONS (jakob's ruling, the geek
      round). "Signed action" is the repo's word for a record; what the reader
@@ -73,7 +74,7 @@ export function SeveranceConfirm({
           <span aria-hidden="true">
             Your pick: {pickAnchor.emoji} {formatStancePair(pick)}
           </span>
-          <span style={SR_ONLY}>{`Your pick: ${pickAnchor.label}, ${formatStanceWords(pick)}`}</span>
+          <span style={SR_ONLY}>{`Your pick: ${pickAnchor.label}, ${formatStanceWords(pick, names)}`}</span>
         </p>
       )}
       <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }}>

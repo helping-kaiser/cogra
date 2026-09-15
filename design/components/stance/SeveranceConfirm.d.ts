@@ -1,4 +1,4 @@
-import type { StanceBundle, StancePair } from "./StanceReadout";
+import type { AxisNames, StanceBundle, StancePair } from "./StanceReadout";
 
 /** The severance confirmation — one dialog for both routes to (0, 0). */
 export interface SeveranceConfirmProps {
@@ -17,6 +17,8 @@ export interface SeveranceConfirmProps {
   onConfirm?: () => void;
   onCancel?: () => void;
   inline?: boolean;
+  /** The record family's axis questions, for the pick's spoken reading. */
+  names?: AxisNames;
 }
 
 export declare function SeveranceConfirm(props: SeveranceConfirmProps): JSX.Element;
