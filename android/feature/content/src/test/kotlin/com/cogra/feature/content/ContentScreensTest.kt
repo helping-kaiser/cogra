@@ -1110,6 +1110,15 @@ class ContentScreensTest {
     // Pull-to-refresh belongs to the top of the thread: a reader
     // correcting upward from the middle of a long post is scrolling,
     // not asking for a re-read.
+    //
+    // NATIVE GRAPHICS, or there is no long post: Robolectric's default
+    // draw path measures text to nothing, so the body below would lay out
+    // shorter than the screen and the swipes would move a list already at
+    // both ends of itself (the same reason the gallery test asks for it).
+    // The premise is asserted below rather than assumed, because a list
+    // that cannot scroll makes the correction a pull FROM the top — which
+    // is the gesture that SHOULD refresh.
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
     @Test
     fun anUpwardDragAwayFromTheTopScrollsInsteadOfRefreshing() {
         var refreshes = 0
@@ -1123,9 +1132,15 @@ class ContentScreensTest {
             onRefresh = { refreshes++ },
         )
         // Down the post, well past the header…
+        val titleAtRest = compose.onNodeWithTag("detail_title").getUnclippedBoundsInRoot().top
         repeat(3) {
             compose.onNodeWithTag("detail_list").performTouchInput { swipeUp() }
         }
+        // …which is the premise the rest of this test rests on, so it is
+        // asserted rather than assumed: a list that never moved would make
+        // the correction below a pull from the top, which SHOULD refresh.
+        val titleScrolled = compose.onNodeWithTag("detail_title").getUnclippedBoundsInRoot().top
+        assertThat(titleScrolled.value).isLessThan(titleAtRest.value)
         // …then a correction back up that the thread itself absorbs.
         compose.onNodeWithTag("detail_list").performTouchInput {
             down(center)

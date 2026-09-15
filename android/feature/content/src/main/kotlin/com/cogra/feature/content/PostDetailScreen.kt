@@ -31,13 +31,13 @@ import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -285,14 +285,24 @@ fun PostDetailScreen(
     ) { padding ->
         // PULL-TO-REFRESH BELONGS TO THE TOP OF THE THREAD: a reader
         // correcting upward from the middle of a long post is scrolling,
-        // not asking for a re-read. The gate is the list's own place,
-        // stated here rather than inferred from leftover scroll — with a
-        // pinned bar there is no collapse left to absorb it.
+        // not asking for a re-read. With a pinned bar there is no collapse
+        // left to absorb that correction's leftover, so the rule is stated
+        // here instead of riding the bar's motion.
+        //
+        // IT IS LATCHED AT THE GESTURE'S START, never read live: a drag
+        // that travels through the top has ALREADY been spent as scroll,
+        // and re-arming as it arrives would turn the tail of every long
+        // correction into a refetch. This is the web's own rule — its
+        // `usePullToRefresh` asks `atTop()` on `touchstart` and not again
+        // (`lib/ui/pull-to-refresh.ts`).
         val listState = rememberLazyListState()
-        val atTop by remember {
-            derivedStateOf {
-                listState.firstVisibleItemIndex == 0 &&
-                    listState.firstVisibleItemScrollOffset == 0
+        var pullArmed by remember { mutableStateOf(true) }
+        LaunchedEffect(listState) {
+            snapshotFlow { listState.isScrollInProgress }.collect { scrolling ->
+                if (scrolling) {
+                    pullArmed = listState.firstVisibleItemIndex == 0 &&
+                        listState.firstVisibleItemScrollOffset == 0
+                }
             }
         }
         val refreshState = rememberPullToRefreshState()
@@ -308,7 +318,7 @@ fun PostDetailScreen(
                     // arrived (HT-10).
                     isRefreshing = state.refreshing,
                     state = refreshState,
-                    enabled = atTop,
+                    enabled = pullArmed,
                     onRefresh = onRefresh,
                 ),
         ) {
