@@ -395,8 +395,13 @@ DO, the way the sound toggle already does:
 
 **The stream and the viewer**:
 
-- `Back to the feed` — the stream's way out. Not "Close": the reader is
-  going back to the feed the stream narrowed, not shutting a layer.
+- `Back to feed` — the stream's way out. Not "Close": the reader is
+  going back to the feed the stream narrowed, not shutting a layer. The
+  feed takes no article anywhere in this vocabulary (jakob 2026-09-15):
+  it is a named surface, like Explore and settings, rather than a common
+  noun like the post or the wallet — and it is the destination a reader
+  meets most often, so one spelling serves `DetailHeader`, `Removed`,
+  the tag page's origin table and the stream alike.
 - `Close` — the viewer's X, which IS shutting a layer.
 - `Share this post` — the share control everywhere it appears. The
   completed name, never a bare "Share": a glyph with one word beside it

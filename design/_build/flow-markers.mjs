@@ -950,7 +950,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(12),
   ],
   Reel: [
-    { n: 1, find: 'aria-label="Back to the feed"', tag: "button" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "button" },
     { n: 2, find: 'aria-label="Turn sound on"', tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a" },
     { n: 4, find: 'aria-label="Give your opinion on this post"', tag: "button" },

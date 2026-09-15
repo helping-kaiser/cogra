@@ -5416,6 +5416,14 @@ inherited. Ruled by jakob the same day.
   The line keeps the present tense — `Nothing carries this tag right
   now` — because `hashtag(name)` still resolves a name nothing has used,
   and a sentence about what was unbound would lie to that one arrival.
+- **`Back to feed`, everywhere (jakob).** The drawn spelling wins over
+  the written rule, which is the right way round: the boards are where a
+  reader meets the words. The feed is a named surface — Explore,
+  settings — and not a common noun like the post or the wallet, so it
+  takes no article and the rest of the origin table is untouched. The
+  Reel's accessible name changes with it and copy-voice states it once.
+  The sweep found no third spelling: `DetailHeader`, `Removed` and both
+  shipped apps were already drawing it this way.
 - **The gate**: 194 → **203 boards**, 1461 → **1511 edges**, gaps 14 →
   **13** and flows 63 → **66 declared · 64 resolved**, the two blocked
   ones unchanged. The gap count falls because `Profile/7` closed and no
