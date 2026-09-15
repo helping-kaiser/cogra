@@ -1,7 +1,8 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SHEET_OUT_MS } from "@/lib/ui/motion";
+import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { BottomSheet, SheetItem } from "./bottom-sheet";
 
 describe("BottomSheet", () => {
@@ -146,6 +147,100 @@ describe("BottomSheet", () => {
       "bg-surface-container-highest",
     );
     expect(screen.getByTestId("bottom-sheet").className).toContain("bg-surface-container-high");
+  });
+
+  // ONE SCRIM, HOWEVER MANY SHEETS. The system has a single dimming token and
+  // stacking moves the z-layer, never the tone — but every native `<dialog>`
+  // paints its own `::backdrop`, so an upper sheet that kept one composited a
+  // second 50% black over the first.
+  it("dims once when it stacks, and dims itself when it does not", () => {
+    const { rerender } = render(
+      <BottomSheet open onClose={() => {}} title="Comment actions" stacked>
+        <p>Row</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByTestId("bottom-sheet").className).toContain("backdrop:bg-transparent");
+    expect(screen.getByTestId("bottom-sheet").className).not.toContain("backdrop:bg-scrim/50");
+
+    rerender(
+      <BottomSheet open onClose={() => {}} title="Comment actions">
+        <p>Row</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByTestId("bottom-sheet").className).toContain("backdrop:bg-scrim/50");
+  });
+
+  // PULLING DOWN IS HOW A DRAWER IS DROPPED (design/readme.md: "pulling down
+  // already means dismiss").
+  describe("the pull that drops it", () => {
+    const pull = (from: number, to: number) => {
+      const dialog = screen.getByTestId("bottom-sheet");
+      fireEvent.pointerDown(dialog, { pointerType: "touch", clientY: from });
+      fireEvent.pointerMove(dialog, { pointerType: "touch", clientY: to });
+      fireEvent.pointerUp(dialog, { pointerType: "touch", clientY: to });
+    };
+
+    it("drops when the pull passes the threshold", () => {
+      const onClose = vi.fn();
+      render(
+        <BottomSheet open onClose={onClose} title="Comments">
+          <p>A comment</p>
+        </BottomSheet>,
+      );
+      pull(100, 100 + PULL_THRESHOLD);
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it("stays for a pull that does not reach it", () => {
+      const onClose = vi.fn();
+      render(
+        <BottomSheet open onClose={onClose} title="Comments">
+          <p>A comment</p>
+        </BottomSheet>,
+      );
+      pull(100, 100 + PULL_THRESHOLD - 1);
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("stays for an upward drag, which is the reader scrolling in", () => {
+      const onClose = vi.fn();
+      render(
+        <BottomSheet open onClose={onClose} title="Comments">
+          <p>A comment</p>
+        </BottomSheet>,
+      );
+      pull(200, 100);
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    // A SCROLLED BODY IS BEING SCROLLED, NOT PULLED — which is what keeps an
+    // unfolded branch standing through a drag inside the thread.
+    it("stays when the body is not at its own top", () => {
+      const onClose = vi.fn();
+      render(
+        <BottomSheet open onClose={onClose} title="Comments">
+          <p>A comment</p>
+        </BottomSheet>,
+      );
+      const body = screen.getByTestId("bottom-sheet-body");
+      Object.defineProperty(body, "scrollTop", { value: 40, configurable: true });
+      pull(100, 100 + PULL_THRESHOLD * 2);
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("ignores a mouse drag, which is a selection rather than a gesture", () => {
+      const onClose = vi.fn();
+      render(
+        <BottomSheet open onClose={onClose} title="Comments">
+          <p>A comment</p>
+        </BottomSheet>,
+      );
+      const dialog = screen.getByTestId("bottom-sheet");
+      fireEvent.pointerDown(dialog, { pointerType: "mouse", clientY: 100 });
+      fireEvent.pointerMove(dialog, { pointerType: "mouse", clientY: 100 + PULL_THRESHOLD * 2 });
+      fireEvent.pointerUp(dialog, { pointerType: "mouse", clientY: 100 + PULL_THRESHOLD * 2 });
+      expect(onClose).not.toHaveBeenCalled();
+    });
   });
 
   it("pins the foot below the body, outside what scrolls", () => {

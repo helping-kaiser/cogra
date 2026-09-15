@@ -91,9 +91,29 @@ internal fun RefsSheet(
     onOpenPost: (String) -> Unit,
     testTagPrefix: String,
 ) {
+    // THE SHEET IS THE DOOR, NOT THE DESTINATION — `CograOverflowMenu`'s own
+    // rule, which this sheet did not keep. Its opener remembers `refsOpen`
+    // across the trip (`rememberSaveable`), so a row that navigated while the
+    // sheet was still open left it open: Back restored the surface AND raised
+    // the sheet over it again, with no way out but a second Back. Dropping
+    // the sheet as the row acts is what makes Back land where the reader
+    // opened it from.
+    val leaving: ((String) -> Unit) -> (String) -> Unit = { go ->
+        { id ->
+            onDismiss()
+            go(id)
+        }
+    }
+    val openTopic = leaving(onOpenTopic)
+    val openActor = leaving(onOpenActor)
+    val openPost = leaving(onOpenPost)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        // `--surface-dialog` is `surface-container-high` (design/tokens/semantic.css:9-12),
+        // which the board draws and Material's own default does not: its
+        // `surfaceContainerLow` reads a rung too dark, most of all in the dark theme.
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.testTag("${testTagPrefix}_refs_sheet"),
     ) {
         Column(Modifier.fillMaxWidth()) {
@@ -112,7 +132,7 @@ internal fun RefsSheet(
                     item { SectionLabel(stringResource(R.string.content_refs_section_tags)) }
                 }
                 items(topics, key = { it.hashtag.id }) { claim ->
-                    TagRow(claim, onOpenTopic, testTagPrefix)
+                    TagRow(claim, openTopic, testTagPrefix)
                 }
                 if (references.isNotEmpty()) {
                     item {
@@ -120,7 +140,7 @@ internal fun RefsSheet(
                     }
                 }
                 items(references, key = { it.targetId }) { claim ->
-                    ReferenceRow(claim, onOpenActor, onOpenPost, testTagPrefix)
+                    ReferenceRow(claim, openActor, openPost, testTagPrefix)
                 }
             }
         }

@@ -152,6 +152,7 @@ private fun ReferenceFinderSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.testTag("${testTagPrefix}_finder"),
     ) {
         Column(
