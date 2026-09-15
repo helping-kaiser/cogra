@@ -81,6 +81,64 @@ class MediaGeometryTest {
         assertThat(rect.height).isAtLeast(1)
     }
 
+    // -- the shape the bytes come out at (HT-CROP) --
+
+    /**
+     * The defect this closes, in the numbers it was found in: jakob's
+     * 4:5 post kept a 426 × 1080 picture — the untouched original — because
+     * a window covering (all but a rounding of) the whole picture slipped
+     * past the whole-window branch and was baked verbatim.
+     */
+    @Test
+    fun aWindowCoveringThePictureStillCropsToThePostsShape() {
+        val nearlyWhole = CropWindow(0f, 0f, 1f, 0.9998f)
+        val rect = cropRect(1080, 2738, CropSpec(targetRatio = 4f / 5f, window = nearlyWhole))
+        assertThat(rect.width.toFloat() / rect.height).isWithin(0.01f).of(4f / 5f)
+    }
+
+    @Test
+    fun aWindowOfTheWrongShapeIsCorrectedAboutItsOwnCentre() {
+        // Half the width, all the height, of a square picture: 1:2, where
+        // the post is 4:5. The centre stays put; the shape does not.
+        val spec = CropSpec(targetRatio = 4f / 5f, window = CropWindow(0.25f, 0f, 0.75f, 1f))
+        val rect = cropRect(200, 200, spec)
+        assertThat(rect.width.toFloat() / rect.height).isWithin(0.01f).of(4f / 5f)
+        assertThat(rect.left + rect.width / 2).isEqualTo(100)
+    }
+
+    /** The author's own framing survives to the pixel when it is already the shape. */
+    @Test
+    fun aWindowAlreadyAtTheShapeIsUntouched() {
+        val spec = CropSpec(targetRatio = 4f / 5f, window = CropWindow(0.1f, 0.2f, 0.5f, 0.7f))
+        assertThat(cropRect(200, 200, spec)).isEqualTo(PixelRect(20, 40, 80, 100))
+    }
+
+    @Test
+    fun everyPostShapeComesOutAtItsOwnRatio() {
+        val window = CropWindow(0f, 0f, 0.99f, 0.99f)
+        listOf(4f / 5f, 1f, 1.91f).forEach { target ->
+            val rect = cropRect(1080, 1920, CropSpec(targetRatio = target, window = window))
+            assertThat(rect.width.toFloat() / rect.height).isWithin(0.02f * target).of(target)
+        }
+    }
+
+    @Test
+    fun atTargetRatioLeavesADegenerateRectangleAlone() {
+        val flat = floatArrayOf(10f, 10f, 10f, 10f)
+        assertThat(atTargetRatio(flat, 1f).toList()).isEqualTo(flat.toList())
+        assertThat(atTargetRatio(floatArrayOf(0f, 0f, 10f, 10f), 0f).toList())
+            .containsExactly(0f, 0f, 10f, 10f).inOrder()
+    }
+
+    @Test
+    fun aRatioIsAtItsTargetOnlyWithinTheSlack() {
+        assertThat(isAtRatio(0.8f, 0.8f)).isTrue()
+        assertThat(isAtRatio(0.8f * (1f + RATIO_SLACK / 2f), 0.8f)).isTrue()
+        assertThat(isAtRatio(0.8f * (1f + RATIO_SLACK * 2f), 0.8f)).isFalse()
+        assertThat(isAtRatio(Float.NaN, 0.8f)).isFalse()
+        assertThat(isAtRatio(0f, 0.8f)).isFalse()
+    }
+
     @Test
     fun theWholePictureIsRecognisedAsSuch() {
         val rect = cropRect(100, 100, CropSpec(targetRatio = 1f))

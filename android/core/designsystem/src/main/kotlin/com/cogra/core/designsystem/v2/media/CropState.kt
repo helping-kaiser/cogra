@@ -10,6 +10,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.canhub.cropper.CropImageView
 import com.cogra.core.designsystem.v2.token.MediaShape
+import kotlin.math.abs
 
 /**
  * The window one picture is framed to, as fractions of the picture.
@@ -114,9 +115,23 @@ class CropState internal constructor(initial: CropFraming) {
      * picture, or a default, that is not this framing's (jakob
      * 2026-09-01: "the preview of image 1 visibly changes every time i
      * move image 2 crop").
+     *
+     * **And it is this picture's only if it is the right shape.** The
+     * view is held to a fixed aspect ratio, so every window the author
+     * can actually make comes back at the framed shape; one that does
+     * not is the view describing an overlay it has no settled layout
+     * for yet, not a framing anybody chose. Taking those was how a
+     * window covering the whole picture became the recorded framing —
+     * which uploaded the untouched original — and how a stage reopened
+     * on a window nobody had dragged there.
+     *
+     * [pictureRatio] is needed because the window travels as fractions:
+     * half the width of a tall picture is not the same shape as half the
+     * width of a wide one.
      */
-    internal fun onWindowChanged(next: CropFraming) {
+    internal fun onWindowChanged(next: CropFraming, pictureRatio: Float) {
         if (!seeded) return
+        if (!next.matches(framedShape, pictureRatio)) return
         framing = next
     }
 
@@ -133,6 +148,15 @@ class CropState internal constructor(initial: CropFraming) {
         pendingRestore = framing.takeIf { it != CropFraming.Whole }
         seeded = false
     }
+
+    /**
+     * Whether [window] is a framing of this picture's shape.
+     *
+     * Null shape means nothing has pointed the view at a shape yet, and
+     * there is therefore nothing a window could be measured against.
+     */
+    private fun CropFraming.matches(shape: MediaShape?, pictureRatio: Float): Boolean =
+        shape != null && CropWindowMath.isAtRatio(this, pictureRatio, shape.ratio)
 
     /**
      * Places the window this picture wants, now that it is decoded —
@@ -157,12 +181,20 @@ class CropState internal constructor(initial: CropFraming) {
         if (whole.width() <= 0 || whole.height() <= 0) return false
 
         val restore = pendingRestore
-        if (restore != null) {
+        // A carried-in framing is put back only if it is still a framing
+        // of this shape. One that is not was never the author's — it is
+        // a window recorded from a view that had no layout to report
+        // against — and putting it back is how the stage reopened zoomed
+        // into a corner nobody had chosen. The opening window is the
+        // honest answer there.
+        val ratio = whole.width().toFloat() / whole.height().toFloat()
+        if (restore != null && restore.matches(framedShape, ratio)) {
             pendingRestore = null
             seeded = true
             view.cropRect = CropWindowMath.rectOf(restore, whole)
             return true
         }
+        pendingRestore = null
         return openWindow(view, whole)
     }
 
@@ -354,6 +386,34 @@ internal object CropWindowMath {
 
     /** A window may never shrink below this share of the picture's edge. */
     const val MIN_WINDOW = 0.1f
+
+    /**
+     * How far a window's own shape may sit from the shape it frames
+     * before it is read as a report about something other than a
+     * framing.
+     *
+     * The window is carried as fractions and comes back through the
+     * view's integer rectangles, so an exact match is not on offer. Two
+     * percent is far below the distance between any two shapes the
+     * composer offers and far above that rounding.
+     */
+    const val RATIO_SLACK = 0.02f
+
+    /**
+     * Whether [window] frames a picture of [pictureRatio] at
+     * [targetRatio].
+     *
+     * The window is a fraction of the picture, so its shape in pixels is
+     * its own shape times the picture's — which is why this cannot be
+     * answered from the window alone.
+     */
+    fun isAtRatio(window: CropFraming, pictureRatio: Float, targetRatio: Float): Boolean {
+        if (window.width <= 0f || window.height <= 0f) return false
+        if (!pictureRatio.isFinite() || pictureRatio <= 0f) return false
+        if (!targetRatio.isFinite() || targetRatio <= 0f) return false
+        val ratio = window.width / window.height * pictureRatio
+        return abs(ratio - targetRatio) <= RATIO_SLACK * targetRatio
+    }
 
     /**
      * Slides the window without changing its size, stopping at the
