@@ -305,6 +305,31 @@ describe("FeedView", () => {
     expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
   });
 
+  // The chats affordance (jakob 2026-09-01). A signed-out tap opens the
+  // guest gate, the edge the canvas draws (`graph.json` "FeedBare" →
+  // `GuestGate`) — ask, never bounce.
+  it("asks a guest to join when they tap the band's chats affordance", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    renderWithProviders(<FeedView />);
+    fireEvent.click(await screen.findByTestId("band-chats"));
+    expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalledWith("/chats");
+  });
+
+  // A signed-in tap reaches the coming-soon destination (`graph.json`
+  // "Feed" → `ChatsComingSoon`, backlog item 68).
+  it("sends a signed-in reader to the coming-soon screen", async () => {
+    server.use(
+      graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
+    );
+    server.use(meHandler(), borrowedViewHandler(null));
+    renderWithProviders(<FeedView />, { store: signedInStore() });
+    fireEvent.click(await screen.findByTestId("band-chats"));
+    expect(push).toHaveBeenCalledWith("/chats");
+  });
+
   it("collapses the restore card into the header for a keyless member", async () => {
     server.use(
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),

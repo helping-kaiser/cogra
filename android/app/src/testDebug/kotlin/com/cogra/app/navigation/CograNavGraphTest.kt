@@ -9,6 +9,8 @@ import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -240,6 +242,57 @@ class CograNavGraphTest {
         compose.onNodeWithTag("topic_back").performClick()
         waitForTag("feed_post_p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    // Backlog item 68, ruled 2026-09-14: chats moved down the release
+    // order but the band's chats affordance stays on the root, and a
+    // signed-in tap now reaches the coming-soon destination rather than
+    // drawing no control at all.
+    @Test
+    fun theChatsAffordanceOpensTheComingSoonScreenAndBackReturnsToFeed() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        render()
+        waitForTag("feed_post_p1")
+
+        compose.onNodeWithTag("feed_band_chats").performClick()
+        waitForTag("chats_empty")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ChatsComingSoon>())
+            .isTrue()
+        // The blessed line (design/guidelines/copy-voice.md "The
+        // coming-soon surfaces"; the board's own
+        // `EmptyState title="Chats — coming soon. Your conversations will
+        // be here."`) — verbatim, never retyped.
+        compose.onNodeWithTag("chats_empty").assertTextEquals(
+            "Chats — coming soon. Your conversations will be here.",
+        )
+        compose.onNodeWithTag("chats_back").assertContentDescriptionEquals("Back")
+
+        // A read drill-in keeps the shell frame with no tab selected
+        // (design.md §6), same as a post detail's own drill-in.
+        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
+
+        compose.onNodeWithTag("chats_back").performClick()
+        waitForTag("feed_post_p1")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
+    }
+
+    // The signed-out edge is unchanged (`graph.json` "FeedBare" →
+    // `GuestGate`): the guest gate opens, not the coming-soon screen.
+    @Test
+    fun theChatsAffordanceOpensTheGuestGateWhenSignedOut() {
+        content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
+        render()
+        waitForTag("login_browse")
+        compose.onNodeWithTag("login_browse").performScrollTo().performClick()
+        waitForTag("feed_post_p1")
+
+        compose.onNodeWithTag("feed_band_chats").performClick()
+        waitForTag("join_prompt")
+        assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ChatsComingSoon>())
+            .isFalse()
     }
 
     // The Reference affordance opens the composer with the node staged,

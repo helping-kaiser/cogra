@@ -29,9 +29,9 @@ describe("CograBand", () => {
     expect(screen.getByText("a notice")).toBeInTheDocument();
   });
 
-  // The chat surface is an undesigned gap on the canvas, so the band draws no
-  // control to nowhere — but it is the band's affordance the moment it leads
-  // somewhere, and it is named, since it is a glyph.
+  // A tab that passes no `onChats` draws no control to nowhere — but it is
+  // the band's affordance the moment it leads somewhere, and it is named,
+  // since it is a glyph.
   it("draws the chats affordance only where it leads somewhere", () => {
     const { rerender } = render(<CograBand />);
     expect(screen.queryByTestId("band-chats")).not.toBeInTheDocument();
