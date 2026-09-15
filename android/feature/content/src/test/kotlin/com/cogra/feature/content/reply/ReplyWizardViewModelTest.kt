@@ -339,7 +339,11 @@ class ReplyWizardViewModelTest {
             .isEqualTo(UploadFailure.COMMENT_VIDEO_TOO_BIG)
     }
 
-    /** The cover is the cheap leg, so the face goes first. */
+    /**
+     * The cover is the cheap leg, so the face goes first — once there
+     * IS a face. The row offering frames never chooses one, so the tap
+     * is part of the journey this test is about.
+     */
     @Test
     fun theCoverIsUploadedBeforeTheClipItFronts() = runTest(dispatcher) {
         video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
@@ -347,6 +351,7 @@ class ReplyWizardViewModelTest {
         vm.onBodyChange("Words")
         vm.onPicked("clip.mp4")
         dispatcher.scheduler.advanceUntilIdle()
+        vm.onPickCoverFrame(0)
 
         vm.onNext()
         dispatcher.scheduler.advanceUntilIdle()
@@ -392,6 +397,35 @@ class ReplyWizardViewModelTest {
         // not hand them a face they never chose.
         assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
         assertThat(vm.state.value.coverMediaId).isNull()
+    }
+
+    /**
+     * THE JOURNEY THE OLD NET NEVER WALKED (HT-COVER): frames land
+     * while the author is still on the composer, and the author seals
+     * without touching one. The coverless tests either held extraction
+     * open or gave it nothing to find, so the ordinary path — offers
+     * on screen, none taken — went unasked. It is bare.
+     */
+    @Test
+    fun aClipTheAuthorNeverGaveAFaceGoesUpBare() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        // The offers are on screen, and none of them is a choice.
+        assertThat(vm.state.value.coverFrames).isNotEmpty()
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.order).containsExactly("clip")
+        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(content.lastAttachments.single().coverMediaId).isNull()
     }
 
     /**
