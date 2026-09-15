@@ -15,9 +15,10 @@
    IT IS THE SAME ACT AS `ApprovePad`, SO IT IS THE SAME PAD. `StanceControl`
    and `ApprovePadNote` — the shared note, which is why that helper takes a
    handle rather than spelling one. A member answering an ask link is doing
-   precisely what the inviter would have done from their own queue; drawing it
-   as a second kind of act would invent a difference the mechanic does not
-   have.
+   precisely what an approver does from their own queue; drawing it as a second
+   kind of act would invent a difference the mechanic does not have. This
+   screen is also the proof that the approver is not the issuer by definition:
+   the reader here issued no link.
 
    THE SURFACE IS SMALL ON PURPOSE. It is reached from outside the app, by
    somebody who was handed a link and has one question to answer, so it carries
@@ -25,7 +26,7 @@
    into. `VouchBackPad`'s shape, one seat over: the card names who, the line
    says what signing does, and `Not now` leaves it unanswered.
 
-   IT NAMES NO INVITER AND NO REASON. Who turned @noor down is @noor's to tell
+   IT NAMES NOBODY ELSE AND NO REASON. Who turned @noor down is @noor's to tell
    and not this screen's to publish — the ask link carries a person, not a
    case file. What the reader needs is who is asking and what their own
    signature would do.

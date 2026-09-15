@@ -1122,7 +1122,7 @@ sentences, all present tense of the act that happened:
 - `@sol gave an opinion on you` — the profile opinion, in the
   chronicle's own verb (`Gave an opinion`). The reader's word is
   **opinion**; *followed* would name a gesture this product does not
-  have, and *vouched* is the inviter's word, not this one's.
+  have, and *vouched* belongs to the vouch-in, not to this.
 - `@mira mentioned you` — a citation whose target is you.
 - `@ada cited your post` — a citation whose target is something you
   wrote. *Cited*, the product's verb for a Reference, and the second
@@ -1130,7 +1130,7 @@ sentences, all present tense of the act that happened:
 - `@juno landed through your invite` — *landed* is already the word the
   approval flow speaks (`Your registration is landing`), so the invite's
   other end keeps it.
-- `@mira approved your application` — the inviter's act, named as
+- `@mira approved your application` — the approver's act, named as
   theirs. Not *You were approved*, which is the passive the register
   refuses and hides the person who did it.
 
@@ -1616,7 +1616,7 @@ vantage honest and says what would end it.
 **The member-side landing**: the page is titled `A vouch, asked for`,
 the card reads `@noor is asking to be vouched in` over `They have an
 account and can read; what they do not have yet is anyone standing for
-them. Your opinion is what brings them in.` No inviter is named and no
+them. Your opinion is what brings them in.` Nobody else is named and no
 reason is given — an ask link carries a person, not a case file. `Not
 now` leaves it standing, which costs the asker nothing, because the
 link does not expire and is not used up.
@@ -1626,3 +1626,20 @@ report in the same shape as `@mira approved your application`, and
 deliberately not softened: the two rows sit in one list and a reader
 comparing them should see one mechanism, not a cheerful one and an
 apologetic one.
+
+**A surface names the person whose approval is in play — the APPROVER —
+and never the role "inviter"** (jakob 2026-09-15, closing the sweep:
+"yeah sweep — the other version where you can choose your inviter is a
+super corner case that will probabely never happen"). An applicant has
+no inviter: `invitations.md` §2 fixes that word at the joiner's own
+back-edge, so before the vouch-back there is only a member whose
+approval is waited on. The rule is about the WORDS, not the people —
+where one member issued the link and approves through it, which is the
+ordinary case, the same handle rightly appears at both ends. What may
+not happen is a line defining the wait, the rung or the act by a
+relationship that does not exist yet: `All set — waiting on @mira`, not
+"waiting on your inviter"; `Waiting on @mira`, not "Waiting on your
+inviter"; `@mira approved your application` as the approver's act. The
+primitive's freedom to reciprocate anyone stays in §2 and stays off the
+screen — no surface offers a choice of inviter, because no reader is
+asked to make one.

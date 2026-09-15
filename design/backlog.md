@@ -2985,7 +2985,7 @@ accessible name changes with it, copy-voice's entry carries the rule and
 the reason, and the sweep found no third spelling anywhere in the tree —
 both apps had already shipped the drawn one.
 
-### 92 · The vouch-in ruling and the primitive spec name different people · *design* · **open — blocks a prose sweep**
+### 92 · The vouch-in ruling and the primitive spec name different people · *design* · **ruled + swept 2026-09-15**
 
 Raised 2026-09-15, while applying the ruling that the vouch-back mask
 names the person whose vouch is in play. The ruling was relayed as "the
@@ -3043,3 +3043,43 @@ What did NOT wait, because both readings agree on it: the approver is
 not the issuer BY DEFINITION, so the borrowed-view band's rung and
 readme §13's vantage clause stop calling the applicant's rung "their
 own inviter" — see item 89.
+
+**Ruled by jakob 2026-09-15**: "yeah sweep — the other version where you
+can choose your inviter is a super corner case that will probabely never
+happen."
+
+So §2 stands untouched and the surfaces stop naming a chooser before one
+exists, which was the third way out and the one the boards were already
+closest to. The rule the sweep wrote: **a surface names the person whose
+approval is in play — the approver — and never the role "inviter"**,
+because an applicant has no inviter until their own back-edge makes one.
+The primitive's freedom to reciprocate anyone stays in §2, unmentioned on
+screen: no surface offers a choice of inviter, because no reader is asked
+to make one.
+
+The sweep, against this item's own enumeration. **Changed**:
+`ApplicantWaiting` now reads `All set — waiting on @mira` over `Their
+approval brings you in. Nothing else is needed from you.`;
+`ProfileApplicant` reads `Waiting on @mira` over `What you post now
+arrives with you.` — its middle sentence deleted rather than reworded,
+since the title carries the fact; `ApprovePad`'s docblock names an
+approver and says why the other word cannot be used on a pad `VouchAsk`
+opens for a member who issued no link; `VouchAsk` and `ApprovePadNote`
+stop calling a queue's owner an inviter; copy-voice's two entries become
+"belongs to the vouch-in" and "the approver's act", and the section
+carries the rule itself. **Already conform, and left alone**:
+`ApplicantFeed`'s "before @mira can approve it" and the New invite
+sheet's "each person still needs your approval" both name the approver
+already — the first by handle, the second by addressing the reader whose
+queue it is. **Fixtures untouched**, by the ruling: where one @mira
+issues the link and approves through it, which is the ordinary case, one
+person in the fixture is honest.
+
+**Four stragglers the sweep found outside the enumeration** and fixed on
+the same rule: readme's bell bullet ("the approval and the inviter's
+opinion both land on them"), the vouch-back ceremony's vantage sentence
+(still defining the borrowed rung by an inviter, the clause item 89
+retired), the invites round's `Set` signing "the inviter's Opinion", and
+the prefill's "the inviter's eventual Opinion" — that last one the
+ISSUER's, which is the word it wanted. `Notifications`' two docblocks
+took the same correction.
