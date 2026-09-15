@@ -5111,6 +5111,35 @@ none of them needing a board. Ruled by jakob the same day.
   the reader actually stood. The whole family takes the `back` terminal;
   the boards keep drawing `Back to Explore`, the cold entry's state
   being the one that stands with no route behind it.
+- **And the origin gets a noun, from a table** (jakob, "as
+  recommended"). A label that names where the reader stood needs one
+  word per place they can have stood, or the rule is only three
+  examples and a guess. The table is built from the page's ACTUAL
+  arriving edges, so it is closed rather than open-ended — a named
+  surface keeps its name, and everything else is named by what it is:
+
+  | Where the reader came from | The label |
+  |---|---|
+  | Explore, at rest | `Back to Explore` |
+  | Explore, mid-query | `Back to the search` |
+  | Your topics | `Back to Your topics` |
+  | the feed, in any of its states | `Back to feed` |
+  | a post, through its tags-and-references sheet | `Back to the post` |
+  | a comment's chips, in the thread | `Back to the comments` |
+  | a profile's posts | `Back to the profile` |
+  | another tag's page | `Back to #<thattag>` |
+  | nowhere — a shared URL | `Back to Explore` |
+
+  Three of those want a word about why. **The feed's many states are
+  one noun**: `Feed`, `FeedScrolled`, `FeedNarrowed`, the applicant
+  shells, `Main`, `KeyElsewhere` and the rest are the same feed with a
+  setting or a band on, and a reader who scrolled three screens did not
+  stand somewhere else. **A sheet is named by what it is a sheet of**:
+  the tags-and-references sheet is the only route from a post detail to
+  a tag page, and back returns the post with its sheet — `Back to the
+  sheet` would name the layer instead of the place. **And a tag page
+  reached from a tag page names the tag**, because `Back to the topic`
+  would be true of the page the reader is standing on too.
 - **The guest close, ruled the same evening.** Guests reach every
   reading page and it is always the same: the stance face wears the
   unset 🫥 and the scores come from the genesis vantage. So every

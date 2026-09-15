@@ -2900,3 +2900,25 @@ absence is deliberate and the reason gets written down, in which case
 the page probably owes the reader a word about where the gesture lives
 instead. What is not an option is leaving a ruled absence with no
 sentence behind it.
+
+### 91 · The way back to the feed is spelled two ways · *design* · **open**
+
+Surfaced 2026-09-15 while building the origin-noun table for the tag
+page's back label. Two spellings are drawn today and they disagree:
+`Back to feed` on `DetailHeader` (so on every post detail, the
+references sheet, the reader's post menus and `ComposeLanded`) and on
+`Removed`, against `Back to the feed` as the Reel's accessible name,
+which `copy-voice.md` states as a rule in its own right.
+
+Neither is obviously the loser, which is why this is a ruling.
+Article-less matches `Back to Explore` and `Back to settings`, where
+the destination reads as a surface's name; the article matches `Back to
+the post`, `Back to the wallet`, `Back to the path`, which is most of
+the vocabulary and the shape the new noun table follows everywhere
+except this one entry. The feed is the one destination that can be read
+either way — a named place or a common noun — and it is the one the
+reader meets most often, so the split is the most visible one there is.
+
+Whichever wins, it wins in both places at once: the drawn `backLabel`s
+and the Reel's accessible name are the same words doing the same job,
+and `copy-voice.md`'s way-back vocabulary should list it once.
