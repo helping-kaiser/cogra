@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -86,7 +85,7 @@ fun CograOverflowMenu(
             containerColor = sheetContainerColor(
                 stacked,
                 MaterialTheme.colorScheme,
-                BottomSheetDefaults.ContainerColor,
+                MaterialTheme.colorScheme.surfaceContainerHigh,
             ),
             modifier = Modifier.testTag("${testTag}_sheet"),
         ) {

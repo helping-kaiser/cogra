@@ -94,6 +94,10 @@ internal fun RefsSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        // `--surface-dialog` is `surface-container-high` (design/tokens/semantic.css:9-12),
+        // which the board draws and Material's own default does not: its
+        // `surfaceContainerLow` reads a rung too dark, most of all in the dark theme.
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier.testTag("${testTagPrefix}_refs_sheet"),
     ) {
         Column(Modifier.fillMaxWidth()) {
