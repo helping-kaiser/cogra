@@ -2394,8 +2394,8 @@ function ApprovePadNote({ handle }) {
    the ROW's to say, on the second line, which is where `ContentRow` puts
    status.
 
-   OLDEST ON TOP, BY AGE ALONE. `@imke` applied nine days ago and still has no
-   key; `@rafa` applied three days ago and is ready. The not-ready row standing
+   OLDEST ON TOP, BY AGE ALONE. `@imke` applied nine days ago and is not fully
+   registered yet; `@rafa` applied three days ago and is ready. The not-ready row standing
    first is the drawing that records the rule: this list is ordered by how long
    someone has been waiting, never by whether the reader can act on them.
 
@@ -2404,10 +2404,17 @@ function ApprovePadNote({ handle }) {
    handle — the designed placeholder, and here the only honest drawing. For the
    same reason there is no display name: a handle is all the account has.
 
-   THE NOT-READY ROW IS STILL PRESSABLE, and answers with a snackbar naming
-   what is outstanding — `ProfileApplicant`'s locked rows, which say why rather
-   than refusing silently. An inert row beside a live close control would read
-   as a row that had stopped working.
+   THE STATUS LINE IS THE READER'S FACT, NOT THE MECHANISM'S (jakob
+   2026-09-15). Which of the two proofs is still missing — a key, a confirmed
+   email — is the applicant's errand and no concern of the person deciding
+   whether to vouch for them. What the approver needs from this line is whether
+   they can act, so both states say the one thing that is true of both:
+   `Not fully registered yet`.
+
+   THE NOT-READY ROW IS STILL PRESSABLE, and answers with a snackbar in the
+   same words — `ProfileApplicant`'s locked rows, which say why rather than
+   refusing silently. An inert row beside a live close control would read as a
+   row that had stopped working.
 
    DEAD LINKS ARE NOT HERE. A revoked or expired link leaves the list the
    moment it stops working, so everything under `Live links` is a link someone
@@ -2447,7 +2454,7 @@ function InvitesBody({ approving = false }) {
             chevron={false}
             name="imke"
             title="@imke"
-            second="Waiting on their key"
+            second="Not fully registered yet"
             trailing="9d"
             action={<CloseApplication handle="@imke" />}
             onOpen={() => {}}

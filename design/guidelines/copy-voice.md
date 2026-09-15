@@ -1491,11 +1491,14 @@ you": only one of those rows is waiting on the reader and the other is
 waiting on its own applicant, so a caption claiming both would make the
 second row a lie. Who is waited on is the ROW's to say.
 
-**An application's second line is its status and names the proof that
-is outstanding** — `Waiting on their key`, and `Their email isn't
-confirmed` for the other of the two. Ready reads `Ready for your
-approval`, the same words the notification uses, so the list and the
-bell cannot describe one state two ways.
+**An application's second line is its status, and it names the
+reader's fact and not the mechanism** (jakob 2026-09-15). Which proof
+is still missing — a key, a confirmed email — is the applicant's
+errand, and the person deciding whether to vouch has no use for it:
+what they need to know is whether they can act. So both not-ready
+states read `Not fully registered yet`, and ready reads `Ready for
+your approval`, the same words the notification uses, so the list and
+the bell cannot describe one state two ways.
 
 **The row's close says what happens, not how it feels.** Its name is
 `Close @imke's application`, never "Reject" or "Decline": nothing is
@@ -1553,9 +1556,11 @@ picture; what they need is the errand and the name, in that order. The
 profile row's mark speaks as `Invites — someone is waiting`.
 
 **Two snackbars the list owes, drawn nowhere and named in the graph**:
-`Invite revoked` when a card leaves, and `@imke has to make their key
-before you can approve` when a not-ready row is pressed — the locked
-row answering with a reason, `ProfileApplicant`'s own manner.
+`Invite revoked` when a card leaves, and `@imke has to finish
+registering before you can approve` when a not-ready row is pressed —
+the locked row answering with a reason, `ProfileApplicant`'s own
+manner, and in the row's own words rather than a second account of the
+same state.
 
 ### The reject extension's lines — same round, same day
 
