@@ -666,8 +666,9 @@ CoGra's signature interaction, and the thing to get right. Full rules in
 `guidelines/stance-control.md`; the short version:
 
 Every interaction authors two independent continuous values in `[−1, +1]`
-— on screen, **"For or against"** and **"How much reaches you"**. All
-four quadrants are legitimate.
+— on screen, **"For or against"** and **"How much reaches you"** for an
+opinion; another record family filling the same two slots names them its
+own (§3). All four quadrants are legitimate.
 
 - **At rest** the target shows the opinion: the face and the exact
   pair. A viewer with no opinion sees a **muted, translucent 🫥** —
@@ -5025,7 +5026,7 @@ slice-3 remainders beside it. The round's premise is one sentence:
   a seal's acts card is a different anatomy with its own totals.
 - **The clip ruling, for context only** (implementation owns it): a
   detail clip stops at its end with replay; a feed clip loops.
-- **The gate**: boards **194 → 200** (`TagPageHeld`, `YourTopics`,
+- **The gate**: boards **188 → 194** (`TagPageHeld`, `YourTopics`,
   `FeedTopic`, `CitedBy`, `CommentCitedByEmpty`, `EditComposeUnchanged`),
   edges **1372 → 1429**, gaps hold at **15**, flows hold at **63/61/2**
   with **2** journey-stopping — every new board joins an existing
@@ -5069,10 +5070,22 @@ none of them needing a board. Ruled by jakob the same day.
   the reader actually stood. The whole family takes the `back` terminal;
   the boards keep drawing `Back to Explore`, the cold entry's state
   being the one that stands with no route behind it.
+- **The guest close, ruled the same evening.** Guests reach every
+  reading page and it is always the same: the stance face wears the
+  unset 🫥 and the scores come from the genesis vantage. So every
+  guest-reachable stance face carries the `GuestGate` outcome on the
+  face itself — `ReplyEntry`, `FeedGallery`, `PostDetail`,
+  `PostDetailVideo` and `ProfileOther` join `TagPage` and `Reel` — and
+  the arriving-edge spelling (`Main`/`FeedBare`'s author chips carried
+  "acts join-gate" as a note on the way in) is retired: one fact, one
+  idiom, on the face that gates. `RefsSheet` draws no stance face and
+  carries nothing. `YourTopics`' back arrow takes the tag pages'
+  history ruling with them — the feed filter is its second route, and
+  the Explore link was the same skip.
 - **The gate**: no board added and none redrawn — **194** screens
   render as before, edges hold at **1461**, gaps at **14**, flows at
-  **63/61/2**. Three outcomes join existing rows and
-  one destination becomes a terminal, so `flows.resolved.json` is
+  **63/61/2**. Eight outcomes join existing rows and
+  two destinations become terminals, so `flows.resolved.json` is
   byte-identical and nothing needed re-blessing. Reachable filter
   summaries hold at **370**, **0** over the band's 154px, widest
   unchanged at `Chats · text · + removed`, 153.9px. The maps and the
