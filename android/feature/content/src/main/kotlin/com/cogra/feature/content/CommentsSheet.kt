@@ -499,7 +499,6 @@ private const val MAX_INDENT_DEPTH = 1
  * body, the soft "Edited" marker (design.md §9), the creator's edit
  * affordance, the reply affordance, and the branch behind its count.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CommentThread(
     comment: CommentView,
@@ -527,171 +526,283 @@ private fun CommentThread(
             .padding(start = indent),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Card(
+        CommentCard(
+            comment = comment,
+            state = state,
+            viewerId = viewerId,
+            signedIn = signedIn,
+            onReplyTo = onReplyTo,
+            onEditComment = onEditComment,
+            onReveal = onReveal,
+            onOpenActor = onOpenActor,
+            onOpenTopic = onOpenTopic,
+            onReference = onReference,
+            onLicense = onLicense,
+            stanceControl = stanceControl,
+        )
+        CommentBranch(
+            comment = comment,
+            depth = depth,
+            state = state,
+            viewerId = viewerId,
+            signedIn = signedIn,
+            onLoadMoreReplies = onLoadMoreReplies,
+            onReplyTo = onReplyTo,
+            onEditComment = onEditComment,
+            onReveal = onReveal,
+            onOpenActor = onOpenActor,
+            onOpenTopic = onOpenTopic,
+            onReference = onReference,
+            onLicense = onLicense,
+            stanceControl = stanceControl,
+        )
+    }
+}
+
+/**
+ * The card itself (`CommentCard.jsx`) — the author's line, what they
+ * wrote, and the one affordance row under it.
+ */
+@Composable
+private fun CommentCard(
+    comment: CommentView,
+    state: CommentsUiState,
+    viewerId: String?,
+    signedIn: Boolean?,
+    onReplyTo: (CommentView) -> Unit,
+    onEditComment: (CommentView) -> Unit,
+    onReveal: (String, SensitiveMark) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
+    onReference: (String) -> Unit,
+    onLicense: (LicenseChoice) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("detail_comment_${comment.id}"),
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag("detail_comment_${comment.id}"),
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                // The picture the boards draw on a comment card (Q49),
-                // and the age beside it. Null is the monogram — the
-                // designed fallback for an author who has set none, not
-                // a gap waiting for a photo.
-                ContentCardHeader(
-                    author = comment.author,
-                    at = comment.createdAt,
-                    onOpenActor = onOpenActor,
-                    testTagPrefix = "comment_${comment.id}",
-                    menu = commentMenuRows(
-                        comment = comment,
-                        onCite = { onReference(comment.id) },
-                        onLicense = { onLicense(comment.license) },
-                    ),
-                    menuContentDescription = stringResource(R.string.content_menu_comment),
-                    // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`):
-                    // the thread already lives in a sheet, so this menu is a
-                    // sheet on a sheet (design/readme.md:2364).
-                    stacked = true,
-                )
-                // A comment is text **plus** optional media (D16),
-                // so its body is never the exclusive-or a post's
-                // is — but it veils and redacts as one region all
-                // the same.
-                PostBody(
-                    content = comment.content,
-                    description = null,
-                    attachments = comment.attachments,
-                    attachmentsStatus = comment.attachmentsStatus,
-                    moderation = comment.moderation,
-                    testTagPrefix = "comment_${comment.id}",
-                    surface = BodySurface.Comment,
-                    revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
-                    onReveal = { onReveal(comment.id, comment.sensitiveMark()) },
-                    // The statuses are the veil — the OR of the author's
-                    // own mark and a moderator's verdict — so the
-                    // author's half is what names the source.
-                    sensitiveSource = if (comment.sensitiveSelfMark) {
-                        SensitiveSource.Author
-                    } else {
-                        SensitiveSource.Platform
-                    },
-                    sensitiveReason = comment.sensitiveReason,
-                )
-                // The soft marker, friendly not forensic (design.md §9).
-                if (comment.updatedAt.isAfter(comment.createdAt)) {
-                    Text(
-                        text = stringResource(R.string.content_comment_edited),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.testTag("comment_edited_${comment.id}"),
-                    )
-                }
-                if (comment.landing.isPending) {
-                    PendingMarker(testTag = "comment_pending_${comment.id}")
-                }
-                // The same one line a post wears (`CommentCard.jsx`).
-                TopicsLine(
-                    topics = comment.topics,
-                    references = comment.references,
-                    onOpenTopic = onOpenTopic,
-                    testTagPrefix = "comment_${comment.id}",
-                )
-                // ONE AFFORDANCE ROW, AS ON PostCard, SPREAD ACROSS THE CARD
-                // (`CommentCard.jsx`: `width: "100%"`,
-                // `justifyContent: "space-between"`, `flexWrap: "wrap"`,
-                // `columnGap: --space-2`, `rowGap: --space-1`). A fixed gap
-                // huddled the controls at the leading edge; wrapping is what
-                // keeps every one of them on its 48dp target when a comment
-                // grows one more.
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalArrangement = Arrangement.spacedBy(Space.x1),
-                    itemVerticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // A comment carries the control too (design.md §6).
-                    stanceControl(comment.id, "comment_${comment.id}")
-                    if (signedIn == true) {
-                        // `ReplyEntry` 5 — the composer, pre-targeted.
-                        TextButton(
-                            onClick = { onReplyTo(comment) },
-                            modifier = Modifier.testTag("comment_reply_${comment.id}"),
-                        ) {
-                            Text(stringResource(R.string.content_comment_reply))
-                        }
-                    }
-                    // `ReplyMedia` 6 — an own comment wears Edit, and it
-                    // opens `CommentEdit`.
-                    if (viewerId != null && comment.author?.id == viewerId) {
-                        TextButton(
-                            onClick = { onEditComment(comment) },
-                            modifier = Modifier.testTag("comment_edit_${comment.id}"),
-                        ) {
-                            Text(stringResource(R.string.content_edit))
-                        }
-                    }
-                }
-            }
-        }
-        // Replies are counted, not carried (Q49): nothing is on screen
-        // until a reader opens the branch, and `replyCount` is what the
-        // collapsed line reads.
-        val thread = state.replyThreads[comment.id]
-        val replies = thread?.items.orEmpty()
-        val hasMore = thread?.hasMore ?: false
-        replies.forEach { reply ->
-            CommentThread(
-                comment = reply,
-                depth = depth + 1,
+            // The picture the boards draw on a comment card (Q49),
+            // and the age beside it. Null is the monogram — the
+            // designed fallback for an author who has set none, not
+            // a gap waiting for a photo.
+            ContentCardHeader(
+                author = comment.author,
+                at = comment.createdAt,
+                onOpenActor = onOpenActor,
+                testTagPrefix = "comment_${comment.id}",
+                menu = commentMenuRows(
+                    comment = comment,
+                    onCite = { onReference(comment.id) },
+                    onLicense = { onLicense(comment.license) },
+                ),
+                menuContentDescription = stringResource(R.string.content_menu_comment),
+                // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`):
+                // the thread already lives in a sheet, so this menu is a
+                // sheet on a sheet (design/readme.md:2364).
+                stacked = true,
+            )
+            CommentCardBody(
+                comment = comment,
                 state = state,
+                onReveal = onReveal,
+                onOpenTopic = onOpenTopic,
+            )
+            CommentAffordances(
+                comment = comment,
                 viewerId = viewerId,
                 signedIn = signedIn,
-                onLoadMoreReplies = onLoadMoreReplies,
                 onReplyTo = onReplyTo,
                 onEditComment = onEditComment,
-                onReveal = onReveal,
-                onOpenActor = onOpenActor,
-                onOpenTopic = onOpenTopic,
-                onReference = onReference,
-                onLicense = onLicense,
                 stanceControl = stanceControl,
             )
         }
-        when {
-            thread?.loading == true -> CircularProgressIndicator(
-                modifier = Modifier.padding(start = 12.dp).testTag("replies_loading_${comment.id}"),
+    }
+}
+
+/**
+ * What the author wrote, and the quiet marks the card carries under it.
+ */
+@Composable
+private fun CommentCardBody(
+    comment: CommentView,
+    state: CommentsUiState,
+    onReveal: (String, SensitiveMark) -> Unit,
+    onOpenTopic: (String) -> Unit,
+) {
+    // A comment is text **plus** optional media (D16),
+    // so its body is never the exclusive-or a post's
+    // is — but it veils and redacts as one region all
+    // the same.
+    PostBody(
+        content = comment.content,
+        description = null,
+        attachments = comment.attachments,
+        attachmentsStatus = comment.attachmentsStatus,
+        moderation = comment.moderation,
+        testTagPrefix = "comment_${comment.id}",
+        surface = BodySurface.Comment,
+        revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
+        onReveal = { onReveal(comment.id, comment.sensitiveMark()) },
+        // The statuses are the veil — the OR of the author's
+        // own mark and a moderator's verdict — so the
+        // author's half is what names the source.
+        sensitiveSource = if (comment.sensitiveSelfMark) {
+            SensitiveSource.Author
+        } else {
+            SensitiveSource.Platform
+        },
+        sensitiveReason = comment.sensitiveReason,
+    )
+    // The soft marker, friendly not forensic (design.md §9).
+    if (comment.updatedAt.isAfter(comment.createdAt)) {
+        Text(
+            text = stringResource(R.string.content_comment_edited),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.testTag("comment_edited_${comment.id}"),
+        )
+    }
+    if (comment.landing.isPending) {
+        PendingMarker(testTag = "comment_pending_${comment.id}")
+    }
+    // The same one line a post wears (`CommentCard.jsx`).
+    TopicsLine(
+        topics = comment.topics,
+        references = comment.references,
+        onOpenTopic = onOpenTopic,
+        testTagPrefix = "comment_${comment.id}",
+    )
+}
+
+/**
+ * ONE AFFORDANCE ROW, AS ON PostCard, SPREAD ACROSS THE CARD
+ * (`CommentCard.jsx`: `width: "100%"`, `justifyContent: "space-between"`,
+ * `flexWrap: "wrap"`, `columnGap: --space-2`, `rowGap: --space-1`). A fixed
+ * gap huddled the controls at the leading edge; wrapping is what keeps every
+ * one of them on its 48dp target when a comment grows one more.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CommentAffordances(
+    comment: CommentView,
+    viewerId: String?,
+    signedIn: Boolean?,
+    onReplyTo: (CommentView) -> Unit,
+    onEditComment: (CommentView) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+) {
+    FlowRow(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.spacedBy(Space.x1),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        // A comment carries the control too (design.md §6).
+        stanceControl(comment.id, "comment_${comment.id}")
+        if (signedIn == true) {
+            // `ReplyEntry` 5 — the composer, pre-targeted.
+            TextButton(
+                onClick = { onReplyTo(comment) },
+                modifier = Modifier.testTag("comment_reply_${comment.id}"),
+            ) {
+                Text(stringResource(R.string.content_comment_reply))
+            }
+        }
+        // `ReplyMedia` 6 — an own comment wears Edit, and it
+        // opens `CommentEdit`.
+        if (viewerId != null && comment.author?.id == viewerId) {
+            TextButton(
+                onClick = { onEditComment(comment) },
+                modifier = Modifier.testTag("comment_edit_${comment.id}"),
+            ) {
+                Text(stringResource(R.string.content_edit))
+            }
+        }
+    }
+}
+
+/**
+ * The branch under a card: the replies a reader has opened, and the one line
+ * that stands in for them until they ask.
+ *
+ * Replies are counted, not carried (Q49): nothing is on screen until a reader
+ * opens the branch, and `replyCount` is what the collapsed line reads.
+ */
+@Composable
+private fun CommentBranch(
+    comment: CommentView,
+    depth: Int,
+    state: CommentsUiState,
+    viewerId: String?,
+    signedIn: Boolean?,
+    onLoadMoreReplies: (CommentView) -> Unit,
+    onReplyTo: (CommentView) -> Unit,
+    onEditComment: (CommentView) -> Unit,
+    onReveal: (String, SensitiveMark) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
+    onReference: (String) -> Unit,
+    onLicense: (LicenseChoice) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+) {
+    val thread = state.replyThreads[comment.id]
+    val replies = thread?.items.orEmpty()
+    val hasMore = thread?.hasMore ?: false
+    replies.forEach { reply ->
+        CommentThread(
+            comment = reply,
+            depth = depth + 1,
+            state = state,
+            viewerId = viewerId,
+            signedIn = signedIn,
+            onLoadMoreReplies = onLoadMoreReplies,
+            onReplyTo = onReplyTo,
+            onEditComment = onEditComment,
+            onReveal = onReveal,
+            onOpenActor = onOpenActor,
+            onOpenTopic = onOpenTopic,
+            onReference = onReference,
+            onLicense = onLicense,
+            stanceControl = stanceControl,
+        )
+    }
+    when {
+        thread?.loading == true -> CircularProgressIndicator(
+            modifier = Modifier.padding(start = 12.dp).testTag("replies_loading_${comment.id}"),
+        )
+        thread?.failed == true -> TextButton(
+            onClick = { onLoadMoreReplies(comment) },
+            modifier = Modifier.testTag("replies_retry_${comment.id}"),
+        ) {
+            Text(stringResource(R.string.content_retry))
+        }
+        // The collapsed branch, as `CommentCard` draws it: the count
+        // stands in for the replies until a reader asks for them.
+        replies.isEmpty() && comment.replyCount > 0 -> TextButton(
+            onClick = { onLoadMoreReplies(comment) },
+            modifier = Modifier.testTag("replies_more_${comment.id}"),
+        ) {
+            Text(
+                pluralStringResource(
+                    R.plurals.content_comment_view_replies,
+                    comment.replyCount,
+                    comment.replyCount,
+                ),
             )
-            thread?.failed == true -> TextButton(
-                onClick = { onLoadMoreReplies(comment) },
-                modifier = Modifier.testTag("replies_retry_${comment.id}"),
-            ) {
-                Text(stringResource(R.string.content_retry))
-            }
-            // The collapsed branch, as `CommentCard` draws it: the count
-            // stands in for the replies until a reader asks for them.
-            replies.isEmpty() && comment.replyCount > 0 -> TextButton(
-                onClick = { onLoadMoreReplies(comment) },
-                modifier = Modifier.testTag("replies_more_${comment.id}"),
-            ) {
-                Text(
-                    pluralStringResource(
-                        R.plurals.content_comment_view_replies,
-                        comment.replyCount,
-                        comment.replyCount,
-                    ),
-                )
-            }
-            hasMore -> TextButton(
-                onClick = { onLoadMoreReplies(comment) },
-                modifier = Modifier.testTag("replies_more_${comment.id}"),
-            ) {
-                Text(stringResource(R.string.content_comment_more_replies))
-            }
+        }
+        hasMore -> TextButton(
+            onClick = { onLoadMoreReplies(comment) },
+            modifier = Modifier.testTag("replies_more_${comment.id}"),
+        ) {
+            Text(stringResource(R.string.content_comment_more_replies))
         }
     }
 }
