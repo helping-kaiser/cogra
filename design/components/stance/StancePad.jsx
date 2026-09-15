@@ -41,6 +41,26 @@ export const STANCE_AXES = {
   top: INTEREST_POLES[1],
 };
 
+/* THE POLE WORDS SIT OUTSIDE THE FIELD (jakob's ruling 2026-09-15). They were
+   drawn INSIDE it, at the four edge midpoints — which is exactly where the
+   knob goes when the value reaches that pole, and the knob is an opaque disc
+   drawn after them. So the word a reader most needs at the moment they reach
+   it was the one word the knob covered: at the top pole it vanished outright,
+   the 20px disc landing on a centred label narrower than itself.
+
+   IT COULD NOT BE FIXED BY MAKING THE KNOB READ BETTER. A halo or a plate
+   separates the disc from the ink under it, but the ink is still under it —
+   and the field IS the value space (design.md §8.3), so the knob travels
+   every point a word could occupy. Inside the field, any word is reachable.
+   The collision is structural, so the words leave.
+
+   THE GUTTERS ARE THE COMPONENT'S OWN, so a caller sizes the assembly and the
+   field takes what the words leave — the pad stays one box to place, and no
+   board has to know the ring exists. The four-word anatomy is unchanged: the
+   family's own poles, at the four ends, naming the same two axes. */
+export const AXIS_GUTTER_X_PX = 56;
+export const AXIS_GUTTER_Y_PX = 20;
+
 export const FIELD_CORNER_RADIUS_PX = 16;
 export const KNOB_DIAMETER_PX = 20;
 
@@ -140,51 +160,66 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
 
   return (
     <div
-      ref={ref}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
       style={{
         position: "relative",
-        aspectRatio: "1 / 1",
         width: "100%",
-        touchAction: "none",
-        borderRadius: "var(--radius-large)",
-        background: "var(--surface-container-highest)",
+        boxSizing: "border-box",
+        padding: showAxes ? `${AXIS_GUTTER_Y_PX}px ${AXIS_GUTTER_X_PX}px` : 0,
       }}
     >
-      {zeroAcross !== null && (
-        <div aria-hidden="true" style={{ position: "absolute", left: 0, top: `${zeroAcross}%`, height: "1px", width: "100%", background: "var(--border-hairline)" }} />
-      )}
-      {zeroDown !== null && (
-        <div aria-hidden="true" style={{ position: "absolute", left: `${zeroDown}%`, top: 0, width: "1px", height: "100%", background: "var(--border-hairline)" }} />
-      )}
-      {/* THE AXES ARE NAMED ON THE FIELD. A blank square says nothing about which
-         direction means what, and for a stance the words are the same four the
-         sliders use, so the two surfaces teach each other. `label-small` on
-         `onSurfaceVariant`: present without competing with the knob. */}
+      {/* THE AXES ARE NAMED AROUND THE FIELD. A blank square says nothing about
+         which direction means what, and for a stance the words are the same
+         four the sliders use, so the two surfaces teach each other.
+         `label-small` on `onSurfaceVariant`: present without competing with the
+         knob — and now never covered by it. Each word is held to its own gutter
+         and pushed against the edge it names, so the ring reads as four labels
+         on one field rather than text floating near it. */}
       {showAxes && (
-        <div aria-hidden="true" style={{ position: "absolute", inset: "6px", fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }}>
-          <span style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)" }}>{axes.left}</span>
-          <span style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)" }}>{axes.right}</span>
-          <span style={{ position: "absolute", left: "50%", top: 0, transform: "translateX(-50%)" }}>{axes.top}</span>
-          <span style={{ position: "absolute", left: "50%", bottom: 0, transform: "translateX(-50%)" }}>{axes.bottom}</span>
+        <div
+          aria-hidden="true"
+          style={{ position: "absolute", inset: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
+        >
+          <span style={{ position: "absolute", left: 0, top: "50%", width: `${AXIS_GUTTER_X_PX - 6}px`, transform: "translateY(-50%)", textAlign: "right", whiteSpace: "nowrap" }}>{axes.left}</span>
+          <span style={{ position: "absolute", right: 0, top: "50%", width: `${AXIS_GUTTER_X_PX - 6}px`, transform: "translateY(-50%)", textAlign: "left", whiteSpace: "nowrap" }}>{axes.right}</span>
+          <span style={{ position: "absolute", left: "50%", top: 0, transform: "translateX(-50%)", whiteSpace: "nowrap" }}>{axes.top}</span>
+          <span style={{ position: "absolute", left: "50%", bottom: 0, transform: "translateX(-50%)", whiteSpace: "nowrap" }}>{axes.bottom}</span>
         </div>
       )}
-      <div aria-hidden="true" style={{ position: "absolute", inset: `${KNOB_TRAVEL_INSET_PX}px` }}>
-        <div
-          style={{
-            position: "absolute",
-            left: `${knob.x}%`,
-            top: `${knob.y}%`,
-            height: `${KNOB_DIAMETER_PX}px`,
-            width: `${KNOB_DIAMETER_PX}px`,
-            transform: "translate(-50%, -50%)",
-            borderRadius: "var(--radius-full)",
-            background: "var(--surface-loud)",
-          }}
-        />
+      <div
+        ref={ref}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        style={{
+          position: "relative",
+          aspectRatio: "1 / 1",
+          width: "100%",
+          touchAction: "none",
+          borderRadius: "var(--radius-large)",
+          background: "var(--surface-container-highest)",
+        }}
+      >
+        {zeroAcross !== null && (
+          <div aria-hidden="true" style={{ position: "absolute", left: 0, top: `${zeroAcross}%`, height: "1px", width: "100%", background: "var(--border-hairline)" }} />
+        )}
+        {zeroDown !== null && (
+          <div aria-hidden="true" style={{ position: "absolute", left: `${zeroDown}%`, top: 0, width: "1px", height: "100%", background: "var(--border-hairline)" }} />
+        )}
+        <div aria-hidden="true" style={{ position: "absolute", inset: `${KNOB_TRAVEL_INSET_PX}px` }}>
+          <div
+            style={{
+              position: "absolute",
+              left: `${knob.x}%`,
+              top: `${knob.y}%`,
+              height: `${KNOB_DIAMETER_PX}px`,
+              width: `${KNOB_DIAMETER_PX}px`,
+              transform: "translate(-50%, -50%)",
+              borderRadius: "var(--radius-full)",
+              background: "var(--surface-loud)",
+            }}
+          />
+        </div>
       </div>
     </div>
   );
