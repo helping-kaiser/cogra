@@ -89,7 +89,7 @@ export function Screen() {
             <span style={SR_ONLY}>Your pick: How much it leans on this +0.10, For or against +0.10</span>
           </div>
 
-          <div role="group" aria-label="The pair this citation signs" style={{ alignSelf: "center", width: 240 }}>
+          <div role="group" aria-label="The pair this citation signs" style={{ alignSelf: "stretch" }}>
             <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} axes={CITATION_AXES} />
           </div>
 

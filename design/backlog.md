@@ -3084,6 +3084,42 @@ the prefill's "the inviter's eventual Opinion" — that last one the
 ISSUER's, which is the word it wanted. `Notifications`' two docblocks
 took the same correction.
 
+### 95 · The compose flow has no staged-tags sheet · *design*
+
+Surfaced by the tags-overflow round 2026-09-15. The seal's tags row now
+folds into a counting door the way the References row does, but the two
+doors do not lead to the same KIND of place. A citation's door opens
+`ComposeCitations`, a sheet over the seal: the author checks the list and
+comes back with the seal never having left the screen. Tags have no such
+sheet anywhere in the composer — the only surface that manages the staged
+set is the details stage's Tags field block — so the tags door walks back
+a stage instead, and the seal the author was about to sign goes away.
+
+Three ways out, each a ruling: a staged-tags sheet is drawn (the true
+mirror of the citations sheet, and the only one that keeps the seal on
+screen), the walk back to the details stage is accepted as what managing
+tags means, or the seal's tags row stays a flat count with no door at all
+— which the acts card's own rule refuses, a count the reader cannot open
+being a number they cannot check. Wired to the details stage for now,
+because the round was told to use the surface that exists rather than
+invent the one that would match.
+
+### 96 · The system folds a tag list two different ways · *design*
+
+Surfaced by the same round. `TopicsLine`, on the reader's side, folds a
+tag list PARTIALLY: it keeps the chips that fit and appends the
+remainder as a count — "#fieldnotes #coastroad · 5 tags" — and the whole
+line opens the Tags & references sheet. The seal now folds the same list
+WHOLLY: past what the row holds, every chip goes and the row reads "7
+tags". Both are defensible where they stand — the feed line is a glance
+and the seal is a read-back the author checks before signing — but they
+are two answers to one question, and a reader meets both.
+
+Ruled the seal's way by jakob 2026-09-15 ("please have it the same as
+with references i guess?"), which is what the round drew. What is not
+ruled is whether the two folds should agree: either the seal keeps the
+chips that fit and counts the rest, or the difference is stated as
+deliberate and the reason recorded with both.
 ### 97 · Both apps lag the draft offer's new shape · *implementation* · **open**
 
 Filed by the re-review 2026-09-15, when jakob ruled the compose entry's
