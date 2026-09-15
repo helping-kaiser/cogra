@@ -2676,7 +2676,7 @@ the same treatment. It is a copy ruling, which is why the round flagged
 it rather than inventing one. The poles themselves were blessed
 2026-09-15; the axis names are the half still owed.
 
-### 80 · `readme.md` §3 says the stance parameters have two labels and nothing else · *design*
+### 80 · `readme.md` §3 says the stance parameters have two labels and nothing else · *design* · **ruled + recorded**
 
 Surfaced by the topic round 2026-09-14 while giving the Affinity family
 its pole words. §3 reads: "The two stance parameters are labelled **For
@@ -2693,7 +2693,15 @@ family fills the same two slots with is that family's to name
 saying so, and copy-voice's *vocabulary that stays off the screen*
 probably wants the same clause. A tightening pass, not a decision.
 
-### 81 · A guest on a tag page has no ruled outcome · *design*
+Tightened 2026-09-15 — jakob confirmed it needed no ruling. §3 now names
+the noun: an OPINION's two stance parameters carry those two labels and
+nothing else, and another record family filling the same two slots names
+them its own. copy-voice's *vocabulary that stays off the screen* carries
+the same clause with the three families' words beside it, the long
+version's job. Both borrow the citation round's own formulation — the
+control owns the geometry, the record family owns the words.
+
+### 81 · A guest on a tag page has no ruled outcome · *design* · **ruled + wired**
 
 Surfaced by the topic round 2026-09-14. `TagPage`'s three stance faces
 (two posts, a comment) carry no guest outcome in `graph.json`, and the
@@ -2709,7 +2717,23 @@ already answers correctly whatever the graph says (`signedIn=false`
 opens `JoinPrompt`); what is missing is the wiring, and the edges cannot
 be half-right on one face and silent on three.
 
-### 82 · A tag page reached from Your topics goes back to the wrong place · *design*
+Ruled by jakob 2026-09-15: a guest is not special here. Any reader who
+taps a tag reaches the page — a connection to it or none — and sees what
+is tagged; the only thing a guest lacks is an opinion of the topic, so
+the stance face wears the no-opinion 🫥 and the borrowed vantage ranks
+what they read, post scores included. `TagPage`'s three stance-face
+edges gain the `GuestGate` outcome `Reel` spells for a shared board.
+`TagPageHeld` and `TagPageEmpty` do not: held is a record no guest can
+carry, and the empty page wires no face at all. The accessible path
+needs no outcome either — `StanceControl` renders that button behind
+`signedIn`, so for a guest it is not on the page. No board of its own,
+by the stream ruling. The applicant's once-each rule reaches this page
+unwired, as it reaches `Reel` and every other shared destination: an
+exhausted kind is answered on the applicant's own boards. Its kinds
+include the Affinity, so a topic stance stays open to an applicant who
+has already staged an opinion.
+
+### 82 · A tag page reached from Your topics goes back to the wrong place · *design* · **ruled + wired**
 
 Surfaced by the topic round 2026-09-14. The tag round ruled the page a
 subpage of search, so its arrow is a LINK back to Explore rather than
@@ -2723,6 +2747,14 @@ the label with it), the page carries the label its route gives it, or
 the skip is accepted as the cost of a link. The tag round's reasoning
 for a link is real and this round did not disturb it.
 
+Ruled by jakob 2026-09-15 — back goes where the reader came from, and
+the label names that origin: `Back to Explore`, `Back to Your topics`,
+`Back to feed`. A cold entry with no history, which is what a shared URL
+is, falls back to `Back to Explore`. The whole family carries it —
+`TagPage`, `TagPageHeld`, `TagPageEmpty` — as the graph's `back`
+terminal, the same one every other returning arrow uses. The boards keep
+drawing `Back to Explore`, because a board draws one state and the cold
+entry's is the one that stands without a route behind it.
 ### 83 · The viewer grammar's two unrecorded rulings · *design* · **ruled + recorded**
 
 Filed 2026-09-15, after the census fabric closed with both rulings
