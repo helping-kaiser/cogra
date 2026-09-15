@@ -912,6 +912,112 @@ function ReplyDraft() {
   );
 }
 
+/* THE COMPOSE WIZARD OPENED ON A DRAFT, whole. It lives here for `ReplyDraft`'s
+   reason — `ComposeDraftDiscard` draws this same stage under its dialog — and
+   for a second one: this is the shape both clients hold to, so a body copied
+   per board is a divergence waiting to be shipped twice.
+
+   THE SHAPE IS WEB'S, EVERYWHERE (jakob 2026-09-15: "yes web everywhere"). Web
+   dims the pick region AND takes it out of reach — pointer, keyboard and
+   assistive tech together — while Android dims it and leaves it tappable, so
+   the same screen answers a tap in two different ways. One of those is the
+   drawing: the region under an unanswered draft is not operable.
+
+   THE DRAFT IS PROMINENT, AND IT IS PROMINENT THE WAY EVERY OTHER CARD THE
+   PRODUCT SPEAKS THROUGH IS (jakob: "maybe we should make the draft more
+   prominent.. right now it is easy to just wonder why you cant act"). It wears
+   `--ring-task`, the same brand edge a `TaskCard` wears in a feed, because it
+   is the same fact: this card is the product addressing the reader, and it is
+   the one thing on the screen that can be acted on. The dim beneath it stays at
+   its blessed 0.55 — the ruling asked for a louder draft, not a fainter roll,
+   and both clients already hold that number.
+
+   AND A TAP ON THE ROLL ANSWERS (jakob: "i guess clicking the images should
+   also start the discard process (open the popup).. else people might just
+   click the images and wonder why nothing happens"). Inert content that
+   swallows taps is the failure the ruling names, so the roll carries a shield:
+   one transparent control over the whole region, named for what it will say,
+   raising the draft's own pair as a dialog. It is a CONTROL and not a handler
+   on a dead region, so the keyboard and a screen reader reach the same answer
+   the thumb does — and the tiles underneath stay unreachable, which is what
+   keeps the draft's pair the only pair on the board. */
+const DRAFT_TILE = { position: "relative", width: 125, height: 125 };
+const DRAFT_FILL = { width: "100%", height: "100%", objectFit: "cover", display: "block" };
+const DRAFT_SHADES = [
+  "var(--surface-container-low)",
+  "var(--surface-container)",
+  "var(--surface-container-high)",
+  "var(--surface-container-highest)",
+  "var(--surface-container)",
+  "var(--surface-container-highest)",
+  "var(--surface-container-low)",
+];
+
+function ComposeDraftBody() {
+  return (
+    <>
+      <WizardHeader title="New post" />
+
+      <Card
+        style={{
+          flex: "none",
+          margin: "8px 24px",
+          boxSizing: "border-box",
+          border: "var(--ring-task-width) solid transparent",
+          background:
+            "linear-gradient(var(--surface-card), var(--surface-card)) padding-box, var(--ring-task) border-box",
+        }}
+      >
+        <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
+          Your draft is here
+        </h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <MediaThumb src="post-photo.jpg" size={40} />
+          <span style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
+              Salt maps of the coast road
+            </span>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+              2 pictures — kept on this device
+            </span>
+          </span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <Button variant="text">Discard</Button>
+          <Button>Continue</Button>
+        </div>
+      </Card>
+
+      <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 8, padding: "8px 24px" }}>
+        <p style={{ margin: 0, flex: 1, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
+          Or start fresh —
+        </p>
+      </div>
+
+      {/* The roll, waiting: dimmed and out of reach, with the shield over it. */}
+      <div style={{ position: "relative", flex: 1, display: "flex", overflow: "hidden" }}>
+        <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: 3, padding: "4px 4px 0", overflow: "hidden", alignContent: "flex-start", opacity: 0.55 }}>
+          <div style={{ ...DRAFT_TILE, overflow: "hidden" }}>
+            <img src="post-photo.jpg" alt="" style={DRAFT_FILL} />
+          </div>
+          <div style={{ ...DRAFT_TILE, overflow: "hidden" }}>
+            <img src="inviter.jpg" alt="" style={DRAFT_FILL} />
+          </div>
+          {DRAFT_SHADES.map((background, index) => (
+            <div key={index} style={{ ...DRAFT_TILE, background }} />
+          ))}
+        </div>
+        <button
+          type="button"
+          aria-label="Answer your draft before starting a new post"
+          className="cg-focus"
+          style={{ position: "absolute", inset: 0, border: 0, background: "none", padding: 0, cursor: "pointer" }}
+        />
+      </div>
+    </>
+  );
+}
+
 /* THE REPLY SEAL'S ADD-ROWS — a primary word where a value would sit, so what
    you could still add lines up with what you have already added. They are
    `ActsCard`'s action rows: the whole row is the control, because a word whose

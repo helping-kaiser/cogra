@@ -660,6 +660,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Discard</button>", tag: "button" },
     { n: 4, find: ">Continue</button>", tag: "button" },
+    /* The roll's shield (the re-review, 2026-09-15): one control over a region
+       that is out of reach, so a tap on the pictures reaches the discard
+       instead of nothing. */
+    { n: 5, find: 'aria-label="Answer your draft before starting a new post"', tag: "button" },
+  ],
+  /* The same stage with the shield's answer raised. Only the DIALOG's pair is
+     stamped — the body beneath the scrim is inert and every one of its controls
+     is wired on `ComposeDraft`. Its words carry their object for the reason the
+     board gives: a bare `Discard` already stands, inert, behind the wash. */
+  ComposeDraftDiscard: [
+    { n: 1, find: ">Discard it</button>", tag: "button" },
+    { n: 2, find: ">Keep the draft</button>", tag: "button" },
   ],
   ComposeSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },

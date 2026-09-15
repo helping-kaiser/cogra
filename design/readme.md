@@ -5462,6 +5462,30 @@ inherited. Ruled by jakob the same day.
   sentences and button, the spoken and drawn readouts of a bundle at
   nothing, and the help panel's fourth line, which teaches the way out
   and would otherwise have taught a topic reader the other family's word.
+- **The draft's shape is web's everywhere, and the blocked roll answers
+  (jakob).** "yes web everywhere... maybe we should make the draft more
+  prominent.. right now it is easy to just wonder why you cant act.. i
+  guess clicking the images should also start the discard process (open
+  the popup).. else people might just click the images and wonder why
+  nothing happens." `ComposeDraft` already drew the state — this ruling
+  changes it rather than creating it. Three things follow. The SHAPE is
+  web's: the pick region under an unanswered draft is dimmed AND out of
+  reach, pointer, keyboard and assistive tech together, where Android
+  dims it and leaves it tappable. The DRAFT is prominent the way every
+  other card the product speaks through is — it wears `--ring-task`,
+  the same brand edge a `TaskCard` wears, because it is the same fact:
+  this card is the product addressing the reader and the one thing on
+  the screen that can be acted on. The dim beneath it stays at its
+  blessed 0.55; the ruling asked for a louder draft, not a fainter roll.
+  And the ROLL ANSWERS: a shield — one transparent control over the
+  whole region, so the keyboard and a screen reader reach what the thumb
+  reaches — raises `ComposeDraftDiscard`, the new board. Reaching past
+  the draft is asking to discard it, so that is what the dialog asks,
+  in `DiscardConfirm`'s family: the safe answer filled, no `error`
+  colour, and both words carrying their object, because a bare
+  `Discard` already stands inert behind the wash. The scrim is the third
+  answer nobody has to spell. Android's divergence is implementation's
+  to close (backlog 97).
 - **The gate**: 194 → **203 boards**, 1461 → **1511 edges**, gaps 14 →
   **13** and flows 63 → **66 declared · 64 resolved**, the two blocked
   ones unchanged. The gap count falls because `Profile/7` closed and no

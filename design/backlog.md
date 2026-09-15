@@ -3083,3 +3083,34 @@ retired), the invites round's `Set` signing "the inviter's Opinion", and
 the prefill's "the inviter's eventual Opinion" — that last one the
 ISSUER's, which is the word it wanted. `Notifications`' two docblocks
 took the same correction.
+
+### 97 · Both apps lag the draft offer's new shape · *implementation* · **open**
+
+Filed by the re-review 2026-09-15, when jakob ruled the compose entry's
+existing-draft state: "yes web everywhere... maybe we should make the
+draft more prominent.. right now it is easy to just wonder why you cant
+act.. i guess clicking the images should also start the discard process
+(open the popup).. else people might just click the images and wonder
+why nothing happens."
+
+The boards now draw all three parts and neither client has them.
+
+**Android** owes the shape itself. `ComposeWizardScreen.kt` dims the
+pick stage with `.alpha(DIMMED)` while `draftOffer != null` and leaves
+it operable, so a tap on a picture under an unanswered draft does
+something — which is exactly the divergence the ruling closed in web's
+favour. The region has to go out of reach the way `wizard-view.tsx`
+puts it (`inert`, which takes pointer, keyboard and AT reach together),
+with the shield over it.
+
+**Both** owe the other two. The draft card wears the brand ring
+`--ring-task` (design/tokens/semantic.css) — the same edge a task card
+wears, on the same reasoning. And the roll carries a shield: one
+transparent control across the whole region, accessible-named `Answer
+your draft before starting a new post`, raising `ComposeDraftDiscard` —
+`Discard your draft?` with `Discard it` and `Keep the draft`, the
+dialog anatomy already shared with `DiscardConfirm`. Web's own
+`DraftCard` and pick region are where both land.
+
+Nothing here is a design question; the boards are the contract and this
+is conformance work.
