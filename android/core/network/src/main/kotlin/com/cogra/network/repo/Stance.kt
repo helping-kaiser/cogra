@@ -61,6 +61,19 @@ private enum class TargetKind { POST, COMMENT, USER }
  */
 private class RootAnswer(val bundle: StanceBundleFields?)
 
+/**
+ * A root that answered with a null bundle has an unauthenticated reader
+ * behind it, or one with no actor on the graph. The first is the common
+ * case and the guard refreshes and replays on it; the second costs that
+ * one wasted refresh and then reports the same refusal.
+ */
+private fun StanceBundleFields?.orRefusal(): Outcome<StanceBundleFields> =
+    this?.let { Outcome.Success(it) } ?: unauthenticatedRefusal()
+
+/** No root holds it — the id names nothing stance-able, or the name is unusable. */
+private fun <T> notFound(): Outcome<T> =
+    Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "no such stance target", listOf("target"))))
+
 @Singleton
 class StanceRepositoryImpl @Inject constructor(
     private val client: ApolloClient,
@@ -155,13 +168,8 @@ class StanceRepositoryImpl @Inject constructor(
     }
 
     /**
-     * The one read behind all three.
-     *
-     * A target whose class is already known asks its own root and
-     * nothing else; an unclassified one is probed in [TargetKind]'s
-     * order and stops at the first root that answers. That probe is
-     * why the memo above exists — it happens once per target, and
-     * every read after it is a single document.
+     * The one read behind all of them, and the split the two addresses
+     * make: a name carries its own root, an opaque id does not.
      */
     private suspend fun bundle(
         target: StanceTarget,
@@ -171,33 +179,49 @@ class StanceRepositoryImpl @Inject constructor(
         val picked = Optional.presentIfNotNull(
             pick?.let { StancePickInput(it.pDirected, it.pInterest) },
         )
-        // A name carries its own root, so the topic read is the one
-        // document and the probe below never runs for it. The probe is a
-        // consequence of an OPAQUE id, not of stance-ability.
-        if (target is StanceTarget.Topic) {
-            return@run when (val read = askTopic(target.name, picked, includePending)) {
-                is Outcome.Failed -> Outcome.Failed(read.cause)
-                is Outcome.Refused -> Outcome.Refused(read.errors)
-                is Outcome.Success -> read.value?.let { answer ->
-                    answer.bundle?.let { Outcome.Success(it) } ?: unauthenticatedRefusal()
-                } ?: notFound()
-            }
+        when (target) {
+            is StanceTarget.Topic -> topicBundle(target.name, picked, includePending)
+            is StanceTarget.Node -> nodeBundle(target.id, picked, includePending)
         }
-        val id = (target as StanceTarget.Node).id
+    }
+
+    /**
+     * The topic read: one document, never a probe. The probe is a
+     * consequence of an OPAQUE id, not of stance-ability, and
+     * `hashtag(name:)` is told outright which root to ask.
+     */
+    private suspend fun topicBundle(
+        name: String,
+        pick: Optional<StancePickInput?>,
+        includePending: Boolean,
+    ): Outcome<StanceBundleFields> = when (val read = askTopic(name, pick, includePending)) {
+        is Outcome.Failed -> Outcome.Failed(read.cause)
+        is Outcome.Refused -> Outcome.Refused(read.errors)
+        is Outcome.Success -> read.value?.let { it.bundle.orRefusal() } ?: notFound()
+    }
+
+    /**
+     * The node read.
+     *
+     * A target whose class is already known asks its own root and
+     * nothing else; an unclassified one is probed in [TargetKind]'s
+     * order and stops at the first root that answers. That probe is
+     * why the memo above exists — it happens once per target, and
+     * every read after it is a single document.
+     */
+    private suspend fun nodeBundle(
+        id: String,
+        pick: Optional<StancePickInput?>,
+        includePending: Boolean,
+    ): Outcome<StanceBundleFields> {
         for (kind in kinds[id]?.let { listOf(it) } ?: TargetKind.entries) {
-            when (val read = ask(kind, id, picked, includePending)) {
-                is Outcome.Failed -> return@run Outcome.Failed(read.cause)
-                is Outcome.Refused -> return@run Outcome.Refused(read.errors)
+            when (val read = ask(kind, id, pick, includePending)) {
+                is Outcome.Failed -> return Outcome.Failed(read.cause)
+                is Outcome.Refused -> return Outcome.Refused(read.errors)
                 is Outcome.Success -> {
                     val answer = read.value ?: continue
                     kinds[id] = kind
-                    // A node that answered with a null bundle has an
-                    // unauthenticated reader behind it, or one with no
-                    // actor on the graph. The first is the common case
-                    // and the guard refreshes and replays on it; the
-                    // second costs that one wasted refresh and then
-                    // reports the same refusal.
-                    return@run answer.bundle?.let { Outcome.Success(it) } ?: unauthenticatedRefusal()
+                    return answer.bundle.orRefusal()
                 }
             }
         }
@@ -205,11 +229,8 @@ class StanceRepositoryImpl @Inject constructor(
         // class went stale under a vanished node — forget it so the
         // next read probes again.
         kinds.remove(id)
-        notFound()
+        return notFound()
     }
-
-    private fun <T> notFound(): Outcome<T> =
-        Outcome.Refused(listOf(UserError(ErrorCode.NOT_FOUND, "no such stance target", listOf("target"))))
 
     /**
      * The topic's own root. `hashtag(name:)` resolves any well-formed
