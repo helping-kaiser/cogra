@@ -10,6 +10,7 @@ import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
+import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
@@ -1171,6 +1172,210 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId("header-back"));
     expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
     expect(screen.getByTestId("comments-sheet")).toBeVisible();
+  });
+
+  // THE COMPOSER TAKES THE SCREEN AND GIVES IT BACK WHOLE (jakob 2026-09-15).
+  // The return is two values — where the reader was, and which branch has to
+  // be standing when they get back — and both composers take it: a reply and
+  // an edit alike put what was just written in front of its author (Q6).
+  describe("coming back from a composer", () => {
+    /** One staged write, which is all these care about. */
+    function oneWrite(id: string) {
+      return {
+        __typename: "PreparedWrite",
+        id,
+        family: "REVIEW",
+        canonicalProposal: "AA==",
+        gcAfterEpochs: 3,
+      };
+    }
+
+    /** One comment's branch, as the expand read serves it. */
+    function branchOf(parent: string, replies: FixtureComment[]) {
+      return {
+        comment: {
+          __typename: "Comment",
+          id: parent,
+          replies: {
+            __typename: "CommentConnection",
+            edges: replies.map((reply) => ({
+              __typename: "CommentEdge",
+              node: commentNode(reply),
+            })),
+            pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+          },
+        },
+      };
+    }
+
+    /**
+     * The reader, some way down the thread.
+     *
+     * A REAL BROWSER DROPS THIS ON THE WAY OUT — a closed `<dialog>` is
+     * `display: none` and the offset goes with it — where jsdom keeps it. So
+     * the tests below zero it by hand while the composer is up, which is what
+     * the browser would have done, and the restore is what puts it back.
+     */
+    function scrollThreadTo(offset: number) {
+      const body = screen.getByTestId("comments-sheet-body");
+      body.scrollTop = offset;
+      fireEvent.scroll(body);
+      return body;
+    }
+
+    it("comes back to the reader's place with the reply's own branch standing", async () => {
+      let reads = 0;
+      const before = detail("author-1", [{ id: "c1", body: "First!" }]);
+      // The refetch carries the branch the reply landed in as a COUNT (Q49);
+      // unfolding it is the return's own second act.
+      const after = detail("author-1", [{ id: "c1", body: "First!", replyCount: 1 }]);
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: before })),
+        graphql.query("PostComments", () => {
+          reads += 1;
+          return HttpResponse.json({ data: commentsOf(reads === 1 ? before : after) });
+        }),
+        graphql.query("CommentReplies", () =>
+          HttpResponse.json({
+            data: branchOf("c1", [{ id: "r1", body: "Mine, settling", pending: true }]),
+          }),
+        ),
+        graphql.mutation("PrepareComment", () =>
+          HttpResponse.json({
+            data: {
+              prepareComment: {
+                __typename: "PrepareContentPayload",
+                node: "r1",
+                writes: [oneWrite("w-reply")],
+                userErrors: [],
+              },
+            },
+          }),
+        ),
+      );
+      renderWithProviders(
+        // The wizard signs on this device, so the key has to be on it.
+        <PostView postId="p1" store={fakeIdentityStore({ keyOnDevice: true })} />,
+        { store: storeFor("acct-1"), writeSigner: fakeWriteSigner() },
+      );
+      const sheet = await openComments();
+      const body = scrollThreadTo(320);
+      // The branch is behind its count: nothing of it is on screen yet.
+      expect(screen.queryByTestId("post-comment-r1")).not.toBeInTheDocument();
+
+      fireEvent.click(await screen.findByTestId("comment-reply-c1"));
+      await screen.findByTestId("reply-wizard");
+      await waitFor(() => expect(sheet).not.toBeVisible());
+      body.scrollTop = 0;
+
+      fireEvent.change(screen.getByTestId("reply-words"), {
+        target: { value: "Mine, settling" },
+      });
+      fireEvent.click(screen.getByTestId("reply-next"));
+      await screen.findByTestId("reply-seal");
+      await waitFor(() => expect(screen.getByTestId("reply-sign")).not.toBeDisabled());
+      fireEvent.click(screen.getByTestId("reply-sign"));
+
+      // THE BRANCH IS UNFOLDED, and the new reply is in it wearing the marker
+      // a fresh write wears — a refetch alone would have left the thread
+      // looking unchanged.
+      expect(await screen.findByTestId("post-comment-r1")).toHaveTextContent("Mine, settling");
+      expect(screen.getByTestId("comment-pending-r1")).toBeInTheDocument();
+      expect(screen.getByTestId("comments-sheet")).toBeVisible();
+      expect(screen.getByTestId("comment-signed")).toHaveTextContent("still settling");
+      // ...and the reader is where they left off, not back at the top.
+      await waitFor(() => expect(body.scrollTop).toBe(320));
+    });
+
+    // Q6, jakob 2026-09-15: "we must extend for edit aswell.. editing sth and
+    // then not seeing the corrected version gives the user uncertainty if it
+    // even happened." An edited REPLY lives behind its parent's count, so the
+    // edit's return unfolds that branch exactly as the reply's does.
+    it("unfolds the branch an edited reply lives in, so its author sees it", async () => {
+      let reads = 0;
+      let branches = 0;
+      const thread1 = detail("author-1", [{ id: "c1", body: "First!", replyCount: 1 }]);
+      server.use(
+        graphql.query("PostDetail", () => HttpResponse.json({ data: thread1 })),
+        graphql.query("PostComments", () => {
+          reads += 1;
+          return HttpResponse.json({ data: commentsOf(thread1) });
+        }),
+        graphql.query("CommentReplies", () => {
+          branches += 1;
+          return HttpResponse.json({
+            data: branchOf("c1", [
+              {
+                id: "r1",
+                body: branches === 1 ? "old words" : "better words",
+                authorId: "acct-1",
+                edited: branches > 1,
+              },
+            ]),
+          });
+        }),
+        graphql.mutation("PrepareCommentEdit", () =>
+          HttpResponse.json({
+            data: {
+              prepareCommentEdit: {
+                __typename: "PrepareContentPayload",
+                node: "r1",
+                writes: [oneWrite("w-edit")],
+                userErrors: [],
+              },
+            },
+          }),
+        ),
+      );
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      await openComments();
+      // The reader unfolds the branch themselves and edits their own reply.
+      fireEvent.click(await screen.findByTestId("replies-more-c1"));
+      expect(await screen.findByTestId("post-comment-r1")).toHaveTextContent("old words");
+      const body = scrollThreadTo(180);
+
+      fireEvent.click(screen.getByTestId("comment-edit-r1"));
+      await screen.findByTestId("comment-edit");
+      body.scrollTop = 0;
+      fireEvent.change(screen.getByTestId("comment-edit-input"), {
+        target: { value: "better words" },
+      });
+      fireEvent.click(screen.getByTestId("comment-edit-save"));
+
+      // The refetch re-collapsed every branch; this one comes back open,
+      // because that is where the words the author just wrote are.
+      expect(await screen.findByTestId("comment-edited-r1")).toBeInTheDocument();
+      expect(screen.getByTestId("post-comment-r1")).toHaveTextContent("better words");
+      expect(screen.getByTestId("comments-sheet")).toBeVisible();
+      await waitFor(() => expect(reads).toBe(2));
+      await waitFor(() => expect(body.scrollTop).toBe(180));
+    });
+
+    // A comment on the POST is already at the top level, so there is no branch
+    // to unfold — the place alone is the whole return.
+    it("takes the reader's place back when the composer is dismissed", async () => {
+      server.use(...thread("author-1", [{ id: "c1", body: "First!" }]));
+      renderWithProviders(<PostView postId="p1" />, {
+        store: storeFor("acct-1"),
+        writeSigner: fakeWriteSigner(),
+      });
+      const sheet = await openComments();
+      const body = scrollThreadTo(240);
+
+      fireEvent.click(await screen.findByTestId("comment-add"));
+      await screen.findByTestId("reply-wizard");
+      await waitFor(() => expect(sheet).not.toBeVisible());
+      body.scrollTop = 0;
+
+      // Discarded, not signed: the thread comes back exactly as it was.
+      fireEvent.click(screen.getByTestId("header-back"));
+      expect(screen.queryByTestId("reply-wizard")).not.toBeInTheDocument();
+      expect(screen.getByTestId("comments-sheet")).toBeVisible();
+      await waitFor(() => expect(body.scrollTop).toBe(240));
+    });
   });
 
   // CR-20: both apps read `createdAt` for the Edited comparison and drew none
