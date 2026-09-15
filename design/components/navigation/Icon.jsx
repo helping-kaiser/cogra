@@ -104,6 +104,10 @@ const PATHS = {
      suppressed-autoplay card wears, where the device has already said no. */
   play_arrow: ["M8 5v14l11-7z"],
   pause: ["M6 19h4V5H6v14zm8-14v14h4V5h-4z"],
+  /* THE SAME SLOT'S THIRD STATE. A clip that has ended stops at its end, and
+     what play/pause held becomes `replay`. The plain glyph, never the
+     numeraled `replay_10` the skips below decline. */
+  replay: ["M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"],
   /* The transport's flanking skips, and the toggle that hands the clip the
      whole screen. Material ships `replay_10`/`forward_10` with the numerals
      drawn as separate glyph paths; the plain double-triangles carry the same
