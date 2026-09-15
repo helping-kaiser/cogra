@@ -3162,3 +3162,47 @@ draws the landing: the sheet at the reader's own scroll offset with
 their just-signed reply on its expanded parent. One state board (a
 `ReplyEntry` variant or its own drawing, the round's call) closes it;
 the edit-return twin ruled the same evening lands on the same anatomy.
+
+### 98 · The detail view's collapse and pin have no stated grammar · *design* · **open**
+
+Filed from impl's hand test HT-DETAIL (#778), intake 2026-09-15. The
+detail view carries both a collapse and a pin, and nothing in the boards
+or the docs says how the two read against each other: which surface
+offers which, whether either is the other's undo, and what state the
+reader is left holding after each. Both clients are building from the
+drawings alone, so a gesture pair with no written grammar gets answered
+twice, privately — the shape every divergence in this product has taken.
+
+The finding names the pair without spelling its cases, so the round that
+takes this reconstructs them from HT-DETAIL first, then puts the grammar
+to jakob and records it beside the viewer grammar (item 83).
+
+### 99 · The Sensitive mark has no owner-facing state · *design* · **open**
+
+Filed from impl's hand test HT-DETAIL (#778), intake 2026-09-15. Every
+board that meets a marked post meets it as a reader — `SensitiveVeil`
+over the body, naming whose mark it is, one tap revealing everything —
+and `ComposeSensitive` draws the marking being made. Between them
+nothing draws the post as its own author meets it afterwards: the marked
+state, where the mark is a thing already made, visible as such, and
+undoable from the menu row that made it.
+
+What is owed is that state and the ruling under it — whether an author
+sees their own post veiled like everyone else, or marked and readable,
+which is the difference between a mark you can check and one you have to
+remember making.
+
+### 100 · Three menu contradictions, the own post's missing Cite among them · *design* · **open**
+
+Filed from impl's hand test HT-DETAIL (#778), intake 2026-09-15. The
+lane found three places where a menu's inventory disagrees between the
+boards and the docs. The clearest sits inside one file: `_shared.jsx`
+says citing "rides the same menu on every content (readme §13)... both
+act on the thing itself, whoever wrote it", and `OWN_POST_MENU` beneath
+it is Save · Edit · Mark as sensitive · Remove · license — no Cite,
+while `READER_POST_MENU` carries one.
+
+A menu's contents are the one inventory a client cannot infer from a
+drawing, so each disagreement is a divergence already shipping. The
+round that takes this reconciles all three at once against the boards,
+rather than patching whichever copy the next lane happens to open.
