@@ -1,5 +1,7 @@
 package com.cogra.feature.profile
 
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -260,5 +262,61 @@ class ProfileScreensTest {
         renderEdit(ProfileEditUiState(loading = false, transportFailed = true))
         compose.onNodeWithTag("profile_edit_transport_error").assertExists()
         compose.onNodeWithTag("profile_edit_retry").assertExists()
+    }
+
+    // -- The ruled field atom (CograTextField) the three fields now share --
+    //
+    // Each cap is the server's own (crates/api/src/profile.rs:27,30,35,
+    // mirrored at core/domain/src/main/kotlin/com/cogra/domain/content/
+    // TextLimits.kt:33-40): display name 50, bio 500, website URL 2048. The
+    // late-counter window is `max(20, round(cap / 10))`
+    // (design/components/forms/TextField.jsx:32-93).
+
+    @Test
+    fun theDisplayNameCounterAppearsNearItsCap() {
+        // Cap 50, window max(20, 5) = 20 -> the counter appears at 30 chars.
+        renderEdit(ProfileEditUiState(loading = false, displayName = "a".repeat(30)))
+        compose.onNodeWithTag("profile_edit_display_name_count").assertTextEquals("20 left")
+    }
+
+    @Test
+    fun aDisplayNameOverItsCapDisablesSave() {
+        renderEdit(ProfileEditUiState(loading = false, displayName = "a".repeat(51)))
+        compose.onNodeWithTag("profile_edit_display_name_count").assertTextEquals("1 over")
+        compose.onNodeWithTag("profile_edit_display_name_error")
+            .assertTextEquals("Too long — at most 50 characters.")
+        compose.onNodeWithTag("profile_edit_save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun theBioCounterAppearsNearItsCap() {
+        // Cap 500, window max(20, 50) = 50 -> the counter appears at 450 chars.
+        renderEdit(ProfileEditUiState(loading = false, bio = "a".repeat(450)))
+        compose.onNodeWithTag("profile_edit_bio_count").assertTextEquals("50 left")
+    }
+
+    @Test
+    fun aBioOverItsCapDisablesSave() {
+        renderEdit(ProfileEditUiState(loading = false, bio = "a".repeat(501)))
+        compose.onNodeWithTag("profile_edit_bio_count").assertTextEquals("1 over")
+        compose.onNodeWithTag("profile_edit_bio_error")
+            .assertTextEquals("Too long — at most 500 characters.")
+        compose.onNodeWithTag("profile_edit_save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun theWebsiteUrlCounterAppearsNearItsCap() {
+        // Cap 2048, window max(20, 205) = 205 -> the counter appears at 1843.
+        renderEdit(ProfileEditUiState(loading = false, websiteUrl = "a".repeat(1843)))
+        compose.onNodeWithTag("profile_edit_website_count").assertTextEquals("205 left")
+    }
+
+    @Test
+    fun aWebsiteUrlOverItsCapDisablesSave() {
+        renderEdit(ProfileEditUiState(loading = false, websiteUrl = "a".repeat(2049)))
+        compose.onNodeWithTag("profile_edit_website_count").assertTextEquals("1 over")
+        compose.onNodeWithTag("profile_edit_website_error")
+            .assertTextEquals("Too long — at most 2048 characters.")
+        compose.onNodeWithTag("profile_edit_save").assertIsNotEnabled()
     }
 }
