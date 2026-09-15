@@ -18,6 +18,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -87,8 +88,12 @@ internal fun PostAffordanceRow(
     stanceControl: @Composable () -> Unit,
 ) {
     Row(
-        modifier = modifier.testTag("${testTagPrefix}_affordances"),
-        horizontalArrangement = Arrangement.spacedBy(Space.x2),
+        // THE ROW SPREADS ACROSS THE CARD (`PostCard.jsx:423` — `width: 100%`,
+        // `justifyContent: "space-between"`, `flexWrap: "nowrap"`). Spacing
+        // the controls by a fixed gap huddled them against the leading edge
+        // instead, leaving the card's width unused to their right.
+        modifier = modifier.fillMaxWidth().testTag("${testTagPrefix}_affordances"),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         stanceControl()

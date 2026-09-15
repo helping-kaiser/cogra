@@ -41,6 +41,11 @@ dependencies {
     // picture on screen, the draggable window, the ratio switch — is the
     // library's rather than ours.
     implementation(libs.android.image.cropper)
+    // The fullscreen viewer's pinch-zoom and pan, and the rule that decides
+    // when a drag belongs to the picture rather than to the pager under it.
+    // Hand-rolled `detectTransformGestures` is what ate the viewer's page
+    // swipe and leaked a page turn out of a slow two-finger drag.
+    implementation(libs.zoomable)
     // api: the player surface exposes Media3's `Player` on its own
     // signature, so a feature hosting one needs the artifact on its
     // compile path too. `media3-ui-compose` is Android's own Compose

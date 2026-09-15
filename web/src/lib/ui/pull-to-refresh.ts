@@ -62,12 +62,22 @@ export function pullReleases(state: PullState): boolean {
 export function usePullToRefresh({
   host,
   onPull,
+  enabled = true,
 }: {
   host: RefObject<HTMLElement | null> | null;
   /** Called once per completed pull. Must be stable. */
   onPull: () => void;
+  /**
+   * ONE GESTURE MAY NOT MEAN TWO THINGS (design/readme.md). A surface stands
+   * its pull down while a sheet is raised over it: the listeners sit on the
+   * surface's scroller, and a touch inside a modal `<dialog>` bubbles all the
+   * way out to them — so a reader pulling the sheet down was also asking the
+   * page behind it to refetch, under a sheet they could not see it happen in.
+   */
+  enabled?: boolean;
 }): void {
   useEffect(() => {
+    if (!enabled) return;
     const target: HTMLElement | Window = scrollElementOf(host) ?? window;
     let state = NO_PULL;
     const atTop = () => scrollOffsetOf(host) <= 0;
@@ -98,5 +108,5 @@ export function usePullToRefresh({
       target.removeEventListener("touchend", onEnd);
       target.removeEventListener("touchcancel", onEnd);
     };
-  }, [host, onPull]);
+  }, [host, onPull, enabled]);
 }

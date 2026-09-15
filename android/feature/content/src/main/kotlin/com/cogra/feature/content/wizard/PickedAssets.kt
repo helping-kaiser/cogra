@@ -47,6 +47,10 @@ fun List<PickedAsset>.pickedPictures(
         described = asset.altText.isNotBlank(),
         uploading = asset.upload.inFlight,
         failed = asset.upload is AssetUpload.Failed,
+        // A clip's tile says it is a clip. Without this the composer's
+        // summary drew a video body as an undated square and read it out
+        // as a picture.
+        duration = asset.durationMs?.let { formatDuration(it) },
     )
 }
 
