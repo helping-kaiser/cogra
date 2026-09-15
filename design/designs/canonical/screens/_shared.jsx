@@ -1108,7 +1108,7 @@ function ReplyPadBody() {
           </span>
         </div>
 
-        <div role="group" aria-label="Opinion pad for the post you answer" style={{ alignSelf: "center", width: 240 }}>
+        <div role="group" aria-label="Opinion pad for the post you answer" style={{ alignSelf: "stretch" }}>
           <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
         </div>
 
