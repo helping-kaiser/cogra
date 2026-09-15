@@ -2,11 +2,29 @@ import { fireEvent, screen } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
+import { createTokenStore } from "@/lib/session/token-store";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceHandlers } from "@/test/stance";
 import { TopicView } from "./topic-view";
+
+function signedInStore() {
+  const store = createTokenStore();
+  store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "u1" });
+  return store;
+}
+
+/**
+ * The persistent half of the store is localStorage, which outlives a
+ * test — so a guest says so rather than inheriting whoever signed in
+ * above it.
+ */
+function guestStore() {
+  const store = createTokenStore();
+  store.clear();
+  return store;
+}
 
 // The post cards on this page carry the ⋮, whose rows navigate.
 vi.mock("next/navigation", () => ({
@@ -78,16 +96,111 @@ describe("TopicView", () => {
     expect(screen.getByTestId("topic-stance-p1")).toBeInTheDocument();
   });
 
-  // Follow waits for slice 3 (F5): the backend still accepts the stance,
-  // the surface simply does not offer it.
+  // THE WORD "FOLLOW" IS NOT ON THE SCREEN, and will not be
+  // (copy-voice's ban, extended to topics 2026-09-14). Taking a position
+  // on a topic is the stance gesture at the stance's own price, so there
+  // is no toggle and no one-tap follow to find.
   it("offers no follow gesture", async () => {
     server.use(
-      graphql.query("HashtagDetail", () => HttpResponse.json({ data: hashtagDetail("rust") })),
+      graphql.query("HashtagDetail", () =>
+        HttpResponse.json({
+          data: hashtagDetail("rust", [
+            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
+          ]),
+        }),
+      ),
     );
     renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
     await screen.findByTestId("topic-name");
     expect(screen.queryByTestId("topic-follow")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /follow/i })).not.toBeInTheDocument();
+  });
+
+  // The row is the page's own gesture, and it names what it stances —
+  // the tag itself, hash and all — because three stance controls stand
+  // on this page and the accessible name is what says which is which.
+  it("carries an Affinity row toward the topic, named by the tag", async () => {
+    server.use(
+      graphql.query("HashtagDetail", () =>
+        HttpResponse.json({
+          data: hashtagDetail("rust", [
+            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-name");
+    expect(await screen.findByTestId("topic-affinity")).toHaveAccessibleName(
+      "Take a stance on #rust",
+    );
+  });
+
+  // THE SIX WORDS ARE THE FAMILY'S (jakob 2026-09-15). The control owns
+  // the geometry; association asks how much you like it and attraction
+  // how close you want to be — never the opinion's own question.
+  it("asks the Affinity's own questions on the accessible route", async () => {
+    server.use(
+      graphql.query("HashtagDetail", () =>
+        HttpResponse.json({
+          data: hashtagDetail("rust", [
+            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<TopicView name="rust" />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    await screen.findByTestId("topic-affinity");
+    fireEvent.click(screen.getByTestId("topic-affinity-choose"));
+    expect(await screen.findByTestId("stance-alternates")).toBeInTheDocument();
+    expect(screen.getByLabelText("How much you like it")).toBeInTheDocument();
+    expect(screen.getByLabelText("How close you want to be")).toBeInTheDocument();
+    expect(screen.queryByLabelText("How you stand")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("In your world")).not.toBeInTheDocument();
+  });
+
+  // A GUEST IS NOT SPECIAL HERE (backlog item 81, ruled 2026-09-15):
+  // any reader who taps a tag reaches the page and sees what is tagged.
+  // The only thing they lack is an opinion of the topic, so the face
+  // wears the no-opinion 🫥 and the tap opens the join prompt — it never
+  // bounces them, and the accessible route is not on the page at all.
+  it("lets a guest read the page and gates the row at the join prompt", async () => {
+    server.use(
+      graphql.query("HashtagDetail", () =>
+        HttpResponse.json({
+          data: hashtagDetail("rust", [
+            { relevance: 0.1, confidence: 1, pending: false, node: postNode("p1", "About Rust") },
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<TopicView name="rust" />, {
+      store: guestStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("topic-post-p1")).toBeInTheDocument();
+    const row = await screen.findByTestId("topic-affinity");
+    expect(screen.getByTestId("topic-affinity-resting-face")).toHaveTextContent("🫥");
+    expect(screen.queryByTestId("topic-affinity-choose")).not.toBeInTheDocument();
+    fireEvent.click(row);
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+  });
+
+  // THE EMPTY PAGE WIRES NO FACE AT ALL (backlog item 81, ruled
+  // 2026-09-15) — `TagPageEmpty` draws the header and the empty copy,
+  // and nothing else.
+  it("wires no stance row on the empty page", async () => {
+    server.use(
+      graphql.query("HashtagDetail", () =>
+        HttpResponse.json({ data: hashtagDetail("nevertagged") }),
+      ),
+    );
+    renderWithProviders(<TopicView name="nevertagged" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-empty");
+    expect(screen.queryByTestId("topic-affinity")).not.toBeInTheDocument();
   });
 
   it("shows the empty copy for a never-tagged but well-formed name (D4)", async () => {
