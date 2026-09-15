@@ -524,10 +524,10 @@
     },
     {
       "file": "MapMedia.dc.html",
-      "x": -2740,
+      "x": -3030,
       "y": 0,
-      "w": 2320,
-      "h": 3082,
+      "w": 2610,
+      "h": 3151,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -615,7 +615,7 @@
     {
       "file": "CitedBy.dc.html",
       "title": "Post · what cites it",
-      "x": 3360,
+      "x": 3840,
       "y": 2120,
       "w": 390,
       "h": 844,
