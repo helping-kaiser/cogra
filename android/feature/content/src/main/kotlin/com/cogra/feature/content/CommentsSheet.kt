@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -231,9 +232,15 @@ fun CommentsSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        modifier = Modifier.testTag("comments_sheet"),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        // THE SHEET CARRIES THE HEIGHT, ITS HANDLE INCLUDED. The board leaves
+        // 72px of the screen behind showing (`_shared.jsx:1421` —
+        // `height="calc(100% - 72px)"`), and capping the CONTENT at that left
+        // Material's drag handle standing above the cap: the sheet then came
+        // to within a handle's height of the top and the reveal was gone.
+        modifier = Modifier.testTag("comments_sheet").height(commentsSheetHeight()),
     ) {
-        Column(Modifier.fillMaxWidth().height(commentsSheetHeight())) {
+        Column(Modifier.fillMaxSize()) {
             SheetTitle(
                 text = stringResource(R.string.content_comments_heading),
                 modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x1),
