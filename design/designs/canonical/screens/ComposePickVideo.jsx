@@ -17,37 +17,6 @@
    grid's part and the staged state is identical, so no web board is drawn
    (the same blessing ComposePickWeb's refusals ride on). */
 
-/* The device-gallery grid, inert: no selection rings, nothing to tap. Its
-   markup is screen-local — the pick grid exists on one step of one flow. */
-function DeadGrid() {
-  const shades = [
-    "var(--surface-container-highest)",
-    "var(--surface-container-high)",
-    "var(--surface-container-highest)",
-    "var(--surface-container)",
-    "var(--surface-container-high)",
-    "var(--surface-container-highest)",
-    "var(--surface-container-high)",
-    "var(--surface-container)",
-  ];
-  return (
-    <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: 3, padding: "4px 4px 0", overflow: "hidden", alignContent: "flex-start", opacity: 0.45 }}>
-      <div style={{ position: "relative", width: 125, height: 125, overflow: "hidden", outline: "1px solid var(--border-hairline)", outlineOffset: -1 }}>
-        <img src="post-photo.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-      </div>
-      <div style={{ position: "relative", width: 125, height: 125, overflow: "hidden", outline: "1px solid var(--border-hairline)", outlineOffset: -1 }}>
-        <img src="inviter.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-      </div>
-      <div style={{ position: "relative", width: 125, height: 125, overflow: "hidden", outline: "1px solid var(--border-hairline)", outlineOffset: -1 }}>
-        <img src="gallery-market.jpg" alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-      </div>
-      {shades.map((bg, index) => (
-        <div key={index} style={{ width: 125, height: 125, background: bg, outline: "1px solid var(--border-hairline)", outlineOffset: -1 }} />
-      ))}
-    </div>
-  );
-}
-
 export function Screen() {
   return (
     <>

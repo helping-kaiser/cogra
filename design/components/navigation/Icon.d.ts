@@ -42,6 +42,7 @@ export interface IconProps {
     | "content_copy"
     | "play_arrow"
     | "pause"
+    | "replay"
     | "fast_rewind"
     | "fast_forward"
     | "fullscreen"

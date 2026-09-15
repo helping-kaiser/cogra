@@ -388,6 +388,15 @@
       "page": "media"
     },
     {
+      "file": "ComposePickVideoCover.dc.html",
+      "title": "Pick · the clip wears its cover",
+      "x": 3360,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
       "file": "CoverCrop.dc.html",
       "title": "Cover · a picture of your own",
       "x": 1440,
@@ -545,7 +554,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 3194,
+      "h": 3164,
       "page": "media",
       "title": "Media · flow map"
     },

@@ -805,6 +805,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Write words instead</button>", tag: "button" },
     { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
   ],
+  // The same step once a cover exists: one anatomy, so one marker list.
+  ComposePickVideoCover: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: ">Write words instead</button>", tag: "button" },
+    { n: 5, find: 'aria-label="Remove this video"', tag: "button" },
+  ],
   CoverCrop: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
@@ -1028,25 +1036,22 @@ Object.assign(FLOW_MARKERS, {
   ViewerPicture: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },
     { n: 2, find: 'class="cg-viewer-stage"', tag: "div" },
-    { n: 3, find: 'role="dialog"', tag: "div" },
   ],
   ViewerVideo: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },
     { n: 2, find: 'aria-label="Pause"', tag: "button" },
     { n: 3, find: 'aria-label="Seek"', tag: "div" },
     { n: 4, find: 'aria-label="Turn sound on"', tag: "button" },
-    { n: 5, find: 'role="dialog"', tag: "div" },
-    { n: 6, find: 'aria-label="Back ten seconds"', tag: "button" },
-    { n: 6, find: 'aria-label="Forward ten seconds"', tag: "button" },
+    { n: 5, find: 'aria-label="Back ten seconds"', tag: "button" },
+    { n: 5, find: 'aria-label="Forward ten seconds"', tag: "button" },
   ],
   ViewerLandscape: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },
     { n: 2, find: 'aria-label="Pause"', tag: "button" },
     { n: 3, find: 'aria-label="Seek"', tag: "div" },
     { n: 4, find: 'aria-label="Turn sound on"', tag: "button" },
-    { n: 5, find: 'role="dialog"', tag: "div" },
-    { n: 6, find: 'aria-label="Back ten seconds"', tag: "button" },
-    { n: 6, find: 'aria-label="Forward ten seconds"', tag: "button" },
+    { n: 5, find: 'aria-label="Back ten seconds"', tag: "button" },
+    { n: 5, find: 'aria-label="Forward ten seconds"', tag: "button" },
   ],
 });
 

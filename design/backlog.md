@@ -3162,7 +3162,8 @@ draws the landing: the sheet at the reader's own scroll offset with
 their just-signed reply on its expanded parent. One state board (a
 `ReplyEntry` variant or its own drawing, the round's call) closes it;
 the edit-return twin ruled the same evening lands on the same anatomy.
-### 98 · Which headers collapse, and which pin · *design* · **needs a ruling**
+
+### 98 · Which headers collapse, and which pin · *design* · **open**
 
 Filed 2026-09-15 by the detail-actions lane, after jakob's hand test:
 the post detail's header hiding on scroll "is not a behavior shared for
@@ -3187,7 +3188,7 @@ chats, invites, the key surfaces, profile edit — is un-wrapped on web
 and unexamined on android. Whether "pinned" means `position: sticky` on
 web or simply not collapsing is part of the same ruling.
 
-### 99 · The Sensitive row's marked state is undrawn · *design* · **needs a drawing**
+### 99 · The Sensitive row's marked state is undrawn · *design* · **open**
 
 Filed 2026-09-15 by the detail-actions lane, which built the row on both
 edit surfaces. All eleven `Sensitive` `FactRow`s in the tree read
@@ -3200,7 +3201,7 @@ not. The clients ship `Marked` / `Change`, following the comment edit's
 shipped choice, which is a guess wearing the confidence of a shipped
 string. Also open: whether clearing gets its own word.
 
-### 100 · Three menu contradictions the code has to choose between · *design* · **needs rulings**
+### 100 · Three menu contradictions the code has to choose between · *design* · **open**
 
 Filed 2026-09-15 by the detail-actions lane's row-by-row audit.
 

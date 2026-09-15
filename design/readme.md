@@ -977,11 +977,12 @@ sides. The layout never decides the author's crop. The bars stay plain
 invents image where there is none.
 
 **Tapping media in the detail view opens it full-size** (`MediaViewer`) —
-contain, as large as the screen allows, backed out of with `arrow_back`,
-Escape, or the backdrop, and the route never changes. In the feed the
-same tap opens the post: a reader scrolling is choosing between posts,
-not looking at one picture. A video takes real controls in the viewer,
-where the reader is deliberately watching; in a tile it has only sound.
+contain, as large as the screen allows, backed out of with the X, a
+swipe down, or back but never by a tap, and the route never changes. In
+the feed the same tap opens the post: a reader scrolling is choosing
+between posts, not looking at one picture. A video takes real controls
+in the viewer, where the reader is deliberately watching; in a tile it
+has only sound.
 
 **A tap anywhere meaningless on a post opens its detail view** — title,
 media or body, description (still clamped), the affordances, then the
@@ -5085,6 +5086,14 @@ viewer lane).
   queued the asymmetry: each platform keeps its own player's reflex,
   and one grammar forced across both would break the reflex on one of
   them.
+- **The drawn edge offsets are the inset-zero case.** Boards draw a
+  notchless 390×844, so the viewer's X at the top and the 16px gesture
+  zone at the bottom (*the reel round*) sit exactly where a real phone
+  spends its system insets. On a device the two offsets STACK ON TOP of
+  those insets rather than being measured from the screen's edge — what
+  the boards draw is what remains when both insets are zero. A rule and
+  not a token: `--safe-area-top` stays retired.
+
 ### The tag-page smalls — 2026-09-15
 
 Three items the topic round left standing, all about the tag page and
