@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
@@ -237,59 +238,96 @@ fun CommentsSheet(
                 text = stringResource(R.string.content_comments_heading),
                 modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x1),
             )
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("comments_list"),
-                contentPadding = PaddingValues(horizontal = Space.x4, vertical = Space.x2),
-                verticalArrangement = Arrangement.spacedBy(Space.x3),
-            ) {
-                // The thread's own read, and its own faults: the sheet is
-                // raised over surfaces that have no thread of their own to
-                // degrade, so both say so here.
-                if (state.loading && state.comments.isEmpty()) {
-                    item { LoadingState(testTag = "comments_loading") }
-                }
-                if (state.transportFault == TransportFault.REFRESH && state.comments.isEmpty()) {
-                    item {
-                        Column {
-                            ErrorLine(R.string.content_error_transport, "comments_transport_error")
-                        }
-                    }
-                }
-                if (!state.loading && state.transportFault == null && state.comments.isEmpty()) {
-                    item {
-                        Text(
-                            stringResource(R.string.content_comments_empty),
-                            modifier = Modifier.testTag("detail_no_comments"),
-                        )
-                    }
-                }
-                items(state.comments, key = { it.id }) { comment ->
-                    CommentThread(
-                        comment = comment,
-                        depth = 0,
-                        state = state,
-                        viewerId = viewerId,
-                        signedIn = signedIn,
-                        onLoadMoreReplies = onLoadMoreReplies,
-                        onReplyTo = { c -> depart { onReplyTo(c) } },
-                        onEditComment = { c -> depart { onEditComment(c) } },
-                        onReveal = onReveal,
-                        onOpenActor = onOpenActor,
-                        onOpenTopic = onOpenTopic,
-                        onReference = onReference,
-                        onLicense = onLicense,
-                        stanceControl = stanceControl,
-                    )
-                }
-                if (state.hasMore) {
-                    item { MoreComments(state, onLoadMoreComments) }
-                }
-            }
+            CommentsList(
+                state = state,
+                listState = listState,
+                viewerId = viewerId,
+                signedIn = signedIn,
+                modifier = Modifier.weight(1f),
+                onLoadMoreComments = onLoadMoreComments,
+                onReplyTo = { c -> depart { onReplyTo(c) } },
+                onEditComment = { c -> depart { onEditComment(c) } },
+                onLoadMoreReplies = onLoadMoreReplies,
+                onReveal = onReveal,
+                onOpenActor = onOpenActor,
+                onOpenTopic = onOpenTopic,
+                onReference = onReference,
+                onLicense = onLicense,
+                stanceControl = stanceControl,
+            )
             CommentsFoot(signedIn, { depart(onAddComment) }, onSignInOrJoin)
             CograSnackbarHost(snackbar)
+        }
+    }
+}
+
+/**
+ * The thread's rows, and the three things it says when it has none:
+ * reading, unreachable, or empty.
+ *
+ * The sheet says all three ITSELF, unlike the version that projected the
+ * detail's state: it is raised over the feed too, where there is no
+ * screen underneath holding a thread to degrade in its place.
+ */
+@Composable
+private fun CommentsList(
+    state: CommentsUiState,
+    listState: LazyListState,
+    viewerId: String?,
+    signedIn: Boolean?,
+    onLoadMoreComments: () -> Unit,
+    onReplyTo: (CommentView) -> Unit,
+    onEditComment: (CommentView) -> Unit,
+    onLoadMoreReplies: (CommentView) -> Unit,
+    onReveal: (String, SensitiveMark) -> Unit,
+    onOpenActor: (String) -> Unit,
+    onOpenTopic: (String) -> Unit,
+    onReference: (String) -> Unit,
+    onLicense: (LicenseChoice) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(
+        state = listState,
+        modifier = modifier.testTag("comments_list"),
+        contentPadding = PaddingValues(horizontal = Space.x4, vertical = Space.x2),
+        verticalArrangement = Arrangement.spacedBy(Space.x3),
+    ) {
+        if (state.comments.isEmpty()) {
+            item {
+                when {
+                    state.loading -> LoadingState(testTag = "comments_loading")
+                    state.transportFault != null -> ErrorLine(
+                        R.string.content_error_transport,
+                        "comments_transport_error",
+                    )
+                    else -> Text(
+                        stringResource(R.string.content_comments_empty),
+                        modifier = Modifier.testTag("detail_no_comments"),
+                    )
+                }
+            }
+        }
+        items(state.comments, key = { it.id }) { comment ->
+            CommentThread(
+                comment = comment,
+                depth = 0,
+                state = state,
+                viewerId = viewerId,
+                signedIn = signedIn,
+                onLoadMoreReplies = onLoadMoreReplies,
+                onReplyTo = onReplyTo,
+                onEditComment = onEditComment,
+                onReveal = onReveal,
+                onOpenActor = onOpenActor,
+                onOpenTopic = onOpenTopic,
+                onReference = onReference,
+                onLicense = onLicense,
+                stanceControl = stanceControl,
+            )
+        }
+        if (state.hasMore) {
+            item { MoreComments(state, onLoadMoreComments) }
         }
     }
 }
