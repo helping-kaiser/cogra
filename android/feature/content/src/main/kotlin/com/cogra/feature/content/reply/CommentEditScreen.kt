@@ -21,9 +21,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
+import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.DiscardConfirm
 import com.cogra.core.designsystem.v2.atom.DiscardSubject
@@ -390,8 +389,7 @@ private fun CommentEditSheets(
     onOpenHelp: (HelpTopic) -> Unit,
 ) {
     if (!state.anySheetOpen) return
-    val sheetState = rememberModalBottomSheetState()
-    ModalBottomSheet(onDismissRequest = onCloseSheet, sheetState = sheetState) {
+    CograSheetHost(onDismissRequest = onCloseSheet) {
         val describing = state.describingIndex?.let { state.picked.getOrNull(it) }
         when {
             describing != null -> DescribeSheet(
