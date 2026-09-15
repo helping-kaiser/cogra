@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { renderHook } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   NO_PULL,
@@ -6,6 +7,7 @@ import {
   pullMove,
   pullReleases,
   pullStart,
+  usePullToRefresh,
 } from "./pull-to-refresh";
 
 const AT_TOP = true;
@@ -51,5 +53,27 @@ describe("the pull", () => {
 
   it("takes Material's own 64dp threshold, the number Android pulls against", () => {
     expect(PULL_THRESHOLD).toBe(64);
+  });
+});
+
+// ONE GESTURE MAY NOT MEAN TWO THINGS (design/readme.md). The listeners sit
+// on the surface's scroller and a touch inside a modal `<dialog>` bubbles all
+// the way out to them, so a reader pulling a sheet down was also asking the
+// page behind it to refetch.
+describe("the surface's own pull", () => {
+  const touchStart = ["touchstart", expect.anything(), expect.anything()] as const;
+
+  it("stands down while a sheet is raised over the surface", () => {
+    const bound = vi.spyOn(window, "addEventListener");
+    renderHook(() => usePullToRefresh({ host: null, onPull: () => {}, enabled: false }));
+    expect(bound).not.toHaveBeenCalledWith(...touchStart);
+    bound.mockRestore();
+  });
+
+  it("reads the gesture when the surface owns it", () => {
+    const bound = vi.spyOn(window, "addEventListener");
+    renderHook(() => usePullToRefresh({ host: null, onPull: () => {} }));
+    expect(bound).toHaveBeenCalledWith(...touchStart);
+    bound.mockRestore();
   });
 });

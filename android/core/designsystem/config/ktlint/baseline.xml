@@ -51,11 +51,11 @@
         <error line="30" column="1" source="standard:kdoc" />
     </file>
     <file name="src/main/kotlin/com/cogra/core/designsystem/v2/media/CropState.kt">
-        <error line="26" column="5" source="standard:class-signature" />
         <error line="27" column="5" source="standard:class-signature" />
         <error line="28" column="5" source="standard:class-signature" />
         <error line="29" column="5" source="standard:class-signature" />
-        <error line="29" column="23" source="standard:class-signature" />
+        <error line="30" column="5" source="standard:class-signature" />
+        <error line="30" column="23" source="standard:class-signature" />
     </file>
     <file name="src/main/kotlin/com/cogra/core/designsystem/v2/media/MediaCrop.kt">
         <error line="108" column="51" source="standard:statement-wrapping" />

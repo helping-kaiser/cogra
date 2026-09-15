@@ -19,6 +19,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  atRatio,
   encodeForUpload,
   MAX_LONG_EDGE,
   MAX_WIDTH,
@@ -108,6 +109,48 @@ describe("withinImage", () => {
       width: 800,
       height: 600,
     });
+  });
+});
+
+describe("atRatio", () => {
+  it("leaves a rectangle already at the ratio untouched", () => {
+    const area = { x: 10, y: 20, width: 800, height: 1000 };
+    expect(atRatio(area, 4 / 5)).toBe(area);
+  });
+
+  it("takes the height off a rectangle that is too tall, about its centre", () => {
+    expect(atRatio({ x: 0, y: 0, width: 800, height: 2000 }, 4 / 5)).toEqual({
+      x: 0,
+      y: 500,
+      width: 800,
+      height: 1000,
+    });
+  });
+
+  it("takes the width off a rectangle that is too wide, about its centre", () => {
+    expect(atRatio({ x: 0, y: 0, width: 2000, height: 1000 }, 4 / 5)).toEqual({
+      x: 600,
+      y: 0,
+      width: 800,
+      height: 1000,
+    });
+  });
+
+  it("has nothing to say about a degenerate rectangle or a ratio that is not one", () => {
+    const flat = { x: 0, y: 0, width: 0, height: 100 };
+    expect(atRatio(flat, 1)).toBe(flat);
+    const area = { x: 0, y: 0, width: 100, height: 100 };
+    expect(atRatio(area, 0)).toBe(area);
+    expect(atRatio(area, Number.NaN)).toBe(area);
+  });
+
+  it("holds the corrected rectangle inside the one it came from", () => {
+    const from = { x: 100, y: 100, width: 600, height: 200 };
+    const out = atRatio(from, 4 / 5);
+    expect(out.x).toBeGreaterThanOrEqual(from.x);
+    expect(out.y).toBeGreaterThanOrEqual(from.y);
+    expect(out.x + out.width).toBeLessThanOrEqual(from.x + from.width);
+    expect(out.y + out.height).toBeLessThanOrEqual(from.y + from.height);
   });
 });
 
@@ -315,10 +358,16 @@ describe("encodeForUpload", () => {
     expect(result.height).toBe(1350);
   });
 
-  // The rectangle carries its own shape, so it is authoritative: a draft framed
-  // at one shape and encoded while the wizard still names another must upload
-  // what the author actually saw.
-  it("prefers the measured rectangle over the ratio", async () => {
+  // THE RECTANGLE GIVES THE POSITION; THE SHAPE IS THE POST'S. The measured
+  // rectangle used to be authoritative about its own shape too, on the reading
+  // that a draft framed at one shape and encoded while the wizard named another
+  // should upload what the author saw. That case cannot arise — the shape action
+  // drops `area` on every change of shape, so a measurement always belongs to
+  // the shape in force — and the reading cost more than it bought: a rectangle
+  // of the wrong shape, at the limit one covering the whole picture, uploaded
+  // the untouched original (jakob's hand test, the 4:5 post that kept its
+  // 426x1080 cat).
+  it("takes the position from the measured rectangle and the shape from the post", async () => {
     const drawn = installFakeCanvas(6);
     vi.stubGlobal(
       "createImageBitmap",
@@ -331,7 +380,58 @@ describe("encodeForUpload", () => {
       crop: { x: 0, y: 0, zoom: 1, area, areaPercent: null },
     });
 
-    expect(drawn[0]!.from).toEqual(area);
+    // The band's own centre is kept; only its shape gives.
+    expect(drawn[0]!.from).toEqual({ x: 300, y: 250, width: 400, height: 500 });
+  });
+
+  // The defect, in the numbers it was found in.
+  it("crops to the post's shape even when the framing covers the whole picture", async () => {
+    const drawn = installFakeCanvas(8);
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => ({ width: 1080, height: 2738, close: () => {} })),
+    );
+
+    await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
+      ratio: 4 / 5,
+      crop: {
+        x: 0,
+        y: 0,
+        zoom: 1,
+        area: { x: 0, y: 0, width: 1080, height: 2738 },
+        areaPercent: null,
+      },
+    });
+
+    const from = drawn[0]!.from;
+    expect(from.width / from.height).toBeCloseTo(4 / 5, 5);
+    expect(from.height).toBeLessThan(2738);
+  });
+
+  // `withinImage` holds each axis inside the picture on its own, so a rectangle
+  // overhanging one edge came back a different shape than it went in.
+  it("keeps the shape when a measured rectangle has to be held inside the picture", async () => {
+    const drawn = installFakeCanvas(9);
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => ({ width: 1000, height: 1000, close: () => {} })),
+    );
+
+    await encodeForUpload(new Blob([new Uint8Array([0]) as BlobPart]), {
+      ratio: 4 / 5,
+      crop: {
+        x: 0,
+        y: 0,
+        zoom: 1,
+        area: { x: 0, y: 0, width: 1200, height: 900 },
+        areaPercent: null,
+      },
+    });
+
+    const from = drawn[0]!.from;
+    expect(from.width / from.height).toBeCloseTo(4 / 5, 5);
+    expect(from.x + from.width).toBeLessThanOrEqual(1000);
+    expect(from.y + from.height).toBeLessThanOrEqual(1000);
   });
 
   // Nothing measured — an upload that raced the decode, or a draft signed

@@ -11,6 +11,7 @@ import com.cogra.domain.UserError
 import com.cogra.domain.valueOrNull
 import com.cogra.domain.content.isDescriptionTooLong
 import com.cogra.domain.content.isPostBodyTooLong
+import com.cogra.domain.content.isSensitiveReasonTooLong
 import com.cogra.domain.content.isTitleTooLong
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
@@ -61,17 +62,23 @@ data class ComposePostUiState(
      */
     val attachments: List<MediaAssetView> = emptyList(),
     /**
-     * The author's own sensitive mark this edit leaves standing, read
-     * when the form opened.
+     * The author's own sensitive mark this edit will leave standing —
+     * read when the form opened, and the author's to move from here
+     * (CW-46).
      *
      * An edit record carries the complete content state, so a mark the
-     * record does not re-state is a mark the record removes — carrying
-     * it through is what keeps editing a marked post from quietly
-     * unmarking it. The edit surface has no switch yet; until it does,
-     * the only correct value is the one the post already had.
+     * record does not re-state is a mark the record removes: the form
+     * has to know the mark it starts from before it can offer to change
+     * it, which is what [ComposePostViewModel.start] reads before the
+     * fields fill.
      */
     val sensitive: Boolean = false,
     val sensitiveReason: String? = null,
+    /** The mark the post arrived with, against which a change is read. */
+    val loadedSensitive: Boolean = false,
+    val loadedSensitiveReason: String? = null,
+    /** `ComposeSensitive`, open over the edit. */
+    val sensitiveOpen: Boolean = false,
     val submitting: Boolean = false,
     val emptyBody: Boolean = false,
     /** A refusal that named no chip of its own, in the server's words (F2). */
@@ -98,12 +105,37 @@ data class ComposePostUiState(
      */
     val mediaBody: Boolean get() = attachments.isNotEmpty()
 
-    /** Whether the edit record has anything to carry (F4's count depends on it). */
+    /**
+     * Whether the edit record has anything to carry (F4's count depends
+     * on it).
+     *
+     * The mark is one of the things it carries. An edit record states
+     * the post's complete content state, so moving the mark alone is a
+     * whole edit — and the count, the submit gate and the staging all
+     * read this one property, which is why the mark belongs in it rather
+     * than in a second gate beside it.
+     */
     val contentChanged: Boolean
         get() = creating ||
             title != loadedTitle ||
             description != loadedDescription ||
-            body != loadedBody
+            body != loadedBody ||
+            markChanged
+
+    /**
+     * Whether the author moved the mark. A reason only counts while the
+     * mark stands: the contract refuses a reason without it, and an
+     * unmarked post's stale reason never rides.
+     */
+    val markChanged: Boolean
+        get() = !creating && (
+            sensitive != loadedSensitive ||
+                (sensitive && sensitiveReason.orEmpty() != loadedSensitiveReason.orEmpty())
+            )
+
+    /** The mark's reason, capped the same way every authored field is. */
+    val sensitiveReasonTooLong: Boolean
+        get() = sensitive && isSensitiveReasonTooLong(sensitiveReason.orEmpty())
 
     /**
      * What this submit will stage, counted the way the batch is priced —
@@ -135,7 +167,12 @@ data class ComposePostUiState(
 
     /** Whether the submit may be taken at all. */
     val canSubmit: Boolean
-        get() = !submitting && !nothingToSign && !titleTooLong && !descriptionTooLong && !bodyTooLong
+        get() = !submitting &&
+            !nothingToSign &&
+            !titleTooLong &&
+            !descriptionTooLong &&
+            !bodyTooLong &&
+            !sensitiveReasonTooLong
 
     /**
      * What the withdrawals in this submit cost, or null when it
@@ -242,6 +279,8 @@ class ComposePostViewModel @Inject constructor(
                                 attachments = post.attachments,
                                 sensitive = mark?.sensitive ?: false,
                                 sensitiveReason = mark?.reason,
+                                loadedSensitive = mark?.sensitive ?: false,
+                                loadedSensitiveReason = mark?.reason,
                                 tagSection = TagSectionState(tags = tags, loaded = tags),
                                 referenceSection = ReferenceSectionState(
                                     references = refs,
@@ -288,6 +327,24 @@ class ComposePostViewModel @Inject constructor(
     fun onBodyChange(v: String) = _state.update { it.copy(body = v, emptyBody = false) }
     fun onLicenseChange(v: LicenseChoice) = _state.update { it.copy(license = v) }
     fun onSavedConsumed() = _state.update { it.copy(saved = false) }
+
+    /** CW-46's row opens the post seal's own sheet — one sheet for every
+     *  surface that marks (ruling 42). */
+    fun onOpenSensitive() = _state.update { it.copy(sensitiveOpen = true) }
+
+    fun onCloseSensitive() = _state.update { it.copy(sensitiveOpen = false) }
+
+    /**
+     * Unmarking drops the reason with it: the contract refuses a reason
+     * without the mark, so a reason left behind could only be a refusal
+     * waiting at the submit.
+     */
+    fun onSensitiveChange(marked: Boolean) = _state.update {
+        it.copy(sensitive = marked, sensitiveReason = if (marked) it.sensitiveReason else null)
+    }
+
+    fun onSensitiveReasonChange(reason: String) =
+        _state.update { it.copy(sensitiveReason = reason.ifBlank { null }) }
 
     fun onTagInputChange(v: String) = sections.onTagInputChange(v)
 
@@ -420,9 +477,10 @@ class ComposePostViewModel @Inject constructor(
                         // clears it, which would replace a media post's
                         // pictures with whatever the form's words hold.
                         attachments = s.attachments.map { AttachmentClaim(it.id, it.altText) },
-                        // Carried through unchanged: the record is the
-                        // post's complete content state, so the mark the
-                        // form read is the mark the edit has to re-state.
+                        // The record is the post's complete content
+                        // state, so the mark it carries is the mark that
+                        // stands — whether the author moved it on CW-46's
+                        // row or left the one the form read.
                         sensitive = s.sensitive,
                         sensitiveReason = s.sensitiveReason,
                     )) {

@@ -150,12 +150,73 @@ class CropStateTest {
         // The filmstrip has just moved here; the picture has not landed.
         state.beginAttach()
 
-        state.onWindowChanged(CropFraming(0f, 0f, 0.2f, 0.2f))
+        state.onWindowChanged(CropFraming(0f, 0f, 0.2f, 0.2f), pictureRatio = 1f)
 
         // That window was measured against the picture still on the
         // shared view — the one this framing was moved away from
         // (jakob 2026-09-01).
         assertThat(state.framing).isEqualTo(centred)
+    }
+
+    // -- Which windows are framings at all (HT-CROP) --
+
+    /**
+     * A window is a fraction of its picture, so the same fractions are
+     * different shapes on different pictures — which is why the picture's
+     * own ratio has to come in with the window.
+     */
+    @Test
+    fun aWindowsShapeIsItsOwnShapeTimesThePictures() {
+        // Full width, four fifths of the height, of a square picture: 5:4.
+        val window = CropFraming(0f, 0f, 1f, 0.8f)
+        assertThat(CropWindowMath.isAtRatio(window, pictureRatio = 1f, targetRatio = 1.25f)).isTrue()
+        assertThat(CropWindowMath.isAtRatio(window, pictureRatio = 1f, targetRatio = 0.8f)).isFalse()
+        // The same fractions on a 4:5 picture are 1:1.
+        assertThat(CropWindowMath.isAtRatio(window, pictureRatio = 0.8f, targetRatio = 1f)).isTrue()
+    }
+
+    /**
+     * The whole picture is the shape the HT-CROP defect uploaded: a
+     * report covering everything is never a 4:5 framing of a picture that
+     * is not already 4:5.
+     */
+    @Test
+    fun aWholePictureWindowIsNotAFramingOfAnyOtherShape() {
+        val tall = 1080f / 2738f
+        assertThat(CropWindowMath.isAtRatio(CropFraming.Whole, tall, 0.8f)).isFalse()
+        assertThat(CropWindowMath.isAtRatio(CropFraming(0f, 0f, 1f, 0.9998f), tall, 0.8f)).isFalse()
+        // Unless it genuinely is: a 4:5 picture framed whole is 4:5.
+        assertThat(CropWindowMath.isAtRatio(CropFraming.Whole, 0.8f, 0.8f)).isTrue()
+    }
+
+    @Test
+    fun theSlackCoversTheRoundingAndNothingWider() {
+        val window = CropFraming(0f, 0f, 1f, 1f)
+        val nearly = CropWindowMath.RATIO_SLACK / 2f
+        assertThat(CropWindowMath.isAtRatio(window, 0.8f * (1f + nearly), 0.8f)).isTrue()
+        assertThat(CropWindowMath.isAtRatio(window, 0.8f * 1.1f, 0.8f)).isFalse()
+    }
+
+    @Test
+    fun aDegenerateWindowOrPictureIsNeverAFraming() {
+        assertThat(CropWindowMath.isAtRatio(CropFraming(0.5f, 0.5f, 0.5f, 0.5f), 1f, 1f)).isFalse()
+        assertThat(CropWindowMath.isAtRatio(CropFraming.Whole, 0f, 1f)).isFalse()
+        assertThat(CropWindowMath.isAtRatio(CropFraming.Whole, Float.NaN, 1f)).isFalse()
+        assertThat(CropWindowMath.isAtRatio(CropFraming.Whole, 1f, 0f)).isFalse()
+    }
+
+    /** Every discrete move keeps the window a framing of the same shape. */
+    @Test
+    fun theNonGestureRouteNeverLeavesTheShape() {
+        val picture = 0.5f
+        var window = CropWindowMath.largestWindow(targetRatio = 0.8f, pictureRatio = picture)
+        assertThat(CropWindowMath.isAtRatio(window, picture, 0.8f)).isTrue()
+        listOf(NudgeDirection.Left, NudgeDirection.Up, NudgeDirection.Right).forEach {
+            window = CropWindowMath.nudged(window, it)
+            assertThat(CropWindowMath.isAtRatio(window, picture, 0.8f)).isTrue()
+        }
+        window = CropWindowMath.zoomed(window, inward = true)
+        assertThat(CropWindowMath.isAtRatio(window, picture, 0.8f)).isTrue()
     }
 
     @Test

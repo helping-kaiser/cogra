@@ -104,6 +104,12 @@ function editablePost(
   topics: ReturnType<typeof topicClaim>[] = [],
   references: ReturnType<typeof referenceClaim>[] = [],
   attachments: ReturnType<typeof attachment>[] = [],
+  // The author's own mark, which the query selects on the root post and
+  // the Sensitive row reads.
+  mark: { sensitiveSelfMark: boolean; sensitiveReason: string | null } = {
+    sensitiveSelfMark: false,
+    sensitiveReason: null,
+  },
 ) {
   // A post's body is words XOR media, so a fixture carrying pictures carries
   // no words — the shape the server would actually have served.
@@ -127,6 +133,7 @@ function editablePost(
       landing: { __typename: "Landing", state: "LANDED" },
       moderationStatus: "NORMAL",
       license: { __typename: "License", attribution: 0, provenance: 0 },
+      ...mark,
       topics,
       references,
       comments: {
@@ -452,6 +459,174 @@ describe("ComposeForm", () => {
         sensitiveReason: null,
       },
     });
+  });
+
+  // THE EDIT SURFACE'S OWN SENSITIVE ROW (`_shared.jsx:1390`), where the
+  // post menu's `Mark as sensitive` lands. A creation marks at its seal
+  // instead, which is where the license it can still choose also lives.
+  it("carries the Sensitive row on an edit and the license chooser on a creation", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+    );
+    const { unmount } = renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("compose-sensitive-value")).toHaveTextContent(
+      "Not marked",
+    );
+    expect(screen.getByTestId("compose-open-sensitive")).toHaveTextContent("Mark");
+    expect(screen.queryByTestId("compose-license")).not.toBeInTheDocument();
+    unmount();
+
+    searchParams = new URLSearchParams();
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(screen.queryByTestId("compose-sensitive-value")).not.toBeInTheDocument();
+  });
+
+  /** It reads the AUTHOR'S own mark, and offers the word that moves it. */
+  it("reads a marked post's own mark and offers the change", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: editablePost([], [], [], {
+            sensitiveSelfMark: true,
+            sensitiveReason: "One rubbing includes a dead seabird.",
+          }),
+        }),
+      ),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("compose-sensitive-value")).toHaveTextContent(
+      "Marked",
+    );
+    expect(screen.getByTestId("compose-open-sensitive")).toHaveTextContent("Change");
+
+    fireEvent.click(screen.getByTestId("compose-open-sensitive"));
+    expect(screen.getByTestId("compose-sensitive-switch")).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+  });
+
+  /**
+   * MOVING THE MARK IS A WHOLE EDIT. The record states the post's complete
+   * content state, so marking is a change to it — and a gate that read the
+   * words alone would let the submit stage nothing at all.
+   */
+  it("stages the edit for a mark moved on its own, reason and all", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    let editVariables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+      graphql.mutation("PreparePostEdit", ({ variables }) => {
+        editVariables = variables;
+        return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
+      }),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates no signed actions",
+    );
+
+    fireEvent.click(screen.getByTestId("compose-open-sensitive"));
+    fireEvent.click(screen.getByTestId("compose-sensitive-switch"));
+    fireEvent.change(screen.getByTestId("compose-sensitive-reason"), {
+      target: { value: "One rubbing includes a dead seabird." },
+    });
+    expect(screen.getByTestId("compose-signed-actions")).toHaveTextContent(
+      "creates 1 signed action",
+    );
+
+    fireEvent.click(screen.getByTestId("compose-sensitive-done"));
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(editVariables).toEqual({
+      input: {
+        id: "p1",
+        title: "Old title",
+        description: null,
+        content: "Old body",
+        attachments: null,
+        sensitive: true,
+        sensitiveReason: "One rubbing includes a dead seabird.",
+      },
+    });
+  });
+
+  /**
+   * An edit that re-states the mark without its reason silently clears the
+   * line the veil shows — so the reason is read with the mark and carried
+   * through an edit that never touched it.
+   */
+  it("carries an existing reason through an edit of the words alone", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    let editVariables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: editablePost([], [], [], {
+            sensitiveSelfMark: true,
+            sensitiveReason: "Graphic injury.",
+          }),
+        }),
+      ),
+      graphql.mutation("PreparePostEdit", ({ variables }) => {
+        editVariables = variables;
+        return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
+      }),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    expect(await screen.findByTestId("compose-body")).toHaveValue("Old body");
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "New body" } });
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(editVariables).toMatchObject({
+      input: { sensitive: true, sensitiveReason: "Graphic injury." },
+    });
+  });
+
+  /** The reason wears the same cap every authored field does. */
+  it("holds the submit shut on an over-cap reason, and only while marked", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    server.use(
+      graphql.query("PostDetail", () => HttpResponse.json({ data: editablePost() })),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+    // Something to sign either way, so the button's state reads the cap
+    // rather than an empty batch.
+    expect(await screen.findByTestId("compose-body")).toHaveValue("Old body");
+    fireEvent.change(screen.getByTestId("compose-body"), { target: { value: "New body" } });
+
+    fireEvent.click(screen.getByTestId("compose-open-sensitive"));
+    fireEvent.click(screen.getByTestId("compose-sensitive-switch"));
+    fireEvent.change(screen.getByTestId("compose-sensitive-reason"), {
+      target: { value: "x".repeat(141) },
+    });
+    expect(screen.getByTestId("compose-submit")).toBeDisabled();
+
+    // Unmarked, the reason cannot ride and so cannot refuse.
+    fireEvent.click(screen.getByTestId("compose-sensitive-switch"));
+    expect(screen.getByTestId("compose-submit")).not.toBeDisabled();
   });
 
   // F3: tag editing lives on the edit screen now. Tags are still never
