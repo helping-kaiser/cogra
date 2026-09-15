@@ -157,6 +157,7 @@ export function BottomSheet({
         )}
         <div
           ref={bodyRef}
+          data-testid={`${testId}-body`}
           className={`min-h-0 flex-1 overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
         >
           {children}
