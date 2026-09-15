@@ -98,10 +98,11 @@ export function clipFrame(ratio) {
 }
 
 /* A control that has to survive whatever photograph is under it: the snackbar
-   surface behind the glyph, at the tile's lower-left corner. Every disc a media
-   surface draws is this one — sound, play, and the stream's way back — so they
-   sit at one size and one weight wherever the reader meets them. */
-export function MediaDisc({ label, glyph, onClick, pressed, corner = "bottom-left" }) {
+   surface behind the glyph, at the tile's lower-right corner — the thumb's
+   side while scrolling (jakob, 2026-09-15). Every disc a media surface draws
+   is this one — sound, play, and the stream's way back — so they sit at one
+   size and one weight wherever the reader meets them. */
+export function MediaDisc({ label, glyph, onClick, pressed, corner = "bottom-right" }) {
   const [vertical, horizontal] = corner.split("-");
   return (
     <button

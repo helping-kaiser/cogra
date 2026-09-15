@@ -395,8 +395,13 @@ DO, the way the sound toggle already does:
 
 **The stream and the viewer**:
 
-- `Back to the feed` — the stream's way out. Not "Close": the reader is
-  going back to the feed the stream narrowed, not shutting a layer.
+- `Back to feed` — the stream's way out. Not "Close": the reader is
+  going back to the feed the stream narrowed, not shutting a layer. The
+  feed takes no article anywhere in this vocabulary (jakob 2026-09-15):
+  it is a named surface, like Explore and settings, rather than a common
+  noun like the post or the wallet — and it is the destination a reader
+  meets most often, so one spelling serves `DetailHeader`, `Removed`,
+  the tag page's origin table and the stream alike.
 - `Close` — the viewer's X, which IS shutting a layer.
 - `Share this post` — the share control everywhere it appears. The
   completed name, never a bare "Share": a glyph with one word beside it
@@ -972,7 +977,8 @@ both axes. A walk-back signature keeps its sentence:
 **The walk-back.** Button `Walk it back`, dialog `Walk it all back?`,
 cost `It signs 3 things, each paid separately.` (`It signs 1 thing,
 paid on its own.` in the singular), and the cap aside trimmed to
-`Your feed reads it capped at +1.00 / +0.85.`
+`Your feed reads it capped at +1.00 / +0.85.` **These are the PERSON
+family's words** — see *the topic disconnects* below.
 
 **What one signature commits is counted in things.** The footer reads
 `You're signing 2 things`, the total `2 things, signed together`
@@ -1117,7 +1123,7 @@ sentences, all present tense of the act that happened:
 - `@sol gave an opinion on you` — the profile opinion, in the
   chronicle's own verb (`Gave an opinion`). The reader's word is
   **opinion**; *followed* would name a gesture this product does not
-  have, and *vouched* is the inviter's word, not this one's.
+  have, and *vouched* belongs to the vouch-in, not to this.
 - `@mira mentioned you` — a citation whose target is you.
 - `@ada cited your post` — a citation whose target is something you
   wrote. *Cited*, the product's verb for a Reference, and the second
@@ -1125,7 +1131,7 @@ sentences, all present tense of the act that happened:
 - `@juno landed through your invite` — *landed* is already the word the
   approval flow speaks (`Your registration is landing`), so the invite's
   other end keeps it.
-- `@mira approved your application` — the inviter's act, named as
+- `@mira approved your application` — the approver's act, named as
   theirs. Not *You were approved*, which is the passive the register
   refuses and hides the person who did it.
 
@@ -1455,3 +1461,251 @@ master itself recorded as unruled:
   blessed total (`1 thing, signed`) rather than decided fresh. The short
   form and the long form are one sentence at two lengths and may not
   disagree about the plural.
+
+## Awaiting blessing — the invites round
+
+Every line the invites round drew: the queue, the teaching empty state,
+the create sheet, the fresh link, the approval pad and the close
+dialog. Ruled by jakob 2026-09-15; the words are this round's and up
+for review in the same pass.
+
+**The screen is `Invites`**, titled by the profile row that opens it,
+and its arrow says `Back to your profile` like every other private
+surface off that page.
+
+**The standing entry point is a noun and the empty state's action is a
+verb.** `New invite` on the populated list, `Create invite` on the
+empty state and on the sheet's own commit — the product's own split,
+the one the bottom bar (`New post`) and the empty feed (`write the
+first post`) already keep. The button and the sheet it raises say one
+word between them.
+
+**The empty state carries the whole mechanic in three sentences**:
+`No invites out yet. A link lets someone make an account. Your vouch —
+the opinion you sign when you approve them — is what brings them in.`
+The two halves are said APART because every other product conflates
+them and a reader who does will be surprised by the second. *Vouch* is
+the product's word and a reader's unfamiliar one, so it is explained
+where it stands rather than left to be guessed. `brings them in` is
+lifted from `VouchBack`, `ApplicantWaiting` and `VouchedIn` — the
+boards already had the right words, and the rounder phrasings for what
+a new member joins are either banned vocabulary or a word
+`ProfileHeader` rules out (backlog 88).
+
+**The sections are `Applications` and `Live links`.** Not "Waiting on
+you": only one of those rows is waiting on the reader and the other is
+waiting on its own applicant, so a caption claiming both would make the
+second row a lie. Who is waited on is the ROW's to say.
+
+**An application's second line is its status, and it names the
+reader's fact and not the mechanism** (jakob 2026-09-15). Which proof
+is still missing — a key, a confirmed email — is the applicant's
+errand, and the person deciding whether to vouch has no use for it:
+what they need to know is whether they can act. So both not-ready
+states read `Not fully registered yet`, and ready reads `Ready for
+your approval`, the same words the notification uses, so the list and
+the bell cannot describe one state two ways.
+
+**A group of applications is labelled by its link and its count** —
+`Many uses · 4 waiting`, `Single use · 1 waiting` — and the count says
+WAITING because that is the number the batch acts on: one already
+closed is not closed again. The batch control is `Close all`, named in
+full for the accessibility tree as `Close all 4 applications from this
+link`, and it is absent at one waiting. Its dialog puts the count in
+the title — `Close all 4 applications from this link?` — and names no
+handles; its buttons are the plural of the row's, `Close them` and
+`Keep them`.
+
+**The row's close says what happens, not how it feels.** Its name is
+`Close @imke's application`, never "Reject" or "Decline": nothing is
+deleted and the person keeps the account they made. The dialog behind
+it opens `Close @imke's application?` and answers in two sentences —
+`Their account stays exactly as it is — signed in, and free to keep
+reading. The application just stops waiting on you.` and `A fresh
+invite link puts them back in this list.` The buttons are `Close it`
+and `Keep it`, `Keep it` being the house word for *don't*, from
+`RemoveConfirm` and `SeveranceConfirm`.
+
+**A live link's label is what it is, and its caption is when it dies.**
+`Single use · not used yet` and `Many uses`; the slot state rides the
+single-use label only, because a multi-use link has no slot to be in a
+state. `Revoke` is the card's one inline word. Copy is named for what
+it copies — `Copy the link` — because the button carries no word on
+screen and its accessible name is its only one.
+
+**The create sheet's switch is worded as the RESTRICTION**: `Only one
+person can use it`. That is what makes the label alone enough, and why
+the row carries no status line under it. What OFF does is the group's
+footnote: `With it off, anyone holding the link can apply until it
+expires. Either way each person still needs your approval, one at a
+time.` The second sentence is the one that matters — what scales is the
+queue, never the vouching.
+
+**Expiry is a DURATION and not a moment, so it does not take the
+forward ladder.** The row reads `Expires after` · `7 days` and the
+chooser's rows are `24 hours` · `7 days` · `30 days` — bare lengths,
+because the reader is choosing how long, not naming a date. The ladder
+governs the card's caption instead, where a real moment is being
+reported: `Expires in 7 days · 22.09.2026`, `WalletCampaign`'s blessed
+`Ends in 6 days · 08.09.2026` one surface over.
+
+**The fresh link's sheet is `Your invite link`** and its primary is
+`Share link`. The sheet serves the LINK and nothing else (jakob
+2026-09-15): the id inside it is the capability and the door reads a
+bare one too, but that is a tolerance at the door, not a second way to
+invite somebody, and a sheet offering both made the reader pick between
+two spellings of one thing at the moment they were trying to send it.
+One snackbar, `Link copied`. **The word "token" appears nowhere** — the
+record calls this a link capability and the API calls the field an id;
+on screen it is a link.
+
+**The approval pad's two lines state what `Set` does, every time.**
+`Approving is vouching. Set signs your opinion on @rafa and brings them
+in.` and `It is one signed, priced act — and it is theirs to answer:
+their opinion back completes the pair.` They are not `VouchBackPad`'s
+one-time coaching: approving is rare and priced, and §3's honesty rule
+wants anything priced to say so before it is signed. The pad's "?" is
+named `How vouching works`.
+
+**The eighth notification reads `@rafa is ready for your approval`** —
+a state rather than an act, and the one row in that list that is. What
+happened is that a second proof landed, which is nothing a reader can
+picture; what they need is the errand and the name, in that order. The
+profile row's mark speaks as `Invites — someone is waiting`.
+
+**Two snackbars the list owes, drawn nowhere and named in the graph**:
+`Invite revoked` when a card leaves, and `@imke has to finish
+registering before you can approve` when a not-ready row is pressed —
+the locked row answering with a reason, `ProfileApplicant`'s own
+manner, and in the row's own words rather than a second account of the
+same state.
+
+### The reject extension's lines — same round, same day
+
+**The dialog says both effects.** `Close @imke's application?` then
+`It leaves your list and @imke is told. Their account stays exactly as
+it is — signed in, and free to keep reading.` and `This is your call
+and nobody else's. Any member can still vouch them in, and @imke gets a
+link to ask with.` The first sentence is the one a reader would
+otherwise assume away: closing is not private, and a product that let
+somebody press it thinking it was would be lying by omission. The
+second is what stops the first from reading as expulsion.
+
+**The rejected applicant's card**: title `@kel closed your
+application`, body `That was @kel's call, and it is the only thing it
+decides. Your account stays exactly as it is, you can keep reading, and
+any member you know can vouch you in instead.` *closed* is the control's
+own word, carried through from the button to the dialog to the
+notification to this card — four surfaces, one verb, so the product
+never tells two stories about one act.
+
+**The ask link is labelled by what to do with it**, not by what it is:
+`Ask someone you know to vouch for you`, with `Send it to anyone who is
+already in. It does not expire, and it works however many people you
+send it to.` underneath. The caption is doing the work the invite
+link's expiry caption does — saying what kind of link this is — and
+both of its facts are the differences from an invite link, said as
+reassurance rather than as spec. Its copy control is `Copy your ask
+link`; the snackbar is `Link copied`, the same one the invite link's
+copy gives, because it is the same act on the same kind of thing.
+
+**The band's line changes and the band does not**: `Browsing from
+@kel's view — your own starts when someone vouches you in.` The old
+line promised an approval that is not coming; the new one keeps the
+vantage honest and says what would end it.
+
+**The member-side landing**: the page is titled `A vouch, asked for`,
+the card reads `@noor is asking to be vouched in` over `They have an
+account and can read; what they do not have yet is anyone standing for
+them. Your opinion is what brings them in.` Nobody else is named and no
+reason is given — an ask link carries a person, not a case file. `Not
+now` leaves it standing, which costs the asker nothing, because the
+link does not expire and is not used up.
+
+**The ninth notification**: `@kel closed your application`. A plain
+report in the same shape as `@mira approved your application`, and
+deliberately not softened: the two rows sit in one list and a reader
+comparing them should see one mechanism, not a cheerful one and an
+apologetic one.
+
+**A surface names the person whose approval is in play — the APPROVER —
+and never the role "inviter"** (jakob 2026-09-15, closing the sweep:
+"yeah sweep — the other version where you can choose your inviter is a
+super corner case that will probabely never happen"). An applicant has
+no inviter: `invitations.md` §2 fixes that word at the joiner's own
+back-edge, so before the vouch-back there is only a member whose
+approval is waited on. The rule is about the WORDS, not the people —
+where one member issued the link and approves through it, which is the
+ordinary case, the same handle rightly appears at both ends. What may
+not happen is a line defining the wait, the rung or the act by a
+relationship that does not exist yet: `All set — waiting on @mira`, not
+"waiting on your inviter"; `Waiting on @mira`, not "Waiting on your
+inviter"; `@mira approved your application` as the approver's act. The
+primitive's freedom to reciprocate anyone stays in §2 and stays off the
+screen — no surface offers a choice of inviter, because no reader is
+asked to make one.
+
+## Awaiting blessing — the topic disconnects
+
+**A person is walked back; a topic is DISCONNECTED from** (jakob
+2026-09-15, rejecting *walked back*, *let go* and *dropped* for the
+topic in one breath: "nah thats all to complicated for users.. instead
+of walk back we could just call it 'disconnect' or sth like this. and
+then we can say 'no opinion towards #saltmaps' or sth similar.. we want
+human wording not this nerdy stuff!"). That sentence is the direction,
+not just the ruling: where a word can be the plain one everybody already
+owns, it is.
+
+`Walk it back` is a sentence about a person — you walk back something
+you said to somebody — and a reader who said they like a topic made it
+no promise. The two families therefore part at the way out, the same way
+they already parted at the axis words, and **the split is by record
+family, not by surface**: every person pad keeps `Walk it back` and
+every topic pad says `Disconnect`, wherever either stands.
+
+**The topic family's words**, drawn on `TagPageHeldPad` and its dialog:
+
+- Control `Disconnect` — the pad's standing way out, and the confirming
+  button in the dialog it opens.
+- Dialog title `Disconnect from #saltmaps?`
+- What it does: `You end up with no opinion towards #saltmaps. It stops
+  reaching your feed, you stop earning from it, and nothing passes on
+  through you.`
+- The total: `Everything you've said about #saltmaps adds up to
+  +1.40 / +0.95, and disconnecting clears all of it.`
+- The landing, inside the pad: `This leaves you with no opinion towards
+  it.`
+- What a disconnected topic reads as, wherever it is read as a sentence:
+  `No opinion towards #saltmaps.` — and as a bare label beside the
+  shrug, `No opinion`.
+- The help line: `Disconnect takes everything you've said about the
+  topic to nothing. It has its own confirmation, and each thing you've
+  said is cleared by its own signature.` (the alternates' shorter twin:
+  `Disconnect takes everything to nothing, and each thing you've said is
+  cleared by its own signature.`)
+
+**`Severed` and `severance` are not words on any screen, and on a topic
+surface not even nearly.** They name the mechanic in the docs and the
+code; what a reader is told is what they are left with.
+
+## Awaiting blessing — the draft's discard
+
+**The blocked roll's answer** (`ComposeDraftDiscard`, jakob 2026-09-15).
+Under an unanswered draft the picture roll is dimmed and out of reach; a
+tap on it used to reach nothing, and now it raises this:
+
+- Title `Discard your draft?` — the question the tap actually asked.
+  Reaching for the roll is reaching past the draft.
+- `Picking pictures starts a new post, and this draft is what stands in
+  the way. Discarding is the only thing that loses it.` The first
+  sentence says why the tap did nothing; the second says what the two
+  answers cost, which is the honesty rule's own requirement before a
+  destructive word is pressed.
+- `Discard it` (quiet) and `Keep the draft` (filled) — `DiscardConfirm`'s
+  weighting, with both words carrying their object. The card behind the
+  scrim has a bare `Discard` of its own, inert under the wash, and two
+  buttons reading one word on one screen is the ambiguity a dialog is
+  there to remove.
+- The shield over the roll is named `Answer your draft before starting a
+  new post` — what a screen reader meets where a sighted reader meets a
+  dimmed grid.
