@@ -4,9 +4,14 @@
    have shipped it since slice 2.3 and the canvas had never drawn it, which is
    the debt this board pays.
 
-   IT IS A SUBPAGE OF SEARCH, so the arrow is a LINK back to Explore rather
-   than history, and there is NO BOTTOM BAR — the settings round's rule for a
-   surface a reader arrives at, reads, and leaves. A tag is not a fifth tab.
+   IT IS A SUBPAGE OF SEARCH, and there is NO BOTTOM BAR — the settings round's
+   rule for a surface a reader arrives at, reads, and leaves. A tag is not a
+   fifth tab.
+
+   THE ARROW IS HISTORY, AND THE LABEL NAMES THE ORIGIN (jakob 2026-09-15):
+   `Back to Explore` from Explore, `Back to Your topics` from the list, `Back to
+   feed` from a feed chip. A cold entry with no history — a shared URL — falls
+   back to `Back to Explore`, which is the state this board draws.
 
    THE TITLE IS THE TAG, HASH AND ALL. The `#` is part of the word everywhere
    in this system (`TopicChip`), and a page titled `saltmaps` would be the one

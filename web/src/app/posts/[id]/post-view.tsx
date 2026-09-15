@@ -96,6 +96,7 @@ import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
+import { postMenuItems } from "@/lib/ui2/post-menu";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { commentTarget, ReplyWizard } from "./reply/reply-wizard-view";
 import { CommentEditView } from "./edit/comment-edit-view";
@@ -612,67 +613,18 @@ export function PostView({
     setCommentsOpen(true);
   };
 
-  /**
-   * THE ROWS THE ONE MENU HOLDS — the author's post vs someone else's
-   * (`_shared.jsx:369-376`). Both keep the card's order: the acts the menu was
-   * opened for lead, and the license row closes it, the license being the
-   * rarest read in the product. The license row is dropped when there is none
-   * to show: the license rode the payload, so a redacted record has none
-   * (`PostCard.jsx:142`).
-   *
-   * ROWS WHOSE DESTINATION IS NOT BUILT STAND ANYWAY and do nothing (jakob
-   * 2026-09-14, the introduced-but-inert law): a menu that grew a row per slice
-   * would be a different menu every release, and the row order is ruled.
-   */
-  const postMenuItems = (own: boolean, handle: string | null, license: License | null) => {
-    const rows: MenuItem[] = [
-      { label: "Save", onSelect: () => {}, testId: "post-menu-save" },
-    ];
-    if (own) {
-      rows.push(
-        {
-          label: "Edit",
-          onSelect: () => router.push(`/compose?post=${postId}`),
-          testId: "post-menu-edit",
-        },
-        {
-          // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
-          // post sensitive is always a signed action changing the post — an
-          // edit — so there is no standalone commit path and this row is a
-          // door into the edit flow rather than a sheet of its own. Edit is
-          // the general door; this is the intentioned one. When the edit
-          // surface's drawn Sensitive row lands (CW-46) the link can focus it.
-          label: "Mark as sensitive",
-          onSelect: () => router.push(`/compose?post=${postId}`),
-          testId: "post-menu-sensitive",
-        },
-        { label: "Remove", onSelect: () => setRemoveOpen(true), testId: "post-menu-remove" },
-      );
-    } else {
-      rows.push(
-        {
-          label: "Cite in a new post",
-          onSelect: () => router.push(`/compose?reference=${postId}`),
-          testId: "post-menu-cite",
-        },
-        {
-          // The handle is the thing a reader recognises, and the word they will
-          // look for again under Hidden accounts (`ActorChip.jsx:67`).
-          label: handle === null ? "Hide this account" : `Hide @${handle}`,
-          onSelect: () => {},
-          testId: "post-menu-hide",
-        },
-      );
-    }
-    if (license !== null) {
-      rows.push({
-        label: "License terms",
-        onSelect: () => openLicense(license),
-        testId: "post-menu-license",
-      });
-    }
-    return rows;
-  };
+  /** The shared rows (`ui2/post-menu.ts`), bound to this page's doors. */
+  const menuFor = (own: boolean, handle: string | null, license: License | null) =>
+    postMenuItems({
+      postId,
+      own,
+      handle,
+      license,
+      navigate: (href) => router.push(href),
+      openLicense,
+      openRemove: () => setRemoveOpen(true),
+      testIdPrefix: "post-menu",
+    });
 
   // The header rides every branch — a dead end (not found, transport
   // fault) is exactly where the back arrow matters most.
@@ -1059,7 +1011,7 @@ export function PostView({
           and the skeleton that holds the thread's place is not a thing a reader
           keeps. */}
       {header(
-        redacted ? null : postMenuItems(isOwnPost, post.author?.handle ?? null, post.license),
+        redacted ? null : menuFor(isOwnPost, post.author?.handle ?? null, post.license),
       )}
       {refreshing && (
         <p role="status" aria-live="polite" data-testid="post-refreshing">

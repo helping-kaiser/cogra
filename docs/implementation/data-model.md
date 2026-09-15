@@ -1125,13 +1125,14 @@ CREATE INDEX auth_refresh_tokens_user_idx
 
 -- Invite links: pure service-side staging UX (invitations.md §4).
 -- A link never authors anything and nothing here binds: the
--- inviter's approval is the priced act, and the stance values are
--- PRE-FILLED, not pre-committed — the inviter can adjust them at
--- approval. The link URL carries only the row id. Time-gated and,
--- at the inviter's choice, single-use (one applicant slot) or
--- multi-use (many applicants stage through the same link until
--- expiry — the queue scales, the vouching never does). Revocation
--- sets revoked_at.
+-- inviter's approval is the priced act, and the stance values it
+-- commits are chosen there, so no row here carries any. The link
+-- URL carries only the row id. Time-gated and single-use (one
+-- applicant slot) unless the inviter opens it to multi-use (many
+-- applicants stage through the same link until expiry — the queue
+-- scales, the vouching never does). Revocation sets revoked_at and
+-- stops new staging only: applications already staged stay
+-- approvable (auth.md "Invite-link generation").
 --
 -- inviter_id identifies the inviting actor (FK to actors) — the
 -- actual actor whose Opinion the approval commits, never a system
@@ -1139,9 +1140,7 @@ CREATE INDEX auth_refresh_tokens_user_idx
 CREATE TABLE auth_invite_links (
     id           UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     inviter_id   UUID         NOT NULL REFERENCES actors(id),
-    prefill_dim1 REAL         NOT NULL CHECK (prefill_dim1 BETWEEN -1.0 AND 1.0),
-    prefill_dim2 REAL         NOT NULL CHECK (prefill_dim2 BETWEEN -1.0 AND 1.0),
-    single_use   BOOLEAN      NOT NULL DEFAULT FALSE,
+    single_use   BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     expires_at   TIMESTAMPTZ  NOT NULL,
     revoked_at   TIMESTAMPTZ
@@ -1161,9 +1160,10 @@ CREATE INDEX auth_invite_links_inviter_idx
 -- The joiner's reciprocation is their own client-signed act after
 -- landing, not application state.
 --
--- expires_at is bounded by the link's expiry. An expired,
--- never-approved application stops being approvable but deletes
--- nothing — a fresh invite re-arms the account with a new row
+-- expires_at is bounded by the link's expiry. A closed,
+-- never-approved application — expired, or rejected by the
+-- inviter (rejected_at) — stops being approvable but deletes
+-- nothing: a fresh invite re-arms the account with a new row
 -- (applyWithInvite, api-spec.md). At most one live application
 -- per account is enforced at applyWithInvite, not by constraint —
 -- liveness is time-dependent. Never-verified accounts are deleted
@@ -1173,6 +1173,9 @@ CREATE TABLE auth_applications (
     account_id      UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     invite_link_id  UUID        NOT NULL REFERENCES auth_invite_links(id),
     approved_at     TIMESTAMPTZ,
+    -- The inviter's standalone close (auth.md "Rejection") — set
+    -- instead of approved_at, never by the link's revocation.
+    rejected_at     TIMESTAMPTZ,
     landed_at       TIMESTAMPTZ,
     -- Latched derived cache of an L1 fact: set when the record
     -- mirror confirms the joiner's reciprocal Opinion toward the

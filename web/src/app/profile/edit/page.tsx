@@ -31,13 +31,21 @@ import { firstRefusalMessage, mediaRefusalMessage } from "@/lib/ui/error-message
 import { TOO_BIG_PICTURE } from "@/lib/compose/pick";
 import { pictureTooBig } from "@/lib/ui2/media/caps";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
-import { bioProblem, displayNameProblem, websiteUrlProblem } from "@/lib/profile/caps";
+import {
+  BIO_MAX_CHARS,
+  DISPLAY_NAME_MAX_CHARS,
+  WEBSITE_URL_MAX_CHARS,
+  bioProblem,
+  displayNameProblem,
+  websiteUrlProblem,
+} from "@/lib/profile/caps";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useAuthPhase } from "@/lib/session/provider";
 import { useWriteSigner } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
 import { PageHeader } from "@/lib/ui/page-header";
 import { TransportError } from "@/lib/ui/transport-error";
+import { TextField } from "@/lib/ui2/text-field";
 import {
   PROFILE_RATIOS,
   ProfileMediaField,
@@ -174,9 +182,6 @@ export default function ProfileEditPage() {
     }
   };
 
-  const field =
-    "rounded-medium border border-outline bg-surface px-3 py-2 text-body-large text-on-surface";
-
   // The write side's own caps, mirrored so an over-length value never reaches
   // Save — a client stricter than the server would be the one failure a
   // mirrored cap must not have, so these read the exact same limits
@@ -207,57 +212,32 @@ export default function ProfileEditPage() {
             onChoice={setAvatar}
             testIdPrefix="profile-edit"
           />
-          <label className="flex flex-col gap-1 text-label-large">
-            Display name
-            <input
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              data-testid="profile-edit-display-name"
-              className={field}
-            />
-          </label>
-          {displayNameTooLong !== null && (
-            <p
-              role="alert"
-              data-testid="profile-edit-display-name-error"
-              className="text-body-small text-error"
-            >
-              {displayNameTooLong}
-            </p>
-          )}
-          <label className="flex flex-col gap-1 text-label-large">
-            Bio
-            <textarea
-              value={bio}
-              onChange={(event) => setBio(event.target.value)}
-              rows={4}
-              data-testid="profile-edit-bio"
-              className={field}
-            />
-          </label>
-          {bioTooLong !== null && (
-            <p role="alert" data-testid="profile-edit-bio-error" className="text-body-small text-error">
-              {bioTooLong}
-            </p>
-          )}
-          <label className="flex flex-col gap-1 text-label-large">
-            Website
-            <input
-              value={websiteUrl}
-              onChange={(event) => setWebsiteUrl(event.target.value)}
-              data-testid="profile-edit-website"
-              className={field}
-            />
-          </label>
-          {websiteUrlTooLong !== null && (
-            <p
-              role="alert"
-              data-testid="profile-edit-website-error"
-              className="text-body-small text-error"
-            >
-              {websiteUrlTooLong}
-            </p>
-          )}
+          <TextField
+            label="Display name"
+            value={displayName}
+            onChange={setDisplayName}
+            testId="profile-edit-display-name"
+            cap={DISPLAY_NAME_MAX_CHARS}
+            error={displayNameTooLong ?? undefined}
+          />
+          <TextField
+            label="Bio"
+            value={bio}
+            onChange={setBio}
+            multiline
+            rows={4}
+            testId="profile-edit-bio"
+            cap={BIO_MAX_CHARS}
+            error={bioTooLong ?? undefined}
+          />
+          <TextField
+            label="Website"
+            value={websiteUrl}
+            onChange={setWebsiteUrl}
+            testId="profile-edit-website"
+            cap={WEBSITE_URL_MAX_CHARS}
+            error={websiteUrlTooLong ?? undefined}
+          />
           {refusedMessage !== null && (
             <p role="alert" data-testid="profile-edit-refused" className="text-body-small text-error">
               {refusedMessage}
