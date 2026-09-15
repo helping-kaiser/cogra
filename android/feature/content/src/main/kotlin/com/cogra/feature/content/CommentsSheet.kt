@@ -95,6 +95,15 @@ fun CommentsSheetRoute(
     commentsReturn: CommentsReturn = CommentsReturn(),
     /** Marks the return consumed, so it cannot fire twice. */
     onReturnConsumed: () -> Unit = {},
+    /**
+     * THE SURFACE'S OWN RE-PULL, HANDED DOWN. The thread binds once per post
+     * ([CommentsViewModel.start] returns early on a second raise of the same
+     * one), which is what keeps a reader's unfolded branches across a trip to
+     * the composer — but it also meant a reader who pulled the surface to
+     * refresh raised the sheet on the page read before the pull. A bump here
+     * is the surface saying its own read is stale, so the thread re-reads too.
+     */
+    refreshToken: Int = 0,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
     viewModel: CommentsViewModel = hiltViewModel(),
 ) {
@@ -109,6 +118,11 @@ fun CommentsSheetRoute(
         if (commentsReturn.landed) {
             viewModel.onCommentLanded(commentsReturn.parentCommentId)
         }
+    }
+    // Zero is the token nobody pulled with, so the first composition does not
+    // read the thread a second time on top of `start`.
+    LaunchedEffect(refreshToken) {
+        if (refreshToken > 0) viewModel.refresh()
     }
     // The terms stand OUTSIDE the sheet's own window, as a sibling: a
     // modal sheet raised from inside another one would leave the thread
