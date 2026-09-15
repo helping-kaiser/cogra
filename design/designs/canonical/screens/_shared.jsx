@@ -730,6 +730,12 @@ function ProfileOwnBody({ tail = null }) {
             stancesOn={9}
             stancesTaken={14}
             own
+            /* AN APPLICATION IS WAITING (the invites round). @rafa's proofs
+               are both in and nobody but Sol can act on it, so the row that
+               opens the queue wears the bell's dot. It is the one way the
+               inviter learns without going looking — and the count, which
+               would turn a fact into an errand, waits in the list itself. */
+            invitesWaiting
             onEdit={() => {}}
             onInvites={() => {}}
             onAvatarChange={() => {}}
@@ -2316,6 +2322,18 @@ const CloseApplication = ({ handle }) => (
   </button>
 );
 
+/* ONE LINE OF A PAD'S NOTE. `VouchBackPad` drew it first and drew it alone;
+   the approval pad on the other side of the same handshake draws the identical
+   line, so it is written once here rather than twice on two boards that must
+   never disagree about what a pad's own voice looks like. */
+function PadLine({ children }) {
+  return (
+    <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+      {children}
+    </p>
+  );
+}
+
 /* THE PAD'S OWN LINES on the approval board. They are not one-time coaching
    the way `VouchBackPad`'s are: approving is rare, consequential and priced,
    and the two facts below are true every single time it happens. */
@@ -2369,8 +2387,21 @@ function InvitesBody({ approving = false }) {
     <>
       <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: "8px 0 0" }}>
+        {/* THE STANDING ENTRY POINT IS A NOUN, the empty state's action a verb
+            — the product's own split, kept: the bottom bar says `New post` and
+            the empty feed says `write the first post`. The sheet this opens is
+            titled `New invite` too, so the button and the surface it raises say
+            one thing; `Create invite` is the word for the act, and it belongs
+            on the button that performs it and on the empty state that has
+            nothing else to offer.
+
+            IT IS A FILLED BUTTON AND NOT A FLOATING ONE. This system has no
+            FAB — the bottom bar's compose action is the app's one floating
+            create, and this surface carries no bar — so the page's one
+            committing action stands in the column, at its head, where a long
+            queue can never bury it. */}
         <div style={{ padding: "0 16px" }}>
-          <Button style={{ width: "100%" }}>Create invite</Button>
+          <Button style={{ width: "100%" }}>New invite</Button>
         </div>
 
         <SectionLabel>Applications</SectionLabel>

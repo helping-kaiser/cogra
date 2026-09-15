@@ -1347,7 +1347,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 3709,
+      "h": 4172,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1743,6 +1743,69 @@
       "title": "Notifications · nothing yet",
       "x": 480,
       "y": 5264,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "Invites.dc.html",
+      "title": "Invites · waiting and live",
+      "x": 0,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "InvitesEmpty.dc.html",
+      "title": "Invites · none out yet",
+      "x": 480,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "InviteNew.dc.html",
+      "title": "Invites · a new link",
+      "x": 960,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "InviteExpiry.dc.html",
+      "title": "Invites · how long it lasts",
+      "x": 1440,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "InviteCreated.dc.html",
+      "title": "Invites · the link is ready",
+      "x": 1920,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ApprovePad.dc.html",
+      "title": "Invites · approving is vouching",
+      "x": 2400,
+      "y": 6328,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "RejectConfirm.dc.html",
+      "title": "Invites · closing an application",
+      "x": 2880,
+      "y": 6328,
       "w": 390,
       "h": 844,
       "page": "profile"

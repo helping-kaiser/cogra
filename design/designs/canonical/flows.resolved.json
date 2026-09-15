@@ -375,6 +375,38 @@
       ]
     },
     {
+      "name": "send-someone-an-invite",
+      "description": "Invites on your own profile makes a link — one person and seven days unless the reader says otherwise — and hands it straight to the platform's own share sheet.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 7 «Invites» → Invites — links out, people waiting, or both",
+        "Invites · 2 «New invite» → InviteNew — the create sheet — two decisions and a button",
+        "InviteNew · 3 «Create invite» → InviteCreated — the link exists — the same sheet, now holding it",
+        "end · InviteCreated · 2 «Share link» → os — the platform's own share sheet"
+      ],
+      "boards": [
+        "Profile",
+        "Invites",
+        "InviteNew",
+        "InviteCreated"
+      ]
+    },
+    {
+      "name": "vouch-an-applicant-in",
+      "description": "A ready application in the invites queue opens the stance pad on the applicant; Set signs the inviter's opinion, which is the approval and the vouch in one act.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 7 «Invites» → Invites — links out, people waiting, or both",
+        "Invites · 4 «an application ready for you» → ApprovePad — the pad blooms on them — approving is the vouch",
+        "end · ApprovePad · 4 «Set» → Invites — signed — the vouch lands, the row leaves the queue, and the approval notifies them"
+      ],
+      "boards": [
+        "Profile",
+        "Invites",
+        "ApprovePad"
+      ]
+    },
+    {
       "name": "restore-your-key",
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
       "status": "resolved",
@@ -1747,6 +1779,12 @@
       ],
       "endpoint": []
     },
+    "ApprovePad": {
+      "flows": [
+        "vouch-an-applicant-in"
+      ],
+      "endpoint": []
+    },
     "AvatarCrop": {
       "flows": [
         "edit-avatar-standalone",
@@ -2342,6 +2380,14 @@
       ],
       "endpoint": []
     },
+    "InviteCreated": {
+      "flows": [
+        "send-someone-an-invite"
+      ],
+      "endpoint": [
+        "send-someone-an-invite"
+      ]
+    },
     "InviteEntry": {
       "flows": [
         "guest-turns-applicant",
@@ -2349,6 +2395,21 @@
       ],
       "endpoint": [
         "join-with-an-invite"
+      ]
+    },
+    "InviteNew": {
+      "flows": [
+        "send-someone-an-invite"
+      ],
+      "endpoint": []
+    },
+    "Invites": {
+      "flows": [
+        "send-someone-an-invite",
+        "vouch-an-applicant-in"
+      ],
+      "endpoint": [
+        "vouch-an-applicant-in"
       ]
     },
     "Join": {
@@ -2480,12 +2541,16 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
-        "see-who-stands-with-someone"
+        "see-who-stands-with-someone",
+        "send-someone-an-invite",
+        "vouch-an-applicant-in"
       ],
       "endpoint": [
         "edit-avatar-standalone",
         "edit-avatar-via-edit-screen",
-        "edit-your-profile"
+        "edit-your-profile",
+        "send-someone-an-invite",
+        "vouch-an-applicant-in"
       ]
     },
     "ProfileApplicant": {
@@ -3061,7 +3126,6 @@
   "gapsOnFlows": [
     "ExploreSearch/5: the item's surface (not designed)",
     "ExploreSearch/8: the offer's surface (not designed)",
-    "Profile/7: the invites screen (not designed)",
     "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
     "Wallet/2: the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)",
     "Wallet/3: the settlement's public record view (not boarded — the traceability promise)",

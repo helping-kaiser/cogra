@@ -70,6 +70,31 @@ export function Screen() {
           trailing="1d"
           onOpen={() => {}}
         />
+        {/* THE EIGHTH KIND (the invites round, 2026-09-15): an application of
+            yours became approvable. It belongs to the set by the set's own
+            test — somebody else acted (the applicant attached their key, the
+            second of the two proofs) and the act reached something with an
+            owner, the invite that staged them. Nothing else can tell an
+            inviter this: a staged applicant who never gets approved is the
+            one failure mode the mechanic has, and it is entirely the
+            inviter's to notice.
+
+            IT WEARS THE MONOGRAM, not a picture, because there is no Profile
+            to carry one until the approval lands — the same rule the invites
+            list keeps for the same reason.
+
+            IT IS READ AND THE APPLICATION IS STILL WAITING, and that is not a
+            contradiction: the bell asks whether anything is new, and the
+            profile's Invites dot asks whether anybody is waiting. The second
+            outlives the first. */}
+        <ContentRow
+          variant="chronicle"
+          chevron={false}
+          name="rafa"
+          title="@rafa is ready for your approval"
+          trailing="2d"
+          onOpen={() => {}}
+        />
         <ContentRow
           variant="chronicle"
           chevron={false}
