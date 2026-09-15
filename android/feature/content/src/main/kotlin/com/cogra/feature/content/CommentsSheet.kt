@@ -2,6 +2,8 @@ package com.cogra.feature.content
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -496,6 +499,7 @@ private const val MAX_INDENT_DEPTH = 1
  * body, the soft "Edited" marker (design.md §9), the creator's edit
  * affordance, the reply affordance, and the branch behind its count.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CommentThread(
     comment: CommentView,
@@ -597,7 +601,19 @@ private fun CommentThread(
                     onOpenTopic = onOpenTopic,
                     testTagPrefix = "comment_${comment.id}",
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // ONE AFFORDANCE ROW, AS ON PostCard, SPREAD ACROSS THE CARD
+                // (`CommentCard.jsx`: `width: "100%"`,
+                // `justifyContent: "space-between"`, `flexWrap: "wrap"`,
+                // `columnGap: --space-2`, `rowGap: --space-1`). A fixed gap
+                // huddled the controls at the leading edge; wrapping is what
+                // keeps every one of them on its 48dp target when a comment
+                // grows one more.
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalArrangement = Arrangement.spacedBy(Space.x1),
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                ) {
                     // A comment carries the control too (design.md §6).
                     stanceControl(comment.id, "comment_${comment.id}")
                     if (signedIn == true) {

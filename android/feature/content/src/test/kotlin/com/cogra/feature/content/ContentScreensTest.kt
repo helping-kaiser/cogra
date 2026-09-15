@@ -2178,6 +2178,32 @@ class ContentScreensTest {
     }
 
     /**
+     * THE SHEET IS THE DOOR, NOT THE DESTINATION (`CograOverflowMenu`'s own
+     * rule). The opener remembers that it was raised (`rememberSaveable`), so
+     * a row that navigated with the sheet still standing left Back restoring
+     * the surface AND the sheet over it — a trap with no way out but a second
+     * Back. The row drops the sheet as it acts.
+     */
+    @Test
+    fun aTagRowDropsTheSheetOnItsWayOut() {
+        renderFeed(
+            FeedUiState(
+                loading = false,
+                posts = listOf(
+                    testPost("p1").copy(
+                        topics = listOf(testTopicClaim("photography", relevance = 0.4, confidence = 0.9)),
+                        references = listOf(testReferenceClaim(testMentionTarget("mira"))),
+                    ),
+                ),
+            ),
+        )
+        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("feed_post_p1_refs_sheet").assertExists()
+        compose.onNodeWithTag("feed_post_p1_refs_topic_photography").performClick()
+        compose.onNodeWithTag("feed_post_p1_refs_sheet").assertDoesNotExist()
+    }
+
+    /**
      * On the detail the WHOLE line is the opener, and a citation's pair keeps
      * a sign on both axes — the difference between the two families is what
      * the two shapes carry.
