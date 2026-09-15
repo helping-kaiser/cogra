@@ -52,7 +52,9 @@ import com.cogra.app.ui.CograBottomBar
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.LocalSnackbarHostState
+import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.v2.token.NavTransitions
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.TokenStore
 import com.cogra.feature.auth.LoginRoute
 import com.cogra.feature.auth.PasswordResetRoute
@@ -80,6 +82,7 @@ import com.cogra.feature.profile.ProfileRoute
 import com.cogra.feature.profile.avatar.AvatarFlowRoute
 import com.cogra.feature.settings.KeyExportRoute
 import com.cogra.feature.settings.SettingsRoute
+import com.cogra.feature.stance.StanceControlRoute
 import com.cogra.feature.topics.TopicRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -853,11 +856,34 @@ private fun CograNavGraphContent(
                 )
             }
             composable<Topic> { entry ->
+                val topic = entry.toRoute<Topic>().name
                 TopicRoute(
-                    name = entry.toRoute<Topic>().name,
+                    name = topic,
                     onOpenPost = { id -> navController.navigate(PostDetail(id)) },
                     onOpenActor = { handle -> navController.navigate(Profile(handle)) },
                     onBack = { navController.navigateUp() },
+                    // The page's one action, wired here because what a
+                    // signed-out tap does is the shell's to say — the
+                    // same guest gate the bar's slots raise. Nothing is
+                    // drawn while the auth state is unknown: the two
+                    // readings differ, and guessing puts the wrong
+                    // action on the tap for a frame.
+                    stanceControl = signedIn?.let { signed ->
+                        {
+                            StanceControlRoute(
+                                target = StanceTarget.Topic(topic),
+                                testTagPrefix = "topic_affinity",
+                                axes = StanceAxes.Affinity,
+                                // It NAMES WHAT IT STANCES, hash and all:
+                                // this page carries more than one stance
+                                // control and the accessible name is what
+                                // says which is which (`TagPage`).
+                                targetLabel = "#$topic",
+                                wide = true,
+                                onRequireAccount = { joinPrompt = true }.takeIf { !signed },
+                            )
+                        }
+                    },
                 )
             }
             composable<Profile> { entry ->

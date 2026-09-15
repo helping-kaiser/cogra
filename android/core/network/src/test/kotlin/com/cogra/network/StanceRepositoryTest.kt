@@ -11,6 +11,7 @@ import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.stance.StancePair
+import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingWriteRepository
@@ -34,9 +35,13 @@ class StanceRepositoryTest {
     private lateinit var client: ApolloClient
     private val tokenStore = FakeTokenStore()
 
+    /** The node-shaped target these tests use, spelled once. */
+    private fun node(id: String) = StanceTarget.Node(id)
+
     /** Records what the generic prepare was handed, verbatim. */
     private class RecordingWriteRepository : ThrowingWriteRepository() {
         var lastTarget: String? = null
+        var lastTopic: String? = null
         var lastPick: Pair<Double, Double>? = null
         var outcome: Outcome<List<PreparedWriteView>> = Outcome.Success(emptyList())
 
@@ -46,6 +51,16 @@ class StanceRepositoryTest {
             pInterest: Double,
         ): Outcome<List<PreparedWriteView>> {
             lastTarget = targetId
+            lastPick = pDirected to pInterest
+            return outcome
+        }
+
+        override suspend fun prepareTopicStance(
+            topicName: String,
+            pDirected: Double,
+            pInterest: Double,
+        ): Outcome<List<PreparedWriteView>> {
+            lastTopic = topicName
             lastPick = pDirected to pInterest
             return outcome
         }
@@ -122,11 +137,11 @@ class StanceRepositoryTest {
     fun `standing folds the bundle the backend reports`() = runTest {
         enqueue(answerJson("post", bundleJson(pDirected = 0.4, pInterest = -0.2, recordCount = 5)))
 
-        val outcome = repo().standing("t1")
+        val outcome = repo().standing(node("t1"))
 
         assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
         val standing = (outcome as Outcome.Success).value
-        assertThat(standing.target).isEqualTo("t1")
+        assertThat(standing.target).isEqualTo(node("t1"))
         assertThat(standing.net).isEqualTo(StancePair(0.4, -0.2))
         assertThat(standing.records).isEqualTo(5)
         assertThat(standing.includePending).isTrue()
@@ -151,7 +166,7 @@ class StanceRepositoryTest {
             ),
         )
 
-        val standing = (repo().standing("t1") as Outcome.Success).value
+        val standing = (repo().standing(node("t1")) as Outcome.Success).value
 
         assertThat(standing.net).isEqualTo(StancePair(1.0, -1.0))
         assertThat(standing.raw).isEqualTo(StancePair(6.0, -4.5))
@@ -172,7 +187,7 @@ class StanceRepositoryTest {
             ),
         )
 
-        val quote = (repo().severanceQuote("t1") as Outcome.Success).value
+        val quote = (repo().severanceQuote(node("t1")) as Outcome.Success).value
 
         assertThat(quote.raw).isEqualTo(StancePair(6.0, 4.5))
         assertThat(quote.records).isEqualTo(6)
@@ -186,8 +201,8 @@ class StanceRepositoryTest {
         enqueue(answerJson("user", bundleJson()))
         enqueue(answerJson("user", bundleJson()))
 
-        repo.standing("u1")
-        repo.standing("u1")
+        repo.standing(node("u1"))
+        repo.standing(node("u1"))
 
         assertThat(server.nextOperation()).isEqualTo("PostStance")
         assertThat(server.nextOperation()).isEqualTo("CommentStance")
@@ -204,8 +219,8 @@ class StanceRepositoryTest {
         enqueue(answerJson("comment", bundleJson()))
         enqueue(answerJson("comment", bundleJson()))
 
-        repo.standing("c1")
-        repo.standing("c1")
+        repo.standing(node("c1"))
+        repo.standing(node("c1"))
 
         assertThat(server.nextOperation()).isEqualTo("PostStance")
         assertThat(server.nextOperation()).isEqualTo("CommentStance")
@@ -221,7 +236,7 @@ class StanceRepositoryTest {
             ),
         )
 
-        val outcome = repo().projection("t1", StancePair(0.1, -0.5))
+        val outcome = repo().projection(node("t1"), StancePair(0.1, -0.5))
 
         val landing = (outcome as Outcome.Success).value
         assertThat(landing.pick).isEqualTo(StancePair(0.1, -0.5))
@@ -241,7 +256,7 @@ class StanceRepositoryTest {
             answerJson("post", bundleJson(projected = projectedJson(0.0, 0.6, severed = false))),
         )
 
-        val landing = (repo().projection("t1", StancePair(-0.4, 0.2)) as Outcome.Success).value
+        val landing = (repo().projection(node("t1"), StancePair(-0.4, 0.2)) as Outcome.Success).value
 
         assertThat(landing.inertDirected).isTrue()
         assertThat(landing.inertInterest).isFalse()
@@ -254,7 +269,7 @@ class StanceRepositoryTest {
             answerJson("post", bundleJson(projected = projectedJson(0.0, 0.0, severed = true))),
         )
 
-        val landing = (repo().projection("t1", StancePair(-0.4, -0.2)) as Outcome.Success).value
+        val landing = (repo().projection(node("t1"), StancePair(-0.4, -0.2)) as Outcome.Success).value
 
         assertThat(landing.inertDirected).isTrue()
         assertThat(landing.inertInterest).isTrue()
@@ -265,7 +280,7 @@ class StanceRepositoryTest {
     fun `a bundle that answers a pick without a projection is a server fault`() = runTest {
         enqueue(answerJson("post", bundleJson(projected = null)))
 
-        val outcome = repo().projection("t1", StancePair(0.1, 0.1))
+        val outcome = repo().projection(node("t1"), StancePair(0.1, 0.1))
 
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
     }
@@ -279,9 +294,9 @@ class StanceRepositoryTest {
             ),
         )
 
-        val quote = (repo().severanceQuote("t1") as Outcome.Success).value
+        val quote = (repo().severanceQuote(node("t1")) as Outcome.Success).value
 
-        assertThat(quote.target).isEqualTo("t1")
+        assertThat(quote.target).isEqualTo(node("t1"))
         assertThat(quote.standing).isEqualTo(StancePair(0.7, 0.3))
         assertThat(quote.records).isEqualTo(4)
         assertThat(quote.alreadySevered).isFalse()
@@ -296,7 +311,7 @@ class StanceRepositoryTest {
             ),
         )
 
-        val quote = (repo().severanceQuote("t1") as Outcome.Success).value
+        val quote = (repo().severanceQuote(node("t1")) as Outcome.Success).value
 
         assertThat(quote.alreadySevered).isTrue()
         assertThat(quote.records).isEqualTo(0)
@@ -308,7 +323,7 @@ class StanceRepositoryTest {
         enqueue(missJson("comment"))
         enqueue(missJson("user"))
 
-        val outcome = repo().standing("ghost")
+        val outcome = repo().standing(node("ghost"))
 
         assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)
         assertThat((outcome as Outcome.Refused).errors.single().code).isEqualTo(ErrorCode.NOT_FOUND)
@@ -325,9 +340,9 @@ class StanceRepositoryTest {
         enqueue(missJson("post"))
         enqueue(answerJson("comment", bundleJson()))
 
-        repo.standing("t1")
-        repo.standing("t1")
-        repo.standing("t1")
+        repo.standing(node("t1"))
+        repo.standing(node("t1"))
+        repo.standing(node("t1"))
 
         repeat(3) { server.nextOperation() }
         assertThat(server.nextOperation()).isEqualTo("CommentStance")
@@ -337,7 +352,7 @@ class StanceRepositoryTest {
     fun `a node with no bundle behind it is an unauthenticated refusal`() = runTest {
         enqueue(answerJson("post", null))
 
-        val outcome = repo().standing("t1")
+        val outcome = repo().standing(node("t1"))
 
         assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)
         assertThat((outcome as Outcome.Refused).errors.single().code)
@@ -348,7 +363,7 @@ class StanceRepositoryTest {
     fun `the L1 view rides the wire when the reader asks for it`() = runTest {
         enqueue(answerJson("post", bundleJson()))
 
-        val standing = (repo().standing("t1", includePending = false) as Outcome.Success).value
+        val standing = (repo().standing(node("t1"), includePending = false) as Outcome.Success).value
 
         assertThat(standing.includePending).isFalse()
         assertThat(server.takeRequest().body.readUtf8()).contains("\"includePending\":false")
@@ -369,7 +384,7 @@ class StanceRepositoryTest {
             """.trimIndent(),
         )
 
-        val staged = (repo().prepareSeverance("t1") as Outcome.Success).value
+        val staged = (repo().prepareSeverance(node("t1")) as Outcome.Success).value
 
         assertThat(staged.map { it.id }).containsExactly("w1", "w2", "w3").inOrder()
         assertThat(staged.map { it.family }).containsExactly(Family.OPINION, Family.OPINION, Family.OPINION)
@@ -386,7 +401,7 @@ class StanceRepositoryTest {
             """.trimIndent(),
         )
 
-        val outcome = repo().prepareSeverance("t1")
+        val outcome = repo().prepareSeverance(node("t1"))
 
         assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)
         assertThat((outcome as Outcome.Refused).errors.single().code).isEqualTo(ErrorCode.BAD_INPUT)
@@ -398,9 +413,9 @@ class StanceRepositoryTest {
         // delta against the standing the reads just reported.
         enqueue(answerJson("post", bundleJson(pDirected = 0.8, pInterest = 0.8)))
         val repo = repo()
-        repo.standing("t1")
+        repo.standing(node("t1"))
 
-        repo.prepareStance("t1", StancePair(-0.3, 0.2))
+        repo.prepareStance(node("t1"), StancePair(-0.3, 0.2))
 
         assertThat(writes.lastTarget).isEqualTo("t1")
         assertThat(writes.lastPick).isEqualTo(-0.3 to 0.2)
