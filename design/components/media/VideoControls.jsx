@@ -46,7 +46,9 @@ import { Icon } from "../navigation/Icon.jsx";
    No settings gear, no speed menu, no cast: everything else a player usually
    grows is chrome this product has no use for. */
 
-/* The inset that keeps the bar clear of the system gesture zone. */
+/* The inset that keeps the bar clear of the system gesture zone. What it is
+   measured from on a real device is the readme's, under *the viewer-grammar
+   close*. */
 export const GESTURE_ZONE = 16;
 
 const TIME = {

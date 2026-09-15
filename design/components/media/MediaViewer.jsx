@@ -164,7 +164,8 @@ export function MediaViewer({
       </div>
       {dots}
       {/* The way out. Top-left, over the frame: the chrome belongs to the
-          surface, not to the picture. */}
+          surface, not to the picture. What it is offset from on a real device
+          is the readme's, under *the viewer-grammar close*. */}
       <div
         style={{
           position: "absolute",
