@@ -49,6 +49,7 @@ import com.cogra.core.designsystem.v2.atom.CograBandChats
 import com.cogra.core.designsystem.v2.atom.CograBandIdentity
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.PostView
 import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.isRevealed
@@ -81,6 +82,15 @@ fun FeedRoute(
     expiredLabel: String? = null,
     onExpiredDismissed: () -> Unit = {},
     onOpenDraft: () -> Unit = {},
+    /**
+     * The viewer's account id, for the card's ⋮ — it gates the creator's rows
+     * against the reader's, the way the detail's own menu does.
+     */
+    viewerId: String? = null,
+    /** The ⋮'s Edit and Mark-as-sensitive rows, both doors into the edit flow. */
+    onEditPost: (String) -> Unit = {},
+    /** The ⋮'s Cite row — the composer, with the post staged. */
+    onCitePost: (String) -> Unit = {},
     viewModel: FeedViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -105,6 +115,9 @@ fun FeedRoute(
         keyBanner = keyBanner,
         borrowedViewBand = borrowedViewBand,
         banners = banners,
+        viewerId = viewerId,
+        onEditPost = onEditPost,
+        onCitePost = onCitePost,
         stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
     )
 }
@@ -127,6 +140,10 @@ fun FeedScreen(
     expiredLabel: String? = null,
     onExpiredDismissed: () -> Unit = {},
     onOpenDraft: () -> Unit = {},
+    /** The viewer's account id; picks the card ⋮'s own-post rows. */
+    viewerId: String? = null,
+    onEditPost: (String) -> Unit = {},
+    onCitePost: (String) -> Unit = {},
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit = { _, _ -> },
     /**
@@ -278,6 +295,9 @@ fun FeedScreen(
                                     onOpenActor = onOpenActor,
                                     onOpenTopic = onOpenTopic,
                                     onShare = onShare,
+                                    viewerId = viewerId,
+                                    onEdit = onEditPost,
+                                    onCite = onCitePost,
                                     revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
                                     onReveal = { onReveal(post.id, post.sensitiveMark()) },
                                     stanceControl = stanceControl,
@@ -417,10 +437,21 @@ private fun PostCard(
     onOpenTopic: (String) -> Unit,
     /** The platform's own share sheet, for this post. */
     onShare: (String) -> Unit,
+    /** The viewer's account id; picks the own-post rows over the reader's. */
+    viewerId: String?,
+    /** The ⋮'s Edit and Mark-as-sensitive rows, both doors into the edit flow. */
+    onEdit: (String) -> Unit,
+    /** The ⋮'s Cite row — the composer, with this post staged. */
+    onCite: (String) -> Unit,
     revealed: Boolean,
     onReveal: () -> Unit,
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
 ) {
+    // THE SHEETS THE ⋮'s ROWS OPEN RIDE THE CARD, the way the refs sheet
+    // already does: a feed is a list of cards and the terms a reader asked
+    // for belong to the one they asked from.
+    var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
+    var removeOpen by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -433,11 +464,32 @@ private fun PostCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+            // A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is
+            // nothing of it to edit, cite or license, so the ⋮ goes wholesale
+            // rather than a row at a time. An empty list draws no trigger.
+            val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
             ContentCardHeader(
                 author = post.author,
                 at = post.createdAt,
                 onOpenActor = onOpenActor,
                 testTagPrefix = "feed_${post.id}",
+                menu = if (removed) {
+                    emptyList()
+                } else {
+                    postMenuRows(
+                        own = viewerId != null && post.author?.id == viewerId,
+                        handle = post.author?.handle,
+                        license = post.license,
+                        onEdit = { onEdit(post.id) },
+                        onCite = { onCite(post.id) },
+                        onRemove = { removeOpen = true },
+                        onLicense = { licenseShown = post.license },
+                        // The rows sit under the trigger's own tag, which
+                        // `ContentCardHeader` derives the same way.
+                        testTagPrefix = "feed_${post.id}_menu",
+                    )
+                },
+                menuContentDescription = stringResource(R.string.content_menu_post),
             )
             SummaryTitle(post)
             PostBody(
@@ -481,6 +533,17 @@ private fun PostCard(
                 stanceControl(post.id, "feed_post_${post.id}")
             }
         }
+    }
+    licenseShown?.let { license ->
+        LicenseSheet(license = license, onDismiss = { licenseShown = null })
+    }
+    // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
+    // slice 8's, whole, so Remove closes the dialog and changes nothing.
+    if (removeOpen) {
+        RemoveConfirm(
+            onDismiss = { removeOpen = false },
+            onRemove = { removeOpen = false },
+        )
     }
 }
 
