@@ -1398,21 +1398,18 @@
 
     { "from": "ViewerPicture", "via": 1, "kind": "back", "label": "close the viewer (X)", "to": [{ "terminal": "back", "case": "the X, or a swipe down" }] },
     { "from": "ViewerPicture", "via": 2, "kind": "detour", "label": "the viewer's pager", "to": [{ "terminal": "self", "case": "swipe — the same set the card pages, the dots reading position" }] },
-    { "from": "ViewerPicture", "via": 3, "kind": "back", "label": "backdrop", "to": [{ "terminal": "back", "case": "a tap outside the frame closes it" }] },
 
     { "from": "ViewerVideo", "via": 1, "kind": "back", "label": "close the viewer (X)", "to": [{ "terminal": "back", "case": "the X, or a swipe down" }] },
     { "from": "ViewerVideo", "via": 2, "kind": "advance", "label": "play/pause", "to": [{ "terminal": "self", "case": "the clip stops and starts where it is" }] },
     { "from": "ViewerVideo", "via": 3, "kind": "advance", "label": "seek line", "to": [{ "terminal": "self", "case": "tap or drag — the clip moves under the finger" }] },
     { "from": "ViewerVideo", "via": 4, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "the sticky decision every video shares" }] },
-    { "from": "ViewerVideo", "via": 5, "kind": "back", "label": "backdrop", "to": [{ "terminal": "back", "case": "a tap outside the frame closes it" }] },
-    { "from": "ViewerVideo", "via": 6, "kind": "advance", "label": "skip ten seconds", "to": [{ "terminal": "self", "case": "back or forward, the clip stays where it is drawn" }] },
+    { "from": "ViewerVideo", "via": 5, "kind": "advance", "label": "skip ten seconds", "to": [{ "terminal": "self", "case": "back or forward, the clip stays where it is drawn" }] },
 
     { "from": "ViewerLandscape", "via": 1, "kind": "back", "label": "close the viewer (X)", "to": [{ "terminal": "back", "case": "the X, or a swipe down" }] },
     { "from": "ViewerLandscape", "via": 2, "kind": "advance", "label": "play/pause", "to": [{ "terminal": "self", "case": "the clip stops and starts where it is" }] },
     { "from": "ViewerLandscape", "via": 3, "kind": "advance", "label": "seek line", "to": [{ "terminal": "self", "case": "tap or drag — the clip moves under the finger" }] },
     { "from": "ViewerLandscape", "via": 4, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "the sticky decision every video shares" }] },
-    { "from": "ViewerLandscape", "via": 5, "kind": "back", "label": "backdrop", "to": [{ "terminal": "back", "case": "a tap outside the frame closes it" }] },
-    { "from": "ViewerLandscape", "via": 6, "kind": "advance", "label": "skip ten seconds", "to": [{ "terminal": "self", "case": "back or forward, the clip stays where it is drawn" }] },
+    { "from": "ViewerLandscape", "via": 5, "kind": "advance", "label": "skip ten seconds", "to": [{ "terminal": "self", "case": "back or forward, the clip stays where it is drawn" }] },
 
     { "from": "ComposePickedErrors", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },
     { "from": "ComposePickedErrors", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept, no confirmation" }] },

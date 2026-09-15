@@ -977,11 +977,12 @@ sides. The layout never decides the author's crop. The bars stay plain
 invents image where there is none.
 
 **Tapping media in the detail view opens it full-size** (`MediaViewer`) —
-contain, as large as the screen allows, backed out of with `arrow_back`,
-Escape, or the backdrop, and the route never changes. In the feed the
-same tap opens the post: a reader scrolling is choosing between posts,
-not looking at one picture. A video takes real controls in the viewer,
-where the reader is deliberately watching; in a tile it has only sound.
+contain, as large as the screen allows, backed out of with the X, a
+swipe down, or back but never by a tap, and the route never changes. In
+the feed the same tap opens the post: a reader scrolling is choosing
+between posts, not looking at one picture. A video takes real controls
+in the viewer, where the reader is deliberately watching; in a tile it
+has only sound.
 
 **A tap anywhere meaningless on a post opens its detail view** — title,
 media or body, description (still clamped), the affordances, then the

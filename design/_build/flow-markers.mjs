@@ -1028,25 +1028,22 @@ Object.assign(FLOW_MARKERS, {
   ViewerPicture: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },
     { n: 2, find: 'class="cg-viewer-stage"', tag: "div" },
-    { n: 3, find: 'role="dialog"', tag: "div" },
   ],
   ViewerVideo: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },
     { n: 2, find: 'aria-label="Pause"', tag: "button" },
     { n: 3, find: 'aria-label="Seek"', tag: "div" },
     { n: 4, find: 'aria-label="Turn sound on"', tag: "button" },
-    { n: 5, find: 'role="dialog"', tag: "div" },
-    { n: 6, find: 'aria-label="Back ten seconds"', tag: "button" },
-    { n: 6, find: 'aria-label="Forward ten seconds"', tag: "button" },
+    { n: 5, find: 'aria-label="Back ten seconds"', tag: "button" },
+    { n: 5, find: 'aria-label="Forward ten seconds"', tag: "button" },
   ],
   ViewerLandscape: [
     { n: 1, find: 'aria-label="Close"', tag: "button" },
     { n: 2, find: 'aria-label="Pause"', tag: "button" },
     { n: 3, find: 'aria-label="Seek"', tag: "div" },
     { n: 4, find: 'aria-label="Turn sound on"', tag: "button" },
-    { n: 5, find: 'role="dialog"', tag: "div" },
-    { n: 6, find: 'aria-label="Back ten seconds"', tag: "button" },
-    { n: 6, find: 'aria-label="Forward ten seconds"', tag: "button" },
+    { n: 5, find: 'aria-label="Back ten seconds"', tag: "button" },
+    { n: 5, find: 'aria-label="Forward ten seconds"', tag: "button" },
   ],
 });
 
