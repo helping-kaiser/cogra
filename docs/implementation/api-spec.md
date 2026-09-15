@@ -4227,9 +4227,10 @@ input UploadKeyBackupInput {
 type UploadKeyBackupPayload { ok: Boolean }
 
 "Issue a time-gated invite link. It carries no stance values —
- the inviter picks those at approval, the priced act. An expiry
- under 24 hours can strand a registrant mid-verification, whose
- own account expires on that clock (auth.md \"Expiry\")."
+ the inviter picks those at approval, the priced act. Keep
+ expiresAt at or above the 24-hour verification window, which a
+ shorter link can strand a registrant inside (auth.md \"Expiry
+ floor\")."
 input CreateInviteLinkInput {
   expiresAt: DateTime!
   "One applicant slot when true; many applicants otherwise.
