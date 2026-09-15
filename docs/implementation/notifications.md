@@ -47,7 +47,7 @@ Out of scope:
 
 ## What notifies
 
-Eight kinds. Each is a landed act by **another actor** whose
+Eight kinds. Each is a completed act by **another actor** whose
 target is the viewer's own content, profile, or application.
 
 | Kind | The act behind it | Actor | Opening the row lands on |
@@ -61,12 +61,11 @@ target is the viewer's own content, profile, or application.
 | **Invite landed** | a **Registration** landing an account that applied through one of the viewer's invite links ([invitations.md](../primitive/invitations.md)) | the account that landed | the new member's profile |
 | **Application approved** | the inviter's priced approval of the viewer's own application ([auth.md "Approval and landing"](auth.md#approval-and-landing)) | the inviter | the inviter's profile — who vouched, and where the reciprocation the landing prompts is made |
 
-The approvable kind fires at approvability rather than at
-staging, which is the moment the act becomes the viewer's: before
-both proofs are in, the inviter has nothing they could do with
-the row, and a second row per applicant would report the
-application's schema instead of an event ("One act, one row"
-below).
+The approvable kind fires at approvability, not at staging: that
+is the moment the act becomes the viewer's to answer. Before both
+proofs are in the inviter has nothing they could do with the row,
+and a second row per applicant would report the application's
+schema instead of an event ("One act, one row" below).
 
 Two properties hold across all eight and are what make the set a
 set rather than a list of features:

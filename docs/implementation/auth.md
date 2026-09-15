@@ -284,10 +284,10 @@ values: the inviter chooses them at approval, which is the priced
 act. Links are single-use (one applicant slot) unless the inviter
 opens them to multi-use (many applicants until expiry).
 
-**Expiry is the inviter's choice, with a floor worth respecting.**
-A link shorter than 24 hours can strand a registrant who is still
-verifying, since their own account expires on that clock
-("Expiry" below) — clients keep their presets at or above it.
+**Expiry floor.** A link shorter than 24 hours can strand a
+registrant who is still verifying, since their own account expires
+on that clock ("Expiry" below) — so clients keep their presets at
+or above it.
 
 **Revocation stops new staging only.** Revoking a link sets
 `revoked_at`: no further applicant can register through it, and
