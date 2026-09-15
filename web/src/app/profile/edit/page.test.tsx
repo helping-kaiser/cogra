@@ -203,6 +203,101 @@ describe("ProfileEditPage", () => {
     });
   });
 
+  // The three fields now draw through the ruled TextField atom
+  // (web/src/lib/ui2/text-field.tsx), so they carry its late counter and
+  // over-cap refusal exactly as any other capped field does — caps read
+  // from lib/profile/caps.ts, the write side's own limits.
+  describe("the ruled field caps", () => {
+    it("shows the late counter as display name nears its cap", async () => {
+      server.use(myProfileHandler());
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+      const name = await screen.findByTestId("profile-edit-display-name");
+      // Cap 50, window max(20, 5) = 20 -> counter appears at 30 chars.
+      fireEvent.change(name, { target: { value: "a".repeat(30) } });
+      expect(await screen.findByText("20 left")).toBeInTheDocument();
+    });
+
+    it("goes over the display name cap: refuses and disables Save", async () => {
+      server.use(myProfileHandler());
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+      const name = await screen.findByTestId("profile-edit-display-name");
+      fireEvent.change(name, { target: { value: "a".repeat(51) } });
+      expect(await screen.findByText("1 over")).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toHaveTextContent("Too long — at most 50 characters.");
+      expect(screen.getByTestId("profile-edit-save")).toBeDisabled();
+    });
+
+    it("shows the late counter as bio nears its cap", async () => {
+      server.use(myProfileHandler());
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+      const bio = await screen.findByTestId("profile-edit-bio");
+      // Cap 500, window max(20, 50) = 50 -> counter appears at 450 chars.
+      fireEvent.change(bio, { target: { value: "a".repeat(450) } });
+      expect(await screen.findByText("50 left")).toBeInTheDocument();
+    });
+
+    it("goes over the bio cap: refuses and disables Save", async () => {
+      server.use(myProfileHandler());
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+      const bio = await screen.findByTestId("profile-edit-bio");
+      fireEvent.change(bio, { target: { value: "a".repeat(501) } });
+      expect(await screen.findByText("1 over")).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toHaveTextContent("Too long — at most 500 characters.");
+      expect(screen.getByTestId("profile-edit-save")).toBeDisabled();
+    });
+
+    it("shows the late counter as the website URL nears its cap", async () => {
+      server.use(myProfileHandler());
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+      const website = await screen.findByTestId("profile-edit-website");
+      // Cap 2048, window max(20, 205) = 205 -> counter appears at 1843 chars.
+      fireEvent.change(website, { target: { value: "a".repeat(1843) } });
+      expect(await screen.findByText("205 left")).toBeInTheDocument();
+    });
+
+    it("goes over the website URL cap: refuses and disables Save", async () => {
+      server.use(myProfileHandler());
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+      const website = await screen.findByTestId("profile-edit-website");
+      fireEvent.change(website, { target: { value: "a".repeat(2049) } });
+      expect(await screen.findByText("1 over")).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toHaveTextContent("Too long — at most 2048 characters.");
+      expect(screen.getByTestId("profile-edit-save")).toBeDisabled();
+    });
+
+    it("never truncates: typing past a cap keeps the full value reachable", async () => {
+      server.use(myProfileHandler());
+      renderWithProviders(<ProfileEditPage />, {
+        store: signedInStore(),
+        writeSigner: fakeWriteSigner(),
+      });
+      const name = (await screen.findByTestId(
+        "profile-edit-display-name",
+      )) as HTMLInputElement;
+      fireEvent.change(name, { target: { value: "a".repeat(60) } });
+      expect(name.value).toHaveLength(60);
+      expect(name).not.toHaveAttribute("maxLength");
+    });
+  });
+
   it("surfaces a refused prepare without navigating", async () => {
     server.use(
       myProfileHandler(),

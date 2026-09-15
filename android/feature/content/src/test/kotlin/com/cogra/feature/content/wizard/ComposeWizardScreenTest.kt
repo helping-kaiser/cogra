@@ -744,9 +744,10 @@ class ComposeWizardScreenTest {
         // The name it stopped saying is not said anywhere on the seal.
         compose.onNodeWithText("@ada").assertDoesNotExist()
         // No chevron and no trailing word: the label on the gesture is what
-        // says the line is a door at all.
+        // says the line is a door at all, count folded in — "Manage the N
+        // citations", and at one "Manage the 1 citation" (copy-voice.md:409-419).
         assertThat(door.fetchSemanticsNode().config[SemanticsActions.OnClick].label)
-            .isEqualTo("Manage the citations")
+            .isEqualTo("Manage the 2 citations")
 
         door.performClick()
         assertThat(sheets).containsExactly(SealSheet.Cited)
