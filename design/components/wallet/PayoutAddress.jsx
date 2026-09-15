@@ -49,9 +49,19 @@ export function PayoutAddressRow({ address, onOpen }) {
    and Change as real affordances, the address whole inside. Mono, wrapped,
    never truncated: checking it against a wallet is the point of showing it.
    The address is the Registration guild-key field — public, actor-attributed;
-   changing it is a signed act and every earlier address stays witnessed. */
+   changing it is a signed act and every earlier address stays witnessed.
 
-export function PayoutAddress({ address, label = "Payouts land at", onCopy, onChange, changeLabel = "Change", caption }) {
+   IT IS THE HOUSE'S LONG-OPAQUE-STRING CARD (the invites round, 2026-09-15).
+   The invite link wants exactly this and nothing else: a string no reader can
+   check by eye, held whole rather than truncated, with a copy control and one
+   inline act beside its name. Every part of the anatomy that could be
+   wallet-specific was already a prop — `label`, `caption`, `changeLabel` — and
+   the one that was not is now `copyLabel`, because a button announcing "Copy
+   the address" over an invite link is the drawing lying to the only reader who
+   depends on it. The default keeps the wallet's own word, so nothing there
+   moves; a second kind of string passes its own. */
+
+export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", caption }) {
   return (
     <div
       style={{
@@ -79,7 +89,7 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, onCh
         {onCopy && (
           <button
             type="button"
-            aria-label="Copy the address"
+            aria-label={copyLabel}
             onClick={onCopy}
             className="cg-state cg-focus cg-hit"
             style={{
