@@ -74,10 +74,10 @@ export function Screen() {
             yours became approvable. It belongs to the set by the set's own
             test — somebody else acted (the applicant attached their key, the
             second of the two proofs) and the act reached something with an
-            owner, the invite that staged them. Nothing else can tell an
-            inviter this: a staged applicant who never gets approved is the
-            one failure mode the mechanic has, and it is entirely the
-            inviter's to notice.
+            owner, the invite that staged them. Nothing else can tell the
+            link's issuer this: a staged applicant who never gets approved is
+            the one failure mode the mechanic has, and it is entirely theirs
+            to notice.
 
             IT WEARS THE MONOGRAM, not a picture, because there is no Profile
             to carry one until the approval lands — the same rule the invites
@@ -120,8 +120,8 @@ export function Screen() {
           trailing="12d"
           onOpen={() => {}}
         />
-        {/* THE NINTH KIND (the invites round's extension, 2026-09-15): an
-            inviter closed an application of yours. It is the eighth's twin and
+        {/* THE NINTH KIND (the invites round's extension, 2026-09-15): a
+            member closed an application of yours. It is the eighth's twin and
             had to be drawn beside it — a mechanic that notifies a yes and says
             nothing about a no leaves the applicant waiting on a thing that has
             already stopped happening, which is the one cruelty this flow can

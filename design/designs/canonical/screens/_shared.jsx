@@ -773,7 +773,7 @@ function ProfileOwnBody({ tail = null }) {
             /* AN APPLICATION IS WAITING (the invites round). @rafa's proofs
                are both in and nobody but Sol can act on it, so the row that
                opens the queue wears the bell's dot. It is the one way the
-               inviter learns without going looking — and the count, which
+               queue's owner learns without going looking — and the count, which
                would turn a fact into an errand, waits in the list itself. */
             invitesWaiting
             onEdit={() => {}}
@@ -2467,10 +2467,10 @@ function PadLine({ children }) {
    consequential and priced, and the two facts below are true every single time
    it happens.
 
-   IT TAKES THE HANDLE because the same pad now opens from two places — the
-   inviter's own queue, and an ask link a stranger to that queue sent — and the
+   IT TAKES THE HANDLE because the same pad now opens from two places — a
+   queue of one's own, and an ask link a stranger to that queue sent — and the
    act is identical from both. One note, two boards: the member who answers an
-   ask link is doing exactly what the inviter would have done. */
+   ask link is doing exactly what the queue's own reader would have done. */
 function ApprovePadNote({ handle }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>

@@ -1,11 +1,19 @@
 /* APPROVING IS VOUCHING — the pad, parked open on an applicant.
 
    THIS IS THE OTHER SIDE OF `VouchBackPad`. The handshake has two halves and
-   the product now draws both: the joiner's first opinion toward their inviter,
-   and the inviter's first opinion toward them. Same master, same anatomy, same
-   low defaults — because it is the same act, and drawing the inviter's half as
-   a button labelled "Approve" would hide a signed, priced stance behind a word
+   the product now draws both: an approver's first opinion toward the joiner,
+   and the joiner's first opinion back. Same master, same anatomy, same low
+   defaults — because it is the same act, and drawing the approver's half as a
+   button labelled "Approve" would hide a signed, priced stance behind a word
    that sounds like moderation.
+
+   THE WORD IS APPROVER, AND IT IS NOT "INVITER" (the approver sweep,
+   2026-09-15). Whoever signs here may be the member who issued the link, and
+   usually is — but nothing makes them so: `invitations.md` §2 fixes the
+   inviter at the JOINER's own back-edge, which is the half `VouchBackPad`
+   draws and this pad precedes. A pad calling its reader the inviter would
+   name a relationship this act has not created yet, and `VouchAsk` opens this
+   very pad for a member who issued no link at all.
 
    THERE IS NO PREFILL TO LOAD. The link used to carry suggested values for
    exactly this moment; the ruling took them out of the mechanic. What the pad

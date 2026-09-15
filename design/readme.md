@@ -4033,7 +4033,7 @@ drew against it. Ruled by jakob the same day.
 - **Guests have no bell; applicants do.** Nothing can be addressed to an
   account that does not exist, so `Main`, `FeedBare`, `GuestGate` and
   `WalletGuest` opt out. An applicant is an addressee already — the
-  approval and the inviter's opinion both land on them — so the
+  approval and the approver's opinion both land on them — so the
   applicant boards carry it.
 - **A dot, never a count (jakob).** `--primary` at 8px, ringed in the
   surface, pinned to the glyph's top-right in `ContentRow`'s own badge
@@ -4499,8 +4499,8 @@ needs.
 
 - **What the ceremony is ABOUT is the borrowed view ending.** A feed
   is ranked from the viewer's own outgoing opinions; until the
-  vouch-back the new member had none and browsed from their inviter's
-  vantage. The signature is the moment their own view begins — that,
+  vouch-back the new member had none and browsed from the vantage of
+  the link they came through. The signature is the moment their own view begins — that,
   not a milestone badge, is the thing worth marking, and it lets the
   copy stay concrete while the headline carries the metaphor.
 - **The sky is `SkyField`'s vocabulary, not a new drawing.** The
@@ -5222,7 +5222,7 @@ inherited. Ruled by jakob the same day.
   the only way this mechanic can hurt someone.
 - **Approving IS the vouch (jakob), so approving happens on the pad.**
   The row opens `StanceControl`, parked open at the standing default,
-  and `Set` signs the inviter's Opinion toward the new Profile. A button
+  and `Set` signs the approver's Opinion toward the new Profile. A button
   labelled "Approve" would have hidden a signed, priced stance behind a
   word that sounds like moderation. `ApprovePad` is `VouchBackPad`
   mirrored: the handshake has two halves and the tree now draws both,
@@ -5232,7 +5232,7 @@ inherited. Ruled by jakob the same day.
   toward this person by anyone, because their Profile did not exist
   until this act made it possible.
 - **The prefill is gone from the whole mechanic (jakob).** A link used
-  to carry suggested stance values for the inviter's eventual Opinion.
+  to carry suggested stance values for the issuer's eventual Opinion.
   It asked for a number at the moment the reader knows least, about
   somebody who did not exist yet, and the answer was re-asked at
   approval anyway. The opinion is picked once, on the pad, when there is
@@ -5424,6 +5424,20 @@ inherited. Ruled by jakob the same day.
   Reel's accessible name changes with it and copy-voice states it once.
   The sweep found no third spelling: `DetailHeader`, `Removed` and both
   shipped apps were already drawing it this way.
+- **A surface names the approver, never the role "inviter" (jakob):**
+  "yeah sweep — the other version where you can choose your inviter is a
+  super corner case that will probabely never happen." `invitations.md`
+  §2 fixes the inviter at the JOINER's own back-edge, so an applicant
+  has no inviter yet — only a member whose approval is waited on. The
+  prose says whose: `All set — waiting on @mira` over `Their approval
+  brings you in`, `Waiting on @mira` on the profile card, the approver's
+  act in copy-voice and on `ApprovePad`, whose reader may have issued no
+  link at all — which is what `VouchAsk` proves. The rule is about the
+  WORDS: where one member issues the link and approves through it, which
+  is the ordinary case, the fixtures rightly show one person. §2's
+  freedom to reciprocate anyone stands, and stays off the screen — no
+  surface offers a choice of inviter, because no reader is asked to make
+  one.
 - **The gate**: 194 → **203 boards**, 1461 → **1511 edges**, gaps 14 →
   **13** and flows 63 → **66 declared · 64 resolved**, the two blocked
   ones unchanged. The gap count falls because `Profile/7` closed and no
