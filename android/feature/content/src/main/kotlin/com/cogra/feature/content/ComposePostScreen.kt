@@ -20,6 +20,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
@@ -28,10 +29,12 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,6 +54,10 @@ import com.cogra.core.designsystem.TopicChip
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
+import com.cogra.core.designsystem.v2.atom.Hairline
+import com.cogra.core.designsystem.v2.atom.HelpDialog
+import com.cogra.core.designsystem.v2.atom.SettingRow
+import com.cogra.core.designsystem.v2.compose.HelpTopic
 import com.cogra.core.designsystem.v2.media.MediaGallery
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.domain.LicenseChoice
@@ -62,6 +69,7 @@ import com.cogra.domain.topics.canonicalTagName
 import com.cogra.domain.topics.isAddableTagName
 import com.cogra.domain.topics.tagNameProblem
 import com.cogra.feature.content.R
+import com.cogra.feature.content.wizard.SensitiveSheet
 
 @Composable
 fun ComposePostRoute(
@@ -97,6 +105,10 @@ fun ComposePostRoute(
         onDoneTuningTag = viewModel::onDoneTuningTag,
         onTagRelevanceChange = viewModel::onTagRelevanceChange,
         onTagConfidenceChange = viewModel::onTagConfidenceChange,
+        onOpenSensitive = viewModel::onOpenSensitive,
+        onCloseSensitive = viewModel::onCloseSensitive,
+        onSensitiveChange = viewModel::onSensitiveChange,
+        onSensitiveReasonChange = viewModel::onSensitiveReasonChange,
         onOpenFinder = viewModel::onOpenFinder,
         onCloseFinder = viewModel::onCloseFinder,
         onFinderQueryChange = viewModel::onFinderQueryChange,
@@ -122,6 +134,11 @@ fun ComposePostScreen(
     onDescriptionChange: (String) -> Unit,
     onBodyChange: (String) -> Unit,
     onLicenseChange: (LicenseChoice) -> Unit,
+    /** CW-46's row, and the seal's own sheet behind it. */
+    onOpenSensitive: () -> Unit,
+    onCloseSensitive: () -> Unit,
+    onSensitiveChange: (Boolean) -> Unit,
+    onSensitiveReasonChange: (String) -> Unit,
     onTagInputChange: (String) -> Unit,
     onAddTag: () -> Unit,
     onRemoveTag: (String) -> Unit,
@@ -262,6 +279,45 @@ fun ComposePostScreen(
             // (post.md §4) — the edit form carries none.
             if (!editing) {
                 LicenseControls(license = state.license, onLicenseChange = onLicenseChange)
+            } else {
+                // THE EDIT SURFACE'S OWN SENSITIVE ROW — the control, not
+                // a door to one. The menu's `Mark as sensitive` row leads
+                // here because marking a published post is a signed act
+                // changing the post, and this is the surface that signs
+                // it (jakob 2026-09-14).
+                //
+                // It is the seal's row, unchanged: `_shared.jsx:1390` and
+                // `CommentEdit.jsx:49` draw the same `FactRow` the seal
+                // draws (`_shared.jsx:1003`), last in the stack and
+                // closed by its own rule, opening the same sheet
+                // (`graph.json:991`, "Mark (sensitive)" →
+                // `ComposeSensitive`).
+                //
+                // Unlike the license the mark is never locked: a license
+                // is fixed by contract the moment it is signed, while the
+                // mark is the author's ongoing judgment about their own
+                // words (design/backlog.md item 25 part 2).
+                SettingRow(
+                    label = stringResource(R.string.content_sensitive_label),
+                    value = stringResource(
+                        if (state.sensitive) {
+                            R.string.content_sensitive_marked
+                        } else {
+                            R.string.content_sensitive_unmarked
+                        },
+                    ),
+                    actionText = stringResource(
+                        if (state.sensitive) {
+                            R.string.content_sensitive_change
+                        } else {
+                            R.string.content_sensitive_mark
+                        },
+                    ),
+                    onAction = onOpenSensitive,
+                    testTag = "compose_sensitive",
+                )
+                // `last` on the board: the rule that closes the block.
+                Hairline()
             }
             state.refusal?.let { message ->
                 ErrorLine(message, "compose_refused")
@@ -313,6 +369,32 @@ fun ComposePostScreen(
             onConfirm = onConfirmSubmit,
             onDismiss = onDismissConfirm,
             withdrawalCost = state.withdrawalCost,
+        )
+    }
+    // The post seal's own sheet, raised by CW-46's row — one sheet for
+    // every surface that marks (ruling 42), so the words a reader meets
+    // at the seal are the words they meet again in an edit.
+    var help by remember { mutableStateOf<HelpTopic?>(null) }
+    if (state.sensitiveOpen) {
+        val sheetState = rememberModalBottomSheetState()
+        ModalBottomSheet(onDismissRequest = onCloseSensitive, sheetState = sheetState) {
+            SensitiveSheet(
+                marked = state.sensitive,
+                reason = state.sensitiveReason.orEmpty(),
+                onMarkedChange = onSensitiveChange,
+                onReasonChange = onSensitiveReasonChange,
+                onDone = onCloseSensitive,
+                onHelp = { help = HelpTopic.MarkingAsSensitive },
+                testTagPrefix = "compose",
+            )
+        }
+    }
+    help?.let { topic ->
+        HelpDialog(
+            title = topic.title,
+            paragraphs = topic.paragraphs,
+            onClose = { help = null },
+            testTag = "compose_help_dialog",
         )
     }
 }
