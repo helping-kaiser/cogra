@@ -357,12 +357,15 @@ private fun TransportButton(
 ) {
     Box(
         modifier = Modifier
-            // THE TARGET IS 48dp EVEN WHERE THE GLYPH IS 28 — Material's floor,
-            // "touch targets should be at least 48 x 48 dp"
-            // (developer.android.com/develop/ui/compose/accessibility). This is
+            // THE TARGET IS 48dp EVEN WHERE THE DISC IS DRAWN AT 28 — the
+            // product's own floor ("touch targets never below 48px",
+            // design/readme.md §4) and Material's ("touch targets should be at
+            // least 48 x 48 dp",
+            // developer.android.com/develop/ui/compose/accessibility). This is
             // Compose's own way to honour it: the plate the board drew keeps its
             // size and only what the finger can hit grows, so the bar reads as
             // drawn and the sound and fullscreen discs stop being a near miss.
+            // Web makes the same trade through `cg-hit`.
             .minimumInteractiveComponentSize()
             .size(box)
             .clip(RoundedCornerShape(box / 2))

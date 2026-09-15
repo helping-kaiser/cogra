@@ -203,31 +203,27 @@ describe("the transport's own controls", () => {
 // claims the stage by scrolling into view; the detail's claims it by being
 // pressed, and a press that did not claim would leave two clips running.
 describe("the reach", () => {
-  // WCAG 2.2's enhanced target size is "at least 44 by 44 CSS pixels", and the
-  // sound and fullscreen discs on the bar are drawn at 28. The board's geometry
-  // is not the thing to change; the target is.
-  it("gives the bar's small discs a 44px target without redrawing them", () => {
+  // "Touch targets never below 48px" (design/readme.md §4). This bar draws the
+  // sound and fullscreen discs at 28 and the skips at 44, so the ink stays and
+  // the TARGET is expanded — the `cg-hit` trade `Button` and `Chip` already
+  // make, rather than a geometry this component invents for itself.
+  it("answers to the 48px target on every control without redrawing one", () => {
     transportPlayer({ onOpenViewer: () => {} });
 
-    for (const control of ["sound", "fullscreen"]) {
+    for (const control of ["play", "rewind", "forward", "sound", "fullscreen"]) {
       const button = screen.getByTestId(`video-player-transport-${control}`);
-      // Drawn as the board draws it…
-      expect(button.style.width).toBe("28px");
-      // …and reachable as the guideline asks.
-      const reach = button.querySelector("span[aria-hidden]") as HTMLElement | null;
-      expect(reach, `${control} has no enlarged target`).not.toBeNull();
-      expect(reach!.style.width).toBe("44px");
-      expect(reach!.style.height).toBe("44px");
+      expect(button.className, `${control} does not reach the target`).toContain("cg-hit");
+      // `cg-hit` centres its overlay on the control, so the control has to be
+      // the positioned ancestor or the reach lands somewhere else entirely.
+      expect(button.className).toContain("relative");
     }
   });
 
-  it("leaves the controls already at the minimum alone", () => {
-    transportPlayer();
-    // The play button is drawn at 64 and the skips at 44: nothing to add.
-    for (const control of ["play", "rewind", "forward"]) {
-      const button = screen.getByTestId(`video-player-transport-${control}`);
-      expect(button.querySelector("span[aria-hidden]")).toBeNull();
-    }
+  it("leaves the drawn discs at the sizes the board gives them", () => {
+    transportPlayer({ onOpenViewer: () => {} });
+    expect(screen.getByTestId("video-player-transport-play").style.width).toBe("64px");
+    expect(screen.getByTestId("video-player-transport-rewind").style.width).toBe("44px");
+    expect(screen.getByTestId("video-player-transport-sound").style.width).toBe("28px");
   });
 
   // NOTHING SITS IN THE STRIP THE SYSTEM OWNS (jakob 2026-09-15, hand test: the
