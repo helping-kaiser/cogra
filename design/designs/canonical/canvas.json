@@ -461,6 +461,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeDraftDiscard.dc.html",
+      "title": "Compose · the draft's discard, asked from the roll",
+      "x": 2400,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "ComposeLanded.dc.html",
       "title": "Signed · still settling",
       "x": 960,

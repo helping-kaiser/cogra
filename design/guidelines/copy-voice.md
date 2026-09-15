@@ -1687,3 +1687,25 @@ every topic pad says `Disconnect`, wherever either stands.
 **`Severed` and `severance` are not words on any screen, and on a topic
 surface not even nearly.** They name the mechanic in the docs and the
 code; what a reader is told is what they are left with.
+
+## Awaiting blessing — the draft's discard
+
+**The blocked roll's answer** (`ComposeDraftDiscard`, jakob 2026-09-15).
+Under an unanswered draft the picture roll is dimmed and out of reach; a
+tap on it used to reach nothing, and now it raises this:
+
+- Title `Discard your draft?` — the question the tap actually asked.
+  Reaching for the roll is reaching past the draft.
+- `Picking pictures starts a new post, and this draft is what stands in
+  the way. Discarding is the only thing that loses it.` The first
+  sentence says why the tap did nothing; the second says what the two
+  answers cost, which is the honesty rule's own requirement before a
+  destructive word is pressed.
+- `Discard it` (quiet) and `Keep the draft` (filled) — `DiscardConfirm`'s
+  weighting, with both words carrying their object. The card behind the
+  scrim has a bare `Discard` of its own, inert under the wash, and two
+  buttons reading one word on one screen is the ambiguity a dialog is
+  there to remove.
+- The shield over the roll is named `Answer your draft before starting a
+  new post` — what a screen reader meets where a sighted reader meets a
+  dimmed grid.

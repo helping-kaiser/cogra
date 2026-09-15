@@ -54,6 +54,7 @@
     "HelpDialog": "the \"?\" dialog covers the seal — everything beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
     "ReplyPadHelp": "the \"?\" dialog covers the parked pad, which covers the reply's seal — two washes deep, and only the dialog (and its scrim) is live",
     "DiscardConfirm": "the discard dialog covers the composer it was raised from — everything beneath the scrim is inactive in this state; only the dialog's own pair is live",
+    "ComposeDraftDiscard": "the ask covers the stage it was raised from — the wizard's header, the draft card's own pair and the shielded roll beneath the scrim are inactive in this state, and every one of them is wired on `ComposeDraft`; only the dialog's own pair is live",
     "PadKeyAbsent": "the wash covers the feed — the band, the post card and nav beneath it are inactive in this state; only the parked pad and the key notice inside it are live",
     "InviteNew": "the create sheet covers the invites list — the page's own New invite, its rows, its close controls and its link cards are inactive in this state; only the sheet (and its scrim) is live",
     "InviteExpiry": "the expiry chooser covers the create sheet, which covers the list — two sheets deep, the create sheet dimmed under the chooser's own wash, and only the top sheet (and that wash) is live",
@@ -982,6 +983,10 @@
     { "from": "ComposeDraft", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves — the draft stays" }] },
     { "from": "ComposeDraft", "via": 3, "kind": "cancel", "label": "Discard", "to": [{ "board": "ComposePick", "case": "the draft discarded — a fresh pick" }] },
     { "from": "ComposeDraft", "via": 4, "kind": "advance", "label": "Continue", "to": [{ "board": "ComposeDetails", "case": "resumes where it left — this draft at details" }] },
+    { "from": "ComposeDraft", "via": 5, "kind": "detour", "label": "the roll, behind its shield", "to": [{ "board": "ComposeDraftDiscard", "case": "any tap on the dimmed pictures — reaching past the draft is asking to discard it, and the ask is the answer a blocked surface owes (jakob 2026-09-15)" }] },
+
+    { "from": "ComposeDraftDiscard", "via": 1, "kind": "cancel", "label": "Discard it", "to": [{ "board": "ComposePick", "case": "the draft discarded — the roll comes live and a fresh pick begins, the card's own Discard said from the dialog" }] },
+    { "from": "ComposeDraftDiscard", "via": 2, "kind": "back", "label": "Keep the draft", "to": [{ "terminal": "back", "case": "the dialog closes — the draft stands, and the card behind it still offers Continue" }] },
 
     { "from": "EditCompose", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — where the edit began" }] },
     { "from": "EditCompose", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves — draft kept" }] },
