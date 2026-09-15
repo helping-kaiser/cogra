@@ -201,15 +201,25 @@ export function MediaViewer({
       {count > 1 && (
         <div
           className="pointer-events-none absolute inset-x-0 z-[3] flex justify-center"
-          style={{ bottom: `${GESTURE_ZONE}px` }}
+          style={{ bottom: `calc(${GESTURE_ZONE}px + env(safe-area-inset-bottom))` }}
         >
           <PagerDots count={count} current={current} tone="viewer" testId={`${testId}-dots`} />
         </div>
       )}
 
       {/* THE WAY OUT. Top-left, over the frame: "the chrome belongs to the
-          surface, not to the picture" (`MediaViewer.jsx:167-168`). */}
-      <div className="absolute left-0 top-0 z-[3] flex items-center p-2">
+          surface, not to the picture" (`MediaViewer.jsx:167-168`) — and inside
+          the safe area, because a layer pinned to the screen with
+          `viewport-fit: cover` reaches under the notch, and the one control
+          that closes the viewer cannot sit behind the clock. */}
+      <div
+        className="absolute left-0 top-0 z-[3] flex items-center"
+        style={{
+          padding: "0.5rem",
+          paddingTop: "calc(0.5rem + env(safe-area-inset-top))",
+          paddingLeft: "calc(0.5rem + env(safe-area-inset-left))",
+        }}
+      >
         <button
           ref={closeRef}
           type="button"
@@ -374,6 +384,9 @@ function ViewerStage({
             framed
             // THE FRAME IS NEVER CUT HERE (`MediaViewer.jsx:15-17`).
             fit="contain"
+            // THIS transport is the bottom of the screen, so its bar clears the
+            // phone's own strip as well as the board's gesture zone.
+            safeArea
             testId={`${testId}-video`}
           />
         </div>

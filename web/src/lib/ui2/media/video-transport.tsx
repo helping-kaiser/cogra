@@ -51,6 +51,30 @@ const PLAY_PLATE = "rgba(0,0,0,0.35)";
 const TRACK = "rgba(255,255,255,0.32)";
 const WASH = "linear-gradient(to top, rgba(0,0,0,0.6), rgba(0,0,0,0))";
 
+/**
+ * THE HIT TARGET IS 44px EVEN WHERE THE GLYPH IS 28.
+ *
+ * WCAG 2.2's enhanced target size is "at least 44 by 44 CSS pixels"
+ * (https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced.html), and
+ * the sound and fullscreen discs on this bar are drawn at 28. The board's
+ * geometry is not the thing to change — the target is — so the extra reach is
+ * an overlay centred on the button rather than a bigger button: nothing moves,
+ * and the thumb stops missing. This mirrors what android takes from Material's
+ * own `minimumInteractiveComponentSize`.
+ */
+const HIT_TARGET_MIN = 44;
+
+function HitTarget({ box }: { box: number }) {
+  if (box >= HIT_TARGET_MIN) return null;
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+      style={{ width: `${HIT_TARGET_MIN}px`, height: `${HIT_TARGET_MIN}px` }}
+    />
+  );
+}
+
 function TransportButton({
   label,
   glyph,
@@ -80,7 +104,7 @@ function TransportButton({
         event.stopPropagation();
         onClick();
       }}
-      className="cg-state cg-focus grid flex-none cursor-pointer place-items-center rounded-full border-0 p-0"
+      className="cg-state cg-focus relative grid flex-none cursor-pointer place-items-center rounded-full border-0 p-0"
       style={{
         width: `${box}px`,
         height: `${box}px`,
@@ -89,6 +113,7 @@ function TransportButton({
         filter: OVER_MEDIA,
       }}
     >
+      <HitTarget box={box} />
       <Icon name={glyph} size={size} />
     </button>
   );
@@ -223,6 +248,7 @@ export function Timeline({
  */
 export function VideoTransport({
   playing,
+  ended = false,
   elapsed,
   duration,
   progress,
@@ -233,9 +259,24 @@ export function VideoTransport({
   onSkip,
   onFullscreen,
   inset = GESTURE_ZONE,
+  safeArea = false,
   testId = "video-transport",
 }: {
   playing: boolean;
+  /**
+   * Whether the clip has run out.
+   *
+   * A clip under this transport STOPS at its end rather than looping, so the
+   * stopped state needs a control that says what pressing it does: at the end
+   * the play button is a REPLAY (jakob 2026-09-15, hand test). One glyph for
+   * "resume where you paused" and "start this again from nothing" is one
+   * picture for two different offers.
+   *
+   * It changes the LABEL and not the glyph, and that is a gap rather than a
+   * choice: `VideoControls.jsx` draws two states, and `Icon.jsx` holds no
+   * replay glyph to draw a third with. Exporting one is the design's call.
+   */
+  ended?: boolean;
   elapsed: string;
   duration: string;
   progress: number;
@@ -253,8 +294,24 @@ export function VideoTransport({
    */
   onFullscreen?: () => void;
   inset?: number;
+  /**
+   * Whether this transport reaches the BOTTOM OF THE SCREEN.
+   *
+   * [GESTURE_ZONE] is the board's own allowance and it is measured in CSS
+   * pixels from the frame's edge — which is the right number inside a framed
+   * clip and the wrong one in a fullscreen layer, where the phone's home
+   * indicator sits below it and the app-switcher swipe owns that strip (jakob
+   * 2026-09-15, hand test: the timeline was in it). `env(safe-area-inset-*)` is
+   * the platform's own answer for how much the browser is keeping
+   * (https://developer.mozilla.org/en-US/docs/Web/CSS/env), and the document
+   * already opts into it with `viewport-fit: cover`.
+   */
+  safeArea?: boolean;
   testId?: string;
 }) {
+  const bottom = safeArea
+    ? `calc(${inset}px + env(safe-area-inset-bottom))`
+    : `${inset}px`;
   return (
     <div className="absolute inset-0 z-[2]" data-testid={testId}>
       {/* The wash: a gradient rather than a bar, so nothing cuts the frame. */}
@@ -279,7 +336,7 @@ export function VideoTransport({
           testId={`${testId}-rewind`}
         />
         <TransportButton
-          label={playing ? "Pause" : "Play"}
+          label={playing ? "Pause" : ended ? "Replay" : "Play"}
           glyph={playing ? "pause" : "play_arrow"}
           size={34}
           box={64}
@@ -299,7 +356,7 @@ export function VideoTransport({
       {/* THE BAR, held clear of the gesture zone. */}
       <div
         className="absolute flex items-center"
-        style={{ left: "12px", right: "12px", bottom: `${inset}px`, gap: "var(--space-2)" }}
+        style={{ left: "12px", right: "12px", bottom, gap: "var(--space-2)" }}
       >
         <span
           className="flex-none text-label-small tabular-nums"
