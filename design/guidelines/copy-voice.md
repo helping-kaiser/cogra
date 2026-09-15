@@ -1514,8 +1514,8 @@ and `Keep it`, `Keep it` being the house word for *don't*, from
 `Single use · not used yet` and `Many uses`; the slot state rides the
 single-use label only, because a multi-use link has no slot to be in a
 state. `Revoke` is the card's one inline word. Copy is named for what
-it copies — `Copy the link`, `Copy the code` — because the button
-carries no word on screen and its accessible name is its only one.
+it copies — `Copy the link` — because the button carries no word on
+screen and its accessible name is its only one.
 
 **The create sheet's switch is worded as the RESTRICTION**: `Only one
 person can use it`. That is what makes the label alone enough, and why
@@ -1533,13 +1533,15 @@ governs the card's caption instead, where a real moment is being
 reported: `Expires in 7 days · 22.09.2026`, `WalletCampaign`'s blessed
 `Ends in 6 days · 08.09.2026` one surface over.
 
-**The fresh link's sheet is `Your invite link`**, its primary is `Share
-link`, and the quieter control beneath it is `Invite code` with the
-line `The same invite with the link taken off — the door takes either.`
-Two snackbars, deliberately different so a reader knows which control
-they hit: `Link copied` and `Code copied`. **The word "token" appears
-nowhere** — the record calls this a link capability and the API calls
-the field an id; on screen it is a link and a code.
+**The fresh link's sheet is `Your invite link`** and its primary is
+`Share link`. The sheet serves the LINK and nothing else (jakob
+2026-09-15): the id inside it is the capability and the door reads a
+bare one too, but that is a tolerance at the door, not a second way to
+invite somebody, and a sheet offering both made the reader pick between
+two spellings of one thing at the moment they were trying to send it.
+One snackbar, `Link copied`. **The word "token" appears nowhere** — the
+record calls this a link capability and the API calls the field an id;
+on screen it is a link.
 
 **The approval pad's two lines state what `Set` does, every time.**
 `Approving is vouching. Set signs your opinion on @rafa and brings them

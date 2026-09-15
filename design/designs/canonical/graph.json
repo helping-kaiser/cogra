@@ -1792,8 +1792,7 @@
 
     { "from": "InviteCreated", "via": 1, "kind": "advance", "label": "the link's copy", "to": [{ "terminal": "self", "case": "the link lands on the clipboard — Link copied" }] },
     { "from": "InviteCreated", "via": 2, "kind": "advance", "label": "Share link", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }, { "terminal": "self", "case": "no platform share — the link is copied instead, Link copied", "info": true }] },
-    { "from": "InviteCreated", "via": 3, "kind": "advance", "label": "the code's copy", "to": [{ "terminal": "self", "case": "the id alone lands on the clipboard — Code copied. The door takes it as readily as the link" }] },
-    { "from": "InviteCreated", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Invites", "case": "the sheet closes — the new link is the first card under Live links" }] },
+    { "from": "InviteCreated", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Invites", "case": "the sheet closes — the new link is the first card under Live links" }] },
 
     { "from": "ApprovePad", "via": 1, "kind": "detour", "label": "? — how vouching works", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "ApprovePad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick — it opens at the standing low default, never at a value the link carried" }] },

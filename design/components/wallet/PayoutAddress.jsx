@@ -64,11 +64,11 @@ export function PayoutAddressRow({ address, onOpen }) {
    `bare` DROPS THE CONTAINER AND KEEPS THE ANATOMY, the shape `SettingsGroup`
    already has and for the same reason: a card on a surface of the card's own
    tonal rung is two containers saying one thing a few pixels apart. It is for
-   the string that is a RESTATEMENT rather than a thing of its own — the invite
-   code beneath the invite link it was cut from, the ask link inside the card
-   that explains it. Only the fill and the inset go; the label, the copy
-   control, the mono block and the caption are unchanged, because the reason
-   they are shaped that way does not depend on what is behind them. */
+   the string that sits INSIDE something that already frames it — the rejected
+   applicant's ask link, held by the card whose words explain what it is for.
+   Only the fill and the inset go; the label, the copy control, the mono block
+   and the caption are unchanged, because the reason they are shaped that way
+   does not depend on what is behind them. */
 
 export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", caption, bare = false }) {
   return (

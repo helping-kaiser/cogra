@@ -2790,46 +2790,36 @@ when the implementation loop queued the asymmetry as a question. Both
 now stand in the readme's *viewer-grammar close*; nothing is drawn
 differently.
 
-### 84 · The invite short code · *design* · **open**
+### 84 · The invite short code · *design* · **retired 2026-09-15**
 
-Filed by the invites round 2026-09-15. `InviteCreated` offers an
-`Invite code` beside the link, and the code it offers is the link's
-UUID — 36 characters, correct, and unsayable. A human-friendly code is
-the thing that would make it worth having: short enough to read out
-over a phone, type from a sticker, or put at the end of a talk.
+Filed by the invites round and retired the same day by the ruling that
+took the code control off `InviteCreated` (jakob: "lets stick to just
+serving the link"). The item asked for a human-friendly code — short
+enough to read out over a phone, type from a sticker, or put at the end
+of a talk — because a 36-character UUID was being offered as one. No
+code is offered now. The capability has one shape on screen and it is
+the link, so there is no code block to shorten and no second thing for
+the docs to design a charset and a collision rate for.
 
-It is a BACKEND mechanic before it is a drawing, which is why this is
-filed rather than drawn. The docs have to design the charset (which
-letters and digits survive being read aloud and written down), the
-length against the collision rate a public funnel actually sees,
-whether the short code is a second capability on the same link or a
-different capability with its own revocation, and what the door does
-with one that is expired versus one that never existed. None of that
-is a design decision, and drawing a short code before it exists would
-put a promise on a board the product cannot keep.
+What would revive this is a PRODUCT need, not a drawing one: somebody
+deciding that an invite has to travel by voice or by print, where a
+link cannot go. That is a different item, and it starts at the backend
+the way this one said it would.
 
-The UUID ships as the code meanwhile: it is the capability, the door
-already accepts a bare one (`extractInviteId`, `auth.md` *Link URLs*),
-and it is honest about being long. When the short code is designed,
-this surface changes in one place — the code block on `InviteCreated`
-— and the link beside it does not move.
+### 86 · The door asks for a link and quietly accepts a code · *design* · **closed 2026-09-15**
 
-### 86 · The door asks for a link and quietly accepts a code · *design* · **open**
+Surfaced by the invites round and answered the same day. The item's two
+options were: say both at the door (`Invite link or code`), or rule the
+bare id a thing the door tolerates and never a thing the product hands
+out. jakob took the second — `InviteCreated` serves the link alone —
+and the door's copy therefore stands exactly as drawn: `Enter your
+invite`, the field `Invite link`, the line `CoGra is invite-only. Paste
+your invite link to get started.`
 
-Surfaced by the invites round 2026-09-15. `InviteEntry` is titled
-`Enter your invite`, its field is labelled `Invite link`, and its line
-reads `CoGra is invite-only. Paste your invite link to get started.`
-The product accepts more than that: `extractInviteId` takes the last
-UUID out of whatever is pasted, so a bare id works today, and `auth.md`
-(*Link URLs*) says the native apps take "the pasted link or bare token
-directly" on purpose.
-
-So the invites round can hand a reader a code with nowhere on screen
-that admits it is accepted. The fix is a copy ruling on a blessed
-board, which is why this is filed rather than taken: either the field
-and its line say both (`Invite link or code`), or the code is ruled a
-thing you send and never a thing you type, and `InviteCreated`'s
-caption stops saying the door takes either.
+`extractInviteId` still reads a bare id out of whatever is pasted, and
+that is deliberately invisible: nothing on any surface hands a reader a
+bare id, so nothing on any surface has to explain that one would work.
+A tolerance at the door is documentation's business, not the screen's.
 
 ### 87 · Two destructive dialogs disagree about colour · *design* · **open**
 
