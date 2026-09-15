@@ -22,18 +22,24 @@
 // and costs the height the post does not have; that constraint is why every
 // affordance in it is glyph-plus-number rather than words.
 //
-// TWO SLOTS ARE EMPTY, DELIBERATELY, and each says why where it stands: the
-// Post Score (no field on the contract until slice 3's ranker) and the
-// overflow ⋮ (its menus are undrawn here yet). A slot arrives WITH its
-// surface — the `BottomNav` precedent — and a control that goes nowhere is
-// worse than one that is not there.
+// ONE SLOT IS EMPTY, DELIBERATELY, and says why where it stands: the Post
+// Score, which has no field on the contract until slice 3's ranker. A slot
+// arrives WITH its surface — the `BottomNav` precedent — and a control that
+// goes nowhere is worse than one that is not there.
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { isPending, type PostView } from "@/lib/api/content-api";
+import type { License } from "@/lib/license";
+import { useActiveAccountId } from "@/lib/session/provider";
+import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { RemovedPlaceholder } from "@/lib/ui2/media/removed-placeholder";
+import { OverflowMenu } from "@/lib/ui2/overflow-menu";
+import { postMenuItems } from "@/lib/ui2/post-menu";
 import { RefsSheet } from "@/lib/ui2/refs-sheet";
+import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
 import { Icon } from "./icons";
@@ -183,9 +189,21 @@ export function PostCard({
   onOpenMedia?: (index: number) => void;
 }) {
   const detail = variant === "detail";
+  const router = useRouter();
+  // WHOSE POST THIS IS, read here rather than threaded in from every surface
+  // that draws a card. The stance control beside it already reaches the
+  // session the same way: a card-level control that needs the viewer asks for
+  // the viewer, and a prop would be one more thing a new call site can forget.
+  const viewerId = useActiveAccountId();
   const [open, setOpen] = useState(false);
   // The tags-and-references sheet, raised by the line that counts them.
   const [refsOpen, setRefsOpen] = useState(false);
+  // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`): the
+  // license it shows outlives the `open` flag so the block does not blank out
+  // mid-exit.
+  const [licenseShown, setLicenseShown] = useState<License | null>(null);
+  const [licenseOpen, setLicenseOpen] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
 
   const redacted = payloadIsRedacted(post);
   const media = !redacted && hasMedia(post);
@@ -199,6 +217,20 @@ export function PostCard({
   const description = redacted ? null : (post.description.value ?? null);
   const folded = isFolded(media, words, description);
   const stamp = shortTimestamp(post.createdAt);
+
+  const menuItems = postMenuItems({
+    postId: post.id,
+    own: viewerId !== null && post.author?.id === viewerId,
+    handle: post.author?.handle ?? null,
+    license: post.license,
+    navigate: (route) => router.push(route),
+    openLicense: (license) => {
+      setLicenseShown(license);
+      setLicenseOpen(true);
+    },
+    openRemove: () => setRemoveOpen(true),
+    testIdPrefix: `${testId}-menu`,
+  });
 
   // The SUMMARY title clamps to one line — readme §13's collapse order has the
   // title give way before media or the affordance row ever shrink. The detail
@@ -244,10 +276,11 @@ export function PostCard({
 
   return (
     <Card testId={testId}>
-      {/* AUTHOR, TIMESTAMP, AND THE ⋮'s PLACE — the card's header line. On a
-          detail surface the page header owns the one overflow menu; on a
-          summary card the ⋮ has no menus drawn here yet, so the slot stands
-          empty rather than holding a control that goes nowhere. */}
+      {/* AUTHOR, TIMESTAMP, AND THE ⋮ — the card's header line. ON A DETAIL
+          SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW (`_shared.jsx:337-341`
+          — the master hides the card's dot in `detail`): two dots would be two
+          menus for one post. A summary card keeps its own, because in a feed
+          there is no header to carry it (`PostCard.jsx:257`). */}
       <div className="flex items-center justify-between gap-2">
         {post.author && (
           <ActorChip
@@ -257,15 +290,50 @@ export function PostCard({
             testId={authorTestId}
           />
         )}
-        {stamp !== "" && (
-          <time
-            dateTime={post.createdAt}
-            data-testid={`${testId}-timestamp`}
-            className="flex-none text-body-small text-on-surface-variant"
-          >
-            {stamp}
-          </time>
-        )}
+        <div className="flex flex-none items-center gap-3">
+          {stamp !== "" && (
+            <time
+              dateTime={post.createdAt}
+              data-testid={`${testId}-timestamp`}
+              className="flex-none text-body-small text-on-surface-variant"
+            >
+              {stamp}
+            </time>
+          )}
+          {/* A REMOVED POST HAS NO MENU LEFT (`Removed.jsx:5-6`): there is
+              nothing of it to edit, cite or license, so the ⋮ is dropped
+              wholesale rather than a row at a time.
+              THE SHEETS ITS ROWS OPEN RIDE THE MENU, the way the refs sheet
+              rides this card: the same card is the feed's, the topic page's
+              and the detail's, and each of them carries the rows that raise
+              them. */}
+          {!detail && !redacted && (
+            <OverflowMenu
+              items={menuItems}
+              ariaLabel="More on this post"
+              testId={`${testId}-menu`}
+              trailing={
+                <>
+                  {licenseShown !== null && (
+                    <LicenseSheet
+                      open={licenseOpen}
+                      onClose={() => setLicenseOpen(false)}
+                      license={licenseShown}
+                      testId={`${testId}-license-sheet`}
+                    />
+                  )}
+                  {/* THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob
+                      2026-09-14): erasure is slice 8's, whole. */}
+                  <RemoveConfirm
+                    open={removeOpen}
+                    onClose={() => setRemoveOpen(false)}
+                    onRemove={() => setRemoveOpen(false)}
+                  />
+                </>
+              }
+            />
+          )}
+        </div>
       </div>
       {/* The title stays ABOVE the media because it titles the thing — below
           it, it reads as a caption and the caption reads as a second caption.
