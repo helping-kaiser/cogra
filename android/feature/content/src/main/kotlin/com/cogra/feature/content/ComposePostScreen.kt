@@ -280,44 +280,7 @@ fun ComposePostScreen(
             if (!editing) {
                 LicenseControls(license = state.license, onLicenseChange = onLicenseChange)
             } else {
-                // THE EDIT SURFACE'S OWN SENSITIVE ROW — the control, not
-                // a door to one. The menu's `Mark as sensitive` row leads
-                // here because marking a published post is a signed act
-                // changing the post, and this is the surface that signs
-                // it (jakob 2026-09-14).
-                //
-                // It is the seal's row, unchanged: `_shared.jsx:1390` and
-                // `CommentEdit.jsx:49` draw the same `FactRow` the seal
-                // draws (`_shared.jsx:1003`), last in the stack and
-                // closed by its own rule, opening the same sheet
-                // (`graph.json:991`, "Mark (sensitive)" →
-                // `ComposeSensitive`).
-                //
-                // Unlike the license the mark is never locked: a license
-                // is fixed by contract the moment it is signed, while the
-                // mark is the author's ongoing judgment about their own
-                // words (design/backlog.md item 25 part 2).
-                SettingRow(
-                    label = stringResource(R.string.content_sensitive_label),
-                    value = stringResource(
-                        if (state.sensitive) {
-                            R.string.content_sensitive_marked
-                        } else {
-                            R.string.content_sensitive_unmarked
-                        },
-                    ),
-                    actionText = stringResource(
-                        if (state.sensitive) {
-                            R.string.content_sensitive_change
-                        } else {
-                            R.string.content_sensitive_mark
-                        },
-                    ),
-                    onAction = onOpenSensitive,
-                    testTag = "compose_sensitive",
-                )
-                // `last` on the board: the rule that closes the block.
-                Hairline()
+                SensitiveRow(marked = state.sensitive, onOpen = onOpenSensitive)
             }
             state.refusal?.let { message ->
                 ErrorLine(message, "compose_refused")
@@ -371,19 +334,75 @@ fun ComposePostScreen(
             withdrawalCost = state.withdrawalCost,
         )
     }
-    // The post seal's own sheet, raised by CW-46's row — one sheet for
-    // every surface that marks (ruling 42), so the words a reader meets
-    // at the seal are the words they meet again in an edit.
+    EditSensitiveSheet(
+        open = state.sensitiveOpen,
+        marked = state.sensitive,
+        reason = state.sensitiveReason.orEmpty(),
+        onClose = onCloseSensitive,
+        onMarkedChange = onSensitiveChange,
+        onReasonChange = onSensitiveReasonChange,
+    )
+}
+
+/**
+ * THE EDIT SURFACE'S OWN SENSITIVE ROW — the control, not a door to one.
+ * The menu's `Mark as sensitive` row leads here because marking a
+ * published post is a signed act changing the post, and this is the
+ * surface that signs it (jakob 2026-09-14).
+ *
+ * It is the seal's row, unchanged: `_shared.jsx:1390` and
+ * `CommentEdit.jsx:49` draw the same `FactRow` the seal draws
+ * (`_shared.jsx:1003`), last in the stack and closed by its own rule,
+ * opening the same sheet (`graph.json:991`, "Mark (sensitive)" →
+ * `ComposeSensitive`).
+ *
+ * Unlike the license the mark is never locked: a license is fixed by
+ * contract the moment it is signed, while the mark is the author's
+ * ongoing judgment about their own words (design/backlog.md item 25
+ * part 2).
+ */
+@Composable
+private fun SensitiveRow(marked: Boolean, onOpen: () -> Unit) {
+    SettingRow(
+        label = stringResource(R.string.content_sensitive_label),
+        value = stringResource(
+            if (marked) R.string.content_sensitive_marked else R.string.content_sensitive_unmarked,
+        ),
+        actionText = stringResource(
+            if (marked) R.string.content_sensitive_change else R.string.content_sensitive_mark,
+        ),
+        onAction = onOpen,
+        testTag = "compose_sensitive",
+    )
+    // `last` on the board: the rule that closes the block.
+    Hairline()
+}
+
+/**
+ * The post seal's own sheet, raised by the row above — one sheet for
+ * every surface that marks (ruling 42), so the words a reader meets at
+ * the seal are the words they meet again in an edit.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditSensitiveSheet(
+    open: Boolean,
+    marked: Boolean,
+    reason: String,
+    onClose: () -> Unit,
+    onMarkedChange: (Boolean) -> Unit,
+    onReasonChange: (String) -> Unit,
+) {
     var help by remember { mutableStateOf<HelpTopic?>(null) }
-    if (state.sensitiveOpen) {
+    if (open) {
         val sheetState = rememberModalBottomSheetState()
-        ModalBottomSheet(onDismissRequest = onCloseSensitive, sheetState = sheetState) {
+        ModalBottomSheet(onDismissRequest = onClose, sheetState = sheetState) {
             SensitiveSheet(
-                marked = state.sensitive,
-                reason = state.sensitiveReason.orEmpty(),
-                onMarkedChange = onSensitiveChange,
-                onReasonChange = onSensitiveReasonChange,
-                onDone = onCloseSensitive,
+                marked = marked,
+                reason = reason,
+                onMarkedChange = onMarkedChange,
+                onReasonChange = onReasonChange,
+                onDone = onClose,
                 onHelp = { help = HelpTopic.MarkingAsSensitive },
                 testTagPrefix = "compose",
             )
