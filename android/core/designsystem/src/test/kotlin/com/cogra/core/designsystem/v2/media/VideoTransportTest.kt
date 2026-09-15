@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem.v2.media
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -99,6 +100,20 @@ class VideoTransportTest {
         compose.onNodeWithTag("video_play_pause").assertContentDescriptionEquals("Pause")
     }
 
+    /**
+     * AND AT THE END IT IS A REPLAY (jakob 2026-09-15, hand test).
+     *
+     * A clip under this transport stops rather than looping, so the stopped
+     * state is two different offers wearing one glyph: "resume where you
+     * paused" and "start this again from nothing". The end gets its own.
+     */
+    @Test
+    fun theEndedClipOffersToPlayItAgain() {
+        compose.setContent { Transport(playing = false, ended = true) }
+
+        compose.onNodeWithTag("video_play_pause").assertContentDescriptionEquals("Replay")
+    }
+
     @Test
     fun theSoundRidesTheBarRatherThanKeepingItsDisc() {
         compose.setContent { Transport() }
@@ -124,6 +139,25 @@ class VideoTransportTest {
         assertThat((frame.bottom - timeline.bottom).value).isAtLeast(GESTURE_ZONE.value)
     }
 
+    /**
+     * AND OF THE DEVICE'S OWN BARS, where the transport reaches the screen's
+     * edges (jakob 2026-09-15, hand test: the timeline sat in the strip the
+     * app-switcher swipe owns).
+     *
+     * The board's [GESTURE_ZONE] is an allowance for the gesture strip and
+     * knows nothing about a navigation bar; the device's inset knows nothing
+     * about the board. The bar clears both.
+     */
+    @Test
+    fun theBarAlsoClearsWhateverTheDeviceSaysItsBarsTake() {
+        compose.setContent { Transport(chromeInsets = PaddingValues(bottom = NAV_BAR)) }
+
+        val frame = compose.onNodeWithTag(TRANSPORT_TAG).getUnclippedBoundsInRoot()
+        val timeline = compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()
+        assertThat((frame.bottom - timeline.bottom).value)
+            .isAtLeast(GESTURE_ZONE.value + NAV_BAR.value)
+    }
+
     @Test
     fun theClockReadsTheBoardsOwnTimes() {
         compose.setContent { Transport(elapsedMs = 14_000, durationMs = 41_000) }
@@ -135,6 +169,7 @@ class VideoTransportTest {
     @Composable
     private fun Transport(
         playing: Boolean = false,
+        ended: Boolean = false,
         elapsedMs: Long = 0,
         durationMs: Long = 41_000,
         progress: Float = 0f,
@@ -142,10 +177,13 @@ class VideoTransportTest {
         onTogglePlay: () -> Unit = {},
         onSeek: (Float) -> Unit = {},
         onSkip: (Long) -> Unit = {},
+        chromeInsets: PaddingValues = PaddingValues(0.dp),
     ) {
         Cogra2PreviewTheme {
             VideoTransport(
                 playing = playing,
+                ended = ended,
+                chromeInsets = chromeInsets,
                 elapsedMs = elapsedMs,
                 durationMs = durationMs,
                 progress = progress,
@@ -161,6 +199,9 @@ class VideoTransportTest {
 
     private companion object {
         val FRAME = 320.dp
+
+        /** A phone's navigation bar, as a test can state it. */
+        val NAV_BAR = 48.dp
         const val TOLERANCE = 1f
     }
 }
