@@ -15,21 +15,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,12 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,11 +49,8 @@ import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
-import com.cogra.core.designsystem.v2.atom.MenuRow
-import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.media.MediaViewer
 import com.cogra.core.designsystem.v2.media.PinnedClip
-import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
@@ -103,13 +91,16 @@ fun PostDetailRoute(
     refreshSignal: Boolean = false,
     onRefreshSignalConsumed: () -> Unit = {},
     /**
-     * A comment or an edit signed on the wizard, coming back. The thread
-     * refetches so the new state arrives from the server — a client
-     * never takes a write on by patching its own list — and the
-     * snackbar fires once.
+     * THE SHEET'S OWN RETURN, not the detail's (jakob 2026-09-15). The
+     * thread is the same sheet the feed raises, so a comment coming back
+     * signed is answered by the sheet on either surface and this screen
+     * only passes the two values through: where the reader was, and
+     * which comment the new reply hangs under.
      */
-    commentSignedSignal: Boolean = false,
-    onCommentSignedSignalConsumed: () -> Unit = {},
+    commentsReturn: CommentsReturn = CommentsReturn(),
+    onCommentsReturnConsumed: () -> Unit = {},
+    /** The reader's place, on the way out to a composer. */
+    onCommentsDepart: (CommentsScroll) -> Unit = {},
     viewModel: PostDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -124,25 +115,10 @@ fun PostDetailRoute(
             viewModel.refresh()
         }
     }
-    LaunchedEffect(commentSignedSignal) {
-        if (commentSignedSignal) {
-            onCommentSignedSignalConsumed()
-            viewModel.onCommentSigned()
-        }
-    }
     PostDetailScreen(
         state = state,
         viewerId = viewerId,
-        signedIn = signedIn,
         onRefresh = viewModel::refresh,
-        onLoadMoreComments = viewModel::loadMoreComments,
-        onAddComment = { state.post?.let { onReply(it.asReplyTarget()) } },
-        onReplyTo = { comment -> onReply(comment.asReplyTarget()) },
-        onEditComment = { comment ->
-            onEditComment(comment.id, state.post?.title?.value.orEmpty())
-        },
-        onCommentSignedShown = viewModel::onCommentSignedShown,
-        onLoadMoreReplies = viewModel::onLoadMoreReplies,
         onReveal = viewModel::onReveal,
         onEdit = onEdit,
         onOpenActor = onOpenActor,
@@ -150,28 +126,68 @@ fun PostDetailRoute(
         onOpenTopic = onOpenTopic,
         onReference = onReference,
         onShare = { id -> context.sharePost(viewModel.shareUrl(id)) },
-        onSignInOrJoin = onSignInOrJoin,
         onBack = onBack,
         stanceControl = { target, tag -> StanceControlRoute(target = target, testTagPrefix = tag) },
+        commentsSheet = { onDismiss ->
+            CommentsSheetRoute(
+                postId = postId,
+                viewerId = viewerId,
+                signedIn = signedIn,
+                onDismiss = onDismiss,
+                onReply = { request ->
+                    val target = request.comment?.asReplyTarget() ?: state.post?.asReplyTarget()
+                    target?.let(onReply)
+                },
+                onEditComment = { commentId ->
+                    onEditComment(commentId, state.post?.title?.value.orEmpty())
+                },
+                onOpenActor = onOpenActor,
+                onOpenTopic = onOpenTopic,
+                onReference = onReference,
+                onSignInOrJoin = onSignInOrJoin,
+                onDepart = onCommentsDepart,
+                commentsReturn = commentsReturn,
+                onReturnConsumed = onCommentsReturnConsumed,
+                stanceControl = { target, tag ->
+                    StanceControlRoute(target = target, testTagPrefix = tag)
+                },
+            )
+        },
     )
 }
+
+/**
+ * THE SHEET'S TWO-VALUE RETURN (jakob 2026-09-15).
+ *
+ * A composer is a destination and the thread is not, so signing one
+ * comes back to a sheet that has to be drawn again from nothing. "A
+ * reply landed" cannot draw it: the reader has to find themselves where
+ * they were, looking at what they just wrote — which sits one level
+ * down, behind a count that was collapsed when they left.
+ *
+ * So the return carries both: [scroll] puts the thread back where it
+ * stood, and [parentCommentId] names the branch that unfolds so the new
+ * reply is on screen wearing its pending marker. Null [parentCommentId]
+ * alongside a landing is a comment on the post itself, already at the
+ * top level.
+ *
+ * [landed] is the third fact and not one of the two: it says whether
+ * anything was signed at all. The place comes back from a composer the
+ * reader ABANDONED too — leaving one should not cost them their place —
+ * and only a landing earns the refetch and the confirmation.
+ */
+data class CommentsReturn(
+    val scroll: CommentsScroll? = null,
+    val landed: Boolean = false,
+    val parentCommentId: String? = null,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostDetailScreen(
     state: PostDetailUiState,
     viewerId: String?,
-    signedIn: Boolean?,
     onRefresh: () -> Unit,
-    onLoadMoreComments: () -> Unit,
-    /** `ReplyEntry` 7 — the full-focus composer, this post pinned. */
-    onAddComment: () -> Unit,
-    /** `ReplyEntry` 5 — the composer, pre-targeted at that comment. */
-    onReplyTo: (CommentView) -> Unit,
-    /** `ReplyMedia` 6 — `CommentEdit`, on an own comment. */
-    onEditComment: (CommentView) -> Unit,
-    onCommentSignedShown: () -> Unit,
-    onLoadMoreReplies: (CommentView) -> Unit,
     /** A reader chose to look at one veiled body, as it stands. */
     onReveal: (String, SensitiveMark) -> Unit,
     onEdit: (String) -> Unit,
@@ -182,34 +198,29 @@ fun PostDetailScreen(
     onReference: (String) -> Unit,
     /** Hands this post to the platform's own share sheet. */
     onShare: (String) -> Unit,
-    onSignInOrJoin: () -> Unit,
     onBack: () -> Unit,
     /** The stance control the post and every comment carry (design.md §6). */
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    /**
+     * THE THREAD, WHICH THIS SCREEN NO LONGER OWNS. The sheet is the one
+     * comments surface and holds its own state, so the detail supplies
+     * only the affordance that raises it and the slot it stands in —
+     * exactly what the feed supplies.
+     */
+    commentsSheet: @Composable (onDismiss: () -> Unit) -> Unit = {},
 ) {
     val snackbar = remember { SnackbarHostState() }
     // THE LICENSE IS NEVER A STATE OF THE CARD (`ReaderPostMenu.jsx:27-29`):
-    // one sheet for the screen, raised by whichever menu row asked for it —
-    // the post's own or any comment's.
+    // one sheet for the screen, raised by the menu row that asked for it.
+    // This screen's only such row is the post's own, in the top bar; a
+    // comment's is the thread's, and rides the thread.
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
-    // The post's row raises it over the page; a comment's raises it over the
-    // comments thread — a sheet over a sheet, `stacked`
-    // (`CommentLicense.jsx`, design/readme.md:2364). The one mount below
-    // answers for whichever menu asked, so this tracks which case it was.
-    var licenseStacked by remember { mutableStateOf(false) }
     var removeOpen by remember { mutableStateOf(false) }
     // SAVED, not merely remembered: the composer and the comment editor are
     // their own destinations, so the thread is left and re-entered rather than
     // covered — and every way out of them comes back to it (`ReplyCompose` and
     // `CommentEdit` both cancel and advance to the thread).
     var commentsOpen by rememberSaveable { mutableStateOf(false) }
-    val signedCopy = stringResource(R.string.content_post_saved)
-    LaunchedEffect(state.commentSigned) {
-        if (state.commentSigned) {
-            snackbar.showSnackbar(signedCopy)
-            onCommentSignedShown()
-        }
-    }
     val collapsingTop = rememberCollapsingTop()
     Scaffold(
         snackbarHost = { CograSnackbarHost(snackbar) },
@@ -243,10 +254,7 @@ fun PostDetailScreen(
                         onCite = onReference,
                         onRemove = { removeOpen = true },
                         // Over the page — never stacked.
-                        onLicense = { license ->
-                            licenseShown = license
-                            licenseStacked = false
-                        },
+                        onLicense = { license -> licenseShown = license },
                     )
                 },
             )
@@ -350,32 +358,14 @@ fun PostDetailScreen(
     }
 
     if (commentsOpen) {
-        CommentsSheet(
-            state = state,
-            viewerId = viewerId,
-            signedIn = signedIn,
-            snackbar = snackbar,
-            onDismiss = { commentsOpen = false },
-            onLoadMoreComments = onLoadMoreComments,
-            onAddComment = onAddComment,
-            onReplyTo = onReplyTo,
-            onEditComment = onEditComment,
-            onLoadMoreReplies = onLoadMoreReplies,
-            onReveal = onReveal,
-            onOpenActor = onOpenActor,
-            onOpenTopic = onOpenTopic,
-            onReference = onReference,
-            // Over the comments thread's own sheet — stacked.
-            onLicense = { license ->
-                licenseShown = license
-                licenseStacked = true
-            },
-            onSignInOrJoin = onSignInOrJoin,
-            stanceControl = stanceControl,
-        )
+        commentsSheet { commentsOpen = false }
     }
+    // ONLY THE POST'S OWN TERMS REACH THIS MOUNT, so it is never stacked
+    // (design/readme.md:2364). A comment's terms are raised from inside the
+    // thread and stand over it — that mount moved into the sheet, which is
+    // now the one thing that knows it is a sheet over a sheet.
     licenseShown?.let { license ->
-        LicenseSheet(license = license, onDismiss = { licenseShown = null }, stacked = licenseStacked)
+        LicenseSheet(license = license, onDismiss = { licenseShown = null })
     }
     // THE DIALOG SHIPS, THE REMOVAL DOES NOT (jakob 2026-09-14): erasure is
     // slice 8's, whole — "we need to do erasure right so it should be one
@@ -654,220 +644,6 @@ private fun DetailCardFoot(
 }
 
 /**
- * THE THREAD IS A SHEET OVER THE POST (`_shared.jsx:1247-1257`): the title,
- * the comments, and the entry row pinned at its foot. The detail keeps its
- * place underneath — the sheet is a drawer over the screen, so nothing about
- * the post scrolls when it opens or drops.
- *
- * The sheet's own height is drawn rather than content-sized
- * (`BottomSheet.jsx:29-32`: "a pinned input row at its foot needs the surface
- * itself to own the height"), so the foot does not walk up and down the
- * screen as a page of comments lands.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CommentsSheet(
-    state: PostDetailUiState,
-    viewerId: String?,
-    signedIn: Boolean?,
-    snackbar: SnackbarHostState,
-    onDismiss: () -> Unit,
-    onLoadMoreComments: () -> Unit,
-    onAddComment: () -> Unit,
-    onReplyTo: (CommentView) -> Unit,
-    onEditComment: (CommentView) -> Unit,
-    onLoadMoreReplies: (CommentView) -> Unit,
-    onReveal: (String, SensitiveMark) -> Unit,
-    onOpenActor: (String) -> Unit,
-    onOpenTopic: (String) -> Unit,
-    onReference: (String) -> Unit,
-    onLicense: (LicenseChoice) -> Unit,
-    onSignInOrJoin: () -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        modifier = Modifier.testTag("comments_sheet"),
-    ) {
-        Column(Modifier.fillMaxWidth().height(commentsSheetHeight())) {
-            SheetTitle(
-                text = stringResource(R.string.content_comments_heading),
-                modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x1),
-            )
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("comments_list"),
-                contentPadding = PaddingValues(horizontal = Space.x4, vertical = Space.x2),
-                verticalArrangement = Arrangement.spacedBy(Space.x3),
-            ) {
-                if (state.comments.isEmpty()) {
-                    item {
-                        Text(
-                            stringResource(R.string.content_comments_empty),
-                            modifier = Modifier.testTag("detail_no_comments"),
-                        )
-                    }
-                }
-                items(state.comments, key = { it.id }) { comment ->
-                    CommentThread(
-                        comment = comment,
-                        depth = 0,
-                        state = state,
-                        viewerId = viewerId,
-                        signedIn = signedIn,
-                        onLoadMoreReplies = onLoadMoreReplies,
-                        onReplyTo = onReplyTo,
-                        onEditComment = onEditComment,
-                        onReveal = onReveal,
-                        onOpenActor = onOpenActor,
-                        onOpenTopic = onOpenTopic,
-                        onReference = onReference,
-                        onLicense = onLicense,
-                        stanceControl = stanceControl,
-                    )
-                }
-                if (state.commentsHaveMore) {
-                    item { MoreComments(state, onLoadMoreComments) }
-                }
-            }
-            CommentsFoot(signedIn, onAddComment, onSignInOrJoin)
-            // A ModalBottomSheet is its own window, so the Scaffold's host is
-            // behind this one: the confirmation for a comment that landed in
-            // this thread reads over the thread, where it landed.
-            CograSnackbarHost(snackbar)
-        }
-    }
-}
-
-/** The drawn gap above a full-height sheet (`_shared.jsx:1249`). */
-private val SHEET_TOP_GAP = 72.dp
-
-@Composable
-private fun commentsSheetHeight(): Dp {
-    val window = LocalWindowInfo.current.containerSize.height
-    return with(LocalDensity.current) { window.toDp() } - SHEET_TOP_GAP
-}
-
-/**
- * A failed comments page surfaces where the failed fetch was asked for — the
- * load-more slot, inside the thread (android.md "Degrade, never crash").
- */
-@Composable
-private fun MoreComments(state: PostDetailUiState, onLoadMoreComments: () -> Unit) {
-    when {
-        state.loadingMore -> CircularProgressIndicator(modifier = Modifier.padding(8.dp))
-        state.transportFault == TransportFault.APPEND -> Column {
-            ErrorLine(R.string.content_thread_stale, "detail_more_comments_error")
-            TextButton(
-                onClick = onLoadMoreComments,
-                modifier = Modifier.testTag("detail_more_comments_retry"),
-            ) {
-                Text(stringResource(R.string.content_retry))
-            }
-        }
-        else -> TextButton(
-            onClick = onLoadMoreComments,
-            modifier = Modifier.testTag("detail_more_comments"),
-        ) {
-            Text(stringResource(R.string.content_feed_load_more))
-        }
-    }
-}
-
-/**
- * `ReplyEntry` 7: the sheet's foot is the way *into* the composer, not the
- * composer itself. The full-focus wizard is where a comment is written, so
- * this row only opens it.
- *
- * The write affordance swaps, never merely disables: a member gets the
- * composer's door, an anonymous reader gets the join entry (android.md
- * "Screens"); while the phase resolves, neither.
- */
-@Composable
-private fun CommentsFoot(
-    signedIn: Boolean?,
-    onAddComment: () -> Unit,
-    onSignInOrJoin: () -> Unit,
-) {
-    if (signedIn == null) return
-    HorizontalDivider()
-    if (signedIn) {
-        // It looks like the field the board draws and behaves like the button
-        // it is: a real text field would take focus and raise a keyboard for
-        // words that are typed on the next screen.
-        Surface(
-            onClick = onAddComment,
-            shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Space.x4, vertical = Space.x3)
-                .testTag("detail_add_comment"),
-        ) {
-            Text(
-                text = stringResource(R.string.content_comment_hint),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            )
-        }
-    } else {
-        TextButton(
-            onClick = onSignInOrJoin,
-            modifier = Modifier
-                .padding(horizontal = Space.x2)
-                .testTag("detail_comment_signin"),
-        ) {
-            Text(stringResource(R.string.content_comment_signin))
-        }
-    }
-}
-
-/**
- * THE COMMENT'S ROWS (`_shared.jsx:392`) — Save · Cite in a new post ·
- * Opinions on this · License terms.
- *
- * NO HIDE ROW, AND THE ABSENCE IS RULED (jakob 2026-09-12): hiding is an
- * act on an ACTOR, and the route to it is the commenter's own profile,
- * one tap away through their chip. A thread of many voices is not where
- * that decision belongs.
- *
- * `Opinions on this` STANDS WHATEVER THE COUNT IS, which is the
- * difference between a menu row and a count line: a row that came and
- * went with a number would make the menu a different menu every time.
- */
-@Composable
-private fun commentMenuRows(
-    comment: CommentView,
-    onCite: () -> Unit,
-    onLicense: () -> Unit,
-): List<MenuRow> = buildList {
-    add(MenuRow(stringResource(R.string.content_menu_save), "comment_menu_save_${comment.id}") {})
-    add(
-        MenuRow(
-            stringResource(R.string.content_menu_cite),
-            "comment_menu_cite_${comment.id}",
-            onCite,
-        ),
-    )
-    add(
-        MenuRow(
-            stringResource(R.string.content_menu_opinions),
-            "comment_menu_opinions_${comment.id}",
-        ) {},
-    )
-    add(
-        MenuRow(
-            stringResource(R.string.content_menu_license),
-            "comment_menu_license_${comment.id}",
-            onLicense,
-        ),
-    )
-}
-
-/**
  * The post, as the composer's target card reads it (`ReplyEntry` 7).
  *
  * A post leads with its title; the line under it is the body, clipped,
@@ -908,204 +684,3 @@ private fun String.clipForCard(limit: Int = TARGET_SNIPPET_CHARS): String =
 
 private const val TARGET_TITLE_CHARS = 48
 private const val TARGET_SNIPPET_CHARS = 120
-
-/**
- * The thread is **two levels deep on screen**: a comment, and its
- * replies indented once (design/readme.md §13, 2026-08-28, and the
- * canonical `CommentCard`, which sets exactly this).
- *
- * Anything deeper flattens into that one reply level and opens with the
- * @handle it answers — the mention is the structure, so the column never
- * narrows to a word. design.md §6 still says three levels; it predates
- * the ruling (design/backlog.md item 26 tracks that lag).
- */
-private const val MAX_INDENT_DEPTH = 1
-
-/**
- * One comment with its replies (design.md §6 "Comment"): author chip,
- * body, the soft "Edited" marker (design.md §9), the creator's edit
- * affordance, the reply affordance, and the branch behind its count.
- */
-@Composable
-private fun CommentThread(
-    comment: CommentView,
-    depth: Int,
-    modifier: Modifier = Modifier,
-    state: PostDetailUiState,
-    viewerId: String?,
-    signedIn: Boolean?,
-    onLoadMoreReplies: (CommentView) -> Unit,
-    onReplyTo: (CommentView) -> Unit,
-    onEditComment: (CommentView) -> Unit,
-    /** A reader chose to look at one veiled body, as it stands. */
-    onReveal: (String, SensitiveMark) -> Unit,
-    onOpenActor: (String) -> Unit,
-    onOpenTopic: (String) -> Unit,
-    onReference: (String) -> Unit,
-    /** Raises the terms in the sheet the menu's License row opens. */
-    onLicense: (LicenseChoice) -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
-) {
-    val indent = (minOf(depth, MAX_INDENT_DEPTH) * 12).dp
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(start = indent),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("detail_comment_${comment.id}"),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                // The picture the boards draw on a comment card (Q49),
-                // and the age beside it. Null is the monogram — the
-                // designed fallback for an author who has set none, not
-                // a gap waiting for a photo.
-                ContentCardHeader(
-                    author = comment.author,
-                    at = comment.createdAt,
-                    onOpenActor = onOpenActor,
-                    testTagPrefix = "comment_${comment.id}",
-                    menu = commentMenuRows(
-                        comment = comment,
-                        onCite = { onReference(comment.id) },
-                        onLicense = { onLicense(comment.license) },
-                    ),
-                    menuContentDescription = stringResource(R.string.content_menu_comment),
-                    // IT IS DRAWN STACKED ON PURPOSE (`CommentMenu.jsx:18-23`):
-                    // the thread already lives in a sheet, so this menu is a
-                    // sheet on a sheet (design/readme.md:2364).
-                    stacked = true,
-                )
-                // A comment is text **plus** optional media (D16),
-                // so its body is never the exclusive-or a post's
-                // is — but it veils and redacts as one region all
-                // the same.
-                PostBody(
-                    content = comment.content,
-                    description = null,
-                    attachments = comment.attachments,
-                    attachmentsStatus = comment.attachmentsStatus,
-                    moderation = comment.moderation,
-                    testTagPrefix = "comment_${comment.id}",
-                    surface = BodySurface.Comment,
-                    revealed = state.reveals.isRevealed(comment.id, comment.sensitiveMark()),
-                    onReveal = { onReveal(comment.id, comment.sensitiveMark()) },
-                    // The statuses are the veil — the OR of the author's
-                    // own mark and a moderator's verdict — so the
-                    // author's half is what names the source.
-                    sensitiveSource = if (comment.sensitiveSelfMark) {
-                        SensitiveSource.Author
-                    } else {
-                        SensitiveSource.Platform
-                    },
-                    sensitiveReason = comment.sensitiveReason,
-                )
-                // The soft marker, friendly not forensic (design.md §9).
-                if (comment.updatedAt.isAfter(comment.createdAt)) {
-                    Text(
-                        text = stringResource(R.string.content_comment_edited),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.testTag("comment_edited_${comment.id}"),
-                    )
-                }
-                if (comment.landing.isPending) {
-                    PendingMarker(testTag = "comment_pending_${comment.id}")
-                }
-                // The same one line a post wears (`CommentCard.jsx`).
-                TopicsLine(
-                    topics = comment.topics,
-                    references = comment.references,
-                    onOpenTopic = onOpenTopic,
-                    testTagPrefix = "comment_${comment.id}",
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // A comment carries the control too (design.md §6).
-                    stanceControl(comment.id, "comment_${comment.id}")
-                    if (signedIn == true) {
-                        // `ReplyEntry` 5 — the composer, pre-targeted.
-                        TextButton(
-                            onClick = { onReplyTo(comment) },
-                            modifier = Modifier.testTag("comment_reply_${comment.id}"),
-                        ) {
-                            Text(stringResource(R.string.content_comment_reply))
-                        }
-                    }
-                    // `ReplyMedia` 6 — an own comment wears Edit, and it
-                    // opens `CommentEdit`.
-                    if (viewerId != null && comment.author?.id == viewerId) {
-                        TextButton(
-                            onClick = { onEditComment(comment) },
-                            modifier = Modifier.testTag("comment_edit_${comment.id}"),
-                        ) {
-                            Text(stringResource(R.string.content_edit))
-                        }
-                    }
-                }
-            }
-        }
-        // Replies are counted, not carried (Q49): nothing is on screen
-        // until a reader opens the branch, and `replyCount` is what the
-        // collapsed line reads.
-        val thread = state.replyThreads[comment.id]
-        val replies = thread?.items.orEmpty()
-        val hasMore = thread?.hasMore ?: false
-        replies.forEach { reply ->
-            CommentThread(
-                comment = reply,
-                depth = depth + 1,
-                state = state,
-                viewerId = viewerId,
-                signedIn = signedIn,
-                onLoadMoreReplies = onLoadMoreReplies,
-                onReplyTo = onReplyTo,
-                onEditComment = onEditComment,
-                onReveal = onReveal,
-                onOpenActor = onOpenActor,
-                onOpenTopic = onOpenTopic,
-                onReference = onReference,
-                onLicense = onLicense,
-                stanceControl = stanceControl,
-            )
-        }
-        when {
-            thread?.loading == true -> CircularProgressIndicator(
-                modifier = Modifier.padding(start = 12.dp).testTag("replies_loading_${comment.id}"),
-            )
-            thread?.failed == true -> TextButton(
-                onClick = { onLoadMoreReplies(comment) },
-                modifier = Modifier.testTag("replies_retry_${comment.id}"),
-            ) {
-                Text(stringResource(R.string.content_retry))
-            }
-            // The collapsed branch, as `CommentCard` draws it: the count
-            // stands in for the replies until a reader asks for them.
-            replies.isEmpty() && comment.replyCount > 0 -> TextButton(
-                onClick = { onLoadMoreReplies(comment) },
-                modifier = Modifier.testTag("replies_more_${comment.id}"),
-            ) {
-                Text(
-                    pluralStringResource(
-                        R.plurals.content_comment_view_replies,
-                        comment.replyCount,
-                        comment.replyCount,
-                    ),
-                )
-            }
-            hasMore -> TextButton(
-                onClick = { onLoadMoreReplies(comment) },
-                modifier = Modifier.testTag("replies_more_${comment.id}"),
-            ) {
-                Text(stringResource(R.string.content_comment_more_replies))
-            }
-        }
-    }
-}
