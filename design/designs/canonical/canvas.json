@@ -1037,6 +1037,15 @@
       "page": "media"
     },
     {
+      "file": "ComposePickVideoCover.dc.html",
+      "title": "Pick · the clip wears its cover",
+      "x": 3360,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
       "file": "CoverCrop.dc.html",
       "title": "Cover · a picture of your own",
       "x": 1440,
