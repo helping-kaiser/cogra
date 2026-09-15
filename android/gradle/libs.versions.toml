@@ -8,7 +8,7 @@
 # ships with Kotlin 2.x via the `kotlin.plugin.compose` plugin.
 agp = "8.13.2"
 kotlin = "2.3.21"
-ksp = "2.3.11"
+ksp = "2.3.12"
 
 # Static analysis. ktlint is the formatter (the analogue of `cargo fmt`)
 # and detekt the rule engine (the analogue of clippy); ktlint's own docs
@@ -88,7 +88,7 @@ coil = "3.4.0"
 # 1.11.0 is the current stable (2026-08-05). Its `minSdk` is 23, under
 # our 26. Unlike Coil it states no AGP floor above ours — it is an
 # AndroidX library built against the same toolchain line we are on.
-media3 = "1.11.0"
+media3 = "1.11.1"
 
 # Cropping. The crop step runs an established cropper rather than our own
 # geometry (jakob 2026-08-31: "i cant imagine that you cant find a nice
@@ -112,7 +112,7 @@ androidImageCropper = "4.7.0"
 # and subject to removal, and its keyset API cannot import a raw seed —
 # which key recovery requires.
 tink = "1.23.0"
-bouncycastle = "1.85.2"
+bouncycastle = "1.86"
 
 # Type-safe Navigation Compose routes are @Serializable, so the build needs
 # the kotlinx-serialization plugin (versioned with Kotlin) and its JSON runtime.
@@ -131,7 +131,7 @@ coroutinesTest = "1.11.0"
 turbine = "1.2.1"
 truth = "1.4.5"
 mockwebserver = "5.5.0"
-robolectric = "4.16.1"
+robolectric = "4.17"
 # Robolectric's android-all sandbox jars, one per API level the suites
 # launch on: the library modules' default (minSdk 26), the two levels
 # `RecoveryCodeConfirmTest` pins with `@Config`, and `app`'s targetSdk.
