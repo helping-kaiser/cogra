@@ -14,11 +14,12 @@
    list. `EmptyState`'s rules hold — a calm statement, no scolding, no `error`
    colour, and an empty list is not a fault (design.md §6, §9).
 
-   NO FOLLOW CONTROL, same as the populated page (jakob's review 2026-09-09):
-   the header anchor misread as a stance readout, so the follow gesture waits
-   for its own surface in slice 3's round. Following an unused tag stays a
-   perfectly good act — an Affinity toward a Type needs no Tag records to
-   exist first — and the slice-3 shape must keep that true.
+   NO STANCE ROW, AND NO CONTROL OF ANY KIND (jakob 2026-09-15: "the empty
+   page wires no face at all"). The populated page carries an Affinity row
+   under its title; the anatomy lives on `TagPageBody`, which this board does
+   not draw. Taking a position on an unused name is a perfectly good act — an
+   Affinity toward a Type needs no Tag records to exist first — so what this
+   board settles is where the gesture is offered, not whether it could be.
 
    NO ACTION IS OFFERED, and that is deliberate. `EmptyState` takes the one
    action that fills a list where there is one; here the action would be "post

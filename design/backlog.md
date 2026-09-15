@@ -2875,3 +2875,27 @@ reasoning that the specific rung's own justification has lapsed.
 Either is defensible and it is jakob's call. Whichever way it goes, the
 vantage rule in readme §13 wants the clause spelled out, because this
 is the first state that reaches past its last rung.
+
+### 90 · The empty tag page's missing stance row has no recorded reason · *design* · **open**
+
+Surfaced 2026-09-15 while tightening `TagPageEmpty`'s rationale, which
+had been justifying the absence with "same as the populated page" — a
+premise the topic round retired when it gave `TagPage` its Affinity
+row. The ruling itself is on the record: item 81 says "the empty page
+wires no face at all", and the board is drawn that way. What is not on
+the record is WHY.
+
+The tension is real enough to want an answer. `TagPageEmpty`'s own
+prose says taking a position on an unused name is a perfectly good act
+— an Affinity toward a Type needs no Tag records to exist first — and
+the tag page is the one destination a Type has. If that holds, the
+reader who arrives at a name nobody has used yet is exactly the reader
+most likely to want to stake it, and the page offers them nothing.
+
+Two ways out, and it is jakob's call. Either the empty page gains the
+same row the populated one carries — the stance anatomy already travels
+as `TagPageBody`, so it is a reuse rather than a drawing — or the
+absence is deliberate and the reason gets written down, in which case
+the page probably owes the reader a word about where the gesture lives
+instead. What is not an option is leaving a ruled absence with no
+sentence behind it.
