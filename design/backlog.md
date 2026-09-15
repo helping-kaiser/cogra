@@ -2701,7 +2701,7 @@ the same clause with the three families' words beside it, the long
 version's job. Both borrow the citation round's own formulation — the
 control owns the geometry, the record family owns the words.
 
-### 81 · A guest on a tag page has no ruled outcome · *design*
+### 81 · A guest on a tag page has no ruled outcome · *design* · **ruled + wired**
 
 Surfaced by the topic round 2026-09-14. `TagPage`'s three stance faces
 (two posts, a comment) carry no guest outcome in `graph.json`, and the
@@ -2716,6 +2716,22 @@ or the guest boards' tag chips are ruled not to reach it. `StanceControl`
 already answers correctly whatever the graph says (`signedIn=false`
 opens `JoinPrompt`); what is missing is the wiring, and the edges cannot
 be half-right on one face and silent on three.
+
+Ruled by jakob 2026-09-15: a guest is not special here. Any reader who
+taps a tag reaches the page — a connection to it or none — and sees what
+is tagged; the only thing a guest lacks is an opinion of the topic, so
+the stance face wears the no-opinion 🫥 and the borrowed vantage ranks
+what they read, post scores included. `TagPage`'s three stance-face
+edges gain the `GuestGate` outcome `Reel` spells for a shared board.
+`TagPageHeld` and `TagPageEmpty` do not: held is a record no guest can
+carry, and the empty page wires no face at all. The accessible path
+needs no outcome either — `StanceControl` renders that button behind
+`signedIn`, so for a guest it is not on the page. No board of its own,
+by the stream ruling. The applicant's once-each rule reaches this page
+unwired, as it reaches `Reel` and every other shared destination: an
+exhausted kind is answered on the applicant's own boards. Its kinds
+include the Affinity, so a topic stance stays open to an applicant who
+has already staged an opinion.
 
 ### 82 · A tag page reached from Your topics goes back to the wrong place · *design*
 
