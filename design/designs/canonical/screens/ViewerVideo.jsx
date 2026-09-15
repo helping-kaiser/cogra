@@ -11,8 +11,8 @@
    nothing here draws a rotate control, and the bar carries no fullscreen toggle
    because this already is it.
 
-   The way out is the X, a swipe down, or the backdrop, exactly as for a
-   picture. */
+   The way out is the X, a swipe down, or back, exactly as for a picture — and
+   a tap is not one of them. */
 export function Screen() {
   const { media } = MIRA_CLIP_POST;
   return <MediaViewer items={media} index={0} onClose={() => {}} elapsed="0:14" duration="0:41" progress={0.34} />;

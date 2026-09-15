@@ -24,8 +24,9 @@
    close. The description is read aloud to people who cannot see the frame;
    printed here it would become a caption its author never wrote.
 
-   THREE WAYS OUT: the X, a swipe DOWN, and the backdrop. An X, not a back
-   arrow — this is a layer being dismissed, not a step being walked. */
+   THREE WAYS OUT: the X, a swipe DOWN, and back. A tap is not one of them. An
+   X, not a back arrow — this is a layer being dismissed, not a step being
+   walked. */
 export function Screen() {
   return <MediaViewer items={MIRA_GALLERY_POST.media} index={1} onClose={() => {}} />;
 }
