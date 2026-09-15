@@ -127,6 +127,45 @@ query PostDetail(
   }
 }
 
+# THE THREAD, WITHOUT THE POST. `PostDetail` answers "what is this post, and
+# what is its thread" in one read, which is exactly what opening a post asks.
+# The comments sheet asks a narrower question, and it is raised over the FEED
+# too — where the post is already in hand and every field `PostFields` carries
+# is one the card is already drawing. Reading the thread through `PostDetail`
+# there would fetch a post only to discard it.
+#
+# So the thread gets its own document, selecting the same comment shape the
+# detail read does. It is strictly cheaper than the read it stands in for: the
+# same connection, minus `PostFields`.
+#
+# `totalCount` rides along because a page does not say how many there are, and
+# the sheet states the whole thread's size — the count the reader tapped.
+query PostComments(
+  $id: UUID!
+  $first: Int!
+  $after: String
+  $includePending: Boolean! = true
+) {
+  post(id: $id) {
+    id
+    comments(first: $first, after: $after, includePending: $includePending) {
+      totalCount
+      edges {
+        node {
+          ...CommentFields
+          replies(first: 0, includePending: $includePending) {
+            totalCount
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
 # The expand read: a further page of one comment's direct replies, each
 # carrying only the COUNT of its own branch — the same rule as the thread
 # read, one level down, so unfolding cannot re-create the cost Q49 removed.

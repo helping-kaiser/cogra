@@ -9,6 +9,7 @@ import type { ApolloClient } from "@apollo/client";
 import {
   CommentRepliesDocument,
   CommentSelfMarkDocument,
+  PostCommentsDocument,
   PostDetailDocument,
   PostsDocument,
   PrepareCommentDocument,
@@ -17,6 +18,7 @@ import {
   PreparePostEditDocument,
   type CommentRepliesQuery,
   type LandingState,
+  type PostCommentsQuery,
   type PostDetailQuery,
   type PostsQuery,
 } from "@/__generated__/graphql";
@@ -29,8 +31,19 @@ import { stagedFromPrepared, type StagedWriteView } from "./writes-api";
 
 export type PostView = PostsQuery["posts"]["edges"][number]["node"];
 
-type DetailPost = NonNullable<PostDetailQuery["post"]>;
-export type CommentView = DetailPost["comments"]["edges"][number]["node"];
+/**
+ * A comment, as THE THREAD READ serves it — the document the comments sheet
+ * makes, on every surface that raises it.
+ *
+ * It used to be derived from the detail read, back when that was the only
+ * document carrying comments. The sheet is now the one comments surface and
+ * `PostComments` is the one read behind it, so the shape is named where it is
+ * actually fetched. The detail read selects the same comment shape, so its own
+ * page stays assignable — and if the two ever drift, `PostDetail` stops
+ * type-checking, which is the contract doing its job.
+ */
+type ThreadPost = NonNullable<PostCommentsQuery["post"]>;
+export type CommentView = ThreadPost["comments"]["edges"][number]["node"];
 /**
  * A reply, as the EXPAND read serves it (Q49).
  *
@@ -266,6 +279,52 @@ export async function fetchPostDetail(
       endCursor: post.comments.pageInfo.endCursor ?? null,
       hasNextPage: post.comments.pageInfo.hasNextPage,
     },
+  });
+}
+
+/**
+ * One page of a post's thread, and the whole thread's size.
+ *
+ * The size is not the page's: the sheet states the count the reader tapped to
+ * raise it, which is cursor-independent and does not shrink as pages land.
+ */
+export type CommentPage = Page<CommentView> & { readonly total: number };
+
+/**
+ * ONE POST'S THREAD, WITHOUT THE POST — the read behind the comments sheet.
+ *
+ * The sheet is raised over the feed as well as over the detail, and on the
+ * feed the post is already in hand. Reading the thread through the detail
+ * document there fetched a whole post to discard it.
+ *
+ * null: the id names no post.
+ */
+export async function fetchPostComments(
+  client: ApolloClient,
+  postId: string,
+  after: string | null = null,
+  options: ListingOptions = {},
+): Promise<Outcome<CommentPage | null>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: PostCommentsDocument,
+      variables: {
+        id: postId,
+        first: CONTENT_PAGE_SIZE,
+        after,
+        includePending: includePendingOf(options),
+      },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  const post = fetched.value.post;
+  if (!post) return success(null);
+  return success({
+    items: post.comments.edges.map((edge) => edge.node),
+    endCursor: post.comments.pageInfo.endCursor ?? null,
+    hasNextPage: post.comments.pageInfo.hasNextPage,
+    total: post.comments.totalCount,
   });
 }
 
