@@ -1,11 +1,27 @@
 "use client";
 
-// The topic route (D20, roadmap "Slice 2.3 — Topics"): the name and the
-// tagged content list — the content-intrinsic channel only this slice
-// (D8). Following a topic waits for slice 3; the backend accepts the
-// stance either way, the surface simply does not offer it yet.
-// Ships deliberately plain: jakob is re-thinking the rest of slice 2's
-// visual design, so this surface hits it once at the redesign.
+// The topic route (D20, roadmap "Slice 2.3 — Topics"): the name, the
+// stance row, and the tagged content list — the content-intrinsic
+// channel only this slice (D8).
+//
+// THE HEADER CARRIES NO CONTROL AND THE ROW BELOW IT DOES (`TagPage`,
+// the topic round 2026-09-14). A stance anchor on the header's trailing
+// edge read as a stance readout for the post the reader arrived from; a
+// row of its own, under the title and above anything belonging to a
+// post, cannot. THE GESTURE IS AN AFFINITY — the same ceremony every
+// stance uses, wearing the family's own six words (`AFFINITY_AXES`) —
+// so there is no toggle and no one-tap follow, and the word "follow" is
+// not on the screen (copy-voice's ban, extended to topics).
+//
+// A GUEST REACHES IT LIKE ANYONE ELSE (backlog item 81, ruled
+// 2026-09-15). The page is public, the face wears the no-opinion 🫥 that
+// a viewer with no bundle always wears, and the tap raises the join
+// prompt — all of which the control already does behind `signedIn`.
+//
+// THE EMPTY PAGE WIRES NO FACE AT ALL (the same ruling), which is why
+// the row sits inside the populated branch. `TagPageEmpty`'s own prose
+// still argues that from the pre-topic-round premise that the populated
+// page carries no control either — reported, not resolved here.
 //
 // `hashtag(name:)` resolves any well-formed name (D4) — a Type is
 // anchored vacuously, so a topic nobody has tagged yet still renders a
@@ -23,6 +39,8 @@ import { Card } from "@/lib/ui/card";
 import { PageHeader } from "@/lib/ui/page-header";
 import { PostCard } from "@/lib/ui/post-card";
 import { LINK_COPIED } from "@/lib/ui/share";
+import { StanceControl } from "@/lib/ui/stance-control";
+import { AFFINITY_AXES } from "@/lib/ui/stance-format";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError } from "@/lib/ui/transport-error";
 
@@ -110,6 +128,22 @@ export function TopicView({ name }: { name: string }) {
       <h1 className="text-headline-small" data-testid="topic-name">
         #{hashtag.name.value}
       </h1>
+      {/* Under the title, above anything belonging to a post. It NAMES
+          WHAT IT STANCES — the tag itself, hash and all — because more
+          than one stance control stands on this page and the face's
+          accessible name is what says which is which.
+
+          A name moderation has taken away is a topic with nothing to
+          stance toward: the canonical name IS the target's identity
+          (hashtag.md §1), so the row waits for one rather than signing
+          against a blank. */}
+      {hashtag.name.value !== null && hashtag.taggedContent.length > 0 && (
+        <StanceControl
+          target={{ id: hashtag.name.value, kind: "topic", label: `#${hashtag.name.value}` }}
+          testIdPrefix="topic-affinity"
+          axes={AFFINITY_AXES}
+        />
+      )}
       <hr className="border-outline-variant" />
       <h2 className="text-title-medium">Tagged</h2>
       {hashtag.taggedContent.length === 0 && (

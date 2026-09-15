@@ -1193,6 +1193,13 @@ describe("severance", () => {
     expect(data.severed).toEqual([]);
   });
 
+  it("offers the walk-away, named, once a record stands behind the bundle", async () => {
+    mount({ seed: { "post-1": { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } });
+    await settle();
+    await hold();
+    expect(screen.getByTestId(`${PREFIX}-sever`)).toHaveTextContent("Walk it back");
+  });
+
   it("is findable from the open pad, and states what reaching zero takes", async () => {
     mount({
       seed: {
@@ -1256,20 +1263,18 @@ describe("severance", () => {
     expect(data.sent).toEqual([]);
   });
 
-  it("keeps the route findable but refuses to bill for nothing", async () => {
-    // §8.5 wants severance findable from the open pad; with no standing
-    // there is nothing to walk back, and the dialog says so rather than
-    // hiding the route and leaving the state unreachable.
+  it("offers no route at all with nothing to walk back", async () => {
+    // §8.5 wants severance findable from the open pad, and the route
+    // used to stand with no standing behind it — leading only to a
+    // dialog saying there was nothing to bill for. The master closed
+    // that (`design/components/stance/StanceControl.jsx`, "SEVER NEEDS
+    // SOMETHING TO SEVER … It arrives with the first stance"), and the
+    // pair `TagPage` / `TagPageHeldPad` draws the two states: three
+    // controls over a topic nobody holds, four over a held one.
     const data = mount();
     await settle();
     await hold();
-    await act(async () => {
-      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
-    });
-    expect(screen.getByTestId("severance-cost")).toHaveTextContent(
-      "You are already at nothing here.",
-    );
-    expect(screen.getByTestId("severance-proceed")).toBeDisabled();
+    expect(screen.queryByTestId(`${PREFIX}-sever`)).not.toBeInTheDocument();
     expect(data.severed).toEqual([]);
   });
 

@@ -467,10 +467,15 @@ export function StanceControl({
   // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (design's `StanceControl`,
   // and the pair `TagPage` / `TagPageHeldPad` draws: the pad over a topic
   // nobody holds has three controls and the pad over a held one has four).
-  // With no records and nothing severed there is no relationship to leave,
-  // and the button led only to a dialog saying so.
-  const severable =
-    bundle !== null && bundle !== undefined && (bundle.records > 0 || bundle.severed);
+  // With nothing said there is no relationship to leave, and the button
+  // led only to a dialog saying so.
+  //
+  // THE COUNT IS THE WHOLE TEST, and `severed` is deliberately not a
+  // second clause: on the wire it means "both axes at zero", which a
+  // bundle folding no records satisfies vacuously. A bundle that HAS
+  // records and nets to zero is already covered by the count, and the
+  // confirmation says so itself through `alreadySevered`.
+  const severable = bundle !== null && bundle !== undefined && bundle.records > 0;
 
   const padBody = (
     <>
