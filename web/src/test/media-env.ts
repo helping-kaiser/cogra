@@ -80,8 +80,12 @@ export function installMediaEnvironment(): void {
         return this._paused ?? true;
       },
     });
-    media.play = function (this: HTMLMediaElement & { _paused?: boolean }) {
+    media.play = function (this: HTMLMediaElement & { _paused?: boolean; _ended?: boolean }) {
       this._paused = false;
+      // A real element clears `ended` the moment playback (re)starts — the
+      // player's own replay press relies on this to read `video.ended` as
+      // true only up to that call (`video-player.tsx`, the play() algorithm).
+      this._ended = false;
       this.dispatchEvent(new Event("play"));
       return Promise.resolve();
     };
@@ -90,6 +94,13 @@ export function installMediaEnvironment(): void {
       this.dispatchEvent(new Event("pause"));
     };
     media.load = function () {};
+
+    Object.defineProperty(media, "ended", {
+      configurable: true,
+      get(this: HTMLMediaElement & { _ended?: boolean }) {
+        return this._ended ?? false;
+      },
+    });
 
     // THE CLOCK, which jsdom also leaves out: `duration` answers NaN and
     // `currentTime` never moves, so a transport driven by either would be
@@ -120,4 +131,12 @@ export function installMediaEnvironment(): void {
 export function statesDuration(video: HTMLMediaElement, seconds: number): void {
   (video as HTMLMediaElement & { _duration?: number })._duration = seconds;
   video.dispatchEvent(new Event("durationchange"));
+}
+
+/** The clip running out: a real element sets `ended` before it fires the
+ * event, and the transport's replay press reads that flag back
+ * (`video-player.tsx`, "PLAY AT THE END IS REPLAY"). */
+export function endsClip(video: HTMLMediaElement): void {
+  (video as HTMLMediaElement & { _ended?: boolean })._ended = true;
+  video.dispatchEvent(new Event("ended"));
 }

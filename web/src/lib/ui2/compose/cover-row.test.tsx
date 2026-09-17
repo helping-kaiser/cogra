@@ -80,6 +80,29 @@ describe("CoverRow", () => {
     ).toBeInTheDocument();
   });
 
+  // Design #781: `cover === null` is the row's own rest state — no ring
+  // and no dim on any frame, because choosing a cover is always a
+  // willing act (CoverRow.jsx:20-24). Every unchosen frame used to carry
+  // `opacity-65` unconditionally (`selected ? "" : "opacity-65"`), which
+  // dimmed the whole strip before anyone had picked anything.
+  it("rings and dims no frame when no cover has been picked yet", () => {
+    render(
+      <CoverRow
+        framePreviews={["blob:frame-0", "blob:frame-1"]}
+        cover={null}
+        coverPreview={null}
+        capturing={false}
+        onPickFrame={vi.fn()}
+        onPickPicture={vi.fn()}
+      />,
+    );
+    for (const testId of ["wizard-cover-frame-0", "wizard-cover-frame-1"]) {
+      const tile = screen.getByTestId(testId);
+      expect(tile).toHaveAttribute("aria-pressed", "false");
+      expect(tile).not.toHaveClass("opacity-65");
+    }
+  });
+
   it("keeps the default caption while capture is still running", () => {
     render(
       <CoverRow
