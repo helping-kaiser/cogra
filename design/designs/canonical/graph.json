@@ -4,7 +4,8 @@
   "terminals": {
     "back": "Back — returns to the previous screen",
     "self": "Acts on this screen — state changes in place",
-    "os": "Hands off to the OS — browser download, mail app, system sheet"
+    "os": "Hands off to the OS — browser download, mail app, system sheet",
+    "document": "Opens a written document — legal text the product ships and design does not draw, so there is no board owed behind it"
   },
   "scanExempt": {
     "TagPad": "the pair sheet covers the edit — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
@@ -283,6 +284,9 @@
     { "from": "Join", "via": 5, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
     { "from": "Join", "via": 6, "kind": "advance", "label": "Create account", "to": [{ "board": "ApplicantFeed", "case": "account created — applicant days begin" }, { "board": "JoinErrors", "case": "handle taken / invalid input" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "Join", "via": 7, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
+    { "from": "Join", "via": 8, "kind": "detour", "label": "? — About CoGra", "to": [{ "board": "About", "case": "the door's one explanation, behind the \"?\" rather than a fifth clickable line" }] },
+
+    { "from": "About", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "back where it was opened — the join door, or settings" }] },
 
     { "from": "JoinErrors", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "InviteEntry" }] },
     { "from": "JoinErrors", "via": 2, "kind": "advance", "label": "Handle field", "to": [{ "terminal": "self", "case": "typing" }] },
@@ -1674,6 +1678,10 @@
     { "from": "Settings", "via": 16, "kind": "advance", "label": "Sign out", "to": [{ "board": "SignIn", "case": "remembered — the session ends and the account stays offered here" }, { "board": "SignIn", "case": "not remembered — the key and the unpublished draft go with the session" }] },
     { "from": "Settings", "via": 17, "kind": "advance", "label": "Hidden accounts", "to": [{ "board": "SettingsHidden", "case": "the hidden list in a sheet over settings; with nobody hidden the row is inert and reads None, so there is nothing to open" }] },
     { "from": "Settings", "via": 18, "kind": "advance", "label": "Delete account", "to": [{ "board": "DeleteAccount", "case": "what goes, what stays, and the content sweep as a choice — nothing is deleted from the row" }] },
+    { "from": "Settings", "via": 19, "kind": "advance", "label": "Watch the intro again", "to": [{ "board": "OnboardingSteps", "case": "the intro from its first card — the one way back to it once the seen flag is set" }] },
+    { "from": "Settings", "via": 20, "kind": "advance", "label": "About CoGra", "to": [{ "board": "About" }] },
+    { "from": "Settings", "via": 21, "kind": "advance", "label": "Privacy", "to": [{ "terminal": "document", "case": "the privacy document" }] },
+    { "from": "Settings", "via": 22, "kind": "advance", "label": "Terms", "to": [{ "terminal": "document", "case": "the terms document" }] },
 
     { "from": "DeleteAccount", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings", "case": "nothing is lost — no message has gone out" }] },
     { "from": "DeleteAccount", "via": 2, "kind": "advance", "label": "Also remove what I posted", "to": [{ "terminal": "self", "case": "the box ticks — the choice rides the request, and the content sweep runs at the deadline only if it is set" }] },

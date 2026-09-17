@@ -308,6 +308,15 @@
       "page": "entry"
     },
     {
+      "file": "About.dc.html",
+      "title": "About CoGra · the whole page",
+      "x": 2400,
+      "y": 7240,
+      "w": 390,
+      "h": 1736,
+      "page": "entry"
+    },
+    {
       "file": "ComposePick.dc.html",
       "title": "Compose · pick the body",
       "x": 0,
@@ -1338,7 +1347,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 4018,
+      "h": 4061,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1428,7 +1437,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 4323,
+      "h": 4456,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1546,7 +1555,7 @@
       "x": 0,
       "y": 1928,
       "w": 390,
-      "h": 2163,
+      "h": 2442,
       "page": "profile"
     },
     {
