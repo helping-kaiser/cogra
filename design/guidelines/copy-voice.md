@@ -19,12 +19,20 @@ Two rules keep that from becoming noise:
 2. **Detail is layered** — a calm surface by default, the arithmetic a
    tap away, with the density partly the reader's own choice.
 
-## The vocabulary that stays off the screen
+## The register that stays off the screen
 
-Words describing how the thing is built rather than what the reader is
-doing: **graph, node, edge, vertex, tensor, weight, parameter,
-decentralized, protocol, token, crypto**. The repo's own internal
-vocabulary is equally out: *valence*, *connection*, `p_d`, `p_i`.
+A voice, not a word list (jakob's ruling 2026-09-17). Copy never sounds
+nerdy, geeky or mathematical about the product's own machinery. That
+keeps out every word whose job is to describe how the thing is built:
+**node, edge, vertex, tensor, weight, parameter, decentralized,
+protocol, token, crypto**, and the repo's own *valence*, `p_d`, `p_i`.
+
+**Graph, network and connection are ordinary English** and are welcome
+used plainly — the blessed lines below say "stays on the graph" and
+"Removed by the network" because those are the sentences a reader
+understands. **Followers** is not forbidden either; it is steered
+around because it misdescribes what CoGra's edges are, which is an
+accuracy problem rather than a register one.
 
 An **opinion's** two stance parameters are labelled `For or against` and
 `How much reaches you` on screen, and nothing else. Another record family
@@ -796,11 +804,12 @@ Blessed with the close-out round. `VouchedIn` is the one board that
 marks a moment rather than reporting one, and its three strings are the
 whole screen:
 
-- `You're part of the sky now.` — the headline. *Graph* is off the
-  screen (§ *The vocabulary that stays off the screen*), and *sky* is
-  the word the product already uses for the same picture, which the
-  board draws behind the words. It is the one place a metaphor leads,
-  and it can afford to: the line under it carries the content.
+- `You're part of the sky now.` — the headline. *Sky* is the word the
+  product already uses for this picture, and the board draws that
+  picture behind the words; a headline that named the graph would be
+  naming the mechanism at the one moment the reader is feeling
+  something. It is the one place a metaphor leads, and it can afford
+  to: the line under it carries the content.
 - `Your opinion on @mira is signed, and the way is open both ways. The
   feed you see from here is your own.` — the subline, and the honest
   half. It claims three things that are all certainly true the instant
@@ -1488,9 +1497,8 @@ them and a reader who does will be surprised by the second. *Vouch* is
 the product's word and a reader's unfamiliar one, so it is explained
 where it stands rather than left to be guessed. `brings them in` is
 lifted from `VouchBack`, `ApplicantWaiting` and `VouchedIn` — the
-boards already had the right words, and the rounder phrasings for what
-a new member joins are either banned vocabulary or a word
-`ProfileHeader` rules out (backlog 88).
+boards already had the right words, and one phrase said on four
+surfaces teaches faster than four near-synonyms would.
 
 **The sections are `Applications` and `Live links`.** Not "Waiting on
 you": only one of those rows is waiting on the reader and the other is

@@ -499,6 +499,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Remove</button>", tag: "button" },
     { n: 5, find: ">License terms</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+    // Citing arrived after this sheet was numbered and took the next free
+    // number rather than the second one it reads at — the settings page's
+    // rule, for its reason: the badge is an identity, not a position.
+    { n: 7, find: ">Cite in a new post</button>", tag: "button" },
   ],
   // The menus round: four sheet boards, one per surface a ⋮ opens on. Each is
   // scanExempt, so only the sheet's own rows and its scrim carry numbers, and

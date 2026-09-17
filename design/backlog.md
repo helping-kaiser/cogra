@@ -59,10 +59,10 @@ Stances row: a stance is not ranked, and the real set combines.
 ### 5 · Profile header + media avatars · *system* · **built**
 `components/people/ProfileHeader.jsx`, plus a photo on `MonogramAvatar`
 and `ActorChip`, on the People card. The stance on the person leads the
-actions row; the counts read **"Stances on them"** and **"Stances they've
-taken"** (the repo's own word for the link is banned on screen, and
-"followers" would describe a different product); `own` changes the row,
-not the layout; no cover image. The monogram stays the fallback.
+actions row; the counts name their two directions separately, and never
+merge into a "followers" figure, which would describe a different
+product; `own` changes the row, not the layout; no cover image. The
+monogram stays the fallback.
 
 ### 6 · Compose + signing + pending · *design* · **built**
 `designs/canonical/` — the canonical canvas's Compose rows
@@ -2537,7 +2537,7 @@ bundle exposes components and constants to screens, never a card's
 helpers, so the rule is tied by the docblocks rather than by an import.
 Nothing is drawn differently.
 
-### 74 · The onboarding intro amends the per-control rule · *design*
+### 74 · The onboarding intro amends the per-control rule · *design* · **drawn 2026-09-17, awaiting canvas iteration**
 
 jakob's ruling (2026-09-14) amends §13's per-control rule
 (design/readme.md §13, "First-time onboarding is per-control, never a
@@ -2549,7 +2549,23 @@ cannot fully act. A new Settings group hosts the re-watch entry, the
 About page, and privacy/terms. Per-control coach marks stay as they are;
 the seen-flag is server-side.
 
-Status: open, awaiting the Round C drawing round.
+Drawn 2026-09-17, v1. FIVE cards in jakob's ruled order — `OnboardingSteps`
+· `OnboardingShape` · `OnboardingPublic` · `OnboardingLayers` ·
+`OnboardingVouch` (entry, y 7240, x 0/480/960/1440/1920) — full screen, no
+bottom bar, a headline and one line each, pager dots, Skip on every card,
+`Start reading` on the last. Money is OUT of the cards entirely: it gets its
+own onboarding at the first wallet touch, the emerging per-surface pattern.
+Card 2 draws emojis ON the edges — jakob's conceptual ruling, that an emoji
+IS the pair an edge carries — and card 5 draws a fixture inviter the client
+personalizes to the actual link-issuer's avatar (an implementation relay,
+not a drawn state). `About` (entry, 2400×7240, 390×1736) carries the fuller
+version and GETS ALL of it, money and unbuilt features included; Settings
+gained the About group after Credentials; the join door gained a `HelpDot`
+rather than a fifth clickable line. readme §13's per-control rule carries
+the amendment.
+
+Status: awaiting jakob's canvas iteration — the five cards are v1 and the
+round expects to iterate on them.
 
 ### 75 · The keyboard's own mechanism · *design* · **ruled + recorded**
 
@@ -2709,13 +2725,13 @@ The rule is not wrong, it is scoped to the wrong noun: what may not be
 renamed is the OPINION's two parameters, and what a different record
 family fills the same two slots with is that family's to name
 (`StancePad`'s own contract says exactly this). §3 wants one clause
-saying so, and copy-voice's *vocabulary that stays off the screen*
+saying so, and copy-voice's *register that stays off the screen*
 probably wants the same clause. A tightening pass, not a decision.
 
 Tightened 2026-09-15 — jakob confirmed it needed no ruling. §3 now names
 the noun: an OPINION's two stance parameters carry those two labels and
 nothing else, and another record family filling the same two slots names
-them its own. copy-voice's *vocabulary that stays off the screen* carries
+them its own. copy-voice's *register that stays off the screen* carries
 the same clause with the three families' words beside it, the long
 version's job. Both borrow the citation round's own formulation — the
 control owns the geometry, the record family owns the words.
@@ -2845,7 +2861,7 @@ care in that dialog lives where the rule puts it: the safe answer takes
 the filled button, the removal stays a text button, and two sentences
 say what removal does before either is pressed.
 
-### 88 · `ProfileHeader` bans a word the two banned lists do not · *design* · **open**
+### 88 · `ProfileHeader` bans a word the two banned lists do not · *design* · **closed 2026-09-17**
 
 Surfaced by the invites round 2026-09-15 while drafting the empty
 state's teaching lines. `ProfileHeader.prompt.md` says: do not write
@@ -2861,6 +2877,18 @@ labels it was written about. The invites round sidestepped it by using
 the product's own blessed phrase (`brings them in`, from `VouchBack`,
 `ApplicantWaiting` and `VouchedIn`), which is better copy than either
 candidate, so again nothing is blocked.
+
+Closed 2026-09-17 by widening the question rather than answering it as
+asked. jakob ruled the ban itself an exaggeration: what must stay off
+the screen is the nerdy, geeky, mathematical REGISTER, not a list of
+words — and *graph*, *network* and *connection* are ordinary English,
+welcome used plainly. *followers* is not forbidden either; it is
+steered around on `ProfileHeader`'s figures because it misdescribes
+what a CoGra edge is, which is accuracy and not vocabulary. readme §3
+and copy-voice now state the register; `ProfileHeader`'s prompt, its
+docblock, its `.d.ts` and the People card state the accuracy argument;
+`BottomNav`, the §7 Explore reasoning and the connection-count
+reasoning no longer cite a ban as their justification.
 
 ### 89 · Whose view does a turned-down applicant borrow · *design* · **narrowed 2026-09-15**
 
@@ -3084,7 +3112,7 @@ the prefill's "the inviter's eventual Opinion" — that last one the
 ISSUER's, which is the word it wanted. `Notifications`' two docblocks
 took the same correction.
 
-### 95 · The compose flow has no staged-tags sheet · *design*
+### 95 · The compose flow has no staged-tags sheet · *design* · **drawn 2026-09-17**
 
 Surfaced by the tags-overflow round 2026-09-15. The seal's tags row now
 folds into a counting door the way the References row does, but the two
@@ -3104,7 +3132,16 @@ being a number they cannot check. Wired to the details stage for now,
 because the round was told to use the surface that exists rather than
 invent the one that would match.
 
-### 96 · The system folds a tag list two different ways · *design*
+Ruled and drawn 2026-09-17: the first way out. `TagsSheet`
+(`components/compose/`) is the true mirror of `CitedSheet` — same shape,
+same title construction, same `Done`, `TopicRemovable` pills in the
+composer's own wrapping row, and it ADDS NOTHING, no "+ Add a tag", for
+`CitedSheet`'s own reason. `ComposeTags` (compose, 3840×1060) draws the
+sheet over the inert seal at the same seven tags it lists.
+`ComposeSealTagged/9` now opens it instead of walking back to the details
+stage, and its kind changed from `back` to `advance` with it.
+
+### 96 · The system folds a tag list two different ways · *design* · **ruled 2026-09-17**
 
 Surfaced by the same round. `TopicsLine`, on the reader's side, folds a
 tag list PARTIALLY: it keeps the chips that fit and appends the
@@ -3120,6 +3157,16 @@ with references i guess?"), which is what the round drew. What is not
 ruled is whether the two folds should agree: either the seal keeps the
 chips that fit and counts the rest, or the difference is stated as
 deliberate and the reason recorded with both.
+
+Ruled 2026-09-17: the second. The two folds differ DELIBERATELY. The
+reader's glance line keeps sample chips for scent — enough of the list
+to judge whether to look — while the seal is a read-back before a
+signature, so it folds wholly and its door shows the complete list, the
+way its References sibling does. One surface is being skimmed and the
+other is being checked; a single fold would serve one of them badly.
+Recorded in `TopicsLine.prompt.md`, `ActsCard.prompt.md` and the seal's
+tags-row docblock (`_shared.jsx`).
+
 ### 97 · Both apps lag the draft offer's new shape · *implementation* · **open**
 
 Filed by the re-review 2026-09-15, when jakob ruled the compose entry's
@@ -3151,7 +3198,7 @@ dialog anatomy already shared with `DiscardConfirm`. Web's own
 Nothing here is a design question; the boards are the contract and this
 is conformance work.
 
-### 85 · The signed reply's landing state is promised and undrawn · *design* · **open**
+### 85 · The signed reply's landing state is promised and undrawn · *design* · **drawn 2026-09-17**
 
 Filed 2026-09-15 with the reply-return ruling (readme, *the
 detail-fold and reply-return rulings*). The flow's end case promises
@@ -3163,7 +3210,19 @@ their just-signed reply on its expanded parent. One state board (a
 `ReplyEntry` variant or its own drawing, the round's call) closes it;
 the edit-return twin ruled the same evening lands on the same anatomy.
 
-### 98 · Which headers collapse, and which pin · *design* · **open**
+Drawn 2026-09-17 as `ReplySettled` (comments, 3840×0): the sheet cut at
+its top edge by the kept offset, the parent's collapsed count expanded,
+the signed reply in `CommentCard`'s reserved `children` slot wearing
+`PendingMarker`. `CommentsSheet` learned `scrolledBy` and
+`CommentsThreadSheet` learned `landed`, both extended rather than
+forked. The reply flow's four sign outcomes — `ReplySeal/9`,
+`ReplyCited/9`, `ReplyCitedMany/9`, `ComposeSealUploading/7` — now land
+here instead of on the thread without the reply in it. The edit's return
+shares this anatomy and is owed no second board; the two edit-sign
+edges (`CommentEdit/12`, `CommentEditVideo/12`) still land on
+`ReplyMedia` and are a follow-up.
+
+### 98 · Which headers collapse, and which pin · *design* · **ruled 2026-09-17**
 
 Filed 2026-09-15 by the detail-actions lane, after jakob's hand test:
 the post detail's header hiding on scroll "is not a behavior shared for
@@ -3188,7 +3247,24 @@ chats, invites, the key surfaces, profile edit — is un-wrapped on web
 and unexamined on android. Whether "pinned" means `position: sticky` on
 web or simply not collapsing is part of the same ruling.
 
-### 99 · The Sensitive row's marked state is undrawn · *design* · **open**
+Ruled 2026-09-17: **browse collapses, task pins.** A surface the reader
+dwells in and scrolls for content gives its top to the content; a
+surface they pass through to finish something keeps its top, because
+the way back and the content's acts must not leave mid-task. Collapse:
+feed, search results, topic page, profile, saved, notifications,
+history, invites list. Pin: post detail, every compose and edit stage,
+settings, the ceremonies, chats, About. On web **pinned means
+`position: sticky`**, and the collapsing surfaces adopt `CollapsingTop`
+there too — settings and compose therefore FLIP to pinned, and the
+detail is pinned on both. The table lives in readme §4 beside the fixed
+elements; `CollapsingTop.prompt.md` and `PageHeader.prompt.md` point at
+it instead of at a blanket rule about surfaces that scroll. Recorded
+beside it: cross-platform visual parity, dark mode included, wherever
+capability is equal (jakob 2026-09-17, caveated the same day — genuine
+capability gaps are presented differently, per case). Both apps owe the
+conform pass.
+
+### 99 · The Sensitive row's marked state is undrawn · *design* · **ruled 2026-09-17**
 
 Filed 2026-09-15 by the detail-actions lane, which built the row on both
 edit surfaces. All eleven `Sensitive` `FactRow`s in the tree read
@@ -3201,7 +3277,16 @@ not. The clients ship `Marked` / `Change`, following the comment edit's
 shipped choice, which is a guess wearing the confidence of a shipped
 string. Also open: whether clearing gets its own word.
 
-### 100 · Three menu contradictions the code has to choose between · *design* · **open**
+Ruled 2026-09-17: the shipped pair is right — `value="Marked"`,
+`action="Change"` — and clearing gets NO word on the row. The switch
+inside the sheet is where a mark comes off, so a row offering the undo
+beside the door would make undoing the easier of the two. Drawn as a
+states block on `rows.card.html`, the FactRow family's own card, both
+readings side by side; recorded in `FactRow.prompt.md`. No board spent
+and no board fixture changed — the eleven at-rest rows in the tree are
+the at-rest state and stay as they are.
+
+### 100 · Three menu contradictions the code has to choose between · *design* · **ruled 2026-09-17**
 
 Filed 2026-09-15 by the detail-actions lane's row-by-row audit.
 
@@ -3223,3 +3308,41 @@ forbids it. The clients follow the constant.
 reader menu with `Share` at 320px, the card dropping its own
 (`showShare={false}`). Neither client implements the breakpoint, so the
 narrow board is undelivered; what width triggers it is undrawn.
+
+Ruled 2026-09-17, all three. (a) The EDGE was stale, not the ruling:
+`RemoveMenu/3` now opens `EditCompose` — marking a published post is a
+signed change to it, made and signed where every other change to it is,
+and the edit's own Sensitive row raises the sheet. The clients already
+conform. (b) `OWN_POST_MENU` gains `Cite in a new post` at the reader
+menu's own position, second, so the thumb finds one row in one place on
+every menu that has it; `RemoveMenu` took the next free number (7) for
+it rather than renumbering five edges, the settings page's rule. The
+`cite-a-post` flow now starts on four boards. (c) The breakpoint is
+**360px of viewport width** — at or under it, share moves into the
+sheet. The 320 board stays drawn at 320 because that is the narrowest
+phone this system draws for, not because 320 is the threshold. jakob's
+register for the whole width: small phones are rare but real,
+everything must WORK on them, masterful is not yet owed.
+
+### 101 · The over-cap Done on the two closing sheets · *design* · **ruled 2026-09-17**
+
+Filed by the design round on the implementation session's report (HT-FIELDS,
+PR #784), which gated `Done` on both Done-closing sheets — `DescribeSheet`
+(alt text, `DescribeSheet.jsx:92` passes `cap={1000}`) and the sensitive
+sheet (reason, `ComposeSensitive.jsx:40` passes `cap={140}`) — and found no
+canonical board drawing the over-cap state. The boards draw the at-rest
+under-cap fixture only.
+
+RULED: **visible-but-disabled**, the app-wide `canSign`/`canSubmit`
+precedent, is the intent — not a hidden button, not a dialog. The refusal
+the reader reads is the FIELD's, and that part was never undrawn: the late
+counter is contractual at `TextField.prompt.md:27-36` (silent until
+`remaining <= max(20, round(cap / 10))`, a quiet remaining count, `--error`
+once past, the board wording the message, Unicode scalars never `.length`),
+and `forms.card.html:48` carries a worked over-cap specimen. So the only
+genuinely undrawn part was the SHEET-level treatment of its closing word,
+which is a sentence rather than a board: a `Done` that vanished would leave
+a reader hunting for the way out of a sheet they cannot leave.
+
+Recorded 2026-09-17 in `DescribeSheet.prompt.md` and `ComposeSensitive.jsx`'s
+docblock. No board spent, no fixture changed.
