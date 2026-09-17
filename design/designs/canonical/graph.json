@@ -23,6 +23,7 @@
     "ExploreFilter": "the search filter sheet covers the results — the field, trigger, rows, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "ReplyEntry": "the comments sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ReplyMedia": "the comments sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ReplySettled": "the same sheet reopened on a just-signed reply — the post detail beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "CommentEditActs": "the acts sheet covers the edit — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "RefsSheet": "the tags-and-references sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "PostOpinions": "the opinions sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
@@ -699,6 +700,14 @@
     { "from": "FeedFar", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "FeedFar", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
+    { "from": "ReplySettled", "via": 1, "kind": "advance", "label": "comment author chips", "to": [{ "board": "ProfileOther" }] },
+    { "from": "ReplySettled", "via": 2, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "board": "CommentMenu", "case": "the comment's sheet (master)" }] },
+    { "from": "ReplySettled", "via": 3, "kind": "advance", "label": "comment tag chips", "to": [{ "board": "TagPage" }] },
+    { "from": "ReplySettled", "via": 4, "kind": "advance", "label": "comment stance face", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }] },
+    { "from": "ReplySettled", "via": 5, "kind": "advance", "label": "Reply", "to": [{ "board": "ReplyCompose", "case": "the composer, pre-targeted at that comment" }] },
+    { "from": "ReplySettled", "via": 6, "kind": "advance", "label": "Add a comment", "to": [{ "board": "ReplyCompose", "case": "the full-focus composer, parent pinned" }] },
+    { "from": "ReplySettled", "via": 7, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — back to where it was opened" }] },
+
     { "from": "ReplyEntry", "via": 1, "kind": "advance", "label": "comment author chips", "to": [{ "board": "ProfileOther" }] },
     { "from": "ReplyEntry", "via": 2, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "board": "CommentMenu", "case": "the comment's sheet (master)" }] },
     { "from": "ReplyEntry", "via": 3, "kind": "advance", "label": "comment tag chips", "to": [{ "board": "TagPage" }] },
@@ -817,7 +826,7 @@
     { "from": "ReplySeal", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplySeal", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
     { "from": "ReplySeal", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
-    { "from": "ReplySeal", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ReplySeal", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ReplySeal", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
 
     { "from": "ReplyCited", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the reference still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
@@ -828,7 +837,7 @@
     { "from": "ReplyCited", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplyCited", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
     { "from": "ReplyCited", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
-    { "from": "ReplyCited", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment and its reference settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ReplyCited", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply and its reference settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ReplyCited", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the reference still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
     { "from": "ReplyCited", "via": 11, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation leaves — the comment stops carrying it" }] },
     { "from": "ReplyCited", "via": 12, "kind": "advance", "label": "staged reference name", "to": [{ "board": "RefPair", "case": "the citation's pair sheet (master on the compose page)" }] },
@@ -841,7 +850,7 @@
     { "from": "ReplyCitedMany", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplyCitedMany", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
     { "from": "ReplyCitedMany", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
-    { "from": "ReplyCitedMany", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment and its references settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ReplyCitedMany", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply and its references settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ReplyCitedMany", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the references still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
     { "from": "ReplyCitedMany", "via": 11, "kind": "advance", "label": "References row", "to": [{ "board": "ComposeCitations", "case": "the staged-citations sheet (master on the compose page)" }] },
 
@@ -1477,7 +1486,7 @@
     { "from": "ComposeSealUploading", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeSealUploading", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "ComposeSealUploading", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }, { "board": "ReplyEntry", "case": "uploads land — signing proceeds to the thread, the comment settling" }] },
+    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }, { "board": "ReplySettled", "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }] },
     { "from": "ComposeSealUploading", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeUploading", "case": "one stage back" }] },
 
     { "from": "ComposePickWeb", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },

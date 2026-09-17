@@ -371,6 +371,21 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: "Add a comment</label>", tag: "label" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
   ],
+  // The same sheet at the end of the reply flow (item 85): the same controls,
+  // minus the "View n replies" line the landing has already opened — so every
+  // number below the sixth shifts up by one.
+  ReplySettled: [
+    { n: 1, find: '<a href="/u/', tag: "a", all: true },
+    { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
+    { n: 3, find: '<a href="/t/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 5, find: ">Reply</button>", tag: "button", all: true },
+    { n: 6, find: "Add a comment</label>", tag: "label" },
+    { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
     { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
