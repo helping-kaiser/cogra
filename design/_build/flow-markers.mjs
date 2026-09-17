@@ -738,6 +738,16 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
   ],
+  // The tags door's twin of the sheet above (item 95). scanExempt likewise, so
+  // only the sheet's own controls and its scrim carry numbers; the seven pills'
+  // name-buttons share one number and their ×s another, one edge covering each
+  // control — `ComposeCitations`' rule, arriving at the row above it.
+  ComposeTags: [
+    { n: 1, find: "— set how it relates\"", tag: "button", all: true },
+    { n: 2, find: 'aria-label="Remove #', tag: "button", all: true },
+    { n: 3, find: ">Done</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   ComposeKeyAbsent: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },

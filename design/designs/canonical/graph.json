@@ -49,6 +49,7 @@
     "SettingsHidden": "the hidden-accounts sheet covers the settings page — every row beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposeLicense": "the license sheet covers the seal — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposeCitations": "the staged-citations sheet covers the seal — everything beneath the scrim is inactive in this state, the counting row that opened it among them; only the sheet (and its scrim) is live",
+    "ComposeTags": "the staged-tags sheet covers the seal — everything beneath the scrim is inactive in this state, the counting row that opened it among them; only the sheet (and its scrim) is live",
     "ComposeSensitive": "the sensitive sheet covers the seal — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposePad": "the wash covers the seal, whole — its header, its three facts and its foot are inactive in this state; only the parked pad is live",
     "ReplyPad": "the wash covers the reply's seal, whole — its header, its add-rows, its three facts and its foot are inactive in this state; only the parked pad is live",
@@ -979,7 +980,12 @@
     { "from": "ComposeSealTagged", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
     { "from": "ComposeSealTagged", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "signed — the detail view, still settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ComposeSealTagged", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeDetails", "case": "one stage back — the tags still staged" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
-    { "from": "ComposeSealTagged", "via": 9, "kind": "back", "label": "Tags row", "to": [{ "board": "ComposeDetails", "case": "the count opens what it counts — the details stage is where staged tags are managed, the compose flow having no staged-tags sheet to open (backlog item 95)" }, { "board": "ComposeDetailsVideo", "case": "the same, on a clip body's details" }] },
+    { "from": "ComposeSealTagged", "via": 9, "kind": "advance", "label": "Tags row", "to": [{ "board": "ComposeTags", "case": "the count opens what it counts — the staged-tags sheet over the seal, the References row's own kind of door (backlog item 95)" }] },
+
+    { "from": "ComposeTags", "via": 1, "kind": "advance", "label": "staged tag name", "to": [{ "board": "TagPadCompose", "case": "the tag's pair sheet (master on the compose page)" }] },
+    { "from": "ComposeTags", "via": 2, "kind": "advance", "label": "tag chip ×", "to": [{ "terminal": "self", "case": "the tag leaves — the post stops being about it, and the row behind counts one fewer" }] },
+    { "from": "ComposeTags", "via": 3, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the seal it opened from, post's or reply's" }] },
+    { "from": "ComposeTags", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
     { "from": "ComposeCitations", "via": 1, "kind": "advance", "label": "staged reference name", "to": [{ "board": "RefPair", "case": "the citation's pair sheet (master on the compose page)" }] },
     { "from": "ComposeCitations", "via": 2, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation leaves — the post stops being about it, and the row behind counts one fewer" }] },

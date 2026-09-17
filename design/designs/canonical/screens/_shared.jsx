@@ -62,6 +62,7 @@ const {
   DescribeCounter,
   PickedSheet,
   CitedSheet,
+  TagsSheet,
   DescribeSheet,
   UploadStatusLine,
   UploadErrorLine,
@@ -1088,11 +1089,18 @@ const citedRow = (count) => ({
    `TopicsLine` already uses where the feed folds a tag list into its
    remainder, said again on this side of the composer.
 
-   WHERE THE DOOR LEADS IS THE DETAILS STAGE, and it is the one place the two
-   rows do not match: a citation's door opens a sheet OVER the seal, a tag's
-   walks back to where tags are staged, because the compose flow has no
-   staged-tags sheet to open. Wired to the surface that exists rather than
-   inventing the one that would match (backlog item 95). */
+   WHERE THE DOOR LEADS IS `TagsSheet`, OVER THE SEAL — the References row's
+   own destination with tags in it (backlog item 95, ruled the batch-rulings
+   round). The two rows fold for one reason and promise one thing, so they open
+   one kind of door; the seal has one grammar and not two.
+
+   THE TWO FOLDS STILL DIFFER, AND THEY DIFFER DELIBERATELY (backlog item 96,
+   ruled the same round). `TopicsLine` keeps sample chips beside its remainder
+   because the reader's glance wants SCENT — enough of the list to judge whether
+   to look. A seal is a read-back before a signature, so its row folds WHOLLY
+   and its door shows the complete list, exactly as its References sibling does.
+   One surface is being skimmed and the other is being checked; a single fold
+   would serve one of them badly. */
 const tagsRow = (count) => ({
   label: "Tags",
   value: `${count} tags`,
