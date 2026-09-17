@@ -24,33 +24,41 @@
    each other with solid edges and to @mira with solid edges, so she is visibly
    IN that graph while you are visibly not yet.
 
-   WHAT IS DRAWN UP THERE IS A CUTOUT, NOT A CLUSTER (jakob's second canvas
-   pass: "the graph above mira still doesnt look graphy.. it looks closed off
-   and a bit like a mushroom it should give the feel of strechting endlessly
-   wide out (maybe have some loose edges fading out and give it a nicer
-   shape"). Three things do that work and each one answers a word of his:
+   WHAT IS DRAWN UP THERE IS A CUTOUT, NOT A CLUSTER, and it took three canvas
+   passes to find the shape. Each fault jakob named has its own fix, and two of
+   them are failure modes this drawing must never return to:
 
-   - CLOSED OFF is fixed by the LOOSE EDGES. Nine of them leave the wired dots
-     and run outward — left, up, right, down past the corners — on a stroke
-     that fades to nothing. Three end in a dot faint enough to read as far
-     away; six end in nothing at all, which is the honest drawing of an edge
-     whose other end is off this card. A graph whose every edge lands
-     somewhere inside the frame is a graph with a boundary, and this one has
-     none.
-   - MUSHROOM is fixed by the SILHOUETTE and by the GATE. The dots sit in a
-     shallow band — 342 wide against 60 tall — that TILTS, running lower on
-     the left and higher on the right, because a level row of dots arcs into
-     a cap the moment its ends drop and a tilted one cannot. And only two
-     edges rise to @mira: three converging on one face drew a flare, and a
-     flare under a band of dots is the stem the cap was sitting on. The loose
-     edges leave along the band's own axis far more than they leave upward,
-     which is what makes it read as weather blown across the top rather than
-     as something growing out of her.
+   - CLOSED OFF is fixed by the LOOSE EDGES ("it looks closed off... it should
+     give the feel of strechting endlessly wide out (maybe have some loose
+     edges fading out"). Eleven of them leave the wired dots and run outward —
+     left, right, off the top, down past the lower corners — on a stroke that
+     fades to nothing. Four end in a dot faint enough to read as far away;
+     seven end in nothing at all, which is the honest drawing of an edge whose
+     other end is off this card. A graph whose every edge lands inside the
+     frame is a graph with a boundary, and this one has none.
+   - MUSHROOM is fixed by the GATE. Only two edges rise to @mira: three
+     converging on one face drew a flare, and a flare under a spread of dots
+     is a stem holding up a cap.
+   - A PLANE is fixed by DEPTH (jakob's third pass: "make it span more
+     height.. it is not a shroom anymore but like a plane rather than a
+     graph.. maybe a bit more of a tree shape with some interconnections
+     looks more convincing"). A wide shallow band has one dimension to read
+     and so reads as a surface seen edge-on. The dots now CLIMB — 226px of
+     span against 270 of width — in loose tiers that branch: two above her,
+     four above those, four above those, two more at the top where it thins
+     out. The composition moved DOWN the card to buy that room, his own
+     suggestion, and the stage grew with it.
+   - A STRICT TREE would have been the next wrong answer, so the tiers are
+     CROSS-LINKED: siblings joined to each other, a mid dot reaching across
+     into its neighbour's branch, an upper one tying back down the other
+     side. Branching is what gives the drawing depth; the cross-links are
+     what keep it a graph. Six of the sixteen wired edges exist only to close
+     a loop no tree would have.
    - A NICER SHAPE is fixed by the IRREGULARITY. Positions are hand-placed and
-     deliberately uneven — no two gaps equal, no symmetry to find — because
-     an even scatter reads as a pattern and a pattern reads as decoration.
-     The mesh closes a few triangles and leaves other dots on a single
-     thread, the way a real neighbourhood is dense in places and thin in
+     deliberately uneven — no two gaps equal, no tier level, no symmetry to
+     find — because an even scatter reads as a pattern and a pattern reads as
+     decoration. The mesh is dense in the middle and leaves the top dots on a
+     thread each, the way a real neighbourhood is thick in places and thin in
      others.
 
    THE FADE IS A GRADIENT, NOT AN OPACITY (and it is token-themed). Each loose
@@ -60,9 +68,9 @@
    the right thing in both themes, which a flat 30%-opacity line does not.
 
    MIRA IS JOINED ON, NOT HOLDING IT UP. Two edges, rising nearly parallel to
-   the two dots above her; everything to the right of them is hers only THROUGH
-   the mesh, which is the gate's own meaning — one link in, and the network
-   carries on past it without her.
+   the two dots above her; everything beyond those two is hers only THROUGH the
+   mesh, which is the gate's own meaning — one link in, and the network carries
+   on past it without her.
 
    YOUR EDGE IS DOTTED, HERS ARE SOLID (jakob ruled the dotted line over the
    other candidate, an arrow that stops short: "with dotted line"). Dotted reads
@@ -91,62 +99,79 @@
    act, and never "Done" or "Finish", which name the tour instead of the
    product. */
 
-const STAGE = { width: 342, height: 336 };
+const STAGE = { width: 342, height: 470 };
 
-/* The band above @mira: eight wired members across the stage's full width.
-   Positions are hand-placed rather than generated — no two gaps equal, heights
-   alternating instead of arching — because a layout algorithm at this size
-   draws either a circle or a tangle, and an even scatter reads as decoration. */
+/* The graph above @mira: twelve wired members climbing the stage in loose
+   tiers. Positions are hand-placed rather than generated — no tier level, no
+   two gaps equal, no symmetry to find — because a layout algorithm at this
+   size draws either a lattice or a tangle, and an even scatter reads as
+   decoration. `l` is the pair she reaches, `m` the branching, `u` the spread,
+   `t` the two that thin out at the top. */
 const MEMBERS = [
-  { id: "a", x: 32, y: 76 },
-  { id: "b", x: 76, y: 40 },
-  { id: "c", x: 120, y: 86 },
-  { id: "d", x: 156, y: 46 },
-  { id: "e", x: 198, y: 60 },
-  { id: "f", x: 240, y: 26 },
-  { id: "g", x: 280, y: 74 },
-  { id: "h", x: 314, y: 34 },
+  { id: "l1", x: 132, y: 246 },
+  { id: "l2", x: 206, y: 232 },
+  { id: "m1", x: 72, y: 186 },
+  { id: "m2", x: 152, y: 168 },
+  { id: "m3", x: 234, y: 176 },
+  { id: "m4", x: 296, y: 146 },
+  { id: "u1", x: 36, y: 108 },
+  { id: "u2", x: 112, y: 76 },
+  { id: "u3", x: 192, y: 98 },
+  { id: "u4", x: 258, y: 58 },
+  { id: "t1", x: 148, y: 20 },
+  { id: "t2", x: 306, y: 30 },
 ];
 const AT = Object.fromEntries(MEMBERS.map((member) => [member.id, member]));
-/* Dense in places, thin in others — `b` and `g` hang on a single thread each
-   while the middle closes triangles, which is how a neighbourhood actually
-   looks and a lattice does not. */
+/* Ten edges branch upward and six cross between branches — and the six are the
+   point. Branching alone draws a tree, and a tree is not a graph; the
+   cross-links (marked) close loops no tree would have, which is what makes
+   the climb read as a network seen in depth rather than as a diagram of
+   descent. */
 const MESH = [
-  ["a", "b"],
-  ["a", "c"],
-  ["b", "d"],
-  ["c", "d"],
-  ["c", "e"],
-  ["d", "f"],
-  ["e", "f"],
-  ["e", "g"],
-  ["f", "h"],
-  ["g", "h"],
+  ["l1", "l2"], // cross — the two she reaches know each other
+  ["l1", "m1"],
+  ["l1", "m2"],
+  ["l2", "m3"],
+  ["l2", "m4"],
+  ["m1", "u1"],
+  ["m1", "u2"],
+  ["m2", "u2"],
+  ["m2", "u3"],
+  ["m2", "m3"], // cross — between the two mid branches
+  ["m3", "u3"], // cross — two branches share a dot above them
+  ["m3", "u4"],
+  ["m4", "u4"], // cross — likewise on the right
+  ["u2", "t1"],
+  ["u3", "t1"], // cross — the top dot is reached from both sides
+  ["u4", "t2"],
 ];
 /* The edges that leave: where each one starts, where it dies, and whether
-   anything is still visible when it gets there. They go outward along the
-   band's axis far more than upward — that is what keeps the silhouette a band
-   and not a cap. */
+   anything is still visible when it gets there. They go off every side at
+   different heights — four left, three over the top, three right, one down
+   past a lower corner — because a graph that only frayed sideways was the
+   flat band this pass replaced. */
 const LOOSE = [
-  { from: "a", to: [-26, 54], far: true },
-  { from: "a", to: [-18, 116] },
-  { from: "b", to: [50, -22] },
-  { from: "c", to: [56, 134] },
-  { from: "d", to: [150, -30], far: true },
-  { from: "f", to: [264, -34] },
-  { from: "h", to: [372, 16], far: true },
-  { from: "h", to: [366, 68] },
-  { from: "g", to: [332, 128] },
+  { from: "u1", to: [-28, 78], far: true },
+  { from: "u1", to: [-20, 160] },
+  { from: "m1", to: [-24, 234] },
+  { from: "l1", to: [40, 298] },
+  { from: "t1", to: [126, -36], far: true },
+  { from: "u2", to: [84, -28] },
+  { from: "u4", to: [280, -34] },
+  { from: "t2", to: [350, -14], far: true },
+  { from: "m4", to: [372, 108], far: true },
+  { from: "m4", to: [364, 186] },
+  { from: "l2", to: [304, 274] },
 ];
 /* The TWO edges that make her the gate, and two is the number for a reason:
-   three converging on one face drew a flare, and a flare under a band of dots
-   is exactly the mushroom stem this round was told to get rid of. Two rise
-   almost parallel, so she reads as joined ON to the band rather than holding
-   it up — and the whole right half is hers only through the mesh, which is
-   the gate's own meaning. Drawn from her centre, her face painting over their
-   lower ends. */
-const GATE = ["c", "e"];
-const MIRA_AT = { x: 171, y: 180 };
+   three converging on one face drew a flare, and a flare under a spread of
+   dots is exactly the mushroom stem this round was told to get rid of. Two
+   rise almost parallel, so she reads as joined ON to the graph rather than
+   holding it up — and everything past `l1` and `l2` is hers only through the
+   mesh, which is the gate's own meaning. Drawn from her centre, her face
+   painting over their lower ends. */
+const GATE = ["l1", "l2"];
+const MIRA_AT = { x: 171, y: 324 };
 
 export function Screen() {
   return (
@@ -220,8 +245,8 @@ export function Screen() {
             />
           ))}
           {/* Hers to you: the one edge that is not solid yet. */}
-          <path d="M 171 216 L 171 264" stroke="var(--border-field)" strokeWidth="2" strokeDasharray="4 5" fill="none" />
-          <polygon points="165,264 177,264 171,272" fill="var(--border-field)" />
+          <path d="M 171 360 L 171 398" stroke="var(--border-field)" strokeWidth="2" strokeDasharray="4 5" fill="none" />
+          <polygon points="165,398 177,398 171,406" fill="var(--border-field)" />
         </IntroLines>
 
         {MEMBERS.map((member) => (
@@ -241,14 +266,14 @@ export function Screen() {
         ))}
 
         <IntroFace x={MIRA_AT.x} y={MIRA_AT.y} size={64} name="Mira Voss" src="inviter.jpg" />
-        <IntroCaption x={252} y={172}>@mira</IntroCaption>
+        <IntroCaption x={252} y={316}>@mira</IntroCaption>
 
         <span
           aria-hidden="true"
           style={{
             position: "absolute",
             left: 143,
-            top: 272,
+            top: 406,
             width: 56,
             height: 56,
             boxSizing: "border-box",
@@ -261,14 +286,14 @@ export function Screen() {
           style={{
             position: "absolute",
             left: 159,
-            top: 288,
+            top: 422,
             width: 24,
             height: 24,
             borderRadius: "var(--radius-full)",
             background: "var(--primary)",
           }}
         />
-        <IntroCaption x={252} y={292}>you</IntroCaption>
+        <IntroCaption x={252} y={426}>you</IntroCaption>
       </IntroStage>
     </IntroFrame>
   );
