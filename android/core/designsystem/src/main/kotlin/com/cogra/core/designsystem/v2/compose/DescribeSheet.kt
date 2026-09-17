@@ -31,7 +31,6 @@ import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.imageModel
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
-import com.cogra.core.designsystem.v2.token.MediaOverlay
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
 /**
@@ -143,7 +142,12 @@ fun DescribeSheet(
     }
 }
 
-/** The board's 48dp disc, `play_arrow` at 28dp (`DescribeSheet.jsx:71-89`). */
+/**
+ * The board's 48dp `MediaDisc`, `play_arrow` at 28dp
+ * (`DescribeSheet.jsx:71-89`). The plate reads `inverseSurface`/
+ * `inverseOnSurface` — jakob's F8 ruling (2026-09-17) — never a literal
+ * scrim, so it stays the same disc in both themes on both platforms.
+ */
 @Composable
 private fun BoxScope.PlayDisc(testTag: String?) {
     Box(
@@ -151,14 +155,14 @@ private fun BoxScope.PlayDisc(testTag: String?) {
             .align(Alignment.Center)
             .size(48.dp)
             .clip(CircleShape)
-            .background(MediaOverlay.Badge)
+            .background(MaterialTheme.colorScheme.inverseSurface)
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = Icons.Filled.PlayArrow,
             contentDescription = null,
-            tint = MediaOverlay.BadgeInk,
+            tint = MaterialTheme.colorScheme.inverseOnSurface,
             modifier = Modifier.size(28.dp),
         )
     }
