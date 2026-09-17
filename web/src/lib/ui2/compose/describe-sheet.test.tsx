@@ -138,6 +138,17 @@ describe("DescribeSheet", () => {
     expect(Number(preview.style.top.replace("px", ""))).toBeCloseTo(-36, 3);
   });
 
+  // Drawn truth, pinned against the master (jakob hand-test finding,
+  // 2026-09-17: the strip rendered at ~2/3 of this): contain-whole media
+  // strip, 180px tall, on surface-container-high
+  // (design/components/compose/DescribeSheet.jsx:61,63).
+  it("draws the strip at the board's 180px height on the reserved surface", () => {
+    open();
+    const strip = screen.getByTestId("describe-sheet-strip");
+    expect(strip).toHaveClass("h-[180px]");
+    expect(strip).toHaveClass("bg-surface-container-high");
+  });
+
   it("falls back to the whole picture where nothing has been framed", () => {
     // A comment's picture, or a pick nobody framed — the sheet keeps the
     // contain-fitted preview it always had.
