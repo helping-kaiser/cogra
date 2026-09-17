@@ -127,9 +127,14 @@ fun DescribeSheet(
             testTag = testTag?.let { "${it}_field" },
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            // Visible but disabled over the cap, never hidden (the
+            // caps-affordance round's ruling, PR #755's pattern) — [error]
+            // is only ever the caller's over-cap message on this sheet, so
+            // its presence is exactly the signal to gate on.
             CograButton(
                 text = "Done",
                 onClick = onDone,
+                enabled = error == null,
                 kind = ButtonKind.Text,
                 testTag = testTag?.let { "${it}_done" },
             )
