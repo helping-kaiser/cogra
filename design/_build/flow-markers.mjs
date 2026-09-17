@@ -2109,3 +2109,21 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
 });
+
+// The onboarding intro (the batch-rulings round). Two controls per card and the
+// same two numbers on all five, because it is one frame drawn five times: Skip
+// leads, the way it stands top-right on every card, and the forward button
+// follows. The pager dots carry no number — they are an indicator, not a
+// control (`_shared.jsx`, the intro block).
+const introCard = (forward) => [
+  { n: 1, find: ">Skip</button>", tag: "button" },
+  { n: 2, find: `>${forward}</button>`, tag: "button" },
+];
+
+Object.assign(FLOW_MARKERS, {
+  OnboardingSteps: introCard("Next"),
+  OnboardingShape: introCard("Next"),
+  OnboardingPublic: introCard("Next"),
+  OnboardingLayers: introCard("Next"),
+  OnboardingVouch: introCard("Start reading"),
+});
