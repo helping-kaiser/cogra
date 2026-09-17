@@ -9,7 +9,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { intersect, statesDuration } from "@/test/media-env";
+import { endsClip, intersect, statesDuration } from "@/test/media-env";
 import { isMuted, resetMuteForTests } from "./mute";
 import { VideoPlayer } from "./video-player";
 import { resetVideoStageForTests } from "./video-stage";
@@ -162,6 +162,42 @@ describe("the transport's own controls", () => {
     act(() => play().click());
     expect(video.paused).toBe(true);
     expect(play()).toHaveAttribute("aria-label", "Play");
+  });
+
+  // A clip under this transport stops at its end rather than looping (FE
+  // conform round, design #781), so the centre slot's third state gets its
+  // own glyph and label, drawn at the same geometry as play/pause.
+  it("draws replay, not a relabelled play arrow, once the clip has ended", () => {
+    const video = transportPlayer();
+    const play = () => screen.getByTestId("video-player-transport-play");
+
+    act(() => endsClip(video));
+
+    expect(play()).toHaveAttribute("aria-label", "Replay");
+    // Byte-exact against the master (`design/components/navigation/Icon.jsx:110`,
+    // shipped in the icon set at `icons.tsx:62-64`) — not merely the label.
+    expect(play().querySelector("path")).toHaveAttribute(
+      "d",
+      "M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z",
+    );
+    expect(play().style.width).toBe("64px");
+  });
+
+  it("restarts the clip from the start when replay is pressed", () => {
+    const video = transportPlayer();
+    act(() => {
+      video.currentTime = 41;
+    });
+    act(() => endsClip(video));
+
+    act(() => screen.getByTestId("video-player-transport-play").click());
+
+    expect(video.currentTime).toBe(0);
+    expect(video.paused).toBe(false);
+    expect(screen.getByTestId("video-player-transport-play")).toHaveAttribute(
+      "aria-label",
+      "Pause",
+    );
   });
 
   it("carries the sticky sound decision every clip shares", () => {

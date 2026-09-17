@@ -2,6 +2,10 @@ package com.cogra.core.designsystem.v2.media
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -112,6 +116,32 @@ class VideoTransportTest {
         compose.setContent { Transport(playing = false, ended = true) }
 
         compose.onNodeWithTag("video_play_pause").assertContentDescriptionEquals("Replay")
+    }
+
+    /**
+     * AND IT IS DRAWN AS ITS OWN GLYPH, not the Play arrow wearing a
+     * different name — `centreGlyph()` is what `CentreCluster` hands the
+     * button, pulled out so the selection is checkable without a compose
+     * tree at the drawn size (`design/components/media/VideoControls.jsx:210-211`
+     * — 34dp glyph in a 64dp box, same as play/pause; `PLAY_GLYPH`/
+     * `PLAY_DIAMETER` in this file).
+     */
+    @Test
+    fun theCentreGlyphIsReplayOnceTheClipHasEnded() {
+        assertThat(centreGlyph(playing = false, ended = true)).isEqualTo(Icons.Filled.Replay)
+    }
+
+    @Test
+    fun theCentreGlyphIsPauseWhilePlayingEvenPastTheEnd() {
+        // Playing and ended cannot both be true from a real player, but the
+        // selection still has to resolve one way — pause wins, since a clip
+        // that is audibly running is not a clip at rest.
+        assertThat(centreGlyph(playing = true, ended = true)).isEqualTo(Icons.Filled.Pause)
+    }
+
+    @Test
+    fun theCentreGlyphIsPlayAtRestBeforeTheFirstPress() {
+        assertThat(centreGlyph(playing = false, ended = false)).isEqualTo(Icons.Filled.PlayArrow)
     }
 
     @Test
