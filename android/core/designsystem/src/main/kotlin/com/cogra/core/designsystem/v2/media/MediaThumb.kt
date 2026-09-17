@@ -46,8 +46,11 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 /**
  * What a thumbnail says about itself, over the picture.
  *
- * Every badge rides [MediaOverlay]'s own scrim rather than a theme surface,
- * because it has to stay legible over arbitrary pixels in both themes.
+ * The order counter and the failed dot read theme roles (`primary`,
+ * `error`); [ThumbBadge.Cover], [ThumbBadge.Remove], and [ThumbBadge.Duration]
+ * read `inverseSurface`/`inverseOnSurface` — the `MediaDisc` plate
+ * (`design/components/compose/MediaThumb.jsx`), the one role designed to
+ * stay legible over arbitrary pixels in both themes.
  */
 sealed interface ThumbBadge {
     /** The picker's selection order: a filled counter, or an empty ring. */
@@ -194,8 +197,9 @@ fun MediaThumb(
  * An upload in flight: the ring on its own scrim, centred
  * (`design/components/compose/UploadNotice.jsx`'s `Ring`, on the tile).
  *
- * The scrim is what keeps a light stroke legible over arbitrary pixels —
- * the same reason every other badge here rides [MediaOverlay].
+ * The scrim is a literal [MediaOverlay] colour rather than a theme role: it
+ * dims the whole tile evenly, so it is not the plate register the cover,
+ * remove, and duration badges read.
  */
 @Composable
 private fun BoxScope.UploadRing(progress: Float?) {
@@ -293,21 +297,26 @@ private fun BoxScope.OrderBadge(position: Int?) {
     }
 }
 
+/** `MediaDisc`'s plate (`design/components/compose/MediaThumb.jsx`): the
+ * cover mark reads `inverseSurface`/`inverseOnSurface`, never a literal
+ * scrim (jakob's F8 ruling, 2026-09-17). */
 @Composable
 private fun BoxScope.CoverBadge() {
     Text(
         text = "Cover",
         style = MaterialTheme.typography.labelSmall,
-        color = MediaOverlay.BadgeInk,
+        color = MaterialTheme.colorScheme.inverseOnSurface,
         modifier = Modifier
             .align(Alignment.BottomStart)
             .padding(3.dp)
             .clip(CircleShape)
-            .background(MediaOverlay.Badge)
-            .padding(horizontal = 5.dp),
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .padding(horizontal = 5.dp)
+            .testTag("media_thumb_cover_badge"),
     )
 }
 
+/** Same plate as [CoverBadge] — see that function's citation. */
 @Composable
 private fun BoxScope.RemoveBadge(onRemove: () -> Unit) {
     Box(
@@ -316,19 +325,21 @@ private fun BoxScope.RemoveBadge(onRemove: () -> Unit) {
             .padding(3.dp)
             .size(16.dp)
             .clip(CircleShape)
-            .background(MediaOverlay.Badge)
-            .clickable(onClick = onRemove),
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .clickable(onClick = onRemove)
+            .testTag("media_thumb_remove_badge"),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = Icons.Filled.Close,
             contentDescription = null,
-            tint = MediaOverlay.BadgeInk,
+            tint = MaterialTheme.colorScheme.inverseOnSurface,
             modifier = Modifier.size(10.dp),
         )
     }
 }
 
+/** Same plate as [CoverBadge] — see that function's citation. */
 @Composable
 private fun BoxScope.DurationBadge(label: String) {
     Row(
@@ -336,21 +347,22 @@ private fun BoxScope.DurationBadge(label: String) {
             .align(Alignment.BottomStart)
             .padding(6.dp)
             .clip(RoundedCornerShape(Space.x1))
-            .background(MediaOverlay.Badge)
-            .padding(horizontal = 6.dp, vertical = 1.dp),
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .padding(horizontal = 6.dp, vertical = 1.dp)
+            .testTag("media_thumb_duration_badge"),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = Icons.Filled.PlayArrow,
             contentDescription = null,
-            tint = MediaOverlay.BadgeInk,
+            tint = MaterialTheme.colorScheme.inverseOnSurface,
             modifier = Modifier.size(10.dp),
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MediaOverlay.BadgeInk,
+            color = MaterialTheme.colorScheme.inverseOnSurface,
         )
     }
 }
