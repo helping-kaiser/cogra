@@ -94,7 +94,8 @@ fun DescribeSheet(
                 .fillMaxWidth()
                 .height(PreviewHeight)
                 .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .then(testTag?.let { Modifier.testTag("${it}_strip") } ?: Modifier),
         ) {
             AsyncImage(
                 // THE PICTURE THE POST WILL CARRY, not the one it came from.
