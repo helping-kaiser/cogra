@@ -49,6 +49,21 @@ sealed interface CoverPick {
     data object OwnPicture : CoverPick
 }
 
+/** Whether tile [index] wears the ring — an exact match on [CoverPick.Frame]. */
+internal fun CoverPick.ringsFrame(index: Int): Boolean = this == CoverPick.Frame(index)
+
+/**
+ * Whether tile [index] dims — pulled out on its own (rather than folded
+ * into the call site) so the null-rest rule is a one-line JVM test
+ * instead of a full Compose tree: [CoverPick.None] dims nothing at all,
+ * because choosing a cover is always a willing act (design #781;
+ * CoverRow.jsx:20-24).
+ */
+internal fun CoverPick.dimsFrame(index: Int): Boolean = this != CoverPick.None && !ringsFrame(index)
+
+/** The other half of [dimsFrame], for the dashed own-picture tile. */
+internal fun CoverPick.dimsOwnPicture(): Boolean = this != CoverPick.None && this != CoverPick.OwnPicture
+
 /**
  * "Cover" — a strip of frames lifted from the clip, plus one dashed tile
  * that opens the device's own picker.
@@ -86,23 +101,19 @@ fun CoverRow(
             color = MaterialTheme.colorScheme.onSurface,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
-            // DIMMED TRACKS "SOMETHING IS CHOSEN", NOT `!chosen` (design
-            // #781; MediaThumb.kt:86-90 draws this exact line already:
-            // "dimmed ... is a separate parameter rather than `!selected`
-            // because most uses ... have no selection at all and must not
-            // fade everything"). `CoverPick.None` is the row's opening
-            // state and stays four equal candidates — no ring, no dim —
-            // until a tile is tapped (CoverRow.jsx:20-24,65,84-89;
-            // CoverRow.d.ts:21-24: "nothing is chosen until someone
-            // chooses").
-            val anyChosen = picked != CoverPick.None
+            // `ringsFrame`/`dimsFrame` (below `CoverPick`) carry the
+            // null-rest rule: `CoverPick.None` rings and dims nothing at
+            // all (design #781; CoverRow.jsx:20-24,65,84-89;
+            // CoverRow.d.ts:21-24 — "nothing is chosen until someone
+            // chooses"). `dimmed` tracking "something is chosen" rather
+            // than plain `!selected` is MediaThumb's own documented
+            // contract (MediaThumb.kt:86-90).
             frames.forEachIndexed { index, frame ->
-                val chosen = picked == CoverPick.Frame(index)
                 MediaThumb(
                     item = MediaItem(frame, 1f),
                     size = tileSize,
-                    selected = chosen,
-                    dimmed = anyChosen && !chosen,
+                    selected = picked.ringsFrame(index),
+                    dimmed = picked.dimsFrame(index),
                     onClick = { onPickFrame(index) },
                     contentDescription = stringResource(R.string.designsystem_cover_frame, index + 1),
                     testTag = testTagPrefix?.let { "${it}_frame_$index" },
@@ -110,7 +121,7 @@ fun CoverRow(
             }
             OwnPictureTile(
                 chosen = picked == CoverPick.OwnPicture,
-                anyChosen = anyChosen,
+                dimmed = picked.dimsOwnPicture(),
                 model = ownPicture,
                 onClick = onPickOwnPicture,
                 tileSize = tileSize,
@@ -149,7 +160,7 @@ fun CoverRow(
 @Composable
 private fun OwnPictureTile(
     chosen: Boolean,
-    anyChosen: Boolean,
+    dimmed: Boolean,
     model: Any?,
     onClick: () -> Unit,
     tileSize: Dp,
@@ -160,7 +171,7 @@ private fun OwnPictureTile(
             item = MediaItem(model, 1f),
             size = tileSize,
             selected = chosen,
-            dimmed = anyChosen && !chosen,
+            dimmed = dimmed,
             onClick = onClick,
             contentDescription = stringResource(R.string.designsystem_cover_own),
             testTag = testTag,
