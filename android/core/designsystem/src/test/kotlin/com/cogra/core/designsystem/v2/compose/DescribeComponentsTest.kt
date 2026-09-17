@@ -1,10 +1,12 @@
 package com.cogra.core.designsystem.v2.compose
 
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import org.junit.Rule
@@ -119,6 +121,27 @@ class DescribeComponentsTest {
         }
 
         compose.onNodeWithTag("sheet_done").assertExists().assertIsEnabled()
+    }
+
+    // Drawn truth, pinned against the master (jakob hand-test finding,
+    // 2026-09-17: the strip rendered at ~2/3 of this): contain-whole media
+    // strip, 180dp tall (`design/components/compose/DescribeSheet.jsx:61` —
+    // `PreviewHeight` cites the same line).
+    @Test
+    fun theStripDrawsAtTheBoardsHeight() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                DescribeSheet(
+                    item = MediaItem(null, 1f),
+                    value = "",
+                    onValueChange = {},
+                    onDone = {},
+                    testTag = "sheet",
+                )
+            }
+        }
+
+        compose.onNodeWithTag("sheet_strip").assertHeightIsEqualTo(180.dp)
     }
 
     // ---- DescribeCounter --------------------------------------------------
