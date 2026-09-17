@@ -2558,14 +2558,30 @@ own onboarding at the first wallet touch, the emerging per-surface pattern.
 Card 2 draws emojis ON the edges — jakob's conceptual ruling, that an emoji
 IS the pair an edge carries — and card 5 draws a fixture inviter the client
 personalizes to the actual link-issuer's avatar (an implementation relay,
-not a drawn state). `About` (entry, 2400×7240, 390×1736) carries the fuller
-version and GETS ALL of it, money and unbuilt features included; Settings
-gained the About group after Credentials; the join door gained a `HelpDot`
-rather than a fifth clickable line. readme §13's per-control rule carries
-the amendment.
+not a drawn state). `About` (entry, 2400×7240) carries the fuller version
+and GETS ALL of it, money and unbuilt features included; Settings gained the
+About group after Credentials; the join door gained a `HelpDot` rather than
+a fifth clickable line. readme §13's per-control rule carries the amendment.
 
-Status: awaiting jakob's canvas iteration — the five cards are v1 and the
-round expects to iterate on them.
+**Iteration 1, 2026-09-18**, on jakob's canvas pass. Card 3's chat got
+relatable copy — two friends and a sky — because the fixture text read as
+sample data. Card 5 was redrawn VERTICAL and with more graph, his own
+composition: you a dot at the bottom, @mira above pointing down at you, and
+above her the members she is the gate to, wired to each other and to her
+with solid edges. Your edge is DOTTED (his ruling, over the other candidate
+of an arrow that stops short), the arrowhead still touching your ring so the
+direction still teaches; `vouched for you` became `invited you`, the
+issuer's word rather than the ceremony's. `About` became FAQ-SHAPED — nine
+expandable topics instead of one flowing page ("it will get toooo long for
+comsumption"), the text unchanged for now, drawn with the first topic open.
+Folded it measures 625px, so the board dropped its tall frame and is an
+ordinary 390×844 phone again; its topic row is minted locally because the
+tree owned no full-width disclosure anatomy, and the chevron is the `Icon`
+master's `expand_more`.
+
+Status: awaiting jakob's next canvas pass. One DERIVED call rides on it —
+topics toggle independently, so opening a second leaves the first open (the
+FAQ convention), which he has not ruled.
 
 ### 75 · The keyboard's own mechanism · *design* · **ruled + recorded**
 

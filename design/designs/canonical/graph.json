@@ -289,6 +289,7 @@
     { "from": "Join", "via": 8, "kind": "detour", "label": "? — About CoGra", "to": [{ "board": "About", "case": "the door's one explanation, behind the \"?\" rather than a fifth clickable line" }] },
 
     { "from": "About", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "back where it was opened — the join door, or settings" }] },
+    { "from": "About", "via": 2, "kind": "detour", "label": "topic row", "to": [{ "terminal": "self", "case": "the topic unfolds, and folds again — each answers on its own, so opening a second leaves the first open" }] },
 
     { "from": "JoinErrors", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "InviteEntry" }] },
     { "from": "JoinErrors", "via": 2, "kind": "advance", "label": "Handle field", "to": [{ "terminal": "self", "case": "typing" }] },
