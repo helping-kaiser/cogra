@@ -35,15 +35,16 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    taught readers to parse — then bio, then the one actions row. Tight: the
    header is a summary, not a hero.
 
-   THE COUNTS ARE THE HARD PART. The thing being counted is what the repo calls a
-   connection, and that word is on the banned list (readme §3) along with the rest
-   of the implementation vocabulary. So the header counts what a reader can
-   actually place: how many people have given an opinion on this person, and how
-   many this person has given. Two figures, each labelled, each plain — never one
-   merged "followers" number, because there is no following here and borrowing the
-   word would describe a different product. A Posts figure leads the row, and the
-   figures are one tap target leading to the opinions page: both directions,
-   separated, never merged there either.
+   THE COUNTS ARE THE HARD PART, and the difficulty is accuracy rather than
+   vocabulary. What links two people here carries an opinion and has a direction,
+   so a single number would have to pick one of those facts and hide the other.
+   The header counts what a reader can actually place instead: how many people
+   have given an opinion on this person, and how many this person has given. Two
+   figures, each labelled, each plain — never one merged "followers" number,
+   because there is no following here and borrowing the word would describe a
+   different product. A Posts figure leads the row, and the figures are one tap
+   target leading to the opinions page: both directions, separated, never merged
+   there either.
 
    THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (jakob 2026-09-01). Changing the
    picture is frequent and mostly standalone, so one's own avatar wears a change

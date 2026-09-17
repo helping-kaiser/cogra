@@ -411,8 +411,16 @@ function DetailHeader({ items }) {
    the one menu that also holds Remove is the last place to move the rows
    around. The license closes this menu as it closes the others. */
 const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
+/* CITING RIDES THIS MENU TOO (backlog item 100, ruled the batch-rulings
+   round). `CARD_MENU`'s own note says citing acts on the thing itself,
+   whoever wrote it — the argument Save was already given — and self-citation
+   is a real thing an author does: a post that builds on their own earlier one
+   points at it exactly the way it would point at anyone else's. It takes the
+   reader menu's own position, second, so the thumb finds one row in one place
+   on every menu that has it. */
 const OWN_POST_MENU = [
   SAVE_ROW,
+  CITE_ROW,
   { label: "Edit", onSelect: () => {} },
   { label: "Mark as sensitive", onSelect: () => {} },
   { label: "Remove", onSelect: () => {} },

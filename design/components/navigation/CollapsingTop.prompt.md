@@ -1,4 +1,6 @@
-Wrap the `PageHeader` — and any must-act banner that has to follow the reader, like the key-restore card or the guest notice — in `CollapsingTop`.
+Wrap the `PageHeader` — and any must-act banner that has to follow the reader, like the key-restore card or the guest notice — in `CollapsingTop`, **on the surfaces that collapse**.
+
+Which those are is ruled per surface, not per screen: browse collapses, task pins, and the readme's §4 table names both sides. A surface the reader dwells in and scrolls for content wraps its top in here; a surface they are passing through to finish something pins it instead, `position: sticky` on web. Web adopts this component on the collapsing surfaces too, so a scroll is answered the same way on both platforms.
 
 ```jsx
 <CollapsingTop>
