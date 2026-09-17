@@ -59,11 +59,21 @@ export function CoverRow({
         {framePreviews.map((src, index) => (
           // Keyed by position: the offers are a fixed list taken from one clip,
           // and two frames of an unchanging shot can produce identical bytes.
+          //
+          // DIMMED IS ITS OWN FLAG, NOT `!selected` (CoverRow.jsx:65,84-89;
+          // CoverRow.d.ts:21-24, design #781): the master's `selected`
+          // defaults to `null`, and with nothing picked no frame dims — "the
+          // dim is what the rest of a strip does around a frame that was
+          // picked, and until one is picked there is no rest." `cover` is
+          // this row's whole answer (a frame index or COVER_FROM_PICTURE),
+          // so `cover !== null` is exactly "something has been willingly
+          // chosen".
           <FrameTile
             key={index}
             src={src}
             index={index}
             selected={cover?.frame === index}
+            dimmed={cover !== null && cover.frame !== index}
             onPick={() => onPickFrame(index)}
             testId={`${testIdPrefix}-cover-frame-${index}`}
           />
@@ -140,12 +150,14 @@ function FrameTile({
   src,
   index,
   selected,
+  dimmed,
   onPick,
   testId,
 }: {
   src: string;
   index: number;
   selected: boolean;
+  dimmed: boolean;
   onPick: () => void;
   testId: string;
 }) {
@@ -158,7 +170,7 @@ function FrameTile({
       onClick={onPick}
       style={selected ? { outline: "2px solid var(--primary)", outlineOffset: "1px" } : undefined}
       className={`cg-focus size-14 flex-none cursor-pointer overflow-hidden rounded-small border-0 p-0 ${
-        selected ? "" : "opacity-65"
+        dimmed ? "opacity-65" : ""
       }`}
     >
       {/* A plain `img`: these are object URLs for bytes already in memory, so
