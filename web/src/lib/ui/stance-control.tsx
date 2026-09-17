@@ -80,8 +80,9 @@ import { StanceAlternates } from "@/lib/ui/stance-alternates";
 import { StanceCoachMark, STANCE_EXPLANATION } from "@/lib/ui/stance-coach-mark";
 import { formatStancePair, STANCE_AXES, type StanceAxes } from "@/lib/ui/stance-format";
 import {
+  DISCONNECT_ZERO,
   NO_STANDING_LABEL,
-  SEVERED_LABEL,
+  SEVERANCE_ZERO,
   signedLine,
   StanceLandingLine,
   StanceStanding,
@@ -138,6 +139,14 @@ export function StanceControl({
   const phase = useAuthPhase();
   const [mode] = useStanceInputMode();
   const [taught, teach] = useStanceTaught();
+
+  // TOPICS DISCONNECT; EVERYTHING ELSE SEVERS (copy-voice.md "the topic
+  // disconnects", jakob 2026-09-15) — the split is by record family, not
+  // by surface, so every stance kind but `"topic"` keeps the severance
+  // wording verbatim.
+  const isTopic = target.kind === "topic";
+  const zeroWords = isTopic ? DISCONNECT_ZERO : SEVERANCE_ZERO;
+  const severLabel = isTopic ? "Disconnect" : "Walk it back";
 
   /**
    * The control's own read, once it has one. Wrapped rather than bare so
@@ -286,7 +295,14 @@ export function StanceControl({
     setBusy(false);
     if (outcome.kind !== "success") return false;
     setSigned(
-      signedLine(landed.landing, outcome.value.records, landed.severed, target.label, axes),
+      signedLine(
+        landed.landing,
+        outcome.value.records,
+        landed.severed,
+        target.label,
+        axes,
+        zeroWords,
+      ),
     );
     readBundle({ fresh: true });
     return true;
@@ -298,7 +314,9 @@ export function StanceControl({
     const outcome = await data.sever(seamTarget);
     setBusy(false);
     if (outcome.kind !== "success") return false;
-    setSigned(signedLine(SEVERED.landing, outcome.value.records, true, target.label, axes));
+    setSigned(
+      signedLine(SEVERED.landing, outcome.value.records, true, target.label, axes, zeroWords),
+    );
     readBundle({ fresh: true });
     return true;
   };
@@ -461,7 +479,7 @@ export function StanceControl({
         ? null
         : bundle.current;
   // A standing, so the table is not consulted at the origin (§8.4).
-  const restingFace = restingPair === null ? null : bundleReadout(restingPair, SEVERED_LABEL);
+  const restingFace = restingPair === null ? null : bundleReadout(restingPair, zeroWords.label);
   const knob = padPercentOf(pick);
 
   // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (design's `StanceControl`,
@@ -486,6 +504,7 @@ export function StanceControl({
         targetLabel={target.label}
         testIdPrefix={testIdPrefix}
         axes={axes}
+        zero={zeroWords}
       />
       {/* A soft rounded square, and the drawn field IS the value
           space: its corners are (±1, ±1) and the knob never leaves
@@ -517,7 +536,7 @@ export function StanceControl({
         </div>
       </div>
       {/* Below the field, and never merged into the line above it. */}
-      <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} />
+      <StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} />
     </>
   );
 
@@ -698,7 +717,7 @@ export function StanceControl({
                 onClick={openSeverance}
                 className={buttonClassName({ variant: "text", size: "sm" })}
               >
-                Walk it back
+                {severLabel}
               </button>
             )}
           </div>
@@ -715,8 +734,9 @@ export function StanceControl({
           onCancel={closeAll}
           onSever={openSeverance}
           severable={severable}
+          severLabel={severLabel}
           axes={axes}
-          landing={<StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} />}
+          landing={<StanceLandingLine landing={landing} testIdPrefix={testIdPrefix} zero={zeroWords} />}
         >
           <StanceStanding
             pick={pick}
@@ -724,6 +744,7 @@ export function StanceControl({
             targetLabel={target.label}
             testIdPrefix={testIdPrefix}
             axes={axes}
+            zero={zeroWords}
           />
         </StanceAlternates>
       )}
@@ -737,6 +758,7 @@ export function StanceControl({
           alreadySevered={confirming.alreadySevered}
           busy={busy}
           failed={confirmFailed}
+          kind={target.kind}
           onCancel={() => {
             setConfirming(null);
             setConfirmFailed(false);
