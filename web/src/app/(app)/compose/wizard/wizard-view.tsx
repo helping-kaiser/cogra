@@ -698,6 +698,7 @@ export function ComposeWizard({
             // empty-body gate again.
             error={gate.ok ? null : gate.reason}
             blocked={!gate.ok}
+            coverSrc={coverPreview}
             onWords={(words) => dispatch({ type: "words", words })}
             onMode={(mode) => dispatch({ type: "mode", mode })}
             onPick={(files) => void takeFiles(files)}
