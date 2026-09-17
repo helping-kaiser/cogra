@@ -85,10 +85,20 @@ export function SensitiveSheet({
           optional
           disabled={!marked}
           cap={SENSITIVE_REASON_MAX_CHARS}
-          error={sensitiveReasonProblem(reason) ?? undefined}
+          // The reason only counts against the cap while the mark is on —
+          // an over-length leftover from a mark switched back off is never
+          // sent (`sensitiveInput`), so it earns no error on a field the
+          // switch has already greyed out.
+          error={marked ? sensitiveReasonProblem(reason) ?? undefined : undefined}
         />
         <div className="flex justify-end">
-          <PillButton testId={`${testIdPrefix}-sensitive-done`} onClick={onClose}>
+          {/* Visible but disabled over the cap, never hidden — the same
+              gate the field's own error line above uses. */}
+          <PillButton
+            testId={`${testIdPrefix}-sensitive-done`}
+            disabled={marked && sensitiveReasonProblem(reason) !== null}
+            onClick={onClose}
+          >
             Done
           </PillButton>
         </div>
