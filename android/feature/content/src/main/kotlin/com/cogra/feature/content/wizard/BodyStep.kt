@@ -235,6 +235,11 @@ private fun PickedTray(
                         // they made rather than the original.
                         state.crops[asset.uri].toFraming(),
                     ),
+                    // The clip's own chosen face, once there is one: back
+                    // from the cover stage, the tray says so rather than
+                    // reading coverless again (`ComposePickVideoCover`,
+                    // design/backlog.md intake 2026-09-15).
+                    coverSrc = if (state.isVideoPost) state.coverModel() else null,
                     contentDescription = stringResource(R.string.content_picture_at, index + 1),
                     testTag = "wizard_tray_$index",
                 )

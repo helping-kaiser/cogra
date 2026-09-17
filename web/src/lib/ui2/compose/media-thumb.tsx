@@ -78,6 +78,7 @@ export function MediaThumb({
   progress,
   failed = false,
   durationMs,
+  coverSrc,
   onRemove,
   removeLabel = "Remove this picture",
   testId,
@@ -106,6 +107,14 @@ export function MediaThumb({
   cover?: boolean;
   progress?: number | "indeterminate";
   failed?: boolean;
+  /**
+   * A clip's chosen cover, drawn as the frame itself: an inset in the same
+   * bottom-left corner `cover`'s badge owns, a third of the tile's short
+   * side (28px floor) behind a hairline ring. A tile is a picture's or a
+   * clip's, so this and `cover` are never both set
+   * (design/components/compose/MediaThumb.jsx:93,192-217).
+   */
+  coverSrc?: string | null;
   onRemove?: () => void;
   removeLabel?: string;
   testId?: string;
@@ -113,6 +122,7 @@ export function MediaThumb({
   const w = width ?? size;
   const h = height ?? size;
   const alt = altText ?? "";
+  const coverMark = Math.max(28, Math.round(Math.min(w, h) / 3));
   // A framing wins over `fit`: it already says exactly which section shows and
   // how big it is, so there is nothing left for a fit rule to decide.
   const framing = cropPreviewStyle(crop, { width: w, height: h });
@@ -145,6 +155,16 @@ export function MediaThumb({
       {cover ? (
         <span className="absolute bottom-[3px] left-[3px] rounded-full bg-scrim/55 px-[5px] text-label-small text-white">
           Cover
+        </span>
+      ) : null}
+      {coverSrc ? (
+        <span
+          data-testid={testId ? `${testId}-cover-mark` : undefined}
+          style={{ width: `${coverMark}px`, height: `${coverMark}px` }}
+          className="absolute bottom-[3px] left-[3px] block overflow-hidden rounded-small border border-outline-variant box-border"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={coverSrc} alt="Cover" className="block size-full object-cover" />
         </span>
       ) : null}
       {/* The composer's video anatomy: a play disc over the poster and the
