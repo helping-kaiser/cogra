@@ -2018,6 +2018,15 @@
       "page": "comments"
     },
     {
+      "file": "ReplySettled.dc.html",
+      "title": "Comments · a signed reply settling",
+      "x": 3840,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "TagPageHeldPad.dc.html",
       "title": "A tag's page · the pad, topic held",
       "x": 1440,

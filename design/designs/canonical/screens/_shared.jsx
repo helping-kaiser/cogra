@@ -1616,11 +1616,21 @@ function CommentComposerFoot() {
    and this one is reused across BOARDS of one surface. Every board that opens
    comments draws the same frame and differs only in the cards inside it, so
    the cards are the children and the frame is written once. */
-function CommentsSheet({ children }) {
+/* `scrolledBy` DRAWS A SHEET THE READER HAD ALREADY MOVED (the reply-return
+   ruling, readme §13): the list carries a zero-height first item with a
+   negative top margin, so every comment after it rides up by that much and the
+   list's own `overflow: hidden` cuts what leaves at the top. The list's gap
+   sits between that item and the first comment, so the margin carries it too —
+   the number a board passes is the pixels of scroll, not the pixels of
+   margin. */
+const COMMENTS_GAP = 12;
+
+function CommentsSheet({ children, scrolledBy = 0 }) {
   return (
     <BottomSheet open ariaLabel="Comments" height="calc(100% - 72px)">
       <SheetTitle>Comments</SheetTitle>
-      <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, margin: 0, padding: "0 16px", listStyle: "none" }}>
+      <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: COMMENTS_GAP, margin: 0, padding: "0 16px", listStyle: "none" }}>
+        {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}
         {children}
       </ul>
       <CommentComposerFoot />
@@ -1628,9 +1638,53 @@ function CommentsSheet({ children }) {
   );
 }
 
-function CommentsThreadSheet() {
+/* What @tobias's two collapsed replies are, once a landing expands them. They
+   live beside the thread rather than inside the collapsed board, because the
+   collapsed board counts them and never draws them — and a count drawn beside
+   a list it disagreed with is the defect this canvas keeps closing. */
+const TOBIAS_REPLIES = [
+  {
+    id: "t1",
+    author: ADA,
+    content: "The glovebox is the whole trick. Mine lives in the door pocket.",
+    timestamp: "35m",
+    onReply: () => {},
+    license: { attribution: 0, provenance: 0 },
+    menuItems: CARD_MENU,
+  },
+  {
+    id: "t2",
+    author: MIRA,
+    content: "@tobias It is the bend that does it, not the light. Prove me wrong.",
+    timestamp: "28m",
+    onReply: () => {},
+    license: { attribution: 0, provenance: 0 },
+    menuItems: CARD_MENU,
+  },
+];
+
+/* `landed` is the state a signed reply returns into (readme §13, the
+   reply-return ruling): the parent's collapsed count has become its replies,
+   and the reply just signed sits in `CommentCard`'s reserved `children` slot —
+   the slot the composer stood in, which is why the words land where the reader
+   left them. */
+function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
+  const settledReply = (
+    <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
+      <CommentCard
+        depth={1}
+        pending
+        author={SOL}
+        content="The third headland light is real — I have a print from 2019 that almost catches it. Almost."
+        timestamp="now"
+        onReply={() => {}}
+        license={{ attribution: 0, provenance: 0 }}
+        menuItems={CARD_MENU}
+      />
+    </ul>
+  );
   return (
-    <CommentsSheet>
+    <CommentsSheet scrolledBy={scrolledBy}>
       <CommentCard
         author={TOBIAS}
         content="That stretch after the second bend is the reason I keep a camera in the glovebox."
@@ -1638,12 +1692,15 @@ function CommentsThreadSheet() {
         bundle={mkBundle(0.1, 0.1)}
         onReply={() => {}}
         replyCount={2}
-        onOpenReplies={() => {}}
+        onOpenReplies={landed ? undefined : () => {}}
+        replies={landed ? TOBIAS_REPLIES : []}
         topics={["glovebox", "coastroad"]}
         references={1}
         license={{ attribution: 0, provenance: 0 }}
         menuItems={CARD_MENU}
-      />
+      >
+        {landed ? settledReply : null}
+      </CommentCard>
       {/* The veiled comment sits SECOND, where the frame still shows it
           whole: the thread is taller than the sheet, and a state drawn
           below the fold is a state nobody can check. The whole body — the
