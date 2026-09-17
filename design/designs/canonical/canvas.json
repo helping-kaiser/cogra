@@ -1778,7 +1778,7 @@
       "file": "Saved.dc.html",
       "title": "Saved · what you kept",
       "x": 0,
-      "y": 4194,
+      "y": 4473,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1787,7 +1787,7 @@
       "file": "SavedEmpty.dc.html",
       "title": "Saved · nothing kept yet",
       "x": 480,
-      "y": 4194,
+      "y": 4473,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1796,7 +1796,7 @@
       "file": "SavedUndo.dc.html",
       "title": "Saved · one just removed",
       "x": 2400,
-      "y": 4194,
+      "y": 4473,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1805,7 +1805,7 @@
       "file": "History.dc.html",
       "title": "History · what you have read",
       "x": 960,
-      "y": 4194,
+      "y": 4473,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1814,7 +1814,7 @@
       "file": "HistoryEmpty.dc.html",
       "title": "History · nothing seen yet",
       "x": 1440,
-      "y": 4194,
+      "y": 4473,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1823,7 +1823,7 @@
       "file": "SettingsHidden.dc.html",
       "title": "Settings · hidden accounts",
       "x": 1920,
-      "y": 4194,
+      "y": 4473,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1832,7 +1832,7 @@
       "file": "Notifications.dc.html",
       "title": "Notifications · what happened",
       "x": 0,
-      "y": 5264,
+      "y": 5543,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1841,7 +1841,7 @@
       "file": "NotificationsEmpty.dc.html",
       "title": "Notifications · nothing yet",
       "x": 480,
-      "y": 5264,
+      "y": 5543,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1850,7 +1850,7 @@
       "file": "Invites.dc.html",
       "title": "Invites · waiting and live",
       "x": 0,
-      "y": 6328,
+      "y": 6607,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1859,7 +1859,7 @@
       "file": "InvitesEmpty.dc.html",
       "title": "Invites · none out yet",
       "x": 480,
-      "y": 6328,
+      "y": 6607,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1868,7 +1868,7 @@
       "file": "InviteNew.dc.html",
       "title": "Invites · a new link",
       "x": 960,
-      "y": 6328,
+      "y": 6607,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1877,7 +1877,7 @@
       "file": "InviteExpiry.dc.html",
       "title": "Invites · how long it lasts",
       "x": 1440,
-      "y": 6328,
+      "y": 6607,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1886,7 +1886,7 @@
       "file": "InviteCreated.dc.html",
       "title": "Invites · the link is ready",
       "x": 1920,
-      "y": 6328,
+      "y": 6607,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1895,7 +1895,7 @@
       "file": "ApprovePad.dc.html",
       "title": "Invites · approving is vouching",
       "x": 2400,
-      "y": 6328,
+      "y": 6607,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1904,7 +1904,7 @@
       "file": "RejectConfirm.dc.html",
       "title": "Invites · closing an application",
       "x": 2880,
-      "y": 6328,
+      "y": 6607,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1913,7 +1913,7 @@
       "file": "VouchAsk.dc.html",
       "title": "Invites · someone asked you to vouch",
       "x": 3360,
-      "y": 6328,
+      "y": 6607,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1922,7 +1922,7 @@
       "file": "VouchAskPad.dc.html",
       "title": "Invites · answering the ask",
       "x": 3840,
-      "y": 6328,
+      "y": 6607,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1931,7 +1931,7 @@
       "file": "RejectAllConfirm.dc.html",
       "title": "Invites · closing a link's applications",
       "x": 4320,
-      "y": 6328,
+      "y": 6607,
       "w": 390,
       "h": 844,
       "page": "profile"
