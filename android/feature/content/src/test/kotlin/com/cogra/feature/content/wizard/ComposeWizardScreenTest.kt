@@ -309,6 +309,39 @@ class ComposeWizardScreenTest {
         ).assertExists()
     }
 
+    // Visible but disabled over the cap, never hidden (the caps-affordance
+    // round's ruling, PR #755's pattern) — Done stays on screen so the
+    // author can trim back under the cap, rather than losing the way out.
+    @Test
+    fun theSensitiveDoneStaysVisibleButDisabledOverTheCap() {
+        compose.setContent {
+            Wizard(
+                words.copy(
+                    step = WizardStep.Seal,
+                    sheet = SealSheet.Sensitive,
+                    sensitive = true,
+                    sensitiveReason = "x".repeat(141),
+                ),
+            )
+        }
+        compose.onNodeWithTag("wizard_sensitive_done").assertExists().assertIsNotEnabled()
+    }
+
+    @Test
+    fun theSensitiveDoneStaysEnabledAtTheCapTheWriteSideAllows() {
+        compose.setContent {
+            Wizard(
+                words.copy(
+                    step = WizardStep.Seal,
+                    sheet = SealSheet.Sensitive,
+                    sensitive = true,
+                    sensitiveReason = "x".repeat(140),
+                ),
+            )
+        }
+        compose.onNodeWithTag("wizard_sensitive_done").assertExists().assertIsEnabled()
+    }
+
     @Test
     fun theArrowStepsAndTheXLeaves() {
         // Two ways out, each doing one thing (jakob 2026-08-31). The X is
