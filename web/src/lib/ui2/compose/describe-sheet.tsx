@@ -88,7 +88,10 @@ export function DescribeSheet({
             ?
           </button>
         </div>
-        <div className="relative flex h-[180px] items-center justify-center overflow-hidden rounded-medium bg-surface-container-high">
+        <div
+          data-testid={`${testId}-strip`}
+          className="relative flex h-[180px] items-center justify-center overflow-hidden rounded-medium bg-surface-container-high"
+        >
           {src && framing !== null && box !== null ? (
             <span
               data-testid={`${testId}-framed`}
