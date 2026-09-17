@@ -302,20 +302,22 @@ private fun CloseButton(onClose: () -> Unit, modifier: Modifier, testTag: String
             // filter does the latter), so `CircleShape` is scoped to the icon's
             // own bounds, not the button's larger touch target, to keep the
             // shadow close to the drawn X rather than a wider disc.
-            modifier = Modifier.dropShadow(
-                shape = CircleShape,
-                shadow = Shadow(
-                    radius = 3.dp,
-                    offset = DpOffset(0.dp, 1.dp),
-                    color = Color.Black,
-                    alpha = 0.6f,
-                ),
-            ),
+            modifier = Modifier.dropShadow(shape = CircleShape, shadow = OVER_MEDIA_SHADOW),
         )
     }
 }
 
 const val VIEWER_TAG = "media_viewer"
+
+/** The master spec, read back for `MediaViewerCloseShadowTest` (`internal` so
+ * the test module's friend access can pin it against
+ * `design/components/media/MediaViewer.jsx:195`). */
+internal val OVER_MEDIA_SHADOW = Shadow(
+    radius = 3.dp,
+    offset = DpOffset(0.dp, 1.dp),
+    color = Color.Black,
+    alpha = 0.6f,
+)
 
 /** `padding: "8px"` around the X (`MediaViewer.jsx:175`), on top of whatever
  * the device's own bars take. */
