@@ -38,7 +38,9 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 sealed interface CoverPick {
     /**
      * No face yet — the row's opening state, and the one it keeps until
-     * a tile is tapped. Every tile draws unchosen; none wears the ring.
+     * a tile is tapped. Every tile draws unchosen: none wears the ring
+     * and none dims, because choosing a cover is always a willing act
+     * (design #781; CoverRow.jsx:20-24).
      */
     data object None : CoverPick
 
@@ -84,13 +86,23 @@ fun CoverRow(
             color = MaterialTheme.colorScheme.onSurface,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(Space.x2)) {
+            // DIMMED TRACKS "SOMETHING IS CHOSEN", NOT `!chosen` (design
+            // #781; MediaThumb.kt:86-90 draws this exact line already:
+            // "dimmed ... is a separate parameter rather than `!selected`
+            // because most uses ... have no selection at all and must not
+            // fade everything"). `CoverPick.None` is the row's opening
+            // state and stays four equal candidates — no ring, no dim —
+            // until a tile is tapped (CoverRow.jsx:20-24,65,84-89;
+            // CoverRow.d.ts:21-24: "nothing is chosen until someone
+            // chooses").
+            val anyChosen = picked != CoverPick.None
             frames.forEachIndexed { index, frame ->
                 val chosen = picked == CoverPick.Frame(index)
                 MediaThumb(
                     item = MediaItem(frame, 1f),
                     size = tileSize,
                     selected = chosen,
-                    dimmed = !chosen,
+                    dimmed = anyChosen && !chosen,
                     onClick = { onPickFrame(index) },
                     contentDescription = stringResource(R.string.designsystem_cover_frame, index + 1),
                     testTag = testTagPrefix?.let { "${it}_frame_$index" },
@@ -98,6 +110,7 @@ fun CoverRow(
             }
             OwnPictureTile(
                 chosen = picked == CoverPick.OwnPicture,
+                anyChosen = anyChosen,
                 model = ownPicture,
                 onClick = onPickOwnPicture,
                 tileSize = tileSize,
@@ -136,6 +149,7 @@ fun CoverRow(
 @Composable
 private fun OwnPictureTile(
     chosen: Boolean,
+    anyChosen: Boolean,
     model: Any?,
     onClick: () -> Unit,
     tileSize: Dp,
@@ -146,7 +160,7 @@ private fun OwnPictureTile(
             item = MediaItem(model, 1f),
             size = tileSize,
             selected = chosen,
-            dimmed = !chosen,
+            dimmed = anyChosen && !chosen,
             onClick = onClick,
             contentDescription = stringResource(R.string.designsystem_cover_own),
             testTag = testTag,
