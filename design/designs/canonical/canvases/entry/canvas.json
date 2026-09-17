@@ -308,6 +308,15 @@
       "page": "entry"
     },
     {
+      "file": "About.dc.html",
+      "title": "About CoGra · the whole page",
+      "x": 2400,
+      "y": 7240,
+      "w": 390,
+      "h": 1736,
+      "page": "entry"
+    },
+    {
       "file": "HelpDialog.dc.html",
       "title": "The ? dialog",
       "x": 0,
@@ -474,7 +483,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 4018,
+      "h": 4061,
       "page": "entry",
       "title": "Entry · flow map"
     },

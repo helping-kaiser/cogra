@@ -2007,6 +2007,27 @@ function SettingsBody() {
           <SettingsRow label="Email" value="sol@solferreira.art" onOpen={() => {}} />
         </SettingsGroup>
 
+        {/* ABOUT SITS AFTER CREDENTIALS AND BEFORE LEAVING (jakob's ruling, the
+            batch-rulings round). The page's order is frequency, not taxonomy,
+            and these four rows are the least-reached on it — nobody opens
+            settings to re-watch an intro. They stand together because they are
+            one kind of row: four doors onto words about the product, none of
+            them a setting.
+
+            NO FOOTNOTE. A group's footnote carries the fact a reader needs once
+            and never again, and there is none here — every row's label already
+            says exactly what it opens.
+
+            PRIVACY AND TERMS ARE ROWS AND NOTHING ELSE. They open static legal
+            documents, which are written rather than designed; a board drawing
+            one would be a drawing of text nobody in this repo writes. */}
+        <SettingsGroup label="About">
+          <SettingsRow label="Watch the intro again" onOpen={() => {}} />
+          <SettingsRow label="About CoGra" onOpen={() => {}} />
+          <SettingsRow label="Privacy" onOpen={() => {}} />
+          <SettingsRow label="Terms" onOpen={() => {}} />
+        </SettingsGroup>
+
         <SettingsGroup ariaLabel="Sign out">
           <SettingsRow
             checked={false}

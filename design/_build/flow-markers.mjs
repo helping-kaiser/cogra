@@ -1232,6 +1232,12 @@ Object.assign(FLOW_MARKERS, {
     // Deleting the account is the page's last row and its next free number —
     // the same rule the People group followed, for the same reason.
     { n: 18, find: ">Delete account</span>", tag: "button" },
+    // The About group, likewise: four rows added after the page was numbered,
+    // taking the next four free numbers rather than the four they read at.
+    { n: 19, find: ">Watch the intro again</span>", tag: "button" },
+    { n: 20, find: ">About CoGra</span>", tag: "button" },
+    { n: 21, find: ">Privacy</span>", tag: "button" },
+    { n: 22, find: ">Terms</span>", tag: "button" },
   ],
   // The hidden-accounts sheet over the settings page (the private-viewer-state
   // round). scanExempt like its two siblings, so only the sheet is numbered —
@@ -1362,6 +1368,7 @@ Object.assign(FLOW_MARKERS, {
 // field starts empty (no distinguishing value text to key off).
 Object.assign(FLOW_MARKERS, {
   Join: [
+    { n: 8, find: 'aria-label="About CoGra"', tag: "button" },
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'data-field="Handle"', tag: "div" },
     { n: 3, find: 'data-field="Email"', tag: "div" },
@@ -2115,6 +2122,11 @@ Object.assign(FLOW_MARKERS, {
 // leads, the way it stands top-right on every card, and the forward button
 // follows. The pager dots carry no number — they are an indicator, not a
 // control (`_shared.jsx`, the intro block).
+// The About page: one way out, and everything else on it is words.
+Object.assign(FLOW_MARKERS, {
+  About: [{ n: 1, find: 'aria-label="Back"', tag: "a" }],
+});
+
 const introCard = (forward) => [
   { n: 1, find: ">Skip</button>", tag: "button" },
   { n: 2, find: `>${forward}</button>`, tag: "button" },
