@@ -390,7 +390,7 @@ fun VideoPlayer(
 
         if (controls == VideoControls.SoundOnly) {
             Row(
-                modifier = Modifier.align(Alignment.BottomStart).padding(Space.x2),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(Space.x2),
             ) {
                 MuteButton(muted = muted)
             }
@@ -604,7 +604,6 @@ private fun MuteButton(muted: Boolean) {
         stringResource(if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute)
     Box(
         modifier = Modifier
-            .padding(start = Space.x2)
             .size(BADGE_CONTROL)
             .clip(RoundedCornerShape(BADGE_CONTROL / 2))
             .background(MediaOverlay.Badge)
@@ -648,5 +647,7 @@ internal const val POSTER_TAG = "video_poster"
  * cost of a field read. */
 private const val TICK_MS = 250L
 
-private val BADGE_CONTROL = 28.dp
-private val BADGE_GLYPH = 16.dp
+// design/components/media/MediaAttachment.jsx:123-124,134 — the MediaDisc
+// master's disc is 36px with a 20px glyph.
+private val BADGE_CONTROL = 36.dp
+private val BADGE_GLYPH = 20.dp
