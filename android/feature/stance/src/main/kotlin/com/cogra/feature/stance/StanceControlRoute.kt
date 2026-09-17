@@ -20,6 +20,7 @@ import com.cogra.core.designsystem.StanceInputSurface
 import com.cogra.core.designsystem.StanceLanding
 import com.cogra.core.designsystem.StancePadMode
 import com.cogra.core.designsystem.StancePoint
+import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceTarget
@@ -42,6 +43,12 @@ fun StanceControlRoute(
     testTagPrefix: String,
     modifier: Modifier = Modifier,
     axes: StanceAxes = StanceAxes.Opinion,
+    /**
+     * The family's words for reaching zero — every kind but a topic
+     * severs; a topic disconnects (jakob's I2 ruling, copy-voice.md "the
+     * topic disconnects").
+     */
+    zeroWords: StanceZeroWords = StanceZeroWords.Severed,
     targetLabel: String? = null,
     wide: Boolean = false,
     onRequireAccount: (() -> Unit)? = null,
@@ -95,6 +102,7 @@ fun StanceControlRoute(
         testTagPrefix = testTagPrefix,
         modifier = modifier,
         axes = axes,
+        zeroWords = zeroWords,
         targetLabel = targetLabel,
         wide = wide,
     )

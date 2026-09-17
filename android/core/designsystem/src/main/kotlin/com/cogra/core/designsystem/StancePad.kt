@@ -286,6 +286,12 @@ fun StanceControl(
      */
     axes: StanceAxes = StanceAxes.Opinion,
     /**
+     * The family's words for reaching zero — every kind but a topic
+     * severs; a topic disconnects (jakob's I2 ruling, copy-voice.md "the
+     * topic disconnects").
+     */
+    zeroWords: StanceZeroWords = StanceZeroWords.Severed,
+    /**
      * What this control stances toward, in the reader's own words —
      * `#saltmaps`, hash and all. Named because a page may carry more
      * than one stance control and the face's accessible name is what
@@ -313,7 +319,7 @@ fun StanceControl(
     val lowerCentre = remember(bottomPx, marginPx) { PadAtLowerCentre(bottomPx, marginPx) }
     val tapLabel = stringResource(R.string.stance_target)
     val exactLabel = stringResource(R.string.stance_pick_exactly)
-    val severLabel = stringResource(R.string.stance_severance_open)
+    val severLabel = stringResource(zeroWords.open)
     val standingLabel = stringResource(R.string.stance_standing)
     val description = targetDescription(state.standing, axes, targetLabel)
     // THE WALK-AWAY NEEDS SOMETHING TO WALK BACK (`TagPageHeldPad`: the
@@ -416,6 +422,8 @@ fun StanceControl(
                         onOpenSeverance = onOpenSeverance,
                         testTagPrefix = testTagPrefix,
                         axes = axes,
+                        zeroWords = zeroWords,
+                        targetLabel = targetLabel,
                         severable = severable,
                     )
                 }
@@ -435,6 +443,8 @@ fun StanceControl(
                 onDismiss = onDismissSeverance,
                 testTagPrefix = testTagPrefix,
                 axes = axes,
+                zeroWords = zeroWords,
+                targetLabel = targetLabel,
             )
         }
     }
@@ -650,6 +660,8 @@ private fun StancePadOverlay(
     onOpenSeverance: () -> Unit,
     testTagPrefix: String,
     axes: StanceAxes,
+    zeroWords: StanceZeroWords,
+    targetLabel: String?,
     severable: Boolean,
 ) {
     val explainLabel = stringResource(R.string.stance_explain)
@@ -672,7 +684,7 @@ private fun StancePadOverlay(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Box(modifier = Modifier.weight(1f)) {
-                    StanceStandingLine(state.standing, testTagPrefix, axes)
+                    StanceStandingLine(state.standing, testTagPrefix, axes, zeroWords, targetLabel)
                 }
                 TextButton(
                     onClick = { explaining = !explaining },
@@ -703,7 +715,7 @@ private fun StancePadOverlay(
                 if (state.inputMode == StanceInputSurface.PAD) {
                     StancePadField(state.pick, onPick = onPick, enabled = !state.busy)
                 }
-                StanceLandingLine(state.landing, testTagPrefix, axes)
+                StanceLandingLine(state.landing, testTagPrefix, axes, zeroWords)
             }
             if (sticky) {
                 // The alternates are the accessible path, so the way into
@@ -757,7 +769,7 @@ private fun StancePadOverlay(
                         onClick = onOpenSeverance,
                         modifier = Modifier.testTag("${testTagPrefix}_stance_sever"),
                     ) {
-                        Text(stringResource(R.string.stance_severance_open))
+                        Text(stringResource(zeroWords.open))
                     }
                 }
             }
@@ -908,12 +920,18 @@ private fun StanceFailure(needsKey: Boolean, testTagPrefix: String) {
  * keeps apart, and read-side throughout (design.md §8.1).
  */
 @Composable
-private fun StanceStandingLine(standing: StancePoint?, testTagPrefix: String, axes: StanceAxes) {
+private fun StanceStandingLine(
+    standing: StancePoint?,
+    testTagPrefix: String,
+    axes: StanceAxes,
+    zeroWords: StanceZeroWords = StanceZeroWords.Severed,
+    targetLabel: String? = null,
+) {
     val text = when {
         standing == null -> stringResource(R.string.stance_standing_none)
         // The zero bundle never speaks through the anchor table
         // (design.md §8.4): it is named, not read as a near neighbour.
-        standing.isZeroBundle -> stringResource(R.string.stance_standing_zero)
+        standing.isZeroBundle -> stringResource(zeroWords.standingZero, targetLabel.orEmpty())
         else -> "${stringResource(R.string.stance_standing)}: ${standing.reading(axes)}"
     }
     Text(
@@ -1153,7 +1171,12 @@ private fun DrawScope.drawStanceField(
  * nothing here to wait for and no spinner to show.
  */
 @Composable
-private fun StanceLandingLine(landing: StanceLanding?, testTagPrefix: String, axes: StanceAxes) {
+private fun StanceLandingLine(
+    landing: StanceLanding?,
+    testTagPrefix: String,
+    axes: StanceAxes,
+    zeroWords: StanceZeroWords = StanceZeroWords.Severed,
+) {
     if (landing == null) {
         Text(
             text = stringResource(R.string.stance_landing_working),
@@ -1165,7 +1188,7 @@ private fun StanceLandingLine(landing: StanceLanding?, testTagPrefix: String, ax
     }
     val readout = standingReadout(landing.net)
     val words = when {
-        landing.severance -> stringResource(R.string.stance_severance_reached)
+        landing.severance -> stringResource(zeroWords.reached)
         landing.inertDirected && landing.inertInterest ->
             stringResource(R.string.stance_carries_nothing)
         landing.inertDirected -> stringResource(R.string.stance_carries_nothing_directed)
