@@ -2862,6 +2862,171 @@ function NewInviteSheet() {
   );
 }
 
+/* ── THE ONBOARDING INTRO (jakob's rulings, the batch-rulings round) ───────
+   Five full-screen cards shown once, on the first authenticated feed entry,
+   from applicant on. The frame is written here because five boards draw it and
+   differ only in their illustration and their words.
+
+   THE ILLUSTRATIONS ARE NOT GATED BY THE APP'S OWN ELEMENTS (jakob's ruling).
+   They are drawn with whatever means teaches fastest — lines, dots, plates —
+   and where a real component appears it IS the real component: the pad is
+   `StancePad`, every face is `MonogramAvatar`. A post card, a comment and a
+   chat bubble appear as LIKENESSES rather than as mounted masters, because a
+   mounted `PostCard` would put seven live controls on a card whose only live
+   controls are Skip and Next; the likenesses are built from the masters' own
+   tokens, radii and anatomy so they cannot drift in look.
+
+   THE FRAME IS SKIP · ILLUSTRATION · WORDS · DOTS · NEXT. Skip stands on every
+   card, top-right, and leaves for the feed; the last card's button reads
+   `Start reading` instead of `Next`. The dots are an indicator and not a
+   control — a pager a reader can drive would make five boards into twenty-five
+   edges and teach nothing the buttons do not. */
+const INTRO_STEPS = 5;
+
+function IntroDots({ step }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, padding: "20px 0 16px" }}>
+      <span style={SR_ONLY}>{`Step ${step} of ${INTRO_STEPS}`}</span>
+      {Array.from({ length: INTRO_STEPS }, (_, index) => (
+        <span
+          key={index}
+          aria-hidden="true"
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "var(--radius-full)",
+            background: index + 1 === step ? "var(--primary)" : "var(--border-field)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function IntroFrame({ step, headline, lines, note = null, cta = "Next", children }) {
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ flex: "none", display: "flex", justifyContent: "flex-end", padding: "8px 12px 0" }}>
+        <Button variant="text">Skip</Button>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
+        {children}
+      </div>
+      <div style={{ flex: "none", padding: "0 24px 32px" }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "var(--text-headline-small)",
+            lineHeight: "var(--text-headline-small--line-height)",
+            fontWeight: "var(--text-headline-small--font-weight)",
+          }}
+        >
+          {headline}
+        </h1>
+        {lines.map((line) => (
+          <p
+            key={line}
+            style={{
+              margin: "8px 0 0",
+              fontSize: "var(--text-body-medium)",
+              lineHeight: "var(--text-body-medium--line-height)",
+              letterSpacing: "var(--text-body-medium--letter-spacing)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {line}
+          </p>
+        ))}
+        {note}
+        <IntroDots step={step} />
+        <Button style={{ width: "100%" }}>{cta}</Button>
+      </div>
+    </div>
+  );
+}
+
+/* The illustrations' own stage: a fixed box the pieces are placed in, with one
+   SVG under them carrying every line. Absolute placement in ONE coordinate
+   space is what keeps a drawing of lines-between-things from drifting apart at
+   a different text size. */
+function IntroStage({ width = 342, height = 300, children }) {
+  return (
+    <div style={{ position: "relative", width, height, flex: "none" }}>{children}</div>
+  );
+}
+
+function IntroLines({ width = 342, height = 300, children }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
+      style={{ position: "absolute", inset: 0, overflow: "visible" }}
+    >
+      {children}
+    </svg>
+  );
+}
+
+/* A node's caption — the word under a face, `label-small` and quiet, so the
+   drawing says who each dot is without a legend beside it. */
+function IntroCaption({ children, x, y, width = 88 }) {
+  return (
+    <span
+      style={{
+        position: "absolute",
+        left: x - width / 2,
+        top: y,
+        width,
+        textAlign: "center",
+        fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        letterSpacing: "var(--text-label-small--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/* A face on the stage, centred on (x, y) — the real avatar, placed. */
+function IntroFace({ x, y, size = 44, name, src }) {
+  return (
+    <span style={{ position: "absolute", left: x - size / 2, top: y - size / 2, display: "block" }}>
+      <MonogramAvatar name={name} size={size} src={src} />
+    </span>
+  );
+}
+
+/* THE POST CARD AS A LIKENESS. `PostCard`'s own anatomy — the author line, the
+   title, the picture on the card's own corner — at the card's radius and fill,
+   with nothing pressable on it. */
+function IntroPostCard({ title, timestamp = "2h", author = ADA, src = "post-photo.jpg", height = 92, tail = null }) {
+  return (
+    <div
+      style={{
+        borderRadius: "var(--radius-medium)",
+        background: "var(--surface-card)",
+        overflow: "hidden",
+        border: "1px solid var(--border-hairline)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "10px var(--space-3)" }}>
+        <MonogramAvatar name={author.displayName} src={author.src} />
+        <span style={{ flex: 1, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
+          @{author.handle}
+        </span>
+        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{timestamp}</span>
+      </div>
+      <div style={{ padding: "0 var(--space-3) 10px", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{title}</div>
+      <img src={src} alt="" style={{ display: "block", width: "100%", height, objectFit: "cover" }} />
+      {tail}
+    </div>
+  );
+}
+
 /* ── THE PICK STEP'S INERT GALLERY (the video conform round) ───────────────
    The device-gallery grid with the picking turned off: no selection rings,
    nothing to tap, because a post carries pictures OR one video and the clip

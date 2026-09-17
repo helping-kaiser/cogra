@@ -263,6 +263,51 @@
       "page": "entry"
     },
     {
+      "file": "OnboardingSteps.dc.html",
+      "title": "Intro · your own steps",
+      "x": 0,
+      "y": 7240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "OnboardingShape.dc.html",
+      "title": "Intro · opinions have a shape",
+      "x": 480,
+      "y": 7240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "OnboardingPublic.dc.html",
+      "title": "Intro · everything is public",
+      "x": 960,
+      "y": 7240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "OnboardingLayers.dc.html",
+      "title": "Intro · nothing is lost",
+      "x": 1440,
+      "y": 7240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "OnboardingVouch.dc.html",
+      "title": "Intro · someone brings you in",
+      "x": 1920,
+      "y": 7240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "HelpDialog.dc.html",
       "title": "The ? dialog",
       "x": 0,
@@ -429,7 +474,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 3800,
+      "h": 4018,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -499,6 +544,14 @@
       "y": 4240,
       "w": 290,
       "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Restore your key' and 'Key elsewhere' carry a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key.",
+      "page": "entry"
+    },
+    {
+      "id": "sec-intro",
+      "x": -340,
+      "y": 7240,
+      "w": 290,
+      "text": "ENTRY · The intro\n\nFive full-screen cards, shown once on the first authenticated feed entry, from applicant on; the seen flag is the server's. Skip stands on every card and leaves for the feed; Settings' About group re-watches them from the first. The illustrations are not gated by the app's own elements — but where a real component appears it is the real one, and the pad is the pad. V1: jakob iterates on these on canvas.",
       "page": "entry"
     },
     {

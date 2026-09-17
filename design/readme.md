@@ -1109,7 +1109,20 @@ bottom edge otherwise, the keyboard while one is up; one number
 everywhere (ruled 2026-09-10). First-time onboarding is
 per-control, never a tour, and on the entry screens only the pad
 carries it — what it is for, how it opens, that nothing signs until
-Set, and that the input can be swapped in settings.
+Set, and that the input can be swapped in settings. Beside those
+marks stands **one skippable intro** (ruled 2026-09-14): five
+full-screen cards — the feed is your own steps, opinions have a
+shape, everything is public, nothing is lost, someone brings you in
+— fired on the first authenticated feed entry, from applicant on,
+shown once against a server-side seen flag, and re-opened from
+Settings' About group. Skip stands on every card and leaves for the
+feed the intro opened over. It teaches what the product IS rather
+than what a control does, so it neither replaces a coach mark nor
+adds one; the per-control marks are unchanged by it. The last card
+carries the applicant's one task — the friend who sent the invite
+still has to let them in — and its inviter face is personalized by
+the client to the actual link-issuer's avatar, the monogram
+standing in where there is no photo.
 
 ### The compose flow — 2026-08-27
 
