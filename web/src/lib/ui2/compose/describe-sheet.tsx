@@ -59,6 +59,7 @@ export function DescribeSheet({
       ? null
       : { width: Math.round(PREVIEW_HEIGHT * aspect), height: PREVIEW_HEIGHT };
   const framing = box === null ? null : cropPreviewStyle(crop, box);
+  const problem = altTextProblem(value);
   return (
     <BottomSheet
       open={open}
@@ -126,10 +127,18 @@ export function DescribeSheet({
           onChange={onChange}
           testId={`${testId}-field`}
           cap={ALT_TEXT_MAX_CHARS}
-          error={altTextProblem(value) ?? undefined}
+          error={problem ?? undefined}
         />
         <div className="flex justify-end">
-          <PillButton testId={`${testId}-done`} variant="text" onClick={onClose}>
+          {/* Visible but disabled over the cap, never hidden — `problem` is
+              only ever the over-cap message on this field, so its presence
+              is exactly the signal to gate on. */}
+          <PillButton
+            testId={`${testId}-done`}
+            variant="text"
+            disabled={problem !== null}
+            onClick={onClose}
+          >
             Done
           </PillButton>
         </div>

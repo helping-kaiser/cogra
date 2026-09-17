@@ -57,6 +57,20 @@ describe("DescribeSheet", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/too long/i);
   });
 
+  // Visible but disabled over the cap, never hidden (the caps-affordance
+  // round's ruling, PR #755's pattern) — Done stays on screen so the author
+  // can trim back under the cap, rather than losing the way out.
+  it("disables, rather than hides, Done past the cap", () => {
+    open({ value: "x".repeat(ALT_TEXT_MAX_CHARS + 1) });
+    expect(screen.getByTestId("describe-sheet-done")).toBeVisible();
+    expect(screen.getByTestId("describe-sheet-done")).toBeDisabled();
+  });
+
+  it("leaves Done enabled at the cap the write side allows", () => {
+    open({ value: "x".repeat(ALT_TEXT_MAX_CHARS) });
+    expect(screen.getByTestId("describe-sheet-done")).toBeEnabled();
+  });
+
   // CW-15: the reason sits directly under the title on both shapes, not as
   // an extended trailing line near the field.
   it("carries the reason under the title, not as an extended trailing line", () => {
