@@ -7,6 +7,8 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertDoesNotExist
+import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -382,6 +384,30 @@ class ComposeWizardScreenTest {
         // The tray shows; the sheet manages.
         compose.onNodeWithTag("wizard_show_all").performClick()
         assertThat(manages).isEqualTo(1)
+    }
+
+    @Test
+    fun theVideoTrayShowsTheChosenCoverMarkOnceThereIsOne() {
+        // ComposePickVideoCover (design/backlog.md intake 2026-09-15): the
+        // back arrow from the cover stage lands here, and the tray has to
+        // say the cover already exists rather than reading coverless again.
+        val withCover = ComposeWizardState(
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverFrames = List(3) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 192)) },
+            coverChoice = CoverChoice.Frame(0),
+        )
+        compose.setContent { Wizard(withCover) }
+        compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun theVideoTrayHasNoCoverMarkBeforeAChoiceIsMade() {
+        val coverless = ComposeWizardState(
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverFrames = List(3) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 192)) },
+        )
+        compose.setContent { Wizard(coverless) }
+        compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
