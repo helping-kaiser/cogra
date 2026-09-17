@@ -76,7 +76,12 @@ class StancePadTest {
      */
     private val heldStanding = StancePoint(0.6, 0.35)
 
-    private fun show(state: StanceControlState, axes: StanceAxes = StanceAxes.Opinion, targetLabel: String? = null) {
+    private fun show(
+        state: StanceControlState,
+        axes: StanceAxes = StanceAxes.Opinion,
+        targetLabel: String? = null,
+        zeroWords: StanceZeroWords = StanceZeroWords.Severed,
+    ) {
         compose.setContent {
             // Centred, so a drag has room on every side of the target.
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -96,6 +101,7 @@ class StancePadTest {
                     onConfirmationShown = { confirmationsShown++ },
                     testTagPrefix = TAG,
                     axes = axes,
+                    zeroWords = zeroWords,
                     targetLabel = targetLabel,
                 )
             }
@@ -729,6 +735,41 @@ class StancePadTest {
             .assertTextContains("back to nothing", substring = true)
     }
 
+    // jakob's I2 ruling (copy-voice.md "Awaiting blessing — the topic
+    // disconnects", 2026-09-15): a topic disconnects, never severs. The
+    // test above (default `StanceZeroWords.Severed`) is untouched — the
+    // split is by record family, not by surface.
+    @Test
+    fun aTopicsLandingOnZeroReadsAsNoOpinionRatherThanSeverance() {
+        show(
+            StanceControlState(
+                pad = StancePadMode.DRAGGING,
+                landing = StanceLanding(
+                    StancePoint.Origin,
+                    inertDirected = true,
+                    inertInterest = true,
+                    severance = true,
+                ),
+            ),
+            zeroWords = StanceZeroWords.Disconnected,
+        )
+
+        compose.onNodeWithTag("${TAG}_stance_landing")
+            .assertTextContains("This leaves you with no opinion towards it.")
+    }
+
+    @Test
+    fun aTopicsZeroStandingNamesItInTheSentenceRuledForIt() {
+        show(
+            StanceControlState(pad = StancePadMode.STICKY, standing = StancePoint.Origin),
+            zeroWords = StanceZeroWords.Disconnected,
+            targetLabel = "#saltmaps",
+        )
+
+        compose.onNodeWithTag("${TAG}_stance_standing")
+            .assertTextContains("No opinion towards #saltmaps.")
+    }
+
     // -- Where the pad opens (design.md §8.3) --
     //
     // WHERE it lands is arithmetic, and PadBesideTargetTest is its
@@ -780,6 +821,18 @@ class StancePadTest {
 
         compose.onNodeWithTag("${TAG}_stance_cancel").performScrollTo().performClick()
         assertThat(dismissed).isEqualTo(1)
+    }
+
+    @Test
+    fun aTopicsWayOutReadsDisconnectNeverWalkItBack() {
+        show(
+            StanceControlState(pad = StancePadMode.STICKY, standing = heldStanding),
+            zeroWords = StanceZeroWords.Disconnected,
+        )
+
+        compose.onNodeWithTag("${TAG}_stance_sever")
+            .performScrollTo()
+            .assertTextContains("Disconnect")
     }
 
     @Test

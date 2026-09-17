@@ -49,7 +49,12 @@ fun SeveranceConfirm(
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.testTag("${testTagPrefix}_severance"),
-        title = { Text(stringResource(zeroWords.title, targetLabel.orEmpty())) },
+        title = {
+            Text(
+                text = stringResource(zeroWords.title, targetLabel.orEmpty()),
+                modifier = Modifier.testTag("${testTagPrefix}_severance_title"),
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (prompt.fromPick) {
@@ -58,7 +63,10 @@ fun SeveranceConfirm(
                         modifier = Modifier.testTag("${testTagPrefix}_severance_from_pick"),
                     )
                 }
-                Text(stringResource(zeroWords.body, targetLabel.orEmpty()))
+                Text(
+                    text = stringResource(zeroWords.body, targetLabel.orEmpty()),
+                    modifier = Modifier.testTag("${testTagPrefix}_severance_body"),
+                )
                 // This is where the read-side guidance belongs: what the
                 // reader stands at, and what reaching zero takes.
                 //
