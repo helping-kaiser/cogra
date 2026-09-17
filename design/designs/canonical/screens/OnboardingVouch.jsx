@@ -24,6 +24,46 @@
    each other with solid edges and to @mira with solid edges, so she is visibly
    IN that graph while you are visibly not yet.
 
+   WHAT IS DRAWN UP THERE IS A CUTOUT, NOT A CLUSTER (jakob's second canvas
+   pass: "the graph above mira still doesnt look graphy.. it looks closed off
+   and a bit like a mushroom it should give the feel of strechting endlessly
+   wide out (maybe have some loose edges fading out and give it a nicer
+   shape"). Three things do that work and each one answers a word of his:
+
+   - CLOSED OFF is fixed by the LOOSE EDGES. Nine of them leave the wired dots
+     and run outward — left, up, right, down past the corners — on a stroke
+     that fades to nothing. Three end in a dot faint enough to read as far
+     away; six end in nothing at all, which is the honest drawing of an edge
+     whose other end is off this card. A graph whose every edge lands
+     somewhere inside the frame is a graph with a boundary, and this one has
+     none.
+   - MUSHROOM is fixed by the SILHOUETTE and by the GATE. The dots sit in a
+     shallow band — 342 wide against 60 tall — that TILTS, running lower on
+     the left and higher on the right, because a level row of dots arcs into
+     a cap the moment its ends drop and a tilted one cannot. And only two
+     edges rise to @mira: three converging on one face drew a flare, and a
+     flare under a band of dots is the stem the cap was sitting on. The loose
+     edges leave along the band's own axis far more than they leave upward,
+     which is what makes it read as weather blown across the top rather than
+     as something growing out of her.
+   - A NICER SHAPE is fixed by the IRREGULARITY. Positions are hand-placed and
+     deliberately uneven — no two gaps equal, no symmetry to find — because
+     an even scatter reads as a pattern and a pattern reads as decoration.
+     The mesh closes a few triangles and leaves other dots on a single
+     thread, the way a real neighbourhood is dense in places and thin in
+     others.
+
+   THE FADE IS A GRADIENT, NOT AN OPACITY (and it is token-themed). Each loose
+   edge carries its own `linearGradient` in user space, running from the dot it
+   leaves to the point it dies at, with `--border-field` at full strength and
+   the same token at zero — so the edge fades along its own direction and does
+   the right thing in both themes, which a flat 30%-opacity line does not.
+
+   MIRA IS JOINED ON, NOT HOLDING IT UP. Two edges, rising nearly parallel to
+   the two dots above her; everything to the right of them is hers only THROUGH
+   the mesh, which is the gate's own meaning — one link in, and the network
+   carries on past it without her.
+
    YOUR EDGE IS DOTTED, HERS ARE SOLID (jakob ruled the dotted line over the
    other candidate, an arrow that stops short: "with dotted line"). Dotted reads
    not-yet-sealed and rhymes with the dashed ring already around your dot, where
@@ -53,34 +93,59 @@
 
 const STAGE = { width: 342, height: 336 };
 
-/* The graph above @mira: seven members and the edges between them. Positions
-   are hand-placed rather than generated — a mesh that reads as a neighbourhood
-   at a glance is a drawing decision, and a layout algorithm at this size draws
-   either a circle or a tangle. */
+/* The band above @mira: eight wired members across the stage's full width.
+   Positions are hand-placed rather than generated — no two gaps equal, heights
+   alternating instead of arching — because a layout algorithm at this size
+   draws either a circle or a tangle, and an even scatter reads as decoration. */
 const MEMBERS = [
-  { id: "a", x: 58, y: 26 },
-  { id: "b", x: 140, y: 10 },
-  { id: "c", x: 232, y: 28 },
-  { id: "d", x: 300, y: 72 },
-  { id: "e", x: 104, y: 80 },
-  { id: "f", x: 200, y: 86 },
-  { id: "g", x: 30, y: 98 },
+  { id: "a", x: 32, y: 76 },
+  { id: "b", x: 76, y: 40 },
+  { id: "c", x: 120, y: 86 },
+  { id: "d", x: 156, y: 46 },
+  { id: "e", x: 198, y: 60 },
+  { id: "f", x: 240, y: 26 },
+  { id: "g", x: 280, y: 74 },
+  { id: "h", x: 314, y: 34 },
 ];
 const AT = Object.fromEntries(MEMBERS.map((member) => [member.id, member]));
+/* Dense in places, thin in others — `b` and `g` hang on a single thread each
+   while the middle closes triangles, which is how a neighbourhood actually
+   looks and a lattice does not. */
 const MESH = [
   ["a", "b"],
-  ["b", "c"],
+  ["a", "c"],
+  ["b", "d"],
   ["c", "d"],
-  ["a", "e"],
+  ["c", "e"],
+  ["d", "f"],
   ["e", "f"],
-  ["b", "f"],
-  ["f", "d"],
   ["e", "g"],
-  ["a", "g"],
+  ["f", "h"],
+  ["g", "h"],
 ];
-/* The three edges that make her the gate — drawn from her centre, her own face
-   painting over their lower ends. */
-const GATE = ["e", "f", "c"];
+/* The edges that leave: where each one starts, where it dies, and whether
+   anything is still visible when it gets there. They go outward along the
+   band's axis far more than upward — that is what keeps the silhouette a band
+   and not a cap. */
+const LOOSE = [
+  { from: "a", to: [-26, 54], far: true },
+  { from: "a", to: [-18, 116] },
+  { from: "b", to: [50, -22] },
+  { from: "c", to: [56, 134] },
+  { from: "d", to: [150, -30], far: true },
+  { from: "f", to: [264, -34] },
+  { from: "h", to: [372, 16], far: true },
+  { from: "h", to: [366, 68] },
+  { from: "g", to: [332, 128] },
+];
+/* The TWO edges that make her the gate, and two is the number for a reason:
+   three converging on one face drew a flare, and a flare under a band of dots
+   is exactly the mushroom stem this round was told to get rid of. Two rise
+   almost parallel, so she reads as joined ON to the band rather than holding
+   it up — and the whole right half is hers only through the mesh, which is
+   the gate's own meaning. Drawn from her centre, her face painting over their
+   lower ends. */
+const GATE = ["c", "e"];
 const MIRA_AT = { x: 171, y: 180 };
 
 export function Screen() {
@@ -98,6 +163,44 @@ export function Screen() {
     >
       <IntroStage {...STAGE}>
         <IntroLines {...STAGE}>
+          <defs>
+            {LOOSE.map((edge, index) => (
+              <linearGradient
+                key={`fade-${index}`}
+                id={`vouch-fade-${index}`}
+                gradientUnits="userSpaceOnUse"
+                x1={AT[edge.from].x}
+                y1={AT[edge.from].y}
+                x2={edge.to[0]}
+                y2={edge.to[1]}
+              >
+                <stop offset="0" style={{ stopColor: "var(--border-field)", stopOpacity: 1 }} />
+                <stop offset="0.5" style={{ stopColor: "var(--border-field)", stopOpacity: 0.45 }} />
+                <stop offset="1" style={{ stopColor: "var(--border-field)", stopOpacity: 0 }} />
+              </linearGradient>
+            ))}
+          </defs>
+          {/* The edges that leave, under everything else. */}
+          {LOOSE.map((edge, index) => (
+            <path
+              key={`loose-${index}`}
+              d={`M ${AT[edge.from].x} ${AT[edge.from].y} L ${edge.to[0]} ${edge.to[1]}`}
+              stroke={`url(#vouch-fade-${index})`}
+              strokeWidth="2"
+              fill="none"
+            />
+          ))}
+          {/* Three of them still have something at the far end, faint enough
+              to read as distance rather than as a neighbour. */}
+          {LOOSE.filter((edge) => edge.far).map((edge, index) => (
+            <circle
+              key={`fardot-${index}`}
+              cx={edge.to[0]}
+              cy={edge.to[1]}
+              r="7"
+              style={{ fill: "var(--secondary-container)", opacity: 0.4 }}
+            />
+          ))}
           {MESH.map(([from, to]) => (
             <path
               key={`${from}${to}`}
