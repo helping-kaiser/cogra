@@ -175,4 +175,66 @@ class SeveranceConfirmTest {
         compose.onNodeWithTag("${TAG}_severance_keep").performClick()
         assertThat(dismissed).isEqualTo(1)
     }
+
+    // jakob's I2 ruling (copy-voice.md "Awaiting blessing — the topic
+    // disconnects", 2026-09-15): a topic disconnects, never severs. Every
+    // test above keeps the severance family's defaults untouched — the
+    // split is by record family, not by surface.
+    private fun showDisconnect(prompt: SeverancePrompt, targetLabel: String = "#saltmaps") {
+        compose.setContent {
+            SeveranceConfirm(
+                prompt = prompt,
+                onConfirm = { confirmed++ },
+                onDismiss = { dismissed++ },
+                testTagPrefix = TAG,
+                zeroWords = StanceZeroWords.Disconnected,
+                targetLabel = targetLabel,
+            )
+        }
+    }
+
+    @Test
+    fun aTopicAsksWithItsNameNeverSeverThis() {
+        showDisconnect(prompt())
+
+        compose.onNodeWithTag("${TAG}_severance_title")
+            .assertTextContains("Disconnect from #saltmaps?")
+    }
+
+    @Test
+    fun aTopicsConsequencesNameNoOpinionInTheRuledWords() {
+        showDisconnect(prompt())
+
+        compose.onNodeWithTag("${TAG}_severance_body").assertTextContains(
+            "You end up with no opinion towards #saltmaps. It stops reaching your feed, " +
+                "you stop earning from it, and nothing passes on through you.",
+        )
+    }
+
+    @Test
+    fun aTopicsTotalNamesTheTargetInsideOneSentence() {
+        showDisconnect(prompt(raw = StancePoint(1.4, 0.95)))
+
+        compose.onNodeWithTag("${TAG}_severance_standing").assertTextContains(
+            "Everything you've said about #saltmaps adds up to +1.40 / +0.95, " +
+                "and disconnecting clears all of it.",
+            substring = true,
+        )
+    }
+
+    @Test
+    fun aTopicConfirmsAsDisconnectNeverSever() {
+        showDisconnect(prompt())
+
+        compose.onNodeWithTag("${TAG}_severance_confirm").assertTextContains("Disconnect")
+    }
+
+    @Test
+    fun aTopicKeepsTheSharedCostAndKeepLines() {
+        showDisconnect(prompt(records = 4))
+
+        compose.onNodeWithTag("${TAG}_severance_cost")
+            .assertTextContains("4 signed actions", substring = true)
+        compose.onNodeWithTag("${TAG}_severance_keep").assertTextContains("Keep it")
+    }
 }
