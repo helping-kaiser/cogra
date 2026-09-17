@@ -1157,7 +1157,16 @@ adds one; the per-control marks are unchanged by it. The last card
 carries the applicant's one task — the friend who sent the invite
 still has to let them in — and its inviter face is personalized by
 the client to the actual link-issuer's avatar, the monogram
-standing in where there is no photo.
+standing in where there is no photo. It says **invited**, never
+*vouched*: the issuer invites and the vouch is the act that follows,
+so the first screen a reader meets must not teach that order
+backwards.
+
+**`About` is a FAQ, not an essay** (jakob 2026-09-18). Its topics are
+rows a reader expands, because the page gains a section every time
+CoGra gains something worth explaining and a page that grows by
+scrolling is read less the more it says. Topics answer
+independently — opening one leaves the others as they were.
 
 ### The compose flow — 2026-08-27
 

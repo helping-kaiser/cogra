@@ -13,6 +13,15 @@
    rule, which is the thing this card is for. The comment beneath points at one
    message and cites it — the ordinary public act, done to a chat.
 
+   THE BUBBLES READ LIKE A REAL CHAT (jakob's canvas pass: "the text in the chat
+   messages should be sth more relatable like a real chat"). Two friends noticing
+   a sky, one walking out to meet it — a question, a short answer, and the line
+   worth quoting. A chat that sounded like a product's sample data would let the
+   reader file this card under "not about me", which is the one reading it cannot
+   afford. They keep the house's capitalisation: the lowercase of a real thumb
+   would be a second voice for fixture content that every other board writes in
+   sentences.
+
    THE CHAT IS AN ILLUSTRATION, THE COMMENT IS A LIKENESS. Chats are not built,
    so the bubbles are drawn with whatever reads as a chat (the intro block's
    ruling); the comment beneath carries `CommentCard`'s own anatomy — face,
@@ -62,10 +71,10 @@ export function Screen() {
           </div>
         </div>
         <div style={{ ...BUBBLE, left: 12, top: 48, width: 214, borderRadius: "16px 16px 16px 4px", background: "var(--surface-container-highest)" }}>
-          Crust held all the way past the slipway today.
+          Are you seeing this sky or is it just my window?
         </div>
         <div style={{ ...BUBBLE, left: 140, top: 108, width: 190, textAlign: "right", borderRadius: "16px 16px 4px 16px", background: "var(--surface-container-high)" }}>
-          Then it is walkable at six.
+          No, I see it. Walking down now.
         </div>
         <div
           style={{
@@ -78,7 +87,7 @@ export function Screen() {
             color: "var(--on-surface-loud)",
           }}
         >
-          The gulls left the tideline to us for once.
+          The whole bay has gone gold. Bring the good thermos.
         </div>
 
         {/* The comment points back up at the message it cites. */}
@@ -116,10 +125,10 @@ export function Screen() {
               color: "var(--text-secondary)",
             }}
           >
-            The gulls left the tideline to us for once.
+            The whole bay has gone gold.
           </div>
           <div style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Best line anyone has written about the flats.
+            Better than anything I wrote about that evening.
           </div>
         </div>
       </IntroStage>

@@ -2151,9 +2151,15 @@ Object.assign(FLOW_MARKERS, {
 // leads, the way it stands top-right on every card, and the forward button
 // follows. The pager dots carry no number — they are an indicator, not a
 // control (`_shared.jsx`, the intro block).
-// The About page: one way out, and everything else on it is words.
+// The About page: the way out, and the nine topic rows.
 Object.assign(FLOW_MARKERS, {
-  About: [{ n: 1, find: 'aria-label="Back"', tag: "a" }],
+  About: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    // Nine rows, one control doing the same thing to its own topic — so they
+    // share a number the way a feed's repeated per-post controls do, and one
+    // edge covers them all.
+    { n: 2, find: "aria-expanded=", tag: "button", all: true },
+  ],
 });
 
 const introCard = (forward) => [
