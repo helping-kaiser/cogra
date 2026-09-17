@@ -216,12 +216,13 @@
         "start · «comment count» on 27 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
-        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+        "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyEntry",
         "ReplyCompose",
         "ReplySeal",
+        "ReplySettled",
         "ApplicantFeed",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -653,12 +654,13 @@
       "steps": [
         "start · ReplyEntry · 5 «Reply» → ReplyCompose — the composer, pre-targeted at that comment",
         "ReplyCompose · 3 «Next» → ReplySeal",
-        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+        "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyEntry",
         "ReplyCompose",
-        "ReplySeal"
+        "ReplySeal",
+        "ReplySettled"
       ]
     },
     {
@@ -669,13 +671,14 @@
         "start · ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 5 «+ Add pictures or a video» → ReplyPictures — picks land in the tray",
         "ReplyPictures · 3 «Next» → ReplySeal",
-        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+        "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyEntry",
         "ReplyCompose",
         "ReplyPictures",
-        "ReplySeal"
+        "ReplySeal",
+        "ReplySettled"
       ]
     },
     {
@@ -686,13 +689,14 @@
         "start · ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 5 «+ Add pictures or a video» → ReplyVideo — a video — the composer's video state",
         "ReplyVideo · 3 «Next» → ReplySeal",
-        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+        "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyEntry",
         "ReplyCompose",
         "ReplyVideo",
-        "ReplySeal"
+        "ReplySeal",
+        "ReplySettled"
       ]
     },
     {
@@ -701,12 +705,12 @@
       "status": "resolved",
       "steps": [
         "start · ReplyPictures · 3 «Next» → ComposeSealUploading — uploads still running — the gated seal (master on the media page)",
-        "end · ComposeSealUploading · 7 «Sign and publish (disabled)» → ReplyEntry — uploads land — signing proceeds to the thread, the comment settling"
+        "end · ComposeSealUploading · 7 «Sign and publish (disabled)» → ReplySettled — uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyPictures",
         "ComposeSealUploading",
-        "ReplyEntry"
+        "ReplySettled"
       ]
     },
     {
@@ -1366,12 +1370,12 @@
       "steps": [
         "start · ReplyPicturesWeb",
         "ReplyPicturesWeb · 3 «Next» → ReplySeal",
-        "end · ReplySeal · 9 «Sign comment» → ReplyEntry — signed — the thread, the comment settling"
+        "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyPicturesWeb",
         "ReplySeal",
-        "ReplyEntry"
+        "ReplySettled"
       ]
     },
     {
@@ -1647,10 +1651,11 @@
       "startsOn": [
         "CommentMenu",
         "ReaderPostMenu",
-        "ReaderPostMenuNarrow"
+        "ReaderPostMenuNarrow",
+        "RemoveMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» on 3 boards → ComposePick",
+        "start · «Cite in a new post» on 4 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1661,7 +1666,8 @@
         "ComposeCited",
         "CommentMenu",
         "ReaderPostMenu",
-        "ReaderPostMenuNarrow"
+        "ReaderPostMenuNarrow",
+        "RemoveMenu"
       ]
     },
     {
@@ -2829,6 +2835,7 @@
     },
     "RemoveMenu": {
       "flows": [
+        "cite-a-post",
         "edit-your-post",
         "remove-your-post"
       ],
@@ -2874,20 +2881,16 @@
     "ReplyEntry": {
       "flows": [
         "find-the-thread-a-comment-answers",
-        "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
-        "reply-while-the-pictures-upload",
         "reply-with-a-video",
         "reply-with-pictures",
         "search-into-a-thread"
       ],
       "endpoint": [
         "find-the-thread-a-comment-answers",
-        "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
-        "reply-while-the-pictures-upload",
         "reply-with-a-video",
         "reply-with-pictures",
         "search-into-a-thread"
@@ -2936,6 +2939,24 @@
         "reply-with-pictures"
       ],
       "endpoint": []
+    },
+    "ReplySettled": {
+      "flows": [
+        "reply-from-the-browser",
+        "reply-to-a-comment",
+        "reply-to-a-post",
+        "reply-while-the-pictures-upload",
+        "reply-with-a-video",
+        "reply-with-pictures"
+      ],
+      "endpoint": [
+        "reply-from-the-browser",
+        "reply-to-a-comment",
+        "reply-to-a-post",
+        "reply-while-the-pictures-upload",
+        "reply-with-a-video",
+        "reply-with-pictures"
+      ]
     },
     "ReplyVideo": {
       "flows": [

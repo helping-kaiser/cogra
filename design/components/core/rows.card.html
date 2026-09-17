@@ -5,7 +5,9 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <script src="../../_ds_bundle.js"></script>
-<style>body{padding:16px}.grid{display:grid;grid-template-columns:340px 360px;gap:24px;align-items:start}.col{display:flex;flex-direction:column;gap:8px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.rows{display:flex;flex-direction:column}.list{display:flex;flex-direction:column;gap:8px}</style>
+<style>body{padding:16px}.grid{display:grid;grid-template-columns:340px 360px;gap:24px;align-items:start}.col{display:flex;flex-direction:column;gap:8px}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}.rows{display:flex;flex-direction:column}.list{display:flex;flex-direction:column;gap:8px}
+.states{display:flex;flex-direction:column;gap:12px}.state{display:flex;flex-direction:column;gap:4px}
+.statelbl{font-size:11px;color:var(--text-secondary);line-height:1.35}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
 const { FactRow, QuotedRow, ContentRow, LedgerRow, StanceReadout, MoneyFigure } = window.CoGraDesignSystem_9084ba;
@@ -17,6 +19,18 @@ function Demo(){return (
       <FactRow label="License" value="Public domain — your default" action="Change"/>
       <FactRow label="Your opinion" value={<StanceReadout pair={{pDirected:0.1,pInterest:0.1}}/>} action="Adjust"/>
       <FactRow label="Sensitive" value="Not marked" action="Mark" last/>
+    </div>
+
+    <span className="lbl">The Sensitive row in both its states — the value reads the mark, the action stays the way in. Clearing is the sheet's own switch, so the row never grows a third word.</span>
+    <div className="states">
+      <div className="state">
+        <div className="rows"><FactRow label="Sensitive" value="Not marked" action="Mark" last/></div>
+        <span className="statelbl">nothing marked — the action opens the sheet</span>
+      </div>
+      <div className="state">
+        <div className="rows"><FactRow label="Sensitive" value="Marked" action="Change" last/></div>
+        <span className="statelbl">marked — the same door, renamed for what is behind it now</span>
+      </div>
     </div>
 
     <span className="lbl">FactRow · ledger — quiet label, the value is the answer, rules between</span>

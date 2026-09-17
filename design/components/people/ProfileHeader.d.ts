@@ -6,8 +6,8 @@ import type { StanceBundle, StancePair } from "../stance/StanceReadout";
  *
  * The two counts say what a reader can place: how many people have given an
  * opinion on this person, and how many they have given. Never one merged "followers"
- * figure — there is no following here, and the repo's own word for the thing is on
- * the banned list (readme §3).
+ * figure — a link here has a direction and carries an opinion, so one number would
+ * have to hide one of those facts.
  */
 export interface ProfileHeaderProps {
   handle: string;
