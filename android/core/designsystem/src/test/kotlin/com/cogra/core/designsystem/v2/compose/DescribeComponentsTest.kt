@@ -1,5 +1,7 @@
 package com.cogra.core.designsystem.v2.compose
 
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -79,6 +81,44 @@ class DescribeComponentsTest {
 
         // Permanent, not an extended trailing line behind the field.
         compose.onNodeWithText("Read aloud to people who can't see it.").assertExists()
+    }
+
+    // Visible but disabled over the cap, never hidden (the caps-affordance
+    // round's ruling, PR #755's pattern) — Done stays on screen so the
+    // author can trim back under the cap, rather than losing the way out.
+    @Test
+    fun doneStaysVisibleButDisabledOverTheCap() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                DescribeSheet(
+                    item = MediaItem(null, 1f),
+                    value = "x".repeat(1001),
+                    onValueChange = {},
+                    onDone = {},
+                    error = "Too long — at most 1000 characters.",
+                    testTag = "sheet",
+                )
+            }
+        }
+
+        compose.onNodeWithTag("sheet_done").assertExists().assertIsNotEnabled()
+    }
+
+    @Test
+    fun doneStaysEnabledAtTheCapTheWriteSideAllows() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                DescribeSheet(
+                    item = MediaItem(null, 1f),
+                    value = "x".repeat(1000),
+                    onValueChange = {},
+                    onDone = {},
+                    testTag = "sheet",
+                )
+            }
+        }
+
+        compose.onNodeWithTag("sheet_done").assertExists().assertIsEnabled()
     }
 
     // ---- DescribeCounter --------------------------------------------------
