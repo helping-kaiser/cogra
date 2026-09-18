@@ -14,6 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.TouchInjectionScope
 import androidx.compose.ui.test.assertContentDescriptionContains
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
@@ -21,8 +24,8 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
-import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
@@ -32,9 +35,6 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
-import androidx.compose.ui.test.TouchInjectionScope
-import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.semantics.SemanticsProperties
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
@@ -714,7 +714,12 @@ class StancePadTest {
         show(
             StanceControlState(
                 pad = StancePadMode.DRAGGING,
-                landing = StanceLanding(StancePoint(0.0, 0.4), inertDirected = true, inertInterest = false, severance = false),
+                landing = StanceLanding(
+                    StancePoint(0.0, 0.4),
+                    inertDirected = true,
+                    inertInterest = false,
+                    severance = false,
+                ),
             ),
         )
 
@@ -727,7 +732,12 @@ class StancePadTest {
         show(
             StanceControlState(
                 pad = StancePadMode.DRAGGING,
-                landing = StanceLanding(StancePoint.Origin, inertDirected = true, inertInterest = true, severance = true),
+                landing = StanceLanding(
+                    StancePoint.Origin,
+                    inertDirected = true,
+                    inertInterest = true,
+                    severance = true,
+                ),
             ),
         )
 
