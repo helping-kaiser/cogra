@@ -18,6 +18,10 @@ import { LONG_PRESS_MS, StanceControl } from "./stance-control";
 const TARGET: StanceTargetRef = { id: "post-1", kind: "post", label: "this post" };
 const PREFIX = "stance-post-1";
 
+/** A topic target, for the disconnect-family tests (copy-voice.md "the
+ * topic disconnects"). */
+const TOPIC_TARGET: StanceTargetRef = { id: "saltmaps", kind: "topic", label: "#saltmaps" };
+
 /**
  * The 200×200 field the geometry tests use. `hold()` puts the pointer
  * down at (0, 0), so a pointer position below IS the travel from the
@@ -39,9 +43,12 @@ function alreadyTaught() {
   writeStanceTaught();
 }
 
-function mount(options: StubStanceOptions = {}, { signedIn = true } = {}) {
+function mount(
+  options: StubStanceOptions = {},
+  { signedIn = true, target = TARGET }: { signedIn?: boolean; target?: StanceTargetRef } = {},
+) {
   const data = createStubStanceData(options);
-  renderWithProviders(<StanceControl target={TARGET} testIdPrefix={PREFIX} />, {
+  renderWithProviders(<StanceControl target={target} testIdPrefix={PREFIX} />, {
     store: signedIn ? signedInStore() : createTokenStore(),
     stanceData: data,
   });
@@ -1295,6 +1302,62 @@ describe("severance", () => {
     });
     expect(screen.getByTestId("severance-failed")).toBeInTheDocument();
     expect(screen.getByTestId<HTMLDialogElement>("severance-confirm").open).toBe(true);
+  });
+});
+
+// jakob's I2 ruling (copy-voice.md "Awaiting blessing — the topic
+// disconnects", 2026-09-15): a topic disconnects, never severs. Every
+// other kind above (`describe("severance", ...)`, target kind "post")
+// keeps the severance wording verbatim — the split is by record family,
+// not by surface.
+describe("a topic's own way out — disconnect, not sever", () => {
+  beforeEach(() => {
+    alreadyTaught();
+  });
+
+  it("names the pad's way out Disconnect, never Walk it back", async () => {
+    mount(
+      { seed: { saltmaps: { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } },
+      { target: TOPIC_TARGET },
+    );
+    await settle();
+    await hold();
+    expect(screen.getByTestId(`${PREFIX}-sever`)).toHaveTextContent("Disconnect");
+  });
+
+  it("passes the topic kind to the confirmation, which asks in the ruled words", async () => {
+    mount(
+      { seed: { saltmaps: { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } },
+      { target: TOPIC_TARGET },
+    );
+    await settle();
+    await hold();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    expect(screen.getByTestId("severance-confirm")).toHaveTextContent(
+      "Disconnect from #saltmaps?",
+    );
+    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Disconnect");
+  });
+
+  it("reads a disconnected topic as 'No opinion towards #saltmaps.' once signed", async () => {
+    const data = mount(
+      { seed: { saltmaps: { records: [{ pDirected: 0.5, pInterest: 0.5 }] } } },
+      { target: TOPIC_TARGET },
+    );
+    await settle();
+    await hold();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-sever`));
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("severance-proceed"));
+    });
+    expect(data.severed).toEqual(["saltmaps"]);
+    expect(screen.getByTestId(`${PREFIX}-signed`)).toHaveTextContent(
+      "Signed, still settling. No opinion towards #saltmaps.",
+    );
   });
 });
 
