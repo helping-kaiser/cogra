@@ -385,6 +385,30 @@ class ComposeWizardScreenTest {
     }
 
     @Test
+    fun theVideoTrayShowsTheChosenCoverMarkOnceThereIsOne() {
+        // ComposePickVideoCover (design/backlog.md intake 2026-09-15): the
+        // back arrow from the cover stage lands here, and the tray has to
+        // say the cover already exists rather than reading coverless again.
+        val withCover = ComposeWizardState(
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverFrames = List(3) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 192)) },
+            coverChoice = CoverChoice.Frame(0),
+        )
+        compose.setContent { Wizard(withCover) }
+        compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun theVideoTrayHasNoCoverMarkBeforeAChoiceIsMade() {
+        val coverless = ComposeWizardState(
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverFrames = List(3) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 192)) },
+        )
+        compose.setContent { Wizard(coverless) }
+        compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test
     fun theGridDrawsTheDevicesOwnPicturesAndTogglesThemInPlace() {
         compose.setContent { Wizard(withPicks) }
 

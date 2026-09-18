@@ -109,6 +109,13 @@ sealed interface ThumbBadge {
  *   Null with [uploading] set draws the indeterminate ring.
  * @param duration a clip's running time, drawn at the opposite corner
  *   from [badge] so a video tile can be both picked and timed.
+ * @param coverSrc a clip's chosen cover, drawn as the frame itself rather
+ *   than a word: an inset in the same bottom-left corner [ThumbBadge.Cover]
+ *   owns, a third of the tile's short side with a 28dp floor, behind a
+ *   hairline ring (`design/components/compose/MediaThumb.jsx:93,192-217`).
+ *   A tile is a picture's or a clip's, so this and [badge] are never both
+ *   set. Needs a resolved [width]/[height] or [size] to size itself —
+ *   silently omitted on the unmeasured fill-width tile ([size] `null`).
  */
 @Composable
 fun MediaThumb(
@@ -127,6 +134,7 @@ fun MediaThumb(
     uploading: Boolean = false,
     progress: Float? = null,
     duration: String? = null,
+    coverSrc: Any? = null,
     testTag: String? = null,
 ) {
     val shape = RoundedCornerShape(corner)
@@ -139,6 +147,12 @@ fun MediaThumb(
         size != null -> Modifier.size(size)
         else -> Modifier.fillMaxWidth().aspectRatio(1f)
     }
+    // The mark scales with the tile so it reads the same on the tray's 48dp
+    // chip and on a larger one, and never falls under its own floor
+    // (MediaThumb.jsx:93). Null on the unmeasured fill-width tile, where no
+    // edge is known at composition time — that tile has no caller passing
+    // `coverSrc` today.
+    val coverMarkSize = (width ?: size)?.let { w -> (height ?: size)?.let { h -> maxOf(28.dp, minOf(w, h) / 3) } }
     Box(
         modifier = modifier
             .then(sizing)
@@ -190,7 +204,33 @@ fun MediaThumb(
         // selection ring at one corner and the time at the other, so the
         // two are not alternatives.
         duration?.let { DurationBadge(it) }
+        if (coverSrc != null && coverMarkSize != null) CoverMark(coverSrc, coverMarkSize)
     }
+}
+
+/**
+ * The clip's chosen face, inset bottom-left — a frame rather than a word,
+ * because a cover is the clip's own property and never a second attachment
+ * (`design/components/compose/MediaThumb.jsx:192-217`). Radius and ring read
+ * `MaterialTheme.shapes.small` (`design/tokens/shape.css:16`,
+ * `--radius-small: 8px` — Dimens.kt's documented radii-read-Shapes policy)
+ * and `outlineVariant`, matching the hairline the master draws.
+ */
+@Composable
+private fun BoxScope.CoverMark(coverSrc: Any?, size: Dp) {
+    val shape = MaterialTheme.shapes.small
+    AsyncImage(
+        model = coverSrc,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .align(Alignment.BottomStart)
+            .padding(3.dp)
+            .size(size)
+            .clip(shape)
+            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape)
+            .testTag("media_thumb_cover_mark"),
+    )
 }
 
 /**

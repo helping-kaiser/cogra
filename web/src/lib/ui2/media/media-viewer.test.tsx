@@ -91,6 +91,16 @@ describe("the ways out", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  // A GLYPH OVER MEDIA TAKES A SHADOW, NEVER A PLATE (design-confirmed
+  // 2026-09-18). Pins the X against a regression back to plateless-and-
+  // shadowless — the same shadow pager-dots' viewer tone and the video
+  // transport's controls already carry (`pager-dots.tsx`, `video-transport.tsx`
+  // `OVER_MEDIA`).
+  it("the X reads a shadow, never a plate", () => {
+    open();
+    expect(screen.getByTestId("media-viewer-close").style.filter).toContain("drop-shadow");
+  });
+
   it("closes on the backdrop, and never on the frame itself", () => {
     const { onClose, stage } = open();
     act(() => {
