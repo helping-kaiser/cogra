@@ -26,9 +26,12 @@
    the master, and the day an action ranks above share the queue takes it first
    and this board follows.
 
-   THE BREAKPOINT IS 360px OF VIEWPORT WIDTH — at or under it, share moves into
-   this sheet and the card drops its own (`showShare={false}`); above it, the
-   wide board is the state (backlog item 100, ruled the batch-rulings round).
+   THE BREAKPOINT IS STRICTLY BELOW 360 OF VIEWPORT WIDTH — <360px web, <360dp
+   android, same semantics both — under it, share moves into this sheet and the
+   card drops its own (`showShare={false}`); at 360 and above, the wide board
+   is the state (backlog item 100, ruled the batch-rulings round; sharpened by
+   jakob 2026-09-22: 360dp is mainstream android, and the narrow treatment is
+   for the genuinely small, not the common).
    The board is drawn at 320 because that is the narrowest phone this system
    draws for, not because 320 is the threshold. jakob's register for this whole
    width: small phones are rare but real, and everything must WORK on them —

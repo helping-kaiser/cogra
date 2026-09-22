@@ -26,10 +26,27 @@ import React from "react";
    · Enters over 400ms from the bottom, leaves over 200ms to the bottom
      (`tokens/transitions.css`) — a dismissal exits the edge it entered from. */
 
-/* `height` pins the sheet at a fixed size instead of letting content set it —
-   the comments sheet fills the screen up to a sliver below the top (readme §13,
-   2026-08-28), and a pinned input row at its foot needs the surface itself to
-   own the height. The children then manage their own scrolling. */
+/* THE TALLEST SHEET IS A CLASS, AND IT IS THE CEILING OVER ALL OF THEM (jakob's
+   ruling, the sheets-and-video round). A sheet's top edge never rises above a
+   72px sliver measured from the top of the SAFE AREA — Android below the status
+   bar and the display cutout, web from the viewport top. The rounded top corners
+   keep a strip of the surface behind visible, and no sheet ever touches the safe
+   area: a drawer that reached the top edge would be a screen, and a reader who
+   cannot see what they left cannot tell a drawer from a destination.
+
+   The ceiling caps every height class rather than replacing any. `maxHeight`
+   keeps its 62% default and the raised 88% class stays what a sheet asks for
+   when its content needs the room; `height` pins a sheet at a size instead of
+   letting content set it, for the footed filter whose Done row is pinned beneath
+   its scrolling sections. Each is held under the ceiling by `min()`, so no class
+   can out-grow the sliver on a screen short enough for its percentage to reach
+   it.
+
+   `tallest` IS THAT CLASS ASKED FOR BY NAME — the comments sheet, whose pinned
+   composer row needs the surface itself to own the height (readme §13,
+   2026-08-28). It pins the sheet at the ceiling and the children manage their
+   own scrolling. */
+const SHEET_CEILING = "calc(100% - 72px - env(safe-area-inset-top, 0px))";
 
 /* `stacked` is the sheet that opens over another sheet — the comment's menu and
    the comment's license, both over the comments thread. A SHEET OVER A SHEET IS
@@ -41,7 +58,7 @@ import React from "react";
    title visible above this one. Its surface takes the next tonal rung,
    `surfaceContainerHighest`: elevation is tonal (`tokens/semantic.css`), and two
    surfaces at one rung claim one elevation. */
-export function BottomSheet({ open = false, onClose, ariaLabel, children, inline = false, maxHeight = "62%", height, stacked = false }) {
+export function BottomSheet({ open = false, onClose, ariaLabel, children, inline = false, maxHeight = "62%", height, tallest = false, stacked = false }) {
   const [shown, setShown] = React.useState(open);
   const [closing, setClosing] = React.useState(false);
 
@@ -95,7 +112,11 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
               right: 0,
               bottom: 0,
               zIndex: washLayer + 1,
-              ...(height ? { height, overflow: "hidden" } : { maxHeight, overflowY: "auto" }),
+              ...(tallest
+                ? { height: SHEET_CEILING, overflow: "hidden" }
+                : height
+                  ? { height: `min(${height}, ${SHEET_CEILING})`, overflow: "hidden" }
+                  : { maxHeight: `min(${maxHeight}, ${SHEET_CEILING})`, overflowY: "auto" }),
             }),
       }}
     >

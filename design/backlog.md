@@ -194,15 +194,18 @@ Item 4 built `FeedFilter` (kinds, forms, Ranked/Newest order, the
 trigger reading the view in words) — and no canonical feed board
 ever drew the trigger; it slipped while compose had the focus.
 
-### 10 · Sensitive veil treatment · *system*, has open questions
+### 10 · Sensitive veil treatment · *system* · **ruled 2026-09-22**
 Granularity is settled (blur only what is marked, reveal per post),
 and the compose session (item 6) settled more: the author's self-mark
 veils body + description with the title readable, and the veil's face
 is the pattern every large product uses — the visibility glyph,
 `Sensitive — tap to view`, and the author's reason, centred in white
-on the wash, no surface of their own. Drawn on the post-ladder row. Still open in this item: whether a reveal survives
-leaving and returning to the post, and how the reader's 0–10 severity
-setting maps to blur-or-not. No `error` colouring, no warning glyph.
+on the wash, no surface of their own. Drawn on the post-ladder row.
+A reveal is **session-scoped**: it survives every move inside the app —
+feed to profile and back to feed leaves it revealed — and returns on a
+full app close or another hard reset of the media. The reader's 0–10
+severity setting is read as a **single show-sensitive threshold**; the
+gradient across it is post-MVP. No `error` colouring, no warning glyph.
 
 ### 11 · Money & CGT figures · *system* · **built**
 `components/core/MoneyFigure.jsx` (`MoneyFigure`, `CgtMark`,
@@ -3234,9 +3237,9 @@ the signed reply in `CommentCard`'s reserved `children` slot wearing
 forked. The reply flow's four sign outcomes — `ReplySeal/9`,
 `ReplyCited/9`, `ReplyCitedMany/9`, `ComposeSealUploading/7` — now land
 here instead of on the thread without the reply in it. The edit's return
-shares this anatomy and is owed no second board; the two edit-sign
-edges (`CommentEdit/12`, `CommentEditVideo/12`) still land on
-`ReplyMedia` and are a follow-up.
+shares this anatomy and is owed no second board, so the two edit-sign
+edges (`CommentEdit/12`, `CommentEditVideo/12`) land here too — repointed
+2026-09-22 on jakob's ruling, which closes the item.
 
 ### 98 · Which headers collapse, and which pin · *design* · **ruled 2026-09-17**
 
@@ -3334,8 +3337,9 @@ menu's own position, second, so the thumb finds one row in one place on
 every menu that has it; `RemoveMenu` took the next free number (7) for
 it rather than renumbering five edges, the settings page's rule. The
 `cite-a-post` flow now starts on four boards. (c) The breakpoint is
-**360px of viewport width** — at or under it, share moves into the
-sheet. The 320 board stays drawn at 320 because that is the narrowest
+**strictly below 360 of viewport width** (<360px web, <360dp android;
+sharpened by jakob 2026-09-22 — 360dp is mainstream android) — under
+it, share moves into the sheet. The 320 board stays drawn at 320 because that is the narrowest
 phone this system draws for, not because 320 is the threshold. jakob's
 register for the whole width: small phones are rare but real,
 everything must WORK on them, masterful is not yet owed.

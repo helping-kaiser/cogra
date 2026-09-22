@@ -1614,13 +1614,22 @@ function EditComposeBody({ unchanged = false } = {}) {
 }
 
 /* The comment sheet's composer foot: your face, and the field that opens a
-   comment. Every sheet of comments carries it, so it is written once. */
+   comment. Every sheet of comments carries it, so it is written once.
+
+   THE FIELD GROWS AND THE LIST GIVES IT THE ROOM (jakob's ruling, the
+   sheets-and-video round). The field is multi-line with a minimum of one line,
+   so it opens as the single line drawn here and takes a second the moment the
+   comment needs one. The sheet cannot grow with it — it already stands at the
+   tallest-sheet ceiling — so the growth comes OUT OF THE LIST ABOVE, the way
+   every chat app the reader already uses does it: the words being written push
+   the thread up rather than walking off the bottom of the screen. Past the room
+   the sheet has, the field scrolls inside itself. */
 function CommentComposerFoot() {
   return (
     <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
       <MonogramAvatar name="Sol Ferreira" />
       <div style={{ flex: 1 }}>
-        <TextField label="Add a comment" cap={2000} value="" />
+        <TextField label="Add a comment" rows={1} cap={2000} value="" />
       </div>
     </div>
   );
@@ -1632,6 +1641,11 @@ function CommentComposerFoot() {
    and this one is reused across BOARDS of one surface. Every board that opens
    comments draws the same frame and differs only in the cards inside it, so
    the cards are the children and the frame is written once. */
+/* THE SHEET TAKES THE TALLEST CLASS — `tallest`, the 72px sliver below the safe
+   area, which is the ceiling every sheet is held under and this one is pinned at.
+   A thread is the one surface with a list to read and a field to write in at
+   once, so the surface owns the height and the list scrolls inside it; the
+   composer's own growth comes out of that list (`CommentComposerFoot`). */
 /* `scrolledBy` DRAWS A SHEET THE READER HAD ALREADY MOVED (the reply-return
    ruling, readme §13): the list carries a zero-height first item with a
    negative top margin, so every comment after it rides up by that much and the
@@ -1643,7 +1657,7 @@ const COMMENTS_GAP = 12;
 
 function CommentsSheet({ children, scrolledBy = 0 }) {
   return (
-    <BottomSheet open ariaLabel="Comments" height="calc(100% - 72px)">
+    <BottomSheet open tallest ariaLabel="Comments">
       <SheetTitle>Comments</SheetTitle>
       <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: COMMENTS_GAP, margin: 0, padding: "0 16px", listStyle: "none" }}>
         {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}

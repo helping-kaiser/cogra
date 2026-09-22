@@ -70,6 +70,18 @@ sed -i -E "s#^MEDIA_BASE_URL=https?://[^:/]+#MEDIA_BASE_URL=https://${IP}#" .env
 # MEDIA_ORIGIN is the web front's proxy target — the store's bucket URL,
 # stamped for the same split-distro reason as MEDIA_S3_ENDPOINT.
 sed -i -E "s#^MEDIA_ORIGIN=https?://[^:/]+#MEDIA_ORIGIN=http://${IP}#" .env
+#
+# GRAPHQL_URL is optional (the web falls back to localhost:8080), but when
+# present it is the /graphql and /media/uploads rewrite target — baked into
+# the production bundle at build time — so a stale address here survives a
+# network change invisibly until the proxy 504s.
+if grep -qE "^GRAPHQL_URL=" .env; then
+    sed -i -E "s#^GRAPHQL_URL=https?://[^:/]+#GRAPHQL_URL=http://${IP}#" .env
+    grep -qE "^GRAPHQL_URL=[^[:space:]]*${IP}" .env || {
+        echo "GRAPHQL_URL did not take the stamp — its line does not match the pattern above" >&2
+        exit 1
+    }
+fi
 
 for var in $STAMPED; do
     grep -qE "^${var}=[^[:space:]]*${IP}" .env || {
@@ -81,7 +93,7 @@ done
 trap - EXIT
 rm -f "$BACKUP"
 
-grep -E "^($(echo "$STAMPED" | tr ' ' '|'))=" .env
+grep -E "^($(echo "$STAMPED" | tr ' ' '|')|GRAPHQL_URL)=" .env
 echo "stamped ${IP}"
 
 # The certificate and the CA behind it. Browsers reach the dev server past
@@ -102,4 +114,4 @@ mkcert -cert-file "$CERT_DIR/localhost.pem" -key-file "$CERT_DIR/localhost-key.p
 cp "$(mkcert -CAROOT)/rootCA.pem" "$DEV_CA"
 
 echo "issued ${CERT_DIR}/localhost.pem for ${IP}; staged its CA at ${DEV_CA}"
-echo "restart the web dev server, then rebuild the guest APK: make guest-apk"
+echo "restart the web server (a production bundle bakes the rewrite targets — rebuild it), then rebuild the guest APK: make guest-apk"

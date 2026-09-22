@@ -260,18 +260,32 @@ describe("PostCard", () => {
   // detail's own — one menu for a post wherever it is drawn — so what these
   // read is that the card picks the right set and names the author.
   describe("the overflow menu", () => {
-    // `OWN_POST_MENU` (`_shared.jsx:369-375`): Save · Edit · Mark as
-    // sensitive · Remove · License terms.
-    it("gives the creator the own-post rows", () => {
+    // `OWN_POST_MENU` (`_shared.jsx:421-428`): Save · Cite in a new post ·
+    // Edit · Mark as sensitive · Remove · License terms. Cite takes the
+    // reader menu's own position, second, so the thumb finds one row in
+    // one place on every menu that has it.
+    it("gives the creator the own-post rows, cite in second position", () => {
       mount(post(), {}, { store: storeFor("u1") });
       fireEvent.click(screen.getByTestId("card-menu"));
       expect(screen.getByTestId("card-menu-save")).toHaveTextContent("Save");
+      expect(screen.getByTestId("card-menu-cite")).toHaveTextContent("Cite in a new post");
       expect(screen.getByTestId("card-menu-edit")).toHaveTextContent("Edit");
       expect(screen.getByTestId("card-menu-sensitive")).toHaveTextContent("Mark as sensitive");
       expect(screen.getByTestId("card-menu-remove")).toHaveTextContent("Remove");
       expect(screen.getByTestId("card-menu-license")).toHaveTextContent("License terms");
-      expect(screen.queryByTestId("card-menu-cite")).not.toBeInTheDocument();
       expect(screen.queryByTestId("card-menu-hide")).not.toBeInTheDocument();
+      const order = Array.from(
+        screen.getByTestId("card-menu-sheet-body").querySelectorAll("[data-testid]"),
+        (node) => node.getAttribute("data-testid"),
+      );
+      expect(order).toEqual([
+        "card-menu-save",
+        "card-menu-cite",
+        "card-menu-edit",
+        "card-menu-sensitive",
+        "card-menu-remove",
+        "card-menu-license",
+      ]);
     });
 
     // `READER_POST_MENU` (`_shared.jsx:376`): Save · Cite in a new post ·

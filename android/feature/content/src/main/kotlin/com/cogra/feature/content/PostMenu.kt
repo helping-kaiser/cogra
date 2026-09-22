@@ -55,6 +55,11 @@ internal fun postMenuRows(
     }
     add(MenuRow(stringResource(R.string.content_menu_save), "${testTagPrefix}_save") {})
     if (own) {
+        // CITE RIDES THIS MENU TOO (`_shared.jsx:414-420`, backlog item 100):
+        // self-citation is a real authorial act, and the row takes the
+        // reader menu's own position, second, so the thumb finds one row in
+        // one place on every menu that has it.
+        add(MenuRow(stringResource(R.string.content_menu_cite), "${testTagPrefix}_cite", onCite))
         add(MenuRow(stringResource(R.string.content_edit), "${testTagPrefix}_edit", onEdit))
         // SENSITIVE STAYS IN EDIT (jakob 2026-09-14): marking a published
         // post sensitive is always a signed action changing the post — an
