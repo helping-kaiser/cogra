@@ -50,6 +50,9 @@ const {
   StanceValue,
   StanceControl,
   HISTORY_DOOR_LABEL,
+  SEVERED_LABEL,
+  SR_ONLY,
+  TabBar,
 } = components;
 
 function SettingsExcerpt({ children }) {
@@ -276,5 +279,176 @@ function HistoricNote({ line, action }) {
       <QuietNote>{line}</QuietNote>
       <InlineAction size="sm">{action}</InlineAction>
     </div>
+  );
+}
+
+/* ── THE STANCE TIMELINES ────────────────────────────────────────────────────
+
+   A STANCE IS ALREADY A HISTORY. The bundle from one node to another is not a
+   stored number that gets overwritten — it is every record ever cast along that
+   pair, folded. So this timeline reads the record mirror and adds no table:
+   the list IS the thing, and the standing is what it comes to.
+
+   AND THE FOLD CLIPS, WHICH IS WHY THE PLAIN-WORDS LINE EXISTS. A raw sum of
+   +27.40 lands at +1.00 the moment it passes the cap, so two people whose
+   standings read identically can be one gentle pick and twenty-seven apart. The
+   dial cannot show that and should not try; a sentence can, so the header says
+   it in words and leaves the digits to geek mode.
+
+   NUMBERS RIDE THE READING MODE, NEVER A SEPARATE BOARD. Both markups are
+   always drawn — the face for everybody, the exact pair in a `cg-exact` span
+   that paints only in geek mode — and the spoken twin says the fact in both, so
+   the mode draws and never redacts (readme §13). */
+
+/* The numbers in a sentence — canonical's `ExactTail`, spelled here because a
+   tree does not reach another tree's prelude. */
+function ExactTail({ exact, spoken }) {
+  return (
+    <>
+      <span className="cg-exact" aria-hidden="true">{exact}</span>
+      <span style={SR_ONLY}>{spoken}</span>
+    </>
+  );
+}
+
+/* One record: the face it was cast at, the date it was signed, and — for the
+   one record that is a counter-record — the word for what it did. The face and
+   the pair come from `StanceValue`, so a board never spells a readout and can
+   never drift from the anchor table. */
+function TimelineRow({ pDirected, pInterest, when, note }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 56, padding: "6px 24px" }}>
+      <StanceValue pDirected={pDirected} pInterest={pInterest} />
+      {note && (
+        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
+          {note}
+        </span>
+      )}
+      <span style={{ flex: 1 }} />
+      <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
+        {when}
+      </span>
+    </div>
+  );
+}
+
+/* The header: what it stands at, and what it is built from. The label is the
+   pad's own word for the same quantity, so a reader who taps through from the
+   pad meets the line they just left. */
+function TimelineHeader({ pDirected, pInterest, sum, exact, spoken }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", padding: "0 24px 8px" }}>
+      <span
+        aria-hidden="true"
+        style={{
+          fontSize: "var(--text-label-small)",
+          letterSpacing: "var(--text-label-small--letter-spacing)",
+          fontWeight: "var(--text-label-small--font-weight)",
+          color: "var(--text-secondary)",
+        }}
+      >
+        As it stands
+      </span>
+      <StanceValue pDirected={pDirected} pInterest={pInterest} />
+      <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+        {sum} <ExactTail exact={exact} spoken={spoken} />
+      </p>
+    </div>
+  );
+}
+
+function TimelineSheet({ title, ariaLabel, children }) {
+  return (
+    <BottomSheet open ariaLabel={ariaLabel} maxHeight="88%">
+      <SheetTitle>{title}</SheetTitle>
+      {children}
+    </BottomSheet>
+  );
+}
+
+/* A PERSON↔PERSON BUNDLE: six of twenty-seven, because a sheet scrolls and a
+   board shows the top of a list rather than all of it. Three years of dates is
+   what makes the header's sentence worth drawing — a relationship is the case
+   where a clipped sum hides the most.
+
+   THE COUNTER-RECORD IS IN THE FIXTURE ON PURPOSE. Walking an opinion back
+   signs a record like any other, so it stands at its own date wearing the
+   system's own word; a timeline that hid it would be telling the one lie this
+   surface exists to prevent, and the picks under it would look unanswered. */
+const TIMELINE_RECORDS = [
+  { pDirected: 0.9, pInterest: 0.6, when: "12 September" },
+  { pDirected: 1, pInterest: 1, when: "3 August" },
+  { pDirected: -1, pInterest: -1, when: "14 May", note: SEVERED_LABEL },
+  { pDirected: 0.8, pInterest: 0.4, when: "2 February" },
+  { pDirected: 0.6, pInterest: 0.3, when: "9 November 2024" },
+  { pDirected: 0.4, pInterest: 0.1, when: "21 June 2024" },
+];
+
+/* A PERSON→POST BUNDLE, WHOLE. A post that went up on 3 September cannot carry
+   a record from 2024, so the content-side fixture is its own: four picks in ten
+   days, every one of them drawn, and a raw sum the board's own rows add up to.
+   Its header's numbers are checkable by hand against these four. */
+const POST_TIMELINE_RECORDS = [
+  { pDirected: 0.9, pInterest: 0.6, when: "12 September" },
+  { pDirected: 0.5, pInterest: 0.3, when: "10 September" },
+  { pDirected: 0.7, pInterest: 0.4, when: "7 September" },
+  { pDirected: 0.3, pInterest: 0.2, when: "5 September" },
+];
+
+function TimelineRecords({ records = TIMELINE_RECORDS }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {records.map((record) => (
+        <TimelineRow key={record.when} {...record} />
+      ))}
+    </div>
+  );
+}
+
+/* Who holds an opinion on the post the two post-side boards draw — canonical's
+   own roster, at the length this sheet can show. */
+const POST_OPINION_HOLDERS = [
+  { name: "Mira Voss", handle: "mira", src: "inviter.jpg", pDirected: 0.9, pInterest: 0.25 },
+  { name: "Sol Ferreira", handle: "sol", pDirected: 0.7, pInterest: 0.4 },
+  { name: "Tobias Lindqvist", handle: "tobias", pDirected: 0.6, pInterest: 0.65 },
+  { name: "Kel Moreau", handle: "kel", pDirected: 0.25, pInterest: 0.95 },
+  { name: "Juno Baptiste", handle: "juno", pDirected: -0.55, pInterest: 0.25 },
+];
+
+/* The post the opinion boards are about, and the surface its sheets sit over. */
+function OpinionPostDetail() {
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back to feed" />
+      <DetailColumn>
+        <PostCard {...SALT_MAPS_CURRENT} timestamp="12 September" variant="detail" score="9.10" comments={2} opinions={5} onOpenOpinions={() => {}} />
+      </DetailColumn>
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+    </>
+  );
+}
+
+/* The profile opinions page — canonical's `ProfileStances`, drawn here so the
+   round's split rows can be shown on it without touching the MVP board. */
+function ProfileStancesExcerpt({ onOpenHistory }) {
+  return (
+    <>
+      <PageHeader title="@ada · Opinions" backHref="#" backLabel="Back" />
+      <TabBar
+        ariaLabel="Which direction"
+        value="on"
+        tabs={[
+          { id: "on", label: "On them" },
+          { id: "taken", label: "By them" },
+        ]}
+      />
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", paddingTop: 4 }}>
+        <StanceRow name="Tobias Lindqvist" handle="tobias" pDirected={0.7} pInterest={0.4} onOpen={() => {}} onOpenHistory={onOpenHistory} />
+        <StanceRow name="Sol Ferreira" handle="sol" pDirected={0.6} pInterest={0.3} onOpen={() => {}} onOpenHistory={onOpenHistory} />
+        <StanceRow name="Mira Voss" handle="mira" src="inviter.jpg" pDirected={0.4} pInterest={0.5} onOpen={() => {}} onOpenHistory={onOpenHistory} />
+        <StanceRow name="Juno Baptiste" handle="juno" pDirected={-0.2} pInterest={0.1} onOpen={() => {}} onOpenHistory={onOpenHistory} />
+      </div>
+      <BottomNav active={null} slots={ALL_SLOTS} inline />
+    </>
   );
 }

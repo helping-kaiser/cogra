@@ -2241,4 +2241,17 @@ Object.assign(FLOW_MARKERS, {
   ProfileHistory: [{ n: 1, find: 'aria-label="Back to the profile"', tag: "a" }],
   HistoryMenu: [{ n: 1, find: ">Edit history</button>", tag: "button" }],
   EditedMarkerDoor: [{ n: 1, find: ">Edited</button>", tag: "button" }],
+  // The split row: the two halves are marked on the FIRST row only, the
+  // repeated-element convention — one edge covers every row, and two badges on
+  // five rows would bury the row the split is being shown on.
+  OpinionsRowDoors: [
+    { n: 1, find: ">Mira Voss</span>", tag: "button" },
+    { n: 2, find: 'aria-label="See how this opinion built"', tag: "button" },
+  ],
+  ProfileStancesDoors: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Tobias Lindqvist</span>", tag: "button" },
+    { n: 3, find: 'aria-label="See how this opinion built"', tag: "button" },
+  ],
+  PadHistoryDoor: [{ n: 1, find: ">Current opinion · see how it built</button>", tag: "button" }],
 });

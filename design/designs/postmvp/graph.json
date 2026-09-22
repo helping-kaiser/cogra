@@ -9,7 +9,11 @@
   },
   "scanExempt": {
     "HistoryMenu": "the own-post sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
-    "VersionRemoveConfirm": "the think-twice dialog covers the author's register — every row beneath the scrim is inactive in this state; only the dialog (and its scrim) is live"
+    "VersionRemoveConfirm": "the think-twice dialog covers the author's register — every row beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "OpinionsRowDoors": "the opinions sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "StanceTimeline": "the timeline sheet covers the opinions page — every row beneath the scrim is inactive in this state; only the sheet (and its scrim) is live, and it is a reading surface with nothing to act on",
+    "StanceTimelinePost": "the timeline sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "PadHistoryDoor": "the scrim wash covers the shell — the back arrow, the post card's own controls and the nav are inactive in this state; only the parked pad is live"
   },
   "entries": {
     "PushSettings": "the settings page at the notifications group — this round's excerpt of canonical's Settings, not a screen of its own",
@@ -18,7 +22,10 @@
     "HistoryMenu": "the own post's ⋮, opened on its detail surface — this round's excerpt of canonical's own-post sheet, not a screen of its own",
     "EditedMarkerDoor": "the post's detail surface, reached the ordinary way — this round's excerpt of it, drawn for the one marker the round makes tappable",
     "CommentHistory": "the comment's ⋮ in the thread, whose roster gains the same row the post's does — a menu this graph cannot name, because it lives in canonical",
-    "ProfileHistory": "the profile's ⋮, whose roster gains the same row — likewise a canonical menu"
+    "ProfileHistory": "the profile's ⋮, whose roster gains the same row — likewise a canonical menu",
+    "OpinionsRowDoors": "the opinions count on a post's detail, which opens this sheet — this round's excerpt of canonical's `PostOpinions`, drawn for the split its rows gain",
+    "ProfileStancesDoors": "a profile's figures row, which opens the opinions page — this round's excerpt of canonical's `ProfileStances`, drawn for the same split",
+    "PadHistoryDoor": "a stance face, tapped anywhere a stance face is drawn — the pad is a cross-cutting overlay, and the shell beneath it is the everyday one rather than the state's own"
   },
   "boardKinds": {},
   "edges": [
@@ -252,6 +259,49 @@
       "kind": "back",
       "label": "back arrow",
       "to": [{ "terminal": "back", "case": "back to the profile" }]
+    },
+
+    {
+      "from": "OpinionsRowDoors",
+      "via": 1,
+      "kind": "advance",
+      "label": "a row's person area",
+      "to": [{ "terminal": "canonical", "case": "their profile — acting on an opinion happens where the pad and its context live, which is the standing ruling this half of the row keeps" }]
+    },
+    {
+      "from": "OpinionsRowDoors",
+      "via": 2,
+      "kind": "advance",
+      "label": "a row's value readout",
+      "to": [{ "board": "StanceTimelinePost", "case": "every record that person has signed on this post — a history door is a readout, so the value is the door" }]
+    },
+    {
+      "from": "ProfileStancesDoors",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the profile the figures row was on" }]
+    },
+    {
+      "from": "ProfileStancesDoors",
+      "via": 2,
+      "kind": "advance",
+      "label": "a row's person area",
+      "to": [{ "terminal": "canonical", "case": "their profile — the same half of the same row, on the page the sheet mirrors" }]
+    },
+    {
+      "from": "ProfileStancesDoors",
+      "via": 3,
+      "kind": "advance",
+      "label": "a row's value readout",
+      "to": [{ "board": "StanceTimeline", "case": "every record that person has signed toward this one, in the direction the tab is showing" }]
+    },
+    {
+      "from": "PadHistoryDoor",
+      "via": 1,
+      "kind": "advance",
+      "label": "Current opinion · see how it built",
+      "to": [{ "board": "StanceTimeline", "case": "the records the standing above the field was summed from — the pad stays parked beneath the sheet, the pick untouched" }]
     }
   ]
 }

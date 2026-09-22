@@ -83,6 +83,12 @@ export interface PostCardProps {
    */
   stanceDefaultPick?: { pDirected: number; pInterest: number };
   /**
+   * Makes the pad's "Current opinion" line a door onto the timeline the
+   * standing was summed from (the change-histories round). Pass-through to
+   * `StanceControl`'s `onOpenHistory`.
+   */
+  stanceOnOpenHistory?: () => void;
+  /**
    * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
    * explanation is item 13's Post score drill-down, still undesigned.
