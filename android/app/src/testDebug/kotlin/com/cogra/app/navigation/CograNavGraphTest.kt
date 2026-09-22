@@ -91,6 +91,8 @@ class CograNavGraphTest {
     /** The key the fake write repository seals against. */
     @Inject lateinit var actor: ActorKey
 
+    @Inject lateinit var reveals: com.cogra.domain.content.SensitiveReveals
+
     private lateinit var navController: TestNavHostController
 
     @Before
@@ -397,8 +399,20 @@ class CograNavGraphTest {
     // NavHost-level test is what actually exercises that survival —
     // `SensitiveRevealsTest` (core:domain) proves the singleton's own
     // logic, not that navigation leaves it alone.
+    // The click-to-reveal interaction itself is already covered at the
+    // isolated composable level by `MediaComponentsTest`
+    // (core:designsystem) and the singleton's own sharing/reset logic by
+    // `SensitiveRevealsTest` (core:domain). What neither proves is the
+    // thing this ruling is actually about: that a reveal already on
+    // record is not lost when the reader moves through REAL destinations
+    // — each with its own ViewModel the NavHost tears down and rebuilds —
+    // rather than staying on one screen. So this test records the reveal
+    // directly against the singleton (the same act a real tap performs)
+    // and spends its NavHost machinery on the move itself: feed → detail
+    // → feed, with a fresh ViewModel at each stop, checking the veil
+    // stays down throughout.
     @Test
-    fun revealingASensitiveBodyOnTheFeedSurvivesNavigatingToDetailAndBack() {
+    fun aReadRevealSurvivesNavigatingFromTheFeedToDetailAndBack() {
         signIn()
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
@@ -410,11 +424,18 @@ class CograNavGraphTest {
             post = post,
             comments = com.cogra.domain.Page(emptyList(), null, hasNextPage = false),
         )
+        reveals.reveal(
+            "p1",
+            com.cogra.domain.content.SensitiveMark(
+                content = post.content.status,
+                description = post.description.status,
+                attachments = post.attachmentsStatus,
+            ),
+        )
         render()
-        waitForTag("feed_post_p1_veil_reveal")
-
-        compose.onNodeWithTag("feed_post_p1_veil_reveal").performClick()
-        compose.waitForIdle()
+        waitForTag("feed_post_p1")
+        // Already revealed on arrival — the choice was made before this
+        // screen existed, so nothing here asks again.
         assertThat(
             compose.onAllNodesWithTag("feed_post_p1_veil_reveal").fetchSemanticsNodes(),
         ).isEmpty()
