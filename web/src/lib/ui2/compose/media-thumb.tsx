@@ -32,6 +32,15 @@ import { formatDuration } from "../media/video";
 const REMOVE_GLYPH =
   "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z";
 
+/**
+ * The duration pill's own floor (jakob's ruling, 2026-09-22:
+ * design/readme.md §13 — "`MediaThumb` draws the pill on an authoring
+ * tile of 80px or more, where an author is identifying a file among
+ * files"). `PickedRow`'s 48px default summary tile drew the pill at
+ * that size until this ruling, which is what jakob's hand test caught.
+ */
+const DURATION_BADGE_MIN_TILE = 80;
+
 // THE RING NEVER INVENTS A NUMBER. The upload model reports a state, not a
 // fraction, so an upload in flight draws the ring as a turning arc rather than a
 // made-up percentage — a determinate ring at a guessed value would be a lie
@@ -94,6 +103,10 @@ export function MediaThumb({
    * shows neither — a comment's video in the thread wears one control, the
    * sound, and no duration pill at all. Here the author is choosing a clip and
    * its length is part of what they are choosing.
+   *
+   * The pill itself only draws once the tile clears `DURATION_BADGE_MIN_TILE`
+   * (80px) — below that floor it would outweigh the tile it sits on
+   * (jakob's ruling, 2026-09-22: design/readme.md §13).
    */
   durationMs?: number | null;
   /** The framing to show. Omitted where a picture has none. */
@@ -123,6 +136,13 @@ export function MediaThumb({
   const h = height ?? size;
   const alt = altText ?? "";
   const coverMark = Math.max(28, Math.round(Math.min(w, h) / 3));
+  // The duration pill's own floor (jakob's ruling, 2026-09-22:
+  // design/readme.md §13 — "`MediaThumb` draws the pill on an authoring
+  // tile of 80px or more, where an author is identifying a file among
+  // files"). Under it the pill reads as the tile's whole face rather than
+  // a corner mark — `PickedRow`'s 48px default summary tile drew it at
+  // that size until this ruling, which is what jakob's hand test caught.
+  const durationFits = Math.min(w, h) >= DURATION_BADGE_MIN_TILE;
   // A framing wins over `fit`: it already says exactly which section shows and
   // how big it is, so there is nothing left for a fit rule to decide.
   const framing = cropPreviewStyle(crop, { width: w, height: h });
@@ -181,12 +201,14 @@ export function MediaThumb({
               <path d="M8 5v14l11-7z" />
             </svg>
           </span>
-          <span
-            data-testid={testId ? `${testId}-duration` : undefined}
-            className="absolute bottom-[3px] right-[3px] rounded-extra-small bg-scrim/55 px-[5px] text-label-small text-white"
-          >
-            {formatDuration(durationMs)}
-          </span>
+          {durationFits ? (
+            <span
+              data-testid={testId ? `${testId}-duration` : undefined}
+              className="absolute bottom-[6px] right-[6px] rounded-extra-small bg-scrim/55 px-[5px] text-label-small text-white"
+            >
+              {formatDuration(durationMs)}
+            </span>
+          ) : null}
         </>
       ) : null}
       {progress !== undefined && !failed ? (

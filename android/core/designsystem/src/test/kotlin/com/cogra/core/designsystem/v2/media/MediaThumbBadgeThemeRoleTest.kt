@@ -2,6 +2,7 @@ package com.cogra.core.designsystem.v2.media
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import org.junit.Rule
 import org.junit.Test
@@ -62,10 +63,16 @@ class MediaThumbBadgeThemeRoleTest {
         compose.onNodeWithTag("media_thumb_remove_badge", useUnmergedTree = true).assertExists()
     }
 
+    // Above `DurationBadgeMinTile` (80dp): the composer's actual pick-grid
+    // scale (`PickStage`'s 125dp column), where the pill draws.
+    private val fittingSize = 96.dp
+
     @Test
     fun theDurationBadgeRendersInLightMode() {
         compose.setContent {
-            Cogra2PreviewTheme(darkTheme = false) { MediaThumb(item, badge = ThumbBadge.Duration("0:42")) }
+            Cogra2PreviewTheme(darkTheme = false) {
+                MediaThumb(item, size = fittingSize, badge = ThumbBadge.Duration("0:42"))
+            }
         }
         compose.onNodeWithTag("media_thumb_duration_badge", useUnmergedTree = true).assertExists()
     }
@@ -73,7 +80,9 @@ class MediaThumbBadgeThemeRoleTest {
     @Test
     fun theDurationBadgeRendersInDarkMode() {
         compose.setContent {
-            Cogra2PreviewTheme(darkTheme = true) { MediaThumb(item, badge = ThumbBadge.Duration("0:42")) }
+            Cogra2PreviewTheme(darkTheme = true) {
+                MediaThumb(item, size = fittingSize, badge = ThumbBadge.Duration("0:42"))
+            }
         }
         compose.onNodeWithTag("media_thumb_duration_badge", useUnmergedTree = true).assertExists()
     }
