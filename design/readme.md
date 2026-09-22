@@ -4978,9 +4978,13 @@ closes a place where the canvas knew a rule and had never drawn it.
   Share LEADS the sheet: every other row there is a menu row by nature,
   share is the one that was a one-tap control a moment ago, and a reader
   who opens this ⋮ to share came for the row that moved. **The
-  breakpoint is 360px of viewport width** (jakob, 2026-09-17): at or
-  under it the row sheds share and this sheet takes it; above it, the
-  wide board is the state. The board is drawn at 320 because that is
+  breakpoint is STRICTLY BELOW 360 of viewport width** — `<360px` on
+  web, `<360dp` on android, the same semantics on both (jakob,
+  2026-09-22, sharpening his 2026-09-17 ruling): under it the row
+  sheds share and this sheet takes it; at 360 and above, the wide
+  board is the state. The strict inequality is the ruling's point —
+  360dp is a mainstream android width (the Galaxy class), and the
+  narrow treatment is for the genuinely small, not the common. The board is drawn at 320 because that is
   the narrowest phone this system draws for, not because 320 is the
   threshold. Small phones are rare but real — everything must WORK on
   them, and masterful is not yet owed, so the answer is one number and
