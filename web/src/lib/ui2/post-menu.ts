@@ -60,6 +60,15 @@ export function postMenuItems({
   ];
   if (own) {
     rows.push(
+      // CITE RIDES THIS MENU TOO (`_shared.jsx:414-420`, backlog item 100):
+      // self-citation is a real authorial act, and the row takes the reader
+      // menu's own position, second, so the thumb finds one row in one
+      // place on every menu that has it.
+      {
+        label: "Cite in a new post",
+        onSelect: () => navigate(`/compose?reference=${postId}`),
+        testId: `${testIdPrefix}-cite`,
+      },
       {
         label: "Edit",
         onSelect: () => navigate(`/compose?post=${postId}`),
