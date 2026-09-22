@@ -4,7 +4,8 @@
   "terminals": {
     "back": "Back — returns to the previous screen",
     "self": "Acts on this screen — state changes in place",
-    "os": "Hands off to the OS — browser download, mail app, system sheet"
+    "os": "Hands off to the OS — browser download, mail app, system sheet",
+    "document": "Opens a written document — legal text the product ships and design does not draw, so there is no board owed behind it"
   },
   "scanExempt": {
     "TagPad": "the pair sheet covers the edit — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
@@ -22,6 +23,7 @@
     "ExploreFilter": "the search filter sheet covers the results — the field, trigger, rows, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "ReplyEntry": "the comments sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ReplyMedia": "the comments sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "ReplySettled": "the same sheet reopened on a just-signed reply — the post detail beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "CommentEditActs": "the acts sheet covers the edit — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "RefsSheet": "the tags-and-references sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "PostOpinions": "the opinions sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
@@ -47,6 +49,7 @@
     "SettingsHidden": "the hidden-accounts sheet covers the settings page — every row beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposeLicense": "the license sheet covers the seal — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposeCitations": "the staged-citations sheet covers the seal — everything beneath the scrim is inactive in this state, the counting row that opened it among them; only the sheet (and its scrim) is live",
+    "ComposeTags": "the staged-tags sheet covers the seal — everything beneath the scrim is inactive in this state, the counting row that opened it among them; only the sheet (and its scrim) is live",
     "ComposeSensitive": "the sensitive sheet covers the seal — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "ComposePad": "the wash covers the seal, whole — its header, its three facts and its foot are inactive in this state; only the parked pad is live",
     "ReplyPad": "the wash covers the reply's seal, whole — its header, its add-rows, its three facts and its foot are inactive in this state; only the parked pad is live",
@@ -72,6 +75,7 @@
     "EditComposeUnchanged": "the same edit, opened and left as it was found — the state an empty acts batch leaves it in; content, not a tap",
     "TagPageEmpty": "a tag everything has been untagged out of — the same page any chip opens, in the state an unbinding leaves it: the list empty, the topic's history not (jakob 2026-09-15); content, not a tap",
     "FeedEntryMoved": "a post whose paths have all aged out — the same screen the score opens, in the state the dust floor leaves it once every path’s last opinion has decayed past it; content, not a tap",
+    "OnboardingSteps": "the first authenticated feed entry, from applicant on — the intro opens over the feed once, the seen flag server-side, and Settings' About group re-opens it here; content and a flag, not a tap",
     "Main": "arrival through an invite link — the inviter's borrowed view",
     "FeedBare": "app open, signed out, no link — the bare borrowed view",
     "KeyElsewhere": "app open, signed in on a device the key is not on",
@@ -282,6 +286,10 @@
     { "from": "Join", "via": 5, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
     { "from": "Join", "via": 6, "kind": "advance", "label": "Create account", "to": [{ "board": "ApplicantFeed", "case": "account created — applicant days begin" }, { "board": "JoinErrors", "case": "handle taken / invalid input" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "Join", "via": 7, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
+    { "from": "Join", "via": 8, "kind": "detour", "label": "? — About CoGra", "to": [{ "board": "About", "case": "the door's one explanation, behind the \"?\" rather than a fifth clickable line" }] },
+
+    { "from": "About", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "back where it was opened — the join door, or settings" }] },
+    { "from": "About", "via": 2, "kind": "detour", "label": "topic row", "to": [{ "terminal": "self", "case": "the topic unfolds, and folds again — each answers on its own, so opening a second leaves the first open" }] },
 
     { "from": "JoinErrors", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "InviteEntry" }] },
     { "from": "JoinErrors", "via": 2, "kind": "advance", "label": "Handle field", "to": [{ "terminal": "self", "case": "typing" }] },
@@ -361,6 +369,17 @@
     { "from": "RestoreError", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "RestoreError", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
     { "from": "RestoreError", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "terminal": "self", "case": "still failing — the line updates in place" }] },
+
+    { "from": "OnboardingSteps", "via": 1, "kind": "cancel", "label": "Skip", "to": [{ "board": "ApplicantFeed", "case": "the intro is left for the feed it opened over — applicant days" }, { "board": "Feed", "case": "already a member" }] },
+    { "from": "OnboardingSteps", "via": 2, "kind": "advance", "label": "Next", "to": [{ "board": "OnboardingShape" }] },
+    { "from": "OnboardingShape", "via": 1, "kind": "cancel", "label": "Skip", "to": [{ "board": "ApplicantFeed", "case": "the intro is left for the feed it opened over — applicant days" }, { "board": "Feed", "case": "already a member" }] },
+    { "from": "OnboardingShape", "via": 2, "kind": "advance", "label": "Next", "to": [{ "board": "OnboardingPublic" }] },
+    { "from": "OnboardingPublic", "via": 1, "kind": "cancel", "label": "Skip", "to": [{ "board": "ApplicantFeed", "case": "the intro is left for the feed it opened over — applicant days" }, { "board": "Feed", "case": "already a member" }] },
+    { "from": "OnboardingPublic", "via": 2, "kind": "advance", "label": "Next", "to": [{ "board": "OnboardingLayers" }] },
+    { "from": "OnboardingLayers", "via": 1, "kind": "cancel", "label": "Skip", "to": [{ "board": "ApplicantFeed", "case": "the intro is left for the feed it opened over — applicant days" }, { "board": "Feed", "case": "already a member" }] },
+    { "from": "OnboardingLayers", "via": 2, "kind": "advance", "label": "Next", "to": [{ "board": "OnboardingVouch" }] },
+    { "from": "OnboardingVouch", "via": 1, "kind": "cancel", "label": "Skip", "to": [{ "board": "ApplicantFeed", "case": "the intro is left for the feed it opened over — applicant days" }, { "board": "Feed", "case": "already a member" }] },
+    { "from": "OnboardingVouch", "via": 2, "kind": "advance", "label": "Start reading", "to": [{ "board": "ApplicantFeed", "case": "the last card ends where Skip ends — applicant days" }, { "board": "Feed", "case": "already a member" }] },
 
     { "from": "Wallet", "via": 1, "kind": "detour", "label": "? — What is CGT?", "to": [{ "board": "HelpDialog", "case": "the What-is-CGT text" }] },
     { "from": "Wallet", "via": 2, "kind": "advance", "label": "payout address row", "to": [{ "gap": "the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)" }] },
@@ -683,6 +702,14 @@
     { "from": "FeedFar", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "FeedFar", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
+    { "from": "ReplySettled", "via": 1, "kind": "advance", "label": "comment author chips", "to": [{ "board": "ProfileOther" }] },
+    { "from": "ReplySettled", "via": 2, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "board": "CommentMenu", "case": "the comment's sheet (master)" }] },
+    { "from": "ReplySettled", "via": 3, "kind": "advance", "label": "comment tag chips", "to": [{ "board": "TagPage" }] },
+    { "from": "ReplySettled", "via": 4, "kind": "advance", "label": "comment stance face", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }] },
+    { "from": "ReplySettled", "via": 5, "kind": "advance", "label": "Reply", "to": [{ "board": "ReplyCompose", "case": "the composer, pre-targeted at that comment" }] },
+    { "from": "ReplySettled", "via": 6, "kind": "advance", "label": "Add a comment", "to": [{ "board": "ReplyCompose", "case": "the full-focus composer, parent pinned" }] },
+    { "from": "ReplySettled", "via": 7, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — back to where it was opened" }] },
+
     { "from": "ReplyEntry", "via": 1, "kind": "advance", "label": "comment author chips", "to": [{ "board": "ProfileOther" }] },
     { "from": "ReplyEntry", "via": 2, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "board": "CommentMenu", "case": "the comment's sheet (master)" }] },
     { "from": "ReplyEntry", "via": 3, "kind": "advance", "label": "comment tag chips", "to": [{ "board": "TagPage" }] },
@@ -801,7 +828,7 @@
     { "from": "ReplySeal", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplySeal", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
     { "from": "ReplySeal", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
-    { "from": "ReplySeal", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ReplySeal", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ReplySeal", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
 
     { "from": "ReplyCited", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the reference still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
@@ -812,7 +839,7 @@
     { "from": "ReplyCited", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplyCited", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
     { "from": "ReplyCited", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
-    { "from": "ReplyCited", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment and its reference settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ReplyCited", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply and its reference settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ReplyCited", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the reference still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
     { "from": "ReplyCited", "via": 11, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation leaves — the comment stops carrying it" }] },
     { "from": "ReplyCited", "via": 12, "kind": "advance", "label": "staged reference name", "to": [{ "board": "RefPair", "case": "the citation's pair sheet (master on the compose page)" }] },
@@ -825,7 +852,7 @@
     { "from": "ReplyCitedMany", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplyCitedMany", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
     { "from": "ReplyCitedMany", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
-    { "from": "ReplyCitedMany", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplyEntry", "case": "signed — the thread, the comment and its references settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ReplyCitedMany", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply and its references settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ReplyCitedMany", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the references still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
     { "from": "ReplyCitedMany", "via": 11, "kind": "advance", "label": "References row", "to": [{ "board": "ComposeCitations", "case": "the staged-citations sheet (master on the compose page)" }] },
 
@@ -954,7 +981,12 @@
     { "from": "ComposeSealTagged", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
     { "from": "ComposeSealTagged", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "signed — the detail view, still settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "ComposeSealTagged", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeDetails", "case": "one stage back — the tags still staged" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
-    { "from": "ComposeSealTagged", "via": 9, "kind": "back", "label": "Tags row", "to": [{ "board": "ComposeDetails", "case": "the count opens what it counts — the details stage is where staged tags are managed, the compose flow having no staged-tags sheet to open (backlog item 95)" }, { "board": "ComposeDetailsVideo", "case": "the same, on a clip body's details" }] },
+    { "from": "ComposeSealTagged", "via": 9, "kind": "advance", "label": "Tags row", "to": [{ "board": "ComposeTags", "case": "the count opens what it counts — the staged-tags sheet over the seal, the References row's own kind of door (backlog item 95)" }] },
+
+    { "from": "ComposeTags", "via": 1, "kind": "advance", "label": "staged tag name", "to": [{ "board": "TagPadCompose", "case": "the tag's pair sheet (master on the compose page)" }] },
+    { "from": "ComposeTags", "via": 2, "kind": "advance", "label": "tag chip ×", "to": [{ "terminal": "self", "case": "the tag leaves — the post stops being about it, and the row behind counts one fewer" }] },
+    { "from": "ComposeTags", "via": 3, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the seal it opened from, post's or reply's" }] },
+    { "from": "ComposeTags", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
     { "from": "ComposeCitations", "via": 1, "kind": "advance", "label": "staged reference name", "to": [{ "board": "RefPair", "case": "the citation's pair sheet (master on the compose page)" }] },
     { "from": "ComposeCitations", "via": 2, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation leaves — the post stops being about it, and the row behind counts one fewer" }] },
@@ -1159,10 +1191,11 @@
 
     { "from": "RemoveMenu", "via": 1, "kind": "advance", "label": "Save", "to": [{ "terminal": "self", "case": "your own post is kept too — the sheet closes, the snackbar confirms, and the row reads Unsave next time" }] },
     { "from": "RemoveMenu", "via": 2, "kind": "advance", "label": "Edit", "to": [{ "board": "EditCompose" }] },
-    { "from": "RemoveMenu", "via": 3, "kind": "advance", "label": "Mark as sensitive", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master)" }] },
+    { "from": "RemoveMenu", "via": 3, "kind": "advance", "label": "Mark as sensitive", "to": [{ "board": "EditCompose", "case": "the edit flow opens on the post — marking a published post is a signed change to it, made and signed where every other change to it is (jakob 2026-09-14); the edit's own Sensitive row raises the sheet" }] },
     { "from": "RemoveMenu", "via": 4, "kind": "advance", "label": "Remove", "to": [{ "board": "RemoveConfirm" }] },
     { "from": "RemoveMenu", "via": 5, "kind": "detour", "label": "License terms", "to": [{ "board": "PostLicense", "case": "the menu closes and the terms come up in a sheet over the post (master — a post's terms read the same from either menu)" }] },
     { "from": "RemoveMenu", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+    { "from": "RemoveMenu", "via": 7, "kind": "advance", "label": "Cite in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this post rides along invisibly until details, exactly as it does from the reader's menu" }] },
 
     { "from": "ReaderPostMenu", "via": 1, "kind": "advance", "label": "Save", "to": [{ "terminal": "self", "case": "the post is kept — the sheet closes, the snackbar confirms, and the row reads Unsave next time" }] },
     { "from": "ReaderPostMenu", "via": 2, "kind": "advance", "label": "Cite in a new post", "to": [{ "board": "ComposePick", "case": "the post wizard opens fresh at its first stage — this post rides along invisibly until details" }] },
@@ -1461,7 +1494,7 @@
     { "from": "ComposeSealUploading", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeSealUploading", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "ComposeSealUploading", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }, { "board": "ReplyEntry", "case": "uploads land — signing proceeds to the thread, the comment settling" }] },
+    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }, { "board": "ReplySettled", "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }] },
     { "from": "ComposeSealUploading", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeUploading", "case": "one stage back" }] },
 
     { "from": "ComposePickWeb", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },
@@ -1662,6 +1695,10 @@
     { "from": "Settings", "via": 16, "kind": "advance", "label": "Sign out", "to": [{ "board": "SignIn", "case": "remembered — the session ends and the account stays offered here" }, { "board": "SignIn", "case": "not remembered — the key and the unpublished draft go with the session" }] },
     { "from": "Settings", "via": 17, "kind": "advance", "label": "Hidden accounts", "to": [{ "board": "SettingsHidden", "case": "the hidden list in a sheet over settings; with nobody hidden the row is inert and reads None, so there is nothing to open" }] },
     { "from": "Settings", "via": 18, "kind": "advance", "label": "Delete account", "to": [{ "board": "DeleteAccount", "case": "what goes, what stays, and the content sweep as a choice — nothing is deleted from the row" }] },
+    { "from": "Settings", "via": 19, "kind": "advance", "label": "Watch the intro again", "to": [{ "board": "OnboardingSteps", "case": "the intro from its first card — the one way back to it once the seen flag is set" }] },
+    { "from": "Settings", "via": 20, "kind": "advance", "label": "About CoGra", "to": [{ "board": "About" }] },
+    { "from": "Settings", "via": 21, "kind": "advance", "label": "Privacy", "to": [{ "terminal": "document", "case": "the privacy document" }] },
+    { "from": "Settings", "via": 22, "kind": "advance", "label": "Terms", "to": [{ "terminal": "document", "case": "the terms document" }] },
 
     { "from": "DeleteAccount", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Settings", "case": "nothing is lost — no message has gone out" }] },
     { "from": "DeleteAccount", "via": 2, "kind": "advance", "label": "Also remove what I posted", "to": [{ "terminal": "self", "case": "the box ticks — the choice rides the request, and the content sweep runs at the deadline only if it is set" }] },

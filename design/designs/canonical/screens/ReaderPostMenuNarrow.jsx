@@ -24,7 +24,19 @@
    NOTHING ELSE MOVES. Same master, same rows, same words — this is the reader's
    menu with one row visiting, not a second menu. The wide phone's board stays
    the master, and the day an action ranks above share the queue takes it first
-   and this board follows. */
+   and this board follows.
+
+   THE BREAKPOINT IS STRICTLY BELOW 360 OF VIEWPORT WIDTH — <360px web, <360dp
+   android, same semantics both — under it, share moves into this sheet and the
+   card drops its own (`showShare={false}`); at 360 and above, the wide board
+   is the state (backlog item 100, ruled the batch-rulings round; sharpened by
+   jakob 2026-09-22: 360dp is mainstream android, and the narrow treatment is
+   for the genuinely small, not the common).
+   The board is drawn at 320 because that is the narrowest phone this system
+   draws for, not because 320 is the threshold. jakob's register for this whole
+   width: small phones are rare but real, and everything must WORK on them —
+   masterful is not yet owed. So the rule is one number and a row that moves,
+   and no second design language for narrow screens. */
 export const FRAME = { width: 320, height: 568 };
 
 const NARROW_MENU = [{ label: "Share", onSelect: () => {} }, ...READER_POST_MENU];
