@@ -452,6 +452,11 @@ private fun DetailMenu(
     // jakob 2026-09-17): the detail's own ⋮ is the reader's menu too
     // (`_shared.jsx:341-346` — the card's own dot yields to it).
     val narrow = isNarrowShareWidth()
+    val shareRow: (() -> Unit)? = if (!own && narrow) {
+        { onShare(post.id) }
+    } else {
+        null
+    }
     CograOverflowMenu(
         items = postMenuRows(
             own = own,
@@ -461,7 +466,7 @@ private fun DetailMenu(
             onCite = { onCite(post.id) },
             onRemove = onRemove,
             onLicense = { onLicense(post.license) },
-            onShare = if (!own && narrow) { { onShare(post.id) } } else null,
+            onShare = shareRow,
             testTagPrefix = "detail_menu",
         ),
         contentDescription = stringResource(R.string.content_menu_post),

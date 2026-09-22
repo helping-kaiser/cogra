@@ -598,6 +598,11 @@ private fun CardMenuHeader(
     // jakob 2026-09-17): only the reader's menu gains it, and only at or
     // under the breakpoint the row itself sheds it at.
     val narrow = isNarrowShareWidth()
+    val shareRow: (() -> Unit)? = if (!own && narrow) {
+        { onShare(post.id) }
+    } else {
+        null
+    }
     ContentCardHeader(
         author = post.author,
         at = post.createdAt,
@@ -614,7 +619,7 @@ private fun CardMenuHeader(
                 onCite = { onCite(post.id) },
                 onRemove = { removeOpen = true },
                 onLicense = { licenseShown = post.license },
-                onShare = if (!own && narrow) { { onShare(post.id) } } else null,
+                onShare = shareRow,
                 // The rows sit under the trigger's own tag, which
                 // `ContentCardHeader` derives the same way.
                 testTagPrefix = "feed_${post.id}_menu",
