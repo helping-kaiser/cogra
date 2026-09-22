@@ -5861,12 +5861,15 @@ doc's own taxonomy. Backlog item 102.
   inside a group turn one line of the scan into a screen of it. And a
   clustering would be a second taxonomy to keep in step with the doc's.
 - **The OS ask fires only from an explicit act, never at launch
-  (jakob).** Two acts, and no third: the settings toggle, and a
-  one-time dismissible offer row at the top of the list. On web that row
-  **is** the pre-prompt; on native a denial is **sticky**, which is
-  exactly why the ask may not be spent on a reader who did not reach for
-  it. Dismissed is dismissed for good — an offer that came back would be
-  the launch prompt with extra steps.
+  (jakob).** It has one home: the master switch on the push settings
+  page. The one-time dismissible offer row at the top of the list is
+  the door to that page — the tap lands where the choice is made, the
+  way every notification row lands on its subject (jakob) — so on
+  native, where a denial is **sticky**, the ask is never spent on a
+  reader who did not reach for it, and on web the reader arrives at the
+  browser's own dialog through their own deliberate taps. Dismissed is
+  dismissed for good — an offer that came back would be the launch
+  prompt with extra steps.
 - **Push content is the drawn row, and nothing invented (jakob).** The
   title is the row's sentence (`@ada commented on your post`); the body
   is the row's second line where the row has one, and absent where it

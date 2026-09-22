@@ -3387,11 +3387,13 @@ The doc's taxonomy, unclustered — a grouping would be a second model to
 keep in step with the first. The settings page carries one disclosure
 row reading its state back, the `Default license` grammar.
 
-**The OS ask fires only from an explicit act.** Two of them: the
-settings toggle, and a one-time dismissible offer row at the top of the
-list. Never at launch. On web that row *is* the pre-prompt; on native a
-denial is sticky, which is why nothing may spend the ask on a reader who
-did not reach for it. Dismissed is dismissed for good.
+**The OS ask fires only from an explicit act.** One act spends it: the
+master switch on the push settings page. The one-time dismissible offer
+row at the top of the list is the door to that page — the tap lands
+where the choice is made, the way every notification row lands on its
+subject. Never at launch: on native a denial is sticky, which is why
+nothing may spend the ask on a reader who did not reach for it.
+Dismissed is dismissed for good.
 
 **Push content is the drawn row, and nothing invented.** Title is the
 row's sentence (`@ada commented on your post`); body is the row's second

@@ -191,6 +191,13 @@ it: **"this browser"** on web, **"this app"** on Android — never a bare
 preposition. One line, two renderings:
 `Your key isn't on this browser` · `Your key isn't in this app`.
 
+**Where a sentence can be phrased without the platform noun, it is, so
+both platforms share one string (jakob).** Push's settings talk about
+*when*, not *where* (`Announce new notifications the moment they
+arrive.`), and where the noun is unavoidable the one shared sentence
+names both concretely (`…the notification settings of the browser or
+phone itself`) rather than rendering twice.
+
 ## The "?" dialogs
 
 Compose keeps captions to one short line; the full explanation lives
