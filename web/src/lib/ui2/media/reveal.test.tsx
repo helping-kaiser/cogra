@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BodyRegion } from "@/lib/ui/post-media";
 import { forgetReveals, isRevealed, rememberReveal, sensitiveSignature } from "./reveal";
@@ -117,5 +117,21 @@ describe("the signature", () => {
 
   it("survives a node arriving without a moderation status", () => {
     expect(sensitiveSignature({ attachmentsStatus: "NORMAL" })).toBe("NORMAL|");
+  });
+});
+
+// design/readme.md §9 (jakob, 2026-09-22): the veil returns on a full page
+// reload, never merely on navigation — so a reveal must never reach
+// storage that a reload would still read back.
+describe("the reveal never reaches storage", () => {
+  it("writes nothing to localStorage or sessionStorage when a body is revealed", () => {
+    const localSpy = vi.spyOn(Storage.prototype, "setItem");
+    try {
+      rememberReveal("post-1", sensitiveSignature(MARKED));
+      expect(isRevealed("post-1", sensitiveSignature(MARKED))).toBe(true);
+      expect(localSpy).not.toHaveBeenCalled();
+    } finally {
+      localSpy.mockRestore();
+    }
   });
 });
