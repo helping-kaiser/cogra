@@ -227,7 +227,9 @@ export function BottomSheet({
       // default, and this one rises from the edge it will go back to. It
       // fills the screen up to a sliver below the safe area at most, so the
       // rounded corners keep a strip of the surface behind visible.
-      className={`${closing ? "cg-sheet-out" : "cg-sheet-in"} ${
+      className={`${
+        closing ? "cg-sheet-out" : "cg-sheet-in"
+      } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 ${
         // ONE SCRIM, HOWEVER MANY SHEETS. The system has a single dimming
         // token (`--scrim-dialog`, 50% black) and stacking moves the z-layer,
         // never the tone (design/components/core/BottomSheet.jsx). Every

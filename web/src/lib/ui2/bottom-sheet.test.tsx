@@ -123,8 +123,14 @@ describe("BottomSheet", () => {
     // Content-sized, held UNDER the ceiling rather than pinned at it: the
     // 92dvh class stands and the ceiling clamps it (`BottomSheet.jsx`'s
     // `min()`).
+    // jsdom re-prints `calc()` in its own normal form, so the pieces are what
+    // is compared rather than the string — the exact spelling of the constant
+    // is pinned on its own below.
     const capped = screen.getByTestId("bottom-sheet");
-    expect(capped.style.maxHeight).toBe(`min(92dvh, ${SHEET_CEILING})`);
+    expect(capped.style.maxHeight).toMatch(/^min\(92dvh,/);
+    expect(capped.style.maxHeight).toContain("100dvh");
+    expect(capped.style.maxHeight).toContain("72px");
+    expect(capped.style.maxHeight).toContain("env(safe-area-inset-top");
     expect(capped.style.height).toBe("");
 
     rerender(
@@ -135,7 +141,9 @@ describe("BottomSheet", () => {
     // The tallest class is PINNED at the ceiling, so it takes a height and
     // not a maximum.
     const pinned = screen.getByTestId("bottom-sheet");
-    expect(pinned.style.height).toBe(SHEET_CEILING);
+    expect(pinned.style.height).toContain("100dvh");
+    expect(pinned.style.height).toContain("72px");
+    expect(pinned.style.height).toContain("env(safe-area-inset-top");
     expect(pinned.style.maxHeight).toBe("");
   });
 
@@ -157,9 +165,9 @@ describe("BottomSheet", () => {
         <p>Body</p>
       </BottomSheet>,
     );
-    expect(screen.getByTestId("bottom-sheet-column").style.maxHeight).toBe(
-      `min(92dvh, ${SHEET_CEILING})`,
-    );
+    const column = screen.getByTestId("bottom-sheet-column").style.maxHeight;
+    expect(column).toMatch(/^min\(92dvh,/);
+    expect(column).toBe(screen.getByTestId("bottom-sheet").style.maxHeight);
   });
 
   // A sheet over a sheet takes the next tonal rung (design/readme.md:2364:
