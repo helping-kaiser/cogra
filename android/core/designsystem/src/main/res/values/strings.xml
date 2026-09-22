@@ -185,6 +185,26 @@
     <string name="stance_severance_keep">Keep it</string>
     <string name="stance_severance_failed">Severing didn\'t go through. Try again.</string>
 
+    <!-- A topic's own way out: DISCONNECTED, never severed (jakob's I2
+         ruling, copy-voice.md "Awaiting blessing — the topic disconnects",
+         2026-09-15: "we want human wording not this nerdy stuff!" —
+         rejecting "walked back", "let go" and "dropped" for a topic in
+         one breath). The split is by record family, not by surface:
+         persons, posts and comments keep every string above verbatim; a
+         topic's pad and its confirmation swap these in instead. -->
+    <string name="stance_disconnect_open">Disconnect</string>
+    <string name="stance_disconnect_title">Disconnect from %1$s?</string>
+    <string name="stance_disconnect_reached">This leaves you with no opinion towards it.</string>
+    <string name="stance_disconnect_body">You end up with no opinion towards %1$s. It stops reaching your feed, you stop earning from it, and nothing passes on through you.</string>
+    <string name="stance_disconnect_standing_zero">No opinion towards %1$s.</string>
+    <string name="stance_disconnect_confirm">Disconnect</string>
+    <!-- The confirmation's raw-sums total (copy-voice.md "the topic
+         disconnects": "Everything you've said about #saltmaps adds up
+         to +1.40 / +0.95, and disconnecting clears all of it."). One
+         self-contained sentence, unlike `stance_standing_raw`'s label
+         the caller appends a reading to. -->
+    <string name="stance_disconnect_standing_raw">Everything you\'ve said about %1$s adds up to %2$s, and disconnecting clears all of it.</string>
+
     <string name="stance_coach">Press and hold to pick exactly where you stand.</string>
     <string name="stance_coach_dismiss">Got it</string>
 

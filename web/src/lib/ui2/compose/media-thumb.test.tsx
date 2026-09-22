@@ -91,4 +91,37 @@ describe("MediaThumb", () => {
       expect(Number(image.style.height.replace("px", ""))).toBeCloseTo(112, 3);
     });
   });
+
+  // design #781: the clip's own chosen face, inset bottom-left rather than
+  // named by a word, because a cover is the clip's own property
+  // (design/components/compose/MediaThumb.jsx:93,192-217).
+  describe("the clip's chosen cover", () => {
+    it("shows nothing until a cover is chosen", () => {
+      render(<MediaThumb src="blob:one" testId="thumb" />);
+      expect(screen.queryByTestId("thumb-cover-mark")).toBeNull();
+    });
+
+    it("insets the chosen frame bottom-left, behind a hairline ring", () => {
+      render(<MediaThumb src="blob:one" coverSrc="blob:cover" testId="thumb" />);
+      const mark = screen.getByTestId("thumb-cover-mark");
+      expect(mark.className).toContain("rounded-small");
+      expect(mark.className).toContain("border-outline-variant");
+      expect(mark.querySelector("img")).toHaveAttribute("src", "blob:cover");
+    });
+
+    it("never falls under the 28px floor, even on the tray's 114x64 tile", () => {
+      // min(114, 64) / 3 = 21.33 — under the floor, per MediaThumb.jsx:93.
+      render(<MediaThumb src="blob:one" coverSrc="blob:cover" width={114} height={64} testId="thumb" />);
+      const mark = screen.getByTestId("thumb-cover-mark");
+      expect(mark.style.width).toBe("28px");
+      expect(mark.style.height).toBe("28px");
+    });
+
+    it("scales to a third of the tile's short side past the floor", () => {
+      render(<MediaThumb src="blob:one" coverSrc="blob:cover" size={150} testId="thumb" />);
+      const mark = screen.getByTestId("thumb-cover-mark");
+      expect(mark.style.width).toBe("50px");
+      expect(mark.style.height).toBe("50px");
+    });
+  });
 });

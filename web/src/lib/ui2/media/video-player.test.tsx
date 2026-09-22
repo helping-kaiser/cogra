@@ -163,6 +163,17 @@ describe("the reading surface", () => {
     expect(screen.queryByTestId("video-player-duration")).toBeNull();
   });
 
+  // G1 / design/components/media/MediaAttachment.jsx:105 — the MediaDisc
+  // master's default corner is bottom-right (the thumb's side while
+  // scrolling), not bottom-left.
+  it("sits at the master's bottom-right corner", () => {
+    player({ surface: "reading" });
+    const disc = screen.getByTestId("video-player-sound");
+    expect(disc.className).toMatch(/\bbottom-2\b/);
+    expect(disc.className).toMatch(/\bright-2\b/);
+    expect(disc.className).not.toMatch(/\bleft-2\b/);
+  });
+
   it("still autoplays muted when it comes into view", () => {
     // Losing the transport bar must not cost the clip its autoplay.
     const video = player({ surface: "reading" });
@@ -206,6 +217,17 @@ describe("the full surface (a feed card's clip)", () => {
   it("shows no duration, which the detail surface owns for now (W3-6)", () => {
     player({ durationMs: 18_000 });
     expect(screen.queryByTestId("video-player-duration")).toBeNull();
+  });
+
+  // G1 / design/components/media/MediaAttachment.jsx:105 — the MediaDisc
+  // master's default corner is bottom-right (the thumb's side while
+  // scrolling), not bottom-left.
+  it("sits at the master's bottom-right corner", () => {
+    player();
+    const disc = screen.getByTestId("video-player-sound");
+    expect(disc.className).toMatch(/\bbottom-2\b/);
+    expect(disc.className).toMatch(/\bright-2\b/);
+    expect(disc.className).not.toMatch(/\bleft-2\b/);
   });
 });
 

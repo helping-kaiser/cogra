@@ -560,7 +560,15 @@ internal fun SensitiveSheet(
             testTag = "${testTagPrefix}_sensitive_reason",
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            CograButton("Done", onDone, testTag = "${testTagPrefix}_sensitive_done")
+            // Visible but disabled over the cap, never hidden — the reason
+            // only counts against the cap while the mark is on, the same
+            // gate its own error line above uses.
+            CograButton(
+                "Done",
+                onDone,
+                enabled = !(marked && isSensitiveReasonTooLong(reason)),
+                testTag = "${testTagPrefix}_sensitive_done",
+            )
         }
     }
 }

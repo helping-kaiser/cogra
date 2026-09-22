@@ -35,6 +35,28 @@ describe("SensitiveSheet", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/too long/i);
   });
 
+  // Visible but disabled over the cap, never hidden (the caps-affordance
+  // round's ruling, PR #755's pattern) — Done stays on screen so the author
+  // can trim back under the cap, rather than losing the way out.
+  it("disables, rather than hides, Done past the cap", () => {
+    open({ reason: "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1) });
+    expect(screen.getByTestId("test-sensitive-done")).toBeVisible();
+    expect(screen.getByTestId("test-sensitive-done")).toBeDisabled();
+  });
+
+  it("leaves Done enabled at the cap the write side allows", () => {
+    open({ reason: "x".repeat(SENSITIVE_REASON_MAX_CHARS) });
+    expect(screen.getByTestId("test-sensitive-done")).toBeEnabled();
+  });
+
+  // An over-length leftover from a mark switched back off is never sent
+  // (`sensitiveInput`), so it earns no error and never blocks Done.
+  it("ignores an over-cap reason while the mark is off", () => {
+    open({ marked: false, reason: "x".repeat(SENSITIVE_REASON_MAX_CHARS + 1) });
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByTestId("test-sensitive-done")).toBeEnabled();
+  });
+
   // Scalar values, not UTF-16 code units, matching every other cap in the
   // compose lanes.
   it("counts an astral character as one, not two", () => {

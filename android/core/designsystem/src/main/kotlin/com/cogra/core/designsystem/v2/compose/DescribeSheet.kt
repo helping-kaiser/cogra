@@ -31,7 +31,6 @@ import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.imageModel
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
-import com.cogra.core.designsystem.v2.token.MediaOverlay
 import com.cogra.core.designsystem.v2.token.ThemePreviews
 
 /**
@@ -94,7 +93,8 @@ fun DescribeSheet(
                 .fillMaxWidth()
                 .height(PreviewHeight)
                 .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .then(testTag?.let { Modifier.testTag("${it}_strip") } ?: Modifier),
         ) {
             AsyncImage(
                 // THE PICTURE THE POST WILL CARRY, not the one it came from.
@@ -127,9 +127,14 @@ fun DescribeSheet(
             testTag = testTag?.let { "${it}_field" },
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            // Visible but disabled over the cap, never hidden (the
+            // caps-affordance round's ruling, PR #755's pattern) — [error]
+            // is only ever the caller's over-cap message on this sheet, so
+            // its presence is exactly the signal to gate on.
             CograButton(
                 text = "Done",
                 onClick = onDone,
+                enabled = error == null,
                 kind = ButtonKind.Text,
                 testTag = testTag?.let { "${it}_done" },
             )
@@ -137,7 +142,12 @@ fun DescribeSheet(
     }
 }
 
-/** The board's 48dp disc, `play_arrow` at 28dp (`DescribeSheet.jsx:71-89`). */
+/**
+ * The board's 48dp `MediaDisc`, `play_arrow` at 28dp
+ * (`DescribeSheet.jsx:71-89`). The plate reads `inverseSurface`/
+ * `inverseOnSurface` — jakob's F8 ruling (2026-09-17) — never a literal
+ * scrim, so it stays the same disc in both themes on both platforms.
+ */
 @Composable
 private fun BoxScope.PlayDisc(testTag: String?) {
     Box(
@@ -145,14 +155,14 @@ private fun BoxScope.PlayDisc(testTag: String?) {
             .align(Alignment.Center)
             .size(48.dp)
             .clip(CircleShape)
-            .background(MediaOverlay.Badge)
+            .background(MaterialTheme.colorScheme.inverseSurface)
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = Icons.Filled.PlayArrow,
             contentDescription = null,
-            tint = MediaOverlay.BadgeInk,
+            tint = MaterialTheme.colorScheme.inverseOnSurface,
             modifier = Modifier.size(28.dp),
         )
     }
