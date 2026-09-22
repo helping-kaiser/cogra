@@ -114,6 +114,11 @@ updates:
       # runtime together) — queued in the audit fix plan.
       - dependency-name: "com.apollographql.apollo*"
         versions: ["[5,)"]
+      # robolectric moves only together with the androidAll* jar pins
+      # (catalog comment) — dependabot cannot bump the pair, so the bump
+      # rides bite ROBOLECTRIC-417 instead.
+      - dependency-name: "org.robolectric:robolectric"
+        versions: ["[4.17,)"]
   - package-ecosystem: npm
     directory: /web
     schedule:

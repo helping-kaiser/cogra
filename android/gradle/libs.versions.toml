@@ -152,7 +152,7 @@ coroutinesTest = "1.11.0"
 turbine = "1.2.1"
 truth = "1.4.5"
 mockwebserver = "5.5.0"
-robolectric = "4.17"
+robolectric = "4.16.1"
 # Robolectric's android-all sandbox jars, one per API level the suites
 # launch on: the library modules' default (minSdk 26), the two levels
 # `RecoveryCodeConfirmTest` pins with `@Config`, and `app`'s targetSdk.
@@ -160,6 +160,9 @@ robolectric = "4.17"
 # (`DefaultSdkProvider.populateSdks`, `-i` suffix =
 # `PREINSTRUMENTED_VERSION`), so they move with the `robolectric` version
 # above — a mismatch fails the suite with the resolver's directory listing.
+# Exactly that happened when dependabot bumped robolectric alone to 4.17
+# (mass IllegalAccessException in the sandbox, CI 2026-09-22): 4.17 rides
+# with re-pinned jars or not at all — bite ROBOLECTRIC-417.
 androidAllApi26 = "8.0.0_r4-robolectric-r1-i7"
 androidAllApi32 = "12.1-robolectric-8229987-i7"
 androidAllApi33 = "13-robolectric-9030017-i7"
