@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -47,7 +48,6 @@ import androidx.media3.ui.compose.state.rememberPresentationState
 import androidx.media3.ui.compose.state.rememberProgressStateWithTickInterval
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.R
-import com.cogra.core.designsystem.v2.token.MediaOverlay
 import com.cogra.core.designsystem.v2.token.Space
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -390,7 +390,7 @@ fun VideoPlayer(
 
         if (controls == VideoControls.SoundOnly) {
             Row(
-                modifier = Modifier.align(Alignment.BottomStart).padding(Space.x2),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(Space.x2),
             ) {
                 MuteButton(muted = muted)
             }
@@ -596,7 +596,10 @@ internal fun posterReason(
  *
  * It commands [VideoSound] rather than this player: the reader is
  * answering for every clip, which is the whole point of one sticky
- * answer.
+ * answer. The disc is `MediaDisc`'s plate
+ * (`design/components/media/MediaAttachment.jsx:105`) — `inverseSurface`/
+ * `inverseOnSurface`, never a literal scrim, per jakob's F8 ruling
+ * (2026-09-17).
  */
 @Composable
 private fun MuteButton(muted: Boolean) {
@@ -604,10 +607,9 @@ private fun MuteButton(muted: Boolean) {
         stringResource(if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute)
     Box(
         modifier = Modifier
-            .padding(start = Space.x2)
             .size(BADGE_CONTROL)
             .clip(RoundedCornerShape(BADGE_CONTROL / 2))
-            .background(MediaOverlay.Badge)
+            .background(MaterialTheme.colorScheme.inverseSurface)
             .clickable(onClick = VideoSound::toggle)
             .semantics { contentDescription = label }
             .testTag("video_mute"),
@@ -620,7 +622,7 @@ private fun MuteButton(muted: Boolean) {
                 Icons.AutoMirrored.Filled.VolumeUp
             },
             contentDescription = null,
-            tint = MediaOverlay.BadgeInk,
+            tint = MaterialTheme.colorScheme.inverseOnSurface,
             modifier = Modifier.size(BADGE_GLYPH),
         )
     }
@@ -648,5 +650,7 @@ internal const val POSTER_TAG = "video_poster"
  * cost of a field read. */
 private const val TICK_MS = 250L
 
-private val BADGE_CONTROL = 28.dp
-private val BADGE_GLYPH = 16.dp
+// design/components/media/MediaAttachment.jsx:123-124,134 — the MediaDisc
+// master's disc is 36px with a 20px glyph.
+private val BADGE_CONTROL = 36.dp
+private val BADGE_GLYPH = 20.dp

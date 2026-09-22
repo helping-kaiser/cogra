@@ -392,7 +392,7 @@ export function VideoPlayer({
           aria-label={muted ? "Turn sound on" : "Turn sound off"}
           aria-pressed={!muted}
           onClick={() => setMuted(!muted)}
-          className="cg-state cg-focus absolute bottom-2 left-2 grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-surface-snackbar p-0 text-on-surface-snackbar"
+          className="cg-state cg-focus absolute bottom-2 right-2 grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-surface-snackbar p-0 text-on-surface-snackbar"
         >
           <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
             {muted ? (

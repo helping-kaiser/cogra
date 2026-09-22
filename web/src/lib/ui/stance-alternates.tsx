@@ -63,6 +63,7 @@ export function StanceAlternates({
   onCancel,
   onSever,
   severable = true,
+  severLabel = "Walk it back",
   axes = STANCE_AXES,
   busy = false,
   children,
@@ -85,6 +86,11 @@ export function StanceAlternates({
    * to leave, and the control led only to a dialog saying so.
    */
   severable?: boolean;
+  /**
+   * The way-out's own word: "Walk it back" for every kind but a topic,
+   * "Disconnect" for one (copy-voice.md "the topic disconnects").
+   */
+  severLabel?: string;
   /**
    * The record family's own words. They reach the sliders and the typed
    * fields — the accessible route asks what the drawn one asks.
@@ -157,7 +163,7 @@ export function StanceAlternates({
             onClick={onSever}
             className={`mr-auto ${buttonClassName({ variant: "text", size: "sm" })}`}
           >
-            Walk it back
+            {severLabel}
           </button>
         )}
         <button

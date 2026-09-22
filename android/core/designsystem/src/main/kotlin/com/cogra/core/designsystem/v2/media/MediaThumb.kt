@@ -46,8 +46,11 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
 /**
  * What a thumbnail says about itself, over the picture.
  *
- * Every badge rides [MediaOverlay]'s own scrim rather than a theme surface,
- * because it has to stay legible over arbitrary pixels in both themes.
+ * The order counter and the failed dot read theme roles (`primary`,
+ * `error`); [ThumbBadge.Cover], [ThumbBadge.Remove], and [ThumbBadge.Duration]
+ * read `inverseSurface`/`inverseOnSurface` — the `MediaDisc` plate
+ * (`design/components/compose/MediaThumb.jsx`), the one role designed to
+ * stay legible over arbitrary pixels in both themes.
  */
 sealed interface ThumbBadge {
     /** The picker's selection order: a filled counter, or an empty ring. */
@@ -106,6 +109,13 @@ sealed interface ThumbBadge {
  *   Null with [uploading] set draws the indeterminate ring.
  * @param duration a clip's running time, drawn at the opposite corner
  *   from [badge] so a video tile can be both picked and timed.
+ * @param coverSrc a clip's chosen cover, drawn as the frame itself rather
+ *   than a word: an inset in the same bottom-left corner [ThumbBadge.Cover]
+ *   owns, a third of the tile's short side with a 28dp floor, behind a
+ *   hairline ring (`design/components/compose/MediaThumb.jsx:93,192-217`).
+ *   A tile is a picture's or a clip's, so this and [badge] are never both
+ *   set. Needs a resolved [width]/[height] or [size] to size itself —
+ *   silently omitted on the unmeasured fill-width tile ([size] `null`).
  */
 @Composable
 fun MediaThumb(
@@ -124,6 +134,7 @@ fun MediaThumb(
     uploading: Boolean = false,
     progress: Float? = null,
     duration: String? = null,
+    coverSrc: Any? = null,
     testTag: String? = null,
 ) {
     val shape = RoundedCornerShape(corner)
@@ -136,6 +147,12 @@ fun MediaThumb(
         size != null -> Modifier.size(size)
         else -> Modifier.fillMaxWidth().aspectRatio(1f)
     }
+    // The mark scales with the tile so it reads the same on the tray's 48dp
+    // chip and on a larger one, and never falls under its own floor
+    // (MediaThumb.jsx:93). Null on the unmeasured fill-width tile, where no
+    // edge is known at composition time — that tile has no caller passing
+    // `coverSrc` today.
+    val coverMarkSize = (width ?: size)?.let { w -> (height ?: size)?.let { h -> maxOf(28.dp, minOf(w, h) / 3) } }
     Box(
         modifier = modifier
             .then(sizing)
@@ -187,15 +204,42 @@ fun MediaThumb(
         // selection ring at one corner and the time at the other, so the
         // two are not alternatives.
         duration?.let { DurationBadge(it) }
+        if (coverSrc != null && coverMarkSize != null) CoverMark(coverSrc, coverMarkSize)
     }
+}
+
+/**
+ * The clip's chosen face, inset bottom-left — a frame rather than a word,
+ * because a cover is the clip's own property and never a second attachment
+ * (`design/components/compose/MediaThumb.jsx:192-217`). Radius and ring read
+ * `MaterialTheme.shapes.small` (`design/tokens/shape.css:16`,
+ * `--radius-small: 8px` — Dimens.kt's documented radii-read-Shapes policy)
+ * and `outlineVariant`, matching the hairline the master draws.
+ */
+@Composable
+private fun BoxScope.CoverMark(coverSrc: Any?, size: Dp) {
+    val shape = MaterialTheme.shapes.small
+    AsyncImage(
+        model = coverSrc,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .align(Alignment.BottomStart)
+            .padding(3.dp)
+            .size(size)
+            .clip(shape)
+            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape)
+            .testTag("media_thumb_cover_mark"),
+    )
 }
 
 /**
  * An upload in flight: the ring on its own scrim, centred
  * (`design/components/compose/UploadNotice.jsx`'s `Ring`, on the tile).
  *
- * The scrim is what keeps a light stroke legible over arbitrary pixels —
- * the same reason every other badge here rides [MediaOverlay].
+ * The scrim is a literal [MediaOverlay] colour rather than a theme role: it
+ * dims the whole tile evenly, so it is not the plate register the cover,
+ * remove, and duration badges read.
  */
 @Composable
 private fun BoxScope.UploadRing(progress: Float?) {
@@ -293,21 +337,26 @@ private fun BoxScope.OrderBadge(position: Int?) {
     }
 }
 
+/** `MediaDisc`'s plate (`design/components/compose/MediaThumb.jsx`): the
+ * cover mark reads `inverseSurface`/`inverseOnSurface`, never a literal
+ * scrim (jakob's F8 ruling, 2026-09-17). */
 @Composable
 private fun BoxScope.CoverBadge() {
     Text(
         text = "Cover",
         style = MaterialTheme.typography.labelSmall,
-        color = MediaOverlay.BadgeInk,
+        color = MaterialTheme.colorScheme.inverseOnSurface,
         modifier = Modifier
             .align(Alignment.BottomStart)
             .padding(3.dp)
             .clip(CircleShape)
-            .background(MediaOverlay.Badge)
-            .padding(horizontal = 5.dp),
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .padding(horizontal = 5.dp)
+            .testTag("media_thumb_cover_badge"),
     )
 }
 
+/** Same plate as [CoverBadge] — see that function's citation. */
 @Composable
 private fun BoxScope.RemoveBadge(onRemove: () -> Unit) {
     Box(
@@ -316,19 +365,21 @@ private fun BoxScope.RemoveBadge(onRemove: () -> Unit) {
             .padding(3.dp)
             .size(16.dp)
             .clip(CircleShape)
-            .background(MediaOverlay.Badge)
-            .clickable(onClick = onRemove),
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .clickable(onClick = onRemove)
+            .testTag("media_thumb_remove_badge"),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = Icons.Filled.Close,
             contentDescription = null,
-            tint = MediaOverlay.BadgeInk,
+            tint = MaterialTheme.colorScheme.inverseOnSurface,
             modifier = Modifier.size(10.dp),
         )
     }
 }
 
+/** Same plate as [CoverBadge] — see that function's citation. */
 @Composable
 private fun BoxScope.DurationBadge(label: String) {
     Row(
@@ -336,21 +387,22 @@ private fun BoxScope.DurationBadge(label: String) {
             .align(Alignment.BottomStart)
             .padding(6.dp)
             .clip(RoundedCornerShape(Space.x1))
-            .background(MediaOverlay.Badge)
-            .padding(horizontal = 6.dp, vertical = 1.dp),
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .padding(horizontal = 6.dp, vertical = 1.dp)
+            .testTag("media_thumb_duration_badge"),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = Icons.Filled.PlayArrow,
             contentDescription = null,
-            tint = MediaOverlay.BadgeInk,
+            tint = MaterialTheme.colorScheme.inverseOnSurface,
             modifier = Modifier.size(10.dp),
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MediaOverlay.BadgeInk,
+            color = MaterialTheme.colorScheme.inverseOnSurface,
         )
     }
 }

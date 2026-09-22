@@ -40,14 +40,44 @@ import {
 export const SEVERED_LABEL = "Severed";
 export const NO_STANDING_LABEL = "No stance yet";
 
+/**
+ * A record family's words for a bundle netted to `(0, 0)`. PERSONS,
+ * posts and comments sever; TOPICS disconnect — "the split is by record
+ * family, not by surface" (copy-voice.md "Awaiting blessing — the topic
+ * disconnects", jakob 2026-09-15: "we want human wording not this nerdy
+ * stuff!"). `SEVERANCE_ZERO` is every non-topic kind's default; a topic
+ * target passes `DISCONNECT_ZERO` instead.
+ */
+export type ZeroWords = {
+  /** The bare word beside the shrug. */
+  readonly label: string;
+  /** The full sentence a severed/disconnected bundle reads as. */
+  readonly sentence: (targetLabel: string) => string;
+  /** The pad's own landing line, reached by an ordinary pick. */
+  readonly landing: string;
+};
+
+export const SEVERANCE_ZERO: ZeroWords = {
+  label: SEVERED_LABEL,
+  sentence: (targetLabel) => `You've severed ${targetLabel}.`,
+  landing: "This pick nets everything you've said about it back to nothing.",
+};
+
+/** `"Severed"` and `"severance"` are not words on any topic surface. */
+export const DISCONNECT_ZERO: ZeroWords = {
+  label: "No opinion",
+  sentence: (targetLabel) => `No opinion towards ${targetLabel}.`,
+  landing: "This leaves you with no opinion towards it.",
+};
+
 function face(pair: StancePair): string {
   const anchor = nearestAnchor(pair);
   return `${anchor.emoji} ${anchor.label}`;
 }
 
 /** The same, for a STANDING: the table never speaks for zero (§8.4). */
-function standingFace(pair: StancePair): string {
-  const readout = bundleReadout(pair, SEVERED_LABEL);
+function standingFace(pair: StancePair, zero: ZeroWords = SEVERANCE_ZERO): string {
+  const readout = bundleReadout(pair, zero.label);
   return `${readout.emoji} ${readout.label}`;
 }
 
@@ -57,8 +87,8 @@ export function reading(pair: StancePair): string {
 }
 
 /** The same reading, for a standing rather than a pick. */
-export function standingReading(pair: StancePair): string {
-  return `${standingFace(pair)} ${formatStancePair(pair)}`;
+export function standingReading(pair: StancePair, zero: ZeroWords = SEVERANCE_ZERO): string {
+  return `${standingFace(pair, zero)} ${formatStancePair(pair)}`;
 }
 
 /** `undefined` while the standing is still being read, `null` where it could not be. */
@@ -83,17 +113,34 @@ export function severanceStandingLine(bundle: BundleState, targetLabel: string):
   return `What you'd be walking back: ${formatStancePair(bundle.rawSum)}`;
 }
 
-export function standingLine(bundle: BundleState, targetLabel: string): string {
+/**
+ * The same total, in a topic's own words (copy-voice.md "the topic
+ * disconnects"): "Everything you've said about #saltmaps adds up to
+ * +1.40 / +0.95, and disconnecting clears all of it."
+ */
+export function disconnectStandingLine(bundle: BundleState, targetLabel: string): string {
   if (bundle === undefined) return "Checking where you stand…";
   if (bundle === null || bundle.records === 0) {
     return `${ZERO_BUNDLE_EMOJI} You haven't taken a stance on ${targetLabel} yet.`;
   }
-  if (bundle.severed) return `${ZERO_BUNDLE_EMOJI} You've severed ${targetLabel}.`;
+  return `Everything you've said about ${targetLabel} adds up to ${formatStancePair(bundle.rawSum)}, and disconnecting clears all of it.`;
+}
+
+export function standingLine(
+  bundle: BundleState,
+  targetLabel: string,
+  zero: ZeroWords = SEVERANCE_ZERO,
+): string {
+  if (bundle === undefined) return "Checking where you stand…";
+  if (bundle === null || bundle.records === 0) {
+    return `${ZERO_BUNDLE_EMOJI} You haven't taken a stance on ${targetLabel} yet.`;
+  }
+  if (bundle.severed) return `${ZERO_BUNDLE_EMOJI} ${zero.sentence(targetLabel)}`;
   // The folded pair rides along with the face: §8.3 makes the numbers
   // part of the default reading wherever the standing is shown. It is
   // the STANDING reading, so a bundle at zero the fold did not flag
   // still shrugs rather than borrowing the table's nearest face (§8.4).
-  return `Where you stand now: ${standingReading(bundle.current)}`;
+  return `Where you stand now: ${standingReading(bundle.current, zero)}`;
 }
 
 /**
@@ -117,12 +164,13 @@ export function signedLine(
   severed: boolean,
   targetLabel: string,
   axes: StanceAxes = STANCE_AXES,
+  zero: ZeroWords = SEVERANCE_ZERO,
 ): string {
   const acts = records === 1 ? "Signed" : `Signed ${records} actions`;
   // Severance says itself; a pair at the origin would read as a stance
   // taken rather than one walked back.
   const where = severed
-    ? `You've severed ${targetLabel}.`
+    ? zero.sentence(targetLabel)
     : `Where you stand now: ${formatStanceWords(standing, axes)}`;
   return `${acts}, still settling. ${where}`;
 }
@@ -138,9 +186,9 @@ export function signedLine(
  * the flag decides that inertness applies and the returned pair only
  * says which side it fell on.
  */
-export function landingLine(landing: StanceLanding | null): string {
+export function landingLine(landing: StanceLanding | null, zero: ZeroWords = SEVERANCE_ZERO): string {
   if (landing === null) return "Working out where this leaves you…";
-  if (landing.severed) return "This pick nets everything you've said about it back to nothing.";
+  if (landing.severed) return zero.landing;
   if (landing.inert) {
     const directedInert = landing.landing.pDirected === 0;
     const interestInert = landing.landing.pInterest === 0;
@@ -151,7 +199,7 @@ export function landingLine(landing: StanceLanding | null): string {
   // Face, words, AND the exact pair (§8.3): the landing carries the same
   // three the standing does. The landing is a bundle, not a pick, so it
   // reads through the standing face.
-  return `This leaves you at: ${standingReading(landing.landing)}`;
+  return `This leaves you at: ${standingReading(landing.landing, zero)}`;
 }
 
 /** The standing and the pick's face — everything that sits above the field. */
@@ -161,6 +209,7 @@ export function StanceStanding({
   targetLabel,
   testIdPrefix,
   axes = STANCE_AXES,
+  zero = SEVERANCE_ZERO,
 }: {
   pick: StancePair;
   bundle: BundleState;
@@ -168,6 +217,8 @@ export function StanceStanding({
   testIdPrefix: string;
   /** The record family's own words for the two slots. */
   axes?: StanceAxes;
+  /** The record family's words for a bundle netted to zero. */
+  zero?: ZeroWords;
 }) {
   return (
     <div aria-live="polite" className="flex flex-col gap-1">
@@ -175,7 +226,7 @@ export function StanceStanding({
         data-testid={`${testIdPrefix}-standing`}
         className="text-body-small text-on-surface-variant"
       >
-        {standingLine(bundle, targetLabel)}
+        {standingLine(bundle, targetLabel, zero)}
       </p>
       <p data-testid={`${testIdPrefix}-face`} className="text-title-large">
         {face(pick)}
@@ -196,14 +247,17 @@ export function StanceStanding({
 export function StanceLandingLine({
   landing,
   testIdPrefix,
+  zero = SEVERANCE_ZERO,
 }: {
   /** The fold's projection of the pick; null while it is being read. */
   landing: StanceLanding | null;
   testIdPrefix: string;
+  /** The record family's words for a bundle netted to zero. */
+  zero?: ZeroWords;
 }) {
   return (
     <p aria-live="polite" data-testid={`${testIdPrefix}-landing`} className="text-body-small">
-      {landingLine(landing)}
+      {landingLine(landing, zero)}
     </p>
   );
 }

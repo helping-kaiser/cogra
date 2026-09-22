@@ -23,7 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -31,6 +33,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -286,11 +289,35 @@ private fun CloseButton(onClose: () -> Unit, modifier: Modifier, testTag: String
             imageVector = Icons.Filled.Close,
             contentDescription = null,
             tint = MediaOverlay.BadgeInk,
+            // A GLYPH OVER MEDIA TAKES A SHADOW, NEVER A PLATE (design-confirmed
+            // 2026-09-18; `MediaViewer.jsx:195`, `filter:
+            // drop-shadow(0 1px 3px rgba(0,0,0,0.6))`). `Modifier.dropShadow` is
+            // Compose's CSS-parity shadow, stable since Compose 1.9
+            // (developer.android.com/develop/ui/compose/graphics/draw/shadows):
+            // unlike `Modifier.shadow`'s elevation model it needs no light
+            // source, so it reads the same wherever the button sits on the
+            // frame — and unlike a raw `android.graphics.RenderEffect` chain, it
+            // is a Compose-Skia primitive with no minSdk floor. It shadows the
+            // shape it is given rather than the glyph's own silhouette (CSS's
+            // filter does the latter), so `CircleShape` is scoped to the icon's
+            // own bounds, not the button's larger touch target, to keep the
+            // shadow close to the drawn X rather than a wider disc.
+            modifier = Modifier.dropShadow(shape = CircleShape, shadow = OVER_MEDIA_SHADOW),
         )
     }
 }
 
 const val VIEWER_TAG = "media_viewer"
+
+/** The master spec, read back for `MediaViewerCloseShadowTest` (`internal` so
+ * the test module's friend access can pin it against
+ * `design/components/media/MediaViewer.jsx:195`). */
+internal val OVER_MEDIA_SHADOW = Shadow(
+    radius = 3.dp,
+    offset = DpOffset(0.dp, 1.dp),
+    color = Color.Black,
+    alpha = 0.6f,
+)
 
 /** `padding: "8px"` around the X (`MediaViewer.jsx:175`), on top of whatever
  * the device's own bars take. */

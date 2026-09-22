@@ -146,3 +146,61 @@ describe("the severance confirmation", () => {
     expect(screen.getByTestId("severance-confirm").innerHTML).not.toContain("error");
   });
 });
+
+// jakob's I2 ruling (copy-voice.md "Awaiting blessing — the topic
+// disconnects", 2026-09-15: "we want human wording not this nerdy
+// stuff!"). Topics disconnect; every other kind above keeps severing
+// verbatim — the split is by record family, not by surface.
+describe("the disconnect confirmation (a topic's own words)", () => {
+  function showTopic(props: Partial<React.ComponentProps<typeof SeveranceConfirm>> = {}) {
+    const onConfirm = vi.fn();
+    const onCancel = vi.fn();
+    render(
+      <SeveranceConfirm
+        pick={null}
+        targetLabel="#saltmaps"
+        bundle={STANDING}
+        records={3}
+        kind="topic"
+        onConfirm={onConfirm}
+        onCancel={onCancel}
+        {...props}
+      />,
+    );
+    return { onConfirm, onCancel };
+  }
+
+  it("asks with the target named, never 'Sever this?'", () => {
+    showTopic();
+    expect(screen.getByTestId("severance-confirm")).toHaveTextContent(
+      "Disconnect from #saltmaps?",
+    );
+  });
+
+  it("says what reaching zero carries with it, in the ruled words", () => {
+    showTopic();
+    expect(screen.getByTestId("severance-consequences")).toHaveTextContent(
+      "You end up with no opinion towards #saltmaps. It stops reaching your feed, you stop earning from it, and nothing passes on through you.",
+    );
+  });
+
+  it("states the total the ruled way — the raw pair inside one sentence", () => {
+    showTopic();
+    expect(screen.getByTestId("severance-raw")).toHaveTextContent(
+      "Everything you've said about #saltmaps adds up to +1.60 / +0.40, and disconnecting clears all of it.",
+    );
+  });
+
+  it("names the confirming action Disconnect, never Sever", () => {
+    showTopic();
+    expect(screen.getByTestId("severance-proceed")).toHaveTextContent("Disconnect");
+  });
+
+  it("keeps 'Keep it' and the cost line shared with every other kind", () => {
+    showTopic({ records: 4 });
+    expect(screen.getByTestId("severance-cancel")).toHaveTextContent("Keep it");
+    expect(screen.getByTestId("severance-cost")).toHaveTextContent(
+      "It takes 4 signed actions, each paid for separately.",
+    );
+  });
+});

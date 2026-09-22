@@ -55,6 +55,7 @@ describe("icons", () => {
       "graph",
       "play_arrow",
       "pause",
+      "replay",
       "fast_rewind",
       "fast_forward",
       // The bar's last control, cut from the master with the surface it opens

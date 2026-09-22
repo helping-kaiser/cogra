@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -179,14 +180,9 @@ private fun CentreCluster(
         )
         // PLAY · PAUSE · REPLAY. The end of a clip that does not loop is a state
         // of its own, and the press there starts the clip again rather than
-        // resuming it — so the control SAYS so, which is what the labels in this
-        // transport are for ("labelled by what the press does, not by what the
-        // clip is doing").
-        //
-        // THE GLYPH STAYS THE PLAY ARROW, and that is a gap rather than a
-        // choice: `VideoControls.jsx` draws two states, and `Icon.jsx` holds no
-        // replay glyph to draw a third with. Exporting one is the design's call,
-        // not this lane's — raised for the design relay 2026-09-15.
+        // resuming it — so the control SAYS so, both in its label ("labelled by
+        // what the press does, not by what the clip is doing") and in its own
+        // glyph, never the Play arrow wearing a different name.
         TransportButton(
             label = stringResource(
                 when {
@@ -195,7 +191,7 @@ private fun CentreCluster(
                     else -> R.string.designsystem_video_play
                 },
             ),
-            glyph = if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+            glyph = centreGlyph(playing = playing, ended = ended),
             box = PLAY_DIAMETER,
             glyphSize = PLAY_GLYPH,
             plate = MediaOverlay.TransportPlate,
@@ -211,6 +207,17 @@ private fun CentreCluster(
             testTag = "video_forward",
         )
     }
+}
+
+/**
+ * PLAY · PAUSE · REPLAY — the centre slot's three states, as one glyph
+ * decision pulled out of the layout so it is checkable without a compose
+ * tree (`design/components/media/VideoControls.jsx:207-214`).
+ */
+internal fun centreGlyph(playing: Boolean, ended: Boolean): ImageVector = when {
+    playing -> Icons.Filled.Pause
+    ended -> Icons.Filled.Replay
+    else -> Icons.Filled.PlayArrow
 }
 
 /** Elapsed · the timeline · total · the sound, held clear of the gesture zone. */

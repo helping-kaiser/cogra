@@ -255,13 +255,10 @@ export function VideoTransport({
    *
    * A clip under this transport STOPS at its end rather than looping, so the
    * stopped state needs a control that says what pressing it does: at the end
-   * the play button is a REPLAY (jakob 2026-09-15, hand test). One glyph for
-   * "resume where you paused" and "start this again from nothing" is one
-   * picture for two different offers.
-   *
-   * It changes the LABEL and not the glyph, and that is a gap rather than a
-   * choice: `VideoControls.jsx` draws two states, and `Icon.jsx` holds no
-   * replay glyph to draw a third with. Exporting one is the design's call.
+   * the play button is a REPLAY (jakob 2026-09-15, hand test) — its own glyph
+   * and its own label, not the Play glyph wearing a different name. One
+   * picture for "resume where you paused" and "start this again from
+   * nothing" would be one picture for two different offers.
    */
   ended?: boolean;
   elapsed: string;
@@ -324,7 +321,7 @@ export function VideoTransport({
         />
         <TransportButton
           label={playing ? "Pause" : ended ? "Replay" : "Play"}
-          glyph={playing ? "pause" : "play_arrow"}
+          glyph={playing ? "pause" : ended ? "replay" : "play_arrow"}
           size={34}
           box={64}
           plate

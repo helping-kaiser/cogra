@@ -309,6 +309,39 @@ class ComposeWizardScreenTest {
         ).assertExists()
     }
 
+    // Visible but disabled over the cap, never hidden (the caps-affordance
+    // round's ruling, PR #755's pattern) — Done stays on screen so the
+    // author can trim back under the cap, rather than losing the way out.
+    @Test
+    fun theSensitiveDoneStaysVisibleButDisabledOverTheCap() {
+        compose.setContent {
+            Wizard(
+                words.copy(
+                    step = WizardStep.Seal,
+                    sheet = SealSheet.Sensitive,
+                    sensitive = true,
+                    sensitiveReason = "x".repeat(141),
+                ),
+            )
+        }
+        compose.onNodeWithTag("wizard_sensitive_done").assertExists().assertIsNotEnabled()
+    }
+
+    @Test
+    fun theSensitiveDoneStaysEnabledAtTheCapTheWriteSideAllows() {
+        compose.setContent {
+            Wizard(
+                words.copy(
+                    step = WizardStep.Seal,
+                    sheet = SealSheet.Sensitive,
+                    sensitive = true,
+                    sensitiveReason = "x".repeat(140),
+                ),
+            )
+        }
+        compose.onNodeWithTag("wizard_sensitive_done").assertExists().assertIsEnabled()
+    }
+
     @Test
     fun theArrowStepsAndTheXLeaves() {
         // Two ways out, each doing one thing (jakob 2026-08-31). The X is
@@ -349,6 +382,30 @@ class ComposeWizardScreenTest {
         // The tray shows; the sheet manages.
         compose.onNodeWithTag("wizard_show_all").performClick()
         assertThat(manages).isEqualTo(1)
+    }
+
+    @Test
+    fun theVideoTrayShowsTheChosenCoverMarkOnceThereIsOne() {
+        // ComposePickVideoCover (design/backlog.md intake 2026-09-15): the
+        // back arrow from the cover stage lands here, and the tray has to
+        // say the cover already exists rather than reading coverless again.
+        val withCover = ComposeWizardState(
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverFrames = List(3) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 192)) },
+            coverChoice = CoverChoice.Frame(0),
+        )
+        compose.setContent { Wizard(withCover) }
+        compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
+    fun theVideoTrayHasNoCoverMarkBeforeAChoiceIsMade() {
+        val coverless = ComposeWizardState(
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverFrames = List(3) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 192)) },
+        )
+        compose.setContent { Wizard(coverless) }
+        compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test

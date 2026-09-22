@@ -42,6 +42,7 @@ export function PickStep({
   refusals,
   error,
   blocked,
+  coverSrc,
   onWords,
   onMode,
   onPick,
@@ -57,6 +58,13 @@ export function PickStep({
   refusals: readonly PickRefusal[];
   error: string | null;
   blocked: boolean;
+  /**
+   * The clip's chosen face, once there is one — back from the cover stage,
+   * the tray says so rather than reading coverless again
+   * (`ComposePickVideoCover`, design/backlog.md intake 2026-09-15). Null on
+   * a picture post, and on a video whose cover is not yet settled.
+   */
+  coverSrc?: string | null;
   onWords: (next: string) => void;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
@@ -81,6 +89,7 @@ export function PickStep({
       refusals={refusals}
       error={error}
       blocked={blocked}
+      coverSrc={coverSrc}
       onMode={onMode}
       onPick={onPick}
       onUnpick={onUnpick}
@@ -197,6 +206,7 @@ function MediaBody({
   refusals,
   error,
   blocked,
+  coverSrc,
   onMode,
   onPick,
   onUnpick,
@@ -209,6 +219,7 @@ function MediaBody({
   refusals: readonly PickRefusal[];
   error: string | null;
   blocked: boolean;
+  coverSrc?: string | null;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
@@ -286,6 +297,10 @@ function MediaBody({
                     // ComposeCover) — so the badge ComposePick draws on a
                     // picture's first tile has no video counterpart.
                     cover={!holdsVideo && index === 0}
+                    // The clip's own chosen face rides its own tile, never a
+                    // second attachment beside it — the corner the "Cover"
+                    // badge would own on a picture (MediaThumb.jsx:192-217).
+                    coverSrc={holdsVideo ? coverSrc : null}
                     onRemove={() => onUnpick(asset.id)}
                     removeLabel={holdsVideo ? "Remove this video" : `Remove picture ${index + 1}`}
                     testId={`wizard-unpick-${asset.id}`}

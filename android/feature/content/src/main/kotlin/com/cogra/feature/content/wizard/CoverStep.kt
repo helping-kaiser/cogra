@@ -29,7 +29,6 @@ import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.media.CoverPick
 import com.cogra.core.designsystem.v2.media.CoverRow
 import com.cogra.core.designsystem.v2.media.cappedToTallestTile
-import com.cogra.core.designsystem.v2.token.MediaOverlay
 import com.cogra.core.designsystem.v2.token.MediaShape
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.R
@@ -92,6 +91,12 @@ internal fun CoverStepBody(
  * so a wide clip reads wide here and a vertical one reads 4:5. The
  * board's 342×342 is one square specimen drawn at the stage's width,
  * not a shape imposed on every clip.
+ *
+ * `ComposeCover.jsx`: "THE PREVIEW IS `MediaThumb`'s VIDEO STATE at post
+ * scale — the play disc on its scrim and the duration on the trailing
+ * corner are that component's anatomy" — so both badges here read the same
+ * `inverseSurface`/`inverseOnSurface` plate `MediaThumb` reads, per jakob's
+ * F8 ruling (2026-09-17).
  */
 @Composable
 private fun CoverPreview(model: Any?, durationMs: Int, ratio: Float) {
@@ -120,13 +125,14 @@ private fun CoverPreview(model: Any?, durationMs: Int, ratio: Float) {
                 .align(Alignment.Center)
                 .size(PLAY_DIAMETER)
                 .clip(RoundedCornerShape(PLAY_DIAMETER / 2))
-                .background(MediaOverlay.Badge),
+                .background(MaterialTheme.colorScheme.inverseSurface)
+                .testTag("wizard_cover_play_disc"),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Filled.PlayArrow,
                 contentDescription = null,
-                tint = MediaOverlay.BadgeInk,
+                tint = MaterialTheme.colorScheme.inverseOnSurface,
                 modifier = Modifier.size(PLAY_GLYPH),
             )
         }
@@ -144,10 +150,10 @@ private fun DurationBadge(label: String, modifier: Modifier = Modifier) {
     Text(
         text = label,
         style = MaterialTheme.typography.labelSmall,
-        color = MediaOverlay.BadgeInk,
+        color = MaterialTheme.colorScheme.inverseOnSurface,
         modifier = modifier
             .clip(RoundedCornerShape(Space.x1))
-            .background(MediaOverlay.Badge)
+            .background(MaterialTheme.colorScheme.inverseSurface)
             .padding(horizontal = Space.x2, vertical = 1.dp)
             .semantics { contentDescription = spoken }
             .testTag("wizard_cover_duration"),

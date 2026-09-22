@@ -35,20 +35,38 @@ fun SeveranceConfirm(
     testTagPrefix: String,
     /** The family's words, so the ceremony asks what the pad asked. */
     axes: StanceAxes = StanceAxes.Opinion,
+    /**
+     * The family's words for reaching zero — every kind but a topic
+     * severs; a topic disconnects (jakob's I2 ruling, copy-voice.md "the
+     * topic disconnects").
+     */
+    zeroWords: StanceZeroWords = StanceZeroWords.Severed,
+    /** Already in the reader's own words — "#saltmaps" — for the ruled
+     * strings that name the target. Unused by the severance family's own
+     * strings, which carry no placeholder. */
+    targetLabel: String? = null,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.testTag("${testTagPrefix}_severance"),
-        title = { Text(stringResource(R.string.stance_severance_title)) },
+        title = {
+            Text(
+                text = stringResource(zeroWords.title, targetLabel.orEmpty()),
+                modifier = Modifier.testTag("${testTagPrefix}_severance_title"),
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (prompt.fromPick) {
                     Text(
-                        text = stringResource(R.string.stance_severance_reached),
+                        text = stringResource(zeroWords.reached),
                         modifier = Modifier.testTag("${testTagPrefix}_severance_from_pick"),
                     )
                 }
-                Text(stringResource(R.string.stance_severance_body))
+                Text(
+                    text = stringResource(zeroWords.body, targetLabel.orEmpty()),
+                    modifier = Modifier.testTag("${testTagPrefix}_severance_body"),
+                )
                 // This is where the read-side guidance belongs: what the
                 // reader stands at, and what reaching zero takes.
                 //
@@ -62,7 +80,17 @@ fun SeveranceConfirm(
                 // control that cannot add up (design.md §8.3).
                 Text(
                     text = if (prompt.raw.isZeroBundle) {
-                        "${ZERO_BUNDLE_READOUT.emoji} ${stringResource(R.string.stance_standing_zero)}"
+                        "${ZERO_BUNDLE_READOUT.emoji} ${stringResource(zeroWords.standingZero, targetLabel.orEmpty())}"
+                    } else if (zeroWords == StanceZeroWords.Disconnected) {
+                        // One self-contained sentence with the raw pair
+                        // inside it (copy-voice.md "the topic
+                        // disconnects"), unlike the severance family's
+                        // label-then-reading construction below.
+                        stringResource(
+                            R.string.stance_disconnect_standing_raw,
+                            targetLabel.orEmpty(),
+                            prompt.raw.pair(),
+                        )
                     } else {
                         "${stringResource(R.string.stance_standing_raw)}: ${prompt.raw.reading(axes)}"
                     },
@@ -100,7 +128,7 @@ fun SeveranceConfirm(
                 enabled = !prompt.working && !prompt.alreadySevered,
                 modifier = Modifier.testTag("${testTagPrefix}_severance_confirm"),
             ) {
-                Text(stringResource(R.string.stance_severance_confirm))
+                Text(stringResource(zeroWords.confirm))
             }
         },
         dismissButton = {

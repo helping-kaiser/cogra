@@ -53,6 +53,7 @@ import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.StanceAxes
+import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.core.designsystem.v2.token.NavTransitions
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.store.TokenStore
@@ -874,6 +875,12 @@ private fun CograNavGraphContent(
                                 target = StanceTarget.Topic(topic),
                                 testTagPrefix = "topic_affinity",
                                 axes = StanceAxes.Affinity,
+                                // Disconnected, never severed (jakob's I2
+                                // ruling, copy-voice.md "the topic
+                                // disconnects") — the same split
+                                // `StanceAxes.Affinity` already makes for
+                                // the two signed slots.
+                                zeroWords = StanceZeroWords.Disconnected,
                                 // It NAMES WHAT IT STANCES, hash and all:
                                 // this page carries more than one stance
                                 // control and the accessible name is what

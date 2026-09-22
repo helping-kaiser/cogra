@@ -22,8 +22,16 @@ import { useEffect, useRef } from "react";
 
 import { nearestAnchor } from "@/lib/stance/anchors";
 import type { StancePair } from "@/lib/stance/model";
+import type { StanceTargetKind } from "@/lib/stance/stance-data";
 import { buttonClassName } from "@/lib/ui/button";
-import { severanceStandingLine, standingLine, type BundleState } from "@/lib/ui/stance-readout";
+import {
+  DISCONNECT_ZERO,
+  disconnectStandingLine,
+  SEVERANCE_ZERO,
+  severanceStandingLine,
+  standingLine,
+  type BundleState,
+} from "@/lib/ui/stance-readout";
 
 export function SeveranceConfirm({
   pick,
@@ -33,12 +41,13 @@ export function SeveranceConfirm({
   alreadySevered = false,
   busy = false,
   failed = false,
+  kind = "post",
   onConfirm,
   onCancel,
 }: {
   /** The pick that reached this dialog; null on the explicit gesture. */
   pick: StancePair | null;
-  /** Already in the reader's words — "this post", "@ada". */
+  /** Already in the reader's words — "this post", "@ada", "#saltmaps". */
   targetLabel: string;
   /** The standing, for the line that states it. */
   bundle: BundleState;
@@ -49,9 +58,17 @@ export function SeveranceConfirm({
   busy?: boolean;
   /** The signing pass did not complete; the dialog stays open and says so. */
   failed?: boolean;
+  /**
+   * The target's record family: topics disconnect, everything else
+   * severs verbatim (copy-voice.md "the topic disconnects", jakob
+   * 2026-09-15: "the split is by record family, not by surface").
+   */
+  kind?: StanceTargetKind;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const isTopic = kind === "topic";
+  const zero = isTopic ? DISCONNECT_ZERO : SEVERANCE_ZERO;
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = ref.current;
@@ -68,7 +85,9 @@ export function SeveranceConfirm({
       onClose={onCancel}
       className="cg-dialog-in m-auto w-[min(90vw,22rem)] rounded-extra-large bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
-      <h2 className="text-headline-small">Sever this?</h2>
+      <h2 className="text-headline-small">
+        {isTopic ? `Disconnect from ${targetLabel}?` : "Sever this?"}
+      </h2>
       {pickAnchor !== null && (
         <p data-testid="severance-pick" className="mt-2 text-body-medium">
           Your pick: {pickAnchor.emoji} {pickAnchor.label}
@@ -80,19 +99,22 @@ export function SeveranceConfirm({
         data-testid="severance-consequences"
         className="mt-2 text-body-medium text-on-surface-variant"
       >
-        Your standing toward {targetLabel} drops to nothing. It stops reaching your feed, you stop
-        earning from it, and nothing passes on through you.
+        {isTopic
+          ? `You end up with no opinion towards ${targetLabel}. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`
+          : `Your standing toward ${targetLabel} drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`}
       </p>
       <p
         data-testid="severance-standing"
         className="mt-2 text-body-small text-on-surface-variant"
       >
-        {standingLine(bundle, targetLabel)}
+        {standingLine(bundle, targetLabel, zero)}
       </p>
       {/* The RAW sums, not the clipped fold: they are what a walk back
           to zero actually walks (design.md §8.3, §8.5). */}
       <p data-testid="severance-raw" className="mt-1 text-body-small text-on-surface-variant">
-        {severanceStandingLine(bundle, targetLabel)}
+        {isTopic
+          ? disconnectStandingLine(bundle, targetLabel)
+          : severanceStandingLine(bundle, targetLabel)}
       </p>
       <p data-testid="severance-cost" className="mt-2 text-body-medium">
         {alreadySevered
@@ -120,7 +142,7 @@ export function SeveranceConfirm({
           onClick={onConfirm}
           className={buttonClassName({ variant: "text", size: "sm" })}
         >
-          Sever
+          {isTopic ? "Disconnect" : "Sever"}
         </button>
       </div>
     </dialog>

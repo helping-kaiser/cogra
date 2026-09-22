@@ -71,19 +71,28 @@ object MediaFrame {
  * Colours that sit *on media* rather than on a theme surface.
  *
  * These are the one place a 2.0 component names a literal instead of reading
- * a role, and the reason is that they are not theme colours: a badge over a
+ * a role, and the reason is that they are not theme colours: a scrim over a
  * photograph has to stay legible against arbitrary pixels, in both themes, so
  * it cannot follow the surface. The values are read off the canvas boards
- * (`rgba(0,0,0,0.55)` badges, `rgba(255,255,255,0.55)` crop rules).
+ * (`rgba(255,255,255,0.55)` crop rules).
+ *
+ * The disc/plate register — `MediaDisc`'s sound, play, and back controls,
+ * and the thumbnail's cover/remove/duration badges
+ * (`design/components/media/MediaAttachment.jsx:105`,
+ * `design/components/compose/MediaThumb.jsx`) — is NOT here: it reads
+ * `MaterialTheme.colorScheme.inverseSurface` / `.inverseOnSurface`
+ * (`design/tokens/semantic.css`'s `--surface-snackbar`, itself
+ * `var(--inverse-surface)`). That pair is deliberately the one Material role
+ * designed to read against arbitrary media in both themes, so the plate
+ * follows it rather than a literal scrim — jakob's F8 ruling (2026-09-17)
+ * that Android and web draw the same plate.
  */
 object MediaOverlay {
-    /** The scrim behind a duration, a `Cover` mark, or a remove affordance. */
-    val Badge = Color(0x8C000000)
-
     /** The lighter scrim an upload ring rides — `rgba(0,0,0,0.35)`. */
     val UploadScrim = Color(0x59000000)
 
-    /** Ink on [Badge]; white rather than `onSurface` for the same reason. */
+    /** Ink on a literal scrim (e.g. [UploadScrim]); white because the scrim
+     * itself is not a theme surface. */
     val BadgeInk = Color(0xFFFFFFFF)
 
     /** The crop viewport's rule-of-thirds lines, and the avatar circle's rim. */
