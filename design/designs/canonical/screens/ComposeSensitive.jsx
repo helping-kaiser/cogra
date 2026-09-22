@@ -15,7 +15,17 @@
    ONE LINE FOR BOTH SCALES. The comment editor's Mark row opens this same
    sheet, so the explainer names what the veil covers on either — the pictures
    and the words. A comment has no description to name, and a post's
-   description is words. */
+   description is words.
+
+   OVER THE CAP, `Done` IS VISIBLE-BUT-DISABLED (backlog item 101, ruled the
+   batch-rulings round): the app-wide `canSign`/`canSubmit` treatment, never a
+   hidden button and never a dialog. The refusal the reader reads is the
+   reason field's own late counter — contractual on this field already
+   (`TextField.prompt.md`, the capped-field rule, at the 140 this sheet
+   passes) — and the closing word only stops being available. A `Done` that
+   vanished would leave a reader hunting for the way out of a sheet they
+   cannot leave. This board draws the at-rest state; the disabled one is this
+   sentence, not a second board. */
 export function Screen() {
   return (
     <>

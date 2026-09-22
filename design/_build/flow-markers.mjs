@@ -371,6 +371,21 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: "Add a comment</label>", tag: "label" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
   ],
+  // The same sheet at the end of the reply flow (item 85): the same controls,
+  // minus the "View n replies" line the landing has already opened — so every
+  // number below the sixth shifts up by one.
+  ReplySettled: [
+    { n: 1, find: '<a href="/u/', tag: "a", all: true },
+    { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
+    { n: 3, find: '<a href="/t/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 5, find: ">Reply</button>", tag: "button", all: true },
+    { n: 6, find: "Add a comment</label>", tag: "label" },
+    { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
     { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
@@ -484,6 +499,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Remove</button>", tag: "button" },
     { n: 5, find: ">License terms</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+    // Citing arrived after this sheet was numbered and took the next free
+    // number rather than the second one it reads at — the settings page's
+    // rule, for its reason: the badge is an identity, not a position.
+    { n: 7, find: ">Cite in a new post</button>", tag: "button" },
   ],
   // The menus round: four sheet boards, one per surface a ⋮ opens on. Each is
   // scanExempt, so only the sheet's own rows and its scrim carry numbers, and
@@ -720,6 +739,16 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Remove The long way home — @ada"', tag: "button" },
     { n: 2, find: 'aria-label="Remove Mira Voss"', tag: "button" },
     { n: 2, find: 'aria-label="Remove Tide tables and the third headland — @juno"', tag: "button" },
+    { n: 3, find: ">Done</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The tags door's twin of the sheet above (item 95). scanExempt likewise, so
+  // only the sheet's own controls and its scrim carry numbers; the seven pills'
+  // name-buttons share one number and their ×s another, one edge covering each
+  // control — `ComposeCitations`' rule, arriving at the row above it.
+  ComposeTags: [
+    { n: 1, find: "— set how it relates\"", tag: "button", all: true },
+    { n: 2, find: 'aria-label="Remove #', tag: "button", all: true },
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
   ],
@@ -1232,6 +1261,12 @@ Object.assign(FLOW_MARKERS, {
     // Deleting the account is the page's last row and its next free number —
     // the same rule the People group followed, for the same reason.
     { n: 18, find: ">Delete account</span>", tag: "button" },
+    // The About group, likewise: four rows added after the page was numbered,
+    // taking the next four free numbers rather than the four they read at.
+    { n: 19, find: ">Watch the intro again</span>", tag: "button" },
+    { n: 20, find: ">About CoGra</span>", tag: "button" },
+    { n: 21, find: ">Privacy</span>", tag: "button" },
+    { n: 22, find: ">Terms</span>", tag: "button" },
   ],
   // The hidden-accounts sheet over the settings page (the private-viewer-state
   // round). scanExempt like its two siblings, so only the sheet is numbered —
@@ -1362,6 +1397,7 @@ Object.assign(FLOW_MARKERS, {
 // field starts empty (no distinguishing value text to key off).
 Object.assign(FLOW_MARKERS, {
   Join: [
+    { n: 8, find: 'aria-label="About CoGra"', tag: "button" },
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'data-field="Handle"', tag: "div" },
     { n: 3, find: 'data-field="Email"', tag: "div" },
@@ -2108,4 +2144,33 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
+});
+
+// The onboarding intro (the batch-rulings round). Two controls per card and the
+// same two numbers on all five, because it is one frame drawn five times: Skip
+// leads, the way it stands top-right on every card, and the forward button
+// follows. The pager dots carry no number — they are an indicator, not a
+// control (`_shared.jsx`, the intro block).
+// The About page: the way out, and the nine topic rows.
+Object.assign(FLOW_MARKERS, {
+  About: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    // Nine rows, one control doing the same thing to its own topic — so they
+    // share a number the way a feed's repeated per-post controls do, and one
+    // edge covers them all.
+    { n: 2, find: "aria-expanded=", tag: "button", all: true },
+  ],
+});
+
+const introCard = (forward) => [
+  { n: 1, find: ">Skip</button>", tag: "button" },
+  { n: 2, find: `>${forward}</button>`, tag: "button" },
+];
+
+Object.assign(FLOW_MARKERS, {
+  OnboardingSteps: introCard("Next"),
+  OnboardingShape: introCard("Next"),
+  OnboardingPublic: introCard("Next"),
+  OnboardingLayers: introCard("Next"),
+  OnboardingVouch: introCard("Start reading"),
 });
