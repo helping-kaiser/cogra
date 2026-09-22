@@ -343,7 +343,7 @@ describe("PostCard", () => {
       fireEvent.click(screen.getByTestId("card-menu"));
       expect(screen.getByTestId("card-menu-share")).toHaveTextContent("Share");
       const order = Array.from(
-        screen.getByTestId("card-menu-sheet").querySelectorAll("[data-testid]"),
+        screen.getByTestId("card-menu-sheet-body").querySelectorAll("[data-testid]"),
         (node) => node.getAttribute("data-testid"),
       );
       expect(order[0]).toBe("card-menu-share");

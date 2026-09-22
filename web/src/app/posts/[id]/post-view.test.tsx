@@ -512,7 +512,7 @@ describe("PostView", () => {
     fireEvent.click(await screen.findByTestId("post-menu"));
     expect(screen.getByTestId("post-menu-share")).toHaveTextContent("Share");
     const order = Array.from(
-      screen.getByTestId("post-menu-sheet").querySelectorAll("[data-testid]"),
+      screen.getByTestId("post-menu-sheet-body").querySelectorAll("[data-testid]"),
       (node) => node.getAttribute("data-testid"),
     );
     expect(order[0]).toBe("post-menu-share");
