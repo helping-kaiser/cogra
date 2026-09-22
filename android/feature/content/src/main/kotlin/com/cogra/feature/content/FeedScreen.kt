@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -242,20 +243,7 @@ fun FeedScreen(
     // to the gate as "the reader is at the top" — the region returned
     // the moment it left.
     val collapsingTop = rememberCollapsingTop()
-    // The watch sits a few posts short of the end (`FEED_TAIL_DISTANCE`,
-    // matching web's `TAIL_DISTANCE` in `infinite-list.ts`) so the page is
-    // already on its way by the time the reader gets there. Keyed on the
-    // posts a fresh page just appended and rebuilt as `snapshotFlow`
-    // fresh — a page that failed is not re-asked automatically (`transportFault
-    // != APPEND`); the drawn Retry is the way back, same as web.
-    LaunchedEffect(state.posts, state.hasNextPage, state.transportFault) {
-        if (!state.hasNextPage || state.transportFault == TransportFault.APPEND) return@LaunchedEffect
-        val tailId = state.posts.getOrNull(feedTailIndexOf(state.posts.size))?.id ?: return@LaunchedEffect
-        snapshotFlow { listState.layoutInfo.visibleItemsInfo.any { it.key == tailId } }
-            .distinctUntilChanged()
-            .filter { it }
-            .collect { onLoadMore() }
-    }
+    WatchFeedTail(listState = listState, state = state, onLoadMore = onLoadMore)
     Scaffold(
         topBar = {
             Column {
@@ -399,39 +387,13 @@ fun FeedScreen(
                             }
                             // The slot the next page fills. At rest it draws
                             // nothing — the page comes because the reader
-                            // kept going (`LaunchedEffect` above). In flight
+                            // kept going (`WatchFeedTail` above). In flight
                             // it is the list's own loading spinner, and a
                             // page that did not arrive stands here with its
                             // way back — the drawn twin of `MoreComments`.
                             val appendFault = state.transportFault == TransportFault.APPEND
                             if (state.hasNextPage && (state.loadingMore || appendFault)) {
-                                item {
-                                    Gutter {
-                                        Column(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                        ) {
-                                            if (state.loadingMore) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier
-                                                        .padding(8.dp)
-                                                        .testTag("feed_loading_more"),
-                                                )
-                                            } else {
-                                                ErrorLine(
-                                                    R.string.content_feed_stale,
-                                                    "feed_load_more_error",
-                                                )
-                                                TextButton(
-                                                    onClick = onLoadMore,
-                                                    modifier = Modifier.testTag("feed_load_more_retry"),
-                                                ) {
-                                                    Text(stringResource(R.string.content_retry))
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                item { Gutter { FeedTailSlot(state = state, onLoadMore = onLoadMore) } }
                             }
                         }
                     }
@@ -441,6 +403,65 @@ fun FeedScreen(
     }
     commentsFor?.let { postId ->
         commentsSheet(postId) { commentsFor = null }
+    }
+}
+
+/**
+ * THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (design readme §13,
+ * the same rule web's `infinite-list.ts` cites): no button, no page
+ * numbers — nothing drawn at rest. `listState` is the Compose analogue of
+ * web's `IntersectionObserver`: `snapshotFlow` turns its `layoutInfo` into
+ * a cold flow of scroll-driven snapshots (Android "Compose side-effects"
+ * guide, "Restarting effects with LaunchedEffect" / snapshotFlow), so the
+ * watch costs nothing while the reader is nowhere near the end and needs
+ * no manual scroll listener.
+ *
+ * The watch sits `FEED_TAIL_DISTANCE` posts short of the end — the same
+ * effective distance as web's `TAIL_DISTANCE` — so the fetch is already
+ * under way before the reader runs out of posts to read. It is rebuilt
+ * whenever the posts, `hasNextPage`, or the fault change, and a page that
+ * failed is not re-asked automatically (`transportFault != APPEND`); the
+ * drawn Retry is the way back, same as web.
+ */
+@Composable
+private fun WatchFeedTail(
+    listState: LazyListState,
+    state: FeedUiState,
+    onLoadMore: () -> Unit,
+) {
+    LaunchedEffect(state.posts, state.hasNextPage, state.transportFault) {
+        if (!state.hasNextPage || state.transportFault == TransportFault.APPEND) return@LaunchedEffect
+        val tailId = state.posts.getOrNull(feedTailIndexOf(state.posts.size))?.id ?: return@LaunchedEffect
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.any { it.key == tailId } }
+            .distinctUntilChanged()
+            .filter { it }
+            .collect { onLoadMore() }
+    }
+}
+
+/**
+ * The slot the next page fills — drawn only while a fetch is in flight or
+ * one failed; at rest (`WatchFeedTail` above) nothing is drawn here at
+ * all. The drawn twin of `MoreComments`'s own failure row.
+ */
+@Composable
+private fun FeedTailSlot(state: FeedUiState, onLoadMore: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (state.loadingMore) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .testTag("feed_loading_more"),
+            )
+        } else {
+            ErrorLine(R.string.content_feed_stale, "feed_load_more_error")
+            TextButton(onClick = onLoadMore, modifier = Modifier.testTag("feed_load_more_retry")) {
+                Text(stringResource(R.string.content_retry))
+            }
+        }
     }
 }
 
