@@ -719,11 +719,12 @@
       "status": "resolved",
       "steps": [
         "start · ReplyMedia · 6 «Edit (own comment)» → CommentEdit",
-        "end · CommentEdit · 12 «Sign the edit» → ReplyMedia — signed — the thread, the edit settling"
+        "end · CommentEdit · 12 «Sign the edit» → ReplySettled — signed — the thread reopened where it was left, the edit settling on its card"
       ],
       "boards": [
         "ReplyMedia",
-        "CommentEdit"
+        "CommentEdit",
+        "ReplySettled"
       ]
     },
     {
@@ -2942,6 +2943,7 @@
     },
     "ReplySettled": {
       "flows": [
+        "edit-your-comment",
         "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
@@ -2950,6 +2952,7 @@
         "reply-with-pictures"
       ],
       "endpoint": [
+        "edit-your-comment",
         "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",

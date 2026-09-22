@@ -5673,8 +5673,9 @@ the next round can find them.
   happened") and reads identically for a sheet raised from the feed:
   the return is a property of the sheet, never of the page beneath it.
   The navigation result carries two values — the scroll offset and the
-  parent comment id. The landing state itself is still undrawn: item
-  85.
+  parent comment id. `ReplySettled` draws that landing: the sheet cut at
+  its top edge by the kept offset, the parent's count expanded, the
+  signed words in the slot the composer stood in.
 
 ### The sheets-and-video round — 2026-09-22
 
@@ -5783,6 +5784,22 @@ they were settled.
   does not — and the range across which a reader accepts one kind of
   content and refuses another is built after MVP, not designed around
   now.
+
+### The edit's return — 2026-09-22
+
+- **A signed edit lands where a signed reply lands.** `CommentEdit/12`
+  and `CommentEditVideo/12` reach `ReplySettled` — the thread reopened
+  at the offset the reader left it, the corrected comment on its own
+  card. The anatomy is the reply's and differs only in which card
+  carries the marker, which is why the edit is owed no second board;
+  what it was owed was the edge, and the two edges had still been
+  landing on the thread as though nothing had been written. Backlog item
+  85 closes with them.
+- **The gate**: **1568 edges** hold — a repoint moves a destination, it
+  does not add a journey — and the witness is re-blessed for one line:
+  `edit-your-comment` now ends on `ReplySettled`, which joins the flow's
+  boards and its endpoints. Flows hold at **66 declared · 64 resolved**,
+  gaps at **13**.
 
 ---
 

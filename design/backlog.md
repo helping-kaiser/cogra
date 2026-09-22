@@ -3237,9 +3237,9 @@ the signed reply in `CommentCard`'s reserved `children` slot wearing
 forked. The reply flow's four sign outcomes — `ReplySeal/9`,
 `ReplyCited/9`, `ReplyCitedMany/9`, `ComposeSealUploading/7` — now land
 here instead of on the thread without the reply in it. The edit's return
-shares this anatomy and is owed no second board; the two edit-sign
-edges (`CommentEdit/12`, `CommentEditVideo/12`) still land on
-`ReplyMedia` and are a follow-up.
+shares this anatomy and is owed no second board, so the two edit-sign
+edges (`CommentEdit/12`, `CommentEditVideo/12`) land here too — repointed
+2026-09-22 on jakob's ruling, which closes the item.
 
 ### 98 · Which headers collapse, and which pin · *design* · **ruled 2026-09-17**
 
