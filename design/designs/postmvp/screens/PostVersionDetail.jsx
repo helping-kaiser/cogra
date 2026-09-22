@@ -10,8 +10,15 @@
 
    THE BANNER IS A NOTE, AND IT NAMES THE WAY OUT. A reader who came from the
    chronicle knows where they are; this line is for the one who arrived by link.
-   It says what this is and when it was signed, and hands back the only other
-   place they might have meant to be.
+   It says what this is and hands back the only other place they might have
+   meant to be.
+
+   ITS DATE IS WHEN THE VERSION STOPPED STANDING, not when it was signed. The
+   card under it already carries the signing date — 8 September, its own
+   timestamp — and repeating that above it would tell the reader nothing they
+   are not already reading. What they cannot see from the card is how long this
+   version was the post, so the banner supplies the other end of it: changed
+   away from on 12 September, the date the version above it was signed.
 
    NO OPINION, NO SCORE, NO COMMENT COUNT. All three are facts about the POST,
    and a version is not the post — drawing them here would offer a reader an
