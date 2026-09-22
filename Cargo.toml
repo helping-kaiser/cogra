@@ -35,7 +35,7 @@ axum = { version = "0.8" }
 # exactly that case ("if you need to use third party extractors and want
 # to make sure a limit is also applied there then `RequestBodyLimit`
 # should be used").
-tower-http = { version = "0.6", default-features = false, features = ["limit"] }
+tower-http = { version = "0.7", default-features = false, features = ["limit"] }
 # The limited body's error type, so the handler can tell "over the
 # ceiling" from "the connection broke" and answer 413 rather than 500 —
 # the same downcast axum's own `Bytes` extractor performs.

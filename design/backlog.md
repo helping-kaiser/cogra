@@ -3366,3 +3366,59 @@ a reader hunting for the way out of a sheet they cannot leave.
 
 Recorded 2026-09-17 in `DescribeSheet.prompt.md` and `ComposeSensitive.jsx`'s
 docblock. No board spent, no fixture changed.
+
+### 102 · Push notifications — the post-MVP round · *design* · **ruled 2026-09-22**
+
+The first round drawn in `designs/postmvp/`. Push is named but not built
+in `docs/implementation/notifications.md`: it is the *delivery* of a row
+the list already holds, never a source of one, so nothing here changes
+what notifies. Nine kinds, the doc's own taxonomy.
+
+RULED by jakob 2026-09-22, six ways.
+
+**A `Notifications` group, after Reading.** Reading is where a reader
+says what the product shows them; push is the same activity one step
+further out. Per-kind toggling is the whole strategy: a channel a reader
+can only kill outright is a channel they kill, so the granularity is
+what keeps it alive.
+
+**A master switch and nine per-kind rows, on a subpage** (`PushKinds`).
+The doc's taxonomy, unclustered — a grouping would be a second model to
+keep in step with the first. The settings page carries one disclosure
+row reading its state back, the `Default license` grammar.
+
+**The OS ask fires only from an explicit act.** One act spends it: the
+master switch on the push settings page. The one-time dismissible offer
+row at the top of the list is the door to that page — the tap lands
+where the choice is made, the way every notification row lands on its
+subject. Never at launch: on native a denial is sticky, which is why
+nothing may spend the ask on a reader who did not reach for it.
+Dismissed is dismissed for good.
+
+**Push content is the drawn row, and nothing invented.** Title is the
+row's sentence (`@ada commented on your post`); body is the row's second
+line where one exists and is absent where none does; the tap lands
+exactly where opening the row lands. The full copy register applies —
+sentence case, no exclamation, no counts, no emoji.
+
+**Tray and badge: the platform's own, and no more.** Platform-default
+collapse, no custom *N new* summary, and no numeric app-icon badge ever
+— the launcher's dot is the bell's dot at launcher scale, which is the
+same honesty the boolean `hasUnreadNotifications` already carries. A
+foregrounded app suppresses the banner. Prose law, not drawn.
+
+**The defaults.** On: comment on your post, application approvable,
+application approved, application rejected. Off: reply, mention,
+citation, opinion on your profile, invite landed. The on-set is what a
+reader is answerable for — their own post's comments, and the four
+moments an application turns; the off-set is what the list holds
+perfectly well until they look.
+
+Forward note: **when chats ship, chat-message-received joins the
+on-set.** A message addressed to one person and waiting is the clearest
+case the on-set has; it is recorded rather than drawn because the kind
+does not exist yet (`notifications.md`, *The kinds later slices add*).
+
+This also files the per-kind muting that readme §13, *The notifications
+round* left as *filed post-MVP* — it is this item, and the nine rows are
+it.
