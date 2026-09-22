@@ -21,6 +21,26 @@ function open(overrides: Partial<Parameters<typeof SensitiveSheet>[0]> = {}) {
 }
 
 describe("SensitiveSheet", () => {
+  // THE REASON GROWS (jakob's ruling, the sheets-and-video round, 2026-09-22
+  // — design/readme.md §13: "the sensitive sheet's **Why?** becomes a growing
+  // one-line field"). It opens as the single line the board draws and takes a
+  // second the moment the reason needs one; a reason is a sentence, and the
+  // input it used to be showed the first phrase of it.
+  it("gives the reason a growing one-line box, not a single line", () => {
+    open();
+    const reason = screen.getByTestId("test-sensitive-reason");
+    expect(reason.tagName).toBe("TEXTAREA");
+    expect(reason).toHaveAttribute("rows", "1");
+  });
+
+  // The sheet is content-sized and the box is the one child that yields, so
+  // the growth comes out of the box rather than the sheet's Done row.
+  it("lets the reason yield the room when the sheet meets its ceiling", () => {
+    open();
+    expect(screen.getByTestId("growing-box").className).toContain("min-h-0");
+    expect(screen.getByTestId("growing-box").className).toContain("overflow-y-auto");
+  });
+
   // The server refuses past this length, so the sheet says so where the
   // reason is written rather than letting the seal carry the news — one sheet
   // for every surface that marks (the post seal, the reply seal, and the

@@ -50,17 +50,24 @@ export const SHEET_CEILING_SLIVER_PX = 72;
  * keeps its own 92dvh, and the ceiling only binds on a screen short enough
  * for that percentage to reach the sliver.
  *
- * The literals are spelled out because Tailwind scans source TEXT for class
- * names: a class built from the constant would never be generated. The
- * underscores are Tailwind's own spelling of a space inside an arbitrary
- * value — written out rather than left to the `calc()` normaliser, which has
- * hyphens of its own to tell apart inside `safe-area-inset-top`. The pin in
- * `bottom-sheet.test.tsx` is what keeps the classes and this constant in
- * step.
+ * It is a style rather than a Tailwind class because Tailwind scans source
+ * TEXT for class names — a class built from the sliver could never be
+ * generated, so the number would have to be written out a second time in a
+ * literal, which is exactly the drift the constant exists to stop. The sheet
+ * already carries a style for its drag offset; this rides beside it.
  */
-export const SHEET_CEILING = "calc(100dvh_-_72px_-_env(safe-area-inset-top,0px))";
-const CAPPED = "max-h-[min(92dvh,calc(100dvh_-_72px_-_env(safe-area-inset-top,0px)))]";
-const TALLEST = "h-[calc(100dvh_-_72px_-_env(safe-area-inset-top,0px))]";
+export const SHEET_CEILING =
+  `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px))`;
+
+/** The height class a content sheet keeps, held under the ceiling. */
+const CONTENT_MAX = "92dvh";
+
+/** What a sheet's surface — and the column inside it — is bounded by. */
+function sheetHeight(tallest: boolean): CSSProperties {
+  return tallest
+    ? { height: SHEET_CEILING }
+    : { maxHeight: `min(${CONTENT_MAX}, ${SHEET_CEILING})` };
+}
 
 export function BottomSheet({
   open,
@@ -213,14 +220,14 @@ export function BottomSheet({
       }}
       onPointerUp={endPull}
       onPointerCancel={endPull}
-      style={{ "--cg-sheet-drag": `${pull}px` } as CSSProperties}
+      style={
+        { "--cg-sheet-drag": `${pull}px`, ...sheetHeight(tallest) } as CSSProperties
+      }
       // `mt-auto` is what puts it at the bottom edge: a dialog is centred by
-      // default, and this one rises from the edge it will go back to. It may
-      // fill the screen up to a sliver below the top, so the rounded corners
-      // keep a strip of the surface behind visible.
+      // default, and this one rises from the edge it will go back to. It
+      // fills the screen up to a sliver below the safe area at most, so the
+      // rounded corners keep a strip of the surface behind visible.
       className={`${closing ? "cg-sheet-out" : "cg-sheet-in"} ${
-        tallest ? TALLEST : CAPPED
-      } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 ${
         // ONE SCRIM, HOWEVER MANY SHEETS. The system has a single dimming
         // token (`--scrim-dialog`, 50% black) and stacking moves the z-layer,
         // never the tone (design/components/core/BottomSheet.jsx). Every
@@ -234,7 +241,14 @@ export function BottomSheet({
           : "bg-surface-container-high backdrop:bg-scrim/50"
       } p-0 text-on-surface`}
     >
-      <div className={`flex flex-col ${tallest ? "h-full" : CAPPED}`}>
+      <div
+        data-testid={`${testId}-column`}
+        className="flex flex-col"
+        // The same bound as the surface: a percentage of an indefinite height
+        // resolves to nothing, so the column cannot simply ask for `100%` of
+        // a sheet that is only capped.
+        style={tallest ? { height: "100%" } : sheetHeight(false)}
+      >
         {/* The handle says the sheet can be pulled down, and it can. The
             gesture is read across the whole surface, so the grip marks where
             the eye goes rather than the only place that answers; the

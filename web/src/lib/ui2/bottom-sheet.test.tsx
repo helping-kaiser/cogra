@@ -3,7 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SHEET_OUT_MS } from "@/lib/ui/motion";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
-import { BottomSheet, SheetItem } from "./bottom-sheet";
+import {
+  BottomSheet,
+  SHEET_CEILING,
+  SHEET_CEILING_SLIVER_PX,
+  SheetItem,
+} from "./bottom-sheet";
 
 describe("BottomSheet", () => {
   beforeEach(() => vi.useFakeTimers());
@@ -115,14 +120,46 @@ describe("BottomSheet", () => {
         <p>A comment</p>
       </BottomSheet>,
     );
-    expect(screen.getByTestId("bottom-sheet").className).toContain("max-h-[92dvh]");
+    // Content-sized, held UNDER the ceiling rather than pinned at it: the
+    // 92dvh class stands and the ceiling clamps it (`BottomSheet.jsx`'s
+    // `min()`).
+    const capped = screen.getByTestId("bottom-sheet");
+    expect(capped.style.maxHeight).toBe(`min(92dvh, ${SHEET_CEILING})`);
+    expect(capped.style.height).toBe("");
 
     rerender(
-      <BottomSheet open onClose={() => {}} title="Comments" height="full">
+      <BottomSheet open onClose={() => {}} title="Comments" tallest>
         <p>A comment</p>
       </BottomSheet>,
     );
-    expect(screen.getByTestId("bottom-sheet").className).toContain("h-[calc(100dvh-72px)]");
+    // The tallest class is PINNED at the ceiling, so it takes a height and
+    // not a maximum.
+    const pinned = screen.getByTestId("bottom-sheet");
+    expect(pinned.style.height).toBe(SHEET_CEILING);
+    expect(pinned.style.maxHeight).toBe("");
+  });
+
+  // THE SLIVER IS THE DRAWN ONE (jakob's ruling, the sheets-and-video round,
+  // 2026-09-22; `design/components/core/BottomSheet.jsx`'s `SHEET_CEILING`
+  // is the same `calc(100% - 72px - env(safe-area-inset-top, 0px))`).
+  it("measures its ceiling from the top of the safe area", () => {
+    expect(SHEET_CEILING_SLIVER_PX).toBe(72);
+    expect(SHEET_CEILING).toBe(
+      `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px))`,
+    );
+  });
+
+  // The column inside the surface is bounded by the same thing — a sheet
+  // whose column could out-grow its surface would put Done past the edge.
+  it("bounds the column inside it by the same ceiling", () => {
+    render(
+      <BottomSheet open onClose={() => {}} title="Mark as sensitive">
+        <p>Body</p>
+      </BottomSheet>,
+    );
+    expect(screen.getByTestId("bottom-sheet-column").style.maxHeight).toBe(
+      `min(92dvh, ${SHEET_CEILING})`,
+    );
   });
 
   // A sheet over a sheet takes the next tonal rung (design/readme.md:2364:
@@ -249,7 +286,7 @@ describe("BottomSheet", () => {
         open
         onClose={() => {}}
         title="Comments"
-        height="full"
+        tallest
         foot={<button type="button">Add a comment</button>}
       >
         <p>A comment</p>
@@ -258,6 +295,33 @@ describe("BottomSheet", () => {
     const body = screen.getByText("A comment").parentElement;
     expect(body?.className).toContain("overflow-y-auto");
     expect(body).not.toContainElement(screen.getByRole("button", { name: "Add a comment" }));
+  });
+
+  // (e) A SHEET ALREADY AT THE CEILING TAKES THE ROOM FROM ITS LIST (jakob's
+  // ruling, the sheets-and-video round, 2026-09-22 — design/readme.md §13).
+  // The comments sheet cannot grow, so the composer's growth comes out of the
+  // thread above it, the way every chat app does it. The law is in which of
+  // the two can give: the body yields (`flex-1`, `min-h-0`) and the foot does
+  // not (`flex-none`), so a taller foot shortens the list and the sheet's own
+  // top edge never moves.
+  it("takes a growing foot's room out of the list above it", () => {
+    render(
+      <BottomSheet
+        open
+        onClose={() => {}}
+        title="Comments"
+        tallest
+        foot={<button type="button">Add a comment</button>}
+      >
+        <p>A comment</p>
+      </BottomSheet>,
+    );
+    const body = screen.getByTestId("bottom-sheet-body");
+    expect(body.className).toContain("flex-1");
+    expect(body.className).toContain("min-h-0");
+
+    const foot = screen.getByRole("button", { name: "Add a comment" }).parentElement;
+    expect(foot?.className).toContain("flex-none");
   });
 });
 
