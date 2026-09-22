@@ -51,6 +51,18 @@ const FIELD = FIELD_BOX;
 export const GROWING_FIELD =
   "col-start-1 row-start-1 resize-none overflow-hidden border-0 bg-transparent p-0 [font:inherit] text-on-surface outline-none placeholder:text-on-surface-variant";
 
+/**
+ * What the box draws AROUND its lines: `py-2.5` on both edges (0.625rem
+ * each, so 1.25rem) and the 1px border on both (2px), as FIELD spells them.
+ * It is written out once here because the floor below is a `min-height` and
+ * FIELD is a border box — a floor of N lines that did not clear the chrome
+ * would land inside the text instead of under it. Summed rather than left as
+ * `0.625rem * 2` because that is how a style declaration serialises, and a
+ * constant that does not read back as it was written is one a test has to
+ * spell a second way.
+ */
+const FIELD_CHROME = "calc(1.25rem + 2px)";
+
 function GrowingBox({
   value,
   minRows,
@@ -66,6 +78,29 @@ function GrowingBox({
     <div
       data-testid="growing-box"
       data-min-rows={minRows}
+      // `rows` IS THE MINIMUM, AND THE LAYOUT HAS TO SAY SO (jakob's
+      // round-three hand test, 2026-09-22). `minRows` reached this box as a
+      // data attribute and nothing else, so the floor existed only in the
+      // prose above: the box is a scroll container, which makes its automatic
+      // minimum size zero (CSS Flexbox §4.5 — the `min-height: auto` floor
+      // applies only where `overflow` is `visible`), and `min-h-0` says the
+      // same thing again. Measured in chromium against the deployed
+      // stylesheet, a sheet with no room left shrank this box to a 20px
+      // window inside a 24px line — a field drawn UNDER one line, which is
+      // the "it never grows, the words just scroll" reading. The floor is a
+      // style rather than a class because `minRows` is a prop and Tailwind
+      // scans source TEXT for class names, the same reason `SHEET_CEILING`
+      // is a style (`bottom-sheet.tsx:52-57`).
+      //
+      // The cap above it is untouched: the box still shrinks from its grown
+      // height down to this line, and the words still scroll INSIDE it.
+      //
+      // `lh` is the line-height as an absolute length (MDN, CSS `<length>`),
+      // so the floor follows whichever type role the box reads instead of
+      // restating its leading. An engine too old to know the unit drops the
+      // whole `calc()` and lands back on today's behaviour — the floor is the
+      // enhancement, never what the field depends on to draw.
+      style={{ minHeight: `calc(${minRows}lh + ${FIELD_CHROME})` }}
       // The ring belongs to the drawn box, and the box is now this wrapper
       // rather than the control inside it — `cg-focus-within` is the same
       // ring, taken from the edge the reader sees. The dimming moves with it

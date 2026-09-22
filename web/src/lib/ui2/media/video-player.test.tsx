@@ -30,6 +30,24 @@ function player(props: Partial<React.ComponentProps<typeof VideoPlayer>> = {}) {
   return screen.getByTestId("video-player") as HTMLVideoElement;
 }
 
+/**
+ * The disc's corner, read where it is actually decided — the inline style,
+ * the way the master writes it (`MediaAttachment.jsx:117-122`).
+ *
+ * The `absolute` assertion runs the other way on purpose: the utility must be
+ * ABSENT. It is the class that lost to `.cg-state`'s unlayered `position:
+ * relative`, so leaving it in the list would put the fix one careless
+ * "tidy-up" away from silently reverting to a disc in normal flow.
+ */
+function expectDiscInTheCorner(disc: HTMLElement) {
+  expect(disc.style.position).toBe("absolute");
+  expect(disc.style.bottom).toBe("8px");
+  expect(disc.style.right).toBe("8px");
+  expect(disc.style.left).toBe("");
+  expect(disc.style.top).toBe("");
+  expect(disc.className).not.toMatch(/\babsolute\b/);
+}
+
 describe("autoplay", () => {
   it("starts muted, which is the only autoplay a browser permits", () => {
     const video = player();
@@ -166,12 +184,18 @@ describe("the reading surface", () => {
   // G1 / design/components/media/MediaAttachment.jsx:105 — the MediaDisc
   // master's default corner is bottom-right (the thumb's side while
   // scrolling), not bottom-left.
+  //
+  // WEB-DISC-FLOW (jakob 2026-09-22): this test used to read `bottom-2` and
+  // `right-2` off the class list and passed while the disc sat at the
+  // frame's bottom-LEFT, half off-screen — because `.cg-state`'s unlayered
+  // `position: relative` outranked the layered `absolute` utility and the
+  // button fell into normal flow. A class-name assertion cannot see a class
+  // that lost the cascade, which is the same blind spot WEB-DISC-MISSING
+  // below was written for; the corner is read off the inline style now,
+  // because that is where it is decided.
   it("sits at the master's bottom-right corner", () => {
     player({ surface: "reading" });
-    const disc = screen.getByTestId("video-player-sound");
-    expect(disc.className).toMatch(/\bbottom-2\b/);
-    expect(disc.className).toMatch(/\bright-2\b/);
-    expect(disc.className).not.toMatch(/\bleft-2\b/);
+    expectDiscInTheCorner(screen.getByTestId("video-player-sound"));
   });
 
   // WEB-DISC-MISSING (jakob 2026-09-22): `bg-surface-snackbar` and
@@ -240,13 +264,11 @@ describe("the full surface (a feed card's clip)", () => {
 
   // G1 / design/components/media/MediaAttachment.jsx:105 — the MediaDisc
   // master's default corner is bottom-right (the thumb's side while
-  // scrolling), not bottom-left.
+  // scrolling), not bottom-left. WEB-DISC-FLOW: see the matching test on the
+  // reading surface above for why the corner is read off the style.
   it("sits at the master's bottom-right corner", () => {
     player();
-    const disc = screen.getByTestId("video-player-sound");
-    expect(disc.className).toMatch(/\bbottom-2\b/);
-    expect(disc.className).toMatch(/\bright-2\b/);
-    expect(disc.className).not.toMatch(/\bleft-2\b/);
+    expectDiscInTheCorner(screen.getByTestId("video-player-sound"));
   });
 
   // WEB-DISC-MISSING (jakob 2026-09-22) — see the matching test on the
