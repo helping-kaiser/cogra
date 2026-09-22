@@ -259,9 +259,9 @@ title, at most two short paragraphs, Close. The texts, verbatim
   *The italicised tails are the `cg-exact` spans: the face is drawn in
   both reading modes, the digits only when the reader has asked for
   them (readme §13), and a screen-reader twin says both either way.*
-- **Editing**: An edit replaces the whole post; earlier versions stay
-  public under "Edited" unless you remove them. An edit never bumps
-  the post as new. / Tag and citation changes ride the same signing,
+- **Editing**: An edit signs a full new version on top; earlier
+  versions stay public under "Edited" unless you remove them. An edit
+  never bumps the post as new. / Tag and citation changes ride the same signing,
   each as its own signed action. The license never changes.
 - **Citing**: A citation is its own signed action and carries where
   you stand on what you cite. You can cite anything on CoGra — start
@@ -1740,3 +1740,68 @@ tap on it used to reach nothing, and now it raises this:
 - The shield over the roll is named `Answer your draft before starting a
   new post` — what a screen reader meets where a sighted reader meets a
   dimmed grid.
+
+## Awaiting blessing — the change-histories round
+
+The words of would-like #2 (post-MVP tree, 2026-09-22). Two kinds of
+history — a content chronicle and a stance timeline — and one law under
+both: **editing only ever adds**.
+
+**The door.** `Edit history` — the ⋮ row, and the page's own title. Not
+`History`: your own profile's ⋮ already carries that word for the
+private list of what you have read, and the wallet has a History section
+of its own. The row and the `Edited` marker's tappable form appear only
+once a second version exists; a door onto a list of one teaches a reader
+that the feature does nothing.
+
+**The chronicle.**
+
+- `Current version · signed 12 September` and `Earlier version · signed
+  3 September` — the dateline over each version. `signed`, never
+  `posted` or `saved`: a version is a record somebody put their key to.
+- The tombstone keeps `Removed by its author`, the mark a removed post
+  already wears, and carries its own line in the content's place: `A
+  version stood here from 3 September. Its words and pictures were
+  removed; the record of the change stays.`
+- The foot of every chronicle: `Every version is its own signed record.
+  Editing adds a new one on top — nothing is rewritten, and removing one
+  leaves a mark in its place.` It is the additive law in the reader's
+  words, and it is why no surface in this round draws a diff.
+
+**The author's register.**
+
+- `Remove the whole post` leads the page, under `Removes every version
+  at once. Removing a single version leaves the rest standing.` The lead
+  exists because the head never falls through: an author removing
+  version after version ends with a post that still stands, wearing a
+  mark.
+- `Remove this version` rides an earlier version's own dateline — a word,
+  not a button, this being a rare path.
+- The confirm is `RemoveConfirm` at version scale. Title `Remove this
+  version?`; body `Its words and pictures leave every reader's view, and
+  a mark stays in their place. The other versions keep standing. If this
+  is the current version, the post shows it as removed — an earlier
+  version never takes its place.`; `Remove version` (quiet) and `Keep
+  it` (filled). The last sentence is the one a reader cannot guess, so
+  it is spelled before the act rather than explained after it.
+
+**A historic version, opened.** `A historic version — changed 12
+September.` with `See the current version` beside it. The marker's own
+accessible name in its tappable form is `Edited — see the edit history`.
+
+**The stance timeline.** A stance IS a history, so this surface only had
+to be opened.
+
+- `As it stands` labels the standing; the face and the `cg-exact` pair
+  read it.
+- The sum in plain words, because the fold clips: `Built from 27 picks
+  over three years — more weight than the dial can show.` The exact raw
+  sum rides a `cg-exact` tail — `+27.40 / +26.10 before the cap` — so
+  the digits paint only in geek mode while the sentence stands in both.
+- A row is the face it was cast at and the date it was signed. A
+  counter-record stands in the list at its own date wearing `Walked
+  back`, the system's own word: severance is records, never an absence.
+- The value readout that opens one carries `See how this opinion built`
+  where a row splits, and the pad's label line becomes `Current opinion ·
+  see how it built`. Authoring doors are faces and fields; a history
+  door is a readout.

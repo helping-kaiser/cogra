@@ -5925,6 +5925,66 @@ away is never typed in, so it cannot grow. jakob ruled the collision:
   changes the record and the docblock (`CommentComposerFoot`), not a
   board.
 
+### The change-histories round — 2026-09-22
+
+Would-like #2, and the second round in the post-MVP tree. Thirteen
+boards: a chronicle for every versioned kind of content, a timeline for
+the stance — which turns out to be a history already — and the doors
+onto both. Backlog item 34.
+
+- **One list of whole versions, newest first, the current one marked,
+  and never a diff (jakob).** The store keeps complete states and L1
+  signs a full new record for every edit, so a difference between two
+  versions is something a reader works out by reading. Computing one
+  would also be a claim about which change mattered, which is the
+  author's business rather than the product's. From a row a reader opens
+  that version's own detail surface where the kind has one.
+- **A tombstoned version always keeps its row (jakob).** Removal takes
+  the payload and never the record (`erasure.md` §1), so the mark stands
+  in the content's place at the version's own date — whether one version
+  went or the whole thing did. A row that vanished would be the silent
+  erasure every honesty surface in this product exists to prevent.
+- **Per-version removal is drawn, and the whole-post removal leads the
+  author's register (jakob).** The head never falls through: removing the
+  current version's payload leaves the head selected and rendering
+  absent, so an author working version by version ends with a post that
+  still stands wearing a mark. The act that does what they mean is
+  therefore the first thing on the page, and the confirm words the
+  consequence before it is pressed.
+- **Two doors, both appearing only once a second version exists
+  (jakob).** An `Edit history` row in the ⋮ — beside `Edit`, because
+  `History` is taken twice over (your own profile's ⋮, the wallet's
+  section) — and the `Edited` marker's own tap, which wires the
+  `onInspect` slot `PendingMarker.jsx` has carried unused since the
+  honesty markers were drawn. A door onto a list of one would teach a
+  reader that the feature does nothing.
+- **A stance IS a history, so the timeline reads the record mirror and
+  adds no table (jakob).** The bundle is the fold of every record ever
+  cast from one node to another; the timeline is that list, newest
+  first. Severance shows as what it is — a counter-record at its own
+  date, wearing the system's own word.
+- **The header says the sum in plain words, because the fold clips
+  (jakob).** A raw sum of +27.40 reads +1.00 past the cap, so a standing
+  cannot tell one gentle pick from twenty-seven years of them — and that
+  accumulated conviction is the thing a reader wants. The sentence
+  carries it; the exact pair rides `cg-exact` and paints in geek mode
+  only, both markups always drawn.
+- **The door rule: authoring doors are faces and fields, history doors
+  are readouts (jakob).** The stance face is fully spent — tap opens the
+  pad, hold signs a gentle positive — so it never opens a history. On a
+  list the row splits: the person area opens the person (the 2026-09-01
+  ruling), the value readout opens that pair's timeline. On the pad the
+  `Current opinion` label gains the tappable marker's underline and a
+  tail, two rows clear of the field so no drag can end on it.
+- **Timelines are public to everyone, signed out included (jakob).**
+  Every record in one is a public act already, and the gates in this
+  product are on acting. There is nothing here to act on.
+- **The framing is additive everywhere (jakob).** On L1 an edit signs a
+  full new record with its own hash, salt and witness, pointing at
+  unchanged media — editing only ever adds, and "more" can be a version
+  with one picture fewer. `copy-voice.md`'s *Editing* line carries that
+  framing, and every chronicle closes on it in the reader's words.
+
 ---
 
 ## 14. The canvases
@@ -5956,8 +6016,8 @@ round.
 
 The fifth is the post-MVP tree's own —
 [CoGra · Post-MVP rounds](https://claude.ai/artifact/Fejcck8Jfu2wghbdmHHEkn),
-id `postmvp`, serving the Push notifications page and opening on it,
-seeded exactly as the four are.
+id `postmvp`, serving the Push notifications and Change histories pages
+and opening on the first, seeded exactly as the four are.
 
 A canvas title never carries `< > & "` or a backslash — the editor
 refuses them at seed time, which is why the titles say "and". The old
@@ -6065,4 +6125,7 @@ manifests, §14), and `img/` (the photographs the boards carry).
 before their slice is the work, reviewed on the fifth canvas, and moved
 into canonical when they become current (§13, *The post-MVP
 separation*). Its own `screens/`, `_shared.jsx`, `canvas.json`,
-`graph.json` and `canvases.json`; the same `components/`.
+`graph.json`, `canvases.json` and `img/`; the same `components/`. Its
+photographs are its own copies — the budgets are per-canvas (§14), and
+a tree that reached into another's `img/` would seed a canvas from two
+places.
