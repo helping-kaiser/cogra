@@ -392,7 +392,17 @@ export function VideoPlayer({
           aria-label={muted ? "Turn sound on" : "Turn sound off"}
           aria-pressed={!muted}
           onClick={() => setMuted(!muted)}
-          className="cg-state cg-focus absolute bottom-2 right-2 grid size-9 cursor-pointer place-items-center rounded-full border-0 bg-surface-snackbar p-0 text-on-surface-snackbar"
+          // `surface-snackbar` and `on-surface-snackbar` are tokens-2.css
+          // SEMANTIC ALIASES (tokens-2.css:161-188), never bridged into
+          // Tailwind's `@theme` the way the 1.0 palette is — by that file's
+          // own design ("the semantic aliases resolve to roles… nothing in
+          // this file needs a dark branch"), they are read with `var()`, the
+          // same way `pager-dots.tsx` reads `--border-hairline`. `bg-*`/
+          // `text-*` Tailwind classes built from them compile to nothing:
+          // read as `var()` here instead, matching the master
+          // (`design/components/media/MediaAttachment.jsx:127-128`).
+          className="cg-state cg-focus absolute bottom-2 right-2 grid size-9 cursor-pointer place-items-center rounded-full border-0 p-0"
+          style={{ background: "var(--surface-snackbar)", color: "var(--on-surface-snackbar)" }}
         >
           <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
             {muted ? (
