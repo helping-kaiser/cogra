@@ -89,6 +89,14 @@ export const STANCE_AXIS_NAMES = { directed: DIRECTED_LABEL, interest: INTEREST_
 /** What the middle pair is: the edge being authored, not the bundle it joins. */
 export const PICK_LABEL = "Your pick";
 
+/* WHAT THE STANDING'S LABEL GAINS WHEN IT BECOMES A DOOR (the change-histories
+   round). The pad's "Current opinion" is a sum, and a sum hides what it was
+   summed from: a reader whose standing reads +1.00 / +1.00 cannot tell from the
+   face whether one record or twenty-seven built it. So the label carries the
+   promise of the timeline rather than a second control beside it — the readout
+   IS the door, and the tail is the only ink the door costs. */
+export const HISTORY_DOOR_TAIL = " · see how it built";
+
 export const SEVERED_LABEL = "Walked back";
 export const NO_STANDING_LABEL = "No opinion yet";
 
@@ -569,25 +577,41 @@ export function landingParts(landing, names = STANCE_AXIS_NAMES) {
    the line below it. Three of these stack in the pad — current opinion, the pick,
    the resulting opinion — and they are formatted identically so the eye can compare
    them without reading. */
-function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style }) {
+function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style, onOpenHistory }) {
   if (sentence !== undefined) {
     return (
       <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)", ...style }}>{sentence}</p>
     );
   }
+  const labelInk = {
+    fontSize: "var(--text-label-small)",
+    letterSpacing: "var(--text-label-small--letter-spacing)",
+    fontWeight: "var(--text-label-small--font-weight)",
+    color: "var(--text-secondary)",
+  };
   return (
     <div style={{ display: "flex", flexDirection: "column", ...style }}>
-      <span
-        aria-hidden="true"
-        style={{
-          fontSize: "var(--text-label-small)",
-          letterSpacing: "var(--text-label-small--letter-spacing)",
-          fontWeight: "var(--text-label-small--font-weight)",
-          color: "var(--text-secondary)",
-        }}
-      >
-        {label}
-      </span>
+      {onOpenHistory ? (
+        /* THE LABEL LINE IS THE DOOR, and it is drawn as one. A readout that
+           opened a surface without saying so would be a door nobody can see, so
+           the line takes the `EditedMarker`'s tappable form — the same underline,
+           the same quiet ink — and the tail says where it goes. It sits ABOVE the
+           readout and well clear of the field below, so no drag of the knob can
+           end on it. */
+        <button
+          type="button"
+          onClick={onOpenHistory}
+          className="cg-focus"
+          style={{ ...labelInk, alignSelf: "flex-start", background: "none", border: 0, padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)", textAlign: "left", textDecoration: "underline" }}
+        >
+          {label}
+          {HISTORY_DOOR_TAIL}
+        </button>
+      ) : (
+        <span aria-hidden="true" style={labelInk}>
+          {label}
+        </span>
+      )}
       <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
         <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", lineHeight: 1.2 }}>{emoji}</span>
         <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }}>{pair}</span>
@@ -598,11 +622,11 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
 }
 
 /** The current opinion and the pick — everything that sits above the field. */
-export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_NAMES, style }) {
+export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_NAMES, style, onOpenHistory }) {
   const anchor = nearestAnchor(pick);
   return (
     <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", ...style }}>
-      <ReadoutBlock {...standingParts(bundle, targetLabel, names)} />
+      <ReadoutBlock {...standingParts(bundle, targetLabel, names)} onOpenHistory={onOpenHistory} />
       {/* The pick's own readout — above the field, never under the knob, because a
           thumb on the control covers exactly where feedback would otherwise sit. */}
       <ReadoutBlock
