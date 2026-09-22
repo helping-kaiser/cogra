@@ -124,4 +124,31 @@ describe("MediaThumb", () => {
       expect(mark.style.height).toBe("50px");
     });
   });
+
+  // jakob's ruling, 2026-09-22 (design/readme.md §13): the pill only draws
+  // on an 80px-or-more tile. `PickedRow`'s 48px default summary tile drew
+  // it at that size until this ruling — the regression the ruling names.
+  describe("the clip's duration pill", () => {
+    it("does not draw the pill at the 48px default summary-row size", () => {
+      render(<MediaThumb src="blob:one" durationMs={42_000} testId="thumb" />);
+      expect(screen.queryByTestId("thumb-duration")).toBeNull();
+    });
+
+    it("draws the pill once the tile reaches the 80px floor", () => {
+      render(<MediaThumb src="blob:one" durationMs={42_000} size={80} testId="thumb" />);
+      expect(screen.getByTestId("thumb-duration")).toHaveTextContent("0:42");
+    });
+
+    it("sits bottom-right, 6px in from both edges, past the floor", () => {
+      render(<MediaThumb src="blob:one" durationMs={42_000} size={96} testId="thumb" />);
+      const pill = screen.getByTestId("thumb-duration");
+      expect(pill.className).toContain("bottom-[6px]");
+      expect(pill.className).toContain("right-[6px]");
+    });
+
+    it("still draws the play disc under the floor — only the pill gates on size", () => {
+      render(<MediaThumb src="blob:one" durationMs={42_000} testId="thumb" />);
+      expect(screen.getByTestId("thumb").querySelector("svg")).not.toBeNull();
+    });
+  });
 });
