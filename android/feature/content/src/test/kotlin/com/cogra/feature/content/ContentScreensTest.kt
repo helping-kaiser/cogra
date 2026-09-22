@@ -22,12 +22,14 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -332,14 +334,16 @@ class ContentScreensTest {
             onLoadMore = { calls++ },
         )
         // Ten posts, five short of the end: the watched post is the sixth.
-        compose.onNodeWithTag("feed_post_p6").performScrollTo()
+        // `performScrollToNode` — not `performScrollTo` — because the tail
+        // post is not yet composed off-screen in a `LazyColumn`.
+        compose.onNodeWithTag("feed_list").performScrollToNode(hasTestTag("feed_post_p6"))
         compose.waitForIdle()
         assertThat(calls).isEqualTo(1)
 
         // Staying on screen — or scrolling further while the state hasn't
         // moved — does not ask again: the watch only rises once per
         // approach, the same guard `IntersectionObserver` gives web.
-        compose.onNodeWithTag("feed_post_p10").performScrollTo()
+        compose.onNodeWithTag("feed_list").performScrollToNode(hasTestTag("feed_post_p10"))
         compose.waitForIdle()
         assertThat(calls).isEqualTo(1)
     }
