@@ -740,7 +740,7 @@
     { "from": "CommentEdit", "via": 9, "kind": "advance", "label": "+ Add a tag", "to": [{ "board": "TagPicker" }] },
     { "from": "CommentEdit", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "CommentEdit", "via": 11, "kind": "detour", "label": "This creates 2 signed actions", "to": [{ "board": "CommentEditActs" }] },
-    { "from": "CommentEdit", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplyMedia", "case": "signed — the thread, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "CommentEdit", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the edit settling on its card" },{ "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "CommentEdit", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "CommentEdit", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
 
@@ -755,7 +755,7 @@
     { "from": "CommentEditVideo", "via": 9, "kind": "advance", "label": "+ Add a tag", "to": [{ "board": "TagPicker" }] },
     { "from": "CommentEditVideo", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "CommentEditVideo", "via": 11, "kind": "detour", "label": "This creates 2 signed actions", "to": [{ "board": "CommentEditActs" }] },
-    { "from": "CommentEditVideo", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplyMedia", "case": "signed — the thread, the edit settling, the new cover pointed at" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "CommentEditVideo", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the edit settling on its card, the new cover pointed at" },{ "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "CommentEditVideo", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "CommentEditVideo", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
 
