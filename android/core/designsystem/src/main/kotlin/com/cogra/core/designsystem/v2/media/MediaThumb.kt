@@ -107,8 +107,14 @@ sealed interface ThumbBadge {
  *   uploaded), so this is the picture's own story on its own tile.
  * @param progress how far that upload has got, where the transport can say.
  *   Null with [uploading] set draws the indeterminate ring.
- * @param duration a clip's running time, drawn at the opposite corner
- *   from [badge] so a video tile can be both picked and timed.
+ * @param duration a clip's running time, bottom-right — a video tile
+ *   carrying both [badge] (top-end or bottom-start) and a duration never
+ *   collides on one corner. Drawn only where the tile reads at least
+ *   [DurationBadgeMinTile]: below that floor the pill would outweigh the
+ *   picture it sits on, which is the composer's summary row's own tile
+ *   (`Layout.ThumbSize`, 48dp) and never the pick grid's 125dp column
+ *   (jakob's ruling, 2026-09-22 — design/readme.md §13, "the
+ *   composer's, and the detail has one reading").
  * @param coverSrc a clip's chosen cover, drawn as the frame itself rather
  *   than a word: an inset in the same bottom-left corner [ThumbBadge.Cover]
  *   owns, a third of the tile's short side with a 28dp floor, behind a
@@ -153,6 +159,13 @@ fun MediaThumb(
     // edge is known at composition time — that tile has no caller passing
     // `coverSrc` today.
     val coverMarkSize = (width ?: size)?.let { w -> (height ?: size)?.let { h -> maxOf(28.dp, minOf(w, h) / 3) } }
+    // The duration pill's own floor: an unmeasured (`size = null`) tile is
+    // always the pick grid's fill-width column, drawn well over the floor
+    // (`PickStage`'s 125dp), so only an EXPLICIT small edge hides it.
+    val explicitW = width ?: size
+    val explicitH = height ?: size
+    val durationFits = explicitW == null || explicitH == null ||
+        minOf(explicitW, explicitH) >= DurationBadgeMinTile
     Box(
         modifier = modifier
             .then(sizing)
@@ -195,15 +208,15 @@ fun MediaThumb(
             is ThumbBadge.Order -> OrderBadge(badge.position)
             ThumbBadge.Cover -> CoverBadge()
             is ThumbBadge.Remove -> RemoveBadge(badge.onRemove)
-            is ThumbBadge.Duration -> DurationBadge(badge.label)
+            is ThumbBadge.Duration -> if (durationFits) DurationBadge(badge.label)
             ThumbBadge.Failed -> FailedBadge()
             null -> Unit
         }
         // A clip's running time rides *beside* whatever the tile already
         // says about itself: `ComposePick` draws a video tile with the
-        // selection ring at one corner and the time at the other, so the
+        // selection ring at one corner and the time at another, so the
         // two are not alternatives.
-        duration?.let { DurationBadge(it) }
+        if (durationFits) duration?.let { DurationBadge(it) }
         if (coverSrc != null && coverMarkSize != null) CoverMark(coverSrc, coverMarkSize)
     }
 }
@@ -309,6 +322,16 @@ private fun BoxScope.FailedBadge() {
 private val RingSize = 26.dp
 private val RingStroke = 3.dp
 
+/**
+ * The duration pill's own floor (jakob's ruling, 2026-09-22:
+ * design/readme.md §13 — "`MediaThumb` draws the pill on an authoring
+ * tile of 80px or more, where an author is identifying a file among
+ * files"). Under it the pill reads as the tile's whole face rather than a
+ * corner mark — the composer's 48dp summary row (`PickedRow`) drew it at
+ * that size until this ruling, which is what jakob's hand test caught.
+ */
+private val DurationBadgeMinTile = 80.dp
+
 @Composable
 private fun BoxScope.OrderBadge(position: Int?) {
     val filled = position != null
@@ -379,12 +402,18 @@ private fun BoxScope.RemoveBadge(onRemove: () -> Unit) {
     }
 }
 
-/** Same plate as [CoverBadge] — see that function's citation. */
+/**
+ * Same plate as [CoverBadge] — see that function's citation.
+ *
+ * Bottom-right, 6dp inset — its own corner and its own inset, distinct
+ * from [CoverBadge]'s and [RemoveBadge]'s 3dp so the two never read as
+ * one register (jakob's ruling, 2026-09-22: design/readme.md §13).
+ */
 @Composable
 private fun BoxScope.DurationBadge(label: String) {
     Row(
         modifier = Modifier
-            .align(Alignment.BottomStart)
+            .align(Alignment.BottomEnd)
             .padding(6.dp)
             .clip(RoundedCornerShape(Space.x1))
             .background(MaterialTheme.colorScheme.inverseSurface)
