@@ -81,7 +81,11 @@ internal fun ColumnScope.DetailsStepBody(
                 // for a gallery only; the video tile wears its own × via
                 // onRemove instead (`ComposeDetailsVideo.jsx` 23-32).
                 onManage = if (state.isVideoPost) null else onManagePictures,
-                onRemove = if (state.isVideoPost) { { onRemovePick(0) } } else null,
+                onRemove = if (state.isVideoPost) {
+                    { onRemovePick(0) }
+                } else {
+                    null
+                },
                 testTag = "wizard_picked_row",
             )
             UploadFailures(state, onRetryUpload, onRemovePick)
