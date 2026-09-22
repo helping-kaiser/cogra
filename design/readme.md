@@ -5923,10 +5923,10 @@ round.
 | [CoGra · Compose and media](https://claude.ai/code/artifact/675688a0-1365-48e0-b56a-511104712f53) | `compose` | Compose · Media | Compose |
 | [CoGra · Entry, money and maps](https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5) | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
 
-The fifth is the post-MVP tree's own — `CoGra · Post-MVP rounds`, id
-`postmvp`, serving the Push notifications page and opening on it. It is
-seeded exactly as the four are and carries no `url` until it is first
-published.
+The fifth is the post-MVP tree's own —
+[CoGra · Post-MVP rounds](https://claude.ai/artifact/Fejcck8Jfu2wghbdmHHEkn),
+id `postmvp`, serving the Push notifications page and opening on it,
+seeded exactly as the four are.
 
 A canvas title never carries `< > & "` or a backslash — the editor
 refuses them at seed time, which is why the titles say "and". The old
