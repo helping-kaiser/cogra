@@ -318,15 +318,38 @@ class ContentScreensTest {
         assertThat(refreshes).isEqualTo(0)
     }
 
+    // THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (design readme
+    // §13, the same rule web's `infinite-list.ts` cites): no button, no
+    // page numbers — the watch sits `FEED_TAIL_DISTANCE` posts short of
+    // the end, so scrolling that post into view is the reader "approaching
+    // the tail".
     @Test
-    fun theNextPageLoadsOnDemand() {
-        var more = false
+    fun theNextPageLoadsAutomaticallyAsTheReaderApproachesTheTail() {
+        var calls = 0
+        val posts = (1..10).map { testPost("p$it") }
+        renderFeed(
+            FeedUiState(loading = false, posts = posts, hasNextPage = true),
+            onLoadMore = { calls++ },
+        )
+        // Ten posts, five short of the end: the watched post is the sixth.
+        compose.onNodeWithTag("feed_post_p6").performScrollTo()
+        compose.waitForIdle()
+        assertThat(calls).isEqualTo(1)
+
+        // Staying on screen — or scrolling further while the state hasn't
+        // moved — does not ask again: the watch only rises once per
+        // approach, the same guard `IntersectionObserver` gives web.
+        compose.onNodeWithTag("feed_post_p10").performScrollTo()
+        compose.waitForIdle()
+        assertThat(calls).isEqualTo(1)
+    }
+
+    @Test
+    fun theFeedDrawsNoLoadMoreControlAtRest() {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1")), hasNextPage = true),
-            onLoadMore = { more = true },
         )
-        compose.onNodeWithTag("feed_load_more").performScrollTo().performClick()
-        assertThat(more).isTrue()
+        compose.onNodeWithTag("feed_load_more").assertDoesNotExist()
     }
 
     // The band rides the same collapsing top as the key banner: away
