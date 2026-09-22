@@ -5897,6 +5897,34 @@ doc's own taxonomy. Backlog item 102.
   does not exist yet — the taxonomy's own rule covers it when it does
   (`notifications.md`, *The kinds later slices add*).
 
+### The foot ruling — 2026-09-22
+
+The implementation session, building the sheet ceiling, found two
+rulings colliding on one control: the sheets-and-video round names the
+thread's **Add a comment** a growing `rows={1}` field, but the
+comments-sheet round (2026-08-28) draws that foot as a field-shaped
+**door** into the full-focus composer — and a field whose tap navigates
+away is never typed in, so it cannot grow. jakob ruled the collision:
+
+- **The foot stays a door.** Composing a comment keeps its one home —
+  the full-focus composer, where draft, media, and the signing ceremony
+  live. A live inline foot would need that whole ceremony in a one-line
+  row, or would create a second, lighter class of comment; neither is
+  drawn. The graph's `Add a comment → ReplyCompose` edge was already
+  the door and stands unchanged.
+- **The growth law loses one of its three fields.** It governs the
+  fields a writer actually writes in — the description sheet and the
+  sensitive **Why?** — not the foot. The sheets-and-video round's text
+  naming the foot a growing field is superseded on that one point; its
+  ceiling, growth, and rows-as-minimum rules stand untouched.
+- **A live foot is the chats round's question.** A chat is an inline
+  signed send; if that round designs one, the comment foot inherits it
+  then — never as a sheet bite now.
+- **No pixels move.** Boards draw every field at its `rows`, and the
+  foot was drawn at one line under either reading, so the ruling
+  changes the record and the docblock (`CommentComposerFoot`), not a
+  board.
+
 ---
 
 ## 14. The canvases
