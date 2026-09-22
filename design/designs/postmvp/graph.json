@@ -1,0 +1,13 @@
+{
+  "$doc": "The post-MVP tree's screen graph, the same grammar canonical's carries (backlog item 22). Every interactive element on a board of a wired page carries data-flow=\"n\" (1..n per board, badges drawn by the shell); each number has exactly one edge here, whose `to` lists every outcome: a board, a declared terminal, or an explicit gap. Boards named here live in this tree only — flow-markers.mjs is keyed by board name across every tree, so a post-MVP board never takes a canonical board's name. Edges that will reach canonical's boards are drawn once the round moves across; until then a walk out of this tree is the `back` terminal.",
+  "wired": [],
+  "terminals": {
+    "back": "Back — returns to the previous screen",
+    "self": "Acts on this screen — state changes in place",
+    "os": "Hands off to the OS — the platform's own permission ask, browser download, system sheet"
+  },
+  "scanExempt": {},
+  "entries": {},
+  "boardKinds": {},
+  "edges": []
+}

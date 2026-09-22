@@ -1,0 +1,42 @@
+{
+  "artboards": [
+    {
+      "file": "PushSettings.dc.html",
+      "title": "Settings · the notifications group",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 700,
+      "page": "push"
+    },
+    {
+      "file": "MapPush.dc.html",
+      "x": -980,
+      "y": 0,
+      "w": 560,
+      "h": 274,
+      "page": "push",
+      "title": "Push notifications · flow map"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "postmvp",
+      "x": -340,
+      "y": 0,
+      "w": 560,
+      "text": "POST-MVP — rounds drawn before their slice is the work. The four canonical canvases and designs/canonical are the MVP baseline implementation reads from; this tree is where a later round is drawn, reviewed and held until its slice becomes current, at which point its boards move across to canonical as a reviewed round. Same design system, same flow grammar, same build: boards render from design/components, the page opens with a generated flow map, and graph.json binds each orange number to its outcomes. Nothing implementation needs is ever only here.",
+      "page": "push"
+    }
+  ],
+  "launch": {
+    "view": "canvas",
+    "page": "push"
+  },
+  "pages": [
+    {
+      "id": "push",
+      "name": "Push notifications"
+    }
+  ]
+}
