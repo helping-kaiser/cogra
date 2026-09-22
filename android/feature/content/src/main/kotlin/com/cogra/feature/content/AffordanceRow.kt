@@ -12,10 +12,12 @@
 // share is the first to move into the ⋮ and the row gives way from its
 // end.
 //
-// THE BREAKPOINT IS 360dp OF WINDOW WIDTH (jakob, 2026-09-17;
-// design/readme.md "THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK"): at
-// or under it the row sheds share and the reader's ⋮ holds it instead,
-// leading the sheet (`PostMenu.kt`). Above it the row is the whole four.
+// THE BREAKPOINT IS STRICTLY BELOW 360dp OF WINDOW WIDTH (jakob,
+// 2026-09-17; design/readme.md "THE NARROW PHONE'S MENU HOLDS THE SHARE IT
+// TOOK"; sharpened 2026-09-22, PR #794 / 820c7195 — 360dp is mainstream
+// android): under it the row sheds share and the reader's ⋮ holds it
+// instead, leading the sheet (`PostMenu.kt`). AT 360dp and above the row is
+// the whole four.
 
 package com.cogra.feature.content
 
@@ -56,18 +58,23 @@ private val GLYPH = 18.dp
 /** The 6px seam between a glyph and the number beside it. */
 private val GLYPH_GAP = 6.dp
 
-/** The narrow-share fold's one number (design/readme.md, jakob 2026-09-17). */
+/**
+ * The narrow-share fold's one number (design/readme.md, jakob 2026-09-17,
+ * sharpened 2026-09-22 — PR #794): the inequality is strict, since 360dp
+ * is a mainstream android width and the narrow treatment is for the
+ * genuinely small phone, not the common one.
+ */
 private const val NARROW_SHARE_BREAKPOINT_DP = 360
 
 /**
- * Whether this window is at or under the narrow-share breakpoint — the
+ * Whether this window is strictly below the narrow-share breakpoint — the
  * dp analog of the web's `useNarrowShare` (`narrow-share.ts`), read the
  * way `mediaMaxHeight()` reads the device's own height
  * (`MediaGallery.kt`).
  */
 @Composable
 internal fun isNarrowShareWidth(): Boolean =
-    LocalConfiguration.current.screenWidthDp <= NARROW_SHARE_BREAKPOINT_DP
+    LocalConfiguration.current.screenWidthDp < NARROW_SHARE_BREAKPOINT_DP
 
 /**
  * The row a post wears on the card and on the detail alike.
@@ -83,7 +90,7 @@ internal fun isNarrowShareWidth(): Boolean =
  *   when the drill-down and the field do.
  * - **The overflow ⋮** opens `ReaderPostMenu`, whose rows (License
  *   terms, Cite in a new post) are W3's sheets. Its other possible
- *   content is a folded affordance — and at or under 360dp of window
+ *   content is a folded affordance — and strictly below 360dp of window
  *   width that fold happens: share leaves this row and the reader's ⋮
  *   holds it instead, leading the sheet (`isNarrowShareWidth`,
  *   `PostMenu.kt`).
@@ -118,7 +125,7 @@ internal fun PostAffordanceRow(
     ) {
         stanceControl()
         CommentAffordance(commentCount, onOpenComments, testTagPrefix)
-        // THE ROW GIVES WAY FROM ITS END at or under the narrow-share
+        // THE ROW GIVES WAY FROM ITS END strictly below the narrow-share
         // breakpoint: share is the first to move into the ⋮.
         if (!narrow) {
             ShareAffordance(onShare, testTagPrefix)

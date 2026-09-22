@@ -449,8 +449,9 @@ private fun DetailMenu(
     if (isRemoved(post.content, post.attachments, post.attachmentsStatus)) return
     val own = viewerId != null && post.author?.id == viewerId
     // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
-    // jakob 2026-09-17): the detail's own ⋮ is the reader's menu too
-    // (`_shared.jsx:341-346` — the card's own dot yields to it).
+    // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): the detail's own
+    // ⋮ is the reader's menu too (`_shared.jsx:341-346` — the card's own
+    // dot yields to it).
     val narrow = isNarrowShareWidth()
     val shareRow: (() -> Unit)? = if (!own && narrow) {
         { onShare(post.id) }

@@ -28,6 +28,16 @@ import { canShare, shareLink } from "./share";
 const NEVER_CHANGES = () => () => {};
 const NOT_ON_THE_SERVER = () => false;
 
+/**
+ * Whether this browser can act on a share at all — neither `navigator.share`
+ * nor `clipboard.writeText`. Shared by the button and by the narrow-share
+ * menu row, so a browser with no door never grows a dead control in either
+ * place (`share.ts`'s "the control does not render" law).
+ */
+export function useShareCapable(): boolean {
+  return useSyncExternalStore(NEVER_CHANGES, canShare, NOT_ON_THE_SERVER);
+}
+
 export function ShareButton({
   href,
   targetLabel = "this post",
@@ -45,7 +55,7 @@ export function ShareButton({
   onCopied: () => void;
   testId?: string;
 }) {
-  const capable = useSyncExternalStore(NEVER_CHANGES, canShare, NOT_ON_THE_SERVER);
+  const capable = useShareCapable();
   if (!capable) return null;
 
   return (

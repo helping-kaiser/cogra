@@ -1970,9 +1970,10 @@ class ContentScreensTest {
      * Stance, comment, share — and the two the staging rule gates.
      *
      * ABOVE THE NARROW-SHARE BREAKPOINT (design/readme.md, jakob
-     * 2026-09-17): Robolectric's own default sandbox is 320dp wide, which
-     * is AT the breakpoint, so this pins the wide case explicitly rather
-     * than by the default's accident.
+     * 2026-09-17, sharpened 2026-09-22 — PR #794): Robolectric's own
+     * default sandbox is 320dp wide, which is BELOW the breakpoint, so
+     * this pins the wide case explicitly rather than by the default's
+     * accident.
      */
     @Test
     @Config(qualifiers = "w411dp-h891dp")
@@ -2074,44 +2075,51 @@ class ContentScreensTest {
             .assertContentDescriptionEquals("Share this post")
     }
 
-    // -- The narrow-share fold (design/readme.md, jakob 2026-09-17) --
+    // -- The narrow-share fold (design/readme.md, jakob 2026-09-17,
+    // sharpened 2026-09-22 — PR #794 / 820c7195: the inequality is strict,
+    // since 360dp is mainstream android and the narrow treatment is for
+    // the genuinely small phone, not the common one) --
 
     /**
-     * AT OR UNDER 360dp THE ROW SHEDS SHARE, ON THE FEED CARD. Robolectric's
-     * own default sandbox is 320dp wide — AT the breakpoint — so this pins
-     * the narrow case explicitly rather than leaning on that default by
-     * accident.
+     * STRICTLY BELOW 360dp THE ROW SHEDS SHARE, ON THE FEED CARD.
+     * Robolectric's own default sandbox is 320dp wide — under the
+     * breakpoint — so this pins the narrow case explicitly (at 359dp)
+     * rather than leaning on that default by accident.
      */
     @Test
-    @Config(qualifiers = "w360dp-h640dp")
-    fun theFeedCardsRowShedsShareAtTheNarrowBreakpoint() {
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theFeedCardsRowShedsShareBelowTheNarrowBreakpoint() {
         renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
         compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertDoesNotExist()
     }
 
     /** The detail's own row sheds it the same way. */
     @Test
-    @Config(qualifiers = "w360dp-h640dp")
-    fun theDetailsRowShedsShareAtTheNarrowBreakpoint() {
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theDetailsRowShedsShareBelowTheNarrowBreakpoint() {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
         compose.onNodeWithTag("detail_post_share", useUnmergedTree = true).assertDoesNotExist()
     }
 
-    /** One number, not a range — 361dp is unaffected. */
+    /**
+     * AT 360dp THE WIDE ROW STANDS — the inequality is strict (jakob
+     * 2026-09-22), so the breakpoint itself is unaffected, not just widths
+     * above it.
+     */
     @Test
-    @Config(qualifiers = "w361dp-h640dp")
-    fun theRowKeepsShareJustAboveTheNarrowBreakpoint() {
+    @Config(qualifiers = "w360dp-h640dp")
+    fun theRowKeepsShareAtTheBreakpointItself() {
         renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
         compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertExists()
     }
 
     /**
-     * THE READER'S ⋮ LEADS WITH SHARE at the breakpoint, on the feed card's
-     * own menu.
+     * THE READER'S ⋮ LEADS WITH SHARE below the breakpoint, on the feed
+     * card's own menu.
      */
     @Test
-    @Config(qualifiers = "w360dp-h640dp")
-    fun theFeedCardsReaderMenuLeadsWithShareAtTheNarrowBreakpoint() {
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theFeedCardsReaderMenuLeadsWithShareBelowTheNarrowBreakpoint() {
         val shared = mutableListOf<String>()
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1"))),
@@ -2128,8 +2136,8 @@ class ContentScreensTest {
      * too (`_shared.jsx:341-346` — the card's own dot yields to it).
      */
     @Test
-    @Config(qualifiers = "w360dp-h640dp")
-    fun theDetailsReaderMenuLeadsWithShareAtTheNarrowBreakpoint() {
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theDetailsReaderMenuLeadsWithShareBelowTheNarrowBreakpoint() {
         val shared = mutableListOf<String>()
         renderDetail(
             detailFixture(loading = false, post = testPost("p1")),
@@ -2141,10 +2149,10 @@ class ContentScreensTest {
         assertThat(shared).containsExactly("p1")
     }
 
-    /** Above the breakpoint the menu is unchanged — no Share row at all. */
+    /** At the breakpoint itself the menu is unchanged — no Share row at all. */
     @Test
-    @Config(qualifiers = "w411dp-h891dp")
-    fun theReadersMenuHasNoShareRowAboveTheNarrowBreakpoint() {
+    @Config(qualifiers = "w360dp-h640dp")
+    fun theReadersMenuHasNoShareRowAtTheBreakpointItself() {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1"))),
             viewerId = "someone-else",
@@ -2155,12 +2163,12 @@ class ContentScreensTest {
 
     /**
      * No board draws Share leaving the author's own menu — the ruling
-     * names only the reader's (design/readme.md ~line 4972). Pinned so a
-     * future change to this scope is deliberate, not drift.
+     * names only the reader's (design/readme.md). Pinned so a future
+     * change to this scope is deliberate, not drift.
      */
     @Test
-    @Config(qualifiers = "w360dp-h640dp")
-    fun theOwnPostMenuNeverGainsShareEvenAtTheNarrowBreakpoint() {
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theOwnPostMenuNeverGainsShareEvenBelowTheNarrowBreakpoint() {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1"))),
             viewerId = "author-1",

@@ -29,6 +29,16 @@ export type PostMenuContext = {
   navigate: (href: string) => void;
   openLicense: (license: License) => void;
   openRemove: () => void;
+  /**
+   * THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md, jakob
+   * 2026-09-17, sharpened 2026-09-22 — PR #794): strictly below 360px of
+   * viewport width the affordance row's Share control folds into this menu
+   * instead, leading the sheet; at 360 the wide row keeps it. Built by the
+   * caller — the same place `ShareButton` mounts — and only where it
+   * applies: null skips the row (own posts have no drawn board for it, and a
+   * browser with no share door grows no dead row either).
+   */
+  shareRow: MenuItem | null;
   /** Row test ids derive from this — `post-menu` gives `post-menu-save`. */
   testIdPrefix: string;
 };
@@ -53,11 +63,16 @@ export function postMenuItems({
   navigate,
   openLicense,
   openRemove,
+  shareRow,
   testIdPrefix,
 }: PostMenuContext): MenuItem[] {
-  const rows: MenuItem[] = [
-    { label: "Save", onSelect: () => {}, testId: `${testIdPrefix}-save` },
-  ];
+  const rows: MenuItem[] = [];
+  // SHARE LEADS THE SHEET, ahead of Save: every other row here is a menu row
+  // by nature, and share is the one that was a one-tap control a moment ago
+  // (design/readme.md). Only the reader's menu gains it — no board draws it
+  // leaving the author's own.
+  if (!own && shareRow !== null) rows.push(shareRow);
+  rows.push({ label: "Save", onSelect: () => {}, testId: `${testIdPrefix}-save` });
   if (own) {
     rows.push(
       {

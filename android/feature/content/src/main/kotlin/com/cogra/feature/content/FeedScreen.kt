@@ -595,8 +595,8 @@ private fun CardMenuHeader(
     val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
     val own = viewerId != null && post.author?.id == viewerId
     // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
-    // jakob 2026-09-17): only the reader's menu gains it, and only at or
-    // under the breakpoint the row itself sheds it at.
+    // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): only the reader's
+    // menu gains it, and only where the row itself sheds it (`isNarrowShareWidth`).
     val narrow = isNarrowShareWidth()
     val shareRow: (() -> Unit)? = if (!own && narrow) {
         { onShare(post.id) }

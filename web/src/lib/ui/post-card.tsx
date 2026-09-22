@@ -22,6 +22,12 @@
 // and costs the height the post does not have; that constraint is why every
 // affordance in it is glyph-plus-number rather than words.
 //
+// STRICTLY BELOW 360px OF VIEWPORT WIDTH, SHARE LEAVES THE ROW (design/readme.md,
+// jakob 2026-09-17, sharpened 2026-09-22 — PR #794): the row gives way from
+// its end, and the reader's overflow menu holds what it lost, leading the
+// sheet (`post-menu.ts`). AT 360 the wide row stands — 360dp is mainstream
+// android, so the narrow treatment is for the genuinely small.
+//
 // ONE SLOT IS EMPTY, DELIBERATELY, and says why where it stands: the Post
 // Score, which has no field on the contract until slice 3's ranker. A slot
 // arrives WITH its surface — the `BottomNav` precedent — and a control that
@@ -43,6 +49,7 @@ import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
 import { Icon } from "./icons";
+import { useNarrowShare } from "./narrow-share";
 import { PendingMarker } from "./pending-marker";
 import {
   BodyRegion,
@@ -53,7 +60,8 @@ import {
   removalReason,
   sensitiveSignature,
 } from "./post-media";
-import { ShareButton } from "./share-button";
+import { ShareButton, useShareCapable } from "./share-button";
+import { shareLink } from "./share";
 import { StanceControl } from "./stance-control";
 import { shortTimestamp } from "./timestamp";
 import { TopicsLine } from "./topics-line";
@@ -215,6 +223,13 @@ export function PostCard({
   const [licenseShown, setLicenseShown] = useState<License | null>(null);
   const [licenseOpen, setLicenseOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
+  // THE NARROW-SHARE FOLD (design/readme.md, jakob 2026-09-17, sharpened
+  // 2026-09-22 — PR #794): strictly below 360px the row sheds Share and the
+  // menu leads with it instead; at 360 the wide layout stands. Capability
+  // gated the same way the button itself is — a browser with no share door
+  // never grows a dead row (`share.ts`).
+  const narrow = useNarrowShare();
+  const shareCapable = useShareCapable();
 
   const redacted = payloadIsRedacted(post);
   const media = !redacted && hasMedia(post);
@@ -240,6 +255,18 @@ export function PostCard({
       setLicenseOpen(true);
     },
     openRemove: () => setRemoveOpen(true),
+    shareRow:
+      narrow && shareCapable
+        ? {
+            label: "Share",
+            onSelect: () => {
+              void shareLink(new URL(href, window.location.href).toString()).then((outcome) => {
+                if (outcome === "copied") onLinkCopied();
+              });
+            },
+            testId: `${testId}-menu-share`,
+          }
+        : null,
     testIdPrefix: `${testId}-menu`,
   });
 
@@ -479,7 +506,11 @@ export function PostCard({
           onOpen={onOpenComments}
           testId={`${testId}-comments`}
         />
-        <ShareButton href={href} onCopied={onLinkCopied} testId={`${testId}-share`} />
+        {/* SHARE LEAVES THE ROW STRICTLY BELOW 360px — the fold queue's first
+            move (design/readme.md, jakob 2026-09-17, sharpened 2026-09-22 —
+            PR #794). The reader's overflow menu holds it instead, leading
+            the sheet. */}
+        {!narrow && <ShareButton href={href} onCopied={onLinkCopied} testId={`${testId}-share`} />}
       </div>
     </Card>
   );
