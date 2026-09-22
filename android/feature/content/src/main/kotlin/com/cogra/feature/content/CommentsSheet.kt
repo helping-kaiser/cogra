@@ -249,12 +249,16 @@ fun CommentsSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        // THE TALLEST CLASS, ASKED FOR BY NAME (`BottomSheet.jsx`'s `tallest`,
+        // readme §13 "The sheets-and-video round" 2026-09-22): pinned AT the
+        // ceiling rather than held under it, because a thread is the one
+        // surface with a list to read and a field to write in at once, so the
+        // surface owns the height and the list scrolls inside it.
+        //
         // THE SHEET CARRIES THE HEIGHT, ITS HANDLE INCLUDED. Capping the
         // CONTENT instead left Material's drag handle standing above the cap:
         // the sheet then came to within a handle's height of the top and the
-        // reveal was gone. The number is the shared ceiling every sheet takes
-        // ([sheetCeilingHeight]) — this sheet is the one that drew the shape,
-        // so it reads the named one rather than keeping a second copy.
+        // reveal was gone.
         modifier = Modifier.testTag("comments_sheet").height(sheetCeilingHeight()),
     ) {
         // The foot is drawn last and the list carries the weight, so a foot

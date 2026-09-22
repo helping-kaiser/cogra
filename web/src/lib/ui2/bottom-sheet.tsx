@@ -32,25 +32,35 @@ import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 export const SHEET_CEILING_SLIVER_PX = 72;
 
 /**
- * THE SHEET CEILING — how tall a sheet may ever be (jakob 2026-09-22).
+ * THE SHEET CEILING — how tall a sheet may ever be (jakob's ruling, the
+ * sheets-and-video round, 2026-09-22: design/readme.md §13 and
+ * `design/components/core/BottomSheet.jsx:29-49`, whose master spells the
+ * same `calc(100% - 72px - env(safe-area-inset-top, 0px))`).
  *
  * A sheet's top edge never rises above a {@link SHEET_CEILING_SLIVER_PX}
- * strip measured from the top of the safe area, which on the web is the top
- * of the viewport; `dvh` is what makes that the LIVE viewport rather than the
- * one the browser's own chrome was hiding. The rounded corners keep a strip
- * of the surface behind visible, and no sheet ever passes it.
+ * strip measured from the top of the SAFE AREA. On the web that is the top of
+ * the viewport, plus whatever the device keeps for itself — `dvh` is what
+ * makes it the LIVE viewport rather than the one the browser's own chrome was
+ * hiding, and `env(safe-area-inset-top)` is the notch the viewport still
+ * counts. The rounded corners keep a strip of the surface behind visible: a
+ * drawer that reached the top edge would read as a destination.
  *
- * ONE MECHANISM, NOT TWO. The comments sheet already drew exactly this shape;
- * `content` now stops at the same line instead of a second, unrelated `92dvh`
- * of its own — a sheet growing with its field had no reason to stop anywhere
- * else, and the two numbers were the place the platforms would drift.
+ * THE CEILING CAPS THE OTHER CLASSES RATHER THAN REPLACING THEM, which is why
+ * it arrives inside a `min()` and not as the height itself: a content sheet
+ * keeps its own 92dvh, and the ceiling only binds on a screen short enough
+ * for that percentage to reach the sliver.
  *
  * The literals are spelled out because Tailwind scans source TEXT for class
- * names: a class built from the constant would never be generated. The pin in
- * `bottom-sheet.test.tsx` is what keeps the two in step.
+ * names: a class built from the constant would never be generated. The
+ * underscores are Tailwind's own spelling of a space inside an arbitrary
+ * value — written out rather than left to the `calc()` normaliser, which has
+ * hyphens of its own to tell apart inside `safe-area-inset-top`. The pin in
+ * `bottom-sheet.test.tsx` is what keeps the classes and this constant in
+ * step.
  */
-const CEILING = "max-h-[calc(100dvh-72px)]";
-const CEILING_FULL = "h-[calc(100dvh-72px)]";
+export const SHEET_CEILING = "calc(100dvh_-_72px_-_env(safe-area-inset-top,0px))";
+const CAPPED = "max-h-[min(92dvh,calc(100dvh_-_72px_-_env(safe-area-inset-top,0px)))]";
+const TALLEST = "h-[calc(100dvh_-_72px_-_env(safe-area-inset-top,0px))]";
 
 export function BottomSheet({
   open,
@@ -58,7 +68,7 @@ export function BottomSheet({
   title,
   titleTrailing,
   titleHidden = false,
-  height = "content",
+  tallest = false,
   foot,
   children,
   bodyRef,
@@ -87,16 +97,16 @@ export function BottomSheet({
    */
   titleHidden?: boolean;
   /**
-   * `content` lets the content set the sheet's size, up to the sliver the
-   * screen keeps; `full` pins it at the drawn full height instead — the
-   * comments sheet fills the screen to 72px below the top
-   * (`_shared.jsx:1249` — `height="calc(100% - 72px)"`). Design's own master
-   * takes the same prop for the same reason: "a pinned input row at its foot
-   * needs the surface itself to own the height" (`BottomSheet.jsx:29-32`),
-   * and a sheet sized by its content would rise and fall as a page of
-   * comments lands.
+   * THE TALLEST CLASS, ASKED FOR BY NAME (`BottomSheet.jsx`'s own `tallest`).
+   * A sheet is content-sized by default and grows with what it carries, held
+   * under {@link SHEET_CEILING}; `tallest` pins it AT the ceiling instead.
+   * The comments sheet is the one that asks: "a pinned input row at its foot
+   * needs the surface itself to own the height" (readme §13, 2026-08-28), and
+   * a sheet sized by its content would rise and fall as a page of comments
+   * lands. Its children manage their own scrolling from there — which is also
+   * why the composer's growth comes out of the list above it.
    */
-  height?: "content" | "full";
+  tallest?: boolean;
   /**
    * The row pinned below the scrolling body — design's `CommentComposerFoot`
    * slot. It sits outside the scroll region so it stays reachable however
@@ -209,7 +219,7 @@ export function BottomSheet({
       // fill the screen up to a sliver below the top, so the rounded corners
       // keep a strip of the surface behind visible.
       className={`${closing ? "cg-sheet-out" : "cg-sheet-in"} ${
-        height === "full" ? CEILING_FULL : CEILING
+        tallest ? TALLEST : CAPPED
       } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 ${
         // ONE SCRIM, HOWEVER MANY SHEETS. The system has a single dimming
         // token (`--scrim-dialog`, 50% black) and stacking moves the z-layer,
@@ -224,7 +234,7 @@ export function BottomSheet({
           : "bg-surface-container-high backdrop:bg-scrim/50"
       } p-0 text-on-surface`}
     >
-      <div className={`flex flex-col ${height === "full" ? "h-full" : CEILING}`}>
+      <div className={`flex flex-col ${tallest ? "h-full" : CAPPED}`}>
         {/* The handle says the sheet can be pulled down, and it can. The
             gesture is read across the whole surface, so the grip marks where
             the eye goes rather than the only place that answers; the

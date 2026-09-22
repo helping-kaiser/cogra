@@ -68,7 +68,10 @@ fun sheetContainerColor(stacked: Boolean, colors: ColorScheme, default: Color): 
 val SheetCeilingSliver = 72.dp
 
 /**
- * THE SHEET CEILING — how tall a sheet may ever be (jakob 2026-09-22).
+ * THE SHEET CEILING — how tall a sheet may ever be (jakob's ruling, the
+ * sheets-and-video round, 2026-09-22: design/readme.md §13 and
+ * `design/components/core/BottomSheet.jsx:29-49`, whose master spells the
+ * same thing as `calc(100% - 72px - env(safe-area-inset-top, 0px))`).
  *
  * A sheet's top edge never rises above a [SheetCeilingSliver] strip measured
  * from the top of the SAFE AREA: below the status bar and the display cutout,
@@ -82,6 +85,11 @@ val SheetCeilingSliver = 72.dp
  * itself with the same number instead of inventing a second one. The safe
  * inset is what the comments sheet was missing, and the sliver is now
  * measured from where content may actually start.
+ *
+ * THE CEILING CAPS RATHER THAN REPLACES. A content-sized sheet is held UNDER
+ * it ([CograSheetSurface]'s `heightIn`) and still grows with what it carries;
+ * only the comments sheet is pinned AT it — the `tallest` class, asked for by
+ * name.
  *
  * The IME is deliberately NOT subtracted: a sheet pads itself clear of the
  * keyboard from INSIDE this height ([CograSheetSurface]), so the top edge
