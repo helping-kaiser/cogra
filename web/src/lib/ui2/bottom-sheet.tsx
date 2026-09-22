@@ -25,6 +25,33 @@ import {
 import { exitDuration, SHEET_OUT_MS } from "@/lib/ui/motion";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 
+/**
+ * THE SLIVER A SHEET AT ITS CEILING LEAVES BEHIND (`_shared.jsx:1249` —
+ * `height="calc(100% - 72px)"`).
+ */
+export const SHEET_CEILING_SLIVER_PX = 72;
+
+/**
+ * THE SHEET CEILING — how tall a sheet may ever be (jakob 2026-09-22).
+ *
+ * A sheet's top edge never rises above a {@link SHEET_CEILING_SLIVER_PX}
+ * strip measured from the top of the safe area, which on the web is the top
+ * of the viewport; `dvh` is what makes that the LIVE viewport rather than the
+ * one the browser's own chrome was hiding. The rounded corners keep a strip
+ * of the surface behind visible, and no sheet ever passes it.
+ *
+ * ONE MECHANISM, NOT TWO. The comments sheet already drew exactly this shape;
+ * `content` now stops at the same line instead of a second, unrelated `92dvh`
+ * of its own — a sheet growing with its field had no reason to stop anywhere
+ * else, and the two numbers were the place the platforms would drift.
+ *
+ * The literals are spelled out because Tailwind scans source TEXT for class
+ * names: a class built from the constant would never be generated. The pin in
+ * `bottom-sheet.test.tsx` is what keeps the two in step.
+ */
+const CEILING = "max-h-[calc(100dvh-72px)]";
+const CEILING_FULL = "h-[calc(100dvh-72px)]";
+
 export function BottomSheet({
   open,
   onClose,
@@ -182,7 +209,7 @@ export function BottomSheet({
       // fill the screen up to a sliver below the top, so the rounded corners
       // keep a strip of the surface behind visible.
       className={`${closing ? "cg-sheet-out" : "cg-sheet-in"} ${
-        height === "full" ? "h-[calc(100dvh-72px)]" : "max-h-[92dvh]"
+        height === "full" ? CEILING_FULL : CEILING
       } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 ${
         // ONE SCRIM, HOWEVER MANY SHEETS. The system has a single dimming
         // token (`--scrim-dialog`, 50% black) and stacking moves the z-layer,
@@ -197,7 +224,7 @@ export function BottomSheet({
           : "bg-surface-container-high backdrop:bg-scrim/50"
       } p-0 text-on-surface`}
     >
-      <div className={`flex flex-col ${height === "full" ? "h-full" : "max-h-[92dvh]"}`}>
+      <div className={`flex flex-col ${height === "full" ? "h-full" : CEILING}`}>
         {/* The handle says the sheet can be pulled down, and it can. The
             gesture is read across the whole surface, so the grip marks where
             the eye goes rather than the only place that answers; the
@@ -220,7 +247,13 @@ export function BottomSheet({
             if (bodyRef) bodyRef.current = node;
           }}
           data-testid={`${testId}-body`}
-          className={`min-h-0 flex-1 overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
+          // A COLUMN, SO WHAT IT HOLDS CAN YIELD. A sheet that grows with a
+          // field stops at the ceiling, and from there something has to give
+          // way: the body's children shrink (down to their own `min-h-0`)
+          // before the body starts scrolling, which is what puts the scroll
+          // INSIDE the growing field rather than under the whole sheet. The
+          // scroll stays as the fallback for content that cannot shrink.
+          className={`flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
         >
           {children}
         </div>
