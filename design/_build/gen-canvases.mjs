@@ -116,7 +116,7 @@ function genCanvases(treeDir) {
   for (const u of unresolved) treeFails.push(`${u} is referenced by a board and is not in img/ — no canvas could carry it`);
   const unused = images.filter((f) => ![...boardUses.values()].some((u) => u.includes(f)));
   if (unused.length) notes.push(`${treeDir}: img/ carries ${unused.length} unreferenced file(s), seeded onto no canvas: ${unused.join(", ")}`);
-  if (nonImage.size) notes.push(`named by a board and carried by no canvas, because the tree holds no such file: ${[...nonImage].sort().join(", ")}`);
+  if (nonImage.size) notes.push(`${treeDir}: named by a board and carried by no canvas, because the tree holds no such file: ${[...nonImage].sort().join(", ")}`);
 
   // ---- the manifests --------------------------------------------------------
 
