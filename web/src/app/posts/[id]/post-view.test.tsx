@@ -443,9 +443,11 @@ describe("PostView", () => {
     );
   });
 
-  // The rows are `OWN_POST_MENU` (`_shared.jsx:369-375`): Save · Edit · Mark as
-  // sensitive · Remove · License terms.
-  it("gives the creator the own-post menu, Edit among its rows", async () => {
+  // The rows are `OWN_POST_MENU` (`_shared.jsx:421-428`): Save · Cite in a
+  // new post · Edit · Mark as sensitive · Remove · License terms. Cite
+  // takes the reader menu's own position, second, so the thumb finds one
+  // row in one place on every menu that has it.
+  it("gives the creator the own-post menu, cite in second position", async () => {
     server.use(
       ...thread("acct-1", []),
     );
@@ -455,13 +457,25 @@ describe("PostView", () => {
     });
     fireEvent.click(await screen.findByTestId("post-menu"));
     expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
+    expect(screen.getByTestId("post-menu-cite")).toHaveTextContent("Cite in a new post");
     expect(screen.getByTestId("post-menu-edit")).toHaveTextContent("Edit");
     expect(screen.getByTestId("post-menu-sensitive")).toHaveTextContent("Mark as sensitive");
     expect(screen.getByTestId("post-menu-remove")).toHaveTextContent("Remove");
     expect(screen.getByTestId("post-menu-license")).toHaveTextContent("License terms");
     // A reader's rows are not on an author's menu.
     expect(screen.queryByTestId("post-menu-hide")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("post-menu-cite")).not.toBeInTheDocument();
+    const order = Array.from(
+      screen.getByTestId("post-menu-sheet-body").querySelectorAll("[data-testid]"),
+      (node) => node.getAttribute("data-testid"),
+    );
+    expect(order).toEqual([
+      "post-menu-save",
+      "post-menu-cite",
+      "post-menu-edit",
+      "post-menu-sensitive",
+      "post-menu-remove",
+      "post-menu-license",
+    ]);
   });
 
   // The rows are `READER_POST_MENU` (`_shared.jsx:376`): Save · Cite in a new

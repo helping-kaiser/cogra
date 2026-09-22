@@ -419,7 +419,11 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_p1_menu_remove").assertDoesNotExist()
     }
 
-    /** The rows are `OWN_POST_MENU` (`_shared.jsx:369-375`), on a card. */
+    /**
+     * The rows are `OWN_POST_MENU` (`_shared.jsx:421-428`), on a card. Cite
+     * takes the reader menu's own position, second, so the thumb finds one
+     * row in one place on every menu that has it.
+     */
     @Test
     fun aFeedCardCarriesTheOwnPostMenuWhereTheViewerIsTheAuthor() {
         var editing: String? = null
@@ -430,11 +434,23 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("feed_p1_menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_save").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
         compose.onNodeWithTag("feed_p1_menu_sensitive").assertExists()
         compose.onNodeWithTag("feed_p1_menu_remove").assertExists()
         compose.onNodeWithTag("feed_p1_menu_license").assertExists()
         compose.onNodeWithTag("feed_p1_menu_hide").assertDoesNotExist()
-        compose.onNodeWithTag("feed_p1_menu_cite").assertDoesNotExist()
+
+        val save = compose.onNodeWithTag("feed_p1_menu_save").getUnclippedBoundsInRoot().top
+        val cite = compose.onNodeWithTag("feed_p1_menu_cite").getUnclippedBoundsInRoot().top
+        val edit = compose.onNodeWithTag("feed_p1_menu_edit").getUnclippedBoundsInRoot().top
+        val sensitive = compose.onNodeWithTag("feed_p1_menu_sensitive").getUnclippedBoundsInRoot().top
+        val remove = compose.onNodeWithTag("feed_p1_menu_remove").getUnclippedBoundsInRoot().top
+        val license = compose.onNodeWithTag("feed_p1_menu_license").getUnclippedBoundsInRoot().top
+        assertThat(save.value).isLessThan(cite.value)
+        assertThat(cite.value).isLessThan(edit.value)
+        assertThat(edit.value).isLessThan(sensitive.value)
+        assertThat(sensitive.value).isLessThan(remove.value)
+        assertThat(remove.value).isLessThan(license.value)
 
         compose.onNodeWithTag("feed_p1_menu_edit").performClick()
         assertThat(editing).isEqualTo("p1")
@@ -1289,7 +1305,11 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_menu_remove").assertDoesNotExist()
     }
 
-    /** The rows are `OWN_POST_MENU` (`_shared.jsx:369-375`). */
+    /**
+     * The rows are `OWN_POST_MENU` (`_shared.jsx:421-428`). Cite takes the
+     * reader menu's own position, second, so the thumb finds one row in one
+     * place on every menu that has it.
+     */
     @Test
     fun theCreatorGetsTheOwnPostMenuAndEditOpensFromIt() {
         var editing: String? = null
@@ -1300,12 +1320,24 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("detail_menu").performClick()
         compose.onNodeWithTag("detail_menu_save").assertExists()
+        compose.onNodeWithTag("detail_menu_cite").assertExists()
         compose.onNodeWithTag("detail_menu_sensitive").assertExists()
         compose.onNodeWithTag("detail_menu_remove").assertExists()
         compose.onNodeWithTag("detail_menu_license").assertExists()
         // A reader's rows are not on an author's menu.
         compose.onNodeWithTag("detail_menu_hide").assertDoesNotExist()
-        compose.onNodeWithTag("detail_menu_cite").assertDoesNotExist()
+
+        val save = compose.onNodeWithTag("detail_menu_save").getUnclippedBoundsInRoot().top
+        val cite = compose.onNodeWithTag("detail_menu_cite").getUnclippedBoundsInRoot().top
+        val edit = compose.onNodeWithTag("detail_menu_edit").getUnclippedBoundsInRoot().top
+        val sensitive = compose.onNodeWithTag("detail_menu_sensitive").getUnclippedBoundsInRoot().top
+        val remove = compose.onNodeWithTag("detail_menu_remove").getUnclippedBoundsInRoot().top
+        val license = compose.onNodeWithTag("detail_menu_license").getUnclippedBoundsInRoot().top
+        assertThat(save.value).isLessThan(cite.value)
+        assertThat(cite.value).isLessThan(edit.value)
+        assertThat(edit.value).isLessThan(sensitive.value)
+        assertThat(sensitive.value).isLessThan(remove.value)
+        assertThat(remove.value).isLessThan(license.value)
 
         compose.onNodeWithTag("detail_menu_edit").performClick()
         assertThat(editing).isEqualTo("p1")

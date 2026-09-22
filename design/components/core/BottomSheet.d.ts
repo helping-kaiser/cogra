@@ -10,14 +10,26 @@ export interface BottomSheetProps {
   children?: React.ReactNode;
   /** Render in flow, with no scrim and no animation — for specimens. */
   inline?: boolean;
-  /** Cap before the sheet scrolls internally. Default "62%". */
+  /**
+   * Cap before the sheet scrolls internally. Default "62%"; "88%" is the raised
+   * class for a sheet whose content needs the room. Either is held under the
+   * tallest-sheet ceiling — a 72px sliver below the safe area — so a class can
+   * never out-grow the sliver on a short screen.
+   */
   maxHeight?: string;
   /**
-   * Pin the sheet at a fixed size (overrides `maxHeight`) — the comments sheet
-   * fills the screen up to a sliver below the top, and its pinned entry row
-   * needs the surface to own the height. Children manage their own scrolling.
+   * Pin the sheet at a size instead of letting content set it (overrides
+   * `maxHeight`, held under the same ceiling) — the footed filter sheet, whose
+   * Done row is pinned beneath its scrolling sections. Children manage their own
+   * scrolling.
    */
   height?: string;
+  /**
+   * Take the tallest-sheet class: pinned at the ceiling, a 72px sliver below the
+   * safe area, children scrolling inside it. The comments sheet, whose pinned
+   * composer row needs the surface itself to own the height.
+   */
+  tallest?: boolean;
   /**
    * This sheet opens over another sheet. It takes the layer above, so its own
    * wash falls between the two and dims the sheet below, and its surface takes

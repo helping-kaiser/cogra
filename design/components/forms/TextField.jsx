@@ -82,6 +82,22 @@ import React from "react";
    length — and the drawn paragraphs stay the visible tail. Every field whose
    fixture IS its whole content passes nothing and is counted. */
 
+/* `rows` IS A MINIMUM, AND A MULTI-LINE FIELD GROWS (jakob's ruling, the
+   sheets-and-video round). A field given `rows` opens at that many lines and
+   takes another whenever the writing needs one; a sheet holding it is
+   content-sized and grows with it, up to the tallest-sheet ceiling
+   (`BottomSheet.jsx`), and from there the field scrolls inside itself while the
+   Done row stays in reach. The maximum is never a line count — it is viewport
+   minus chrome, which is the same rule on both platforms and so the same
+   behaviour on each.
+
+   THE DRAWING SHOWS THE MINIMUM. A board is one state, and the state worth
+   drawing is the field as the writer meets it, so every board draws its field at
+   `rows` lines — including the boards whose fixture is longer than the box, which
+   draw the length they claim and state it in the late counter rather than growing
+   to fit it (`ComposeDetailsCaps`, `WordsBody`'s tail). Growth is behaviour, and
+   behaviour that cannot be drawn is stated where the drawing is. */
+
 const COUNT_WINDOW_MINIMUM = 20;
 
 function countReading(value, cap, used) {

@@ -6,6 +6,8 @@ Use `TextField` for every labeled input and, with `rows`, for every composer tex
 <TextField label="Type or paste the code to confirm" mono value={typed} onChange={setTyped} />
 ```
 
+**`rows` is a minimum, and a multi-line field grows.** A field given `rows` opens at that many lines and takes another whenever the writing needs one — `rows={1}` is a field that starts as one line and grows, which is what the comment composer and the sensitive sheet's reason are. A sheet holding such a field is content-sized and grows with it up to the **tallest-sheet ceiling** (`BottomSheet`), and from there the field scrolls inside itself while the Done row stays in reach. Never state a maximum in lines: the bound is viewport minus chrome, so the same rule holds on both platforms and neither caps the growth at a line count. A sheet already pinned at the ceiling gives the field its room out of the list above it (the comments thread). Boards draw the minimum — growth is behaviour, and a drawing is one state.
+
 The label is always visible and always `label-large` — there is no floating-label or placeholder-as-label pattern in this product. The field sits on the **extra-small (4px)** rung with a 1px `outline` border and no fill. `mono` is only for content read character by character.
 
 ```jsx

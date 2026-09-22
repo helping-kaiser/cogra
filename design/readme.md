@@ -565,7 +565,7 @@ which is what makes a guess expensive.
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post score and its explanation is four screens deep | — |
-| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
+| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | where a words-only post names its source, having no wash to carry the line |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
 fixes the slots and their order, so `BottomNav` simply accepts
@@ -790,10 +790,14 @@ Nothing vanishes silently, and none of these use `error` colouring.
   its exact space, so revealing moves nothing on screen — which is also
   why text is blurred in place rather than replaced. No `error`
   colouring, no warning glyph: a neutral wash of the standard scrim and
-  a plain `visibility` chip. The backend's 0–10 severity level is
-  **not** read — it is for a future where a reader accepts one kind of
-  content and not another; today a veil either exists or does not.
-  — `SensitiveVeil`
+  a plain `visibility` chip. **A reveal is the session's**: it survives
+  leaving the post and coming back, and every other move inside the app —
+  a reader who chose to look once is not asked again on the way back.
+  It returns when the app is fully closed, or the media is otherwise
+  reset from scratch. The backend's 0–10 severity level is **not** read:
+  the setting maps to a single show-sensitive threshold, and the
+  gradient — where a reader accepts one kind of content and not
+  another — comes after MVP. — `SensitiveVeil`
 
 ## 10. Accessibility
 
@@ -1055,15 +1059,15 @@ node.
 **Removed and Sensitive.** Removed: a calm placeholder in place of the
 content, never a silent gap — a statement of fact, not a warning; author,
 timestamp, and thread structure survive, and redaction is
-record-granular. Sensitive: **a gentle blur with tap to reveal**, tuned
-by the reader's own `content_filtering_severity_level` (0–10,
-backend-stored). **The body blurs as one region** — media, text, and
+record-granular. Sensitive: **a gentle blur with tap to reveal**, shown
+or not by the reader's own `content_filtering_severity_level` (0–10,
+backend-stored) read as a single threshold. **The body blurs as one
+region** — media, text, and
 description together, under a single veil with one reveal. The title
 stays outside it, so a reader can tell what they are choosing to
 reveal. Picture-by-picture blur inside a gallery is the UI this rule
 exists to avoid. Neither state may use `error` colouring. Genuinely
-open inside that: the literal copy, the blur radius and overlay, whether
-reveal is session-sticky, and how 0–10 maps to blur-or-not.
+open inside that: the literal copy, and the blur radius and overlay.
 
 **Feed, Search, Explore, Wallet, and the marketplace** are product
 surfaces whose decisions are recorded in the product docs rather than
@@ -1080,9 +1084,9 @@ only in the browser around the web one.
 ### Still open
 
 - Palette, type, and shape stay as they are until a problem shows up.
-- The sensitive blur *treatment*: radius, overlay, whether reveal is
-  per-item or session-sticky, and how 0–10 maps to blur-or-not. Its
-  granularity is settled (blur only what is marked).
+- The sensitive blur *treatment*: radius and overlay. Its granularity is
+  settled (blur only what is marked), and so is its scope — one reveal
+  per post, lasting the session.
 - Nothing on the icon list: the last gap closed with a derived FILL-1
   `graph_3` (§5).
 
@@ -3635,10 +3639,9 @@ as much in copy; the edit board still drew a body nobody could touch.
   author which one the post is. The title stays — it names a post of
   either kind.
 - **The growing body field moved to `_shared.jsx` (`WordsBody`).** It
-  was hand-spelled on `ComposeWords` because no `TextField` grows; a
-  second board needing it made it board-local no longer. `ComposeWords`
-  renders byte-identically after the move, which is what a factoring
-  owes.
+  was hand-spelled on `ComposeWords`; a second board needing it made it
+  board-local no longer. `ComposeWords` renders byte-identically after
+  the move, which is what a factoring owes.
 - **The gate**: 143 → **145 screens**, 1046 → **1064 edges**, gaps hold
   at **56** and flows at **58/55/3** — the round adds destinations, not
   journeys. The witness was re-blessed for one line: `ComposePicked`'s
@@ -5670,8 +5673,133 @@ the next round can find them.
   happened") and reads identically for a sheet raised from the feed:
   the return is a property of the sheet, never of the page beneath it.
   The navigation result carries two values — the scroll offset and the
-  parent comment id. The landing state itself is still undrawn: item
-  85.
+  parent comment id. `ReplySettled` draws that landing: the sheet cut at
+  its top edge by the kept offset, the parent's count expanded, the
+  signed words in the slot the composer stood in.
+
+### The sheets-and-video round — 2026-09-22
+
+The sheet ladder gains its top rung and the fields in sheets gain a
+size. jakob took the round's questions together and ruled them all as
+recommended.
+
+- **The tallest sheet is a class, and the class is a ceiling.** A
+  sheet's top edge never rises above a **72px sliver measured from the
+  top of the safe area** — on Android below the status bar and the
+  display cutout, on the web from the viewport top. The rounded top
+  corners keep a strip of the surface behind visible and no sheet ever
+  touches the safe area: a drawer that reached the top edge would read
+  as a destination, and a reader who cannot see what they left cannot
+  tell one from the other. The comments sheet IS this class, asked for
+  by name — `BottomSheet`'s `tallest`.
+- **The ceiling caps the other classes rather than replacing them.**
+  The 62% default and the raised 88% class both stand, each held under
+  the ceiling: a percentage that would reach past the sliver on a short
+  screen is clamped to it. At the 390×844 frame the ceiling stands at
+  **772px** and the 88% class reaches **743**, so the cap binds on no
+  board drawn today — it is the rule that keeps a class honest on a
+  screen the boards do not draw.
+- **A multi-line field in a sheet grows, and the sheet grows with it.**
+  The field takes a line at a time as the writing needs one; the sheet,
+  content-sized already, grows until it meets the ceiling; from there
+  the field scrolls inside itself and the **Done row never leaves
+  reach**. The design states no line count — the field's maximum is
+  viewport minus chrome, derived by the implementation — and both
+  platforms behave identically, because a writer who learns a field on
+  one and meets a shorter one on the other learns the product is two
+  products.
+- **`rows` is a field's minimum, not its size.** A field given `rows`
+  opens at that many lines and grows from there, which makes `rows={1}`
+  the way to spell a field that starts as one line and does not stay
+  one: the comment composer and the sensitive sheet's reason are both
+  written that way. The three fields the law governs: the description
+  sheet keeps its two-line opening, the sensitive sheet's **Why?**
+  becomes a growing one-line field, and the thread's **Add a comment**
+  becomes one too.
+- **A sheet already at the ceiling takes the room from its list.** The
+  comments sheet cannot grow — it is pinned at the ceiling — so the
+  composer's growth comes out of the thread above it, which is what
+  every chat app the reader already uses does: the words being written
+  push the thread up rather than walking off the bottom of the screen.
+- **Boards draw the minimum.** A board is one state and the state worth
+  drawing is the field as the writer meets it, so every field is drawn
+  at its `rows` — including the fields whose fixture is longer than the
+  box, which keep drawing the length they claim and stating it in the
+  late counter (`ComposeDetailsCaps`, `WordsBody`'s tail). Growth is
+  behaviour, and behaviour that cannot be drawn is stated where the
+  drawing is.
+- **The gate**: **217 screens** and **1568 edges** both hold — the round
+  changes what a sheet may do, not where the app goes. **38 boards**
+  re-rendered: every sheet in the tree takes the clamped height, and the
+  two fields that became growing ones are drawn on eight of them.
+
+### The cover's tile, and the one duration — 2026-09-22
+
+The same round's video half. The cover's mark had been built and drawn
+without ever being written down, which is how a treatment becomes a
+board's private habit; jakob ruled it as recommended.
+
+- **A cover rides the clip's own tile.** The chosen frame is inset in
+  the tile's **bottom-left corner** — a third of the tile's short side,
+  never under a **28px** floor, behind a hairline ring, carrying its own
+  framing rather than a miniature of the tile beneath it. **One
+  attachment is one tile**: a cover standing beside the clip would read
+  as a second thing the author picked, and they picked one thing. The
+  corner is the one the "Cover" badge already owns on a picture, so a
+  tray says *cover* in a single place whatever kind of body is in it.
+- **Each surface carries the cover its own way.** The **pick tray**
+  shows the inset, which is how a walk that can be walked backwards
+  tells the author what the step behind them settled. The **details and
+  edit stages** carry a *Cover* field section under *Video*: the door
+  *Add a cover* where none is chosen, the face and *Change the cover*
+  where one is — the two states drawn once each across the two scales.
+  A clip that walked the cover step shows no cover section at all. A
+  **reading surface** shows the cover as the card's still, and branches
+  on nothing: whether that still was chosen or taken was settled while
+  the post was written.
+- **The duration badge is the composer's, and the detail has one
+  reading.** `MediaThumb` draws the pill on an authoring tile of 80px
+  or more, where an author is identifying a file among files. A reading
+  surface draws no pill at either scale — presence on screen is the
+  policy — and the one place a reader meets a clip's length is the
+  detail's **transport**, where the total stands beside the elapsed the
+  way the platform player writes it.
+
+### The veil's scope — 2026-09-22
+
+The two questions backlog item 10 had carried since the veil was drawn,
+answered in the same round. The standing rules live in §9; this is where
+they were settled.
+
+- **A reveal is session-scoped.** It survives every move inside the app —
+  jakob's own example: a post unveiled in the feed, a walk to a profile,
+  and back to the feed, still unveiled — and returns on a full app close
+  or another hard reset of the media. The decision belongs to the reader
+  who made it rather than to the screen they made it on, and a session is
+  the unit a reader can tell they are still inside of. Nothing about a
+  reveal is stored, so none of it outlives the session or follows them to
+  another device.
+- **The reader's gradient is post-MVP.** The 0–10 severity setting is
+  read as a single show-sensitive threshold — a veil either exists or it
+  does not — and the range across which a reader accepts one kind of
+  content and refuses another is built after MVP, not designed around
+  now.
+
+### The edit's return — 2026-09-22
+
+- **A signed edit lands where a signed reply lands.** `CommentEdit/12`
+  and `CommentEditVideo/12` reach `ReplySettled` — the thread reopened
+  at the offset the reader left it, the corrected comment on its own
+  card. The anatomy is the reply's and differs only in which card
+  carries the marker, which is why the edit is owed no second board;
+  what it was owed was the edge, and the two edges had still been
+  landing on the thread as though nothing had been written. Backlog item
+  85 closes with them.
+- **The gate**: **1568 edges** hold — a repoint moves a destination, it
+  does not add a journey — and the witness is re-blessed for one line:
+  `edit-your-comment` now ends on `ReplySettled`, which joins the flow's
+  boards and its endpoints. Flows hold at **66 declared · 64 resolved**,
+  gaps at **13**.
 
 ---
 
