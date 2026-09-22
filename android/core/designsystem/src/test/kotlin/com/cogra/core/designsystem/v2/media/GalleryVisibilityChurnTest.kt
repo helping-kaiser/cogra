@@ -37,6 +37,11 @@ import org.robolectric.shadows.ShadowLog
  * `MediaGallery` is measured here rather than the feed card, because the
  * churn lives inside the gallery and Compose's invalidation correctly
  * keeps it there: a card-level probe sits beside it and sees nothing.
+ *
+ * **The count is the assertion, never a duration.** A JVM's wall clock
+ * over Robolectric moved by half on repeat runs of the same case, so a
+ * timing pin here would fail on the weather. A decision count does not
+ * move: it is the work itself, and it is what the fix changed.
  */
 @RunWith(RobolectricTestRunner::class)
 class GalleryVisibilityChurnTest {
