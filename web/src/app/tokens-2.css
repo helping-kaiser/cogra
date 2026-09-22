@@ -243,6 +243,17 @@ dialog.cg-sheet-out::backdrop {
   outline-offset: var(--focus-ring-offset);
 }
 
+/* THE SAME RING, FOR A BOX WHOSE CONTROL IS INSIDE IT. A growing text field
+   draws its border on a wrapper and puts the textarea in it, so the ring has
+   to come from the edge the reader sees rather than the control. `:has()` is
+   what keeps it `focus-visible` — `:focus-within` would ring on every tap,
+   and a text box that rings on a pointer press is the thing focus-visible
+   exists to stop. */
+.cg-focus-within:has(:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--on-surface);
+  outline-offset: var(--focus-ring-offset);
+}
+
 /* The 48px promise, kept without inflating dense rows. A chip is 32px drawn —
    Material's own dense size, and right for a wrapping row of them — so the
    TARGET is expanded rather than the ink: a transparent overlay centred on the

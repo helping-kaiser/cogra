@@ -1172,7 +1172,7 @@ export function CommentsSheet({
         open={open}
         onClose={() => onOpenChange(false)}
         title="Comments"
-        height="full"
+        tallest
         bodyRef={bodyRef}
         testId="comments-sheet"
         foot={
