@@ -1120,15 +1120,14 @@ refused state:
 *Name*, not *tag*, because the string is what is wrong and the tag is
 fine — there is no tag yet.
 
-## Awaiting blessing — the notifications round
+## Notifications
 
-Drawn on `Notifications`, `NotificationsEmpty` and `FeedUnread`, and up
-for review in the same pass.
+Drawn on `Notifications`, `NotificationsEmpty` and `FeedUnread`.
 
 **A row is a sentence, and the handle is its subject.** `@ada commented
 on your post`, not *Ada Okonkwo · commented* — the disc already carries
 the face, so the words are free to be the whole fact, and a handle is
-what a reader recognises and can go looking for. Seven kinds, seven
+what a reader recognises and can go looking for. Nine kinds, nine
 sentences, all present tense of the act that happened:
 
 - `@ada commented on your post` — a comment on a post of yours.
@@ -1143,17 +1142,25 @@ sentences, all present tense of the act that happened:
 - `@ada cited your post` — a citation whose target is something you
   wrote. *Cited*, the product's verb for a Reference, and the second
   line says where: `in Sunday at the tide market`.
+- `@rafa is ready for your approval` — an applicant staged through your
+  invite who has finished both proofs. The person is the subject, not the
+  application: *An application is ready* names the schema, and what the
+  inviter is being asked about is a someone.
 - `@juno landed through your invite` — *landed* is already the word the
   approval flow speaks (`Your registration is landing`), so the invite's
   other end keeps it.
 - `@mira approved your application` — the approver's act, named as
   theirs. Not *You were approved*, which is the passive the register
   refuses and hides the person who did it.
+- `@kel closed your application` — *closed* is the word the control
+  itself carries, so the row and the button tell one story. Not
+  *rejected*, which names a verdict the network never passed: one member
+  declining is one member declining.
 
 **The second line is what arrived, or where it is.** The comment's and
 the reply's own words for the two that carry words; `in <title>` for the
 mention and the citation, the saved comment row's `on <title>`
-construction turned to the citing side. The other three have neither and
+construction turned to the citing side. The other five have neither and
 carry none — a line invented to even the rhythm would be chrome.
 
 **The unread mark is a dot and says `New`.** On the row's trailing edge
@@ -1169,10 +1176,13 @@ sentence a reader needs.
 
 **The empty state names the kinds.** `Nothing here yet. Comments,
 replies, citations, mentions and opinions on you arrive here as they
-happen.` The list has no gesture of its own — it fills from what other
-people do — so naming what arrives is the only way to say the channel is
-empty rather than broken. No action button: nothing the reader can do
-from here fills it.
+happen, along with what becomes of your invites and your own
+application.` The list has no gesture of its own — it fills from what
+other people do — so naming what arrives is the only way to say the
+channel is empty rather than broken. The kinds that reach a node are
+named one by one and the four that reach the account are one clause: a
+reader counting nine names has stopped reading a sentence. No action
+button: nothing the reader can do from here fills it.
 
 **The surface is `Notifications`,** in the page header and wherever it
 is named. Not *Activity*, which describes a log, and not *Alerts*, which
