@@ -158,30 +158,7 @@ fun MediaThumb(
         size != null -> Modifier.size(size)
         else -> Modifier.fillMaxWidth().aspectRatio(1f)
     }
-    // The one edge computation every size-derived mark below shares —
-    // null on the unmeasured fill-width tile, where no edge is known at
-    // composition time.
-    val explicitW = width ?: size
-    val explicitH = height ?: size
-    val edge = explicitW?.let { w -> explicitH?.let { h -> minOf(w, h) } }
-    // The mark scales with the tile so it reads the same on the tray's 48dp
-    // chip and on a larger one, and never falls under its own floor
-    // (MediaThumb.jsx:93). Null on the unmeasured fill-width tile — that
-    // tile has no caller passing `coverSrc` today.
-    val coverMarkSize = edge?.let { maxOf(28.dp, it / 3) }
-    // The duration pill's own floor: an unmeasured (`size = null`) tile is
-    // always the pick grid's fill-width column, drawn well over the floor
-    // (`PickStage`'s 125dp), so only an EXPLICIT small edge hides it.
-    val durationFits = edge == null || edge >= DurationBadgeMinTile
-    // The play disc's own math (MediaThumb.jsx:86): 26% of the tile's
-    // short edge, clamped to [20dp, 56dp] — no separate floor of its own,
-    // unlike the duration pill; the clamp IS the floor. Null on the
-    // unmeasured fill-width tile, the same as the cover mark above: the
-    // pick grid's candidate tiles carry the duration pill's own play
-    // glyph already (`BodyStep`'s comment on that call site), so the
-    // centred disc is scoped to tiles whose edge is actually known —
-    // the composer's single-clip preview, never the browsing grid.
-    val discSize = edge?.let { playDiscSize(it) }
+    val geometry = thumbGeometry(width, height, size)
     // The disc draws only where a frame is playable: a real clip
     // (`item.isVideo`), a frame to show it over (`item.url != null` —
     // the sourceless neutral tile draws nothing, MediaThumb.jsx:87-90),
@@ -224,13 +201,13 @@ fun MediaThumb(
                 .fillMaxSize()
                 .alpha(if (faded) 0.65f else 1f),
         )
-        if (playable && discSize != null) MediaDisc(discSize)
+        if (playable && geometry.discSize != null) MediaDisc(geometry.discSize)
         if (uploading) UploadRing(progress)
         when (badge) {
             is ThumbBadge.Order -> OrderBadge(badge.position)
             ThumbBadge.Cover -> CoverBadge()
             is ThumbBadge.Remove -> RemoveBadge(badge.onRemove)
-            is ThumbBadge.Duration -> if (durationFits) DurationBadge(badge.label)
+            is ThumbBadge.Duration -> if (geometry.durationFits) DurationBadge(badge.label)
             ThumbBadge.Failed -> FailedBadge()
             null -> Unit
         }
@@ -238,9 +215,46 @@ fun MediaThumb(
         // says about itself: `ComposePick` draws a video tile with the
         // selection ring at one corner and the time at another, so the
         // two are not alternatives.
-        if (durationFits) duration?.let { DurationBadge(it) }
-        if (coverSrc != null && coverMarkSize != null) CoverMark(coverSrc, coverMarkSize)
+        if (geometry.durationFits) duration?.let { DurationBadge(it) }
+        if (coverSrc != null && geometry.coverMarkSize != null) CoverMark(coverSrc, geometry.coverMarkSize)
     }
+}
+
+/**
+ * Every size-derived mark on the tile — the cover mark, the duration pill's
+ * floor, and the play disc — shares this one edge computation: null on the
+ * unmeasured fill-width tile, where no edge is known at composition time.
+ */
+private data class ThumbGeometry(val coverMarkSize: Dp?, val durationFits: Boolean, val discSize: Dp?)
+
+/** MediaThumb.jsx:93 — the cover mark's diameter as a fraction of the tile's short edge. */
+private const val COVER_MARK_EDGE_DIVISOR = 3
+private val COVER_MARK_FLOOR = 28.dp
+
+private fun thumbGeometry(width: Dp?, height: Dp?, size: Dp?): ThumbGeometry {
+    val explicitW = width ?: size
+    val explicitH = height ?: size
+    val edge = explicitW?.let { w -> explicitH?.let { h -> minOf(w, h) } }
+    return ThumbGeometry(
+        // The mark scales with the tile so it reads the same on the tray's
+        // 48dp chip and on a larger one, and never falls under its own
+        // floor (MediaThumb.jsx:93). Null on the unmeasured fill-width
+        // tile — that tile has no caller passing `coverSrc` today.
+        coverMarkSize = edge?.let { maxOf(COVER_MARK_FLOOR, it / COVER_MARK_EDGE_DIVISOR) },
+        // The duration pill's own floor: an unmeasured (`size = null`)
+        // tile is always the pick grid's fill-width column, drawn well
+        // over the floor (`PickStage`'s 125dp), so only an EXPLICIT small
+        // edge hides it.
+        durationFits = edge == null || edge >= DurationBadgeMinTile,
+        // The play disc's own math (MediaThumb.jsx:86): 26% of the short
+        // edge, clamped to [20dp, 56dp] — no floor of its own past that
+        // clamp. Null on the unmeasured tile, the same precedent as the
+        // cover mark: the pick grid's candidate tiles keep the duration
+        // pill's own play glyph, never the centred disc (`BodyStep`'s
+        // comment on that call site) — the disc is scoped to tiles whose
+        // edge is actually known, the composer's single-clip preview.
+        discSize = edge?.let { playDiscSize(it) },
+    )
 }
 
 /**
@@ -342,7 +356,7 @@ private fun BoxScope.MediaDisc(size: Dp) {
             imageVector = Icons.Filled.PlayArrow,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.inverseOnSurface,
-            modifier = Modifier.size(playGlyphSize(size)),
+            modifier = Modifier.size(playGlyphSize(size)).testTag("media_thumb_play_glyph"),
         )
     }
 }
@@ -386,16 +400,26 @@ private val RingStroke = 3.dp
  */
 private val DurationBadgeMinTile = 80.dp
 
+/** MediaThumb.jsx:86 — the disc's diameter as a fraction of the tile's short edge. */
+private const val PLAY_DISC_EDGE_FRACTION = 0.26f
+
+/** MediaThumb.jsx:151 — the play glyph's diameter as a fraction of the disc's. */
+private const val PLAY_GLYPH_FRACTION = 0.57f
+
+private val PLAY_DISC_FLOOR = 20.dp
+private val PLAY_DISC_CEILING = 56.dp
+
 /**
  * The play disc's own math (`design/components/compose/MediaThumb.jsx:86`):
  * 26% of the tile's short edge, clamped to [20dp, 56dp]. Unlike
  * [DurationBadgeMinTile], the disc has no separate floor — this clamp IS
  * its floor, so it draws at every measured size.
  */
-private fun playDiscSize(edge: Dp): Dp = maxOf(20.dp, minOf(56.dp, edge * 0.26f))
+private fun playDiscSize(edge: Dp): Dp =
+    maxOf(PLAY_DISC_FLOOR, minOf(PLAY_DISC_CEILING, edge * PLAY_DISC_EDGE_FRACTION))
 
 /** The play glyph inside the disc: 57% of its diameter (MediaThumb.jsx:151). */
-private fun playGlyphSize(disc: Dp): Dp = disc * 0.57f
+private fun playGlyphSize(disc: Dp): Dp = disc * PLAY_GLYPH_FRACTION
 
 @Composable
 private fun BoxScope.OrderBadge(position: Int?) {
