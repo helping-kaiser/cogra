@@ -10,11 +10,38 @@
       "page": "push"
     },
     {
-      "file": "MapPush.dc.html",
-      "x": -980,
+      "file": "PushKinds.dc.html",
+      "title": "Push notifications · the nine kinds",
+      "x": 480,
       "y": 0,
-      "w": 560,
-      "h": 274,
+      "w": 390,
+      "h": 820,
+      "page": "push"
+    },
+    {
+      "file": "NotificationsOffer.dc.html",
+      "title": "Notifications · the offer row",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "push"
+    },
+    {
+      "file": "PushDenied.dc.html",
+      "title": "Settings · push refused",
+      "x": 1440,
+      "y": 0,
+      "w": 390,
+      "h": 700,
+      "page": "push"
+    },
+    {
+      "file": "MapPush.dc.html",
+      "x": -1580,
+      "y": 0,
+      "w": 1160,
+      "h": 752,
       "page": "push",
       "title": "Push notifications · flow map"
     }
