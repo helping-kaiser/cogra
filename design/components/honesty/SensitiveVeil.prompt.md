@@ -13,12 +13,13 @@ Two states, two different takes: sensitive covers the body and gives it back on 
 
 - **One veil covers the body**: media, text and description together. The title and topics sit outside it and stay readable, so a reader can decide from the frame without touching the content.
 - **One tap reveals everything** — the reader decided once, and asking again per item turns one decision into five.
+- **A reveal lasts the session.** It survives every move inside the app — unveil a post in the feed, walk to a profile, come back, and it is still unveiled — and returns on a full app close or another hard reset of the media. The decision belongs to the reader who made it, not to the screen they made it on; nothing about it is stored, so it never outlives the session or follows them to another device.
 - **The veil names its source.** "The author's warning" or "The platform's verdict" on the second line, always — the two marks read back as the same veil, so an unnamed one reads as the other. A reason, where there is one, follows on that same line after an em dash.
 - **The content stays mounted and keeps its space**, so revealing moves nothing. Text is blurred in place rather than replaced: the reader can see there *is* a sentence.
 - **No `error` colouring, no warning glyph, no red.** A neutral wash of the standard scrim and a plain chip.
 - **`radius` is authoritative and forwarded to the child**, so pass it once. A veiled tile in a flush gallery must not end up rounded beside a square neighbour — media meets the card's straight sides, never its corners.
 - **A comment veils COMPACT** (`kind="compact"`): its whole body — words and pictures as one — is *replaced* by a short block wearing the same wash, the same glyph, the same words and the same source line. A comment is two lines tall; covering it in place would put a wash over the words and a second one over the pictures. What stays readable is the frame — author, timestamp, topics, the opinion still open — the comment's answer to a post's title staying outside the veil. Its type is the theme's, not the media face's fixed white: that white is legible because the wash lies over a picture.
-- **Do not read the reader's severity level.** The 0–10 range is for a future where someone accepts one category and refuses another; today a veil either exists or does not, decided before this renders.
+- **Do not read the reader's severity level.** The setting is one show-sensitive threshold: a veil either exists or does not, decided before this renders. The gradient across the 0–10 range — where someone accepts one category and refuses another — comes after MVP.
 
 **`RedactedContent` — the whole record, never a field.**
 
