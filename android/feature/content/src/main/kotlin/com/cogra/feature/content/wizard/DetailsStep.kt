@@ -3,7 +3,6 @@ package com.cogra.feature.content.wizard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -11,23 +10,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.v2.atom.ButtonKind
-import com.cogra.core.designsystem.v2.atom.ButtonSize
-import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.DescribeSubject
+import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.compose.PickedRow
 import com.cogra.core.designsystem.v2.compose.UploadErrorLine
-import com.cogra.core.designsystem.v2.media.MediaItem
-import com.cogra.core.designsystem.v2.media.MediaThumb
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.content.MAX_DESCRIPTION_CHARS
 import com.cogra.domain.content.MAX_TITLE_CHARS
@@ -67,7 +61,10 @@ internal fun ColumnScope.DetailsStepBody(
     ) {
         if (state.mode == BodyMode.Media) {
             PickedRow(
-                pictures = state.pickedPictures(),
+                // ONE ATTACHMENT IS ONE TILE (`ComposePickVideoCover.jsx:
+                // 12-19`): a chosen cover rides the clip's own tile as its
+                // inset corner mark rather than a second attachment.
+                pictures = state.pickedRowPictures(),
                 // THE BOARD NAMES THE CLIP, IT DOES NOT COUNT IT
                 // (`ComposeDetailsVideo`). A gallery reads "3 pictures —
                 // the body" because the count is the thing to know; a clip
@@ -79,7 +76,16 @@ internal fun ColumnScope.DetailsStepBody(
                 } else {
                     "${ComposeWizardState.pictureCount(state.picked.size)} — the body"
                 },
-                onManage = onManagePictures,
+                // A CLIP HAS NO MANAGER (jakob's ruling 2026-09-15: "one
+                // clip is not a set") — the row opens the Show all sheet
+                // for a gallery only; the video tile wears its own × via
+                // onRemove instead (`ComposeDetailsVideo.jsx` 23-32).
+                onManage = if (state.isVideoPost) null else onManagePictures,
+                onRemove = if (state.isVideoPost) {
+                    { onRemovePick(0) }
+                } else {
+                    null
+                },
                 testTag = "wizard_picked_row",
             )
             UploadFailures(state, onRetryUpload, onRemovePick)
@@ -94,11 +100,12 @@ internal fun ColumnScope.DetailsStepBody(
             )
         }
 
-        // The clip and its cover are TWO STANDALONE ASSETS, so the board
-        // gives the cover its own field under the body rather than
-        // folding it into the clip's tile. A gallery has no such field:
-        // its cover is its order.
-        if (state.isVideoPost) CoverField(state, onCover)
+        // The vertical/no-cover default's door only. Once a face is
+        // chosen the cover rides the clip's own tile above instead, never
+        // a second field (`ComposeDetailsVideo.jsx:19-21`, design/readme.md
+        // §13 "The cover's tile"). A gallery has no such field: its cover
+        // is its order.
+        if (state.isVideoPost && state.coverModel() == null) CoverField(onCover)
 
         TitleField(state.title, state.titleTooLong, onTitleChange)
         DescriptionField(state.description, state.descriptionTooLong, onDescriptionChange)
@@ -122,17 +129,14 @@ internal fun ColumnScope.DetailsStepBody(
 }
 
 /**
- * The cover as the details board draws it — a FIELD with two states,
- * never a second entrance (`ComposeDetailsVideo`, `CommentEditVideo`).
- *
- * Empty, it is the door: "Add a cover" over the line saying what a clip
- * without one does. Filled, it is the face: the 56dp still beside
- * "Change the cover". Both reach the cover stage, which is one Back
- * away, and which state shows is simply whether a cover exists.
+ * The vertical/no-cover default's door — the details board's Cover field
+ * where no face has been chosen (`ComposeDetailsVideo.jsx` lines 19-21,
+ * design/readme.md §13 "The cover's tile"). A clip that walked the cover
+ * step and has a face shows no Cover section at all — the caller only
+ * reaches here when [ComposeWizardState.coverModel] is null.
  */
 @Composable
-private fun CoverField(state: ComposeWizardState, onCover: () -> Unit) {
-    val face = state.coverModel()
+private fun CoverField(onCover: () -> Unit) {
     // The details board's own section rhythm, off the 4dp grid like the
     // column that holds it.
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -141,41 +145,28 @@ private fun CoverField(state: ComposeWizardState, onCover: () -> Unit) {
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurface,
         )
-        if (face == null) {
-            InlineAction(
-                text = "Add a cover",
-                onClick = onCover,
-                testTag = "wizard_cover_door",
-            )
-            Text(
-                text = "It plays the moment it is on screen, so it starts on its own first frame.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        } else {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Space.x2),
-            ) {
-                MediaThumb(
-                    item = MediaItem(face, 1f),
-                    size = COVER_FACE_SIZE,
-                    contentDescription = null,
-                    testTag = "wizard_cover_face",
-                )
-                CograButton(
-                    text = "Change the cover",
-                    onClick = onCover,
-                    kind = ButtonKind.Text,
-                    size = ButtonSize.Compact,
-                    testTag = "wizard_cover_change",
-                )
-            }
-        }
+        InlineAction(
+            text = "Add a cover",
+            onClick = onCover,
+            testTag = "wizard_cover_door",
+        )
+        Text(
+            text = "It plays the moment it is on screen, so it starts on its own first frame.",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
-private val COVER_FACE_SIZE = 56.dp
+/**
+ * The picked row's pictures, plus a video's chosen cover riding the
+ * clip's own tile as its inset corner mark (`state.coverModel()`) —
+ * never a second attachment. Only a video post ever carries one.
+ */
+private fun ComposeWizardState.pickedRowPictures(): List<PickedPicture> {
+    val pictures = pickedPictures()
+    return if (isVideoPost) pictures.map { it.copy(coverSrc = coverModel()) } else pictures
+}
 
 /**
  * The title and the one refusal it can earn — the field's own cap
