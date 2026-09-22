@@ -127,6 +127,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeTags.dc.html",
+      "title": "Seal · tags sheet",
+      "x": 3840,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "ComposeSealTagged.dc.html",
       "title": "Seal · seven tags",
       "x": 3360,
@@ -545,7 +554,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 2893,
+      "h": 2867,
       "page": "compose",
       "title": "Compose · flow map"
     },

@@ -144,14 +144,22 @@ service did something on the reader's behalf.
 `Sign in or join`, `Keep browsing`, `New post`, `Edit profile`,
 `Restore the key`. There is no title case and no all-caps in the UI.
 
-**Implementation vocabulary stays off the screen.** Banned in
-user-facing copy: graph, node, edge, vertex, tensor, weight, parameter,
-decentralized, protocol, token, crypto — and the repo's own internal
-words *valence*, *connection*, `p_d`, `p_i`. An **opinion's** two stance
-parameters are labelled **"For or against"** and **"How much reaches
-you"** on screen, and nothing else; another record family filling the
-same two slots names them its own — the control owns the geometry, the
-record family owns the words.
+**The nerdy register stays off the screen** (jakob's ruling
+2026-09-17). Not a word list — a voice: copy never sounds
+mathematical, technical or clever about its own machinery. That keeps
+*node*, *edge*, *vertex*, *tensor*, *weight*, *parameter*, *valence*,
+`p_d`, `p_i`, *decentralized*, *protocol*, *token* and *crypto* off
+every screen, because each one describes how the thing is built rather
+than what the reader is doing. **Graph, network and connection are
+ordinary English and are welcome used plainly** — "what you signed
+stays on the graph" is a sentence a reader understands, and refusing
+it bought nothing. **Followers** is not forbidden either; it is
+steered around because it *misdescribes* what CoGra's edges are, which
+is an accuracy problem and not a register one. An **opinion's** two
+stance parameters are labelled **"For or against"** and **"How much
+reaches you"** on screen, and nothing else; another record family
+filling the same two slots names them its own — the control owns the
+geometry, the record family owns the words.
 
 The rule is "as little as possible, as much as needed", not a word ban:
 where the format *is* the content, name it exactly. A key export says
@@ -273,6 +281,31 @@ region (sticky, `surface`). The stance pad is `position: fixed` at the
 **lower centre of the viewport**, 16px above the bottom bar — 16px off
 the bottom edge where no bar exists — the same place every time,
 because muscle memory is part of the control (§13).
+
+**Browse collapses, task pins** (jakob's ruling, backlog item 98). A
+surface a reader DWELLS in and scrolls for content gives its top away
+to the content: the header collapses on the way down and returns on the
+way up. A surface a reader is passing THROUGH to finish something keeps
+its top on screen, because the way back and the content's own acts must
+never leave mid-task. Per surface:
+
+| Collapses | Pins |
+|---|---|
+| feed · search results · topic page · profile · saved · notifications · history · invites list | post detail · every compose and edit stage · settings · the ceremonies · chats · About |
+
+On web, **pinned means `position: sticky`** — the bar rides the page's
+edge and never hides — and the collapsing surfaces adopt `CollapsingTop`
+there too, so the two platforms answer a scroll the same way.
+`CollapsingTop` and `PageHeader` point at this table rather than at any
+blanket rule about surfaces that scroll.
+
+**One design, both platforms, dark mode included** (jakob, 2026-09-17).
+Wherever Android and web can do the same thing, they look the same
+thing: no divergence in colour, spacing, treatment or dark-mode
+rendering is acceptable as a platform habit. Where a platform genuinely
+cannot — a capability the other has and this one does not — the
+difference is *presented*, deliberately and per case, the way `Back is
+the platform's` already is. The test is capability, never convention.
 
 ### Corner radii and cards
 
@@ -541,9 +574,10 @@ A design that has only ever seen three slots is a design that breaks when
 the bar grows.
 
 The discovery slot is keyed `search` but **reads "Explore"**. The slot is
-the product's way into the connections a reader has, and the obvious word
-for that — "graph" — is on §7's banned list; "Explore" says what the
-reader is doing rather than how it works. The mark was considered for
+the product's way into the connections a reader has, and "Explore" says
+what the reader is DOING there — a one-word label naming the mechanism
+instead would make five tabs out of which one described itself
+differently from the other four. The mark was considered for
 this slot's glyph and rejected: the mark is the product's identity, so a
 tab wearing it would come to mean one screen; a letterform beside four
 geometric glyphs breaks §5's one-icon-language rule; and the mark has no
@@ -606,9 +640,10 @@ paper over:
   profile round (2026-09-01) made it canonical: the compact avatar-left
   shape with name and figures beside it, and the figures are the design
   work — **Posts**, **"Opinions on them"**, **"Opinions by them"** —
-  because the thing being counted is what the repo calls a connection and
-  that word is banned on screen (§3); one merged "followers" figure would
-  describe a different product. The figures are one tap target toward the
+  because the two directions are different facts and the label has to
+  say which one it counts; one merged "followers" figure would describe
+  a different product, where a link is one-way and carries no opinion.
+  The figures are one tap target toward the
   stances page. On another's profile the stance wears the wide anchor with
   Message beside it; one's own avatar wears the change badge (the
   standalone crop-and-seal shortcut). No cover image: the largest thing on
@@ -1109,7 +1144,29 @@ bottom edge otherwise, the keyboard while one is up; one number
 everywhere (ruled 2026-09-10). First-time onboarding is
 per-control, never a tour, and on the entry screens only the pad
 carries it — what it is for, how it opens, that nothing signs until
-Set, and that the input can be swapped in settings.
+Set, and that the input can be swapped in settings. Beside those
+marks stands **one skippable intro** (ruled 2026-09-14): five
+full-screen cards — the feed is your own steps, opinions have a
+shape, everything is public, nothing is lost, someone brings you in
+— fired on the first authenticated feed entry, from applicant on,
+shown once against a server-side seen flag, and re-opened from
+Settings' About group. Skip stands on every card and leaves for the
+feed the intro opened over. It teaches what the product IS rather
+than what a control does, so it neither replaces a coach mark nor
+adds one; the per-control marks are unchanged by it. The last card
+carries the applicant's one task — the friend who sent the invite
+still has to let them in — and its inviter face is personalized by
+the client to the actual link-issuer's avatar, the monogram
+standing in where there is no photo. It says **invited**, never
+*vouched*: the issuer invites and the vouch is the act that follows,
+so the first screen a reader meets must not teach that order
+backwards.
+
+**`About` is a FAQ, not an essay** (jakob 2026-09-18). Its topics are
+rows a reader expands, because the page gains a section every time
+CoGra gains something worth explaining and a page that grows by
+scrolling is read less the more it says. Topics answer
+independently — opening one leaves the others as they were.
 
 ### The compose flow — 2026-08-27
 
@@ -4920,7 +4977,18 @@ closes a place where the canvas knew a rule and had never drawn it.
   missing would be a claim about this phone made on a different one.
   Share LEADS the sheet: every other row there is a menu row by nature,
   share is the one that was a one-tap control a moment ago, and a reader
-  who opens this ⋮ to share came for the row that moved.
+  who opens this ⋮ to share came for the row that moved. **The
+  breakpoint is STRICTLY BELOW 360 of viewport width** — `<360px` on
+  web, `<360dp` on android, the same semantics on both (jakob,
+  2026-09-22, sharpening his 2026-09-17 ruling): under it the row
+  sheds share and this sheet takes it; at 360 and above, the wide
+  board is the state. The strict inequality is the ruling's point —
+  360dp is a mainstream android width (the Galaxy class), and the
+  narrow treatment is for the genuinely small, not the common. The board is drawn at 320 because that is
+  the narrowest phone this system draws for, not because 320 is the
+  threshold. Small phones are rare but real — everything must WORK on
+  them, and masterful is not yet owed, so the answer is one number and
+  one row that moves rather than a second design language.
 - **THE CITATIONS DOOR SPEAKS ITS COUNT.** An `aria-label` REPLACES
   what it names, so the References row drew a count, hid the digit,
   paired it with "3 citations" — and then `Manage the citations` spoke
