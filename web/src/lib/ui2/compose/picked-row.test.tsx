@@ -35,10 +35,14 @@ describe("PickedRow", () => {
     expect(screen.getByText("2 pictures — the body")).toBeInTheDocument();
   });
 
-  it("passes a video's length through, activating the thumb's video anatomy", () => {
+  // The duration pill floors at 80px tiles (jakob's ruling, 2026-09-22;
+  // design/readme.md §13): on this row's 48px thumb the pill would outweigh
+  // the media, so the length passes through without drawing it — the row's
+  // caption carries the clip-ness.
+  it("passes a video's length through without the pill the 48px thumb cannot carry", () => {
     const withDuration: PickedThumb[] = [{ id: "a", src: "blob:a", durationMs: 42_000 }];
     render(<PickedRow items={withDuration} caption="1 video — the body" onManage={vi.fn()} />);
-    expect(screen.getByTestId("picked-row-thumb-0-duration")).toHaveTextContent("0:42");
+    expect(screen.queryByTestId("picked-row-thumb-0-duration")).toBeNull();
   });
 });
 
