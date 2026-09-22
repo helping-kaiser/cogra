@@ -5930,8 +5930,9 @@ seeded exactly as the four are.
 
 A canvas title never carries `< > & "` or a backslash — the editor
 refuses them at seed time, which is why the titles say "and". The old
-single-canvas artifact stands as a signpost to the MVP four; its version
-picker keeps the pre-split monolith.
+single-canvas artifact stands as a signpost to all five — the MVP four
+and the post-MVP canvas beneath them; its version picker keeps the
+pre-split monolith.
 
 That map is data, not a habit: each tree's own `canvases.json` holds
 it, hand-maintained — each entry carries its canvas's published `url`,
