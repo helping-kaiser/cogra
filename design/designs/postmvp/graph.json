@@ -112,8 +112,8 @@
       "from": "NotificationsOffer",
       "via": 1,
       "kind": "advance",
-      "label": "Get these as they happen",
-      "to": [{ "terminal": "os", "case": "the platform's own permission ask — on web this row is the pre-prompt and the dialog follows it" }]
+      "label": "Want these announced as they happen?",
+      "to": [{ "board": "PushKinds", "case": "the push settings — the tap lands where the choice is made, the way every notification row lands on its subject" }]
     },
     {
       "from": "NotificationsOffer",

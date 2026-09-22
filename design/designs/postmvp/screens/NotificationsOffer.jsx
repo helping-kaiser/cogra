@@ -4,12 +4,14 @@
    THE ASK FIRES FROM AN ACT, NEVER AT LAUNCH (jakob). A permission sheet on
    first open asks a reader about a channel they have not met, and on native a
    refusal is STICKY — the platform will not ask twice, so an ask spent early
-   is the channel spent for good. Two acts may spend it: the settings toggle,
-   and this row.
+   is the channel spent for good. The ask has one home — the master switch on
+   `PushKinds` — and this row is the one-time door to it.
 
-   ON WEB THIS ROW IS THE PRE-PROMPT. There is no second surface between it and
-   the browser's own dialog, which is why the row says the dialog is coming:
-   a reader who meets an unexplained permission sheet refuses it.
+   THE TAP LANDS ON SETTINGS (jakob), the way every notification row lands on
+   its subject. This row's subject is the choice itself, so it opens the push
+   settings, where the master switch is what spends the platform's ask. On web
+   that keeps the reader two deliberate taps from the browser's own dialog —
+   no permission sheet ever meets them unexplained.
 
    IT IS ONE ROW, QUIET, AND AT THE TOP. Quiet because the list is the channel
    and this is an offer about it, not an item in it — the chronicle's own row
@@ -34,8 +36,8 @@ export function Screen() {
           variant="chronicle"
           chevron={false}
           glyph="notifications"
-          title="Get these as they happen"
-          second="This browser will ask you first."
+          title="Want these announced as they happen?"
+          second="Tap to turn on push notifications and choose which kinds."
           action={<InlineAction size="sm" ariaLabel="No thanks — this offer does not come back">No thanks</InlineAction>}
           onOpen={() => {}}
         />

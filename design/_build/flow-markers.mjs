@@ -2208,7 +2208,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: ">Your application closed</span>", tag: "button" },
   ],
   NotificationsOffer: [
-    { n: 1, find: ">Get these as they happen<", tag: "button" },
+    { n: 1, find: ">Want these announced as they happen?<", tag: "button" },
     { n: 2, find: 'aria-label="No thanks', tag: "button" },
   ],
   PushDenied: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }],

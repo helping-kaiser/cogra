@@ -7,15 +7,16 @@
    offering to change it.
 
    THE STATUS LINE CARRIES IT, which is the settings law rather than an
-   exception to it — a second line on a settings row is status, and "this
-   browser is not letting them through" is exactly that. The footnote says the
-   only way back, because a reader who taps a row that cannot act is a reader
-   the page has wasted.
+   exception to it — a second line on a settings row is status, and "blocked
+   outside CoGra" is exactly that. The footnote says the only way back,
+   because a reader who taps a row that cannot act is a reader the page has
+   wasted.
 
    IT SAYS THE ASK IS SPENT. On native a refusal is sticky and the app cannot
-   raise the sheet again; saying so is what stops a reader waiting for a prompt
-   that will never come. The platform noun is the browser's here and the app's
-   in the app, the one line rendered twice.
+   raise the sheet again; saying so is what stops a reader waiting for a
+   prompt that will never come. One string serves both platforms (jakob): the
+   status needs no platform noun at all, and the footnote names both homes of
+   the permission in one sentence rather than rendering twice.
 
    THE NEIGHBOURS ARE DRAWN for the same reason `PushSettings` draws them: the
    group's place in the page is part of what is being reviewed, and a state
@@ -40,11 +41,11 @@ export function Screen() {
 
       <SettingsGroup
         label="Notifications"
-        footnote="Only this browser's own settings can let them through again. CoGra cannot ask a second time once it has been refused."
+        footnote="Push was refused once, and CoGra cannot ask a second time. To allow it again, use the notification settings of the browser or phone itself, then return here."
       >
         <SettingsRow
           label="Push notifications"
-          status="This browser is not letting them through."
+          status="Blocked outside CoGra."
           value="Off"
           onOpen={() => {}}
         />

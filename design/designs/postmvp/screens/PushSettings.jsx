@@ -40,7 +40,7 @@ export function Screen() {
 
       <SettingsGroup
         label="Notifications"
-        footnote="Push delivers rows the list already holds, and never adds one. What reaches you here is the same whether it is on or off."
+        footnote="Everything still lands in Notifications either way. Push only decides what is announced the moment it happens."
       >
         <SettingsRow label="Push notifications" value="On" onOpen={() => {}} />
       </SettingsGroup>

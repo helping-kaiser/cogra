@@ -35,17 +35,17 @@ export function Screen() {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-6)", padding: "24px 24px 32px" }}>
         <SettingsGroup
           ariaLabel="Push notifications"
-          footnote="Push delivers rows the list already holds, and never adds one. With it off, everything still arrives in Notifications."
+          footnote="With push off, nothing is lost — everything still waits in Notifications."
         >
           <SettingsRow
             checked
             label="Push notifications"
-            status="Send them to this browser as they happen."
+            status="Announce new notifications the moment they arrive."
             onOpen={() => {}}
           />
         </SettingsGroup>
 
-        <SettingsGroup label="Sent to this browser">
+        <SettingsGroup label="Announced right away">
           <SettingsRow checked label="Comments on your posts" onOpen={() => {}} />
           <SettingsRow checked={false} label="Replies to your comments" onOpen={() => {}} />
           <SettingsRow checked={false} label="Mentions of you" onOpen={() => {}} />
