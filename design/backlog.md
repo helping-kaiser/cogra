@@ -3334,8 +3334,9 @@ menu's own position, second, so the thumb finds one row in one place on
 every menu that has it; `RemoveMenu` took the next free number (7) for
 it rather than renumbering five edges, the settings page's rule. The
 `cite-a-post` flow now starts on four boards. (c) The breakpoint is
-**360px of viewport width** — at or under it, share moves into the
-sheet. The 320 board stays drawn at 320 because that is the narrowest
+**strictly below 360 of viewport width** (<360px web, <360dp android;
+sharpened by jakob 2026-09-22 — 360dp is mainstream android) — under
+it, share moves into the sheet. The 320 board stays drawn at 320 because that is the narrowest
 phone this system draws for, not because 320 is the threshold. jakob's
 register for the whole width: small phones are rare but real,
 everything must WORK on them, masterful is not yet owed.
