@@ -22,12 +22,14 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -318,15 +320,43 @@ class ContentScreensTest {
         assertThat(refreshes).isEqualTo(0)
     }
 
+    // THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (design readme
+    // §13, the same rule web's `infinite-list.ts` cites): no button, no
+    // page numbers — the watch sits `FEED_TAIL_DISTANCE` posts short of
+    // the end, so scrolling that post into view is the reader "approaching
+    // the tail".
     @Test
-    fun theNextPageLoadsOnDemand() {
-        var more = false
+    fun theNextPageLoadsAutomaticallyAsTheReaderApproachesTheTail() {
+        var calls = 0
+        val posts = (1..10).map { testPost("p$it") }
+        renderFeed(
+            FeedUiState(loading = false, posts = posts, hasNextPage = true),
+            onLoadMore = { calls++ },
+        )
+        // Ten posts, five short of the end: the watched post is the sixth.
+        // `performScrollToNode` — not `performScrollTo` — because the tail
+        // post is not yet composed off-screen in a `LazyColumn`.
+        compose.onNodeWithTag("feed_list").performScrollToNode(hasTestTag("feed_post_p6"))
+        compose.waitForIdle()
+        assertThat(calls).isEqualTo(1)
+
+        // Staying put once the tail is on screen does not ask again — the
+        // watch rises once per approach (`distinctUntilChanged`), the same
+        // guard `IntersectionObserver` gives web. (A later re-approach, after
+        // scrolling away and back, is allowed to ask again on both
+        // platforms; what stops a duplicate FETCH there is `loadingMore` /
+        // `hasNextPage` in the ViewModel, covered by
+        // `FeedViewModelTest.loadMoreWithoutANextPageIsANoOp`.)
+        compose.waitForIdle()
+        assertThat(calls).isEqualTo(1)
+    }
+
+    @Test
+    fun theFeedDrawsNoLoadMoreControlAtRest() {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1")), hasNextPage = true),
-            onLoadMore = { more = true },
         )
-        compose.onNodeWithTag("feed_load_more").performScrollTo().performClick()
-        assertThat(more).isTrue()
+        compose.onNodeWithTag("feed_load_more").assertDoesNotExist()
     }
 
     // The band rides the same collapsing top as the key banner: away
