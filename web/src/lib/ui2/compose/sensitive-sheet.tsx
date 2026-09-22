@@ -70,14 +70,22 @@ export function SensitiveSheet({
       }
       testId={`${testIdPrefix}-sensitive-sheet`}
     >
-      <div className="flex flex-col gap-3">
-        <p className="m-0 text-body-medium">
+      {/* `min-h-0` is what lets the reason yield: the sheet stops at its
+          ceiling, and the growing box is the one child here that can give
+          the room back. */}
+      <div className="flex min-h-0 flex-col gap-3">
+        <p className="m-0 flex-none text-body-medium">
           Veils the pictures and the words until a reader chooses to look.
         </p>
+        {/* ONE LINE TO START, AND IT GROWS (jakob 2026-09-22). A reason is a
+            sentence, not a word, and the single-line input it was hid
+            everything past the first phrase of it. */}
         <TextField
           label="Why?"
           value={reason}
           onChange={onReason}
+          multiline
+          rows={1}
           testId={`${testIdPrefix}-sensitive-reason`}
           // The corner says where it lands, which is what makes it worth
           // writing — a reason nobody sees is a form field for its own sake.
@@ -91,7 +99,7 @@ export function SensitiveSheet({
           // switch has already greyed out.
           error={marked ? sensitiveReasonProblem(reason) ?? undefined : undefined}
         />
-        <div className="flex justify-end">
+        <div className="flex flex-none justify-end">
           {/* Visible but disabled over the cap, never hidden — the same
               gate the field's own error line above uses. */}
           <PillButton

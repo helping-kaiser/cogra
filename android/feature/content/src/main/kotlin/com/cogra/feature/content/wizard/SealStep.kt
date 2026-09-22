@@ -541,12 +541,20 @@ internal fun SensitiveSheet(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
+        // ONE LINE TO START, AND IT GROWS (jakob 2026-09-22). A reason is a
+        // sentence, not a word, and a single-line box hid everything past the
+        // first phrase of it. It takes a line per line and stops at the room
+        // the sheet's own chrome left, from where it scrolls inside itself.
         CograTextField(
             value = reason,
             onValueChange = onReasonChange,
             label = "Why?",
             optional = true,
             optionalLabel = "Optional — shown on the veil",
+            singleLine = false,
+            minLines = 1,
+            growToFit = true,
+            modifier = Modifier.weight(1f, fill = false),
             // The contract refuses a reason without the mark, so the
             // field is only live once the switch is on: offering a box
             // that would be refused is worse than not offering it.

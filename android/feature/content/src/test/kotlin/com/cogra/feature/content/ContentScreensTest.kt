@@ -23,6 +23,7 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -34,6 +35,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.v2.atom.SheetCeilingSliver
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.Landing
 import com.cogra.domain.LandingState
@@ -1015,6 +1017,63 @@ class ContentScreensTest {
         compose.onNodeWithTag("comments_sheet").assertExists()
         compose.onNodeWithTag("detail_comment_c1").assertExists()
         compose.onNodeWithTag("detail_add_comment").assertExists()
+    }
+
+    /**
+     * THE TALLEST CLASS, PINNED AT THE CEILING (jakob's ruling, the
+     * sheets-and-video round, 2026-09-22 — design/readme.md §13, and
+     * `BottomSheet.jsx`'s `tallest`): the thread stands a 72dp sliver below
+     * the top of the safe area and never enters it.
+     */
+    @Test
+    fun theThreadStandsAtTheSheetCeiling() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1"),
+                comments = List(30) { testComment("c$it") },
+            ),
+        )
+        openComments()
+
+        // A `ModalBottomSheet` is its OWN window and its own root, so the
+        // sheet's offset inside that root is zero whatever it does — the
+        // measurable fact is its height against the screen's, taken from the
+        // tallest of the composition's roots.
+        val screen = compose.onAllNodes(isRoot()).fetchSemanticsNodes().maxOf { it.size.height }
+        val sheet = compose.onNodeWithTag("comments_sheet").fetchSemanticsNode().size.height
+        val sliver = with(compose.density) { SheetCeilingSliver.roundToPx() }
+
+        assertThat(sheet).isAtMost(screen - sliver)
+        // …and pinned AT the ceiling, not merely held under it: the thread is
+        // the tallest class.
+        assertThat(sheet).isGreaterThan(screen / 2)
+    }
+
+    /**
+     * A SHEET AT THE CEILING TAKES THE ROOM FROM ITS LIST. The thread cannot
+     * grow — it is pinned — so the composer's foot keeps its own height and
+     * the list ends where the foot begins: any room the foot takes comes out
+     * of the thread above it, never out of the foot's own reach.
+     */
+    @Test
+    fun theThreadsFootKeepsItsRoomAndTheListYieldsIt() {
+        renderDetail(
+            detailFixture(
+                loading = false,
+                post = testPost("p1"),
+                comments = List(30) { testComment("c$it") },
+            ),
+        )
+        openComments()
+
+        val sheet = compose.onNodeWithTag("comments_sheet").getUnclippedBoundsInRoot()
+        val list = compose.onNodeWithTag("comments_list").getUnclippedBoundsInRoot()
+        val foot = compose.onNodeWithTag("detail_add_comment").getUnclippedBoundsInRoot()
+
+        compose.onNodeWithTag("detail_add_comment").assertIsDisplayed()
+        assertThat(list.bottom.value).isAtMost(foot.top.value)
+        assertThat(foot.bottom.value).isAtMost(sheet.bottom.value)
     }
 
     /**

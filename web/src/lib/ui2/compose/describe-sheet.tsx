@@ -67,12 +67,15 @@ export function DescribeSheet({
       title={video ? "Describe the video" : "Describe this picture"}
       testId={testId}
     >
-      <div className="flex flex-col gap-3">
+      {/* `min-h-0` is what lets the field yield: the sheet stops at its
+          ceiling, and the growing box is the one child in this column that
+          can give the room back. */}
+      <div className="flex min-h-0 flex-col gap-3">
         {/* THE REASON IS PERMANENT, NOT BEHIND THE "?" (jakob 2026-09-03) —
             it rides directly under the title on both shapes, because someone
             deciding whether to write a description needs the reason at the
             moment of deciding. */}
-        <div className="flex items-start gap-2">
+        <div className="flex flex-none items-start gap-2">
           <p className="m-0 flex-1 text-label-small text-on-surface-variant">
             Read aloud to people who can&apos;t see it.
           </p>
@@ -90,7 +93,7 @@ export function DescribeSheet({
         </div>
         <div
           data-testid={`${testId}-strip`}
-          className="relative flex h-[180px] items-center justify-center overflow-hidden rounded-medium bg-surface-container-high"
+          className="relative flex h-[180px] flex-none items-center justify-center overflow-hidden rounded-medium bg-surface-container-high"
         >
           {src && framing !== null && box !== null ? (
             <span
@@ -132,7 +135,7 @@ export function DescribeSheet({
           cap={ALT_TEXT_MAX_CHARS}
           error={problem ?? undefined}
         />
-        <div className="flex justify-end">
+        <div className="flex flex-none justify-end">
           {/* Visible but disabled over the cap, never hidden — `problem` is
               only ever the over-cap message on this field, so its presence
               is exactly the signal to gate on. */}
