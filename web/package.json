@@ -14,7 +14,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@apollo/client": "^4.3.0",
+    "@apollo/client": "^4.2.12",
     "@apollo/client-integration-nextjs": "^0.14.5",
     "apollo-upload-client": "^20.0.0",
     "graphql": "^17.0.2",
