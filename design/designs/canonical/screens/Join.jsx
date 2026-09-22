@@ -2,11 +2,19 @@
    borrowed view hands off here once the invite link checks out. Handle,
    email, and password collected in one pass; Create account starts the
    applicant days (ApplicantFeed). No back history from a deep link, so the
-   arrow returns to the invite-entry step instead. */
+   arrow returns to the invite-entry step instead.
+
+   THE DOOR'S ONE EXPLANATION IS A "?", NOT A FIFTH LINE (jakob's ruling, the
+   batch-rulings round: "that sounds great maybe behind a '?'. i already dislike
+   it that we have four clickable texts on this screen"). `HelpDot` is the
+   system's "?" — one per screen, top-right of the header, 32px of ring inside
+   the 48px target — so the About page arrives on this board without the board
+   growing a line of text. Its accessible name says where it goes, because a
+   ring drawn round a question mark says only that something is explained. */
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" action={<HelpDot ariaLabel="About CoGra" onOpen={() => {}} />} />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
           <MonogramAvatar name="Mira Voss" size={64} src="inviter.jpg" />

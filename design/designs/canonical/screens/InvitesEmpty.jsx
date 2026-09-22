@@ -12,9 +12,9 @@
    where it stands, in half a sentence, rather than left to be guessed.
 
    `brings them in` IS THE PRODUCT'S OWN PHRASE, taken from `VouchBack`,
-   `ApplicantWaiting` and `VouchedIn` rather than coined here. The rounder
-   phrasings for what a new member joins are either banned vocabulary or a word
-   `ProfileHeader` rules out; the boards already had the right words.
+   `ApplicantWaiting` and `VouchedIn` rather than coined here. The boards
+   already had the right words, and a phrase repeated across four surfaces
+   teaches faster than four near-synonyms would.
 
    THE EMPTY-STATE IDIOM IS THE SHAPE, NOT THE DRESS (jakob 2026-09-15:
    "Create invite should be more prominent no? it is the single actionable item

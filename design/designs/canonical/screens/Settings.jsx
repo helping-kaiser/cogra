@@ -12,12 +12,15 @@
    back arrow, and it goes where the gear was.
 
    THE ORDER IS FREQUENCY, NOT TAXONOMY (jakob): theme, stance, writing,
-   reading, people, key backup, sessions, credentials, sign out. A taxonomist
+   reading, people, key backup, sessions, credentials, about, sign out. A
+   taxonomist
    would put credentials near the top with identity; a reader reaches for the
    theme far more often than they change their email. People sits next to
    Reading because hiding someone is a reading comfort — and in a group of its
    own because Reading's footnote promises its choices stay on this device,
-   which a hidden account does not.
+   which a hidden account does not. About is last before leaving for the same
+   rule read from the other end: four doors onto words about the product are
+   the least-reached rows on the page, and none of them is a setting.
 
    THE ANATOMY IS `SettingsGroup` + `SettingsRow`, minted this round. Heading
    above, filled card of rows, footnote under — so a row stays one line of
@@ -60,7 +63,7 @@
    that act belongs to the flow it opens, not to a page a reader came to for the
    theme. */
 
-export const FRAME = { width: 390, height: 2163 };
+export const FRAME = { width: 390, height: 2442 };
 
 export function Screen() {
   return <SettingsBody />;

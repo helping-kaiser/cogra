@@ -62,6 +62,7 @@ const {
   DescribeCounter,
   PickedSheet,
   CitedSheet,
+  TagsSheet,
   DescribeSheet,
   UploadStatusLine,
   UploadErrorLine,
@@ -410,8 +411,16 @@ function DetailHeader({ items }) {
    the one menu that also holds Remove is the last place to move the rows
    around. The license closes this menu as it closes the others. */
 const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
+/* CITING RIDES THIS MENU TOO (backlog item 100, ruled the batch-rulings
+   round). `CARD_MENU`'s own note says citing acts on the thing itself,
+   whoever wrote it — the argument Save was already given — and self-citation
+   is a real thing an author does: a post that builds on their own earlier one
+   points at it exactly the way it would point at anyone else's. It takes the
+   reader menu's own position, second, so the thumb finds one row in one place
+   on every menu that has it. */
 const OWN_POST_MENU = [
   SAVE_ROW,
+  CITE_ROW,
   { label: "Edit", onSelect: () => {} },
   { label: "Mark as sensitive", onSelect: () => {} },
   { label: "Remove", onSelect: () => {} },
@@ -1088,11 +1097,18 @@ const citedRow = (count) => ({
    `TopicsLine` already uses where the feed folds a tag list into its
    remainder, said again on this side of the composer.
 
-   WHERE THE DOOR LEADS IS THE DETAILS STAGE, and it is the one place the two
-   rows do not match: a citation's door opens a sheet OVER the seal, a tag's
-   walks back to where tags are staged, because the compose flow has no
-   staged-tags sheet to open. Wired to the surface that exists rather than
-   inventing the one that would match (backlog item 95). */
+   WHERE THE DOOR LEADS IS `TagsSheet`, OVER THE SEAL — the References row's
+   own destination with tags in it (backlog item 95, ruled the batch-rulings
+   round). The two rows fold for one reason and promise one thing, so they open
+   one kind of door; the seal has one grammar and not two.
+
+   THE TWO FOLDS STILL DIFFER, AND THEY DIFFER DELIBERATELY (backlog item 96,
+   ruled the same round). `TopicsLine` keeps sample chips beside its remainder
+   because the reader's glance wants SCENT — enough of the list to judge whether
+   to look. A seal is a read-back before a signature, so its row folds WHOLLY
+   and its door shows the complete list, exactly as its References sibling does.
+   One surface is being skimmed and the other is being checked; a single fold
+   would serve one of them badly. */
 const tagsRow = (count) => ({
   label: "Tags",
   value: `${count} tags`,
@@ -1616,11 +1632,21 @@ function CommentComposerFoot() {
    and this one is reused across BOARDS of one surface. Every board that opens
    comments draws the same frame and differs only in the cards inside it, so
    the cards are the children and the frame is written once. */
-function CommentsSheet({ children }) {
+/* `scrolledBy` DRAWS A SHEET THE READER HAD ALREADY MOVED (the reply-return
+   ruling, readme §13): the list carries a zero-height first item with a
+   negative top margin, so every comment after it rides up by that much and the
+   list's own `overflow: hidden` cuts what leaves at the top. The list's gap
+   sits between that item and the first comment, so the margin carries it too —
+   the number a board passes is the pixels of scroll, not the pixels of
+   margin. */
+const COMMENTS_GAP = 12;
+
+function CommentsSheet({ children, scrolledBy = 0 }) {
   return (
     <BottomSheet open ariaLabel="Comments" height="calc(100% - 72px)">
       <SheetTitle>Comments</SheetTitle>
-      <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 12, margin: 0, padding: "0 16px", listStyle: "none" }}>
+      <ul style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: COMMENTS_GAP, margin: 0, padding: "0 16px", listStyle: "none" }}>
+        {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}
         {children}
       </ul>
       <CommentComposerFoot />
@@ -1628,9 +1654,53 @@ function CommentsSheet({ children }) {
   );
 }
 
-function CommentsThreadSheet() {
+/* What @tobias's two collapsed replies are, once a landing expands them. They
+   live beside the thread rather than inside the collapsed board, because the
+   collapsed board counts them and never draws them — and a count drawn beside
+   a list it disagreed with is the defect this canvas keeps closing. */
+const TOBIAS_REPLIES = [
+  {
+    id: "t1",
+    author: ADA,
+    content: "The glovebox is the whole trick. Mine lives in the door pocket.",
+    timestamp: "35m",
+    onReply: () => {},
+    license: { attribution: 0, provenance: 0 },
+    menuItems: CARD_MENU,
+  },
+  {
+    id: "t2",
+    author: MIRA,
+    content: "@tobias It is the bend that does it, not the light. Prove me wrong.",
+    timestamp: "28m",
+    onReply: () => {},
+    license: { attribution: 0, provenance: 0 },
+    menuItems: CARD_MENU,
+  },
+];
+
+/* `landed` is the state a signed reply returns into (readme §13, the
+   reply-return ruling): the parent's collapsed count has become its replies,
+   and the reply just signed sits in `CommentCard`'s reserved `children` slot —
+   the slot the composer stood in, which is why the words land where the reader
+   left them. */
+function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
+  const settledReply = (
+    <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
+      <CommentCard
+        depth={1}
+        pending
+        author={SOL}
+        content="The third headland light is real — I have a print from 2019 that almost catches it. Almost."
+        timestamp="now"
+        onReply={() => {}}
+        license={{ attribution: 0, provenance: 0 }}
+        menuItems={CARD_MENU}
+      />
+    </ul>
+  );
   return (
-    <CommentsSheet>
+    <CommentsSheet scrolledBy={scrolledBy}>
       <CommentCard
         author={TOBIAS}
         content="That stretch after the second bend is the reason I keep a camera in the glovebox."
@@ -1638,12 +1708,15 @@ function CommentsThreadSheet() {
         bundle={mkBundle(0.1, 0.1)}
         onReply={() => {}}
         replyCount={2}
-        onOpenReplies={() => {}}
+        onOpenReplies={landed ? undefined : () => {}}
+        replies={landed ? TOBIAS_REPLIES : []}
         topics={["glovebox", "coastroad"]}
         references={1}
         license={{ attribution: 0, provenance: 0 }}
         menuItems={CARD_MENU}
-      />
+      >
+        {landed ? settledReply : null}
+      </CommentCard>
       {/* The veiled comment sits SECOND, where the frame still shows it
           whole: the thread is taller than the sheet, and a state drawn
           below the fold is a state nobody can check. The whole body — the
@@ -2005,6 +2078,27 @@ function SettingsBody() {
           <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} />
           <SettingsRow label="Handle" value="@sol" onOpen={() => {}} />
           <SettingsRow label="Email" value="sol@solferreira.art" onOpen={() => {}} />
+        </SettingsGroup>
+
+        {/* ABOUT SITS AFTER CREDENTIALS AND BEFORE LEAVING (jakob's ruling, the
+            batch-rulings round). The page's order is frequency, not taxonomy,
+            and these four rows are the least-reached on it — nobody opens
+            settings to re-watch an intro. They stand together because they are
+            one kind of row: four doors onto words about the product, none of
+            them a setting.
+
+            NO FOOTNOTE. A group's footnote carries the fact a reader needs once
+            and never again, and there is none here — every row's label already
+            says exactly what it opens.
+
+            PRIVACY AND TERMS ARE ROWS AND NOTHING ELSE. They open static legal
+            documents, which are written rather than designed; a board drawing
+            one would be a drawing of text nobody in this repo writes. */}
+        <SettingsGroup label="About">
+          <SettingsRow label="Watch the intro again" onOpen={() => {}} />
+          <SettingsRow label="About CoGra" onOpen={() => {}} />
+          <SettingsRow label="Privacy" onOpen={() => {}} />
+          <SettingsRow label="Terms" onOpen={() => {}} />
         </SettingsGroup>
 
         <SettingsGroup ariaLabel="Sign out">
@@ -2859,6 +2953,171 @@ function NewInviteSheet() {
         </div>
       </div>
     </BottomSheet>
+  );
+}
+
+/* ── THE ONBOARDING INTRO (jakob's rulings, the batch-rulings round) ───────
+   Five full-screen cards shown once, on the first authenticated feed entry,
+   from applicant on. The frame is written here because five boards draw it and
+   differ only in their illustration and their words.
+
+   THE ILLUSTRATIONS ARE NOT GATED BY THE APP'S OWN ELEMENTS (jakob's ruling).
+   They are drawn with whatever means teaches fastest — lines, dots, plates —
+   and where a real component appears it IS the real component: the pad is
+   `StancePad`, every face is `MonogramAvatar`. A post card, a comment and a
+   chat bubble appear as LIKENESSES rather than as mounted masters, because a
+   mounted `PostCard` would put seven live controls on a card whose only live
+   controls are Skip and Next; the likenesses are built from the masters' own
+   tokens, radii and anatomy so they cannot drift in look.
+
+   THE FRAME IS SKIP · ILLUSTRATION · WORDS · DOTS · NEXT. Skip stands on every
+   card, top-right, and leaves for the feed; the last card's button reads
+   `Start reading` instead of `Next`. The dots are an indicator and not a
+   control — a pager a reader can drive would make five boards into twenty-five
+   edges and teach nothing the buttons do not. */
+const INTRO_STEPS = 5;
+
+function IntroDots({ step }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, padding: "20px 0 16px" }}>
+      <span style={SR_ONLY}>{`Step ${step} of ${INTRO_STEPS}`}</span>
+      {Array.from({ length: INTRO_STEPS }, (_, index) => (
+        <span
+          key={index}
+          aria-hidden="true"
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "var(--radius-full)",
+            background: index + 1 === step ? "var(--primary)" : "var(--border-field)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function IntroFrame({ step, headline, lines, note = null, cta = "Next", children }) {
+  return (
+    <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ flex: "none", display: "flex", justifyContent: "flex-end", padding: "8px 12px 0" }}>
+        <Button variant="text">Skip</Button>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
+        {children}
+      </div>
+      <div style={{ flex: "none", padding: "0 24px 32px" }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "var(--text-headline-small)",
+            lineHeight: "var(--text-headline-small--line-height)",
+            fontWeight: "var(--text-headline-small--font-weight)",
+          }}
+        >
+          {headline}
+        </h1>
+        {lines.map((line) => (
+          <p
+            key={line}
+            style={{
+              margin: "8px 0 0",
+              fontSize: "var(--text-body-medium)",
+              lineHeight: "var(--text-body-medium--line-height)",
+              letterSpacing: "var(--text-body-medium--letter-spacing)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {line}
+          </p>
+        ))}
+        {note}
+        <IntroDots step={step} />
+        <Button style={{ width: "100%" }}>{cta}</Button>
+      </div>
+    </div>
+  );
+}
+
+/* The illustrations' own stage: a fixed box the pieces are placed in, with one
+   SVG under them carrying every line. Absolute placement in ONE coordinate
+   space is what keeps a drawing of lines-between-things from drifting apart at
+   a different text size. */
+function IntroStage({ width = 342, height = 300, children }) {
+  return (
+    <div style={{ position: "relative", width, height, flex: "none" }}>{children}</div>
+  );
+}
+
+function IntroLines({ width = 342, height = 300, children }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
+      style={{ position: "absolute", inset: 0, overflow: "visible" }}
+    >
+      {children}
+    </svg>
+  );
+}
+
+/* A node's caption — the word under a face, `label-small` and quiet, so the
+   drawing says who each dot is without a legend beside it. */
+function IntroCaption({ children, x, y, width = 88 }) {
+  return (
+    <span
+      style={{
+        position: "absolute",
+        left: x - width / 2,
+        top: y,
+        width,
+        textAlign: "center",
+        fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        letterSpacing: "var(--text-label-small--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+/* A face on the stage, centred on (x, y) — the real avatar, placed. */
+function IntroFace({ x, y, size = 44, name, src }) {
+  return (
+    <span style={{ position: "absolute", left: x - size / 2, top: y - size / 2, display: "block" }}>
+      <MonogramAvatar name={name} size={size} src={src} />
+    </span>
+  );
+}
+
+/* THE POST CARD AS A LIKENESS. `PostCard`'s own anatomy — the author line, the
+   title, the picture on the card's own corner — at the card's radius and fill,
+   with nothing pressable on it. */
+function IntroPostCard({ title, timestamp = "2h", author = ADA, src = "post-photo.jpg", height = 92, tail = null }) {
+  return (
+    <div
+      style={{
+        borderRadius: "var(--radius-medium)",
+        background: "var(--surface-card)",
+        overflow: "hidden",
+        border: "1px solid var(--border-hairline)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "10px var(--space-3)" }}>
+        <MonogramAvatar name={author.displayName} src={author.src} />
+        <span style={{ flex: 1, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
+          @{author.handle}
+        </span>
+        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{timestamp}</span>
+      </div>
+      <div style={{ padding: "0 var(--space-3) 10px", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{title}</div>
+      <img src={src} alt="" style={{ display: "block", width: "100%", height, objectFit: "cover" }} />
+      {tail}
+    </div>
   );
 }
 

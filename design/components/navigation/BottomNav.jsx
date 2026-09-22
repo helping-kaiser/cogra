@@ -37,9 +37,9 @@ const DEFAULT_SLOTS = ["feed", "compose", "profile"];
 export const ALL_SLOTS = ["feed", "search", "compose", "wallet", "profile"];
 
 /* The bar's labels. The discovery slot is keyed `search` (its route, its glyph)
-   but READS "Explore": `design.md` §7 keeps implementation vocabulary off the
-   screen, and "Explore" says what the reader is doing — discovery through the
-   people they're connected to, rather than a global index. */
+   but READS "Explore": every other tab is named for what the reader does there,
+   and "Explore" says the same about this one — discovery through the people
+   they're connected to, rather than a global index. */
 const LABELS = { feed: "Feed", search: "Explore", compose: "New post", wallet: "Wallet", profile: "Profile" };
 const GLYPHS = { feed: "dynamic_feed", search: "search", wallet: "wallet" };
 
