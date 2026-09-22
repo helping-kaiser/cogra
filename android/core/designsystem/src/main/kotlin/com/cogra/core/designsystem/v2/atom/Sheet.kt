@@ -12,10 +12,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
@@ -31,8 +36,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
@@ -52,6 +60,45 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  */
 fun sheetContainerColor(stacked: Boolean, colors: ColorScheme, default: Color): Color =
     if (stacked) colors.surfaceContainerHighest else default
+
+/**
+ * THE SLIVER A SHEET AT ITS CEILING LEAVES BEHIND (`_shared.jsx:1249` —
+ * `height="calc(100% - 72px)"`).
+ */
+val SheetCeilingSliver = 72.dp
+
+/**
+ * THE SHEET CEILING — how tall a sheet may ever be (jakob 2026-09-22).
+ *
+ * A sheet's top edge never rises above a [SheetCeilingSliver] strip measured
+ * from the top of the SAFE AREA: below the status bar and the display cutout,
+ * never the physical top of the glass. The rounded corners keep a strip of
+ * the surface behind visible, and no sheet ever touches or passes the safe
+ * area — the describe sheet grew to the device's top edge and took its Done
+ * button off the screen with it, which is the bug this height kills.
+ *
+ * ONE MECHANISM, NOT TWO. The comments sheet already drew exactly this shape
+ * against the window; naming it here is what lets every other sheet cap
+ * itself with the same number instead of inventing a second one. The safe
+ * inset is what the comments sheet was missing, and the sliver is now
+ * measured from where content may actually start.
+ *
+ * The IME is deliberately NOT subtracted: a sheet pads itself clear of the
+ * keyboard from INSIDE this height ([CograSheetSurface]), so the top edge
+ * stays exactly where it is when the keyboard arrives and the content yields
+ * instead.
+ *
+ * `safeDrawing` is the documented inset for content that must not overlap the
+ * system bars or the cutout
+ * ([WindowInsets](https://developer.android.com/develop/ui/compose/layouts/insets)).
+ */
+@Composable
+fun sheetCeilingHeight(): Dp {
+    val density = LocalDensity.current
+    val window = LocalWindowInfo.current.containerSize.height
+    val safeTop = WindowInsets.safeDrawing.getTop(density)
+    return (with(density) { (window - safeTop).toDp() } - SheetCeilingSliver).coerceAtLeast(0.dp)
+}
 
 /**
  * The bottom sheet's *surface*, extracted from its presentation.
@@ -79,12 +126,24 @@ fun CograSheetSurface(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            // THE CEILING, ON EVERY SHEET (see [sheetCeilingHeight]). A
+            // content-sized sheet grows with what it carries and stops here;
+            // the surface never reaches the safe area, so whatever the sheet
+            // stacks at its foot stays on the screen.
+            .heightIn(max = sheetCeilingHeight())
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             // The surface reaches the screen's edge; only its content steps
             // clear of the navigation bar. [CograSheetHost] hands the sheet no
             // insets of its own, so the drawn background is what covers them.
-            .navigationBarsPadding()
+            //
+            // THE KEYBOARD TAKES THE SAME PADDING, whichever is larger: the
+            // IME replaces the navigation bar rather than stacking on it, and
+            // `union` is the documented way to pad by one inset or the other
+            // rather than both (developer.android.com's inset guidance). It
+            // pads from INSIDE the ceiling, so a raised keyboard shortens the
+            // content instead of pushing the sheet's top edge up.
+            .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
             .padding(start = Space.x6, end = Space.x6, top = Space.x2, bottom = Space.x6)
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         verticalArrangement = Arrangement.spacedBy(Space.x3),
