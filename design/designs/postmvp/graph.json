@@ -1,0 +1,133 @@
+{
+  "$doc": "The post-MVP tree's screen graph, the same grammar canonical's carries (backlog item 22). Every number has exactly one edge here, whose `to` lists every outcome: a board, a declared terminal, or an explicit gap. Boards named here live in this tree only — flow-markers.mjs is keyed by board name across every tree, so a post-MVP board never takes a canonical board's name. THE PAGE IS NOT WIRED, and deliberately: the settings boards are excerpts of canonical's Settings, so the rows on either side of the round's own group lead to boards this graph cannot name (readme §14 — a tree's graph stops at the tree). Only the round's own controls carry numbers; the rest take theirs when the round migrates into canonical and its edges become ordinary wiring.",
+  "wired": [],
+  "terminals": {
+    "back": "Back — returns to the previous screen",
+    "self": "Acts on this screen — state changes in place",
+    "os": "Hands off to the OS — the platform's own permission ask, browser download, system sheet"
+  },
+  "scanExempt": {},
+  "entries": {
+    "PushSettings": "the settings page at the notifications group — this round's excerpt of canonical's Settings, not a screen of its own",
+    "NotificationsOffer": "the notifications list as a reader who has never been asked about push meets it — a state the account arrives in, not a tap",
+    "PushDenied": "the settings page after the platform refused the ask — a state the device brings, not a tap"
+  },
+  "boardKinds": {},
+  "edges": [
+    {
+      "from": "PushSettings",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back where the gear was — the profile, in canonical" }]
+    },
+    {
+      "from": "PushSettings",
+      "via": 2,
+      "kind": "advance",
+      "label": "Push notifications",
+      "to": [{ "board": "PushKinds", "case": "the master switch and the nine kinds under it" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "PushSettings", "case": "back to the group the row sits in" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 2,
+      "kind": "advance",
+      "label": "Push notifications — the master switch",
+      "to": [
+        { "terminal": "os", "case": "turned on for the first time — the platform's own permission ask, which only an act like this may raise" },
+        { "terminal": "self", "case": "already granted, or being turned off — the switch flips and nothing is asked" }
+      ]
+    },
+    {
+      "from": "PushKinds",
+      "via": 3,
+      "kind": "advance",
+      "label": "Comments on your posts",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default; a comment on your post is yours to answer" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 4,
+      "kind": "advance",
+      "label": "Replies to your comments",
+      "to": [{ "terminal": "self", "case": "the switch flips — off by default; the list holds these until you look" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 5,
+      "kind": "advance",
+      "label": "Mentions of you",
+      "to": [{ "terminal": "self", "case": "the switch flips — off by default" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 6,
+      "kind": "advance",
+      "label": "Citations of your posts and comments",
+      "to": [{ "terminal": "self", "case": "the switch flips — off by default" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 7,
+      "kind": "advance",
+      "label": "Opinions on you",
+      "to": [{ "terminal": "self", "case": "the switch flips — off by default; the profile opinion, never one on your content" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 8,
+      "kind": "advance",
+      "label": "Applicants ready for your approval",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default; nothing else can tell the link's issuer somebody is waiting" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 9,
+      "kind": "advance",
+      "label": "People landing through your invites",
+      "to": [{ "terminal": "self", "case": "the switch flips — off by default" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 10,
+      "kind": "advance",
+      "label": "Your application approved",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default; the moment the account becomes a member" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 11,
+      "kind": "advance",
+      "label": "Your application closed",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default; a close the applicant could otherwise only infer from a queue going quiet" }]
+    },
+    {
+      "from": "NotificationsOffer",
+      "via": 1,
+      "kind": "advance",
+      "label": "Want these announced as they happen?",
+      "to": [{ "board": "PushKinds", "case": "the push settings — the tap lands where the choice is made, the way every notification row lands on its subject" }]
+    },
+    {
+      "from": "NotificationsOffer",
+      "via": 2,
+      "kind": "cancel",
+      "label": "No thanks",
+      "to": [{ "terminal": "self", "case": "the row goes, for good; the list stays where it was and settings keeps the offer" }]
+    },
+    {
+      "from": "PushDenied",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back where the gear was — the profile, in canonical" }]
+    }
+  ]
+}
