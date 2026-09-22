@@ -522,6 +522,7 @@ private fun PostCard(
                 onOpenActor = onOpenActor,
                 onEdit = onEdit,
                 onCite = onCite,
+                onShare = onShare,
             )
             SummaryTitle(post)
             PostBody(
@@ -584,6 +585,7 @@ private fun CardMenuHeader(
     onOpenActor: (String) -> Unit,
     onEdit: (String) -> Unit,
     onCite: (String) -> Unit,
+    onShare: (String) -> Unit,
 ) {
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
     var removeOpen by remember { mutableStateOf(false) }
@@ -591,6 +593,11 @@ private fun CardMenuHeader(
     // of it to edit, cite or license, so the ⋮ goes wholesale rather than a
     // row at a time. An empty list draws no trigger.
     val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
+    val own = viewerId != null && post.author?.id == viewerId
+    // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
+    // jakob 2026-09-17): only the reader's menu gains it, and only at or
+    // under the breakpoint the row itself sheds it at.
+    val narrow = isNarrowShareWidth()
     ContentCardHeader(
         author = post.author,
         at = post.createdAt,
@@ -600,13 +607,14 @@ private fun CardMenuHeader(
             emptyList()
         } else {
             postMenuRows(
-                own = viewerId != null && post.author?.id == viewerId,
+                own = own,
                 handle = post.author?.handle,
                 license = post.license,
                 onEdit = { onEdit(post.id) },
                 onCite = { onCite(post.id) },
                 onRemove = { removeOpen = true },
                 onLicense = { licenseShown = post.license },
+                onShare = if (!own && narrow) { { onShare(post.id) } } else null,
                 // The rows sit under the trigger's own tag, which
                 // `ContentCardHeader` derives the same way.
                 testTagPrefix = "feed_${post.id}_menu",

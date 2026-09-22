@@ -176,6 +176,9 @@
          hiding is an act on an actor, reached from the commenter's own profile. -->
     <string name="content_menu_post">More on this post</string>
     <string name="content_menu_comment">More on this comment</string>
+    <!-- THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md, jakob 2026-09-17):
+         at or under 360dp the reader's menu leads with this row, ahead of Save. -->
+    <string name="content_menu_share">Share</string>
     <string name="content_menu_save">Save</string>
     <string name="content_menu_cite">Cite in a new post</string>
     <string name="content_menu_hide_actor">Hide %1$s</string>
