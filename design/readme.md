@@ -5834,11 +5834,11 @@ work is drawn apart — ruled by jakob the day the push round opened.
   keyed by board name alone, so two trees with a `Settings` would stamp
   one tree's flow numbers onto the other's markup. The post-MVP boards
   carry their round in their names.
-- **The gate**: canonical's generated output is **byte-identical**
-  across the split — **217 screens · 1568 edges · 13 gaps · flows
-  66/64/2** all hold, and every one of its 241 generated files hashes
-  the same before and after. A separation that moved the baseline would
-  not be a separation.
+- **The gate**: canonical's output is **byte-identical** across the
+  split — **217 screens · 1568 edges · 13 gaps · flows 66/64/2** all
+  hold, and every board, map and manifest in the tree hashes the same
+  before and after. A separation that moved the baseline would not be a
+  separation.
 
 ### The push round — 2026-09-22
 
