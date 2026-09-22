@@ -3635,10 +3635,9 @@ as much in copy; the edit board still drew a body nobody could touch.
   author which one the post is. The title stays — it names a post of
   either kind.
 - **The growing body field moved to `_shared.jsx` (`WordsBody`).** It
-  was hand-spelled on `ComposeWords` because no `TextField` grows; a
-  second board needing it made it board-local no longer. `ComposeWords`
-  renders byte-identically after the move, which is what a factoring
-  owes.
+  was hand-spelled on `ComposeWords`; a second board needing it made it
+  board-local no longer. `ComposeWords` renders byte-identically after
+  the move, which is what a factoring owes.
 - **The gate**: 143 → **145 screens**, 1046 → **1064 edges**, gaps hold
   at **56** and flows at **58/55/3** — the round adds destinations, not
   journeys. The witness was re-blessed for one line: `ComposePicked`'s
@@ -5672,6 +5671,62 @@ the next round can find them.
   The navigation result carries two values — the scroll offset and the
   parent comment id. The landing state itself is still undrawn: item
   85.
+
+### The sheets-and-video round — 2026-09-22
+
+The sheet ladder gains its top rung and the fields in sheets gain a
+size. jakob took the round's questions together and ruled them all as
+recommended.
+
+- **The tallest sheet is a class, and the class is a ceiling.** A
+  sheet's top edge never rises above a **72px sliver measured from the
+  top of the safe area** — on Android below the status bar and the
+  display cutout, on the web from the viewport top. The rounded top
+  corners keep a strip of the surface behind visible and no sheet ever
+  touches the safe area: a drawer that reached the top edge would read
+  as a destination, and a reader who cannot see what they left cannot
+  tell one from the other. The comments sheet IS this class, asked for
+  by name — `BottomSheet`'s `tallest`.
+- **The ceiling caps the other classes rather than replacing them.**
+  The 62% default and the raised 88% class both stand, each held under
+  the ceiling: a percentage that would reach past the sliver on a short
+  screen is clamped to it. At the 390×844 frame the ceiling stands at
+  **772px** and the 88% class reaches **743**, so the cap binds on no
+  board drawn today — it is the rule that keeps a class honest on a
+  screen the boards do not draw.
+- **A multi-line field in a sheet grows, and the sheet grows with it.**
+  The field takes a line at a time as the writing needs one; the sheet,
+  content-sized already, grows until it meets the ceiling; from there
+  the field scrolls inside itself and the **Done row never leaves
+  reach**. The design states no line count — the field's maximum is
+  viewport minus chrome, derived by the implementation — and both
+  platforms behave identically, because a writer who learns a field on
+  one and meets a shorter one on the other learns the product is two
+  products.
+- **`rows` is a field's minimum, not its size.** A field given `rows`
+  opens at that many lines and grows from there, which makes `rows={1}`
+  the way to spell a field that starts as one line and does not stay
+  one: the comment composer and the sensitive sheet's reason are both
+  written that way. The three fields the law governs: the description
+  sheet keeps its two-line opening, the sensitive sheet's **Why?**
+  becomes a growing one-line field, and the thread's **Add a comment**
+  becomes one too.
+- **A sheet already at the ceiling takes the room from its list.** The
+  comments sheet cannot grow — it is pinned at the ceiling — so the
+  composer's growth comes out of the thread above it, which is what
+  every chat app the reader already uses does: the words being written
+  push the thread up rather than walking off the bottom of the screen.
+- **Boards draw the minimum.** A board is one state and the state worth
+  drawing is the field as the writer meets it, so every field is drawn
+  at its `rows` — including the fields whose fixture is longer than the
+  box, which keep drawing the length they claim and stating it in the
+  late counter (`ComposeDetailsCaps`, `WordsBody`'s tail). Growth is
+  behaviour, and behaviour that cannot be drawn is stated where the
+  drawing is.
+- **The gate**: **217 screens** and **1568 edges** both hold — the round
+  changes what a sheet may do, not where the app goes. **38 boards**
+  re-rendered: every sheet in the tree takes the clamped height, and the
+  two fields that became growing ones are drawn on eight of them.
 
 ---
 
