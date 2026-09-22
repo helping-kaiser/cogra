@@ -121,9 +121,10 @@ androidImageCropper = "4.7.0"
 #
 # 2.9.0 rather than the newest, for the reason the Coil pin gives: 2.10.0 moves
 # to Compose 1.10.0 and 2.11.0 to AGP 9 / Kotlin 2.3.10, which do not resolve
-# under our AGP 8.13.2 + Compose BOM 2025.10.01. Moving up rides the same
-# toolchain migration Coil's bump waits on.
-zoomable = "2.13.0"
+# under our AGP 8.13.2 + Compose BOM 2025.10.01, and 2.13.0 requires
+# compileSdk 37 (CI checkDebugAarMetadata, 2026-09-22). Moving up rides the
+# same toolchain migration Coil's bump waits on.
+zoomable = "2.9.0"
 
 # Crypto — Tink backs the encrypted token store (EncryptedSharedPreferences
 # is deprecated in current androidx.security-crypto). BouncyCastle's
