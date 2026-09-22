@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -33,12 +34,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -48,6 +46,7 @@ import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
+import com.cogra.core.designsystem.v2.atom.sheetCeilingHeight
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
@@ -250,14 +249,19 @@ fun CommentsSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        // THE SHEET CARRIES THE HEIGHT, ITS HANDLE INCLUDED. The board leaves
-        // 72px of the screen behind showing (`_shared.jsx:1421` —
-        // `height="calc(100% - 72px)"`), and capping the CONTENT at that left
-        // Material's drag handle standing above the cap: the sheet then came
-        // to within a handle's height of the top and the reveal was gone.
-        modifier = Modifier.testTag("comments_sheet").height(commentsSheetHeight()),
+        // THE SHEET CARRIES THE HEIGHT, ITS HANDLE INCLUDED. Capping the
+        // CONTENT instead left Material's drag handle standing above the cap:
+        // the sheet then came to within a handle's height of the top and the
+        // reveal was gone. The number is the shared ceiling every sheet takes
+        // ([sheetCeilingHeight]) — this sheet is the one that drew the shape,
+        // so it reads the named one rather than keeping a second copy.
+        modifier = Modifier.testTag("comments_sheet").height(sheetCeilingHeight()),
     ) {
-        Column(Modifier.fillMaxSize()) {
+        // The foot is drawn last and the list carries the weight, so a foot
+        // that grows takes its room from the thread above it and the sheet
+        // stays exactly at its ceiling. The keyboard pads from inside the
+        // same height, for the same reason.
+        Column(Modifier.fillMaxSize().imePadding()) {
             SheetTitle(
                 text = stringResource(R.string.content_comments_heading),
                 modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x1),
@@ -354,15 +358,6 @@ private fun CommentsList(
             item { MoreComments(state, onLoadMoreComments) }
         }
     }
-}
-
-/** The drawn gap above a full-height sheet (`_shared.jsx:1249`). */
-private val SHEET_TOP_GAP = 72.dp
-
-@Composable
-private fun commentsSheetHeight(): Dp {
-    val window = LocalWindowInfo.current.containerSize.height
-    return with(LocalDensity.current) { window.toDp() } - SHEET_TOP_GAP
 }
 
 /**
