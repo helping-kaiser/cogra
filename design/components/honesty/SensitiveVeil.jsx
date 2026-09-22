@@ -38,10 +38,19 @@ import { Icon } from "../navigation/Icon.jsx";
    is what makes that true; a veil with no scope governs only itself, the safe
    default for a lone tile.
 
-   NOT THE READER'S SETTINGS. The 0–10 severity level is stored, but the product
-   today asks only "show sensitive content or not" — the range is for a future
-   where a reader accepts one category and refuses another. Nothing here reads a
-   level; a veil either exists or does not. */
+   AND IT LASTS THE SESSION (jakob's ruling, the sheets-and-video round). A reveal
+   survives every move inside the app — the post unveiled in the feed is still
+   unveiled after a walk to a profile and back — because the decision belongs to
+   the reader who made it, not to the screen they made it on. It returns when the
+   app is fully closed, or the media is otherwise reset from scratch: a session is
+   the unit a reader can tell they are still inside of. The scope is the running
+   app, never a stored preference, so nothing about a reveal outlives the session
+   or follows the reader to another device.
+
+   NOT THE READER'S SETTINGS. The 0–10 severity level is stored and read as a
+   single show-sensitive threshold: a veil either exists or does not, and nothing
+   here reads a level. The gradient across the range — where a reader accepts one
+   category and refuses another — comes after MVP. */
 
 const RevealContext = React.createContext(null);
 

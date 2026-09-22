@@ -66,7 +66,12 @@ export interface TextFieldProps {
   /** The platform monospace: recovery codes, key ids, seed entry. Nothing else. */
   mono?: boolean;
   placeholder?: string;
-  /** Renders a textarea instead of an input. */
+  /** Renders a textarea instead of an input, at `rows` lines — a MINIMUM, not a
+   *  size. The field grows a line at a time with what is written; a sheet
+   *  holding it grows with it up to the tallest-sheet ceiling, and past that the
+   *  field scrolls inside itself. Never a maximum line count: the bound is
+   *  viewport minus chrome, identical on both platforms. A board draws the
+   *  minimum, because a drawing is one state. */
   rows?: number;
   id?: string;
   /** The supporting line under the field, in `text-secondary` — what the field
