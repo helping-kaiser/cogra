@@ -105,6 +105,11 @@ updates:
         versions: ["[2.10,)"]
       - dependency-name: "io.coil-kt.coil3:*"
         versions: ["[3.5,)"]
+      # zoomable 2.10/2.11 need Compose 1.10 / AGP 9, and 2.13 requires
+      # compileSdk 37 (CI checkDebugAarMetadata, 2026-09-22) — same gated
+      # migration (rationale: android/gradle/libs.versions.toml).
+      - dependency-name: "net.engawapg.lib:zoomable"
+        versions: ["[2.10,)"]
       # Apollo Kotlin 5 is a breaking client migration (codegen +
       # runtime together) — queued in the audit fix plan.
       - dependency-name: "com.apollographql.apollo*"
@@ -141,6 +146,10 @@ updates:
         versions: [">=10"]
       - dependency-name: typescript
         versions: [">=7"]
+      # @apollo/client 4.3.0/4.3.1 break the staged-write mapping
+      # (bite APOLLO-43-MAPPING) — lift when the mapping is adapted.
+      - dependency-name: "@apollo/client"
+        versions: ["4.3.x"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
