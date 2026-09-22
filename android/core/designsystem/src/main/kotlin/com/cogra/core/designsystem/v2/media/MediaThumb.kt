@@ -124,9 +124,14 @@ sealed interface ThumbBadge {
  *   than a word: an inset in the same bottom-left corner [ThumbBadge.Cover]
  *   owns, a third of the tile's short side with a 28dp floor, behind a
  *   hairline ring (`design/components/compose/MediaThumb.jsx:93,192-217`).
- *   A tile is a picture's or a clip's, so this and [badge] are never both
- *   set. Needs a resolved [width]/[height] or [size] to size itself —
- *   silently omitted on the unmeasured fill-width tile ([size] `null`).
+ *   A tile is a picture's or a clip's, so this and [ThumbBadge.Cover] are
+ *   never both set — the two would both claim the bottom-left corner. A
+ *   [ThumbBadge.Remove] rides the opposite corner and combines with this
+ *   freely: the compose Details step's video tile wears both, the same
+ *   way the pick tray already does
+ *   (`design/designs/canonical/screens/ComposePickVideoCover.jsx:12-19`).
+ *   Needs a resolved [width]/[height] or [size] to size itself — silently
+ *   omitted on the unmeasured fill-width tile ([size] `null`).
  */
 @Composable
 fun MediaThumb(
