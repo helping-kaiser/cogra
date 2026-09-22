@@ -194,15 +194,18 @@ Item 4 built `FeedFilter` (kinds, forms, Ranked/Newest order, the
 trigger reading the view in words) — and no canonical feed board
 ever drew the trigger; it slipped while compose had the focus.
 
-### 10 · Sensitive veil treatment · *system*, has open questions
+### 10 · Sensitive veil treatment · *system* · **ruled 2026-09-22**
 Granularity is settled (blur only what is marked, reveal per post),
 and the compose session (item 6) settled more: the author's self-mark
 veils body + description with the title readable, and the veil's face
 is the pattern every large product uses — the visibility glyph,
 `Sensitive — tap to view`, and the author's reason, centred in white
-on the wash, no surface of their own. Drawn on the post-ladder row. Still open in this item: whether a reveal survives
-leaving and returning to the post, and how the reader's 0–10 severity
-setting maps to blur-or-not. No `error` colouring, no warning glyph.
+on the wash, no surface of their own. Drawn on the post-ladder row.
+A reveal is **session-scoped**: it survives every move inside the app —
+feed to profile and back to feed leaves it revealed — and returns on a
+full app close or another hard reset of the media. The reader's 0–10
+severity setting is read as a **single show-sensitive threshold**; the
+gradient across it is post-MVP. No `error` colouring, no warning glyph.
 
 ### 11 · Money & CGT figures · *system* · **built**
 `components/core/MoneyFigure.jsx` (`MoneyFigure`, `CgtMark`,

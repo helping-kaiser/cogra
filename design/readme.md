@@ -565,7 +565,7 @@ which is what makes a guess expensive.
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post score and its explanation is four screens deep | — |
-| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | whether a reveal survives leaving and returning to the post; where a words-only post names its source, having no wash to carry the line |
+| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | where a words-only post names its source, having no wash to carry the line |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
 fixes the slots and their order, so `BottomNav` simply accepts
@@ -790,10 +790,14 @@ Nothing vanishes silently, and none of these use `error` colouring.
   its exact space, so revealing moves nothing on screen — which is also
   why text is blurred in place rather than replaced. No `error`
   colouring, no warning glyph: a neutral wash of the standard scrim and
-  a plain `visibility` chip. The backend's 0–10 severity level is
-  **not** read — it is for a future where a reader accepts one kind of
-  content and not another; today a veil either exists or does not.
-  — `SensitiveVeil`
+  a plain `visibility` chip. **A reveal is the session's**: it survives
+  leaving the post and coming back, and every other move inside the app —
+  a reader who chose to look once is not asked again on the way back.
+  It returns when the app is fully closed, or the media is otherwise
+  reset from scratch. The backend's 0–10 severity level is **not** read:
+  the setting maps to a single show-sensitive threshold, and the
+  gradient — where a reader accepts one kind of content and not
+  another — comes after MVP. — `SensitiveVeil`
 
 ## 10. Accessibility
 
@@ -1055,15 +1059,15 @@ node.
 **Removed and Sensitive.** Removed: a calm placeholder in place of the
 content, never a silent gap — a statement of fact, not a warning; author,
 timestamp, and thread structure survive, and redaction is
-record-granular. Sensitive: **a gentle blur with tap to reveal**, tuned
-by the reader's own `content_filtering_severity_level` (0–10,
-backend-stored). **The body blurs as one region** — media, text, and
+record-granular. Sensitive: **a gentle blur with tap to reveal**, shown
+or not by the reader's own `content_filtering_severity_level` (0–10,
+backend-stored) read as a single threshold. **The body blurs as one
+region** — media, text, and
 description together, under a single veil with one reveal. The title
 stays outside it, so a reader can tell what they are choosing to
 reveal. Picture-by-picture blur inside a gallery is the UI this rule
 exists to avoid. Neither state may use `error` colouring. Genuinely
-open inside that: the literal copy, the blur radius and overlay, whether
-reveal is session-sticky, and how 0–10 maps to blur-or-not.
+open inside that: the literal copy, and the blur radius and overlay.
 
 **Feed, Search, Explore, Wallet, and the marketplace** are product
 surfaces whose decisions are recorded in the product docs rather than
@@ -1080,9 +1084,9 @@ only in the browser around the web one.
 ### Still open
 
 - Palette, type, and shape stay as they are until a problem shows up.
-- The sensitive blur *treatment*: radius, overlay, whether reveal is
-  per-item or session-sticky, and how 0–10 maps to blur-or-not. Its
-  granularity is settled (blur only what is marked).
+- The sensitive blur *treatment*: radius and overlay. Its granularity is
+  settled (blur only what is marked), and so is its scope — one reveal
+  per post, lasting the session.
 - Nothing on the icon list: the last gap closed with a derived FILL-1
   `graph_3` (§5).
 
@@ -5759,6 +5763,26 @@ board's private habit; jakob ruled it as recommended.
   policy — and the one place a reader meets a clip's length is the
   detail's **transport**, where the total stands beside the elapsed the
   way the platform player writes it.
+
+### The veil's scope — 2026-09-22
+
+The two questions backlog item 10 had carried since the veil was drawn,
+answered in the same round. The standing rules live in §9; this is where
+they were settled.
+
+- **A reveal is session-scoped.** It survives every move inside the app —
+  jakob's own example: a post unveiled in the feed, a walk to a profile,
+  and back to the feed, still unveiled — and returns on a full app close
+  or another hard reset of the media. The decision belongs to the reader
+  who made it rather than to the screen they made it on, and a session is
+  the unit a reader can tell they are still inside of. Nothing about a
+  reveal is stored, so none of it outlives the session or follows them to
+  another device.
+- **The reader's gradient is post-MVP.** The 0–10 severity setting is
+  read as a single show-sensitive threshold — a veil either exists or it
+  does not — and the range across which a reader accepts one kind of
+  content and refuses another is built after MVP, not designed around
+  now.
 
 ---
 
