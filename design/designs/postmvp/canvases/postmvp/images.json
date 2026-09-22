@@ -1,4 +1,6 @@
 {
   "from": "../../img",
-  "images": []
+  "images": [
+    "inviter.jpg"
+  ]
 }

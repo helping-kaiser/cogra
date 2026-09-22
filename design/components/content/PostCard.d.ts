@@ -35,6 +35,12 @@ export interface PostCardProps {
   /** Authored and signed, not yet ordered on L1. Shows in full regardless. */
   pending?: boolean;
   edited?: boolean;
+  /**
+   * Opens the edit history from the marker (the change-histories round): handed
+   * one, `EditedMarker` takes its tappable form. Reachable only where a second
+   * version exists, which is also the only case the marker is drawn in.
+   */
+  onInspectEdit?: () => void;
   bundle?: StanceBundle | null;
   signedIn?: boolean;
   /**

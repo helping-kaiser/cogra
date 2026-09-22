@@ -81,6 +81,7 @@ export function PostCard({
   license,
   pending = false,
   edited = false,
+  onInspectEdit,
   bundle,
   signedIn = true,
   taught = true,
@@ -398,7 +399,12 @@ export function PostCard({
           <span aria-hidden="true">Cited by {citedBy}</span>
         </button>
       )}
-      {edited && <EditedMarker />}
+      {/* THE MARKER IS A DOOR ONCE THERE IS SOMEWHERE TO GO (the change-histories
+          round). A post with one version has no history to open, so the marker
+          is not even drawn; a post with two has both the ⋮ row and this, and the
+          marker takes its tappable form rather than growing a control beside it —
+          a history door is a readout. */}
+      {edited && <EditedMarker onInspect={onInspectEdit} />}
       {pending && <PendingMarker />}
       {/* THE AFFORDANCE ROW. The stance control leads — it is the gesture the
           product lives on — then the Post score, then comments, then anything

@@ -4,13 +4,21 @@
   "terminals": {
     "back": "Back — returns to the previous screen",
     "self": "Acts on this screen — state changes in place",
-    "os": "Hands off to the OS — the platform's own permission ask, browser download, system sheet"
+    "os": "Hands off to the OS — the platform's own permission ask, browser download, system sheet",
+    "canonical": "Hands back to the MVP tree — a board this graph cannot name, because a tree's graph stops at the tree (readme §14). The destination exists and is drawn; it takes an ordinary edge the day this round migrates into canonical"
   },
-  "scanExempt": {},
+  "scanExempt": {
+    "HistoryMenu": "the own-post sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "VersionRemoveConfirm": "the think-twice dialog covers the author's register — every row beneath the scrim is inactive in this state; only the dialog (and its scrim) is live"
+  },
   "entries": {
     "PushSettings": "the settings page at the notifications group — this round's excerpt of canonical's Settings, not a screen of its own",
     "NotificationsOffer": "the notifications list as a reader who has never been asked about push meets it — a state the account arrives in, not a tap",
-    "PushDenied": "the settings page after the platform refused the ask — a state the device brings, not a tap"
+    "PushDenied": "the settings page after the platform refused the ask — a state the device brings, not a tap",
+    "HistoryMenu": "the own post's ⋮, opened on its detail surface — this round's excerpt of canonical's own-post sheet, not a screen of its own",
+    "EditedMarkerDoor": "the post's detail surface, reached the ordinary way — this round's excerpt of it, drawn for the one marker the round makes tappable",
+    "CommentHistory": "the comment's ⋮ in the thread, whose roster gains the same row the post's does — a menu this graph cannot name, because it lives in canonical",
+    "ProfileHistory": "the profile's ⋮, whose roster gains the same row — likewise a canonical menu"
   },
   "boardKinds": {},
   "edges": [
@@ -128,6 +136,122 @@
       "kind": "back",
       "label": "back arrow",
       "to": [{ "terminal": "back", "case": "back where the gear was — the profile, in canonical" }]
+    },
+
+    {
+      "from": "HistoryMenu",
+      "via": 1,
+      "kind": "advance",
+      "label": "Edit history",
+      "to": [{ "board": "PostHistoryOwn", "case": "the author's own sheet, so the row lands on the register — the same chronicle every reader gets, with their two acts joined" }]
+    },
+    {
+      "from": "EditedMarkerDoor",
+      "via": 1,
+      "kind": "advance",
+      "label": "Edited — the marker in its tappable form",
+      "to": [
+        { "board": "PostHistory", "case": "any reader — the chronicle, whole and public, gates being on acting rather than on reading" },
+        { "board": "PostHistoryOwn", "case": "its author — the same list with the whole-post removal leading it and one act per earlier version" }
+      ]
+    },
+    {
+      "from": "PostHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the post the history is of" }]
+    },
+    {
+      "from": "PostHistory",
+      "via": 2,
+      "kind": "advance",
+      "label": "the current version",
+      "to": [{ "terminal": "canonical", "case": "the post's own detail — the current version IS the post, so its row opens the post rather than a historic copy of it" }]
+    },
+    {
+      "from": "PostHistory",
+      "via": 3,
+      "kind": "advance",
+      "label": "an earlier version",
+      "to": [{ "board": "PostVersionDetail", "case": "that version whole, at detail size, wearing the line that says which version it is" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the post the history is of" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove the whole post",
+      "to": [{ "terminal": "canonical", "case": "the post's own think-twice dialog, which this round does not touch — removing the post removes every version at once" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 3,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at version scale, over the register it was reached from" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 4,
+      "kind": "advance",
+      "label": "the current version",
+      "to": [{ "terminal": "canonical", "case": "the post's own detail, exactly as the reader's chronicle opens it" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 5,
+      "kind": "advance",
+      "label": "an earlier version",
+      "to": [{ "board": "PostVersionDetail", "case": "that version whole — the author reads a version on the same surface everybody else does" }]
+    },
+    {
+      "from": "VersionRemoveConfirm",
+      "via": 1,
+      "kind": "advance",
+      "label": "Remove version",
+      "to": [{ "board": "PostHistoryOwn", "case": "the list stands and the version becomes a mark in its own row; had it been the current version, the post would go on showing it removed — no earlier version takes its place" }]
+    },
+    {
+      "from": "VersionRemoveConfirm",
+      "via": 2,
+      "kind": "cancel",
+      "label": "Keep it",
+      "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }]
+    },
+    {
+      "from": "PostVersionDetail",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the chronicle the version was opened from" }]
+    },
+    {
+      "from": "PostVersionDetail",
+      "via": 2,
+      "kind": "advance",
+      "label": "See the current version",
+      "to": [{ "terminal": "canonical", "case": "the post as it stands — the way out for a reader who arrived here by link rather than through the chronicle" }]
+    },
+    {
+      "from": "CommentHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the thread the comment is read in" }]
+    },
+    {
+      "from": "ProfileHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the profile" }]
     }
   ]
 }

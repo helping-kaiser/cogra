@@ -57,6 +57,12 @@ export function CommentCard({
   onOpenReplies,
   signedIn = true,
   taught = true,
+  /* Off only where a surface deliberately carries no stance affordance —
+     `PostCard`'s own prop, spelled here for the same reason it exists there.
+     The change-histories round is the case: an opinion is held on the comment,
+     never on one of its versions, so a chronicle of three versions drawing
+     three opinion faces would be drawing one fact three times. */
+  showStance = true,
   onCommit,
   onReply,
   onEdit,
@@ -172,9 +178,10 @@ export function CommentCard({
             the comment grows lands beside it — and it spreads across the card
             the same way, every control on a 48px target (jakob's ruling, the
             geek round). */}
+        {(showStance || (signedIn && (onReply || (own && onEdit))) || actions) && (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }}>
           {/* Owned by the shell — see PostCard. */}
-          <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
+          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />}
           {signedIn && onReply && (
             <Button variant="text" size="sm" onClick={onReply}>
               Reply
@@ -187,6 +194,7 @@ export function CommentCard({
           )}
           {actions}
         </div>
+        )}
       </Card>
       {children}
       {/* The collapsed form: a short rule and the count, indented under the

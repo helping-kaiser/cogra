@@ -47,6 +47,12 @@ export interface CommentCardProps {
   signedIn?: boolean;
   /** Owned by the shell, like `PostCard.taught`. Defaults to true. */
   taught?: boolean;
+  /**
+   * Off only where a surface deliberately carries no stance affordance —
+   * `PostCard`'s own prop. The edit history is the case: an opinion is held on
+   * the comment, never on one of its versions.
+   */
+  showStance?: boolean;
   /** Fires when a stance on this comment is signed. */
   onCommit?: (pick: import("../stance/StanceReadout").StancePair, bundle: StanceBundle) => void;
   onReply?: () => void;
