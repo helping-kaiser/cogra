@@ -26,6 +26,7 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useActiveAccountId } from "@/lib/session/provider";
 import { Button } from "@/lib/ui/button";
 import type { License } from "@/lib/license";
+import { useNarrowShare } from "@/lib/ui/narrow-share";
 import { PageHeader } from "@/lib/ui/page-header";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { useScrollHost } from "@/lib/ui/scroll-host";
@@ -33,7 +34,8 @@ import { galleryItems, hasVideo, payloadIsRedacted } from "@/lib/ui/post-media";
 import { MediaViewer } from "@/lib/ui2/media/media-viewer";
 import { PinnedClip } from "@/lib/ui2/media/pinned-clip";
 import { PostCard } from "@/lib/ui/post-card";
-import { LINK_COPIED } from "@/lib/ui/share";
+import { LINK_COPIED, shareLink } from "@/lib/ui/share";
+import { useShareCapable } from "@/lib/ui/share-button";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
@@ -55,6 +57,12 @@ export function PostView({
   const router = useRouter();
   const viewerId = useActiveAccountId();
   const host = useScrollHost();
+  // THE NARROW-SHARE FOLD (design/readme.md, jakob 2026-09-17, sharpened
+  // 2026-09-22 — PR #794): the same ruling `PostCard`'s own menu applies,
+  // here for the page-header menu this detail surface carries instead
+  // (`_shared.jsx:341-346`).
+  const narrow = useNarrowShare();
+  const shareCapable = useShareCapable();
 
   const [detail, setDetail] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -193,6 +201,20 @@ export function PostView({
       navigate: (href) => router.push(href),
       openLicense,
       openRemove: () => setRemoveOpen(true),
+      shareRow:
+        narrow && shareCapable
+          ? {
+              label: "Share",
+              onSelect: () => {
+                void shareLink(new URL(`/posts/${postId}`, window.location.href).toString()).then(
+                  (outcome) => {
+                    if (outcome === "copied") setLinkCopied(true);
+                  },
+                );
+              },
+              testId: "post-menu-share",
+            }
+          : null,
       testIdPrefix: "post-menu",
     });
 

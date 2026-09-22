@@ -1891,8 +1891,14 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_menu").assertDoesNotExist()
     }
 
-    /** The skeleton survives: author, age, stance, comments, share. */
+    /**
+     * The skeleton survives: author, age, stance, comments, share.
+     *
+     * Above the narrow-share breakpoint, per the same note as
+     * `theCardWearsTheAffordanceRowAndNoGatedControl`.
+     */
     @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun aRemovedPostKeepsItsSkeleton() {
         renderDetail(detailFixture(loading = false, post = removedPost().copy(commentCount = 2)))
 
@@ -1992,8 +1998,17 @@ class ContentScreensTest {
 
     // -- The affordance row (PostCard.jsx 300-358) --
 
-    /** Stance, comment, share — and the two the staging rule gates. */
+    /**
+     * Stance, comment, share — and the two the staging rule gates.
+     *
+     * ABOVE THE NARROW-SHARE BREAKPOINT (design/readme.md, jakob
+     * 2026-09-17, sharpened 2026-09-22 — PR #794): Robolectric's own
+     * default sandbox is 320dp wide, which is BELOW the breakpoint, so
+     * this pins the wide case explicitly rather than by the default's
+     * accident.
+     */
     @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun theCardWearsTheAffordanceRowAndNoGatedControl() {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 3))),
@@ -2071,7 +2086,9 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_comment_c1").assertExists()
     }
 
+    // Above the narrow-share breakpoint — the row still carries Share there.
     @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun shareHandsThePostOnFromBothSurfaces() {
         val shared = mutableListOf<String>()
         renderFeed(
@@ -2083,10 +2100,113 @@ class ContentScreensTest {
     }
 
     @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun theShareControlNamesWhatItShares() {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
         compose.onNodeWithTag("detail_post_share", useUnmergedTree = true)
             .assertContentDescriptionEquals("Share this post")
+    }
+
+    // -- The narrow-share fold (design/readme.md, jakob 2026-09-17,
+    // sharpened 2026-09-22 — PR #794 / 820c7195: the inequality is strict,
+    // since 360dp is mainstream android and the narrow treatment is for
+    // the genuinely small phone, not the common one) --
+
+    /**
+     * STRICTLY BELOW 360dp THE ROW SHEDS SHARE, ON THE FEED CARD.
+     * Robolectric's own default sandbox is 320dp wide — under the
+     * breakpoint — so this pins the narrow case explicitly (at 359dp)
+     * rather than leaning on that default by accident.
+     */
+    @Test
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theFeedCardsRowShedsShareBelowTheNarrowBreakpoint() {
+        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
+        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /** The detail's own row sheds it the same way. */
+    @Test
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theDetailsRowShedsShareBelowTheNarrowBreakpoint() {
+        renderDetail(detailFixture(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_post_share", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /**
+     * AT 360dp THE WIDE ROW STANDS — the inequality is strict (jakob
+     * 2026-09-22), so the breakpoint itself is unaffected, not just widths
+     * above it.
+     */
+    @Test
+    @Config(qualifiers = "w360dp-h640dp")
+    fun theRowKeepsShareAtTheBreakpointItself() {
+        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
+        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertExists()
+    }
+
+    /**
+     * THE READER'S ⋮ LEADS WITH SHARE below the breakpoint, on the feed
+     * card's own menu.
+     */
+    @Test
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theFeedCardsReaderMenuLeadsWithShareBelowTheNarrowBreakpoint() {
+        val shared = mutableListOf<String>()
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+            onShare = { shared += it },
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_share").assertExists().performClick()
+        assertThat(shared).containsExactly("p1")
+    }
+
+    /**
+     * …and on the detail's page-header menu, which is the reader's menu
+     * too (`_shared.jsx:341-346` — the card's own dot yields to it).
+     */
+    @Test
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theDetailsReaderMenuLeadsWithShareBelowTheNarrowBreakpoint() {
+        val shared = mutableListOf<String>()
+        renderDetail(
+            detailFixture(loading = false, post = testPost("p1")),
+            viewerId = "someone-else",
+            onShare = { shared += it },
+        )
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_share").assertExists().performClick()
+        assertThat(shared).containsExactly("p1")
+    }
+
+    /** At the breakpoint itself the menu is unchanged — no Share row at all. */
+    @Test
+    @Config(qualifiers = "w360dp-h640dp")
+    fun theReadersMenuHasNoShareRowAtTheBreakpointItself() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_share").assertDoesNotExist()
+    }
+
+    /**
+     * No board draws Share leaving the author's own menu — the ruling
+     * names only the reader's (design/readme.md). Pinned so a future
+     * change to this scope is deliberate, not drift.
+     */
+    @Test
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theOwnPostMenuNeverGainsShareEvenBelowTheNarrowBreakpoint() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_share").assertDoesNotExist()
     }
 
     /** The web page, not an in-app route: the receiver may have no app. */
