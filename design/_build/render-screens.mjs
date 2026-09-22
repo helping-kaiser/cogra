@@ -76,34 +76,46 @@ import { shell } from "./shell.mjs";
 import { applyFlowMarkers } from "./flow-markers.mjs";
 
 // ---- compile and render every screen.
-// An argument renders another canvas's screens/ (ideation canvases build from
+// An argument renders one directory's screens/ (ideation canvases build from
 // the masters too — freezing happens by committing the outputs, never by
-// copying markup): `node render-screens.mjs designs/search`.
-const canvasDir = process.argv[2] ?? "designs/canonical";
-const screensDir = join(root, canvasDir, "screens");
-const outDir = join(root, canvasDir);
-// `_shared.jsx` is prepended to every screen: screen-level helpers (the logo
-// band, sample people) that are not design-system components live once there.
-let prelude = "";
-try {
-  prelude = readFileSync(join(screensDir, "_shared.jsx"), "utf8") + "\n";
-} catch {}
-let count = 0;
-for (const file of readdirSync(screensDir).sort()) {
-  if (!file.endsWith(".jsx") || file.startsWith("_")) continue;
-  const name = basename(file, ".jsx");
-  const source = (prelude + readFileSync(join(screensDir, file), "utf8")).replace(/^export\s+/gm, "");
-  const compiled = Babel.transform(source, { presets: ["react"] }).code;
-  const factory = new Function(
-    "React",
-    "components",
-    "Raw",
-    `${compiled}\nif (typeof Screen !== "function") throw new Error("no Screen export");\nreturn { Screen, PROPS: typeof PROPS === "undefined" ? null : PROPS, VALS: typeof VALS === "undefined" ? null : VALS, FRAME: typeof FRAME === "undefined" ? null : FRAME };`
-  );
-  const { Screen, PROPS, VALS, FRAME } = factory(React, ns, Raw);
-  const markup = applyFlowMarkers(name, renderToStaticMarkup(React.createElement(Screen)));
-  writeFileSync(join(outDir, `${name}.dc.html`), shell(markup, PROPS, VALS, FRAME ?? undefined));
-  count += 1;
-  console.log(`rendered ${name}.dc.html`);
+// copying markup): `node render-screens.mjs designs/search`. With no argument
+// every generated tree renders, `trees.mjs` being the one place they are named.
+import { TREES } from "./trees.mjs";
+
+function renderTree(canvasDir) {
+  const screensDir = join(root, canvasDir, "screens");
+  const outDir = join(root, canvasDir);
+  // `_shared.jsx` is prepended to every screen: screen-level helpers (the logo
+  // band, sample people) that are not design-system components live once there.
+  let prelude = "";
+  try {
+    prelude = readFileSync(join(screensDir, "_shared.jsx"), "utf8") + "\n";
+  } catch {}
+  let count = 0;
+  for (const file of readdirSync(screensDir).sort()) {
+    if (!file.endsWith(".jsx") || file.startsWith("_")) continue;
+    const name = basename(file, ".jsx");
+    const source = (prelude + readFileSync(join(screensDir, file), "utf8")).replace(/^export\s+/gm, "");
+    const compiled = Babel.transform(source, { presets: ["react"] }).code;
+    const factory = new Function(
+      "React",
+      "components",
+      "Raw",
+      `${compiled}\nif (typeof Screen !== "function") throw new Error("no Screen export");\nreturn { Screen, PROPS: typeof PROPS === "undefined" ? null : PROPS, VALS: typeof VALS === "undefined" ? null : VALS, FRAME: typeof FRAME === "undefined" ? null : FRAME };`
+    );
+    const { Screen, PROPS, VALS, FRAME } = factory(React, ns, Raw);
+    const markup = applyFlowMarkers(name, renderToStaticMarkup(React.createElement(Screen)));
+    writeFileSync(join(outDir, `${name}.dc.html`), shell(markup, PROPS, VALS, FRAME ?? undefined));
+    count += 1;
+    console.log(`rendered ${canvasDir}/${name}.dc.html`);
+  }
+  return count;
 }
-console.log(`${count} screens rendered from the design system in ${Date.now() - t0} ms`);
+
+let total = 0;
+for (const canvasDir of process.argv[2] ? [process.argv[2]] : TREES) {
+  const count = renderTree(canvasDir);
+  total += count;
+  console.log(`${canvasDir}: ${count} screens`);
+}
+console.log(`${total} screens rendered from the design system in ${Date.now() - t0} ms`);

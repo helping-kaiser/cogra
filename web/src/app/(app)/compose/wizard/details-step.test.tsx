@@ -2,6 +2,16 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { DetailsStep } from "./details-step";
+import type { PickedAsset } from "@/lib/compose/wizard";
+
+const VIDEO_ASSET: PickedAsset = {
+  id: "v0",
+  file: new Blob(["v"], { type: "video/mp4" }),
+  crop: { x: 0, y: 0, zoom: 1, area: null, areaPercent: null },
+  altText: "",
+  upload: { kind: "done", mediaId: "m0" },
+  kind: "video",
+};
 
 function renderStep(overrides: Partial<Parameters<typeof DetailsStep>[0]> = {}) {
   const props = {
@@ -89,5 +99,41 @@ describe("DetailsStep", () => {
   it("leaves Next enabled while nothing is over its cap", () => {
     renderStep({ title: "Salt maps", description: "Three weekends of rubbings.", blocked: false });
     expect(screen.getByTestId("wizard-next")).not.toBeDisabled();
+  });
+
+  // The Cover field (`ComposeDetailsVideo`, design/readme.md §13, 2026-09-22):
+  // a field with two states, never a second entrance. Both the door and
+  // "Change the cover" reach the same cover stage — one Back away.
+  describe("the Cover field", () => {
+    it("shows the door when the clip has no chosen cover", () => {
+      const onCover = vi.fn();
+      renderStep({ mode: "media", assets: [VIDEO_ASSET], coverPreview: null, onCover });
+
+      screen.getByTestId("wizard-cover-door").click();
+      expect(onCover).toHaveBeenCalledTimes(1);
+      expect(screen.queryByTestId("wizard-cover-face")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("wizard-cover-change")).not.toBeInTheDocument();
+    });
+
+    it("shows the chosen face and Change the cover once one is picked", () => {
+      const onCover = vi.fn();
+      renderStep({
+        mode: "media",
+        assets: [VIDEO_ASSET],
+        coverPreview: "blob:cover-face",
+        onCover,
+      });
+
+      expect(screen.getByTestId("wizard-cover-face")).toBeInTheDocument();
+      expect(screen.queryByTestId("wizard-cover-door")).not.toBeInTheDocument();
+      screen.getByTestId("wizard-cover-change").click();
+      expect(onCover).toHaveBeenCalledTimes(1);
+    });
+
+    it("carries no Cover section for a non-video body", () => {
+      renderStep({ mode: "words" });
+      expect(screen.queryByTestId("wizard-cover-door")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("wizard-cover-face")).not.toBeInTheDocument();
+    });
   });
 });

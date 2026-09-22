@@ -408,6 +408,42 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertDoesNotExist()
     }
 
+    // The details board's Cover field (`ComposeDetailsVideo`, design/readme.md
+    // §13, 2026-09-22): a field with two states, never a second entrance. The
+    // door reaches the same cover stage as "Change the cover" — one Back away.
+
+    @Test
+    fun theDetailsStepShowsTheCoverDoorWhenNoCoverIsChosen() {
+        val withVideoNoCover = ComposeWizardState(
+            step = WizardStep.Details,
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+        )
+        compose.setContent { Wizard(withVideoNoCover) }
+
+        // The door reaches the cover stage the same way "Change the cover"
+        // does: one Back away, never a second entrance (jakob 2026-08-31).
+        compose.onNodeWithTag("wizard_cover_door").assertIsDisplayed().performClick()
+        assertThat(backs).isEqualTo(1)
+        compose.onNodeWithTag("wizard_cover_face", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("wizard_cover_change").assertDoesNotExist()
+    }
+
+    @Test
+    fun theDetailsStepShowsTheChosenCoverFaceAndChangeAction() {
+        val withVideoCover = ComposeWizardState(
+            step = WizardStep.Details,
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverFrames = List(3) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 192)) },
+            coverChoice = CoverChoice.Frame(0),
+        )
+        compose.setContent { Wizard(withVideoCover) }
+
+        compose.onNodeWithTag("wizard_cover_face", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("wizard_cover_door").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_cover_change").assertIsDisplayed().performClick()
+        assertThat(backs).isEqualTo(1)
+    }
+
     @Test
     fun theGridDrawsTheDevicesOwnPicturesAndTogglesThemInPlace() {
         compose.setContent { Wizard(withPicks) }

@@ -15,10 +15,10 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
@@ -145,7 +145,24 @@ private fun GalleryFrame(
     // How much of this frame the reader can see. Autoplay follows it,
     // so a clip starts when it arrives and stops when it leaves —
     // "autoplay muted on visibility" (roadmap slice 2.5.2).
-    var visible by remember { mutableFloatStateOf(0f) }
+    //
+    // **COMPOSITION NEVER READS THE FRACTION, ONLY THE DECISION.** The
+    // fraction is rewritten on every layout pass, which while a list is
+    // scrolling means every frame; reading it here would recompose this
+    // frame — and restart the effect below — once per frame per clip on
+    // screen, on the thread that owes the compositor the next one. The
+    // measured cost was 848 autoplay decisions across six swipes where
+    // forty would do (`GalleryVisibilityChurnTest`). `derivedStateOf` is
+    // the documented answer to exactly this shape, a fast-changing state
+    // feeding a slow-changing one
+    // (developer.android.com/develop/ui/compose/performance/bestpractices,
+    // "Use derivedStateOf to limit recompositions"): the comparison
+    // re-runs per frame, the recomposition happens when the clip crosses
+    // the bar.
+    val visibleFraction = remember { mutableFloatStateOf(0f) }
+    val playing by remember {
+        derivedStateOf { visibleFraction.floatValue >= AUTOPLAY_VISIBLE_FRACTION }
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -157,7 +174,7 @@ private fun GalleryFrame(
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .then(
                 if (item.isVideo) {
-                    Modifier.onVisibilityChanged { visible = it }
+                    Modifier.onVisibilityChanged { visibleFraction.floatValue = it }
                 } else {
                     Modifier
                 },
@@ -170,8 +187,13 @@ private fun GalleryFrame(
         // the line the frame landed on and when.
         if (videoUrl != null) {
             val traced = remember(videoUrl) { VideoTrace.clip(videoUrl) }
-            LaunchedEffect(visible, traced) {
-                VideoTrace.autoplay(traced, visible, visible >= AUTOPLAY_VISIBLE_FRACTION)
+            // Keyed on the decision, not on the number behind it: a line
+            // per frame is not a log of what autoplay decided, it is the
+            // decision buried in its own noise. The fraction is still
+            // reported — read here, outside composition, so it says what
+            // the frame measured at the moment it crossed.
+            LaunchedEffect(playing, traced) {
+                VideoTrace.autoplay(traced, visibleFraction.floatValue, playing)
             }
         }
         // A player off screen is still a hardware codec held open, and a
@@ -185,13 +207,13 @@ private fun GalleryFrame(
         // all: a card showing 8% of itself was taking the decoder off
         // the card showing all of itself, which left the card being
         // read wearing its cover for as long as it sat there.
-        if (videoUrl != null && visible >= AUTOPLAY_VISIBLE_FRACTION) {
+        if (videoUrl != null && playing) {
             VideoPlayer(
                 url = videoUrl,
                 // The poster is the cover asset: what the author chose
                 // as the clip's face on `ComposeCover`.
                 posterUrl = item.imageModel(),
-                autoplay = visible >= AUTOPLAY_VISIBLE_FRACTION,
+                autoplay = playing,
                 durationMs = item.durationMs,
                 // The gallery's own scale, so a clip is framed the way
                 // every picture beside it is — and so the poster and

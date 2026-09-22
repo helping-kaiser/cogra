@@ -115,6 +115,13 @@ fun DescribeSheet(
             if (video) PlayDisc(testTag?.let { "${it}_play_disc" })
         }
 
+        // TWO LINES TO START, AND IT GROWS FROM THERE (jakob 2026-09-22): the
+        // box takes a line per line written and stops at the room the sheet's
+        // own chrome left — the title, the reason, the 180dp strip, the
+        // supporting row and Done — from where the words scroll inside it.
+        // The weight is what makes that room a measurement rather than a
+        // pixel sum: everything else in this column is unweighted, so the
+        // leftover IS the maximum.
         CograTextField(
             value = value,
             onValueChange = onValueChange,
@@ -122,6 +129,8 @@ fun DescribeSheet(
             optional = true,
             singleLine = false,
             minLines = 2,
+            growToFit = true,
+            modifier = Modifier.weight(1f, fill = false),
             cap = cap,
             error = error,
             testTag = testTag?.let { "${it}_field" },

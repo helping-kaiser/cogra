@@ -110,6 +110,23 @@ fun CograTextField(
      */
     fillHeight: Boolean = false,
     /**
+     * THE GROWTH LAW (jakob 2026-09-22). The box grows line by line with what
+     * is written and stops at whatever room is left, from where the words
+     * scroll inside it — so a sheet's Done button never walks off the screen
+     * behind a long description.
+     *
+     * **The caller has to make the field the yielding child** — a
+     * `Modifier.weight(1f, fill = false)` from its own column — because the
+     * room left is not a number this atom can know: it is whatever the sheet's
+     * own chrome did not take. `fill = false` is the whole law in one flag:
+     * the box asks for its content's height and is granted at most the
+     * leftover, which is the maximum DERIVED rather than summed.
+     *
+     * Past that height `BasicTextField` scrolls its own contents and keeps the
+     * cursor in view — the same bounded box [fillHeight] already relies on.
+     */
+    growToFit: Boolean = false,
+    /**
      * A field the surface is not currently accepting. Used where the
      * contract would refuse the value anyway — `ComposeSensitive`'s
      * reason before the mark is on — so an author never types into a box
@@ -146,7 +163,13 @@ fun CograTextField(
             cursorBrush = SolidColor(colors.primary),
             modifier = Modifier
                 .fillMaxWidth()
-                .then(if (fillHeight) Modifier.weight(1f) else Modifier)
+                .then(
+                    when {
+                        fillHeight -> Modifier.weight(1f)
+                        growToFit -> Modifier.weight(1f, fill = false)
+                        else -> Modifier
+                    },
+                )
                 .defaultMinSize(minHeight = Layout.FieldHeight)
                 .border(
                     BorderStroke(1.dp, fieldOutlineColor(colors, hasError, enabled)),
