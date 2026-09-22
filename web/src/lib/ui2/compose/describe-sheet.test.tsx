@@ -18,6 +18,25 @@ function open(overrides: Partial<Parameters<typeof DescribeSheet>[0]> = {}) {
 }
 
 describe("DescribeSheet", () => {
+  // THE DRAWN MINIMUM, AND THE GROWTH FROM IT (jakob's ruling, the
+  // sheets-and-video round, 2026-09-22 — design/readme.md §13: "the
+  // description sheet keeps its two-line opening"). The box opens at two
+  // lines and takes another whenever the writing needs one; past the room
+  // the sheet has left it scrolls inside itself, so Done stays in reach.
+  it("opens at its drawn two lines and grows from there", () => {
+    open();
+    expect(screen.getByTestId("describe-sheet-field")).toHaveAttribute("rows", "2");
+    expect(screen.getByTestId("growing-box")).toHaveAttribute("data-min-rows", "2");
+  });
+
+  it("keeps the scroll inside the box rather than under the sheet", () => {
+    open({ value: "a\n".repeat(200) });
+    expect(screen.getByTestId("growing-box").className).toContain("overflow-y-auto");
+    expect(screen.getByTestId("describe-sheet-field").className).toContain("overflow-hidden");
+    // The one thing the whole ceiling is for.
+    expect(screen.getByTestId("describe-sheet-done")).toBeVisible();
+  });
+
   it("is titled by what it is for", () => {
     open();
     expect(screen.getByTestId("describe-sheet")).toHaveAttribute(

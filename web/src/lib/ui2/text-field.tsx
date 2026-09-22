@@ -8,7 +8,7 @@
 // deliberately not used — the canvas puts the label above the box, which keeps
 // the "Optional" note readable and stops the label from covering the value.
 
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 
 /**
  * The box itself, without the label above it.
@@ -25,6 +25,68 @@ export const FIELD_BOX =
   "cg-focus box-border w-full rounded-extra-small border border-outline bg-transparent px-3 py-2.5 text-body-large text-on-surface placeholder:text-on-surface-variant disabled:opacity-[var(--state-disabled)]";
 
 const FIELD = FIELD_BOX;
+
+/**
+ * THE GROWTH LAW, AS A BOX (jakob 2026-09-22).
+ *
+ * A multi-line field takes a line per line written and stops at the room its
+ * sheet has left, from where the words scroll INSIDE the box — so nothing
+ * below it, least of all Done, is ever pushed off the screen. A fixed `rows`
+ * box is the cap this replaces: it never grew, so a description longer than
+ * its three lines was written through a slot.
+ *
+ * NO MEASUREMENT AND NO EFFECT. The box is a one-cell grid holding the
+ * textarea and an invisible replica of the same words in the same font; the
+ * cell is as tall as the taller of the two, which IS the text's height, and
+ * the browser recomputes it on every keystroke without React hearing about
+ * it. The trailing newline is what keeps the replica a line ahead when the
+ * writer ends on one, so the box grows as the caret does. `rows` stays the
+ * MINIMUM — the drawn line count a field starts at.
+ *
+ * WHERE THE MAXIMUM COMES FROM: nowhere in here. The box shrinks (`min-h-0`,
+ * and flex's own `flex-shrink: 1`) while everything the sheet stacks around
+ * it does not, so the room left over IS the cap — derived by the layout, the
+ * same way Android's `weight(1f, fill = false)` derives it.
+ */
+export const GROWING_FIELD =
+  "col-start-1 row-start-1 resize-none overflow-hidden border-0 bg-transparent p-0 [font:inherit] text-on-surface outline-none placeholder:text-on-surface-variant";
+
+function GrowingBox({
+  value,
+  minRows,
+  disabled,
+  children,
+}: {
+  value: string;
+  minRows: number;
+  disabled: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      data-testid="growing-box"
+      data-min-rows={minRows}
+      // The ring belongs to the drawn box, and the box is now this wrapper
+      // rather than the control inside it — `cg-focus-within` is the same
+      // ring, taken from the edge the reader sees. The dimming moves with it
+      // for the same reason: `disabled:` is a state of the CONTROL, and the
+      // control is no longer what carries the border (the sensitive sheet's
+      // reason is greyed out until its mark is on).
+      className={`${FIELD} cg-focus-within grid min-h-0 overflow-y-auto ${
+        disabled ? "opacity-[var(--state-disabled)]" : ""
+      }`}
+    >
+      <span
+        aria-hidden="true"
+        data-testid="growing-box-replica"
+        className="col-start-1 row-start-1 invisible break-words whitespace-pre-wrap [font:inherit]"
+      >
+        {`${value}\n`}
+      </span>
+      {children}
+    </div>
+  );
+}
 
 /**
  * THE LATE COUNTER (jakob's ruling, the caps-affordance round,
@@ -119,6 +181,7 @@ export function TextField({
   placeholder?: string;
   disabled?: boolean;
   multiline?: boolean;
+  /** The line count the box STARTS at — its minimum, never its cap. */
   rows?: number;
   /** The field's ruled length cap, in Unicode scalar values — drives the late counter. */
   cap?: number;
@@ -134,8 +197,11 @@ export function TextField({
     [error ? errorId : null, reading ? countId : null].filter(Boolean).join(" ") || undefined;
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-baseline gap-2">
+    // `min-h-0` on the field and `flex-none` on the rows around it is the
+    // growth law in miniature: when the sheet runs out of room it is the BOX
+    // that yields, never the label or the line that says what is wrong.
+    <div className="flex min-h-0 flex-col gap-1">
+      <div className="flex flex-none items-baseline gap-2">
         <label htmlFor={id} className="flex-1 text-label-large text-on-surface">
           {label}
         </label>
@@ -146,18 +212,20 @@ export function TextField({
         )}
       </div>
       {multiline ? (
-        <textarea
-          id={id}
-          data-testid={testId}
-          value={value}
-          rows={rows}
-          placeholder={placeholder}
-          disabled={disabled}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={described}
-          onChange={(event) => onChange(event.target.value)}
-          className={`${FIELD} resize-none`}
-        />
+        <GrowingBox value={value} minRows={rows} disabled={disabled}>
+          <textarea
+            id={id}
+            data-testid={testId}
+            value={value}
+            rows={rows}
+            placeholder={placeholder}
+            disabled={disabled}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={described}
+            onChange={(event) => onChange(event.target.value)}
+            className={GROWING_FIELD}
+          />
+        </GrowingBox>
       ) : (
         <input
           id={id}
@@ -177,7 +245,7 @@ export function TextField({
           is a third element in this row, never a third state of it — it
           sits beside whichever of hint/error is live, or alone. */}
       {(error || reading) && (
-        <div className="flex items-baseline gap-2">
+        <div className="flex flex-none items-baseline gap-2">
           {error && (
             <span id={errorId} role="alert" className="text-body-small text-error">
               {error}

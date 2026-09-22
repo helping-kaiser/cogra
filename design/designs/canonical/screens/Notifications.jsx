@@ -6,9 +6,10 @@
    "three people commented" would trade away the two things a row is for — the
    name and the moment — and would need a second read model on top.
 
-   SEVEN KINDS, EACH DRAWN ONCE: a comment on your post, a reply to your
-   comment, an opinion on your profile, a mention, a citation, someone landing
-   through your invite, and your own application approved. Opinions on your
+   NINE KINDS, EACH DRAWN ONCE: a comment on your post, a reply to your
+   comment, an opinion on your profile, a mention, an applicant ready for your
+   approval, a citation, someone landing through your invite, your own
+   application approved, and your own application closed. Opinions on your
    CONTENT are deliberately absent (jakob): a post collects those continuously,
    and the list would become a counter of ambient sentiment. Who holds an
    opinion on a post is answered on the post itself.
@@ -24,7 +25,7 @@
 
    READ STATE IS TWO LEVELS (jakob). Opening this list clears the bell's dot;
    each row keeps its own quiet mark until it is opened. So the newest three
-   wear `unread` and the older four do not, and there is no mark-all — a
+   wear `unread` and the older six do not, and there is no mark-all — a
    control whose only job is to make a list stop asking is a control for a list
    that asks too much. */
 export function Screen() {

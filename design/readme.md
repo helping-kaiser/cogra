@@ -5801,22 +5801,149 @@ they were settled.
   boards and its endpoints. Flows hold at **66 declared · 64 resolved**,
   gaps at **13**.
 
+### The post-MVP separation — 2026-09-22
+
+The MVP board is done, and the next rounds are not MVP. Rather than let
+the baseline absorb boards whose slice is nowhere near current, post-MVP
+work is drawn apart — ruled by jakob the day the push round opened.
+
+- **A post-MVP round is drawn in a tree of its own.**
+  `designs/postmvp/` is a sibling of `designs/canonical/`, with its own
+  `screens/`, its own `canvas.json`, its own `graph.json` and its own
+  `_shared.jsx`. `designs/canonical/` and the four canvases stay exactly
+  what they were: the MVP baseline, and the boards implementation reads
+  from. A reader who opens canonical is looking at what is being built.
+- **It is the fifth canvas** — `CoGra · Post-MVP rounds`, its own
+  review surface, seeded by the same `gen-canvases.mjs` from the same
+  kind of `canvases.json`. Five canvases now, four of them the MVP's.
+- **The migration rule: boards move across as reviewed rounds**, when
+  their slice becomes the work — not by being copied early and not one
+  board at a time. And whatever implementation needs lands in canonical,
+  always: a board the clients are expected to build is by definition
+  current, so its home is the baseline. Nothing implementation needs is
+  ever only in postmvp.
+- **The pipeline takes the tree as a parameter**, which is the whole of
+  the plumbing. `_build/trees.mjs` names the generated trees and nothing
+  else does; `render-screens`, `gen-maps`, `gen-canvases` and
+  `check-flows` loop over that list, each tree checked against its own
+  canvas and its own graph. The ideation canvases stay off the list on
+  purpose — they render only when named by hand, which is what keeps a
+  frozen board frozen. Both trees share `components/` unchanged: one
+  design system, drawn twice as far.
+- **A board name is unique across every tree.** `flow-markers.mjs` is
+  keyed by board name alone, so two trees with a `Settings` would stamp
+  one tree's flow numbers onto the other's markup. The post-MVP boards
+  carry their round in their names.
+- **The gate**: canonical's output is **byte-identical** across the
+  split — **217 screens · 1568 edges · 13 gaps · flows 66/64/2** all
+  hold, and every board, map and manifest in the tree hashes the same
+  before and after. A separation that moved the baseline would not be a
+  separation.
+
+### The push round — 2026-09-22
+
+The first post-MVP round, and the first boards in the new tree.
+`docs/implementation/notifications.md` names push and does not build it:
+it is the **delivery of a row the list already holds, never a source of
+one**, which is the fact every ruling below hangs off. Nine kinds, the
+doc's own taxonomy. Backlog item 102.
+
+- **A `Notifications` group, after Reading, with per-kind toggling
+  (jakob).** Reading is where a reader says what the product shows them;
+  push is that one step further out. The granularity is the strategy
+  rather than a refinement of it: a channel a reader can only kill
+  outright is a channel they kill, so the way to keep push alive is to
+  make turning one kind off easy.
+- **One row on the page, nine on a subpage (jakob).** The settings page
+  carries a disclosure row reading its state back — the `Default
+  license` grammar — and `PushKinds` carries the master switch and the
+  nine kinds unclustered. A settings page is scanned; nine switches
+  inside a group turn one line of the scan into a screen of it. And a
+  clustering would be a second taxonomy to keep in step with the doc's.
+- **The OS ask fires only from an explicit act, never at launch
+  (jakob).** It has one home: the master switch on the push settings
+  page. The one-time dismissible offer row at the top of the list is
+  the door to that page — the tap lands where the choice is made, the
+  way every notification row lands on its subject (jakob) — so on
+  native, where a denial is **sticky**, the ask is never spent on a
+  reader who did not reach for it, and on web the reader arrives at the
+  browser's own dialog through their own deliberate taps. Dismissed is
+  dismissed for good — an offer that came back would be the launch
+  prompt with extra steps.
+- **Push content is the drawn row, and nothing invented (jakob).** The
+  title is the row's sentence (`@ada commented on your post`); the body
+  is the row's second line where the row has one, and absent where it
+  has none; the tap lands exactly where opening the row lands. The whole
+  copy register applies out there too — sentence case, no exclamation,
+  no counts, no emoji. A notification that said more than its row would
+  make the tray a second product with its own voice.
+- **Tray and badge are the platform's own, and no more (jakob).**
+  Platform-default collapse, never a custom *N new* summary; **no
+  numeric app-icon badge, ever** — the launcher's dot is the bell's dot
+  at launcher scale, the same honesty the boolean
+  `hasUnreadNotifications` already carries, and a number would be the
+  errand the bell refuses to set. A foregrounded app suppresses the
+  banner: the surface is already open. Prose law, not drawn.
+- **The defaults, ruled kind by kind (jakob).** On: **comment on your
+  post**, **application approvable**, **application approved**,
+  **application rejected**. Off: **reply**, **mention**, **citation**,
+  **opinion on your profile**, **invite landed**. What is on is what a
+  reader is answerable for — their own post's comments, and the four
+  moments an application turns; what is off is what the list holds
+  perfectly well until they look.
+- **Forward note: chat-message-received joins the on-set when chats
+  ship.** A message addressed to one person and waiting is the clearest
+  case the on-set has. It is recorded rather than drawn because the kind
+  does not exist yet — the taxonomy's own rule covers it when it does
+  (`notifications.md`, *The kinds later slices add*).
+
+### The foot ruling — 2026-09-22
+
+The implementation session, building the sheet ceiling, found two
+rulings colliding on one control: the sheets-and-video round names the
+thread's **Add a comment** a growing `rows={1}` field, but the
+comments-sheet round (2026-08-28) draws that foot as a field-shaped
+**door** into the full-focus composer — and a field whose tap navigates
+away is never typed in, so it cannot grow. jakob ruled the collision:
+
+- **The foot stays a door.** Composing a comment keeps its one home —
+  the full-focus composer, where draft, media, and the signing ceremony
+  live. A live inline foot would need that whole ceremony in a one-line
+  row, or would create a second, lighter class of comment; neither is
+  drawn. The graph's `Add a comment → ReplyCompose` edge was already
+  the door and stands unchanged.
+- **The growth law loses one of its three fields.** It governs the
+  fields a writer actually writes in — the description sheet and the
+  sensitive **Why?** — not the foot. The sheets-and-video round's text
+  naming the foot a growing field is superseded on that one point; its
+  ceiling, growth, and rows-as-minimum rules stand untouched.
+- **A live foot is the chats round's question.** A chat is an inline
+  signed send; if that round designs one, the comment foot inherits it
+  then — never as a sheet bite now.
+- **No pixels move.** Boards draw every field at its `rows`, and the
+  foot was drawn at one line under either reading, so the ruling
+  changes the record and the docblock (`CommentComposerFoot`), not a
+  board.
+
 ---
 
 ## 14. The canvases
 
-The tree draws one app and is graded as one thing. The editor it is
-reviewed in holds 200 files per canvas and publishes 16MB, and at 191
-boards the tree stands on both ceilings — so the *review* splits into
-four canvases while the tree itself stays whole.
+The canonical tree draws one app and is graded as one thing. The editor
+it is reviewed in holds 200 files per canvas and publishes 16MB, and at
+191 boards the tree stood on both ceilings — so the *review* splits into
+four canvases while the tree itself stays whole. `designs/postmvp/` is
+the second tree and brings the fifth canvas with it (§13, *The post-MVP
+separation*); the four below are the MVP's, and they are what
+implementation reads.
 
-**The tree is the master.** The board files and
-`designs/canonical/canvas.json` are the graded truth: coordinates,
-page assignment, annotations, and the flow graph beside them. The four
-canvases are review surfaces — claude.ai artifacts seeded from that
-master, each carrying the boards of the pages it serves. Nothing is
-decided on a canvas that is not written back into the tree; a canvas
-is re-seeded from the tree, never the other way round.
+**A tree is the master.** The board files and its own `canvas.json` are
+the graded truth: coordinates, page assignment, annotations, and the
+flow graph beside them. The canvases are review surfaces — claude.ai
+artifacts seeded from that master, each carrying the boards of the pages
+it serves. Nothing is decided on a canvas that is not written back into
+the tree; a canvas is re-seeded from the tree, never the other way
+round.
 
 **Which canvas serves which pages:**
 
@@ -5827,15 +5954,21 @@ is re-seeded from the tree, never the other way round.
 | [CoGra · Compose and media](https://claude.ai/code/artifact/675688a0-1365-48e0-b56a-511104712f53) | `compose` | Compose · Media | Compose |
 | [CoGra · Entry, money and maps](https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5) | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
 
+The fifth is the post-MVP tree's own —
+[CoGra · Post-MVP rounds](https://claude.ai/artifact/Fejcck8Jfu2wghbdmHHEkn),
+id `postmvp`, serving the Push notifications page and opening on it,
+seeded exactly as the four are.
+
 A canvas title never carries `< > & "` or a backslash — the editor
 refuses them at seed time, which is why the titles say "and". The old
-single-canvas artifact stands as a signpost to these four; its version
-picker keeps the pre-split monolith.
+single-canvas artifact stands as a signpost to all five — the MVP four
+and the post-MVP canvas beneath them; its version picker keeps the
+pre-split monolith.
 
-That map is data, not a habit: `designs/canonical/canvases.json` holds
+That map is data, not a habit: each tree's own `canvases.json` holds
 it, hand-maintained — each entry carries its canvas's published `url`,
 the links in the table above — and `_build/gen-canvases.mjs` writes one seed
-manifest per canvas under `designs/canonical/canvases/<id>/` — the
+manifest per canvas under `<tree>/canvases/<id>/` — the
 artboards and annotations of its pages with coordinates verbatim, the
 page bar in the order above, plus an `images.json` naming the
 photographs its boards actually reference, so seeding a canvas reads
@@ -5864,12 +5997,15 @@ file is what holds still and what CI grades. Briefs, hand-test notes
 and PR bodies name `ProfileEdit.dc.html`, not the artifact it happens
 to be visible in today.
 
-**Cross-canvas edges are ordinary.** One flow graph spans all four —
-`graph.json` knows boards and pages, not canvases — so an edge from a
-compose board to a feed board is normal wiring, drawn with the same
-`⤴ page` marker the maps already use for a cross-page jump.
-Reachability, entries and gaps are checked over the whole graph; no
-canvas is ever checked alone.
+**Cross-canvas edges are ordinary; cross-tree edges do not exist.** One
+flow graph spans a tree's canvases — `graph.json` knows boards and
+pages, not canvases — so an edge from a compose board to a feed board is
+normal wiring, drawn with the same `⤴ page` marker the maps already use
+for a cross-page jump. Reachability, entries and gaps are checked over
+that whole graph; no canvas is ever checked alone. A tree's graph stops
+at the tree, though: a post-MVP board cannot point at a canonical one,
+because the round it belongs to has not landed in the app the canonical
+graph describes. It gets its edges when it migrates.
 
 ---
 
@@ -5886,10 +6022,13 @@ canvas is ever checked alone.
   `npm install` once in `_build/`, then `node _build/bundle.mjs`.
   `_ds_manifest.json` is the claude.ai Design app's own metadata and is
   refreshed only by that app, on an explicit sync-back.
+- `_build/trees.mjs` — the generated trees, named once (§13, *The
+  post-MVP separation*). The stages below read this list; the ideation
+  canvases are deliberately not on it.
 - `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
   `gen-maps.mjs`, `gen-canvases.mjs`, `check-flows.mjs`,
-  `check-readouts.mjs`, `report-summaries.mjs` — the canonical-canvas
-  pipeline (§13, *Canvas pages and flows*): render the screens, stamp
+  `check-readouts.mjs`, `report-summaries.mjs` — the board pipeline
+  (§13, *Canvas pages and flows*): render the screens, stamp
   the flow numbers, generate the maps, seed the per-canvas manifests
   (§14), gate the result. Run all seven after any
   screen, component, or graph.json edit. A screen whose state is not a
@@ -5921,3 +6060,9 @@ and `iconography.md` for the deeper dives.
 pages, annotations), `graph.json` and the flow layer beside it (§13),
 `canvases.json` + `canvases/<id>/` (the canvas map and per-canvas seed
 manifests, §14), and `img/` (the photographs the boards carry).
+
+**`designs/postmvp/`** — the same shape, one tree over: rounds drawn
+before their slice is the work, reviewed on the fifth canvas, and moved
+into canonical when they become current (§13, *The post-MVP
+separation*). Its own `screens/`, `_shared.jsx`, `canvas.json`,
+`graph.json` and `canvases.json`; the same `components/`.

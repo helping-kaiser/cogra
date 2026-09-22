@@ -2174,3 +2174,42 @@ Object.assign(FLOW_MARKERS, {
   OnboardingLayers: introCard("Next"),
   OnboardingVouch: introCard("Start reading"),
 });
+
+/* THE POST-MVP TREE'S BOARDS (the push round, 2026-09-22).
+
+   THIS TABLE IS KEYED BY BOARD NAME ACROSS EVERY TREE, which is why a
+   post-MVP board never takes a canonical board's name: two `Settings` would
+   stamp one tree's numbers onto the other's markup, and the mismatch would
+   surface as a marker matching nothing rather than as the wrong badge — but
+   only if the two boards happened to differ. The names carry their round.
+
+   ONLY THE ROUND'S OWN CONTROLS ARE NUMBERED. The push page is not wired: its
+   settings boards are EXCERPTS, and the rows on either side of the new group
+   lead to canonical boards this tree's graph cannot name (readme §14 — a
+   tree's graph stops at the tree). Numbering them would owe each one an edge,
+   and the only honest edge available would be a gap that is not a gap. They
+   get their numbers when the round migrates. */
+Object.assign(FLOW_MARKERS, {
+  PushSettings: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">Push notifications</span>", tag: "button" },
+  ],
+  PushKinds: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">Push notifications</span>", tag: "button" },
+    { n: 3, find: ">Comments on your posts</span>", tag: "button" },
+    { n: 4, find: ">Replies to your comments</span>", tag: "button" },
+    { n: 5, find: ">Mentions of you</span>", tag: "button" },
+    { n: 6, find: ">Citations of your posts and comments</span>", tag: "button" },
+    { n: 7, find: ">Opinions on you</span>", tag: "button" },
+    { n: 8, find: ">Applicants ready for your approval</span>", tag: "button" },
+    { n: 9, find: ">People landing through your invites</span>", tag: "button" },
+    { n: 10, find: ">Your application approved</span>", tag: "button" },
+    { n: 11, find: ">Your application closed</span>", tag: "button" },
+  ],
+  NotificationsOffer: [
+    { n: 1, find: ">Want these announced as they happen?<", tag: "button" },
+    { n: 2, find: 'aria-label="No thanks', tag: "button" },
+  ],
+  PushDenied: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }],
+});
