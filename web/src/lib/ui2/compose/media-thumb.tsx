@@ -135,14 +135,30 @@ export function MediaThumb({
   const w = width ?? size;
   const h = height ?? size;
   const alt = altText ?? "";
-  const coverMark = Math.max(28, Math.round(Math.min(w, h) / 3));
+  const edge = Math.min(w, h);
+  const coverMark = Math.max(28, Math.round(edge / 3));
   // The duration pill's own floor (jakob's ruling, 2026-09-22:
   // design/readme.md §13 — "`MediaThumb` draws the pill on an authoring
   // tile of 80px or more, where an author is identifying a file among
   // files"). Under it the pill reads as the tile's whole face rather than
   // a corner mark — `PickedRow`'s 48px default summary tile drew it at
   // that size until this ruling, which is what jakob's hand test caught.
-  const durationFits = Math.min(w, h) >= DURATION_BADGE_MIN_TILE;
+  const durationFits = edge >= DURATION_BADGE_MIN_TILE;
+  // The play disc's own math (design/components/compose/MediaThumb.jsx:86):
+  // 26% of the tile's short edge, clamped to [20, 56]px. Unlike the
+  // duration pill's separate 80px floor, the disc has no floor of its
+  // own — this clamp IS its floor. The glyph inside is 57% of the disc
+  // (MediaThumb.jsx:151).
+  const isVideo = typeof durationMs === "number";
+  const discSize = Math.max(20, Math.min(56, Math.round(edge * 0.26)));
+  const glyphSize = Math.round(discSize * 0.57);
+  // The disc rides a scrim over a frame. With no frame the tile IS the
+  // absence, and a play control drawn on nothing reads as chrome — the
+  // duration stays, because the clip's length is known either way
+  // (MediaThumb.jsx:87-90). It also never rides over the upload ring:
+  // a control drawn on an in-flight upload would promise a play that
+  // is not there yet.
+  const playable = isVideo && Boolean(src) && !failed && progress === undefined;
   // A framing wins over `fit`: it already says exactly which section shows and
   // how big it is, so there is nothing left for a fit rule to decide.
   const framing = cropPreviewStyle(crop, { width: w, height: h });
@@ -191,25 +207,25 @@ export function MediaThumb({
           clip's length in the corner. Neither is a control — the tile is a
           thumbnail, and the disc says "this one moves" rather than offering to
           play it here. */}
-      {typeof durationMs === "number" && !failed ? (
-        <>
-          <span
-            aria-hidden="true"
-            className="absolute left-1/2 top-1/2 grid size-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-scrim/55 text-white"
-          >
-            <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" aria-hidden="true">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </span>
-          {durationFits ? (
-            <span
-              data-testid={testId ? `${testId}-duration` : undefined}
-              className="absolute bottom-[6px] right-[6px] rounded-extra-small bg-scrim/55 px-[5px] text-label-small text-white"
-            >
-              {formatDuration(durationMs)}
-            </span>
-          ) : null}
-        </>
+      {playable ? (
+        <span
+          aria-hidden="true"
+          data-testid={testId ? `${testId}-play` : undefined}
+          style={{ width: `${discSize}px`, height: `${discSize}px` }}
+          className="absolute left-1/2 top-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-scrim/55 text-white"
+        >
+          <svg viewBox="0 0 24 24" width={glyphSize} height={glyphSize} fill="currentColor" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </span>
+      ) : null}
+      {isVideo && !failed && durationFits ? (
+        <span
+          data-testid={testId ? `${testId}-duration` : undefined}
+          className="absolute bottom-[6px] right-[6px] rounded-extra-small bg-scrim/55 px-[5px] text-label-small text-white"
+        >
+          {formatDuration(durationMs as number)}
+        </span>
       ) : null}
       {progress !== undefined && !failed ? (
         <span
