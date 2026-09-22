@@ -11,6 +11,11 @@
 // — and it is also the queue: on a phone too narrow to hold all four,
 // share is the first to move into the ⋮ and the row gives way from its
 // end.
+//
+// THE BREAKPOINT IS 360dp OF WINDOW WIDTH (jakob, 2026-09-17;
+// design/readme.md "THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK"): at
+// or under it the row sheds share and the reader's ⋮ holds it instead,
+// leading the sheet (`PostMenu.kt`). Above it the row is the whole four.
 
 package com.cogra.feature.content
 
@@ -33,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -50,6 +56,19 @@ private val GLYPH = 18.dp
 /** The 6px seam between a glyph and the number beside it. */
 private val GLYPH_GAP = 6.dp
 
+/** The narrow-share fold's one number (design/readme.md, jakob 2026-09-17). */
+private const val NARROW_SHARE_BREAKPOINT_DP = 360
+
+/**
+ * Whether this window is at or under the narrow-share breakpoint — the
+ * dp analog of the web's `useNarrowShare` (`narrow-share.ts`), read the
+ * way `mediaMaxHeight()` reads the device's own height
+ * (`MediaGallery.kt`).
+ */
+@Composable
+internal fun isNarrowShareWidth(): Boolean =
+    LocalConfiguration.current.screenWidthDp <= NARROW_SHARE_BREAKPOINT_DP
+
 /**
  * The row a post wears on the card and on the detail alike.
  *
@@ -64,10 +83,10 @@ private val GLYPH_GAP = 6.dp
  *   when the drill-down and the field do.
  * - **The overflow ⋮** opens `ReaderPostMenu`, whose rows (License
  *   terms, Cite in a new post) are W3's sheets. Its other possible
- *   content is a folded affordance — but with the score gated the row
- *   is stance, comment and share, which fits every phone width the app
- *   supports, so nothing folds into it. The ⋮ and the fold arrive
- *   together with the menu.
+ *   content is a folded affordance — and at or under 360dp of window
+ *   width that fold happens: share leaves this row and the reader's ⋮
+ *   holds it instead, leading the sheet (`isNarrowShareWidth`,
+ *   `PostMenu.kt`).
  *
  * @param commentCount the whole thread's size, across every page.
  * @param onOpenComments where the count leads, or null where the thread
@@ -87,6 +106,7 @@ internal fun PostAffordanceRow(
     actions: @Composable () -> Unit = {},
     stanceControl: @Composable () -> Unit,
 ) {
+    val narrow = isNarrowShareWidth()
     Row(
         // THE ROW SPREADS ACROSS THE CARD (`PostCard.jsx:423` — `width: 100%`,
         // `justifyContent: "space-between"`, `flexWrap: "nowrap"`). Spacing
@@ -98,7 +118,11 @@ internal fun PostAffordanceRow(
     ) {
         stanceControl()
         CommentAffordance(commentCount, onOpenComments, testTagPrefix)
-        ShareAffordance(onShare, testTagPrefix)
+        // THE ROW GIVES WAY FROM ITS END at or under the narrow-share
+        // breakpoint: share is the first to move into the ⋮.
+        if (!narrow) {
+            ShareAffordance(onShare, testTagPrefix)
+        }
         actions()
     }
 }
