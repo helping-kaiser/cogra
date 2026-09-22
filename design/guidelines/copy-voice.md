@@ -372,7 +372,13 @@ Retry (`UploadErrorLine` with both ways out):
 and the way back to it from an edit:
 
 - `The cover takes the video's shape.`
+- `Add a cover`
 - `Change the cover`
+
+  The pair is one door in two states — the first where a clip has no
+  face yet, the second where it has one. Neither says "cover photo" or
+  "thumbnail": the cover is the video's own face, and naming it twice
+  would make it a second picture.
 
 ## Editing a media post
 

@@ -5728,6 +5728,38 @@ recommended.
   re-rendered: every sheet in the tree takes the clamped height, and the
   two fields that became growing ones are drawn on eight of them.
 
+### The cover's tile, and the one duration — 2026-09-22
+
+The same round's video half. The cover's mark had been built and drawn
+without ever being written down, which is how a treatment becomes a
+board's private habit; jakob ruled it as recommended.
+
+- **A cover rides the clip's own tile.** The chosen frame is inset in
+  the tile's **bottom-left corner** — a third of the tile's short side,
+  never under a **28px** floor, behind a hairline ring, carrying its own
+  framing rather than a miniature of the tile beneath it. **One
+  attachment is one tile**: a cover standing beside the clip would read
+  as a second thing the author picked, and they picked one thing. The
+  corner is the one the "Cover" badge already owns on a picture, so a
+  tray says *cover* in a single place whatever kind of body is in it.
+- **Each surface carries the cover its own way.** The **pick tray**
+  shows the inset, which is how a walk that can be walked backwards
+  tells the author what the step behind them settled. The **details and
+  edit stages** carry a *Cover* field section under *Video*: the door
+  *Add a cover* where none is chosen, the face and *Change the cover*
+  where one is — the two states drawn once each across the two scales.
+  A clip that walked the cover step shows no cover section at all. A
+  **reading surface** shows the cover as the card's still, and branches
+  on nothing: whether that still was chosen or taken was settled while
+  the post was written.
+- **The duration badge is the composer's, and the detail has one
+  reading.** `MediaThumb` draws the pill on an authoring tile of 80px
+  or more, where an author is identifying a file among files. A reading
+  surface draws no pill at either scale — presence on screen is the
+  policy — and the one place a reader meets a clip's length is the
+  detail's **transport**, where the total stands beside the elapsed the
+  way the platform player writes it.
+
 ---
 
 ## 14. The canvases
