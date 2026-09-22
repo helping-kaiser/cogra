@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { COMMENT_BODY_MAX_CHARS } from "@/lib/compose/reply-wizard";
 import { SENSITIVE_REASON_MAX_CHARS } from "@/lib/compose/wizard";
@@ -293,6 +293,14 @@ describe("PostView", () => {
     routerPush.mockClear();
   });
 
+  // The narrow-share fold's own idiom (`post-card.test.tsx`): a test that
+  // stubs the viewport or the share capability cleans up after itself, so
+  // neither bleeds into the next test in this file.
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    Object.defineProperty(window, "innerWidth", { value: 1024, configurable: true, writable: true });
+  });
+
   it("renders the post with its thread", async () => {
     server.use(
       ...thread("u1", [{ id: "c1", body: "First!" }]),
@@ -443,9 +451,11 @@ describe("PostView", () => {
     );
   });
 
-  // The rows are `OWN_POST_MENU` (`_shared.jsx:369-375`): Save · Edit · Mark as
-  // sensitive · Remove · License terms.
-  it("gives the creator the own-post menu, Edit among its rows", async () => {
+  // The rows are `OWN_POST_MENU` (`_shared.jsx:421-428`): Save · Cite in a
+  // new post · Edit · Mark as sensitive · Remove · License terms. Cite
+  // takes the reader menu's own position, second, so the thumb finds one
+  // row in one place on every menu that has it.
+  it("gives the creator the own-post menu, cite in second position", async () => {
     server.use(
       ...thread("acct-1", []),
     );
@@ -455,13 +465,25 @@ describe("PostView", () => {
     });
     fireEvent.click(await screen.findByTestId("post-menu"));
     expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
+    expect(screen.getByTestId("post-menu-cite")).toHaveTextContent("Cite in a new post");
     expect(screen.getByTestId("post-menu-edit")).toHaveTextContent("Edit");
     expect(screen.getByTestId("post-menu-sensitive")).toHaveTextContent("Mark as sensitive");
     expect(screen.getByTestId("post-menu-remove")).toHaveTextContent("Remove");
     expect(screen.getByTestId("post-menu-license")).toHaveTextContent("License terms");
     // A reader's rows are not on an author's menu.
     expect(screen.queryByTestId("post-menu-hide")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("post-menu-cite")).not.toBeInTheDocument();
+    const order = Array.from(
+      screen.getByTestId("post-menu-sheet-body").querySelectorAll("[data-testid]"),
+      (node) => node.getAttribute("data-testid"),
+    );
+    expect(order).toEqual([
+      "post-menu-save",
+      "post-menu-cite",
+      "post-menu-edit",
+      "post-menu-sensitive",
+      "post-menu-remove",
+      "post-menu-license",
+    ]);
   });
 
   // The rows are `READER_POST_MENU` (`_shared.jsx:376`): Save · Cite in a new
@@ -484,6 +506,46 @@ describe("PostView", () => {
     expect(screen.getByTestId("post-menu-license")).toHaveTextContent("License terms");
     expect(screen.queryByTestId("post-menu-edit")).not.toBeInTheDocument();
     expect(screen.queryByTestId("post-menu-remove")).not.toBeInTheDocument();
+  });
+
+  // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md, jakob
+  // 2026-09-17, sharpened 2026-09-22 — PR #794): the detail's page-header
+  // menu is the reader's menu too (`_shared.jsx:341-346` — the card's own
+  // dot yields to it), so it leads with Share the same way the card's does,
+  // strictly below the breakpoint.
+  it("leads the detail's reader menu with Share strictly below the narrow breakpoint", async () => {
+    vi.stubGlobal("navigator", { share: vi.fn() });
+    Object.defineProperty(window, "innerWidth", { value: 359, configurable: true, writable: true });
+    server.use(
+      ...thread("someone-else", []),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId("post-menu"));
+    expect(screen.getByTestId("post-menu-share")).toHaveTextContent("Share");
+    const order = Array.from(
+      screen.getByTestId("post-menu-sheet-body").querySelectorAll("[data-testid]"),
+      (node) => node.getAttribute("data-testid"),
+    );
+    expect(order[0]).toBe("post-menu-share");
+  });
+
+  // AT 360 THE WIDE LAYOUT STANDS — the inequality is strict (jakob
+  // 2026-09-22): the detail's menu keeps the same rows the wide board draws.
+  it("keeps the detail's reader menu free of Share at the breakpoint itself", async () => {
+    vi.stubGlobal("navigator", { share: vi.fn() });
+    Object.defineProperty(window, "innerWidth", { value: 360, configurable: true, writable: true });
+    server.use(
+      ...thread("someone-else", []),
+    );
+    renderWithProviders(<PostView postId="p1" />, {
+      store: storeFor("acct-1"),
+      writeSigner: fakeWriteSigner(),
+    });
+    fireEvent.click(await screen.findByTestId("post-menu"));
+    expect(screen.queryByTestId("post-menu-share")).not.toBeInTheDocument();
   });
 
   // The comment's rows are `COMMENT_MENU` (`_shared.jsx:392`) — and the missing

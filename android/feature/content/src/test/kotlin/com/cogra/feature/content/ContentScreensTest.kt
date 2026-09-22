@@ -22,12 +22,14 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeUp
@@ -318,15 +320,43 @@ class ContentScreensTest {
         assertThat(refreshes).isEqualTo(0)
     }
 
+    // THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (design readme
+    // §13, the same rule web's `infinite-list.ts` cites): no button, no
+    // page numbers — the watch sits `FEED_TAIL_DISTANCE` posts short of
+    // the end, so scrolling that post into view is the reader "approaching
+    // the tail".
     @Test
-    fun theNextPageLoadsOnDemand() {
-        var more = false
+    fun theNextPageLoadsAutomaticallyAsTheReaderApproachesTheTail() {
+        var calls = 0
+        val posts = (1..10).map { testPost("p$it") }
+        renderFeed(
+            FeedUiState(loading = false, posts = posts, hasNextPage = true),
+            onLoadMore = { calls++ },
+        )
+        // Ten posts, five short of the end: the watched post is the sixth.
+        // `performScrollToNode` — not `performScrollTo` — because the tail
+        // post is not yet composed off-screen in a `LazyColumn`.
+        compose.onNodeWithTag("feed_list").performScrollToNode(hasTestTag("feed_post_p6"))
+        compose.waitForIdle()
+        assertThat(calls).isEqualTo(1)
+
+        // Staying put once the tail is on screen does not ask again — the
+        // watch rises once per approach (`distinctUntilChanged`), the same
+        // guard `IntersectionObserver` gives web. (A later re-approach, after
+        // scrolling away and back, is allowed to ask again on both
+        // platforms; what stops a duplicate FETCH there is `loadingMore` /
+        // `hasNextPage` in the ViewModel, covered by
+        // `FeedViewModelTest.loadMoreWithoutANextPageIsANoOp`.)
+        compose.waitForIdle()
+        assertThat(calls).isEqualTo(1)
+    }
+
+    @Test
+    fun theFeedDrawsNoLoadMoreControlAtRest() {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1")), hasNextPage = true),
-            onLoadMore = { more = true },
         )
-        compose.onNodeWithTag("feed_load_more").performScrollTo().performClick()
-        assertThat(more).isTrue()
+        compose.onNodeWithTag("feed_load_more").assertDoesNotExist()
     }
 
     // The band rides the same collapsing top as the key banner: away
@@ -419,7 +449,11 @@ class ContentScreensTest {
         compose.onNodeWithTag("feed_p1_menu_remove").assertDoesNotExist()
     }
 
-    /** The rows are `OWN_POST_MENU` (`_shared.jsx:369-375`), on a card. */
+    /**
+     * The rows are `OWN_POST_MENU` (`_shared.jsx:421-428`), on a card. Cite
+     * takes the reader menu's own position, second, so the thumb finds one
+     * row in one place on every menu that has it.
+     */
     @Test
     fun aFeedCardCarriesTheOwnPostMenuWhereTheViewerIsTheAuthor() {
         var editing: String? = null
@@ -430,11 +464,23 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("feed_p1_menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_save").assertExists()
+        compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
         compose.onNodeWithTag("feed_p1_menu_sensitive").assertExists()
         compose.onNodeWithTag("feed_p1_menu_remove").assertExists()
         compose.onNodeWithTag("feed_p1_menu_license").assertExists()
         compose.onNodeWithTag("feed_p1_menu_hide").assertDoesNotExist()
-        compose.onNodeWithTag("feed_p1_menu_cite").assertDoesNotExist()
+
+        val save = compose.onNodeWithTag("feed_p1_menu_save").getUnclippedBoundsInRoot().top
+        val cite = compose.onNodeWithTag("feed_p1_menu_cite").getUnclippedBoundsInRoot().top
+        val edit = compose.onNodeWithTag("feed_p1_menu_edit").getUnclippedBoundsInRoot().top
+        val sensitive = compose.onNodeWithTag("feed_p1_menu_sensitive").getUnclippedBoundsInRoot().top
+        val remove = compose.onNodeWithTag("feed_p1_menu_remove").getUnclippedBoundsInRoot().top
+        val license = compose.onNodeWithTag("feed_p1_menu_license").getUnclippedBoundsInRoot().top
+        assertThat(save.value).isLessThan(cite.value)
+        assertThat(cite.value).isLessThan(edit.value)
+        assertThat(edit.value).isLessThan(sensitive.value)
+        assertThat(sensitive.value).isLessThan(remove.value)
+        assertThat(remove.value).isLessThan(license.value)
 
         compose.onNodeWithTag("feed_p1_menu_edit").performClick()
         assertThat(editing).isEqualTo("p1")
@@ -1289,7 +1335,11 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_menu_remove").assertDoesNotExist()
     }
 
-    /** The rows are `OWN_POST_MENU` (`_shared.jsx:369-375`). */
+    /**
+     * The rows are `OWN_POST_MENU` (`_shared.jsx:421-428`). Cite takes the
+     * reader menu's own position, second, so the thumb finds one row in one
+     * place on every menu that has it.
+     */
     @Test
     fun theCreatorGetsTheOwnPostMenuAndEditOpensFromIt() {
         var editing: String? = null
@@ -1300,12 +1350,24 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("detail_menu").performClick()
         compose.onNodeWithTag("detail_menu_save").assertExists()
+        compose.onNodeWithTag("detail_menu_cite").assertExists()
         compose.onNodeWithTag("detail_menu_sensitive").assertExists()
         compose.onNodeWithTag("detail_menu_remove").assertExists()
         compose.onNodeWithTag("detail_menu_license").assertExists()
         // A reader's rows are not on an author's menu.
         compose.onNodeWithTag("detail_menu_hide").assertDoesNotExist()
-        compose.onNodeWithTag("detail_menu_cite").assertDoesNotExist()
+
+        val save = compose.onNodeWithTag("detail_menu_save").getUnclippedBoundsInRoot().top
+        val cite = compose.onNodeWithTag("detail_menu_cite").getUnclippedBoundsInRoot().top
+        val edit = compose.onNodeWithTag("detail_menu_edit").getUnclippedBoundsInRoot().top
+        val sensitive = compose.onNodeWithTag("detail_menu_sensitive").getUnclippedBoundsInRoot().top
+        val remove = compose.onNodeWithTag("detail_menu_remove").getUnclippedBoundsInRoot().top
+        val license = compose.onNodeWithTag("detail_menu_license").getUnclippedBoundsInRoot().top
+        assertThat(save.value).isLessThan(cite.value)
+        assertThat(cite.value).isLessThan(edit.value)
+        assertThat(edit.value).isLessThan(sensitive.value)
+        assertThat(sensitive.value).isLessThan(remove.value)
+        assertThat(remove.value).isLessThan(license.value)
 
         compose.onNodeWithTag("detail_menu_edit").performClick()
         assertThat(editing).isEqualTo("p1")
@@ -1859,8 +1921,14 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_menu").assertDoesNotExist()
     }
 
-    /** The skeleton survives: author, age, stance, comments, share. */
+    /**
+     * The skeleton survives: author, age, stance, comments, share.
+     *
+     * Above the narrow-share breakpoint, per the same note as
+     * `theCardWearsTheAffordanceRowAndNoGatedControl`.
+     */
     @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun aRemovedPostKeepsItsSkeleton() {
         renderDetail(detailFixture(loading = false, post = removedPost().copy(commentCount = 2)))
 
@@ -1960,8 +2028,17 @@ class ContentScreensTest {
 
     // -- The affordance row (PostCard.jsx 300-358) --
 
-    /** Stance, comment, share — and the two the staging rule gates. */
+    /**
+     * Stance, comment, share — and the two the staging rule gates.
+     *
+     * ABOVE THE NARROW-SHARE BREAKPOINT (design/readme.md, jakob
+     * 2026-09-17, sharpened 2026-09-22 — PR #794): Robolectric's own
+     * default sandbox is 320dp wide, which is BELOW the breakpoint, so
+     * this pins the wide case explicitly rather than by the default's
+     * accident.
+     */
     @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun theCardWearsTheAffordanceRowAndNoGatedControl() {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 3))),
@@ -2039,7 +2116,9 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_comment_c1").assertExists()
     }
 
+    // Above the narrow-share breakpoint — the row still carries Share there.
     @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun shareHandsThePostOnFromBothSurfaces() {
         val shared = mutableListOf<String>()
         renderFeed(
@@ -2051,10 +2130,113 @@ class ContentScreensTest {
     }
 
     @Test
+    @Config(qualifiers = "w411dp-h891dp")
     fun theShareControlNamesWhatItShares() {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
         compose.onNodeWithTag("detail_post_share", useUnmergedTree = true)
             .assertContentDescriptionEquals("Share this post")
+    }
+
+    // -- The narrow-share fold (design/readme.md, jakob 2026-09-17,
+    // sharpened 2026-09-22 — PR #794 / 820c7195: the inequality is strict,
+    // since 360dp is mainstream android and the narrow treatment is for
+    // the genuinely small phone, not the common one) --
+
+    /**
+     * STRICTLY BELOW 360dp THE ROW SHEDS SHARE, ON THE FEED CARD.
+     * Robolectric's own default sandbox is 320dp wide — under the
+     * breakpoint — so this pins the narrow case explicitly (at 359dp)
+     * rather than leaning on that default by accident.
+     */
+    @Test
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theFeedCardsRowShedsShareBelowTheNarrowBreakpoint() {
+        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
+        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /** The detail's own row sheds it the same way. */
+    @Test
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theDetailsRowShedsShareBelowTheNarrowBreakpoint() {
+        renderDetail(detailFixture(loading = false, post = testPost("p1")))
+        compose.onNodeWithTag("detail_post_share", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /**
+     * AT 360dp THE WIDE ROW STANDS — the inequality is strict (jakob
+     * 2026-09-22), so the breakpoint itself is unaffected, not just widths
+     * above it.
+     */
+    @Test
+    @Config(qualifiers = "w360dp-h640dp")
+    fun theRowKeepsShareAtTheBreakpointItself() {
+        renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
+        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertExists()
+    }
+
+    /**
+     * THE READER'S ⋮ LEADS WITH SHARE below the breakpoint, on the feed
+     * card's own menu.
+     */
+    @Test
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theFeedCardsReaderMenuLeadsWithShareBelowTheNarrowBreakpoint() {
+        val shared = mutableListOf<String>()
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+            onShare = { shared += it },
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_share").assertExists().performClick()
+        assertThat(shared).containsExactly("p1")
+    }
+
+    /**
+     * …and on the detail's page-header menu, which is the reader's menu
+     * too (`_shared.jsx:341-346` — the card's own dot yields to it).
+     */
+    @Test
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theDetailsReaderMenuLeadsWithShareBelowTheNarrowBreakpoint() {
+        val shared = mutableListOf<String>()
+        renderDetail(
+            detailFixture(loading = false, post = testPost("p1")),
+            viewerId = "someone-else",
+            onShare = { shared += it },
+        )
+        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("detail_menu_share").assertExists().performClick()
+        assertThat(shared).containsExactly("p1")
+    }
+
+    /** At the breakpoint itself the menu is unchanged — no Share row at all. */
+    @Test
+    @Config(qualifiers = "w360dp-h640dp")
+    fun theReadersMenuHasNoShareRowAtTheBreakpointItself() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "someone-else",
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_share").assertDoesNotExist()
+    }
+
+    /**
+     * No board draws Share leaving the author's own menu — the ruling
+     * names only the reader's (design/readme.md). Pinned so a future
+     * change to this scope is deliberate, not drift.
+     */
+    @Test
+    @Config(qualifiers = "w359dp-h640dp")
+    fun theOwnPostMenuNeverGainsShareEvenBelowTheNarrowBreakpoint() {
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            viewerId = "author-1",
+        )
+        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeWithTag("feed_p1_menu_share").assertDoesNotExist()
     }
 
     /** The web page, not an in-app route: the receiver may have no app. */

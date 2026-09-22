@@ -17,6 +17,11 @@
    and the words. A comment has no description to name, and a post's
    description is words.
 
+   THE REASON GROWS FROM ONE LINE (jakob's ruling, the sheets-and-video round).
+   `rows={1}` is the field's minimum, not its size: a reason that runs past one
+   line takes a second and the sheet grows with it, which is why a 140-character
+   field is written as a multi-line one. The board draws the minimum.
+
    OVER THE CAP, `Done` IS VISIBLE-BUT-DISABLED (backlog item 101, ruled the
    batch-rulings round): the app-wide `canSign`/`canSubmit` treatment, never a
    hidden button and never a dialog. The refusal the reader reads is the
@@ -47,7 +52,7 @@ export function Screen() {
             Veils the pictures and the words until a reader chooses to look.
           </p>
 
-          <TextField label="Why?" corner="Optional — shown on the veil" cap={140} value="One rubbing includes a dead seabird." />
+          <TextField label="Why?" corner="Optional — shown on the veil" rows={1} cap={140} value="One rubbing includes a dead seabird." />
 
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Button>Done</Button>

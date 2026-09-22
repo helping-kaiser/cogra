@@ -125,9 +125,15 @@ function mount(
   );
 }
 
+/** The narrow-share fold's own idiom (`stance-control.test.tsx`). */
+function setViewport(width: number) {
+  Object.defineProperty(window, "innerWidth", { value: width, configurable: true, writable: true });
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
   routerPush.mockClear();
+  setViewport(1024);
 });
 
 describe("PostCard", () => {
@@ -254,18 +260,32 @@ describe("PostCard", () => {
   // detail's own — one menu for a post wherever it is drawn — so what these
   // read is that the card picks the right set and names the author.
   describe("the overflow menu", () => {
-    // `OWN_POST_MENU` (`_shared.jsx:369-375`): Save · Edit · Mark as
-    // sensitive · Remove · License terms.
-    it("gives the creator the own-post rows", () => {
+    // `OWN_POST_MENU` (`_shared.jsx:421-428`): Save · Cite in a new post ·
+    // Edit · Mark as sensitive · Remove · License terms. Cite takes the
+    // reader menu's own position, second, so the thumb finds one row in
+    // one place on every menu that has it.
+    it("gives the creator the own-post rows, cite in second position", () => {
       mount(post(), {}, { store: storeFor("u1") });
       fireEvent.click(screen.getByTestId("card-menu"));
       expect(screen.getByTestId("card-menu-save")).toHaveTextContent("Save");
+      expect(screen.getByTestId("card-menu-cite")).toHaveTextContent("Cite in a new post");
       expect(screen.getByTestId("card-menu-edit")).toHaveTextContent("Edit");
       expect(screen.getByTestId("card-menu-sensitive")).toHaveTextContent("Mark as sensitive");
       expect(screen.getByTestId("card-menu-remove")).toHaveTextContent("Remove");
       expect(screen.getByTestId("card-menu-license")).toHaveTextContent("License terms");
-      expect(screen.queryByTestId("card-menu-cite")).not.toBeInTheDocument();
       expect(screen.queryByTestId("card-menu-hide")).not.toBeInTheDocument();
+      const order = Array.from(
+        screen.getByTestId("card-menu-sheet-body").querySelectorAll("[data-testid]"),
+        (node) => node.getAttribute("data-testid"),
+      );
+      expect(order).toEqual([
+        "card-menu-save",
+        "card-menu-cite",
+        "card-menu-edit",
+        "card-menu-sensitive",
+        "card-menu-remove",
+        "card-menu-license",
+      ]);
     });
 
     // `READER_POST_MENU` (`_shared.jsx:376`): Save · Cite in a new post ·
@@ -326,6 +346,54 @@ describe("PostCard", () => {
       fireEvent.click(screen.getByTestId("card-menu-license"));
       expect(screen.getByTestId("card-license-sheet")).toHaveAttribute("open");
     });
+
+    // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
+    // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): strictly below
+    // 360px the reader's menu leads with it.
+    it("leads the reader's menu with Share strictly below the narrow breakpoint", () => {
+      vi.stubGlobal("navigator", { share: vi.fn() });
+      setViewport(359);
+      mount(post(), {}, { store: storeFor("someone-else") });
+      fireEvent.click(screen.getByTestId("card-menu"));
+      expect(screen.getByTestId("card-menu-share")).toHaveTextContent("Share");
+      const order = Array.from(
+        screen.getByTestId("card-menu-sheet-body").querySelectorAll("[data-testid]"),
+        (node) => node.getAttribute("data-testid"),
+      );
+      expect(order[0]).toBe("card-menu-share");
+      expect(order.indexOf("card-menu-share")).toBeLessThan(order.indexOf("card-menu-save"));
+    });
+
+    // AT 360 THE WIDE LAYOUT STANDS — the inequality is strict, since 360dp
+    // is a mainstream android width (jakob 2026-09-22).
+    it("keeps the reader's menu free of Share at the breakpoint itself", () => {
+      vi.stubGlobal("navigator", { share: vi.fn() });
+      setViewport(360);
+      mount(post(), {}, { store: storeFor("someone-else") });
+      fireEvent.click(screen.getByTestId("card-menu"));
+      expect(screen.queryByTestId("card-menu-share")).not.toBeInTheDocument();
+    });
+
+    // A dead row is worse than none (`share.ts`'s "the control does not
+    // render" law) — the fold never outruns the button's own capability gate.
+    it("keeps the reader's menu free of Share where the browser has no share door", () => {
+      vi.stubGlobal("navigator", {});
+      setViewport(359);
+      mount(post(), {}, { store: storeFor("someone-else") });
+      fireEvent.click(screen.getByTestId("card-menu"));
+      expect(screen.queryByTestId("card-menu-share")).not.toBeInTheDocument();
+    });
+
+    // No board draws Share leaving the author's own menu — the ruling names
+    // only the reader's (design/readme.md). Pinned so a future change to
+    // this scope is a deliberate one, not a drift.
+    it("never adds Share to the creator's own menu, even below the narrow breakpoint", () => {
+      vi.stubGlobal("navigator", { share: vi.fn() });
+      setViewport(359);
+      mount(post(), {}, { store: storeFor("u1") });
+      fireEvent.click(screen.getByTestId("card-menu"));
+      expect(screen.queryByTestId("card-menu-share")).not.toBeInTheDocument();
+    });
   });
 
   it("keeps the affordance row on one line, in the ruled order", () => {
@@ -342,5 +410,25 @@ describe("PostCard", () => {
     );
     expect(order.indexOf("card-stance")).toBeLessThan(order.indexOf("card-comments"));
     expect(order.indexOf("card-comments")).toBeLessThan(order.indexOf("card-share"));
+  });
+
+  // THE NARROW PHONE SHEDS SHARE FROM THE ROW (design/readme.md, jakob
+  // 2026-09-17, sharpened 2026-09-22 — PR #794): strictly below 360px of
+  // viewport width, the row gives way from its end.
+  it("sheds the row's Share control strictly below the narrow breakpoint", () => {
+    vi.stubGlobal("navigator", { share: vi.fn() });
+    setViewport(359);
+    mount(post());
+    expect(screen.queryByTestId("card-share")).not.toBeInTheDocument();
+  });
+
+  // AT 360 THE WIDE LAYOUT STANDS — the inequality is strict, since 360dp is
+  // a mainstream android width (jakob 2026-09-22), so this is the breakpoint
+  // itself, not just "above" it.
+  it("keeps the row's Share control at the breakpoint itself", () => {
+    vi.stubGlobal("navigator", { share: vi.fn() });
+    setViewport(360);
+    mount(post());
+    expect(screen.getByTestId("card-share")).toBeInTheDocument();
   });
 });
