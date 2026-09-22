@@ -22,11 +22,11 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
@@ -1006,9 +1006,18 @@ class ContentScreensTest {
         )
         openComments()
 
-        val root = compose.onRoot().getUnclippedBoundsInRoot()
-        val sheet = compose.onNodeWithTag("comments_sheet").getUnclippedBoundsInRoot()
-        assertThat((sheet.top - root.top).value).isAtLeast(SheetCeilingSliver.value)
+        // A `ModalBottomSheet` is its OWN window and its own root, so the
+        // sheet's offset inside that root is zero whatever it does — the
+        // measurable fact is its height against the screen's, taken from the
+        // tallest of the composition's roots.
+        val screen = compose.onAllNodes(isRoot()).fetchSemanticsNodes().maxOf { it.size.height }
+        val sheet = compose.onNodeWithTag("comments_sheet").fetchSemanticsNode().size.height
+        val sliver = with(compose.density) { SheetCeilingSliver.roundToPx() }
+
+        assertThat(sheet).isAtMost(screen - sliver)
+        // …and pinned AT the ceiling, not merely held under it: the thread is
+        // the tallest class.
+        assertThat(sheet).isGreaterThan(screen / 2)
     }
 
     /**
