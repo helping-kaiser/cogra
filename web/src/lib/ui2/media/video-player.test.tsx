@@ -174,6 +174,25 @@ describe("the reading surface", () => {
     expect(disc.className).not.toMatch(/\bleft-2\b/);
   });
 
+  // WEB-DISC-MISSING (jakob 2026-09-22): `bg-surface-snackbar` and
+  // `text-on-surface-snackbar` compiled to no CSS at all — tokens-2.css's
+  // semantic aliases are never bridged into Tailwind's `@theme`, so the
+  // disc's plate had no background and no icon colour on every web surface,
+  // even though the position test above kept passing (a class *name*
+  // assertion cannot see that Tailwind dropped the class). Pinning the
+  // resolved `var()` — read exactly as the master does
+  // (`design/components/media/MediaAttachment.jsx:127-128`, and the way
+  // `pager-dots.tsx` already reads `--border-hairline`) — is what makes a
+  // silently-dead utility class impossible to reintroduce here.
+  it("paints its plate from var(), not a Tailwind colour class", () => {
+    player({ surface: "reading" });
+    const disc = screen.getByTestId("video-player-sound");
+    expect(disc.style.background).toBe("var(--surface-snackbar)");
+    expect(disc.style.color).toBe("var(--on-surface-snackbar)");
+    expect(disc.className).not.toMatch(/\bbg-surface-snackbar\b/);
+    expect(disc.className).not.toMatch(/\btext-on-surface-snackbar\b/);
+  });
+
   it("still autoplays muted when it comes into view", () => {
     // Losing the transport bar must not cost the clip its autoplay.
     const video = player({ surface: "reading" });
@@ -228,6 +247,18 @@ describe("the full surface (a feed card's clip)", () => {
     expect(disc.className).toMatch(/\bbottom-2\b/);
     expect(disc.className).toMatch(/\bright-2\b/);
     expect(disc.className).not.toMatch(/\bleft-2\b/);
+  });
+
+  // WEB-DISC-MISSING (jakob 2026-09-22) — see the matching test on the
+  // reading surface above for the full mechanism. The full surface is the
+  // feed card's own clip, so this is the disc jakob actually scrolls past.
+  it("paints its plate from var(), not a Tailwind colour class", () => {
+    player();
+    const disc = screen.getByTestId("video-player-sound");
+    expect(disc.style.background).toBe("var(--surface-snackbar)");
+    expect(disc.style.color).toBe("var(--on-surface-snackbar)");
+    expect(disc.className).not.toMatch(/\bbg-surface-snackbar\b/);
+    expect(disc.className).not.toMatch(/\btext-on-surface-snackbar\b/);
   });
 });
 

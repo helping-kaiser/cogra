@@ -24,6 +24,12 @@ import com.cogra.domain.LicenseChoice
  * row on its `hideActor`; `Mark as sensitive` and `Remove` wait on the
  * slices that own them — removal whole, in slice 8's erasure half.
  *
+ * @param onShare THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK
+ *   (design/readme.md, jakob 2026-09-17, sharpened 2026-09-22 — PR #794):
+ *   strictly below 360dp the affordance row's Share control folds into
+ *   this menu instead, leading the sheet. Null where it does not apply —
+ *   own posts have no drawn board for it, and at 360dp and above the row
+ *   keeps it.
  * @param testTagPrefix scopes the rows to their surface — `detail_menu`
  *   gives `detail_menu_save`, and a feed card names itself per post so two
  *   cards' rows are never one tag.
@@ -37,8 +43,16 @@ internal fun postMenuRows(
     onCite: () -> Unit,
     onRemove: () -> Unit,
     onLicense: () -> Unit,
+    onShare: (() -> Unit)?,
     testTagPrefix: String,
 ): List<MenuRow> = buildList {
+    // SHARE LEADS THE SHEET, ahead of Save: every other row here is a menu
+    // row by nature, and share is the one that was a one-tap control a
+    // moment ago (design/readme.md). Only the reader's menu gains it — no
+    // board draws it leaving the author's own.
+    if (!own && onShare != null) {
+        add(MenuRow(stringResource(R.string.content_menu_share), "${testTagPrefix}_share", onShare))
+    }
     add(MenuRow(stringResource(R.string.content_menu_save), "${testTagPrefix}_save") {})
     if (own) {
         // CITE RIDES THIS MENU TOO (`_shared.jsx:414-420`, backlog item 100):

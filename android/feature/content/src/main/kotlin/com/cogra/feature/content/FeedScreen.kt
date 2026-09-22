@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -24,11 +26,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -57,6 +61,21 @@ import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.content.R
 import com.cogra.feature.content.reply.ReplyTarget
 import com.cogra.feature.stance.StanceControlRoute
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+
+/**
+ * How many posts short of the end the tail watch sits — the same effective
+ * distance as web's `TAIL_DISTANCE` (`infinite-list.ts`): far enough out
+ * that the fetch is under way before the reader runs out of posts to read.
+ */
+internal const val FEED_TAIL_DISTANCE = 5
+
+/** Which post to watch in a list of this length, or -1 when there is none. */
+internal fun feedTailIndexOf(count: Int): Int {
+    if (count <= 0) return -1
+    return maxOf(0, count - FEED_TAIL_DISTANCE)
+}
 
 @Composable
 fun FeedRoute(
@@ -203,6 +222,15 @@ fun FeedScreen(
     // so the feed is left and re-entered rather than covered — and the
     // thread has to be standing again when the reader comes back.
     var commentsFor by rememberSaveable { mutableStateOf<String?>(null) }
+    // THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING — no Show more,
+    // no page numbers, nothing drawn at rest (design readme §13, the same
+    // rule web's `infinite-list.ts` cites). `listState` is the Compose
+    // analogue of web's `IntersectionObserver`: `snapshotFlow` turns its
+    // `layoutInfo` into a cold flow of scroll-driven snapshots (Android
+    // "Compose side-effects" guide, "Restarting effects with LaunchedEffect"
+    // / snapshotFlow), so the watch costs nothing while the reader is
+    // nowhere near the end and needs no manual scroll listener.
+    val listState = rememberLazyListState()
     // The collapsing top (design.md §6): the bar hides scrolling down
     // and returns after a third of a screen of upward scroll; the
     // borrowed-view band and the key banner ride the same region and
@@ -215,6 +243,7 @@ fun FeedScreen(
     // to the gate as "the reader is at the top" — the region returned
     // the moment it left.
     val collapsingTop = rememberCollapsingTop()
+    WatchFeedTail(listState = listState, state = state, onLoadMore = onLoadMore)
     Scaffold(
         topBar = {
             Column {
@@ -315,6 +344,7 @@ fun FeedScreen(
                         // (design/readme.md §13). Only the rows that are
                         // not cards keep the gutter.
                         LazyColumn(
+                            state = listState,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .testTag("feed_list"),
@@ -355,39 +385,15 @@ fun FeedScreen(
                                     stanceControl = stanceControl,
                                 )
                             }
-                            if (state.hasNextPage) {
-                                item {
-                                    Gutter {
-                                        Column(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                        ) {
-                                            when {
-                                                state.loadingMore -> CircularProgressIndicator(
-                                                    modifier = Modifier.padding(8.dp),
-                                                )
-                                                state.transportFault == TransportFault.APPEND -> {
-                                                    ErrorLine(
-                                                        R.string.content_feed_stale,
-                                                        "feed_load_more_error",
-                                                    )
-                                                    TextButton(
-                                                        onClick = onLoadMore,
-                                                        modifier = Modifier.testTag("feed_load_more_retry"),
-                                                    ) {
-                                                        Text(stringResource(R.string.content_retry))
-                                                    }
-                                                }
-                                                else -> TextButton(
-                                                    onClick = onLoadMore,
-                                                    modifier = Modifier.testTag("feed_load_more"),
-                                                ) {
-                                                    Text(stringResource(R.string.content_feed_load_more))
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                            // The slot the next page fills. At rest it draws
+                            // nothing — the page comes because the reader
+                            // kept going (`WatchFeedTail` above). In flight
+                            // it is the list's own loading spinner, and a
+                            // page that did not arrive stands here with its
+                            // way back — the drawn twin of `MoreComments`.
+                            val appendFault = state.transportFault == TransportFault.APPEND
+                            if (state.hasNextPage && (state.loadingMore || appendFault)) {
+                                item { Gutter { FeedTailSlot(state = state, onLoadMore = onLoadMore) } }
                             }
                         }
                     }
@@ -397,6 +403,65 @@ fun FeedScreen(
     }
     commentsFor?.let { postId ->
         commentsSheet(postId) { commentsFor = null }
+    }
+}
+
+/**
+ * THE NEXT PAGE ARRIVES BECAUSE THE READER KEPT GOING (design readme §13,
+ * the same rule web's `infinite-list.ts` cites): no button, no page
+ * numbers — nothing drawn at rest. `listState` is the Compose analogue of
+ * web's `IntersectionObserver`: `snapshotFlow` turns its `layoutInfo` into
+ * a cold flow of scroll-driven snapshots (Android "Compose side-effects"
+ * guide, "Restarting effects with LaunchedEffect" / snapshotFlow), so the
+ * watch costs nothing while the reader is nowhere near the end and needs
+ * no manual scroll listener.
+ *
+ * The watch sits `FEED_TAIL_DISTANCE` posts short of the end — the same
+ * effective distance as web's `TAIL_DISTANCE` — so the fetch is already
+ * under way before the reader runs out of posts to read. It is rebuilt
+ * whenever the posts, `hasNextPage`, or the fault change, and a page that
+ * failed is not re-asked automatically (`transportFault != APPEND`); the
+ * drawn Retry is the way back, same as web.
+ */
+@Composable
+private fun WatchFeedTail(
+    listState: LazyListState,
+    state: FeedUiState,
+    onLoadMore: () -> Unit,
+) {
+    LaunchedEffect(state.posts, state.hasNextPage, state.transportFault) {
+        if (!state.hasNextPage || state.transportFault == TransportFault.APPEND) return@LaunchedEffect
+        val tailId = state.posts.getOrNull(feedTailIndexOf(state.posts.size))?.id ?: return@LaunchedEffect
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.any { it.key == tailId } }
+            .distinctUntilChanged()
+            .filter { it }
+            .collect { onLoadMore() }
+    }
+}
+
+/**
+ * The slot the next page fills — drawn only while a fetch is in flight or
+ * one failed; at rest (`WatchFeedTail` above) nothing is drawn here at
+ * all. The drawn twin of `MoreComments`'s own failure row.
+ */
+@Composable
+private fun FeedTailSlot(state: FeedUiState, onLoadMore: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (state.loadingMore) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .testTag("feed_loading_more"),
+            )
+        } else {
+            ErrorLine(R.string.content_feed_stale, "feed_load_more_error")
+            TextButton(onClick = onLoadMore, modifier = Modifier.testTag("feed_load_more_retry")) {
+                Text(stringResource(R.string.content_retry))
+            }
+        }
     }
 }
 
@@ -522,6 +587,7 @@ private fun PostCard(
                 onOpenActor = onOpenActor,
                 onEdit = onEdit,
                 onCite = onCite,
+                onShare = onShare,
             )
             SummaryTitle(post)
             PostBody(
@@ -584,6 +650,7 @@ private fun CardMenuHeader(
     onOpenActor: (String) -> Unit,
     onEdit: (String) -> Unit,
     onCite: (String) -> Unit,
+    onShare: (String) -> Unit,
 ) {
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
     var removeOpen by remember { mutableStateOf(false) }
@@ -591,6 +658,16 @@ private fun CardMenuHeader(
     // of it to edit, cite or license, so the ⋮ goes wholesale rather than a
     // row at a time. An empty list draws no trigger.
     val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
+    val own = viewerId != null && post.author?.id == viewerId
+    // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
+    // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): only the reader's
+    // menu gains it, and only where the row itself sheds it (`isNarrowShareWidth`).
+    val narrow = isNarrowShareWidth()
+    val shareRow: (() -> Unit)? = if (!own && narrow) {
+        { onShare(post.id) }
+    } else {
+        null
+    }
     ContentCardHeader(
         author = post.author,
         at = post.createdAt,
@@ -600,13 +677,14 @@ private fun CardMenuHeader(
             emptyList()
         } else {
             postMenuRows(
-                own = viewerId != null && post.author?.id == viewerId,
+                own = own,
                 handle = post.author?.handle,
                 license = post.license,
                 onEdit = { onEdit(post.id) },
                 onCite = { onCite(post.id) },
                 onRemove = { removeOpen = true },
                 onLicense = { licenseShown = post.license },
+                onShare = shareRow,
                 // The rows sit under the trigger's own tag, which
                 // `ContentCardHeader` derives the same way.
                 testTagPrefix = "feed_${post.id}_menu",

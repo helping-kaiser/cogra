@@ -278,6 +278,7 @@ fun PostDetailScreen(
                         onRemove = { removeOpen = true },
                         // Over the page — never stacked.
                         onLicense = { license -> licenseShown = license },
+                        onShare = onShare,
                     )
                 },
             )
@@ -442,18 +443,31 @@ private fun DetailMenu(
     onCite: (String) -> Unit,
     onRemove: () -> Unit,
     onLicense: (LicenseChoice) -> Unit,
+    onShare: (String) -> Unit,
 ) {
     if (post == null) return
     if (isRemoved(post.content, post.attachments, post.attachmentsStatus)) return
+    val own = viewerId != null && post.author?.id == viewerId
+    // THE NARROW PHONE'S MENU HOLDS THE SHARE IT TOOK (design/readme.md,
+    // jakob 2026-09-17, sharpened 2026-09-22 — PR #794): the detail's own
+    // ⋮ is the reader's menu too (`_shared.jsx:341-346` — the card's own
+    // dot yields to it).
+    val narrow = isNarrowShareWidth()
+    val shareRow: (() -> Unit)? = if (!own && narrow) {
+        { onShare(post.id) }
+    } else {
+        null
+    }
     CograOverflowMenu(
         items = postMenuRows(
-            own = viewerId != null && post.author?.id == viewerId,
+            own = own,
             handle = post.author?.handle,
             license = post.license,
             onEdit = { onEdit(post.id) },
             onCite = { onCite(post.id) },
             onRemove = onRemove,
             onLicense = { onLicense(post.license) },
+            onShare = shareRow,
             testTagPrefix = "detail_menu",
         ),
         contentDescription = stringResource(R.string.content_menu_post),
