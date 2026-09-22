@@ -41,6 +41,15 @@ describe("SensitiveSheet", () => {
     expect(screen.getByTestId("growing-box").className).toContain("overflow-y-auto");
   });
 
+  // The box is what carries the border now, so it is what carries the dimming
+  // too — a reason the contract would refuse still reads as dead until the
+  // mark is on.
+  it("greys the reason's box out while the mark is off", () => {
+    open({ marked: false });
+    expect(screen.getByTestId("test-sensitive-reason")).toBeDisabled();
+    expect(screen.getByTestId("growing-box").className).toContain("opacity-[var(--state-disabled)]");
+  });
+
   // The server refuses past this length, so the sheet says so where the
   // reason is written rather than letting the seal carry the news — one sheet
   // for every surface that marks (the post seal, the reply seal, and the

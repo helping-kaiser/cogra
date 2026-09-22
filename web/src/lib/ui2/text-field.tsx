@@ -54,10 +54,12 @@ export const GROWING_FIELD =
 function GrowingBox({
   value,
   minRows,
+  disabled,
   children,
 }: {
   value: string;
   minRows: number;
+  disabled: boolean;
   children: ReactNode;
 }) {
   return (
@@ -66,8 +68,13 @@ function GrowingBox({
       data-min-rows={minRows}
       // The ring belongs to the drawn box, and the box is now this wrapper
       // rather than the control inside it — `cg-focus-within` is the same
-      // ring, taken from the edge the reader sees.
-      className={`${FIELD} cg-focus-within grid min-h-0 overflow-y-auto`}
+      // ring, taken from the edge the reader sees. The dimming moves with it
+      // for the same reason: `disabled:` is a state of the CONTROL, and the
+      // control is no longer what carries the border (the sensitive sheet's
+      // reason is greyed out until its mark is on).
+      className={`${FIELD} cg-focus-within grid min-h-0 overflow-y-auto ${
+        disabled ? "opacity-[var(--state-disabled)]" : ""
+      }`}
     >
       <span
         aria-hidden="true"
@@ -205,7 +212,7 @@ export function TextField({
         )}
       </div>
       {multiline ? (
-        <GrowingBox value={value} minRows={rows}>
+        <GrowingBox value={value} minRows={rows} disabled={disabled}>
           <textarea
             id={id}
             data-testid={testId}
