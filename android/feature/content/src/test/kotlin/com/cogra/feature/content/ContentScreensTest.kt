@@ -340,10 +340,13 @@ class ContentScreensTest {
         compose.waitForIdle()
         assertThat(calls).isEqualTo(1)
 
-        // Staying on screen — or scrolling further while the state hasn't
-        // moved — does not ask again: the watch only rises once per
-        // approach, the same guard `IntersectionObserver` gives web.
-        compose.onNodeWithTag("feed_list").performScrollToNode(hasTestTag("feed_post_p10"))
+        // Staying put once the tail is on screen does not ask again — the
+        // watch rises once per approach (`distinctUntilChanged`), the same
+        // guard `IntersectionObserver` gives web. (A later re-approach, after
+        // scrolling away and back, is allowed to ask again on both
+        // platforms; what stops a duplicate FETCH there is `loadingMore` /
+        // `hasNextPage` in the ViewModel, covered by
+        // `FeedViewModelTest.loadMoreWithoutANextPageIsANoOp`.)
         compose.waitForIdle()
         assertThat(calls).isEqualTo(1)
     }
