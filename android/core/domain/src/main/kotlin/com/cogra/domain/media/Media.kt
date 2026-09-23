@@ -273,6 +273,15 @@ fun isAltTextTooLong(text: String): Boolean =
     com.cogra.domain.content.authoredLength(text) > MAX_ALT_TEXT_CHARS
 
 /**
+ * The parent a clip is headed for (api-spec.md `MediaScale`).
+ *
+ * The server sizes, re-encodes and validates a clip for this parent's
+ * cap — a comment's is half a post's — so an upload names it. A
+ * picture's cap is the same at either, so a still names none.
+ */
+enum class MediaDestination { POST, COMMENT }
+
+/**
  * The upload verb (api-spec.md `uploadMedia`; D5).
  *
  * One asset per call, by design: a ten-picture post is ten calls the
@@ -299,9 +308,13 @@ interface MediaRepository {
      * own and the id it returns rides `AttachmentClaim` at prepare — which
      * is what lets a clip go up with no cover at all, and what lets an
      * edit name a different one without the clip moving.
+     *
+     * [destination] is the parent the clip is headed for, whose cap the
+     * server holds it to.
      */
     suspend fun uploadVideo(
         video: ProcessedVideo,
+        destination: MediaDestination,
         onProgress: (UploadProgress) -> Unit = {},
     ): Outcome<MediaAssetView>
 

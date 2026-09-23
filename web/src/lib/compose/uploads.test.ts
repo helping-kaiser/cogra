@@ -374,9 +374,12 @@ describe("runVideoUpload", () => {
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     expect(calls).toHaveLength(2);
-    // Both go up as bytes alone: neither upload names the other.
+    // Both go up as bytes alone: neither upload names the other. The clip
+    // names the parent it is headed for, whose cap the server sizes it to; the
+    // cover is a still, whose cap is the same at either, and names none.
     expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
-    expect(calls[1]![0].variables.input).toEqual({ file: expect.any(File) });
+    expect(calls[0]![0].variables.input.scale).toBeUndefined();
+    expect(calls[1]![0].variables.input).toEqual({ file: expect.any(File), scale: "POST" });
     expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
   });
@@ -405,14 +408,15 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, null, video.step, poster.step, SCALE);
+    await runVideoUpload(client, guard, clip, null, video.step, poster.step, COMMENT_SCALE);
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     // One call, not two: there is no cover leg to run.
     expect(calls).toHaveLength(1);
-    // The clip goes up as bytes alone, exactly as a covered one does; what
-    // faceless means is that the placement names no poster at prepare.
-    expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
+    // The clip goes up as bytes and its destination, exactly as a covered one
+    // does; what faceless means is that the placement names no poster at
+    // prepare.
+    expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File), scale: "COMMENT" });
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
     // The cover reports nothing at all: there was no cover to report on.
     expect(poster.seen).toEqual([]);

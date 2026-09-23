@@ -85,6 +85,53 @@ impl<'r> sqlx::Decode<'r, Postgres> for AssetState {
     }
 }
 
+/// The destination an upload is sized for: a post or a comment.
+///
+/// A comment carries half a post's video, so the destination is the cap an
+/// upload is planned and validated against. Stored as text under a CHECK,
+/// the same shape as [`AssetState`], on the asset row — the ingest worker
+/// re-encodes long after the request that named it — and on the upload
+/// session, which processes its bytes only when it completes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MediaScale {
+    Post,
+    Comment,
+}
+
+impl MediaScale {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Post => "post",
+            Self::Comment => "comment",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "post" => Self::Post,
+            "comment" => Self::Comment,
+            _ => return None,
+        })
+    }
+}
+
+impl sqlx::Type<Postgres> for MediaScale {
+    fn type_info() -> PgTypeInfo {
+        <&str as sqlx::Type<Postgres>>::type_info()
+    }
+
+    fn compatible(ty: &PgTypeInfo) -> bool {
+        <&str as sqlx::Type<Postgres>>::compatible(ty)
+    }
+}
+
+impl<'r> sqlx::Decode<'r, Postgres> for MediaScale {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let raw = <&str as sqlx::Decode<Postgres>>::decode(value)?;
+        Self::parse(raw).ok_or_else(|| format!("unknown media scale {raw:?}").into())
+    }
+}
+
 /// One asset row.
 #[derive(Debug, Clone)]
 pub struct MediaAttachment {
@@ -154,6 +201,7 @@ pub async fn insert(
     mime_type: &str,
     size_bytes: i64,
     options: &serde_json::Value,
+    scale: MediaScale,
 ) -> Result<MediaAttachment, sqlx::Error> {
     write_asset(
         pool,
@@ -166,6 +214,7 @@ pub async fn insert(
             mime_type,
             size_bytes,
             options,
+            scale,
             state: AssetState::Ready,
             source_digest: None,
         },
@@ -192,6 +241,7 @@ pub async fn insert_processing(
     mime_type: &str,
     size_bytes: i64,
     options: &serde_json::Value,
+    scale: MediaScale,
 ) -> Result<MediaAttachment, sqlx::Error> {
     write_asset(
         pool,
@@ -204,6 +254,7 @@ pub async fn insert_processing(
             mime_type,
             size_bytes,
             options,
+            scale,
             state: AssetState::Processing,
             source_digest: Some(digest),
         },
@@ -221,6 +272,7 @@ struct NewAsset<'a> {
     mime_type: &'a str,
     size_bytes: i64,
     options: &'a serde_json::Value,
+    scale: MediaScale,
     state: AssetState,
     source_digest: Option<&'a [u8]>,
 }
@@ -244,8 +296,8 @@ async fn write_asset(pool: &PgPool, new: NewAsset<'_>) -> Result<MediaAttachment
         r#"
         INSERT INTO media_attachments
             (id, author_id, digest, digest_algo, storage_key,
-             mime_type, size_bytes, options, state, source_digest)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+             mime_type, size_bytes, options, state, source_digest, scale)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         ON CONFLICT DO NOTHING
         RETURNING id, author_id, digest, digest_algo, storage_key,
                   mime_type, size_bytes,
@@ -263,6 +315,7 @@ async fn write_asset(pool: &PgPool, new: NewAsset<'_>) -> Result<MediaAttachment
         new.options,
         new.state.as_str(),
         new.source_digest,
+        new.scale.as_str(),
     )
     .fetch_optional(pool)
     .await?;
@@ -312,6 +365,9 @@ pub struct IngestJob {
     pub storage_key: String,
     pub mime_type: String,
     pub options: serde_json::Value,
+    /// The destination the upload named, whose cap the re-encode plans
+    /// for and the rendition is validated against.
+    pub scale: MediaScale,
     /// How many times a worker has claimed this row, this claim included.
     pub attempts: i32,
 }
@@ -345,7 +401,8 @@ pub async fn claim_ingest(
             LIMIT 1
         )
         RETURNING id, author_id, storage_key, mime_type,
-                  options AS "options!: serde_json::Value", attempts
+                  options AS "options!: serde_json::Value",
+                  scale AS "scale: MediaScale", attempts
         "#,
         lease_secs,
     )
@@ -796,6 +853,9 @@ pub struct UploadSession {
     pub declared_bytes: i64,
     pub part_size_bytes: i32,
     pub part_count: i32,
+    /// The destination named when the session opened, which the
+    /// assembled bytes are processed for at completion.
+    pub scale: MediaScale,
     /// The asset a finished session produced, and the reason a retried
     /// completion is cheap: set, it is the answer; null, the upload is
     /// still open.
@@ -823,6 +883,7 @@ pub async fn open_upload_session(
     declared_bytes: i64,
     part_size_bytes: i32,
     part_count: i32,
+    scale: MediaScale,
     ttl_secs: f64,
 ) -> Result<UploadSession, sqlx::Error> {
     sqlx::query_as!(
@@ -830,10 +891,11 @@ pub async fn open_upload_session(
         r#"
         INSERT INTO media_upload_sessions
             (id, author_id, storage_key, upload_id, declared_bytes,
-             part_size_bytes, part_count, expires_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, now() + make_interval(secs => $8))
+             part_size_bytes, part_count, scale, expires_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now() + make_interval(secs => $9))
         RETURNING id, author_id, storage_key, upload_id, declared_bytes,
-                  part_size_bytes, part_count, media_id, expires_at
+                  part_size_bytes, part_count, scale AS "scale: MediaScale",
+                  media_id, expires_at
         "#,
         id,
         author_id,
@@ -842,6 +904,7 @@ pub async fn open_upload_session(
         declared_bytes,
         part_size_bytes,
         part_count,
+        scale.as_str(),
         ttl_secs,
     )
     .fetch_one(pool)
@@ -864,7 +927,8 @@ pub async fn upload_session(
         UploadSession,
         r#"
         SELECT id, author_id, storage_key, upload_id, declared_bytes,
-               part_size_bytes, part_count, media_id, expires_at
+               part_size_bytes, part_count, scale AS "scale: MediaScale",
+               media_id, expires_at
         FROM media_upload_sessions
         WHERE id = $1 AND author_id = $2 AND expires_at > now()
         "#,

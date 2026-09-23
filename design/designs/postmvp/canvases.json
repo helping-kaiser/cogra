@@ -4,7 +4,7 @@
       "id": "postmvp",
       "url": "https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2",
       "title": "CoGra · Post-MVP rounds",
-      "pages": ["push", "histories"],
+      "pages": ["push", "histories", "chats"],
       "launch": "push"
     }
   ]

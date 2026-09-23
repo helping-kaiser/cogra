@@ -51,6 +51,7 @@ import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograBandChats
 import com.cogra.core.designsystem.v2.atom.CograBandIdentity
+import com.cogra.core.designsystem.v2.media.PreloadClips
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.LicenseChoice
@@ -231,6 +232,13 @@ fun FeedScreen(
     // / snapshotFlow), so the watch costs nothing while the reader is
     // nowhere near the end and needs no manual scroll listener.
     val listState = rememberLazyListState()
+    // THE CLIPS AHEAD ARE READ BEFORE THE READER GETS THERE: the stage
+    // preloads the opening of the clips around the reader, nearest first
+    // (`VideoPreload`). The feed knows which posts carry one and where the
+    // reader is; the position is read off the layout inside a snapshot, so
+    // scrolling moves it without recomposing the screen.
+    val clips = remember(state.posts) { FeedClips.of(state.posts) }
+    PreloadClips(clips = clips.urls, focus = { clips.focus(listState.layoutInfo) })
     // The collapsing top (design.md §6): the bar hides scrolling down
     // and returns after a third of a screen of upward scroll; the
     // borrowed-view band and the key banner ride the same region and

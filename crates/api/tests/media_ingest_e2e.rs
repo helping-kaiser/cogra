@@ -16,9 +16,9 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use api::media::BlobStore;
 use api::media::ingest_queue::{self as ingest, IngestSettings, Settled};
 use api::media::transcode::Ffmpeg;
+use api::media::{BlobStore, GalleryKind};
 use axum::body::Body;
 use axum::http::Request;
 use http_body_util::BodyExt;
@@ -152,12 +152,22 @@ impl Rig {
     /// One `uploadMedia` multipart request (the GraphQL multipart request
     /// specification): operations, map, and the binary part.
     async fn upload(&self, token: &str, file: &[u8]) -> Value {
+        self.upload_input(token, file, json!({ "file": null }))
+            .await
+    }
+
+    /// An upload headed for a named destination.
+    async fn upload_for(&self, token: &str, file: &[u8], scale: &str) -> Value {
+        self.upload_input(token, file, json!({ "file": null, "scale": scale }))
+            .await
+    }
+
+    async fn upload_input(&self, token: &str, file: &[u8], input: Value) -> Value {
         let query = format!(
             "mutation($input: UploadMediaInput!) {{ uploadMedia(input: $input) {{ \
              media {{ {MEDIA_FIELDS} }} userErrors {{ code message field }} }} }}"
         );
-        let operations =
-            json!({ "query": query, "variables": { "input": { "file": null }}}).to_string();
+        let operations = json!({ "query": query, "variables": { "input": input }}).to_string();
         let mut body: Vec<u8> = Vec::new();
         let part = |headers: &str, payload: &[u8], body: &mut Vec<u8>| {
             body.extend_from_slice(format!("--{BOUNDARY}\r\n{headers}\r\n\r\n").as_bytes());
@@ -363,6 +373,178 @@ async fn camera_original(ffmpeg: &Ffmpeg) -> Vec<u8> {
     tokio::fs::read(&out).await.expect("the fixture")
 }
 
+/// The ffmpeg on `PATH` if it can also tone-map, on the same skip-or-fail
+/// terms as [`ffmpeg_or_skip`]: CI's ffmpeg carries zimg, so a missing
+/// tone map there is a broken gate too.
+async fn tone_mapping_ffmpeg_or_skip(test: &str) -> Option<Ffmpeg> {
+    let ffmpeg = ffmpeg_or_skip(test).await?;
+    if ffmpeg.tone_maps() {
+        return Some(ffmpeg);
+    }
+    if std::env::var_os("CI").is_some() {
+        panic!("ffmpeg must carry zscale, tonemap and h264_metadata under CI ({test})");
+    }
+    eprintln!("SKIPPED {test}: ffmpeg cannot tone-map (built without zimg?)");
+    None
+}
+
+/// A real HDR clip: two seconds of test pattern at 1280 × 720 with sound,
+/// converted by zscale into BT.2020 with the given transfer — so the
+/// samples are genuinely PQ- or HLG-coded, diffuse white at BT.2408's
+/// 203 cd/m² — and tagged so in the H.264 VUI by `h264_metadata`, which
+/// is where a camera states it. Eight-bit, because that is what every
+/// encoder the tests may meet can produce, and at 3 Mbps, inside the rate
+/// target: only the signal puts it outside.
+async fn hdr_original(ffmpeg: &Ffmpeg, zscale_transfer: &str, h273_code: u8) -> Vec<u8> {
+    let scratch = tempfile::tempdir().expect("scratch");
+    let out = scratch.path().join("hdr.mp4");
+    let status = tokio::process::Command::new(ffmpeg.program())
+        .args([
+            "-nostdin",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc2=size=1280x720:rate=30",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=440:sample_rate=48000",
+            "-t",
+            "2",
+            "-vf",
+            &format!(
+                "zscale=tin=bt709:pin=bt709:min=bt709:t={zscale_transfer}:p=bt2020\
+                 :m=bt2020nc:npl=203,format=yuv420p"
+            ),
+            "-c:v",
+            ffmpeg.h264_encoder(),
+            "-b:v",
+            "3000000",
+            "-bsf:v",
+            &format!(
+                "h264_metadata=colour_primaries=9:transfer_characteristics={h273_code}\
+                 :matrix_coefficients=9"
+            ),
+            "-c:a",
+            "aac",
+            "-shortest",
+        ])
+        .arg(&out)
+        .status()
+        .await
+        .expect("ffmpeg runs");
+    assert!(status.success(), "the HDR fixture encodes");
+    tokio::fs::read(&out).await.expect("the fixture")
+}
+
+/// What an independent reader — ffprobe, beside the ffmpeg the tests
+/// drive — says about the first video stream: pixel format, transfer,
+/// primaries, matrix.
+async fn ffprobe_colour(bytes: &[u8]) -> String {
+    let scratch = tempfile::tempdir().expect("scratch");
+    let file = scratch.path().join("probe.mp4");
+    tokio::fs::write(&file, bytes).await.expect("scratch file");
+    let output = tokio::process::Command::new("ffprobe")
+        .args([
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=pix_fmt,color_transfer,color_primaries,color_space",
+            "-of",
+            "default=noprint_wrappers=1",
+        ])
+        .arg(&file)
+        .output()
+        .await
+        .expect("ffprobe runs");
+    assert!(output.status.success(), "ffprobe reads the file");
+    String::from_utf8_lossy(&output.stdout).into_owned()
+}
+
+/// An HDR upload is re-encoded even though its rate is within target, and
+/// its rendition is tone-mapped SDR: 8-bit 4:2:0 BT.709, as the server's
+/// own probe reads it off the SPS and as ffprobe reads it independently —
+/// for PQ and for HLG alike.
+///
+/// An HDR upload is re-encoded to a rendition that is 8-bit 4:2:0 BT.709 SDR.
+/// ´claim:media:an-hdr-upload-becomes-bt709-sdr´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_hdr_upload_is_tone_mapped_to_bt709_sdr(pool: PgPool) {
+    let Some(ffmpeg) =
+        tone_mapping_ffmpeg_or_skip("an_hdr_upload_is_tone_mapped_to_bt709_sdr").await
+    else {
+        return;
+    };
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let caps = rig.media.caps_for(GalleryKind::Post);
+
+    for (zscale_transfer, h273_code) in [("smpte2084", 16), ("arib-std-b67", 18)] {
+        let original = hdr_original(&ffmpeg, zscale_transfer, h273_code).await;
+        let arrived = api::media::process(&original, caps).expect("the fixture is admitted");
+        assert!(
+            api::media::transcode::within_target(
+                arrived.width,
+                arrived.height,
+                arrived.duration_ms,
+                arrived.bytes.len() as u64,
+                caps.video_bytes as u64,
+            ),
+            "{zscale_transfer}: the rate alone would pass it through"
+        );
+
+        let uploaded = rig.upload(&token, &original).await;
+        assert_eq!(
+            uploaded["state"], "PROCESSING",
+            "{zscale_transfer}: an HDR clip is outside the target: {uploaded}"
+        );
+        let id = uploaded["id"].as_str().expect("id").to_string();
+        assert_eq!(rig.ingest(Some(&ffmpeg)).await, Settled::Ready);
+
+        let ready = rig.media_attachment(&token, &id).await;
+        assert_eq!(ready["state"], "READY", "{ready}");
+        let key = ready["url"]
+            .as_str()
+            .and_then(|url| url.strip_prefix("https://media.example/bucket/"))
+            .expect("an asset key")
+            .to_string();
+        let stored = rig.blobs.get(&key).await.expect("the rendition is stored");
+
+        let probe = api::media::process(&stored, caps).expect("the rendition validates");
+        let signal = api::media::video::probe(&stored)
+            .expect("the rendition probes")
+            .signal
+            .expect("the rendition states its signal");
+        assert_eq!(
+            signal.transfer,
+            api::media::video::Transfer::Sdr,
+            "{zscale_transfer}: tone-mapped"
+        );
+        assert_eq!((signal.bit_depth, signal.chroma_420), (8, true));
+        assert!(!probe.needs_transcode, "the rendition is within target");
+
+        let described = ffprobe_colour(&stored).await;
+        for line in [
+            "pix_fmt=yuv420p",
+            "color_transfer=bt709",
+            "color_primaries=bt709",
+            "color_space=bt709",
+        ] {
+            assert!(
+                described.lines().any(|l| l == line),
+                "{zscale_transfer}: ffprobe reads {line}: {described}"
+            );
+        }
+        assert_eq!(rig.prepare_video_post(&token, &id).await, json!([]));
+    }
+}
+
 /// A clip within target is `READY` from the upload's own answer: the
 /// probe the upload runs anyway is the whole cost, and the asset is
 /// attachable at once. One outside it is `PROCESSING`, kept under the
@@ -463,6 +645,43 @@ async fn a_retried_over_target_upload_is_the_same_asset(pool: PgPool) {
         .await
         .expect("count");
     assert_eq!(rows, 1);
+}
+
+/// The destination an upload names is the one its job is planned for: a
+/// comment clip waiting to be re-encoded is claimed as a comment job, and
+/// one that named no destination as a post's.
+///
+/// An over-target upload's ingest job carries the destination the upload named.
+/// ´claim:media:an-ingest-job-knows-its-destination´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_ingest_job_carries_the_destination_its_upload_named(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let reply = rig
+        .upload_for(&token, &h264_movie(2560, 1440, 2_500), "COMMENT")
+        .await;
+    assert_eq!(reply["state"], "PROCESSING");
+    let post = rig.upload(&token, &h264_movie(1440, 2560, 2_500)).await;
+    assert_eq!(post["state"], "PROCESSING");
+
+    let first = postgres_store::media::claim_ingest(&rig.pool, 60.0)
+        .await
+        .expect("claim")
+        .expect("a job");
+    let second = postgres_store::media::claim_ingest(&rig.pool, 60.0)
+        .await
+        .expect("claim")
+        .expect("a job");
+    for job in [first, second] {
+        let expected = if job.id.to_string() == reply["id"].as_str().expect("id") {
+            postgres_store::media::MediaScale::Comment
+        } else {
+            postgres_store::media::MediaScale::Post
+        };
+        assert_eq!(job.scale, expected, "job {}", job.id);
+    }
 }
 
 /// Without an encoder the job fails rather than hanging: the author reads
@@ -619,7 +838,8 @@ async fn an_over_target_upload_is_re_encoded_to_the_target(pool: PgPool) {
         "the original is discarded"
     );
 
-    let probe = api::media::process(&stored, rig.media.caps()).expect("the rendition validates");
+    let probe = api::media::process(&stored, rig.media.caps_for(GalleryKind::Post))
+        .expect("the rendition validates");
     assert_eq!((probe.width, probe.height), (1920, 1080));
     assert!(!probe.needs_transcode, "the rendition is within target");
     assert_eq!(probe.bytes, stored, "nothing left for the strip to remove");

@@ -206,6 +206,18 @@ impl Rig {
         json["data"]["beginMediaUpload"].clone()
     }
 
+    /// Opens a session headed for a named destination.
+    async fn begin_for(&self, token: &str, declared: usize, kind: &str, scale: &str) -> Value {
+        let json = self
+            .gql(
+                Some(token),
+                BEGIN,
+                json!({ "input": { "declaredBytes": declared, "kind": kind, "scale": scale }}),
+            )
+            .await;
+        json["data"]["beginMediaUpload"].clone()
+    }
+
     /// One part, as the wire carries it: the bytes are the whole body.
     async fn put_part(
         &self,
@@ -531,6 +543,58 @@ async fn caps_refuse_at_the_start_and_again_at_completion(pool: PgPool) {
         retried["media"].is_null(),
         "a refused upload is discarded, not left to be completed again: {retried}"
     );
+}
+
+/// A session is sized for the destination it names: sixty megabytes of
+/// video open for a post and are refused for a comment, whose cap is half
+/// a post's. Omitting the destination is a post. The destination rides the
+/// session to completion and lands on the asset row, where the ingest
+/// worker reads it.
+///
+/// A resumable upload answers to the cap of the destination it named, from the early refusal to the asset row.
+/// ´claim:media:a-session-is-sized-for-its-destination´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_session_is_sized_for_the_destination_it_names(pool: PgPool) {
+    let rig = Rig::with_media(pool, Rig::media(8 * 1024 * 1024));
+    let author = rig.member("replier").await;
+    let sixty_mib = 60 * 1024 * 1024;
+
+    let refused = rig.begin_for(&author, sixty_mib, "VIDEO", "COMMENT").await;
+    assert!(refused["upload"].is_null(), "granted: {refused}");
+    assert_eq!(refused["userErrors"][0]["field"], json!(["declaredBytes"]));
+    assert!(
+        refused["userErrors"][0]["message"]
+            .as_str()
+            .is_some_and(|m| m.contains(&(50 * 1024 * 1024).to_string())),
+        "the comment's cap refuses it: {refused}"
+    );
+    no_errors(
+        &rig.begin_for(&author, sixty_mib, "VIDEO", "POST").await,
+        "a post carries sixty megabytes",
+    );
+    no_errors(
+        &rig.begin(&author, sixty_mib, "VIDEO").await,
+        "an unnamed destination is a post",
+    );
+
+    let file = photo_with_location();
+    let begun = rig.begin_for(&author, file.len(), "STILL", "COMMENT").await;
+    no_errors(&begun, "a picture opens for a comment");
+    let session = begun["upload"]["id"].as_str().expect("session id");
+    let part_size = begun["upload"]["partSizeBytes"].as_u64().expect("size") as usize;
+    rig.put_all_parts(&author, session, part_size, &file).await;
+    let completed = rig.complete(&author, session).await;
+    no_errors(&completed, "completion refused");
+    let id: Uuid = completed["media"]["id"]
+        .as_str()
+        .and_then(|id| id.parse().ok())
+        .expect("an asset id");
+    let scale: String = sqlx::query_scalar("SELECT scale FROM media_attachments WHERE id = $1")
+        .bind(id)
+        .fetch_one(&rig.pool)
+        .await
+        .expect("the asset row");
+    assert_eq!(scale, "comment", "the session carried its destination");
 }
 
 /// An upload nobody finishes has to be collected, because until it is

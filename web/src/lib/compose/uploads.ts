@@ -165,8 +165,10 @@ export async function runVideoUpload(
   onCover: UploadStep,
   /**
    * The destination — a post's or a comment's. A long clip is encoded at the
-   * rate that fits its cap, exactly as Android plans one, and a clip that still
-   * comes out over it is refused in that destination's own sentence.
+   * rate that fits its cap, exactly as Android plans one; a clip that still
+   * comes out over it is refused in that destination's own sentence; and the
+   * upload names it to the server (`destination`), which sizes, re-encodes and
+   * validates the clip for that parent's cap.
    */
   scale: PickScale,
 ): Promise<void> {
@@ -277,7 +279,10 @@ async function sendVideo(
   // THE CLIP IS THE BODY WORTH PROTECTING. A picture sent twice costs a
   // moment; a video sent twice is the whole wait, twice.
   await guard.prime();
-  const uploaded = await uploadVideo(client, guard, { blob: stripped.blob });
+  const uploaded = await uploadVideo(client, guard, {
+    blob: stripped.blob,
+    scale: scale.destination,
+  });
 
   if (uploaded.kind === "success") {
     onVideo({ kind: "done", mediaId: uploaded.value.id });

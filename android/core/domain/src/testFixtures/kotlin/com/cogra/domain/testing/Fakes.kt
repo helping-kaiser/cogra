@@ -31,6 +31,7 @@ import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
@@ -535,6 +536,7 @@ open class ThrowingMediaRepository : MediaRepository {
 
     override suspend fun uploadVideo(
         video: ProcessedVideo,
+        destination: MediaDestination,
         onProgress: (UploadProgress) -> Unit,
     ): Outcome<MediaAssetView> = throw UnsupportedOperationException()
 

@@ -31,8 +31,11 @@ mutation UploadMedia($input: UploadMediaInput!) {
 # `kind` is `VIDEO` at every call site this app has. `MediaUploadKind.STILL`
 # is reserved: a still is capped at 10 MiB, below the 8 MiB threshold in
 # practice and never worth a three-round-trip session, so no client names it.
-mutation BeginMediaUpload($declaredBytes: Int!, $kind: MediaUploadKind!) {
-  beginMediaUpload(input: { declaredBytes: $declaredBytes, kind: $kind }) {
+#
+# `scale` is the parent the clip is headed for, whose cap the server sizes,
+# re-encodes and validates it against — a comment's is half a post's.
+mutation BeginMediaUpload($declaredBytes: Int!, $kind: MediaUploadKind!, $scale: MediaScale!) {
+  beginMediaUpload(input: { declaredBytes: $declaredBytes, kind: $kind, scale: $scale }) {
     upload {
       id
       partSizeBytes

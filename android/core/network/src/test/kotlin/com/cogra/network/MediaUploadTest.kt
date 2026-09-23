@@ -3,6 +3,7 @@ package com.cogra.network
 import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.AuthTokens
 import com.cogra.domain.Outcome
+import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
 import com.cogra.network.auth.AuthGuard
@@ -103,8 +104,12 @@ class MediaUploadTest {
             .addHeader("Content-Type", "application/json")
     }
 
+    /** Every GraphQL request body, in order — multipart bodies included. */
+    private val graphqlBodies = mutableListOf<String>()
+
     private fun graphql(request: RecordedRequest): MockResponse {
         val body = request.body.readUtf8()
+        graphqlBodies += body
         val json = when {
             body.contains("beginMediaUpload") -> {
                 beginCalls += 1
@@ -164,7 +169,7 @@ class MediaUploadTest {
         failuresFor[1] = 2
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip)
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
 
         assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
         // Three attempts at part one, one at part two — and the upload
@@ -182,7 +187,7 @@ class MediaUploadTest {
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
         val ticks = mutableListOf<UploadProgress>()
 
-        repo.uploadVideo(clip) { ticks += it }
+        repo.uploadVideo(clip, MediaDestination.POST) { ticks += it }
 
         // Progress only ever moves forward — a retried part reports
         // nothing until it lands, so the bar never goes backwards.
@@ -198,7 +203,7 @@ class MediaUploadTest {
         failuresFor[1] = 99
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip)
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
 
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
         // It gave up rather than looping, and never asked to complete.
@@ -216,7 +221,7 @@ class MediaUploadTest {
         refusalsFor[1] = 422
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip)
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
 
         assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)
         // A refusal is not retried, and completion is never asked for.
@@ -234,7 +239,7 @@ class MediaUploadTest {
         // No token saved at all.
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip)
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
 
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
         assertThat(partAttempts).isEmpty()
@@ -246,7 +251,7 @@ class MediaUploadTest {
         tokens.save(AuthTokens("access", "refresh", "acct"))
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        repo.uploadVideo(clip)
+        repo.uploadVideo(clip, MediaDestination.POST)
 
         val puts = generateSequence { server.takeRequest(1, MILLISECONDS) }
             .filter { it.path.orEmpty().startsWith("/media/uploads/") }
@@ -269,11 +274,38 @@ class MediaUploadTest {
         // nothing else.
         val (repo, clip) = repositoryFor(PART_SIZE - 1)
 
-        val outcome = repo.uploadVideo(clip)
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
 
         assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
         assertThat(beginCalls).isEqualTo(0)
         assertThat(partAttempts).isEmpty()
+    }
+
+    /**
+     * The server sizes, re-encodes and validates a clip for the cap of the
+     * parent it is headed for — a comment's is half a post's — so the
+     * destination rides whichever route the clip's size takes.
+     */
+    @Test
+    fun aClipInPartsNamesItsDestinationWhenTheSessionOpens() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE + 10)
+
+        repo.uploadVideo(clip, MediaDestination.COMMENT)
+
+        val begin = graphqlBodies.single { it.contains("beginMediaUpload") }
+        assertThat(begin).contains("\"scale\":\"COMMENT\"")
+    }
+
+    @Test
+    fun aClipInOneRequestNamesItsDestinationBesideItsBytes() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE - 1)
+
+        repo.uploadVideo(clip, MediaDestination.COMMENT)
+
+        val single = graphqlBodies.single { it.contains("uploadMedia(") }
+        assertThat(single).contains("\"scale\":\"COMMENT\"")
     }
 
     private companion object {

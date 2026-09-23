@@ -3156,7 +3156,13 @@ input PrepareProfileUpdateInput {
  on AttachmentInput at prepare."
 input UploadMediaInput {
   file: Upload!
+  "The parent the asset is headed for, whose cap a clip is sized,
+   re-encoded and validated for."
+  scale: MediaScale! = POST
 }
+"Only a video's cap differs between the two: a comment's is half a
+ post's."
+enum MediaScale { POST COMMENT }
 type UploadMediaPayload { media: MediaAttachment! }
 
 "A prepared content write: the staged handshake plus `node` — the
@@ -3306,16 +3312,26 @@ says so.
   never below 1 Mbps, AAC at 128 kbps. Clients compress to it
   wherever they can; the server probes every upload and re-encodes
   what exceeds it. The probe that validates the upload decides:
-  a clip whose short side is within 1080 and whose container rate
-  is within the target's video-plus-audio budget over the 0.92 cap
-  headroom — the overshoot the composer's own plan allows for — is
-  stored as it arrived and is `READY` at once, which is every
-  Android upload and every compressed web upload. Anything else is
-  stored `PROCESSING` and re-encoded with ffmpeg (fast-start, no
-  source metadata); only the rendition is kept, validated by the
-  same pipeline an upload runs, and the original is discarded. The
-  re-encode plans for the upload cap because the parent is not
-  known yet, so a comment's narrower cap still applies at prepare.
+  a clip whose short side is within 1080, whose container rate is
+  within the target's video-plus-audio budget over the 0.92 cap
+  headroom — the overshoot the composer's own plan allows for — and
+  whose sequence parameter set states 8-bit 4:2:0 standard dynamic
+  range is stored as it arrived and is `READY` at once, which is
+  every Android upload and every compressed web upload. Anything
+  else is stored `PROCESSING` and re-encoded with ffmpeg
+  (fast-start, no source metadata); only the rendition is kept,
+  validated by the same pipeline an upload runs, and the original
+  is discarded. The budget, the re-encode's rate and the
+  rendition's validation all use the cap of the destination the
+  upload names (below).
+- **HDR is tone-mapped to SDR.** A clip whose SPS states a PQ
+  (SMPTE ST 2084) or HLG (ARIB STD-B67) transfer is re-encoded
+  through ffmpeg's `zscale` + `tonemap` recipe — linear light at a
+  nominal white of 203 cd/m² (ITU-R BT.2408's HDR reference white),
+  BT.2020 to BT.709 gamut, the `mobius` curve — into 8-bit 4:2:0
+  BT.709, and the rendition states BT.709 in its own VUI. A server
+  whose ffmpeg lacks the recipe fails an HDR upload with a
+  `failureReason` rather than serving it untone-mapped.
 - **Served bytes are witnessed bytes.** The envelope commits an
   asset's digest at prepare, so every change to an asset's bytes
   happens before prepare can see it: **prepare refuses an asset
@@ -3358,11 +3374,14 @@ says so.
   is refused at `["attachments", "<i>", "mediaId"]`.
 - **A comment's video is capped at 50 MiB**, half a post's, the same
   asymmetry its four pictures against a post's ten already carries;
-  the cover rides the still cap either way. The cap is checked when
-  the attachment is planned rather than at the upload, because an
-  asset is uploaded before it is attached and nothing at that moment
-  knows which parent it is headed for — so the upload admits the
-  widest limit and the parent narrows it, refusing at
+  the cover rides the still cap either way. **An upload names its
+  destination** — `scale: POST | COMMENT` on `uploadMedia` and
+  `beginMediaUpload`, POST when omitted — and a clip is sized,
+  judged within target, re-encoded and validated against that
+  destination's cap. A picture's cap is the same at either, so
+  `scale` changes nothing for a still. The parent applies its cap
+  again when the attachment is planned, because an asset uploaded
+  for a post can be attached to a comment, refusing at
   `["attachments", "<i>", "mediaId"]`.
 - **A poster is the uploader's own still.** `coverMediaId` names
   an asset this account uploaded and still holds; a cover that is
@@ -3443,9 +3462,10 @@ parts rather than the object.
   evidence.** `declaredBytes` and `kind` buy an early refusal at
   `["declaredBytes"]` and fix the part arithmetic; what the file
   *is* is decided by sniffing the assembled bytes, and the cap it
-  answers to follows from that. A still declared as a video is
-  refused at completion by the still cap, so under-declaring buys
-  no allowance.
+  answers to follows from that and from the session's `scale`,
+  which the session keeps until completion. A still declared as a
+  video is refused at completion by the still cap, so
+  under-declaring buys no allowance.
 - **One session costs one upload's rate limit**, consumed at
   `beginMediaUpload` and not per part — charging per part would
   price a large file out of an hourly budget sized for whole
@@ -3482,6 +3502,9 @@ input BeginMediaUploadInput {
   "Which cap the early refusal uses. The sniff at completion
    decides what the file actually is."
   kind: MediaUploadKind!
+  "The parent the upload is headed for, as on uploadMedia: the
+   early refusal and the processing at completion use its cap."
+  scale: MediaScale! = POST
 }
 enum MediaUploadKind { STILL VIDEO }
 type MediaUploadSession {
@@ -3548,9 +3571,11 @@ input PrepareChatInput {
 }
 
 "Post a message — stages the Send (the terminal leg mints the
- Message). For an encrypted message, `content` is the ciphertext
- and `epoch` names the chat-key epoch it is under; for plaintext,
- `epoch` is null. Membership is CoGra's read-side fold policy —
+ Message). For an encrypted message, `content` is the ciphertext,
+ `epoch` names the chat-key epoch it is under, and every
+ attachment's bytes are client-encrypted under that same epoch
+ key before upload (chats.md §7); for plaintext, `epoch` is null.
+ Membership is CoGra's read-side fold policy —
  prepare enforces it as L2 policy."
 input PrepareChatMessageInput {
   chat: UUID!
