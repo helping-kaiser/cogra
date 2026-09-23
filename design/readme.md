@@ -6266,18 +6266,56 @@ row menu's `Chat details` — now land on it. The masters (`ChatIdentity`,
 - **Deferred (jakob):** message disavowal and everything
   moderation-flavoured — the moderation slice's.
 - **The lane's calls, flagged for review:** the anatomy's order
-  (WhatsApp's group info filtered: identity, actions row, media and
-  search, open decisions, members, mute and history, leave); `Edit chat`
-  on the actions row rather than in the header; the leave confirm not
-  offering the opinion door; the clip tile wearing the sound disc and no
-  duration (the one-duration ruling); the leave dialog keeping its
-  heading and answers pinned while a grown reason scrolls (the sheet's
+  (WhatsApp's group info filtered: identity, actions row, media, open
+  decisions, members, mute and history, leave); `Edit chat` on the
+  actions row rather than in the header; the leave confirm not offering
+  the opinion door; the clip tile wearing the sound disc and no duration
+  (the one-duration ruling); the leave dialog keeping its heading and
+  answers pinned while a grown reason scrolls (the sheet's
   short-viewport clause, read for a dialog).
+
+jakob reviewed the round on the canvas the same day and ruled five
+corrections:
+
+- **Search rides the thread's header (jakob).** `Search in this chat`
+  left the details for a glyph at the pinned header's trailing edge,
+  beside the details door, on every thread — the reader's outside the
+  chat included, since plaintext is a public read and the truth note
+  says the same to both. `ChatSearchIn`'s way back is the thread.
+- **Role readouts are doors (jakob).** On a member's details, tapping
+  `Admin`, `Moderator` or `Member` opens the role-change flow —
+  `decision:change_role`'s multi-voice face, round B2's. The row splits
+  the stance row's way (the person area opens the person, the value its
+  own surface), and the word wears the `Edited` marker's tappable
+  underline. A reader outside keeps plain readouts; the pending invitee
+  has neither word nor door.
+- **A chat's versions are removable by decision (jakob).** His case: a
+  picture changed to one a member never wanted public. `Remove this
+  version` rides every version with a payload, opening
+  `decision:redact_version`'s multi-voice face (B2's; the decision joins
+  chats.md §5, gated as `disavow_message`: > 50% cast, ≥ 20% quorum). A
+  chat has no author — its creator is only its creator — so the door
+  shows for every member, where a post's shows for its author alone. A
+  removed version tombstones by the change-histories grammar.
+- **The edit's seal says three (jakob).** The default map's
+  `set:metadata` gate (> 50% weighted cast, 10% quorum) makes even a
+  solo admin's change a proposal passing on its proposer's own ballot,
+  so the reader signs the anchor, its reference to the chat and their
+  +1 ballot — `3 things, signed together`, the founding seal's exact
+  precedent, worded `Change`, `Chat` and `Your opinion` · `For the
+  change`. The system actor signs the succession on its own and never
+  joins the reader's count.
+- **The `Why?` field stays (jakob).** `layer1-interface.md`'s act
+  payload schema gives Leave a "parting reason" — "if the interface
+  says so then the L1 author intended it to exist" — and the leave
+  confirm's docblock cites it.
 - **The gate**: canonical holds byte-identical — **217 screens · 1568
   edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 44
-  screens and 163 edges, its gaps 5 → 3: the two intended B2 gaps and a
-  Collective member's own page, owed since the Collective actor variant
-  (§7).
+  screens and 167 edges. The chats round's five gaps are resolved, and
+  five stand in their place: the four intended B2 faces
+  (Add people, the role change, a version's removal, the change that
+  waits for more voices) and a Collective member's own page, owed since
+  the Collective actor variant (§7).
 
 ---
 

@@ -1988,15 +1988,18 @@ what a joiner meets, never who decides. The opinion anchor is named
 `Give your opinion on {chat}`. The actions row's second act is `Edit
 chat` for a member, `Ask to join` or `Join` for a reader outside.
 
-- The doors: `Media in this chat`, `Search in this chat`, `Edit history`
-  — the change-histories round's door word, kept for a chat.
+- The doors: `Media in this chat` and `Edit history` — the
+  change-histories round's door word, kept for a chat. Search is not a
+  row: it is the thread header's glyph, named `Search in this chat`.
 - `Open decisions` labels the section; empty, it says `Nothing is being
   decided.`
 - `Members` labels the list; `Add people` heads it for a member. A
   row's trailing word is its role: `Admin`, `Moderator`, `Member`. The
   reader's own row reads `@sol · you`; a Collective's `@rowingclub · a
   collective`; an invitee who has not joined `Invited — hasn't joined
-  yet`, with no role.
+  yet`, with no role. For a member the role word is a door, underlined,
+  and named `{Role} — change the role` for the ear (`Admin — change the
+  role`); a reader outside hears the plain word.
 - `Mute this chat`, a switch, with `No push for its messages. It keeps
   its place and its dot on your list.`
 - `Leave this chat`, alone at the foot, quiet at rest.
@@ -2005,9 +2008,14 @@ chat` for a member, `Ask to join` or `Join` for a reader outside.
 chat details`. `Change picture`; `Name` and `Description`, each
 `Optional`; `Save`. The seal: `What you sign`, `Last step`, the leave
 `Leave`, the "?" `How signing works`; the chat shown back as `Coast
-walkers` · `Name, picture and description — one signed change.`; the
-acts card `Chat` · `A new description`, counted as `1 chat change`, `1
-thing, signed`; the line `The change is public, and the chat's earlier
+walkers` · `Name, picture and description — one change to the chat.`;
+the acts card in three rows — `Change` · `A new description`, `Chat` ·
+`Coast walkers`, `Your opinion` · `For the change` (spoken `1 change`,
+`1 link to the chat`, `1 opinion`) — totalled `3 things, signed
+together` over `They land together, or none does.`, the founding seal's
+own pair (jakob's fix pass: the proposal's anchor, its reference to the
+chat and the proposer's own ballot, named in the reader's words and
+never as proposal, ballot or tally); the line `The change is public, and the chat's earlier
 versions stay readable in its edit history.`; the act `Sign the change`
 — the profile seal's own words.
 
@@ -2018,10 +2026,13 @@ events between them are one plain sentence each, the actor first — `Sal
 Torres left`, `Harbour Rowing Club joined`, `Mira Voss invited Harbour
 Rowing Club`, and `You invited Ada Okonkwo` for the reader's own — with
 the date in the dateline's words on the trailing edge, and a leave's
-parting reason quoted on the line under it.
+parting reason quoted on the line under it. Every version carries the
+author's register's `Remove this version` on its dateline — for every
+member, because a chat has no author — and a removed one keeps its row
+with `Already removed` in the act's slot.
 
-**Search in this chat.** Titled `Search in this chat`, back `Back to chat
-details`, the field `Search messages`. The note under the field: `Only
+**Search in this chat.** The thread header's glyph opens it, named
+`Search in this chat`. Titled the same, back `Back to the chat`, the field `Search messages`. The note under the field: `Only
 messages sent without the lock are searched — an encrypted message's
 words open on members' devices and nowhere else.` A result's first line
 is the sender (`You` for the reader's own), its second the message, its
