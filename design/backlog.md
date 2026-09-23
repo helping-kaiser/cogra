@@ -1292,41 +1292,46 @@ had left open and fixed what the canvas showed:
   the round's PR for the root cause (a flex-sized stage with a
   percentage max-height that never resolved).
 
-### 34 · The change-history surface · *design*
+### 34 · The change-history surface · *design* · **ruled**
 
 Filed by the video conform round 2026-09-03, from jakob's ruling
-that **everything versioned shows its change history to the user**,
-reachable from the thing's own three-dot menu. The roadmap carries
-the scope (Staged workstreams, *Change histories on every versioned
-thing*); the surfaces are undrawn.
+that **everything versioned shows its change history to the user**.
+Ruled 2026-09-22 and drawn as would-like #2 in the post-MVP tree —
+thirteen boards on the Change histories page (readme §13, *The
+change-histories round*; `copy-voice.md` carries the words).
 
-Every versioned kind is in scope — posts, comments, stances,
-profiles, chat messages — and the product already keeps the rows: an
-edit replaces the whole content and earlier versions stay public
-under *Edited* unless removed (the "Editing" dialog,
-[guidelines/copy-voice.md](guidelines/copy-voice.md)). What has
-never been drawn is where a reader *goes* to see them.
+1. **One pattern, one board per kind.** A page title, a list of whole
+   versions newest first, the current one marked, the additive law at
+   the foot — the shape does not change with the kind, only the master
+   the versions are drawn by (`PostHistory`, `CommentHistory`,
+   `ProfileHistory`). A stance is the exception that proves it: it is
+   a history already, so it gets a timeline rather than a chronicle.
+2. **A version row is the whole version, never a diff.** The store
+   keeps complete states and L1 signs a full new record per edit, so a
+   difference is something a reader works out by reading; computing one
+   would be a claim about which change mattered. From a row, the
+   version's own detail opens where the kind has one
+   (`PostVersionDetail`).
+3. **A tombstoned version keeps its row**, wearing the mark in the
+   content's place at its own date. Per-version removal is drawn
+   (`VersionRemoveConfirm`), and the author's register leads with
+   *Remove the whole post* — the head never falls through, so nobody
+   should be able to kill an object by removing versions one at a time.
+4. **`Edit history`**, in the ⋮ beside `Edit` — `History` is taken
+   twice over — and the `Edited` marker becomes a door too. Both appear
+   only once a second version exists.
+5. **The stance case is the timeline**, read off the record mirror with
+   no table added: every record cast along the pair, newest first,
+   severance standing in it as the counter-record it is. Its header
+   says in plain words what the standing adds up to, because the fold
+   clips; the exact raw sum rides geek mode. The doors follow the door
+   rule — a face is an authoring door and is fully spent, so the
+   readouts open the history: a row's value, and the pad's `Current
+   opinion` line.
 
-The questions:
-
-1. **One surface or one per kind?** A post's history and a stance's
-   history are different shapes — a body that changed against a pair
-   of numbers that moved. Whether that is one screen with a row
-   vocabulary or a family of screens is the lead question.
-2. **What a version row shows.** The date, and what else — a diff, a
-   summary, the whole earlier version, the acts that rode the edit?
-   The acts sheet (`EditActs` / `CommentEditActs`) already words what
-   an edit signs, and a history row is that after the fact.
-3. **Where the removed versions sit.** An author may remove earlier
-   versions, and a redaction leaves a visible mark rather than
-   erasing silently. The history is the surface where that mark is
-   most visible, so its removed state is part of the design, not an
-   edge case.
-4. **The menu entry's words**, and whether a thing with exactly one
-   version shows the entry at all.
-5. **The stance case.** A stance's history is a record of where
-   someone stood over time — the most sensitive of the five to draw,
-   and the one most likely to want a shape of its own.
+What is still owed: the chat container's own chronicle, which defers
+to the chats round; the comment master carries no redaction state, so
+a removed comment version has no mark to draw yet.
 
 ### 35 · Video playback — decisions the transition fix surfaced · *design* · **ruled**
 

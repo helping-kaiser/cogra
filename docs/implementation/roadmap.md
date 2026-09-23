@@ -786,14 +786,18 @@ On the roadmap but outside the slice order; each names its gate.
   [miner-api.md](miner-api.md)); revisit when someone actually wants
   to operate a paid miner.
 - **Change histories on every versioned thing** — posts, comments,
-  stances, profiles and chat messages all keep their versions, and
-  the reader can see them: a history surface reached from the
-  thing's own three-dot menu, showing what changed and when. It
-  reads rows that already exist and mints no records, so it is a
-  read surface over the version tables rather than a slice of its
-  own. Gate: each kind joins as its versions ship — posts and
-  comments from slice 2, profiles from 2.1, stances from 2.2, chat
-  messages at slice 5.
+  stances, profiles and chats all keep their versions, and the
+  reader can see them: one list of whole versions, newest first,
+  the current one marked and never a diff. A tombstoned version
+  keeps its row and wears the mark. Reached from the thing's own
+  three-dot menu and from the Edited marker for content, and from
+  a value readout for a stance. It reads rows that already exist
+  and mints no records — the version tables for content, the
+  record mirror for a stance, which is a history already. Gate:
+  each kind joins as its versions ship — posts and comments from
+  slice 2, profiles from 2.1, stances from 2.2, the chat container
+  at slice 5 (its name, image, description and members; message
+  bodies never edit).
 - **Walk-the-graph frontend** — a visual graph-exploration client;
   parked product idea. Neighborhood queries over the record mirror
   suffice until it earns its build.

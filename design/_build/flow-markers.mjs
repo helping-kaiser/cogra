@@ -2212,4 +2212,72 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="No thanks', tag: "button" },
   ],
   PushDenied: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }],
+
+  // ── The change-histories round (post-MVP) ────────────────────────────────
+  // A version card's own door is its text link, and the two versions are told
+  // apart by the href the board gives each one — the one part of a card that
+  // is a version's own address rather than shared anatomy.
+  PostHistory: [
+    { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
+    { n: 2, find: 'href="/p/salt-maps/v/12-september"', tag: "a" },
+    { n: 3, find: 'href="/p/salt-maps/v/8-september"', tag: "a" },
+  ],
+  PostHistoryOwn: [
+    { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
+    { n: 2, find: ">Remove the whole post</button>", tag: "button" },
+    { n: 3, find: ">Remove this version</button>", tag: "button" },
+    { n: 4, find: 'href="/p/salt-maps/v/12-september"', tag: "a" },
+    { n: 5, find: 'href="/p/salt-maps/v/8-september"', tag: "a" },
+  ],
+  PostVersionDetail: [
+    { n: 1, find: 'aria-label="Back to the edit history"', tag: "a" },
+    { n: 2, find: ">See the current version</button>", tag: "button" },
+  ],
+  PostVersionDetailMedia: [
+    { n: 1, find: 'aria-label="Back to the edit history"', tag: "a" },
+    { n: 2, find: ">See the current version</button>", tag: "button" },
+  ],
+  VersionRemoveConfirm: [
+    { n: 1, find: ">Remove version</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+  ],
+  CommentHistory: [{ n: 1, find: 'aria-label="Back to the comment"', tag: "a" }],
+  ProfileHistory: [{ n: 1, find: 'aria-label="Back to the profile"', tag: "a" }],
+  // The registers' per-version act is marked on its FIRST row only — the
+  // repeated-element convention; one edge covers every version that carries it.
+  CommentHistoryOwn: [
+    { n: 1, find: 'aria-label="Back to the comment"', tag: "a" },
+    { n: 2, find: ">Remove the whole comment</button>", tag: "button" },
+    { n: 3, find: ">Remove this version</button>", tag: "button" },
+  ],
+  ProfileHistoryOwn: [
+    { n: 1, find: 'aria-label="Back to the profile"', tag: "a" },
+    { n: 2, find: ">Remove every version</button>", tag: "button" },
+    { n: 3, find: ">Remove this version</button>", tag: "button" },
+  ],
+  HistoryMenu: [{ n: 1, find: ">Edit history</button>", tag: "button" }],
+  EditedMarkerDoor: [{ n: 1, find: ">Edited</button>", tag: "button" }],
+  // The split row: the two halves are marked on the FIRST row only, the
+  // repeated-element convention — one edge covers every row, and two badges on
+  // five rows would bury the row the split is being shown on.
+  OpinionsRowDoors: [
+    { n: 1, find: ">Mira Voss</span>", tag: "button" },
+    { n: 2, find: 'aria-label="See how this opinion built"', tag: "button" },
+  ],
+  ProfileStancesDoors: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Tobias Lindqvist</span>", tag: "button" },
+    { n: 3, find: 'aria-label="See how this opinion built"', tag: "button" },
+  ],
+  PadHistoryDoor: [{ n: 1, find: ">Current opinion · see how it built</button>", tag: "button" }],
+  // The timeline sheets' one "?", on the title row (`SheetTitle`'s trailing).
+  StanceTimeline: [{ n: 1, find: 'aria-label="How opinions build"', tag: "button" }],
+  StanceTimelinePost: [{ n: 1, find: 'aria-label="How opinions build"', tag: "button" }],
+  // Two washes stack under this dialog — the sheet's and its own — so the scrim
+  // is found by the DIALOG's wrapper, the one that centres the surface; the
+  // bare wash string would land on the sheet's.
+  TimelineHelp: [
+    { n: 1, find: ">Close</button>", tag: "button" },
+    { n: 2, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
+  ],
 });

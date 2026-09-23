@@ -143,6 +143,10 @@ export function StanceControl({
   overMedia = false,
   helpLabel = "How opinions work",
   axes = STANCE_AXES,
+  /* The standing's own door (the change-histories round): handed one, the
+     "Current opinion" line above the field opens the timeline the sum was
+     built from. Pure pass-through to `StanceStanding`. */
+  onOpenHistory,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -467,7 +471,7 @@ export function StanceControl({
                 ?
               </span>
             </button>
-            <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} names={axes} style={{ paddingRight: "40px" }} />
+            <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} names={axes} onOpenHistory={onOpenHistory} style={{ paddingRight: "40px" }} />
             {/* THE COACH RIDES THE FIRST OPEN, INSIDE THE PAD. It is a note on
                 the surface it explains rather than a card floating beside the
                 anchor — the anchor may be anywhere on the screen and the pad is
@@ -554,7 +558,7 @@ export function StanceControl({
           helpLabel={helpLabel}
           axes={axes}
         >
-          <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} names={axes} />
+          <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} names={axes} onOpenHistory={onOpenHistory} />
         </StanceAlternates>
       )}
 

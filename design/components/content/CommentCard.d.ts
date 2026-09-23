@@ -47,6 +47,12 @@ export interface CommentCardProps {
   signedIn?: boolean;
   /** Owned by the shell, like `PostCard.taught`. Defaults to true. */
   taught?: boolean;
+  /**
+   * Off only where a surface deliberately carries no stance affordance —
+   * `PostCard`'s own prop. The edit history is the case: an opinion is held on
+   * the comment, never on one of its versions.
+   */
+  showStance?: boolean;
   /** Fires when a stance on this comment is signed. */
   onCommit?: (pick: import("../stance/StanceReadout").StancePair, bundle: StanceBundle) => void;
   onReply?: () => void;
@@ -68,6 +74,14 @@ export interface CommentCardProps {
   actions?: React.ReactNode;
   /** Extra overflow-menu items, appended after the license entry. */
   menuItems?: readonly { label: string; onSelect?: () => void }[];
+  /**
+   * Renders the record's SKELETON instead of its content, as `PostCard` does:
+   * redaction is record-granular, so the words, the pictures, the topics line
+   * and the license go at once. `true` for the default wording, or
+   * `RedactedContentProps` for the reason, the date and a note. The author, the
+   * timestamp and the thread position survive around it.
+   */
+  redacted?: boolean | import("../honesty/SensitiveVeil").RedactedContentProps;
   /** An open reply or edit composer, rendered between the card and its replies. */
   children?: React.ReactNode;
   /**
