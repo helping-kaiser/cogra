@@ -55,12 +55,21 @@ const BITS_PER_BYTE = 8;
  * that may be five seconds long would degrade it for nothing, and the cap check
  * catches the rest. The operations run in Android's order, so the floating-point
  * result — and therefore the rounded integer — is the same.
+ *
+ * `audioBps` is the sound's share of the budget. It is Android's 128 kbps
+ * whenever the sound is encoded here; a clip whose AAC is carried across
+ * untouched (`compress-video.ts`, on a browser with no AAC encoder) brings its
+ * own rate, and the picture gets what that leaves.
  */
-export function videoBitrateForClip(durationMs: number, capBytes: number): number {
+export function videoBitrateForClip(
+  durationMs: number,
+  capBytes: number,
+  audioBps: number = AUDIO_BPS,
+): number {
   if (!(durationMs > 0)) return STANDARD_VIDEO_BPS;
   const seconds = durationMs / 1000.0;
   const budgetBits = CAP_HEADROOM * capBytes * BITS_PER_BYTE;
-  const forVideo = budgetBits / seconds - AUDIO_BPS;
+  const forVideo = budgetBits / seconds - audioBps;
   if (forVideo >= STANDARD_VIDEO_BPS) return STANDARD_VIDEO_BPS;
   if (forVideo <= FLOOR_VIDEO_BPS) return FLOOR_VIDEO_BPS;
   // Kotlin's `roundToInt` rounds half up, which is what `Math.round` does for

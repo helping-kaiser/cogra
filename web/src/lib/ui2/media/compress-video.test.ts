@@ -7,7 +7,9 @@
 //  · no WebCodecs at all → the clip is not even opened;
 //  · a clip already within target → passed on untouched, nothing encoded;
 //  · the capability check asks at the EXACT size and rate the encode uses,
-//    and needs AAC too whenever the clip has sound;
+//    and asks the source side too — the picture must be decodable here;
+//  · a clip with sound needs an AAC encoder, OR sound that is already AAC,
+//    which is then copied across and planned at its own rate;
 //  · anything the encoder cannot carry, or any failure mid-way, returns the
 //    picked bytes — never a throw, never a clip without its sound.
 
@@ -23,7 +25,14 @@ type FakeTrack = {
   getRotation?: () => Promise<number>;
   getNumberOfChannels?: () => Promise<number>;
   getSampleRate?: () => Promise<number>;
+  canDecode: () => Promise<boolean>;
+  computePacketStats?: () => Promise<{ averageBitrate: number }>;
 };
+
+/** Whether this "browser" can decode each kind of track; reset per test. */
+let decodes = { video: true, audio: true };
+/** The measured rate of the clip's sound, as the packet table states it. */
+let soundBps = 256_000;
 
 function videoTrack(codec: string, width: number, height: number, rotation = 0): FakeTrack {
   return {
@@ -34,6 +43,7 @@ function videoTrack(codec: string, width: number, height: number, rotation = 0):
     getSquarePixelWidth: async () => width,
     getSquarePixelHeight: async () => height,
     getRotation: async () => rotation,
+    canDecode: async () => decodes.video,
   };
 }
 
@@ -45,6 +55,8 @@ function audioTrack(codec: string | null, channels = 2, rate = 44_100): FakeTrac
     getCodec: async () => codec,
     getNumberOfChannels: async () => channels,
     getSampleRate: async () => rate,
+    canDecode: async () => decodes.audio,
+    computePacketStats: async () => ({ averageBitrate: soundBps }),
   };
 }
 
@@ -135,6 +147,8 @@ beforeEach(() => {
   conversionValid = true;
   discarded = [];
   encodedBuffer = new ArrayBuffer(64);
+  decodes = { video: true, audio: true };
+  soundBps = 256_000;
   canEncodeVideo.mockResolvedValue(true);
   canEncodeAudio.mockResolvedValue(true);
   execute.mockResolvedValue(undefined);
@@ -196,15 +210,29 @@ describe("compressVideo — the capability gate", () => {
     expect(init).not.toHaveBeenCalled();
   });
 
-  it("falls back when the clip has sound and there is no AAC encoder", async () => {
-    // Firefox desktop and desktop Linux: H.264 yes, AAC no. Encoding the
-    // picture alone would drop the sound, so the clip goes up as picked.
+  it("falls back when the sound is neither AAC nor encodable here", async () => {
+    // Firefox desktop and desktop Linux: H.264 yes, AAC no — and a sound that
+    // cannot be copied either. Encoding the picture alone would drop it.
+    tracks = [videoTrack("avc", 3840, 2160), audioTrack("opus")];
     canEncodeAudio.mockResolvedValue(false);
     const picked = clip(200_000_000);
 
     const result = await compressVideo(picked, POST_CAP);
 
     expect(result).toMatchObject({ blob: picked, path: "unsupported" });
+    expect(init).not.toHaveBeenCalled();
+  });
+
+  it("falls back when this browser cannot decode the picture", async () => {
+    // An HEVC clip where WebCodecs has no HEVC decoder.
+    tracks = [videoTrack("hevc", 3840, 2160), audioTrack("aac")];
+    decodes.video = false;
+    const picked = clip(200_000_000);
+
+    const result = await compressVideo(picked, POST_CAP);
+
+    expect(result).toMatchObject({ blob: picked, path: "unsupported" });
+    expect(canEncodeVideo).not.toHaveBeenCalled();
     expect(init).not.toHaveBeenCalled();
   });
 
@@ -216,6 +244,55 @@ describe("compressVideo — the capability gate", () => {
 
     expect(canEncodeAudio).not.toHaveBeenCalled();
     expect(result.path).toBe("encoded");
+  });
+});
+
+describe("compressVideo — AAC carried across (no AAC encoder)", () => {
+  beforeEach(() => {
+    // Firefox desktop, desktop Linux, Safari 16.4–18: H.264 yes, AAC no.
+    canEncodeAudio.mockResolvedValue(false);
+  });
+
+  it("encodes the picture and copies the AAC sound untouched", async () => {
+    const result = await compressVideo(clip(200_000_000), POST_CAP);
+
+    expect(result.path).toBe("encoded");
+    const options = init.mock.calls[0]![0];
+    expect(options.video).toMatchObject({ codec: "avc", forceTranscode: true });
+    // Only the codec: a quality or forceTranscode would each force a re-encode.
+    expect(options.audio).toEqual({ codec: "aac" });
+  });
+
+  it("copies the sound, too, where the encoder exists but cannot read it", async () => {
+    canEncodeAudio.mockResolvedValue(true);
+    decodes.audio = false;
+
+    await compressVideo(clip(200_000_000), POST_CAP);
+
+    expect(init.mock.calls[0]![0].audio).toEqual({ codec: "aac" });
+  });
+
+  it("plans the picture in what the copied sound leaves of the cap", async () => {
+    // 6:28 against the post cap, with 256 kbps of AAC carried across: 128 kbps
+    // more than Android's audio budget, taken from the picture.
+    durationS = 388;
+    soundBps = 256_000;
+
+    await compressVideo(clip(900_000_000), POST_CAP);
+
+    const [, asked] = canEncodeVideo.mock.calls[0]!;
+    expect(qualityOf(asked.quality)).toEqual({ bitrate: 1_733_051, bitrateMode: "variable" });
+    expect(init.mock.calls[0]![0].video.quality).toBe(asked.quality);
+  });
+
+  it("falls back when the copy would be discarded after all", async () => {
+    discarded = [{ track: { type: "audio" }, reason: "no_encodable_target_codec" }];
+    const picked = clip(200_000_000);
+
+    const result = await compressVideo(picked, POST_CAP);
+
+    expect(result).toMatchObject({ blob: picked, path: "unsupported" });
+    expect(execute).not.toHaveBeenCalled();
   });
 });
 
@@ -296,7 +373,7 @@ describe("compressVideo — the encode", () => {
   });
 
   it("falls back when the conversion would discard a track", async () => {
-    // An HEVC source on a browser that cannot decode it.
+    // `Conversion.init` answering no where the capability checks said yes.
     discarded = [{ track: { type: "video" }, reason: "undecodable_source_codec" }];
     conversionValid = false;
     const picked = clip(200_000_000);

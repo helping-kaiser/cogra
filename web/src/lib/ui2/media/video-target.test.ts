@@ -94,6 +94,15 @@ describe("videoBitrateForClip — VideoBitrate.forClip", () => {
     expect(videoBitrateForClip(200_000, commentCap)).toBe(1_801_380);
     expect(videoBitrateForClip(240_000, commentCap)).toBe(1_479_817);
   });
+
+  it("gives the picture what a carried-across sound track leaves", () => {
+    // The Android rate is the default: naming 128 kbps changes nothing.
+    expect(videoBitrateForClip(388_000, postCap, AUDIO_BPS)).toBe(1_861_051);
+    // A 256 kbps AAC track copied untouched takes 128 kbps more of the budget…
+    expect(videoBitrateForClip(388_000, postCap, 256_000)).toBe(1_733_051);
+    // …and a leaner one gives it back.
+    expect(videoBitrateForClip(388_000, postCap, 96_000)).toBe(1_893_051);
+  });
 });
 
 describe("richerThan — MediaGeometry.richerThan", () => {
