@@ -18,7 +18,7 @@ import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import type { ComposeDraftStore } from "@/lib/compose/draft-store";
-import type { WizardState } from "@/lib/compose/wizard";
+import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { ComposeWizard } from "./wizard-view";
 
 const FRAME = new Blob([new Uint8Array([9]) as BlobPart], { type: "image/png" });
@@ -441,5 +441,79 @@ describe("picking a video", () => {
     // possible"), so a capture failure that leaves no offers still has to
     // let the author move on rather than trap them on this screen.
     expect(screen.getByTestId("wizard-next")).not.toBeDisabled();
+  });
+
+  // ONE TILE, NEVER TWO, AND NO MANAGER (jakob's ruling mirrored from
+  // Android PR #813; `ComposeDetailsVideo.jsx:15-34,22-32`,
+  // `ComposePickVideoCover.jsx:12-19`, design/readme.md §13 "The cover's
+  // tile"). The clip's own tile on the details stage opens no Show-all
+  // sheet — its affordances are its × and the Describe entry below it.
+  describe("the details stage's video tile", () => {
+    async function reachDetailsWithCover() {
+      render();
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(await screen.findByTestId("wizard-cover-frame-0"));
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-title");
+    }
+
+    it("draws one tile, the cover riding it as the inset mark", async () => {
+      await reachDetailsWithCover();
+
+      expect(screen.getAllByTestId(/^wizard-picked-row-thumb-\d+-image$/)).toHaveLength(1);
+      expect(screen.getByTestId("wizard-picked-row-thumb-0-cover-mark")).toBeInTheDocument();
+      // No separate Cover field once a face is chosen.
+      expect(screen.queryByTestId("wizard-cover-door")).not.toBeInTheDocument();
+    });
+
+    it("opens no manager when the tile is clicked", async () => {
+      await reachDetailsWithCover();
+
+      const row = screen.getByTestId("wizard-picked-row");
+      expect(row.tagName).not.toBe("BUTTON");
+      fireEvent.click(row);
+
+      const sheet = screen.getByTestId("wizard-picked-sheet");
+      expect(sheet).not.toHaveAttribute("open");
+    });
+
+    // THE × GIVES THE PICK STEP BACK (jakob's ruling, 2026-09-23; design
+    // commit 27aaa1cb, `ComposeDetails.jsx`): removing the clip never
+    // leaves Details standing on nothing. A landed upload (rather than the
+    // real capture/upload pipeline this suite otherwise drives) keeps the
+    // tile's × live rather than traded for the failed badge — the removal
+    // itself, not the network, is what this test is pinning.
+    it("returns the pick step, tray empty, when the × removes the clip", async () => {
+      const clip = aVideo();
+      const drafts = fakeDrafts({
+        ...emptyWizard(),
+        step: "details",
+        mode: "media",
+        assets: [
+          {
+            id: "v0",
+            file: clip,
+            crop: { x: 0, y: 0, zoom: 1, area: null, areaPercent: null },
+            altText: "",
+            upload: { kind: "done", mediaId: "m-video" },
+            kind: "video",
+          },
+        ],
+      });
+      renderWithProviders(
+        <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
+        { store: signedInStore(), writeSigner: fakeWriteSigner() },
+      );
+
+      fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+      await screen.findByTestId("wizard-title");
+
+      fireEvent.click(screen.getByLabelText("Remove this video"));
+
+      expect(await screen.findByTestId("wizard-drop")).toBeInTheDocument();
+      expect(screen.queryByTestId("wizard-picked-count")).toBeNull();
+      expect(screen.queryByTestId("wizard-title")).toBeNull();
+    });
   });
 });

@@ -818,4 +818,58 @@ describe("the compose wizard", () => {
       "true",
     );
   });
+
+  // THE LAST × GIVES THE PICK STEP BACK (jakob's ruling, 2026-09-23; design
+  // commit 27aaa1cb, `ComposePicked.jsx`/`ComposeDetails.jsx` docblocks):
+  // removing the manager's last picture closes it and returns the pick
+  // step, tray empty — the way the video path's own × already does — with
+  // the staged title/description/tags/references kept in the draft.
+  it("closes the manager and gives the pick step back when the last picture leaves it", async () => {
+    server.use(uploadOk(["m1", "m2"]));
+    const p1 = new File([new Uint8Array([1]) as BlobPart], "one.jpg", { type: "image/jpeg" });
+    const p2 = new File([new Uint8Array([2]) as BlobPart], "two.jpg", { type: "image/jpeg" });
+    const CROP = { x: 0, y: 0, zoom: 1, area: null, areaPercent: null };
+    const drafts = fakeDrafts({
+      ...emptyWizard(),
+      step: "details",
+      mode: "media",
+      title: "Salt maps",
+      assets: [
+        { id: "p1", file: p1, altText: "", upload: { kind: "waiting" }, crop: CROP },
+        { id: "p2", file: p2, altText: "", upload: { kind: "waiting" }, crop: CROP },
+      ],
+    });
+    render(drafts);
+
+    fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+    await screen.findByTestId("wizard-title");
+
+    fireEvent.click(screen.getByTestId("wizard-picked-row"));
+    await screen.findByTestId("wizard-picked-sheet-remove-0");
+
+    // One removed, one left — the manager stays open and the details stage
+    // is untouched.
+    fireEvent.click(screen.getByTestId("wizard-picked-sheet-remove-0"));
+    expect(screen.getByTestId("wizard-picked-sheet-remove-0")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-title")).toBeInTheDocument();
+
+    // The last one leaves: the manager closes, and Details never stands on
+    // an empty body — the pick step comes back with the tray empty.
+    fireEvent.click(screen.getByTestId("wizard-picked-sheet-remove-0"));
+
+    expect(await screen.findByTestId("wizard-drop")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-picked-count")).toBeNull();
+    expect(screen.queryByTestId("wizard-title")).toBeNull();
+
+    // The staged title stays in the draft, waiting for a body — the stage
+    // never becomes the words path. Checked together in one `waitFor`: the
+    // debounced autosave fires more than once (an intermediate save can
+    // still carry the pre-removal asset count), and title alone would be
+    // satisfied by a stale one — waiting on both pins the FINAL save.
+    await waitFor(() => {
+      expect(drafts.held()?.title).toBe("Salt maps");
+      expect(drafts.held()?.assets).toHaveLength(0);
+    });
+    expect(drafts.held()?.mode).toBe("media");
+  });
 });

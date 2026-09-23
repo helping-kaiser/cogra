@@ -417,4 +417,44 @@ describe("SealStep", () => {
     expect(onKeepDraft).toHaveBeenCalledOnce();
     expect(onBack).not.toHaveBeenCalled();
   });
+
+  // THE UPLOAD LINE IS STRICTLY THE IN-FLIGHT GATE (design/components/
+  // compose/UploadNotice.prompt.md lines 1, 11) — it never draws for an
+  // empty batch, and sign stays disabled on `blocked` alone, independent of
+  // whether the line itself ever rendered. `renderStep` fixes `blocked` to
+  // null, so this exercises `SealStep` directly with the props the wizard
+  // passes once `sealGate` refuses an empty media draft.
+  it("draws no upload line and still disables sign at an empty media batch", () => {
+    const props = {
+      state: baseState({ mode: "media", assets: [] }),
+      sheet: "none" as SealSheet,
+      blocked: "Pick at least one picture.",
+      busy: false,
+      keyOnDevice: true,
+      refusal: null,
+      stagedPDirected: 0.1,
+      onSheet: vi.fn(),
+      onLicense: vi.fn(),
+      onReferences: vi.fn(),
+      onStagedPDirected: vi.fn(),
+      onSetStance: vi.fn(),
+      onStanceHelp: vi.fn(),
+      onSensitive: vi.fn(),
+      onSensitiveReason: vi.fn(),
+      onHelp: vi.fn(),
+      onLicenseHelp: vi.fn(),
+      onKeyHelp: vi.fn(),
+      onSign: vi.fn(),
+      onBack: vi.fn(),
+      onRestoreKey: vi.fn(),
+      onKeepDraft: vi.fn(),
+    };
+    render(<SealStep {...props} />);
+
+    expect(screen.queryByText(/^Uploading \d+ of \d+/)).not.toBeInTheDocument();
+    expect(screen.getByTestId("wizard-seal-blocked")).toHaveTextContent(
+      "Pick at least one picture.",
+    );
+    expect(screen.getByTestId("wizard-sign")).toBeDisabled();
+  });
 });
