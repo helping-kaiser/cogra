@@ -1393,6 +1393,7 @@ mod galleries {
             "image/webp",
             1024,
             &serde_json::json!({ "v": 1, "aspect_ratio": "4:5" }),
+            media_store::MediaScale::Post,
         )
         .await
         .expect("asset row");
@@ -1420,6 +1421,7 @@ mod galleries {
             "video/mp4",
             size,
             &serde_json::json!({ "v": 1, "aspect_ratio": "4:5", "duration_ms": 2500 }),
+            media_store::MediaScale::Post,
         )
         .await
         .expect("asset row");

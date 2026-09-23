@@ -16,7 +16,7 @@ import { pictureTooBig } from "@/lib/ui2/media/caps";
 import { compressVideo } from "@/lib/ui2/media/compress-video";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import { stripVideoMetadata } from "@/lib/ui2/media/strip-video";
-import { TOO_BIG_PICTURE } from "./pick";
+import { TOO_BIG_PICTURE, type PickScale } from "./pick";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
 export type UploadStep = (next: AssetUpload) => void;
@@ -164,13 +164,16 @@ export async function runVideoUpload(
   onVideo: UploadStep,
   onCover: UploadStep,
   /**
-   * The destination's video cap — a post's or a comment's. A long clip is
-   * encoded at the rate that fits it, exactly as Android plans one.
+   * The destination — a post's or a comment's. A long clip is encoded at the
+   * rate that fits its cap, exactly as Android plans one; a clip that still
+   * comes out over it is refused in that destination's own sentence; and the
+   * upload names it to the server (`destination`), which sizes, re-encodes and
+   * validates the clip for that parent's cap.
    */
-  videoMaxBytes: number,
+  scale: PickScale,
 ): Promise<void> {
   if (cover === null) {
-    await sendVideo(client, guard, video, onVideo, videoMaxBytes);
+    await sendVideo(client, guard, video, onVideo, scale);
     return;
   }
   let encoded;
@@ -206,7 +209,7 @@ export async function runVideoUpload(
   }
   onCover({ kind: "done", mediaId: poster.value.id });
 
-  await sendVideo(client, guard, video, onVideo, videoMaxBytes);
+  await sendVideo(client, guard, video, onVideo, scale);
 }
 
 /**
@@ -221,7 +224,7 @@ async function sendVideo(
   guard: AuthGuard,
   video: PickedAsset,
   onVideo: UploadStep,
-  videoMaxBytes: number,
+  scale: PickScale,
 ): Promise<void> {
   // The compression and the strip are both reported as `encoding`: they are
   // the same stage in the same story — bytes being made ready — and inventing
@@ -230,7 +233,24 @@ async function sendVideo(
   onVideo({ kind: "encoding" });
   // Never throws: a browser that cannot encode, or an encode that fails, hands
   // back the picked bytes and the clip carries on exactly as it would have.
-  const compressed = await compressVideo(video.file, videoMaxBytes);
+  const compressed = await compressVideo(video.file, scale.videoMaxBytes);
+  // A picture that is not H.264 and was not encoded here — the pick found this
+  // browser able to, and the encode then failed or was refused — is one the
+  // server admits no other way. Saying so now spares the author the upload
+  // that would only earn that refusal. A failure mid-encode may pass on a
+  // second try; a refusal of the configuration will not.
+  if (
+    compressed.path !== "encoded" &&
+    compressed.videoCodec !== null &&
+    compressed.videoCodec !== "avc"
+  ) {
+    onVideo({
+      kind: "failed",
+      message: "This browser couldn't prepare that video.",
+      retryable: compressed.path === "failed",
+    });
+    return;
+  }
   let stripped;
   try {
     stripped = await stripVideoMetadata(compressed.blob);
@@ -243,11 +263,26 @@ async function sendVideo(
     return;
   }
 
+  // THE CAP IS WEIGHED HERE, ON WHAT WOULD BE SENT (jakob 2026-09-23: "what
+  // matters is the size after compression and before upload"). The pick lets
+  // an over-cap clip in wherever this browser can encode it down, so the size
+  // question is only settled now — the picture path's order exactly. A clip
+  // still over the cap here is one whose encode overshot or never happened;
+  // sending it would cost the whole upload to earn the server's refusal. Not
+  // retryable, like the picture's: the same clip comes out the same size.
+  if (stripped.blob.size > scale.videoMaxBytes) {
+    onVideo({ kind: "failed", message: scale.tooBigVideo, retryable: false });
+    return;
+  }
+
   onVideo({ kind: "uploading" });
   // THE CLIP IS THE BODY WORTH PROTECTING. A picture sent twice costs a
   // moment; a video sent twice is the whole wait, twice.
   await guard.prime();
-  const uploaded = await uploadVideo(client, guard, { blob: stripped.blob });
+  const uploaded = await uploadVideo(client, guard, {
+    blob: stripped.blob,
+    scale: scale.destination,
+  });
 
   if (uploaded.kind === "success") {
     onVideo({ kind: "done", mediaId: uploaded.value.id });

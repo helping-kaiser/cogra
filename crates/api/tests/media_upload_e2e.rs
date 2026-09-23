@@ -393,6 +393,7 @@ async fn insert_asset(pool: &PgPool, author: Uuid, fill: u8) -> Uuid {
         "image/webp",
         1024,
         &json!({ "v": 1, "aspect_ratio": "4:5" }),
+        postgres_store::media::MediaScale::Post,
     )
     .await
     .expect("asset row");

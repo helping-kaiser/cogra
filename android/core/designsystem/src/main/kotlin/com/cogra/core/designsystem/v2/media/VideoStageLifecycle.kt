@@ -28,7 +28,8 @@ import androidx.media3.common.util.UnstableApi
  *
  * Coming back rebuilds the player from zero. That is the trade Media3's
  * guidance assumes, and the surface asks for it again on `ON_START` —
- * see `VideoPlayer`'s `LifecycleStartEffect`.
+ * see `VideoPlayer`'s `LifecycleStartEffect`. The preload manager goes
+ * and comes back with it ([VideoPreload]): the two share a thread.
  */
 @OptIn(UnstableApi::class)
 object VideoStageLifecycle : DefaultLifecycleObserver {

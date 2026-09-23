@@ -10,7 +10,7 @@
 //  · a negative priming timestamp moves the WHOLE file, never one track;
 //  · the decoder config rides the first packet, or the output describes bytes
 //    no player can set up;
-//  · only the MP4 demuxer is pulled in;
+//  · only the MP4 and QuickTime demuxers are pulled in;
 //  · the input is released either way.
 //
 // The library is mocked so these become assertions about the calls, which is
@@ -59,6 +59,7 @@ vi.mock("mediabunny", () => {
   }
   return {
     MP4: "MP4-format",
+    QTFF: "QTFF-format",
     BlobSource: class {
       constructor(readonly file: unknown) {}
     },
@@ -165,11 +166,12 @@ describe("stripVideoMetadata", () => {
     expect(addedTracks[0]).toContain('"rotation":90');
   });
 
-  it("pulls in only the MP4 demuxer", async () => {
+  it("pulls in only the MP4 and QuickTime demuxers", async () => {
     await stripVideoMetadata(clip());
     // `ALL_FORMATS` would bundle every demuxer the library has for a path that
-    // only ever sees MP4 — the pick screening sniffed the container already.
-    expect(inputFormats).toEqual([["MP4-format"]]);
+    // only ever sees the two containers the pick screening sniffed. QuickTime
+    // is how an iPhone records, and the MP4 reader refuses its brand.
+    expect(inputFormats).toEqual([["MP4-format", "QTFF-format"]]);
   });
 
   it("refuses a track whose codec it cannot read", async () => {
