@@ -40,6 +40,7 @@ import {
   isVideoPost,
   sealGate,
   shapeRatio,
+  stepIndex,
   wizardReducer,
   type PickedAsset,
   type WizardAction,
@@ -54,6 +55,7 @@ import {
   draftSummary,
   type ComposeDraftStore,
 } from "@/lib/compose/draft-store";
+import { useStageHistory } from "@/lib/compose/stage-history";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { PickStep } from "./pick-step";
@@ -591,6 +593,18 @@ export function ComposeWizard({
     dispatch({ type: "back" });
     if (previous === "pick") router.push("/feed");
   };
+
+  // The browser's Back is the same arrow (design/readme.md: "the platform
+  // back gesture does the same"). Each stage past the pick rides its own
+  // history entry, so a Back press never reaches the page behind the wizard
+  // until the pick — the arrival entry — is where it stands, and from there
+  // the browser leaves exactly as it always did.
+  useStageHistory({
+    surface: "compose",
+    level: stepIndex(state),
+    onBack: leave,
+    onForward: () => dispatch({ type: "advance" }),
+  });
 
   // The X: OUT OF THE FLOW from any stage, draft kept, NO confirmation —
   // nothing is lost, and the draft prompt is the return surface. Without it an
