@@ -229,7 +229,7 @@ private fun ReplyClip(
     failure?.let { message ->
         UploadErrorLine(
             message = message,
-            onRetry = if (failed?.retryable == true) onRetry else null,
+            onRetry = if (failed.retryable) onRetry else null,
             onRemove = onRemove,
             testTag = "reply_clip_failed",
         )
