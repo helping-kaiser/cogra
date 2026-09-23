@@ -34,6 +34,12 @@ import java.io.File
  * short-form demo builds its cache (`DemoUtil.getDownloadCache`), so a
  * session that never plays a clip never opens it.
  *
+ * **Installed by the app, not assumed by the stage.** The app shell
+ * hands [dataSourceFactory] to [VideoStage.dataSources] — the same way
+ * it wires the stage to the process lifecycle — so the cache is a
+ * process fact the shell decides, and a component rendered anywhere
+ * else (a test, a preview) never opens a disk cache it did not ask for.
+ *
  * **Bounded, in the cache directory.** An on-the-fly cache "should evict
  * media when reaching a maximum disk space limit", so the evictor is
  * least-recently-used at [MAX_BYTES]. It lives under `cacheDir` because
@@ -70,16 +76,21 @@ object VideoCache {
     }
 
     /**
-     * What a player reads its clip through: the cache first, the
-     * network for anything the cache does not hold yet.
+     * What the stage's players read through — the app installs it as
+     * [VideoStage.dataSources] at startup: the cache first, the network
+     * for anything the cache does not hold yet.
      *
-     * The upstream is the same `DefaultDataSource` a player gets when
-     * nothing is set, so every scheme it played before still plays.
+     * The cache is opened on the first read rather than here, so
+     * installing this costs the app's start nothing. The upstream is the
+     * same `DefaultDataSource` a player gets when nothing is set, so
+     * every scheme it played before still plays.
      */
-    fun dataSourceFactory(context: Context): CacheDataSource.Factory = dataSourceFactory(
-        cache = cache(context),
-        upstream = DefaultDataSource.Factory(context.applicationContext),
-    )
+    fun dataSourceFactory(context: Context): DataSource.Factory {
+        val appContext = context.applicationContext
+        return DataSource.Factory {
+            dataSourceFactory(cache(appContext), DefaultDataSource.Factory(appContext)).createDataSource()
+        }
+    }
 
     internal fun build(
         directory: File,

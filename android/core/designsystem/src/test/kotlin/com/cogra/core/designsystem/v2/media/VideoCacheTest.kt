@@ -9,6 +9,8 @@ import androidx.media3.datasource.BaseDataSource
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSourceUtil
 import androidx.media3.datasource.DataSpec
+import androidx.media3.datasource.cache.Cache
+import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
@@ -96,12 +98,18 @@ class VideoCacheTest {
     @Test
     fun theProcessHasOneCache() {
         // `SimpleCache` locks its folder; a second instance would throw.
-        assertThat(VideoCache.cache(context)).isSameInstanceAs(VideoCache.cache(context))
+        val cache = VideoCache.cache(context)
+        assertThat(VideoCache.cache(context)).isSameInstanceAs(cache)
+        settle(cache)
     }
 
     @Test
     fun thePlayersReaderIsTheProcessCache() {
-        assertThat(VideoCache.dataSourceFactory(context).cache).isSameInstanceAs(VideoCache.cache(context))
+        val reader = VideoCache.dataSourceFactory(context).createDataSource()
+
+        assertThat(reader).isInstanceOf(CacheDataSource::class.java)
+        assertThat((reader as CacheDataSource).cache).isSameInstanceAs(VideoCache.cache(context))
+        settle(reader.cache)
     }
 
     @Test
@@ -124,6 +132,14 @@ class VideoCacheTest {
     }
 
     private fun bytes(size: Int) = ByteArray(size) { it.toByte() }
+
+    // `SimpleCache` indexes its folder on a thread of its own, holding the
+    // cache's lock while it does; any locked call waits it out. Without
+    // this the thread outlives the test and touches a sandbox Robolectric
+    // has already torn down.
+    private fun settle(cache: Cache) {
+        assertThat(cache.cacheSpace).isAtLeast(0L)
+    }
 
     /** A stand-in for the media server that counts what it was asked for. */
     private class Network(vararg files: Pair<String, ByteArray>) : DataSource.Factory {

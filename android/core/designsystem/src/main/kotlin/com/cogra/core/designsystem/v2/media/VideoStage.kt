@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 
@@ -72,6 +73,16 @@ object VideoStage {
         private set
 
     /**
+     * Where every player the stage builds reads its clip from.
+     *
+     * The app shell installs the process's disk cache here at startup
+     * ([VideoCache]). Left unset, a player reads straight from the
+     * network, which is Media3's own default.
+     */
+    @Volatile
+    var dataSources: DataSource.Factory? = null
+
+    /**
      * Takes the stage for [token], on [url].
      *
      * Claiming the clip already on stage keeps the same player
@@ -98,13 +109,14 @@ object VideoStage {
         holding = Holding(
             url = url,
             player = ExoPlayer.Builder(appContext)
-                // Every read goes through the process's disk cache, so a
-                // loop replays from disk and a clip scrolled back to is
-                // not fetched again — see [VideoCache].
-                .setMediaSourceFactory(
-                    DefaultMediaSourceFactory(appContext)
-                        .setDataSourceFactory(VideoCache.dataSourceFactory(appContext)),
-                )
+                // Every read goes through what the app installed — the
+                // process's disk cache, so a loop replays from disk and a
+                // clip scrolled back to is not fetched again.
+                .apply {
+                    dataSources?.let {
+                        setMediaSourceFactory(DefaultMediaSourceFactory(appContext).setDataSourceFactory(it))
+                    }
+                }
                 // Seconds of read-ahead rather than 50 s, and none of it
                 // while paused — see [VideoLoadControl].
                 .setLoadControl(VideoLoadControl.create())
