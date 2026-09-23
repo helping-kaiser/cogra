@@ -96,8 +96,8 @@ object VideoPreload {
         val previous = ranks
         ranks = next
         // A manager built now is handed the whole list as it builds.
-        val parts = built ?: return run { parts(context) }
-        reconcile(parts.manager, previous, next)
+        val manager = built?.manager
+        if (manager == null) parts(context) else reconcile(manager, previous, next)
     }
 
     /**
