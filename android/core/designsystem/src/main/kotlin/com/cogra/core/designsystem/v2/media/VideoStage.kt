@@ -9,6 +9,7 @@ import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 
 /**
  * The one clip the app is playing, and whichever surface is showing it.
@@ -92,9 +93,17 @@ object VideoStage {
         // frame says nothing about this one, and inheriting it would
         // skip the cover on a clip that has not drawn anything yet.
         hasRendered = false
+        val appContext = context.applicationContext
         holding = Holding(
             url = url,
-            player = ExoPlayer.Builder(context.applicationContext)
+            player = ExoPlayer.Builder(appContext)
+                // Every read goes through the process's disk cache, so a
+                // loop replays from disk and a clip scrolled back to is
+                // not fetched again — see [VideoCache].
+                .setMediaSourceFactory(
+                    DefaultMediaSourceFactory(appContext)
+                        .setDataSourceFactory(VideoCache.dataSourceFactory(appContext)),
+                )
                 // THE SKIPS ARE TEN SECONDS, said by the board's own labels
                 // ("Back ten seconds", `VideoControls.jsx:196`). They are the
                 // PLAYER's increments rather than arithmetic in the control,
