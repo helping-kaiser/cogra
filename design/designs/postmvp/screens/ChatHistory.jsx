@@ -36,8 +36,9 @@
 
    NO AUTHOR'S REGISTER. A post's history has its author's removal acts; a
    chat's versions are the chat's own, executed for it by its system actor on
-   its members' decisions, and no one reader is their author. Removing a
-   version's payload is a moderation act, and moderation is deferred (jakob).
+   its members' decisions, and no one reader is their author. So nothing here
+   removes anything; whatever removal a chat's versions ever get is
+   moderation-flavoured, and that is deferred (jakob).
    The version cards are inert: a chat has no historic detail surface to open
    (the profile chronicle's precedent), so the historic banner has no page to
    stand on in this round. */

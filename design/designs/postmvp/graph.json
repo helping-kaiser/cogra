@@ -523,7 +523,7 @@
       "via": 2,
       "kind": "advance",
       "label": "the header — the chat's picture and name",
-      "to": [{ "gap": "the chat's detail surface — members, description, mute, leave, the history of its name and picture; a later chats sub-round, left undrawn on purpose" }]
+      "to": [{ "board": "ChatDetails", "case": "the chat's details — members, description, mute, leave, the history of its name and picture" }]
     },
     {
       "from": "ChatThread",
@@ -617,7 +617,7 @@
       "via": 2,
       "kind": "advance",
       "label": "Chat details",
-      "to": [{ "gap": "the chat's detail surface — the same destination the thread's header opens; a later chats sub-round, left undrawn on purpose" }]
+      "to": [{ "board": "ChatDetails", "case": "the chat's details — the same destination the thread's header opens" }]
     },
     {
       "from": "ChatRowMenu",
@@ -816,7 +816,7 @@
       "via": 2,
       "kind": "advance",
       "label": "the header — the chat's picture and name",
-      "to": [{ "gap": "the chat's detail surface — the same destination as the thread's other header; a later chats sub-round, left undrawn on purpose" }]
+      "to": [{ "board": "ChatDetails", "case": "the chat's details — the same destination as the thread's other header" }]
     },
     {
       "from": "ChatThreadMedia",
@@ -868,7 +868,7 @@
       "via": 2,
       "kind": "advance",
       "label": "the header — the chat's picture and name",
-      "to": [{ "gap": "the chat's detail surface — a later chats sub-round, left undrawn on purpose" }]
+      "to": [{ "board": "ChatDetails", "case": "the chat's details; the keyboard goes down and the draft stays in the field" }]
     },
     {
       "from": "ChatThreadKeyboard",
@@ -906,7 +906,7 @@
       "via": 2,
       "kind": "advance",
       "label": "the header — the chat's picture and name",
-      "to": [{ "gap": "the chat's detail surface, public to a non-member as to a member — a later chats sub-round, left undrawn on purpose" }]
+      "to": [{ "board": "ChatDetailsReader", "case": "the chat's details, public to a non-member as to a member — read-only, the join worded by the chat's policy; a guest lands here too" }]
     },
     {
       "from": "ChatThreadReader",
@@ -959,6 +959,294 @@
       "kind": "back",
       "label": "Back",
       "to": [{ "board": "ChatCreate", "case": "the seal's own way back — the arrow said again at the foot" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the thread the header was tapped in, or the list the row menu was opened over" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 2,
+      "kind": "advance",
+      "label": "the chat's opinion face — tap or hold",
+      "to": [{ "terminal": "canonical", "case": "a tap parks canonical's opinion pad over the details; a hold signs a gentle positive on the chat in place" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 3,
+      "kind": "advance",
+      "label": "Edit chat",
+      "to": [{ "board": "ChatEdit", "case": "the name, picture and description, holding the current version — shown wherever the governance map makes the reader eligible" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 4,
+      "kind": "advance",
+      "label": "Media in this chat",
+      "to": [{ "board": "ChatMediaGallery", "case": "every picture and clip the chat's messages carry, newest first" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 5,
+      "kind": "advance",
+      "label": "Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "the field, the plaintext messages that match, and the note on what is not searched" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 6,
+      "kind": "advance",
+      "label": "Add people",
+      "to": [{ "gap": "the invitation flow into an existing chat — round B2 of the chats work, left undrawn on purpose" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 7,
+      "kind": "advance",
+      "label": "a member row",
+      "to": [
+        { "terminal": "canonical", "case": "a person, or the invited person not yet joined — their profile, canonical's" },
+        { "gap": "a Collective member — its own page; the Collective actor variant is specified and not yet built (readme §7)" }
+      ]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 8,
+      "kind": "advance",
+      "label": "Mute this chat",
+      "to": [{ "terminal": "self", "case": "the switch flips — the chat's device push goes silent; the chat keeps its place and its dot on the list, and the row menu's Mute reads Unmute" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 9,
+      "kind": "advance",
+      "label": "Edit history",
+      "to": [{ "board": "ChatHistory", "case": "the chat's versions, newest first, with the membership events between them" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 10,
+      "kind": "advance",
+      "label": "Leave this chat",
+      "to": [{ "board": "ChatLeaveConfirm", "case": "the think-twice dialog, with the optional parting reason" }]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatThreadReader", "case": "back to the thread read from outside" }]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 2,
+      "kind": "advance",
+      "label": "the chat's opinion face — tap or hold",
+      "to": [
+        { "terminal": "canonical", "case": "canonical's opinion pad — an opinion on a chat needs no membership" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 3,
+      "kind": "advance",
+      "label": "Ask to join — the join, worded by the chat's policy",
+      "to": [
+        { "terminal": "self", "case": "a chat that takes requests — the request is sent and the button says so; an open chat's Join lands the reader in its thread, foot live" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 4,
+      "kind": "advance",
+      "label": "Media in this chat",
+      "to": [{ "board": "ChatMediaGallery", "case": "the same grid, of what a non-member can open (master: the gallery's anatomy)" }]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 5,
+      "kind": "advance",
+      "label": "Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "the same search — plaintext is a public read (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 6,
+      "kind": "advance",
+      "label": "a member row",
+      "to": [{ "terminal": "canonical", "case": "the member's profile, canonical's" }]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 7,
+      "kind": "advance",
+      "label": "Edit history",
+      "to": [{ "board": "ChatHistory", "case": "the same chronicle — a chat's history is public (master: the chronicle's anatomy)" }]
+    },
+    {
+      "from": "ChatEdit",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatDetails", "case": "back to the details — nothing is signed and nothing changes" }]
+    },
+    {
+      "from": "ChatEdit",
+      "via": 2,
+      "kind": "advance",
+      "label": "Change picture",
+      "to": [{ "terminal": "os", "case": "the platform's own picture picker; the crop that follows is canonical's avatar crop at chat scale, not drawn here" }]
+    },
+    {
+      "from": "ChatEdit",
+      "via": 3,
+      "kind": "advance",
+      "label": "Name",
+      "to": [{ "terminal": "self", "case": "typing" }]
+    },
+    {
+      "from": "ChatEdit",
+      "via": 4,
+      "kind": "advance",
+      "label": "Description",
+      "to": [{ "terminal": "self", "case": "typing — the field grows by the growth law" }]
+    },
+    {
+      "from": "ChatEdit",
+      "via": 5,
+      "kind": "advance",
+      "label": "Save",
+      "to": [{ "board": "ChatEditSeal", "case": "the change's seal — what the new version signs" }]
+    },
+    {
+      "from": "ChatEditSeal",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow — a step back",
+      "to": [{ "board": "ChatEdit", "case": "back to the fields, everything as it was" }]
+    },
+    {
+      "from": "ChatEditSeal",
+      "via": 2,
+      "kind": "cancel",
+      "label": "X — Leave",
+      "to": [{ "board": "ChatDetails", "case": "nothing is signed and the chat stays as it is" }]
+    },
+    {
+      "from": "ChatEditSeal",
+      "via": 3,
+      "kind": "detour",
+      "label": "? — How signing works",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog" }]
+    },
+    {
+      "from": "ChatEditSeal",
+      "via": 4,
+      "kind": "advance",
+      "label": "Sign the change",
+      "to": [
+        { "board": "ChatDetails", "case": "the reader's own voice suffices under the chat's map — the change passes, the chat's system actor executes the succession, and the details show the new version" },
+        { "gap": "the map needs more voices — the change waits as a quiet pending card in the thread and a row under Open decisions; the pending-card grammar and the filled section are round B2's" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent seal and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatEditSeal",
+      "via": 5,
+      "kind": "back",
+      "label": "Back",
+      "to": [{ "board": "ChatEdit", "case": "the seal's own way back — the arrow said again at the foot" }]
+    },
+    {
+      "from": "ChatHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the details it was opened from — a member's or a reader's" }]
+    },
+    {
+      "from": "ChatSearchIn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the details it was opened from — a member's or a reader's" }]
+    },
+    {
+      "from": "ChatSearchIn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Search messages",
+      "to": [{ "terminal": "self", "case": "typing — the list narrows to the plaintext messages that match, newest first" }]
+    },
+    {
+      "from": "ChatSearchIn",
+      "via": 3,
+      "kind": "advance",
+      "label": "a result",
+      "to": [
+        { "board": "ChatThread", "case": "a member — the thread, scrolled to the message (master: the thread's anatomy)" },
+        { "board": "ChatThreadReader", "case": "a reader outside — the thread read from outside, scrolled to the message" }
+      ]
+    },
+    {
+      "from": "ChatMediaGallery",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the details it was opened from — a member's or a reader's" }]
+    },
+    {
+      "from": "ChatMediaGallery",
+      "via": 2,
+      "kind": "advance",
+      "label": "a tile — a picture or a clip",
+      "to": [
+        { "board": "ChatThreadMedia", "case": "a member — the thread, scrolled to the message the media rides, its words beside it; a second tap there opens the viewer (master: the thread's anatomy)" },
+        { "board": "ChatThreadReader", "case": "a reader outside — the thread read from outside, scrolled to the message" }
+      ]
+    },
+    {
+      "from": "ChatMediaGallery",
+      "via": 3,
+      "kind": "advance",
+      "label": "the clip's sound disc",
+      "to": [{ "terminal": "self", "case": "sound on or off — the one global decision every clip shares" }]
+    },
+    {
+      "from": "ChatLeaveConfirm",
+      "via": 1,
+      "kind": "advance",
+      "label": "Why? — the optional parting reason",
+      "to": [{ "terminal": "self", "case": "typing — the field grows by the growth law, and the dialog keeps its heading and answers in view" }]
+    },
+    {
+      "from": "ChatLeaveConfirm",
+      "via": 2,
+      "kind": "advance",
+      "label": "Leave",
+      "to": [
+        { "board": "ChatsHome", "case": "the Leave is signed, with the reason if one was given; the chat leaves the reader's list" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatLeaveConfirm",
+      "via": 3,
+      "kind": "cancel",
+      "label": "Stay",
+      "to": [{ "board": "ChatDetails", "case": "the dialog closes; nothing is signed and any reason typed is let go" }]
+    },
+    {
+      "from": "ChatLeaveConfirm",
+      "via": 4,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes, nothing signed" }]
     }
   ]
 }

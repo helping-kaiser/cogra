@@ -325,6 +325,78 @@
       "page": "chats"
     },
     {
+      "file": "ChatDetails.dc.html",
+      "title": "Chat details · the member's view",
+      "x": 0,
+      "y": 2892,
+      "w": 390,
+      "h": 1112,
+      "page": "chats"
+    },
+    {
+      "file": "ChatDetailsReader.dc.html",
+      "title": "Chat details · read from outside, the join on the actions row",
+      "x": 480,
+      "y": 2892,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatEdit.dc.html",
+      "title": "Edit chat · the name, the picture, the words",
+      "x": 960,
+      "y": 2892,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatEditSeal.dc.html",
+      "title": "Edit chat · the change's seal",
+      "x": 1440,
+      "y": 2892,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatHistory.dc.html",
+      "title": "A chat's edit history · versions, with who came and went between them",
+      "x": 1920,
+      "y": 2892,
+      "w": 390,
+      "h": 904,
+      "page": "chats"
+    },
+    {
+      "file": "ChatSearchIn.dc.html",
+      "title": "Search in this chat · the plaintext it can read",
+      "x": 0,
+      "y": 4124,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatMediaGallery.dc.html",
+      "title": "Media in this chat · the grid, each tile a door to its message",
+      "x": 480,
+      "y": 4124,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatLeaveConfirm.dc.html",
+      "title": "Leave the chat · the think-twice dialog and the parting reason",
+      "x": 960,
+      "y": 4124,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
       "file": "MapPush.dc.html",
       "x": -1580,
       "y": 0,
@@ -347,7 +419,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 1511,
+      "h": 2481,
       "page": "chats",
       "title": "Chats · flow map"
     }
@@ -374,7 +446,15 @@
       "x": -340,
       "y": 0,
       "w": 560,
-      "text": "CHATS — would-like #3, drawn and revised 2026-09-23. The one surface where CoGra takes messenger convention whole: a list of your chats with a floating New chat (the product's first FAB), bubbles with your own on the right, a live field at the foot. Underneath, a chat is the proposal primitive in messenger clothes — nothing here may look like a proposal. The send arrow IS the seal: tapping it signs the message in your name, and holding it opens what you sign. Each message is plaintext or encrypted by the lock beside the field — plaintext by default, sticky per chat, the state shown by the lock's fill — and every encrypted message wears a quiet lock; previews and bubbles show the words wherever you hold the key. Rows keep the ages ladder, the thread prints the clock and divides the days. The page has two faces that swap both ways: your chats, and all chats — the ordinary rank narrowed to chats, no second algorithm, your own chats hidden by default. Long-press is the second gesture: a row for the chat's options, a bubble for the message's acts. Messages never edit. The chat's detail surface, behind the thread's header, is the one destination left undrawn on purpose.",
+      "text": "CHATS — would-like #3, drawn and revised 2026-09-23. The one surface where CoGra takes messenger convention whole: a list of your chats with a floating New chat (the product's first FAB), bubbles with your own on the right, a live field at the foot. Underneath, a chat is the proposal primitive in messenger clothes — nothing here may look like a proposal. The send arrow IS the seal: tapping it signs the message in your name, and holding it opens what you sign. Each message is plaintext or encrypted by the lock beside the field — plaintext by default, sticky per chat, the state shown by the lock's fill — and every encrypted message wears a quiet lock; previews and bubbles show the words wherever you hold the key. Rows keep the ages ladder, the thread prints the clock and divides the days. The page has two faces that swap both ways: your chats, and all chats — the ordinary rank narrowed to chats, no second algorithm, your own chats hidden by default. Long-press is the second gesture: a row for the chat's options, a bubble for the message's acts. Messages never edit. The chat's detail surface, behind the thread's header, is drawn in the rows below.",
+      "page": "chats"
+    },
+    {
+      "id": "chats-details",
+      "x": -340,
+      "y": 2892,
+      "w": 560,
+      "text": "CHAT DETAILS — round B1 of the chats work, drawn 2026-09-23. What the thread's header and the row menu open: a messenger's group info through CoGra's grammar. The chat's face, name and words at the top, and its own OPINION control leading the actions row (the profile header's precedent), with Edit chat beside it wherever the governance map lets the reader propose a change. Media and search, then OPEN DECISIONS — where an act that needs more voices than its actor's waits; empty here, filled in round B2. The members wear their roles; a Collective can be one; an invited person who has not joined yet is marked, and NO ROW EVER SHOWS PRESENCE. Mute silences push only and lives here and on the row menu. Leave is unilateral, with an optional parting reason that stands in the chat's history. The metadata grows in whole versions like a post's — its successions — and the edit history shows them newest first with who joined, left and was invited between them, never inside them. Chats are public, so a reader outside gets the same page minus the member's acts, with the join on the actions row. Intended gaps: Add people (B2's invitation flow) and the change that waits for more voices (B2's pending card and filled section).",
       "page": "chats"
     }
   ],

@@ -1133,9 +1133,9 @@ function DayDivider({ children }) {
    pressable — the messenger's door into the chat's detail surface: members,
    description, mute, leave, and the history of its name and picture.
 
-   THE DESTINATION IS DELIBERATELY UNDRAWN. The detail surface is a later
-   sub-round of the chats work, and the one gap this round leaves on purpose
-   (graph: a gap). The door is drawn now so the thread's anatomy is final.
+   THE DESTINATION IS `ChatDetails` — or `ChatDetailsReader` for a reader
+   outside the chat — drawn by the chat details round, which resolved the gap
+   the chats round left here on purpose.
 
    IT PINS. A thread is where a reader writes, and the way back and the chat's
    own name must never leave mid-conversation — readme §2's Pins column. The
