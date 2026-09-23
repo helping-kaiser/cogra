@@ -291,7 +291,7 @@ never leave mid-task. Per surface:
 
 | Collapses | Pins |
 |---|---|
-| feed · search results · topic page · profile · saved · notifications · history · invites list | post detail · every compose and edit stage · settings · the ceremonies · chats · About |
+| feed · search results · topic page · profile · saved · notifications · history · invites list · the chats list, both faces | post detail · every compose and edit stage · settings · the ceremonies · a chat's thread · About |
 
 On web, **pinned means `position: sticky`** — the bar rides the page's
 edge and never hides — and the collapsing surfaces adopt `CollapsingTop`
@@ -454,6 +454,8 @@ fills is the most common way an icon set starts to look accidental.
 | `check` | the checkbox's mark — the system's own addition (§13's entry screens), not yet in the product's set |
 | `photo_camera` | the avatar's change badge on one's own profile — the system's own addition (profile round), not yet in the product's set |
 | `history` | the chronicle's Everything tab — the system's own addition (profile round), not yet in the product's set |
+| `lock` / `lock_outline` | a chat message sent encrypted, and the chat foot's lock toggle, whose state is its fill — the post-MVP chats round's; `lock_outline` is the system's own addition, `person`'s two-cut precedent |
+| `add_comment` | the chats list's floating New chat — the post-MVP chats round's, the system's own addition |
 
 **All of them are inlined** — path data in `Icon`, reference copies in
 `assets/icons/`. All but `graph_3` are the classic **filled** 24px
@@ -6117,6 +6119,104 @@ jakob ruled it as the video path's rule applied to pictures:
   draft. Drawn on canonical (`ComposePicked`'s remove edge,
   docblocks there and on `ComposeDetails`), merged as its own PR.
 
+### The chats base round — 2026-09-23
+
+Would-like #3, the third round in the post-MVP tree: the four base
+boards, `ChatsHome`, `ChatsExplore`, `ChatThread` and `ChatCreate`, on a
+page of their own. The masters (`ChatRow`, `ChatExploreRow`,
+`ChatBubble`, `ChatSealedNotice`, `ChatFoot`) live in the tree's
+prelude until the round migrates.
+
+- **Messenger clothes over the proposal primitive (jakob).** A chat's
+  backbone is the proposal machinery, and nothing on these surfaces may
+  look like a proposal. This is the one place CoGra adopts messenger
+  convention wholesale: a list of your chats, bubbles, your own on the
+  right.
+- **The send arrow is the seal (jakob).** The signing ceremony
+  compresses into the send act: a tap signs the message and sends it;
+  press and hold opens the what-you-sign sheet; a one-time quiet line
+  under the foot on the first send says so. The field is live — the
+  question the foot ruling left to this round — and the comment foot's
+  inheritance is not taken here.
+- **The lock toggle (jakob).** Per-message encryption beside the field,
+  sticky per chat, plaintext by default for a fresh chat, the state
+  shown by the lock's fill (`lock_outline` / `lock`). Every encrypted
+  message wears a quiet lock by its time, readable or not; one the
+  reader holds no key for shows a friendly notice with the raw text
+  one tap under it.
+- **Bubbles carry content, time and the lock, nothing else (jakob).**
+  Opinions, citing, saving and commenting live behind a long-press.
+  Messages never edit.
+- **Two faces, one page (jakob).** `Your chats` and `All chats` swap
+  both ways; the explorer is the ordinary rank narrowed to chats, with
+  no second algorithm and no header claiming one. A guest reads the
+  explorer; the swap to their own chats is where the join prompt meets
+  them.
+- **The founding is minimal (jakob).** Name, picture and description,
+  all optional; who can join as three choice rows — open, on request,
+  invite only — never a segmented pill. The governance map ships its
+  default silently. A 1:1 and a group both start from the list's `New
+  chat`.
+
+### The chats round, completed — 2026-09-23
+
+jakob reviewed the base boards on the canvas the same day and ruled the
+revisions and the rest of the round: eleven more boards, fifteen in all
+on the Chats page. The masters grew in the tree's prelude —
+`NewChatFab`, `NoKeyPreview`, `HideJoinedSwitch`, `DayDivider`,
+`ChatThreadHeader`, `ChatJoinFoot` — and `ChatBubble` took media.
+
+- **The product's first FAB (jakob).** `New chat` floats bottom-right
+  over the list on both faces and stays while the list scrolls — the
+  messenger's grammar, and the one place the "no FAB" rule the
+  `Invites` entry point records gives way. It is glyph-only
+  (`add_comment`, so it never reads as a second New post) and tonal
+  (`secondary-container`): the bar's compose action keeps the one loud
+  surface, and opening a picker commits nothing.
+- **The list collapses; the thread pins (jakob).** The chats list is a
+  surface a reader dwells in, so it moves to §2's Collapses column and
+  takes `CollapsingTop`; a chat's thread keeps its pin.
+- **Previews decrypt wherever the reader holds the key (jakob).** Push
+  already shows the words, so hiding them on the list is annoyance
+  without honesty. `An encrypted message`, with the lock, appears only
+  where the key is genuinely absent — rare on your own list (a message
+  from before you joined), common in the explorer (a non-member holds
+  no key).
+- **Two clocks (jakob).** Rows keep the ages ladder — a row answers
+  freshness. The thread prints exact clock times on every bubble and a
+  day divider wherever it crosses a day — it is a coordination surface,
+  the one place CoGra needs when-exactly. The divider speaks the
+  dateline's date and never `Today`.
+- **The thread's header is the door (jakob).** The chat's picture and
+  name open its detail surface — members, description, mute, leave,
+  the history of its metadata. That surface is a later sub-round and
+  the one gap this round leaves on purpose.
+- **The explorer's filter is a quiet switch, on (jakob):** `Hide chats
+  you're in` — the face exists to discover.
+- **Contrast (jakob's review, conformance).** Text on the reader's own
+  bubble and the no-key notice take `text-body`: the fill's formal
+  `on-` pair measures 4.58:1, AA at the floor.
+- **`Invite only` is the preselected policy (jakob)** — what people
+  already know, and what a chat founded by picking people is.
+- **Long-press is the chats' second gesture (jakob).** On a row it
+  opens the chat's options (`Mute`, `Chat details`); on a bubble, the
+  message's acts — the comment's menu pointed at a message, with `Give
+  your opinion` and `Reply` added and no Edit row, ever.
+- **One door for both kinds (jakob).** The FAB opens a people picker
+  with `New group chat` at its head: a person opens the 1:1, the group
+  row turns the list into a multi-pick that ends in the founding. Tapping
+  someone you already share a 1:1 with asks — carry on, or start a
+  separate chat — because several 1:1s with one person are legal
+  (`chats.md` §9).
+- **The seals.** Holding the send arrow opens what one message signs,
+  in the compose seal's vocabulary; the founding's `Next` reaches its
+  own seal — the chat and one invitation per picked person, signed
+  together — on the profile Save's precedent.
+- **The non-member's face** is the thread itself with the join, worded
+  by the chat's policy, where the foot would be; a guest gets the same
+  face.
+- **Stickers are parked (jakob).**
+
 ---
 
 ## 14. The canvases
@@ -6148,8 +6248,8 @@ round.
 
 The fifth is the post-MVP tree's own —
 [CoGra · Post-MVP rounds](https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2),
-id `postmvp`, serving the Push notifications and Change histories pages
-and opening on the first. It lives in the successor canvas tooling
+id `postmvp`, serving the Push notifications, Change histories and Chats
+pages and opening on the first. It lives in the successor canvas tooling
 (the Design Artifact type): the same seed manifests, published as the
 artifact's own board files rather than through the old seeded editor.
 Its predecessor artifact stands frozen with the pre-migration

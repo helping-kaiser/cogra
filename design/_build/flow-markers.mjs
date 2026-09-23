@@ -2280,4 +2280,122 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Close</button>", tag: "button" },
     { n: 2, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
   ],
+
+  // ── The chats round (post-MVP) ───────────────────────────────────────────
+  // A list's row is marked on its FIRST row only, the repeated-element
+  // convention: one edge covers every row, and its cases say where each kind
+  // of row lands. The explorer's two join words are marked where each first
+  // appears, for the same reason. A row's tap and its long-press are one
+  // element and one number — the edge's two outcomes say which gesture lands
+  // where — and the same holds for the send arrow's tap and hold. A bubble's
+  // long-press lands on the bubble, found by the `data-message` name the
+  // board gives it.
+  ChatsHome: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="How chats work"', tag: "button" },
+    { n: 3, find: ">All chats</button>", tag: "button" },
+    { n: 4, find: 'aria-label="New chat"', tag: "button" },
+    { n: 5, find: ">Coast walkers</span>", tag: "button" },
+  ],
+  ChatsExplore: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="How chats work"', tag: "button" },
+    { n: 3, find: ">Your chats</button>", tag: "button" },
+    { n: 4, find: ">Hide chats you", tag: "button" },
+    { n: 5, find: ">Harbour office</span>", tag: "button" },
+    { n: 6, find: ">Join</button>", tag: "button" },
+    { n: 7, find: ">Ask to join</button>", tag: "button" },
+    { n: 8, find: 'aria-label="New chat"', tag: "button" },
+  ],
+  // The foot's field is found by its wrapper — a replaced element cannot host
+  // the badge (`TextField`'s own note) — and the seal by its accessible name.
+  ChatThread: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: ">Show the encrypted text</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 5, find: 'data-field="Message"', tag: "div" },
+    { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 7, find: 'data-message="boots"', tag: "div" },
+  ],
+  ChatCreate: [
+    { n: 1, find: 'aria-label="Back to the people you picked"', tag: "a" },
+    { n: 2, find: ">Choose a picture</button>", tag: "button" },
+    { n: 3, find: 'data-field="Name"', tag: "div" },
+    { n: 4, find: 'data-field="Description"', tag: "div" },
+    { n: 5, find: ">Open</span>", tag: "label" },
+    { n: 6, find: ">Next</button>", tag: "button" },
+  ],
+  ChatRowMenu: [
+    { n: 1, find: ">Mute</button>", tag: "button" },
+    { n: 2, find: ">Chat details</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ChatMessageMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">Give your opinion</button>", tag: "button" },
+    { n: 4, find: ">Reply</button>", tag: "button" },
+    { n: 5, find: ">Cited by</button>", tag: "button" },
+    { n: 6, find: ">Opinions on this</button>", tag: "button" },
+    { n: 7, find: ">License terms</button>", tag: "button" },
+    { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ChatPicker: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: ">Search people<", tag: "div" },
+    { n: 3, find: ">New group chat</span>", tag: "button" },
+    { n: 4, find: ">Ada Okonkwo<", tag: "button" },
+  ],
+  ChatPickerGroup: [
+    { n: 1, find: 'aria-label="Back to new chat"', tag: "a" },
+    { n: 2, find: ">Search people<", tag: "div" },
+    { n: 3, find: 'aria-label="Remove Ada Okonkwo"', tag: "button" },
+    { n: 4, find: ">Mira Voss<", tag: "button" },
+    { n: 5, find: ">Next</button>", tag: "button" },
+  ],
+  // Dialogs are found by their own wrapper's wash, `TimelineHelp`'s way.
+  ChatExistingAsk: [
+    { n: 1, find: ">Open that chat</button>", tag: "button" },
+    { n: 2, find: ">Start a new chat</button>", tag: "button" },
+    { n: 3, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ChatSignSheet: [
+    { n: 1, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 2, find: ">Sign and send</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ChatsHelp: [
+    { n: 1, find: ">Close</button>", tag: "button" },
+    { n: 2, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ChatThreadMedia: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: 'alt="A pot of dark honey', tag: "div" },
+    { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 5, find: 'data-field="Message"', tag: "div" },
+    { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 7, find: 'aria-label="Turn sound on"', tag: "button" },
+  ],
+  ChatThreadKeyboard: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 4, find: 'data-field="Message"', tag: "div" },
+    { n: 5, find: 'aria-label="Sign and send"', tag: "button" },
+  ],
+  ChatThreadReader: [
+    { n: 1, find: 'aria-label="Back to all chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Harbour office — chat details"', tag: "button" },
+    { n: 3, find: ">Show the encrypted text</button>", tag: "button" },
+    { n: 4, find: ">Ask to join</button>", tag: "button" },
+  ],
+  ChatCreateSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — nothing is started"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Sign and start the chat</button>", tag: "button" },
+    { n: 5, find: ">Back</button>", tag: "button" },
+  ],
 });
