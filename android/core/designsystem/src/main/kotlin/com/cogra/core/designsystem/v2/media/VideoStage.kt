@@ -1,16 +1,17 @@
 package com.cogra.core.designsystem.v2.media
 
 import android.content.Context
+import android.os.Handler
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.source.WrappingMediaSource
 
 /**
  * The one clip the app is playing, and whichever surface is showing it.
@@ -40,10 +41,12 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
  * can never take the surface away from the one that replaced it.
  *
  * **One player for every clip, too.** A new clip is swapped into the
- * player already on stage — `setMediaItem`, then `prepare` — rather than
+ * player already on stage — `setMediaSource`, then `prepare` — rather than
  * given a player of its own. That is Media3's feed recipe: the app keeps
- * one player and hands it each item as the item is about to be shown
- * (developer.android.com/media/media3/exoplayer/preloading-media/preloadmanager/manage-play).
+ * one player and hands it each item as the item is about to be shown,
+ * from the preload manager when it has been reading the clip ahead
+ * ([VideoPreload];
+ * developer.android.com/media/media3/exoplayer/preloading-media/preloadmanager/manage-play).
  * Tearing a player down and building the next one is main-thread work
  * — `release` waits for the playback thread to let go of its codecs —
  * and it landed inside the very frame that scrolled a clip into view.
@@ -85,7 +88,8 @@ object VideoStage {
         private set
 
     /**
-     * Where the stage's player reads every clip from.
+     * Where the stage's player reads every clip from — and the preload
+     * manager beside it ([VideoPreload]).
      *
      * The app shell installs the process's disk cache here at startup
      * ([VideoCache]), before any player is built. Left unset, the player
@@ -119,6 +123,11 @@ object VideoStage {
         // skip the cover on a clip that has not drawn anything yet.
         hasRendered = false
         val player = current?.player ?: build(context.applicationContext)
+        // The source the preload manager has been reading when the clip is
+        // in the list the reader is scrolling — its opening already in
+        // memory — and a fresh one otherwise (the manage-play recipe).
+        val source = VideoPreload.sourceFor(context, url)
+        sourceOnStage = source
         player.apply {
             // Each clip starts as a freshly built player would: still until
             // the surface showing it says to play, rather than inheriting the
@@ -136,37 +145,44 @@ object VideoStage {
             // `prepare` is what a fresh player needs and what a player the
             // last clip left failed (idle, with its error) needs again; on a
             // player that is already prepared it does nothing.
-            setMediaItem(Media3Item.fromUri(url))
+            setMediaSource(if (current != null) fenced(source, player) else source)
             prepare()
         }
-        if (current != null) fencePreviousClip(player)
         holding = Holding(url = url, player = player, owner = token)
     }
 
-    /** The one player every clip plays in — built on the first claim, and again after [release]. */
-    private fun build(appContext: Context): ExoPlayer = ExoPlayer.Builder(appContext)
-        // Every read goes through what the app installed — the
-        // process's disk cache, so a loop replays from disk and a
-        // clip scrolled back to is not fetched again.
-        .apply {
-            dataSources?.let {
-                setMediaSourceFactory(DefaultMediaSourceFactory(appContext).setDataSourceFactory(it))
-            }
-        }
-        // Seconds of read-ahead rather than 50 s, and none of it
-        // while paused — see [VideoLoadControl].
-        .setLoadControl(VideoLoadControl.create())
-        // THE SKIPS ARE TEN SECONDS, said by the board's own labels
-        // ("Back ten seconds", `VideoControls.jsx:196`). They are the
-        // PLAYER's increments rather than arithmetic in the control,
-        // because `seekBack`/`seekForward` are what Media3's own seek
-        // commands act on — including the notification and any future
-        // media button — and a control that did its own subtraction
-        // would leave those two answering five seconds
-        // (developer.android.com/media/media3/exoplayer/listening-to-player-events).
-        .setSeekBackIncrementMs(SKIP_MS)
-        .setSeekForwardIncrementMs(SKIP_MS)
-        .build()
+    /**
+     * What the stage handed its player for the clip on stage — the preload
+     * manager's own source when the list had one. Read by tests.
+     */
+    internal var sourceOnStage: MediaSource? = null
+        private set
+
+    /**
+     * The one player every clip plays in — built on the first claim, and
+     * again after [release].
+     *
+     * Built by the preload manager's builder, which has to own everything
+     * the two share: the data sources (the process's disk cache, so a loop
+     * replays from disk and a clip scrolled back to is not fetched again)
+     * and the load control (seconds of read-ahead rather than 50 s, and
+     * none of it while paused) are set there — see [VideoPreload]. What is
+     * this player's alone is set here.
+     */
+    private fun build(appContext: Context): ExoPlayer = VideoPreload.buildPlayer(
+        appContext,
+        ExoPlayer.Builder(appContext)
+            // THE SKIPS ARE TEN SECONDS, said by the board's own labels
+            // ("Back ten seconds", `VideoControls.jsx:196`). They are the
+            // PLAYER's increments rather than arithmetic in the control,
+            // because `seekBack`/`seekForward` are what Media3's own seek
+            // commands act on — including the notification and any future
+            // media button — and a control that did its own subtraction
+            // would leave those two answering five seconds
+            // (developer.android.com/media/media3/exoplayer/listening-to-player-events).
+            .setSeekBackIncrementMs(SKIP_MS)
+            .setSeekForwardIncrementMs(SKIP_MS),
+    )
 
     /**
      * Set by a swap, cleared once the player has put the previous clip
@@ -181,24 +197,48 @@ object VideoStage {
      * clip's picture. A released player dropped such reports with its
      * listeners; a reused one delivers them.
      *
-     * The fence is a player message sent right after the swap and
-     * delivered on the main thread. The playback thread handles the new
-     * playlist before the message, so every report of the previous clip
-     * was posted before the fence's own delivery, and both travel through
-     * the same main-thread queue in order: once the fence has arrived,
-     * the next first frame is this clip's.
+     * **The fence rides the new clip's source** ([FencedSource]). The
+     * playback thread prepares that source while it takes up the new
+     * playlist — the step that also takes the previous clip's renderers
+     * down — and the source posts the fence to the main thread right
+     * there. Every report of the previous clip was posted before that
+     * step; every report of the new clip needs a period of the new source,
+     * which exists only after it. Both travel through the one main-thread
+     * queue in order, so once the fence has arrived the next first frame
+     * is this clip's.
+     *
+     * It has to be the source rather than a message sent after the swap.
+     * A message is enqueued by a second call on the main thread, and the
+     * playback thread is free to take up the new clip in between: a
+     * preloaded clip needs no network and no header before its first
+     * frame, so a main thread held up for the length of a decoder start
+     * between the two calls would let the new clip's report land before
+     * the fence — dropped, and the cover kept over a clip under the full
+     * transport, which never loops to report again. The source has no
+     * second call to wait for.
      */
     private var pendingSwap: Any? = null
 
-    private fun fencePreviousClip(player: ExoPlayer) {
+    private fun fenced(source: MediaSource, player: ExoPlayer): MediaSource {
         val fence = Any()
         pendingSwap = fence
-        player.createMessage { _, _ -> if (pendingSwap === fence) pendingSwap = null }
-            // A player message is delivered on the playback thread unless
-            // told otherwise, and the fence only orders anything on the
-            // thread the first-frame reports arrive on.
-            .setLooper(player.applicationLooper)
-            .send()
+        val main = Handler(player.applicationLooper)
+        return FencedSource(source) { main.post { if (pendingSwap === fence) pendingSwap = null } }
+    }
+
+    /**
+     * A clip's source that says so, once, when the player prepares it.
+     *
+     * A `WrappingMediaSource` — Media3's own base for a source that adds to
+     * another — so everything else, the preloaded period the player takes
+     * over included, is the wrapped source's untouched.
+     */
+    internal class FencedSource(source: MediaSource, private val onPrepared: () -> Unit) :
+        WrappingMediaSource(source) {
+        override fun prepareSourceInternal() {
+            onPrepared()
+            super.prepareSourceInternal()
+        }
     }
 
     /**
@@ -288,7 +328,11 @@ object VideoStage {
      */
     fun release() {
         holding?.player?.release()
+        // The preload manager shares the player's thread and load control,
+        // and a backgrounded app needs neither — nor the memory it holds.
+        VideoPreload.release()
         holding = null
+        sourceOnStage = null
         hasRendered = false
         pendingSwap = null
     }

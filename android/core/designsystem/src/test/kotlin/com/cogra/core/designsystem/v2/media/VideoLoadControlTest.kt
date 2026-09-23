@@ -83,8 +83,45 @@ class VideoLoadControlTest {
         assertThat(control.shouldStartPlayback(at(bufferedMs = 400, playing = true))).isFalse()
     }
 
-    private fun at(bufferedMs: Long, playing: Boolean) = LoadControl.Parameters(
-        player,
+    @Test
+    fun aPreloadReadsPastTheHalfSecondFloor() {
+        // Media3 asks about every preload with `playWhenReady = false`. Read
+        // as a pause, the preload manager's three seconds would stop at half
+        // of one.
+        control.onPrepared(PlayerId.PRELOAD)
+
+        assertThat(control.shouldContinueLoading(at(bufferedMs = 2_000, playing = false, id = PlayerId.PRELOAD)))
+            .isTrue()
+    }
+
+    @Test
+    fun aParkedClipDoesNotHoldThePreloadsBack() {
+        // The parked player is stopped here while the delegate still counts
+        // it as loading; a preload is answered by its bytes, not by that.
+        control.onPrepared(PlayerId.PRELOAD)
+        assertThat(control.shouldContinueLoading(at(bufferedMs = 3_000, playing = false))).isFalse()
+
+        assertThat(control.shouldContinueLoading(at(bufferedMs = 1_000, playing = false, id = PlayerId.PRELOAD)))
+            .isTrue()
+    }
+
+    @Test
+    fun thePreloadsStopAtTheirOwnShareOfMemory() {
+        control.onPrepared(PlayerId.PRELOAD)
+        val allocator = control.getAllocator(PlayerId.PRELOAD)
+        val segments = VideoLoadControl.PRELOAD_BUFFER_BYTES / allocator.individualAllocationLength
+
+        repeat(segments - 1) { allocator.allocate() }
+        assertThat(control.shouldContinueLoading(at(bufferedMs = 1_000, playing = false, id = PlayerId.PRELOAD)))
+            .isTrue()
+
+        allocator.allocate()
+        assertThat(control.shouldContinueLoading(at(bufferedMs = 1_000, playing = false, id = PlayerId.PRELOAD)))
+            .isFalse()
+    }
+
+    private fun at(bufferedMs: Long, playing: Boolean, id: PlayerId = player) = LoadControl.Parameters(
+        id,
         timeline,
         period,
         0L,
