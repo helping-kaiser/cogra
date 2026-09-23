@@ -4,8 +4,10 @@
 
 package com.cogra.domain.media
 
+import com.cogra.domain.MediaAssetState
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
+import kotlinx.coroutines.delay
 
 /**
  * One picture, processed on the device and ready to send.
@@ -326,4 +328,75 @@ interface MediaRepository {
      * costs a day of held parts rather than anything the author sees.
      */
     suspend fun abortUpload(uploadId: String)
+
+    /**
+     * One of the viewer's own uploads, as the server currently sees it —
+     * how a client learns that an asset it uploaded as PROCESSING has
+     * become READY or FAILED (api-spec.md "Media"). Polled the way
+     * `stagedWrite` is polled. Null for an unknown id, exactly as the
+     * server documents.
+     */
+    suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?>
 }
+
+/**
+ * Where one uploaded asset stands, as `mediaAttachment` answers it — just
+ * the gate's own question and nothing more: the wizard never shows the
+ * server's rendition before the seal, so the full gallery shape
+ * ([MediaAssetView]'s `url`/`options`/…) would only spend budget nothing
+ * here reads.
+ */
+data class MediaReadiness(
+    val id: String,
+    val state: MediaAssetState,
+    val failureReason: String?,
+)
+
+/**
+ * Waits out a PROCESSING asset the way `WriteSigner.approveFrom` waits
+ * out a sealing write: a fixed delay before each read of
+ * `mediaAttachment`, bounded by an attempt budget that turns "never
+ * settled" into a [Outcome.Failed] a caller already knows how to show.
+ *
+ * READY (or a business refusal, or a transport fault) answers at once —
+ * no poll, no extra request. Android's own uploads are always within
+ * target — the on-device pipeline re-encodes before send — so PROCESSING
+ * is a backstop for a future server-side rule change, not the shipped
+ * path.
+ */
+suspend fun MediaRepository.awaitReady(uploaded: Outcome<MediaAssetView>): Outcome<MediaAssetView> {
+    if (uploaded !is Outcome.Success) return uploaded
+    var current = uploaded.value
+    var attempts = 0
+    while (current.state == MediaAssetState.PROCESSING) {
+        if (attempts++ >= MEDIA_READY_POLL_ATTEMPTS) {
+            return Outcome.Failed(
+                IllegalStateException("media ${current.id} still PROCESSING after the poll budget"),
+            )
+        }
+        delay(MEDIA_READY_POLL_DELAY_MS)
+        when (val read = mediaAttachment(current.id)) {
+            is Outcome.Success -> {
+                val readiness = read.value ?: return Outcome.Failed(
+                    IllegalStateException("media ${current.id} vanished while processing"),
+                )
+                current = current.copy(state = readiness.state, failureReason = readiness.failureReason)
+            }
+            is Outcome.Refused -> return read
+            is Outcome.Failed -> return read
+        }
+    }
+    return Outcome.Success(current)
+}
+
+/** The poll idiom's own interval (`WriteSigner.sealPollDelayMs`) — shared rather than earning its own number. */
+internal const val MEDIA_READY_POLL_DELAY_MS = 1_000L
+
+/**
+ * A generous backstop bound. PROCESSING should never outlast this on an
+ * Android upload; a real out-of-target transcode is server-side work
+ * this client cannot see progress on, so a budget — not an infinite
+ * wait — is what keeps a stuck asset from holding the sign gate shut
+ * forever.
+ */
+internal const val MEDIA_READY_POLL_ATTEMPTS = 30

@@ -30,6 +30,7 @@ import com.cogra.domain.HashtagView
 import com.cogra.domain.Landing
 import com.cogra.domain.LandingState
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaAssetState
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.ModeratedField
 import com.cogra.domain.ModerationState
@@ -48,8 +49,12 @@ import com.cogra.domain.TopicClaimView
 import com.cogra.domain.UserError
 import com.cogra.domain.WriteState
 import com.cogra.domain.flatMap
+import com.cogra.domain.media.MediaReadiness
+import com.cogra.network.graphql.CompleteMediaUploadMutation
 import com.cogra.network.graphql.HashtagQuery
+import com.cogra.network.graphql.MediaAttachmentQuery
 import com.cogra.network.graphql.ReferenceCandidatesQuery
+import com.cogra.network.graphql.UploadMediaMutation
 import com.cogra.network.graphql.fragment.ApplicationFields
 import com.cogra.network.graphql.fragment.CommentFields
 import com.cogra.network.graphql.fragment.HashtagFields
@@ -203,6 +208,10 @@ internal fun com.cogra.network.graphql.type.FieldModerationStatus.toDomain(): Fi
 internal fun com.cogra.network.graphql.type.ModerationStatus.toDomain(): ModerationState =
     runCatching { ModerationState.valueOf(rawValue) }.getOrDefault(ModerationState.UNKNOWN)
 
+/** A state this client version does not know is never read as READY. */
+internal fun com.cogra.network.graphql.type.MediaAttachmentState.toDomain(): MediaAssetState =
+    runCatching { MediaAssetState.valueOf(rawValue) }.getOrDefault(MediaAssetState.UNKNOWN)
+
 internal fun ProfileFields.toDomain(): ProfileView = ProfileView(
     id = id,
     handle = handle,
@@ -241,6 +250,25 @@ internal fun MediaFields.toDomain(): MediaAssetView = MediaAssetView(
  * keeps its own `status` — a cover redacted alone reads REDACTED here
  * while the video it covers still plays.
  */
+/**
+ * The upload path's own answer — the shared fragment plus the two
+ * fields only it selects (`media.graphql`'s own comment explains why
+ * they are not on [MediaFields] itself).
+ */
+internal fun UploadMediaMutation.Media.toDomain(): MediaAssetView =
+    mediaFields.toDomain().copy(state = state.toDomain(), failureReason = failureReason)
+
+/** See [UploadMediaMutation.Media.toDomain] — same shape, the resumable path's payload. */
+internal fun CompleteMediaUploadMutation.Media.toDomain(): MediaAssetView =
+    mediaFields.toDomain().copy(state = state.toDomain(), failureReason = failureReason)
+
+/** The poll's own lean answer — just the gate's question, per `media.graphql`'s comment on the query. */
+internal fun MediaAttachmentQuery.MediaAttachment.toDomain(): MediaReadiness = MediaReadiness(
+    id = id,
+    state = state.toDomain(),
+    failureReason = failureReason,
+)
+
 internal fun MediaFields.CoverMedia.toDomain(): MediaAssetView = MediaAssetView(
     id = id,
     url = url,

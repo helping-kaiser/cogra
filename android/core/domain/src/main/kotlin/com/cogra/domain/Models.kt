@@ -294,6 +294,18 @@ data class MediaAssetView(
     /** The clip's length, null on a still (D11 — derived, never sent). */
     val durationMs: Int? = null,
     val cover: MediaAssetView? = null,
+    /**
+     * Where the asset stands between upload and first use (api-spec.md
+     * "Media"). Defaults to READY because every context that does not
+     * select the field — a feed, a profile, anything reading a parent's
+     * gallery — carries only READY assets by contract (schema.graphql
+     * `MediaAttachment.state`: "every asset a parent carries is READY");
+     * only the upload path itself, which does select it, ever reads
+     * anything else.
+     */
+    val state: MediaAssetState = MediaAssetState.READY,
+    /** Why [state] is FAILED, worded for the author. Null in every other state. */
+    val failureReason: String? = null,
 ) {
     /**
      * Whether this asset plays rather than being drawn once.
@@ -340,6 +352,29 @@ data class MediaAssetView(
             }
         }
     }
+}
+
+/**
+ * Where an uploaded asset stands between its upload and its first use
+ * (api-spec.md "Media"; schema.graphql `MediaAttachmentState`).
+ *
+ * PROCESSING is a correctness backstop on Android, not the shipped path:
+ * the on-device pipeline re-encodes every video to the upload target
+ * before it ever leaves, so the server has nothing left to transcode and
+ * an upload answers READY at once in practice.
+ */
+enum class MediaAssetState {
+    /** Uploaded; the server is re-encoding it. Not attachable yet. */
+    PROCESSING,
+
+    /** The bytes are final — safe to attach to a placement. */
+    READY,
+
+    /** Could not be made servable; see the asset's own `failureReason`. */
+    FAILED,
+
+    /** A state this client version does not know — treated as still not ready. */
+    UNKNOWN,
 }
 
 /**
