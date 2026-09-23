@@ -43,17 +43,9 @@
 //
 // WHY NOT `Conversion` WITH `tags: {}`, which is the library's own one-liner
 // for this: because it writes each input track's name back out as a fresh
-// `udta/name` box, and because it does not actually copy. Its fast path requires
-// the track's first timestamp to be at or after the conversion's start, and an
-// AAC track written by any ordinary encoder begins at a NEGATIVE timestamp — the
-// 1024-sample priming delay, measured at -23.2 ms on a plain ffmpeg AAC track.
-// At the default `copy.shiftTolerance` of zero that start cannot be moved, so
-// the audio takes the decode-and-re-encode branch: the author's sound would be
-// re-compressed for a container-level change, and on a browser with no AAC
-// *encoder* the track would be discarded outright. Copying the packets by hand is what makes "never
-// re-encode" true rather than aspirational — and it is what the fast path of
-// `Conversion` does internally anyway, so this is the same operation without
-// the condition that disqualifies it.
+// `udta/name` box. Its copy path is the same packet move as the one below —
+// `compress-video.ts` relies on it to carry AAC across — so copying the packets
+// by hand is that operation without the one box it would add.
 //
 // `formats: [MP4, QTFF]` rather than `ALL_FORMATS` is deliberate: the docs note
 // "The `formats` parameter enables tree-shaking"
