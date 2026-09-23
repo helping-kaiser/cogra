@@ -1389,3 +1389,289 @@ function ChatPickerBody() {
     </>
   );
 }
+
+/* ══ THE CHAT DETAILS ROUND ══════════════════════════════════════════════════
+
+   Round B1 of the chats work (jakob's rulings 2026-09-23): the surface behind
+   the thread's header and the row menu's `Chat details` — the one destination
+   the chats round left undrawn on purpose — and its satellites: the edit and
+   its seal, the chronicle, search, media, and the leave.
+
+   STILL MESSENGER CLOTHES (jakob 2026-09-23). A chat's details are a group-info
+   page every messenger reader already knows — the face, the name, the words,
+   the members, mute and leave — and the proposal machinery stays underneath.
+   A MULTI-VOICE ACT IS INSTANT WHERE THE ACTOR'S OWN VOICE SUFFICES under the
+   chat's governance map, and otherwise it waits as a quiet pending card IN THE
+   THREAD and a row under `Open decisions` here. This round draws the section
+   and its empty state only; the pending card and the filled section are round
+   B2's, and the graph carries them as one intended gap.
+
+   NO PRESENCE, EVER (jakob 2026-09-23). No online dot, no last-seen, no
+   typing line on any member row or anywhere else: the member list says who is
+   in the chat and in what role, which are public records, and nothing about
+   what a person is doing right now, which is not.
+
+   CHATS ARE PUBLIC, SO THIS SURFACE IS TOO (jakob 2026-09-23). A non-member
+   and a guest read the same details — the face, the words, the members, the
+   history, the media, search — minus the acts only a member has, with the join
+   worded by the chat's policy (`ChatDetailsReader`). */
+
+/* THE POLICY, SAID BACK IN ONE LINE — the founding seal's own sentence
+   (`A new group chat — invite only.`) without the `new`, and each line says
+   what a joiner meets, never who decides (the founding's rule: governance
+   ships silently). */
+const CHAT_POLICY_LINE = {
+  open: "A group chat — anyone can join.",
+  request: "A group chat — anyone can ask to join.",
+  invite: "A group chat — invite only.",
+};
+
+/* THE CHAT'S DISC — its picture, or `forum` on the reserved fill where it has
+   none: the founding's own 64px disc and the thread header's 32px one are this
+   drawing at two sizes. */
+function ChatDisc({ image, size = 64 }) {
+  const glyph = Math.round(size * 0.44);
+  return image ? (
+    <img src={image} alt="" style={{ width: size, height: size, flex: "none", borderRadius: "var(--radius-full)", objectFit: "cover", display: "block" }} />
+  ) : (
+    <span
+      aria-hidden="true"
+      style={{ flex: "none", width: size, height: size, display: "grid", placeItems: "center", borderRadius: "var(--radius-full)", background: "var(--surface-container-high)", color: "var(--text-secondary)" }}
+    >
+      <Icon name="forum" size={glyph} />
+    </span>
+  );
+}
+
+/* THE TOP OF THE DETAILS — `ProfileHeader`'s compact shape, because it is the
+   same job one kind over: the face left at 80px, the name as the page's one
+   heading beside it, the words under both, then ONE actions row. Not a card:
+   it is the top of the screen, on the page ground (the header's own rule).
+
+   THE CHAT'S OPINION CONTROL LEADS THE ACTIONS ROW (jakob 2026-09-23: the
+   profile header's stance-anchor precedent). A chat is first-class content
+   (chats.md §1) and an opinion on it is an ordinary Opinion → Chat, the space's
+   own sentiment (§4, *Membership sentiment*) — so it wears the wide anchor, the
+   row's one stretched action, and whatever the row's second act is takes its
+   word's width beside it (`Message`'s sizing rule): `Edit chat` for a member
+   the map lets propose a change, the join for a reader outside. */
+function ChatIdentity({ name, image, policy, description, children }) {
+  return (
+    <header style={{ flex: "none", display: "flex", flexDirection: "column", gap: "var(--space-3)", padding: "var(--space-3) 16px var(--space-1)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
+        <ChatDisc image={image} size={80} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
+          <h1 style={{ margin: 0, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere" }}>
+            {name}
+          </h1>
+          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{CHAT_POLICY_LINE[policy]}</span>
+        </div>
+      </div>
+      {description && <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{description}</p>}
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <StanceControl wide targetLabel={name} onCommit={() => {}} />
+        </div>
+        {children}
+      </div>
+    </header>
+  );
+}
+
+/* A GROUP OF DOORS — `SettingsGroup` at the list gutter, headed by nothing
+   but its accessible name: the rows name themselves. */
+function DetailsGroup({ ariaLabel, children }) {
+  return (
+    <div style={{ flex: "none", padding: "8px 16px 0" }}>
+      <SettingsGroup ariaLabel={ariaLabel}>{children}</SettingsGroup>
+    </div>
+  );
+}
+
+/* OPEN DECISIONS — THE SECTION, BESIDE MEDIA (jakob 2026-09-23). Where an act
+   needs more voices than its actor's, it waits here and in the thread; with
+   nothing waiting, the section says so in the wallet's empty-history register
+   (`WalletEmpty`: the section's own label, one quiet line in `body-medium`
+   `text-secondary` at the label's gutter) — never a hidden section, because a
+   section that appears only when something is pending teaches a reader that
+   its absence means something else. The filled rows are round B2's. */
+function OpenDecisionsEmpty() {
+  return (
+    <div style={{ flex: "none" }}>
+      <SectionLabel>Open decisions</SectionLabel>
+      <p style={{ margin: 0, padding: "4px 24px 0", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
+        Nothing is being decided.
+      </p>
+    </div>
+  );
+}
+
+/* THE MEMBER LIST — `ReferenceRow` at person kind, the picker's row: the
+   face, the name, the handle under it, and on the trailing edge the ROLE
+   (jakob 2026-09-23), in the row's own `value` slot — `Admin`, `Moderator`,
+   `Member`, the default map's three roles (chats.md §5) in the reader's words.
+   Every member row carries its word, `Member` included, so the one row that
+   carries none is the one that is not a member yet.
+
+   THE FOUNDER HOLDS ADMIN FROM THE FOUNDING ACT (jakob 2026-09-23, chats.md
+   §3) — the reader founded this chat, so the first row is theirs. Every later
+   role came through `decision:change_role`.
+
+   A MEMBER CAN BE A COLLECTIVE, and it wears the person's row: `ActorChip`'s
+   own rule is that a Collective looks like a person and reads as a shared
+   identity. Its second line says which it is, because nothing else on the
+   row would — the Collective actor variant is specified and not yet built
+   (readme §7), and this line is the least a list owes a reader until it is.
+
+   AN INVITED PERSON WHO HAS NOT POINTED BACK IS PENDING (jakob 2026-09-23).
+   Founding creates the chat whole at once; an invitation is a vouch, and
+   membership materialises only from the invitee's own Participant (chats.md
+   §4). So the invitee is listed — the Invitation is a public record — with
+   `Invited — hasn't joined yet` where the handle would be and no role at the
+   edge. THE THREAD'S QUIET LINE for the same fact is a state of the drawn
+   thread (`ChatThread`), not a board of its own.
+
+   NO PRESENCE on any row — see the round's charter above. A tap opens the
+   person's profile (canonical's). */
+const ROLE_WORD = { admin: "Admin", chat_mod: "Moderator", member: "Member" };
+const PENDING_INVITE_LINE = "Invited — hasn't joined yet";
+
+function MemberRows({ members }) {
+  return members.map((m) => (
+    <ReferenceRow
+      key={m.handle}
+      kind="person"
+      name={m.name}
+      src={m.src}
+      sub={m.pending ? PENDING_INVITE_LINE : m.sub ?? `@${m.handle}`}
+      value={m.pending ? undefined : ROLE_WORD[m.role]}
+      onOpen={() => {}}
+    />
+  ));
+}
+
+/* The members' section: the label, then — for a member — the way to invite
+   more people first, the messenger's place for it and `ChatPicker`'s own
+   head-row grammar (`ContentRow`'s door, 16px gutter), then the rows. */
+function MembersSection({ members, addPeople = false }) {
+  return (
+    <div style={{ flex: "none", display: "flex", flexDirection: "column" }}>
+      <SectionLabel>Members</SectionLabel>
+      {addPeople && (
+        <div style={{ padding: "4px 16px 4px" }}>
+          <ContentRow variant="door" title="Add people" glyph="add" onOpen={() => {}} />
+        </div>
+      )}
+      <MemberRows members={members} />
+    </div>
+  );
+}
+
+const COAST_WALKERS = {
+  name: "Coast walkers",
+  image: "post-photo.jpg",
+  policy: "invite",
+  description: "Who is out on the flats, and when the crust holds. Walks leave from the harbour office.",
+};
+
+const COAST_WALKERS_MEMBERS = [
+  { name: "Sol Ferreira", handle: "sol", sub: "@sol · you", role: "admin" },
+  { name: "Mira Voss", handle: "mira", src: "inviter.jpg", role: "chat_mod" },
+  { name: "Harbour Rowing Club", handle: "rowingclub", sub: "@rowingclub · a collective", role: "member" },
+  { name: "Juno Baptiste", handle: "juno", role: "member" },
+  { name: "Kel Moreau", handle: "kel", role: "member" },
+  { name: "Tobias Lindqvist", handle: "tobias", role: "member" },
+  { name: "Ada Okonkwo", handle: "ada", pending: true },
+];
+
+/* THE MEMBER'S DETAILS, WHOLE — drawn once because two boards draw it: the
+   surface itself and the leave dialog over it (`ThreadDetail`'s rule: what a
+   modal covers is the real surface, inert). The anatomy's order and its
+   reasons are `ChatDetails`' docblock. */
+function ChatDetailsBody() {
+  return (
+    <>
+      <PageHeader title="Chat details" backHref="#" backLabel="Back to the chat" />
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", paddingBottom: 24 }}>
+        <ChatIdentity {...COAST_WALKERS}>
+          <Button variant="outline" style={{ flex: "none" }}>
+            Edit chat
+          </Button>
+        </ChatIdentity>
+        <DetailsGroup ariaLabel="In this chat">
+          <SettingsRow label="Media in this chat" onOpen={() => {}} />
+          <SettingsRow label="Search in this chat" onOpen={() => {}} />
+        </DetailsGroup>
+        <OpenDecisionsEmpty />
+        <MembersSection members={COAST_WALKERS_MEMBERS} addPeople />
+        <DetailsGroup ariaLabel="This chat">
+          <SettingsRow checked={false} label="Mute this chat" status="No push for its messages. It keeps its place and its dot on your list." onOpen={() => {}} />
+          <SettingsRow label="Edit history" onOpen={() => {}} />
+        </DetailsGroup>
+        <DetailsGroup ariaLabel="Leave">
+          <SettingsRow action label="Leave this chat" onOpen={() => {}} />
+        </DetailsGroup>
+      </div>
+    </>
+  );
+}
+
+/* ── THE CHAT'S EDIT HISTORY ──────────────────────────────────────────────────
+
+   A CHAT'S METADATA GROWS THE WAY A POST'S AND A PROFILE'S DO (jakob
+   2026-09-23): layered, full-state versions. On L1 the mechanism is
+   succession — the lineage head's founding payload IS the chat's current
+   metadata, and an update is a new head whose payload carries the whole new
+   state (chats.md §8) — so a version here is a whole founding payload as a
+   reader can see it: the face, the name, the words and who can join. The rest
+   of that payload (the governance map beyond the policy, the system actor's
+   name) ships silently, as it did at the founding.
+
+   THE CHRONICLE IS THE CHANGE-HISTORIES PATTERN VERBATIM: whole versions,
+   newest first, the current one marked by its dateline, never a diff.
+
+   MEMBERSHIP EVENTS INTERLEAVE AS QUIET ROWS BETWEEN THE VERSIONS (jakob
+   2026-09-23), each at its own date — and they are NEVER part of a version's
+   state. Membership is a fold over its own records (chats.md §4), and it
+   carries across a succession with nobody acting, so a version card that
+   listed members would be claiming a snapshot no payload holds. */
+
+/* One version of the chat — the details' identity at chronicle scale, the way
+   `ProfileVersionCard` is the profile header's. Inert: a chat has no historic
+   detail surface to open (the profile chronicle's precedent). */
+function ChatVersionCard({ name, image, policy, description }) {
+  return (
+    <Card>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <ChatDisc image={image} size={64} />
+        <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <span style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>{name}</span>
+          <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{CHAT_POLICY_LINE[policy]}</span>
+        </span>
+      </div>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{description}</p>
+    </Card>
+  );
+}
+
+/* ONE MEMBERSHIP EVENT — a quiet row, no container: the actor's face at row
+   scale, what they did in one sentence, and the date on the trailing edge in
+   the dateline's words. `TimelineRow`'s quiet register (every word
+   `text-secondary`, the date `label-small`), so it reads as a note between two
+   versions and never as a third kind of card.
+
+   A LEAVE MAY CARRY ITS PARTING REASON (jakob 2026-09-23: the Leave record takes
+   an optional one, chats.md §2). Where the leaver gave one it is theirs and it
+   is public, so it stands under the sentence in their own words, quoted. */
+function ChatEventRow({ who, src, when, reason, children }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "8px 24px" }}>
+      <MonogramAvatar name={who} src={src} size="sm" />
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+        <span>{children}</span>
+        {reason && <span>“{reason}”</span>}
+      </span>
+      <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{when}</span>
+    </div>
+  );
+}
