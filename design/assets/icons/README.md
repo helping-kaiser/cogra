@@ -30,6 +30,7 @@ fill="none"/>` rect is stripped, per the product's own convention.
 | drag-indicator.svg | drag_indicator | the picked tray's reorder handle |
 | image.svg | image | the cover strip's own-picture tile |
 | lock.svg | lock | a locked field (the edit's license); a chat message sent encrypted, and the chat foot's lock toggle on (post-MVP) |
+| add-comment.svg | add_comment | the chats list's floating New chat (post-MVP) |
 | lock-outline.svg | lock_outline | the chat foot's lock toggle off — the state is the fill, `person`'s two-cut precedent (post-MVP) |
 | expand-more.svg / chevron-right.svg | expand_more, chevron_right | a disclosure, and a row that opens |
 | arrow-outward.svg | arrow_outward | the wallet's direction badge (rotated 180° for incoming) |

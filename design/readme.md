@@ -291,7 +291,7 @@ never leave mid-task. Per surface:
 
 | Collapses | Pins |
 |---|---|
-| feed · search results · topic page · profile · saved · notifications · history · invites list | post detail · every compose and edit stage · settings · the ceremonies · chats · About |
+| feed · search results · topic page · profile · saved · notifications · history · invites list · the chats list, both faces | post detail · every compose and edit stage · settings · the ceremonies · a chat's thread · About |
 
 On web, **pinned means `position: sticky`** — the bar rides the page's
 edge and never hides — and the collapsing surfaces adopt `CollapsingTop`
@@ -455,6 +455,7 @@ fills is the most common way an icon set starts to look accidental.
 | `photo_camera` | the avatar's change badge on one's own profile — the system's own addition (profile round), not yet in the product's set |
 | `history` | the chronicle's Everything tab — the system's own addition (profile round), not yet in the product's set |
 | `lock` / `lock_outline` | a chat message sent encrypted, and the chat foot's lock toggle, whose state is its fill — the post-MVP chats round's; `lock_outline` is the system's own addition, `person`'s two-cut precedent |
+| `add_comment` | the chats list's floating New chat — the post-MVP chats round's, the system's own addition |
 
 **All of them are inlined** — path data in `Icon`, reference copies in
 `assets/icons/`. All but `graph_3` are the classic **filled** 24px
