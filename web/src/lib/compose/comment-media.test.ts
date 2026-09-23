@@ -62,6 +62,15 @@ describe("a comment's pictures", () => {
     expect(uploadsPending(media)).toBe(1);
     expect(uploadsFailed(media)).toBe(1);
   });
+
+  // A still-PROCESSING asset (the fallback-browser-original re-encode) is not
+  // done yet either — it counts exactly as an in-flight upload does.
+  it("counts a still-processing asset as pending", () => {
+    let media = pickInto(NO_COMMENT_MEDIA, picks(2));
+    media = withUpload(media, "c0", { kind: "processing", mediaId: "m0" });
+    media = withUpload(media, "c1", { kind: "done", mediaId: "m1" });
+    expect(uploadsPending(media)).toBe(1);
+  });
 });
 
 describe("the comment gate", () => {
