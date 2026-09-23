@@ -439,8 +439,14 @@ points at a parent — see "Why parents point at attachments" below.
 -- row never points at a parent — see "Why parents point at attachments"
 -- below.
 --
--- An asset row is immutable after upload: there is no update surface,
--- and a re-crop is a new asset (new bytes, new digest). The upload
+-- An asset row is immutable once it is ready: a re-crop is a new asset
+-- (new bytes, new digest). Before that it is `processing` — a video
+-- outside the served target, waiting for the ingest worker to re-encode
+-- it — and the worker is the only update surface: it settles the row
+-- `ready`, pointing it at the rendition's digest, key and size, or
+-- `failed` with a reason, exactly once. Prepare refuses anything but a
+-- ready asset, so the one moment a digest changes is a moment no
+-- envelope can have committed it. The upload
 -- carries nothing authored — a description (alt text) is witnessed in
 -- the referencing payload's manifest and cached on the junction row
 -- per version, so a picture uploads the moment it is picked and is
@@ -485,20 +491,49 @@ CREATE TABLE media_attachments (
     mime_type        TEXT         NOT NULL,
     size_bytes       BIGINT,
     options          JSONB        NOT NULL DEFAULT '{}'::jsonb,
+    -- The ingest state, stated by every insert (no default).
+    state            TEXT         NOT NULL
+        CHECK (state IN ('processing', 'ready', 'failed')),
+    -- What the author reads when the asset failed; present exactly then.
+    failure_reason   TEXT,
+    -- The digest of the bytes as they arrived, kept on a re-encoded
+    -- asset so a retried upload of the same file finds it after
+    -- `digest` has moved to the rendition. Null on an asset stored as
+    -- it arrived.
+    source_digest    BYTEA,
+    -- The ingest queue's claim: a worker leases a processing row and
+    -- renews the lease while it works, so a job whose worker died is
+    -- claimable again once the lease lapses.
+    lease_until      TIMESTAMPTZ,
+    attempts         INTEGER      NOT NULL DEFAULT 0,
     -- The tombstone shape every version table uses: redaction removes
     -- the bytes and leaves the mark (primitive/layers.md §5).
     redaction_reason TEXT,
     redacted_at      TIMESTAMPTZ,
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    -- One asset per author per digest: a retried upload of the same
-    -- picture resolves to the row that already exists instead of a
-    -- second object. The upload returns that row rather than erroring.
-    UNIQUE (author_id, digest)
+    CHECK ((state = 'failed') = (failure_reason IS NOT NULL))
 );
+
+-- One live asset per author per digest: a retried upload of the same
+-- picture resolves to the row that already exists instead of a second
+-- object, and the upload returns that row rather than erroring. A
+-- failed asset holds its digest no longer, so the same file can be
+-- uploaded again once the cause is gone. The same rule covers the
+-- digest a re-encoded asset arrived with.
+CREATE UNIQUE INDEX media_attachments_author_digest_key
+    ON media_attachments (author_id, digest) WHERE state <> 'failed';
+CREATE UNIQUE INDEX media_attachments_author_source_digest_key
+    ON media_attachments (author_id, source_digest)
+    WHERE source_digest IS NOT NULL AND state <> 'failed';
+
+-- The ingest queue reads the oldest processing row; at rest the index
+-- is empty.
+CREATE INDEX media_attachments_processing_idx
+    ON media_attachments (created_at) WHERE state = 'processing';
 ```
 
-That unique constraint's index leads with `author_id`, so it
-serves every author-keyed lookup — the account-redaction sweep of
+The author-digest index leads with `author_id`, so it serves every
+author-keyed lookup — the account-redaction sweep of
 [erasure.md](../instances/erasure.md) among them — as a prefix
 scan, and no separate author index is carried.
 
@@ -1480,7 +1515,7 @@ A video's cover (the poster) is a `cover_media_id` foreign key to
 `media_attachments` on the **junction row**, beside `alt_text` — a
 parent-version fact about the placement, not a property of the
 asset, which is why an edit can name a different cover without
-touching a clip whose row is immutable once written. An entry may
+touching a clip whose row is immutable once ready. An entry may
 not name itself as its own poster. The poster is redacted with its
 video and the removal cascade can see the link. The junction-side
 `is_cover` is a different concern: it selects which attachment leads

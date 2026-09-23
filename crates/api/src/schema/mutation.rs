@@ -460,7 +460,8 @@ fn reference_drafts(
 }
 
 /// One attachment placement within a gallery. Assets are uploaded first
-/// via `uploadMedia`; the envelope commits their digests.
+/// via `uploadMedia`; the envelope commits their digests, so every asset
+/// named here — the attachment and its cover alike — must be READY.
 ///
 /// The list is the gallery in order, so `displayOrder` states the entry's
 /// own index and `isCover` is true on the first entry and nowhere else —
@@ -470,9 +471,9 @@ fn reference_drafts(
 /// galleries only; a comment gallery ignores it.
 #[derive(InputObject)]
 struct AttachmentInput {
-    /// An asset **this author uploaded**. Cross-author re-use is not
-    /// supported through this path: sharing someone else's picture is a
-    /// link to their post, never a reference to their asset.
+    /// An asset **this author uploaded**, and READY. Cross-author re-use
+    /// is not supported through this path: sharing someone else's picture
+    /// is a link to their post, never a reference to their asset.
     media_id: Uuid,
     display_order: i32,
     is_cover: Option<bool>,
@@ -2119,6 +2120,12 @@ impl Mutation {
     /// both blocking work, so they run on the blocking pool — left on
     /// the async runtime, one upload would stall every other request
     /// behind it.
+    ///
+    /// The asset comes back READY when its bytes are already within the
+    /// served target — every still, and every video a client compressed
+    /// — and PROCESSING when the server has to re-encode it first. A
+    /// PROCESSING asset cannot be attached yet: poll `mediaAttachment`
+    /// until it reads READY (or FAILED, with the reason).
     async fn upload_media(
         &self,
         ctx: &Context<'_>,
@@ -2244,6 +2251,9 @@ impl Mutation {
     /// Safe to retry. A client whose connection dropped waiting for this
     /// reply calls it again and is handed the same asset, because the
     /// session remembers what it produced.
+    ///
+    /// Like `uploadMedia`, the asset may come back PROCESSING, and is
+    /// attachable once `mediaAttachment` reads it READY.
     async fn complete_media_upload(
         &self,
         ctx: &Context<'_>,

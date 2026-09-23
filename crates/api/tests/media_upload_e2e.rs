@@ -30,7 +30,7 @@ const BOUNDARY: &str = "cogra-test-boundary";
 
 const UPLOAD_MEDIA: &str = r#"mutation($input: UploadMediaInput!) {
   uploadMedia(input: $input) {
-    media { id url digest digestAlgo mimeType sizeBytes altText options { aspectRatio durationMs } coverMedia { id } }
+    media { id url digest digestAlgo mimeType sizeBytes altText state failureReason options { aspectRatio durationMs } coverMedia { id } }
     userErrors { code message field }
   }
 }"#;
@@ -236,6 +236,11 @@ async fn an_upload_stores_stripped_bytes_under_their_own_digest(pool: PgPool) {
 
     assert_eq!(media["mimeType"], "image/webp");
     assert_eq!(media["digestAlgo"], "sha256");
+    assert_eq!(
+        media["state"], "READY",
+        "a still's bytes are final the moment they are stored"
+    );
+    assert!(media["failureReason"].is_null());
     assert!(
         media["altText"].is_null(),
         "the upload carries bytes and nothing authored: a description is \
@@ -728,6 +733,11 @@ async fn a_video_uploads_with_its_duration(pool: PgPool) {
     );
     assert_eq!(uploaded["media"]["mimeType"], "video/mp4");
     assert_eq!(uploaded["media"]["options"]["durationMs"], 2_500);
+    assert_eq!(
+        uploaded["media"]["state"], "READY",
+        "1080 on the short side and a few bytes a second: within target, so \
+         the upload's own probe is the whole cost"
+    );
     assert!(
         uploaded["media"]["coverMedia"].is_null(),
         "an upload is outside every placement, so it names no poster"
