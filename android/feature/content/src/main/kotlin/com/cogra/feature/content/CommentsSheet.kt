@@ -47,6 +47,7 @@ import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.sheetCeilingHeight
+import com.cogra.core.designsystem.v2.media.ScrollStageHost
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
@@ -319,47 +320,54 @@ private fun CommentsList(
     stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        state = listState,
-        modifier = modifier.testTag("comments_list"),
-        contentPadding = PaddingValues(horizontal = Space.x4, vertical = Space.x2),
-        verticalArrangement = Arrangement.spacedBy(Space.x3),
-    ) {
-        if (state.comments.isEmpty()) {
-            item {
-                when {
-                    state.loading -> LoadingState(testTag = "comments_loading")
-                    state.transportFault != null -> ErrorLine(
-                        R.string.content_error_transport,
-                        "comments_transport_error",
-                    )
-                    else -> Text(
-                        stringResource(R.string.content_comments_empty),
-                        modifier = Modifier.testTag("detail_no_comments"),
-                    )
+    // ONE STAGE FOR THE THREAD (the stage law, design/readme.md "The
+    // feed-video rulings"): every clip in it, replies included, competes
+    // for one — the playing clip keeps it while past 70%, and the topmost
+    // qualifying clip takes it the moment it drops. The sheet is a scroll
+    // surface of its own, so it does not share the stage of the list below.
+    ScrollStageHost {
+        LazyColumn(
+            state = listState,
+            modifier = modifier.testTag("comments_list"),
+            contentPadding = PaddingValues(horizontal = Space.x4, vertical = Space.x2),
+            verticalArrangement = Arrangement.spacedBy(Space.x3),
+        ) {
+            if (state.comments.isEmpty()) {
+                item {
+                    when {
+                        state.loading -> LoadingState(testTag = "comments_loading")
+                        state.transportFault != null -> ErrorLine(
+                            R.string.content_error_transport,
+                            "comments_transport_error",
+                        )
+                        else -> Text(
+                            stringResource(R.string.content_comments_empty),
+                            modifier = Modifier.testTag("detail_no_comments"),
+                        )
+                    }
                 }
             }
-        }
-        items(state.comments, key = { it.id }) { comment ->
-            CommentThread(
-                comment = comment,
-                depth = 0,
-                state = state,
-                viewerId = viewerId,
-                signedIn = signedIn,
-                onLoadMoreReplies = onLoadMoreReplies,
-                onReplyTo = onReplyTo,
-                onEditComment = onEditComment,
-                onReveal = onReveal,
-                onOpenActor = onOpenActor,
-                onOpenTopic = onOpenTopic,
-                onReference = onReference,
-                onLicense = onLicense,
-                stanceControl = stanceControl,
-            )
-        }
-        if (state.hasMore) {
-            item { MoreComments(state, onLoadMoreComments) }
+            items(state.comments, key = { it.id }) { comment ->
+                CommentThread(
+                    comment = comment,
+                    depth = 0,
+                    state = state,
+                    viewerId = viewerId,
+                    signedIn = signedIn,
+                    onLoadMoreReplies = onLoadMoreReplies,
+                    onReplyTo = onReplyTo,
+                    onEditComment = onEditComment,
+                    onReveal = onReveal,
+                    onOpenActor = onOpenActor,
+                    onOpenTopic = onOpenTopic,
+                    onReference = onReference,
+                    onLicense = onLicense,
+                    stanceControl = stanceControl,
+                )
+            }
+            if (state.hasMore) {
+                item { MoreComments(state, onLoadMoreComments) }
+            }
         }
     }
 }

@@ -29,9 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -80,27 +78,6 @@ object VideoSound {
         _muted.value = true
     }
 }
-
-/**
- * How much of this element is inside the window, as a fraction of its
- * own height.
- *
- * Autoplay is a question about what the reader can actually see, and
- * Compose answers it through layout rather than through a scroll
- * listener: `boundsInWindow` is already clipped to what is on screen, so
- * its height against the element's own is the fraction showing.
- */
-fun Modifier.onVisibilityChanged(onChange: (Float) -> Unit): Modifier =
-    onGloballyPositioned { coordinates ->
-        val height = coordinates.size.height
-        onChange(
-            if (height == 0) {
-                0f
-            } else {
-                (coordinates.boundsInWindow().height / height.toFloat()).coerceIn(0f, 1f)
-            },
-        )
-    }
 
 /**
  * One clip, playing where it sits.

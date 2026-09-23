@@ -13,9 +13,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.node.GlobalPositionAwareModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.OnUnplacedModifierNode
+import androidx.compose.ui.platform.InspectorInfo
 
 /**
  * THE STAGE LAW (jakob 2026-09-23 — `design/readme.md`, "The feed-video
@@ -169,16 +173,48 @@ fun ScrollStageHost(content: @Composable () -> Unit) {
 }
 
 /**
- * Reports this frame's place on [stage] under [key], every time layout moves
- * it.
+ * Puts this frame on [stage] under [key]: its place after every layout pass
+ * that moves it, and its departure the moment it stops being placed.
  *
  * Measured through layout rather than a scroll listener: `boundsInWindow` is
  * already clipped to what is on screen, so its height against the frame's own
  * is the fraction showing, and `positionInWindow` is where the frame starts
  * whether or not it is clipped.
+ *
+ * **Leaving is not the same as leaving the composition.** A lazy list keeps
+ * rows it has just scrolled away composed but unplaced, ready to come back,
+ * and a row flung out in one frame never gets a pass that measures it off
+ * screen — its last place, fully visible, would stand forever and the stage
+ * would never pass on. So the frame leaves when it is UNPLACED, which Compose
+ * reports on its own node (`OnUnplacedModifierNode`), as well as when it is
+ * detached; a row brought back is placed again and reports again.
  */
 internal fun Modifier.standOn(stage: ScrollStage, key: Any, page: Int): Modifier =
-    onGloballyPositioned { coordinates ->
+    this then StandOnElement(stage, key, page)
+
+private data class StandOnElement(val stage: ScrollStage, val key: Any, val page: Int) :
+    ModifierNodeElement<StandOnNode>() {
+    override fun create() = StandOnNode(stage, key, page)
+
+    override fun update(node: StandOnNode) {
+        if (node.stage !== stage || node.key !== key) node.leave()
+        node.stage = stage
+        node.key = key
+        node.page = page
+    }
+
+    override fun InspectorInfo.inspectableProperties() {
+        name = "standOn"
+        properties["page"] = page
+    }
+}
+
+private class StandOnNode(var stage: ScrollStage, var key: Any, var page: Int) :
+    Modifier.Node(),
+    GlobalPositionAwareModifierNode,
+    OnUnplacedModifierNode {
+
+    override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         val height = coordinates.size.height
         val visible = if (height == 0) {
             0f
@@ -187,3 +223,10 @@ internal fun Modifier.standOn(stage: ScrollStage, key: Any, page: Int): Modifier
         }
         stage.report(key, StagePlace(top = coordinates.positionInWindow().y, page = page, visible = visible))
     }
+
+    override fun onUnplaced() = leave()
+
+    override fun onDetach() = leave()
+
+    fun leave() = stage.leave(key)
+}
