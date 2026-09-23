@@ -46,6 +46,23 @@ describe("DiscardConfirm", () => {
     expect(onDiscard).not.toHaveBeenCalled();
   });
 
+  it("keeps writing when the platform closes it without asking", () => {
+    const { onKeepWriting, onDiscard } = show();
+    (screen.getByTestId("discard-confirm") as HTMLDialogElement).close();
+    expect(onKeepWriting).toHaveBeenCalledTimes(1);
+    expect(onDiscard).not.toHaveBeenCalled();
+  });
+
+  it("reads its own closing, after an answer, as no second answer", () => {
+    const onKeepWriting = vi.fn();
+    const { rerender } = render(
+      <DiscardConfirm open onKeepWriting={onKeepWriting} onDiscard={() => {}} />,
+    );
+    rerender(<DiscardConfirm open={false} onKeepWriting={onKeepWriting} onDiscard={() => {}} />);
+    expect(screen.getByTestId("discard-confirm")).not.toHaveAttribute("open");
+    expect(onKeepWriting).not.toHaveBeenCalled();
+  });
+
   it("reports each answer once, and only its own", () => {
     const { onKeepWriting, onDiscard } = show();
     fireEvent.click(screen.getByTestId("discard-confirm-keep"));

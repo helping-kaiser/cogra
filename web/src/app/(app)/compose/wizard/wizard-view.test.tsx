@@ -146,10 +146,15 @@ function render(drafts = fakeDrafts(), keyed = true) {
   );
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   installEncoder();
   searchParams = new URLSearchParams();
   push.mockClear();
+  // Every stage rides a history entry, and jsdom's history outlives a test:
+  // the last test's traversals are let finish, and its marks are cleared, so
+  // this one opens on a plain entry the way a real visit does.
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  window.history.replaceState(null, "");
 });
 
 afterEach(() => {
@@ -871,5 +876,112 @@ describe("the compose wizard", () => {
       expect(drafts.held()?.assets).toHaveLength(0);
     });
     expect(drafts.held()?.mode).toBe("media");
+  });
+
+  // jakob's hand test, 2026-09-23 (Pixel 6, Chrome): the left-edge back
+  // gesture inside the wizard dropped him on the page he came from. The law
+  // is design/readme.md's — the arrow steps ONE STAGE BACK, "the platform
+  // back gesture does the same" — and Android's BackHandler already obeys it.
+  describe("the browser's back and forward", () => {
+    const stageDepth = () =>
+      (window.history.state as { cograStage?: { depth: number } } | null)?.cograStage?.depth ?? 0;
+
+    async function toSeal() {
+      fireEvent.click(await screen.findByTestId("wizard-to-words"));
+      fireEvent.change(screen.getByTestId("wizard-words"), {
+        target: { value: "Three weekends at low tide." },
+      });
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-title");
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByText("Last step");
+    }
+
+    it("steps back one stage per press, and leaves the pick to the browser", async () => {
+      render();
+      await toSeal();
+      expect(stageDepth()).toBe(2);
+
+      window.history.back();
+      expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+      expect(screen.queryByText("Last step")).toBeNull();
+
+      window.history.back();
+      expect(await screen.findByTestId("wizard-words")).toBeInTheDocument();
+      expect(screen.queryByTestId("wizard-title")).toBeNull();
+      // The pick is the arrival entry: the next Back is the browser's own, so
+      // the wizard pushes no route of its own on the way.
+      expect(push).not.toHaveBeenCalled();
+      expect(stageDepth()).toBe(0);
+    });
+
+    it("reaches the crop from the details, as the arrow does", async () => {
+      server.use(uploadOk(["m1"]));
+      render();
+      await pick(["one.jpg"]);
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-crop-frame");
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-title");
+
+      window.history.back();
+      expect(await screen.findByTestId("wizard-crop-frame")).toBeInTheDocument();
+      expect(screen.queryByTestId("wizard-title")).toBeNull();
+    });
+
+    it("keeps the history in step with the arrow", async () => {
+      render();
+      await toSeal();
+
+      fireEvent.click(screen.getByTestId("header-back"));
+      await screen.findByTestId("wizard-title");
+      await waitFor(() => expect(stageDepth()).toBe(1));
+      // Settled: the arrow's own traversal stepped nothing further.
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(screen.getByTestId("wizard-title")).toBeInTheDocument();
+    });
+
+    it("re-advances on Forward, through the stage's own gate", async () => {
+      render();
+      await toSeal();
+      window.history.back();
+      await screen.findByTestId("wizard-title");
+
+      window.history.forward();
+      expect(await screen.findByText("Last step")).toBeInTheDocument();
+      expect(stageDepth()).toBe(2);
+    });
+
+    it("closes an open sheet on Back before any stage steps back", async () => {
+      const p1 = new File([new Uint8Array([1]) as BlobPart], "one.jpg", { type: "image/jpeg" });
+      const CROP = { x: 0, y: 0, zoom: 1, area: null, areaPercent: null };
+      server.use(uploadOk(["m1"]));
+      render(
+        fakeDrafts({
+          ...emptyWizard(),
+          step: "details",
+          mode: "media",
+          assets: [{ id: "p1", file: p1, altText: "", upload: { kind: "waiting" }, crop: CROP }],
+        }),
+      );
+      fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+      await screen.findByTestId("wizard-title");
+      // A draft restored on the details is three stages deep, and Back walks
+      // all three of them — the same ladder the arrow walks.
+      await waitFor(() => expect(stageDepth()).toBe(2));
+
+      fireEvent.click(screen.getByTestId("wizard-picked-row"));
+      expect(screen.getByTestId("wizard-picked-sheet")).toHaveAttribute("open");
+
+      window.history.back();
+      await waitFor(() =>
+        expect(screen.getByTestId("wizard-picked-sheet")).not.toHaveAttribute("open"),
+      );
+      expect(screen.getByTestId("wizard-title")).toBeInTheDocument();
+      await waitFor(() => expect(stageDepth()).toBe(2));
+
+      window.history.back();
+      expect(await screen.findByTestId("wizard-crop-frame")).toBeInTheDocument();
+    });
   });
 });

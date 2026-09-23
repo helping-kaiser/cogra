@@ -40,6 +40,7 @@ import {
   isVideoPost,
   sealGate,
   shapeRatio,
+  stepIndex,
   wizardReducer,
   type PickedAsset,
   type WizardAction,
@@ -54,6 +55,7 @@ import {
   draftSummary,
   type ComposeDraftStore,
 } from "@/lib/compose/draft-store";
+import { useStageHistory } from "@/lib/compose/stage-history";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { PickStep } from "./pick-step";
@@ -187,14 +189,18 @@ export function ComposeWizard({
   const [refusals, setRefusals] = useState<readonly PickRefusal[]>(NO_REFUSALS);
   const cover = state.cover;
   // The face itself, wherever it came from — a captured frame or the
-  // author's own picture — so the details thumbnail and the cover row's own
-  // tile can both show it rather than the video's bytes or a bare outline.
+  // author's own picture — so the cover row's own tile can show it rather
+  // than the video's bytes or a bare outline.
   const coverPreview = useObjectUrl(cover?.file ?? null);
-  // THE COVERLESS CLIP'S FACE IS ITS FIRST FRAME (design/readme.md, the
-  // video-cover round). An `img` cannot decode the clip's own bytes, so the
-  // tile that stands for the video needs a still either way: the chosen face
-  // when there is one, and otherwise the opening frame already in hand.
-  const clipFace = coverPreview ?? framePreviews[0] ?? null;
+  // THE CLIP'S FACE IS ALWAYS ITS OWN FIRST FRAME, never the chosen cover —
+  // a cover rides a tile only as the small ringed inset, never as the face
+  // itself (`design/designs/canonical/screens/ComposeDetailsVideo.jsx`,
+  // jakob's hand-test ruling 2026-09-23). An `img` cannot decode the clip's
+  // own bytes, so the pick tray, the details tile, and the describe sheet all
+  // need this still in its place — null while extraction has not landed or
+  // found nothing, which draws the neutral tile rather than a borrowed
+  // picture.
+  const clipFace = framePreviews[0] ?? null;
 
   // The badge's number AND the clip's shape, read off the clip as soon as it is
   // picked rather than waiting for the cover screen — the details row shows the
@@ -221,11 +227,16 @@ export function ComposeWizard({
     };
   }, [videoFile]);
 
-  // THE FRAMES ARE TAKEN WHEN THE SCREEN IS REACHED, not at pick: a decode of
-  // the whole clip is the most expensive thing this flow does, and an author
-  // who picked a video and then changed their mind should never pay for it.
+  // THE FACE IS EXTRACTED AS SOON AS THE CLIP IS PICKED, not only once the
+  // cover screen is reached (`design/designs/canonical/screens/
+  // ComposeDetailsVideo.jsx`, jakob's 2026-09-23 ruling: "the device silently
+  // extracts the clip's first frame ... using the frame picker's own
+  // extraction"). The pick tray and the details tile both stand the clip on
+  // this same still, so both need it from the moment there is a clip —
+  // waiting for the cover screen left them with nothing to show but the
+  // video's own bytes, which an `<img>` cannot decode.
   useEffect(() => {
-    if (videoFile === null || state.step !== "cover" || captured?.file === videoFile) return;
+    if (videoFile === null || captured?.file === videoFile) return;
     let cancelled = false;
     void captureFrames(videoFile)
       .then((taken) => {
@@ -250,7 +261,7 @@ export function ComposeWizard({
     return () => {
       cancelled = true;
     };
-  }, [videoFile, state.step, captured, dispatch]);
+  }, [videoFile, captured]);
 
   const chooseCover = (file: Blob, frame: number) => {
     // A new face is a new upload: the old one may already be on the server, and
@@ -583,6 +594,18 @@ export function ComposeWizard({
     if (previous === "pick") router.push("/feed");
   };
 
+  // The browser's Back is the same arrow (design/readme.md: "the platform
+  // back gesture does the same"). Each stage past the pick rides its own
+  // history entry, so a Back press never reaches the page behind the wizard
+  // until the pick — the arrival entry — is where it stands, and from there
+  // the browser leaves exactly as it always did.
+  useStageHistory({
+    surface: "compose",
+    level: stepIndex(state),
+    onBack: leave,
+    onForward: () => dispatch({ type: "advance" }),
+  });
+
   // The X: OUT OF THE FLOW from any stage, draft kept, NO confirmation —
   // nothing is lost, and the draft prompt is the return surface. Without it an
   // author five stages deep was stuck backing out tap by tap.
@@ -712,6 +735,7 @@ export function ComposeWizard({
             error={gate.ok ? null : gate.reason}
             blocked={!gate.ok}
             coverSrc={coverPreview}
+            clipFace={clipFace}
             onWords={(words) => dispatch({ type: "words", words })}
             onMode={(mode) => dispatch({ type: "mode", mode })}
             onPick={(files) => void takeFiles(files)}
@@ -862,7 +886,17 @@ export function ComposeWizard({
       <DescribeSheet
         open={describing !== null}
         onClose={() => setDescribing(null)}
-        src={describing === null ? null : (previews[describing] ?? null)}
+        // A video's own bytes are what `previews` holds for it — an `<img>`
+        // cannot decode them, so the sheet stands the clip on its first
+        // frame the same way its other tiles do (same defect as W1, this
+        // surface just never had its own test).
+        src={
+          describing === null
+            ? null
+            : isVideoPost(state)
+              ? clipFace
+              : (previews[describing] ?? null)
+        }
         crop={state.assets.find((asset) => asset.id === describing)?.crop ?? null}
         value={state.assets.find((asset) => asset.id === describing)?.altText ?? ""}
         onChange={(altText) => {
