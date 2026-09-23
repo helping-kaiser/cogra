@@ -15,6 +15,16 @@ describe("UploadStatusLine", () => {
     render(<UploadStatusLine done={1} total={3} />);
     expect(screen.getByRole("status")).toBeInTheDocument();
   });
+
+  // STRICTLY THE IN-FLIGHT UPLOAD GATE (design/components/compose/
+  // UploadNotice.prompt.md lines 1, 11): it never draws for an empty batch —
+  // there is nothing moving to report, so a caller bug must draw nothing
+  // rather than "Uploading 0 of 0".
+  it("draws nothing for an empty batch", () => {
+    render(<UploadStatusLine done={0} total={0} />);
+    expect(screen.queryByTestId("upload-status")).toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
+  });
 });
 
 describe("UploadErrorLine", () => {

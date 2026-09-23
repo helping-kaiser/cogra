@@ -442,6 +442,18 @@ export function ComposeWizard({
     dispatch({ type: "upload", id, upload: { kind: "waiting" } });
   };
 
+  // THIS STAGE NEVER STANDS ON AN EMPTY BODY (jakob's ruling, 2026-09-23;
+  // design commit 27aaa1cb, `ComposeDetails.jsx`/`ComposePicked.jsx`
+  // docblocks). Removing an asset that empties the draft — the video's own
+  // ×, or the last picture in the Show-all manager — gives the pick step
+  // back rather than leaving Details standing on nothing. The staged title,
+  // description, tags and references stay in the draft, waiting for a body.
+  const removeAsset = (id: string) => {
+    const emptying = state.assets.length === 1;
+    dispatch({ type: "unpick", id });
+    if (emptying) dispatch({ type: "goto", step: "pick" });
+  };
+
   // Re-cropping invalidates the bytes that were uploaded from the old framing,
   // so everything starts again. The orphaned assets are the server's to sweep —
   // they are attached to nothing (D5).
@@ -767,7 +779,7 @@ export function ComposeWizard({
           onManage={() => setManaging(true)}
           onDescribe={() => setDescribing(state.assets[0]?.id ?? null)}
           onRetry={retry}
-          onRemove={(id) => dispatch({ type: "unpick", id })}
+          onRemove={removeAsset}
           onNext={() => dispatch({ type: "advance" })}
           blocked={!gate.ok}
         />
@@ -831,7 +843,17 @@ export function ComposeWizard({
           described: asset.altText.trim() !== "",
         }))}
         onDescribe={(id) => setDescribing(id)}
-        onRemove={(id) => dispatch({ type: "unpick", id })}
+        // THE LAST × GIVES THE PICK STEP BACK (jakob's ruling, 2026-09-23;
+        // design commit 27aaa1cb, `ComposePicked.jsx`): removing the last
+        // picture closes the manager itself, the way the video path's own ×
+        // gives its step back — whether the manager was opened from the pick
+        // step (already showing it) or from Details (which never stands on
+        // an empty body).
+        onRemove={(id) => {
+          const last = state.assets.length === 1;
+          removeAsset(id);
+          if (last) setManaging(false);
+        }}
         onMove={(from, to) => dispatch({ type: "reorder", from, to })}
         testId="wizard-picked-sheet"
       />

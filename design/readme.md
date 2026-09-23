@@ -5749,11 +5749,14 @@ board's private habit; jakob ruled it as recommended.
   tray says *cover* in a single place whatever kind of body is in it.
 - **Each surface carries the cover its own way.** The **pick tray**
   shows the inset, which is how a walk that can be walked backwards
-  tells the author what the step behind them settled. The **details and
-  edit stages** carry a *Cover* field section under *Video*: the door
-  *Add a cover* where none is chosen, the face and *Change the cover*
-  where one is — the two states drawn once each across the two scales.
-  A clip that walked the cover step shows no cover section at all. A
+  tells the author what the step behind them settled. The **edit
+  stage** carries a *Cover* field section under *Video*, in both its
+  states: the door *Add a cover* where none is chosen, the face and
+  *Change the cover* where one is. The **compose details stage**
+  carries only the door, and only for a clip whose shape skipped the
+  frame picker; a clip that walked the cover step shows no cover
+  section at all — its face rides the tile's inset, and the step is
+  one Back away. A
   **reading surface** shows the cover as the card's still, and branches
   on nothing: whether that still was chosen or taken was settled while
   the post was written.
