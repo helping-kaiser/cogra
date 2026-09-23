@@ -18,6 +18,7 @@
 // the product's format rules, and every one of them is a rule a test should be
 // able to state directly.
 
+import { clipOutlook } from "@/lib/ui2/media/compress-video";
 import { isAnimatedGif } from "@/lib/ui2/media/gif";
 import {
   COMMENT_VIDEO_MAX_BYTES,
@@ -86,6 +87,10 @@ export const MIXED_BODY_COMMENT = "A comment carries pictures or one video, not 
  */
 export type PickScale = {
   readonly videoMaxBytes: number;
+  /**
+   * Spoken here for a clip provably over the cap, and by the upload
+   * (`runVideoUpload`) for one whose encoded bytes still came out over it.
+   */
   readonly tooBigVideo: string;
   readonly mixedBody: string;
 };
@@ -140,7 +145,16 @@ export async function screenPick(
         refuse(file, UNREADABLE);
         continue;
       }
-      if (file.size > scale.videoMaxBytes) {
+      // THE CAP IS ON WHAT IS SENT (jakob, 2026-09-23: "a video with 300mb that
+      // compresses to less than 100mb is eligible"). A clip over it as picked
+      // gets in wherever this browser will encode it down and the encode can
+      // fit; the one it provably cannot fit — so long that even the floor
+      // rate overflows — is refused now, in the same words, rather than after
+      // the wait. Where there is no encode, the picked bytes are what go, and
+      // they are weighed as they are. Whatever still comes out over the cap is
+      // refused at upload (`runVideoUpload`), as a picture is.
+      const outlook = await clipOutlook(file, scale.videoMaxBytes);
+      if (outlook === "too-long" || (outlook === "as-picked" && file.size > scale.videoMaxBytes)) {
         refuse(file, scale.tooBigVideo);
         continue;
       }

@@ -5,7 +5,18 @@
 // is part of the contract, and a paraphrase that drifts from
 // ComposePickedErrors is a defect no type checker would catch.
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// The encode's outlook is mocked at its module: what it asks of mediabunny and
+// WebCodecs is `compress-video.test.ts`'s subject. By default it answers as a
+// browser with no encoder does — the picked bytes are what will be weighed.
+const clipOutlook = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/ui2/media/compress-video", () => ({ clipOutlook }));
+
+beforeEach(() => {
+  clipOutlook.mockReset();
+  clipOutlook.mockResolvedValue("as-picked");
+});
 
 import {
   COMMENT_VIDEO_MAX_BYTES,
@@ -163,10 +174,30 @@ describe("screenPick", () => {
     expect(outcome.refusals).toHaveLength(0);
   });
 
-  it("refuses a video over the cap", async () => {
+  it("refuses a video over the cap where nothing here will make it smaller", async () => {
     const outcome = await screenPick([mp4(POST_VIDEO_MAX_BYTES + 1)], EMPTY);
     expect(outcome.refusals[0]!.reason).toBe(TOO_BIG_VIDEO_POST);
     expect(TOO_BIG_VIDEO_POST).toContain("100 MB");
+  });
+
+  // jakob 2026-09-23: "a video with 300mb that compresses to less than 100mb
+  // is eligible". The cap belongs to what is sent, exactly as a picture's does.
+  it("takes a video over the cap that this browser will compress inside it", async () => {
+    clipOutlook.mockResolvedValue("compressible");
+    const big = mov(300 * 1024 * 1024);
+
+    const outcome = await screenPick([big], EMPTY);
+
+    expect(clipOutlook).toHaveBeenCalledWith(big, POST_VIDEO_MAX_BYTES);
+    expect(outcome.accepted).toEqual([big]);
+    expect(outcome.refusals).toHaveLength(0);
+  });
+
+  it("refuses, in the same words, a video too long for even the floor rate to fit", async () => {
+    clipOutlook.mockResolvedValue("too-long");
+    const outcome = await screenPick([mp4(POST_VIDEO_MAX_BYTES + 1)], EMPTY);
+    expect(outcome.accepted).toHaveLength(0);
+    expect(outcome.refusals.map((r) => r.reason)).toEqual([TOO_BIG_VIDEO_POST]);
   });
 
   it("takes one video and reports the batch as the moving kind", async () => {
@@ -220,6 +251,16 @@ describe("screenPick at comment scale", () => {
     // The same file is fine on a post, which is what makes the scale real.
     const asPost = await screenPick([between], EMPTY, POST_SCALE);
     expect(asPost.accepted).toHaveLength(1);
+  });
+
+  it("asks the outlook against a comment's cap, not a post's", async () => {
+    clipOutlook.mockResolvedValue("compressible");
+    const big = mp4(80 * 1024 * 1024);
+
+    const outcome = await screenPick([big], EMPTY, COMMENT_SCALE);
+
+    expect(clipOutlook).toHaveBeenCalledWith(big, COMMENT_VIDEO_MAX_BYTES);
+    expect(outcome.accepted).toEqual([big]);
   });
 
   it("takes a comment video inside the cap", async () => {

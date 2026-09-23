@@ -74,6 +74,7 @@ import { VIDEO_TYPE } from "./video";
 import {
   AUDIO_BPS,
   KEY_FRAME_INTERVAL_S,
+  fitsAtFloor,
   planVideo,
   rotatedDimensions,
   videoBitrateForClip,
@@ -160,6 +161,57 @@ export async function compressVideo(file: Blob, capBytes: number): Promise<Compr
     // The probe itself failed — a container the demuxer cannot read. The strip
     // reads it the same way and is where that becomes the author's refusal.
     return keep("failed", describe(error));
+  } finally {
+    input.dispose();
+  }
+}
+
+/**
+ * What the pick is told about a clip before it is let in.
+ *
+ * THE CAP IS WEIGHED ON THE COMPRESSED CLIP (jakob, 2026-09-23: "what matters
+ * is the size after compression and before upload"). So a clip over the cap as
+ * picked is asked the same questions `compressVideo` will ask — can this
+ * browser encode it, and at what rate — and the answer says whether the encode
+ * can bring it inside.
+ */
+export type ClipOutlook =
+  /**
+   * The picked bytes are what will be weighed: this browser cannot encode the
+   * clip, it needs no encode to be sent, or it could not be read here — in
+   * which case the strip is where that becomes a refusal.
+   */
+  | "as-picked"
+  /** Over the cap as picked, but this browser encodes it and the encode can fit. */
+  | "compressible"
+  /** This browser encodes it, but even the floor rate is more than the cap holds. */
+  | "too-long";
+
+/**
+ * The outlook for a picked clip bound for `capBytes`.
+ *
+ * Reads the header only — tracks, codecs, length, the sound's packet table —
+ * and asks the encoder questions, never encodes; the pick stays quick. Never
+ * throws: anything short of an answer is `as-picked`, which is the screening
+ * the pick always did.
+ */
+export async function clipOutlook(file: Blob, capBytes: number): Promise<ClipOutlook> {
+  // Within the cap as picked, the answer is settled before anything is read.
+  if (file.size <= capBytes) return "as-picked";
+  if (typeof VideoEncoder === "undefined") return "as-picked";
+
+  const input = new Input({ formats: [MP4, QTFF], source: new BlobSource(file) });
+  try {
+    const probed = await probe(input, file.size);
+    if (typeof probed === "string") return "as-picked";
+    const ready = await readiness(probed, capBytes);
+    if (ready.kind !== "encode") return "as-picked";
+    const soundBps =
+      ready.audio.kind === "none" ? 0 : ready.audio.kind === "copy" ? ready.audio.bps : AUDIO_BPS;
+    return fitsAtFloor(probed.clip.durationMs, capBytes, soundBps) ? "compressible" : "too-long";
+  } catch (error) {
+    console.info(`${TAG} no outlook for this clip: ${describe(error)}`);
+    return "as-picked";
   } finally {
     input.dispose();
   }

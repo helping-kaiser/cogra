@@ -61,6 +61,8 @@ function audioTrack(codec: string | null, channels = 2, rate = 44_100): FakeTrac
 }
 
 let tracks: FakeTrack[] = [];
+/** Set to make the demuxer fail, as it does on bytes it cannot parse. */
+let unreadable: Error | null = null;
 let durationS = 30;
 const dispose = vi.fn();
 const inputsOpened = vi.fn();
@@ -100,7 +102,10 @@ vi.mock("mediabunny", () => ({
     constructor(readonly options: unknown) {
       inputsOpened(options);
     }
-    getTracks = async () => tracks;
+    getTracks = async () => {
+      if (unreadable !== null) throw unreadable;
+      return tracks;
+    };
     getPrimaryVideoTrack = async () => tracks.find((t) => t.type === "video") ?? null;
     getPrimaryAudioTrack = async () => tracks.find((t) => t.type === "audio") ?? null;
     computeDuration = async () => durationS;
@@ -123,7 +128,7 @@ vi.mock("mediabunny", () => ({
   canEncodeAudio,
 }));
 
-const { compressVideo } = await import("./compress-video");
+const { clipOutlook, compressVideo } = await import("./compress-video");
 
 const POST_CAP = 100 * 1024 * 1024;
 
@@ -145,6 +150,7 @@ beforeEach(() => {
   // A phone's 4K landscape recording with sound: over the bound on both counts.
   tracks = [videoTrack("avc", 3840, 2160), audioTrack("aac")];
   durationS = 30;
+  unreadable = null;
   conversionValid = true;
   discarded = [];
   encodedBuffer = new ArrayBuffer(64);
@@ -294,6 +300,62 @@ describe("compressVideo — AAC carried across (no AAC encoder)", () => {
 
     expect(result).toMatchObject({ blob: picked, path: "unsupported" });
     expect(execute).not.toHaveBeenCalled();
+  });
+});
+
+// The pick's question of an over-cap clip, answered from the same probe and
+// the same capability checks the encode itself will run.
+describe("clipOutlook — can the encode bring it inside the cap?", () => {
+  it("settles a clip within the cap without opening it", async () => {
+    await expect(clipOutlook(clip(POST_CAP), POST_CAP)).resolves.toBe("as-picked");
+    expect(inputsOpened).not.toHaveBeenCalled();
+  });
+
+  it("weighs the picked bytes where the browser has no VideoEncoder", async () => {
+    vi.stubGlobal("VideoEncoder", undefined);
+    await expect(clipOutlook(clip(200_000_000), POST_CAP)).resolves.toBe("as-picked");
+    expect(inputsOpened).not.toHaveBeenCalled();
+  });
+
+  it("lets in an over-cap clip this browser will encode inside the cap", async () => {
+    await expect(clipOutlook(clip(300 * 1024 * 1024), POST_CAP)).resolves.toBe("compressible");
+    // Asked, never encoded.
+    expect(canEncodeVideo).toHaveBeenCalledOnce();
+    expect(init).not.toHaveBeenCalled();
+    expect(dispose).toHaveBeenCalledOnce();
+  });
+
+  it("names the clip even the floor rate cannot fit", async () => {
+    // 800 s × (1 Mbps + 128 kbps) = 902.4 Mbit, over the post cap's 838.9.
+    durationS = 800;
+    await expect(clipOutlook(clip(900_000_000), POST_CAP)).resolves.toBe("too-long");
+  });
+
+  it("counts no sound for a silent clip", async () => {
+    // 800 s × 1 Mbps = 800 Mbit: inside the cap once there is no sound to carry.
+    tracks = [videoTrack("avc", 3840, 2160)];
+    durationS = 800;
+    await expect(clipOutlook(clip(900_000_000), POST_CAP)).resolves.toBe("compressible");
+  });
+
+  it("counts a copied AAC track at its own measured rate", async () => {
+    // 700 s: fits with 128 kbps encoded (789.6 Mbit), not with 256 kbps
+    // carried across (879.2 Mbit).
+    durationS = 700;
+    await expect(clipOutlook(clip(900_000_000), POST_CAP)).resolves.toBe("compressible");
+    canEncodeAudio.mockResolvedValue(false);
+    await expect(clipOutlook(clip(900_000_000), POST_CAP)).resolves.toBe("too-long");
+  });
+
+  it("weighs the picked bytes where this browser cannot encode the clip", async () => {
+    canEncodeVideo.mockResolvedValue(false);
+    await expect(clipOutlook(clip(200_000_000), POST_CAP)).resolves.toBe("as-picked");
+  });
+
+  it("never throws, and weighs the picked bytes when the clip cannot be read", async () => {
+    unreadable = new Error("not a movie");
+    await expect(clipOutlook(clip(200_000_000), POST_CAP)).resolves.toBe("as-picked");
+    expect(dispose).toHaveBeenCalledOnce();
   });
 });
 

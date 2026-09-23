@@ -78,6 +78,30 @@ export function videoBitrateForClip(
 }
 
 /**
+ * Whether a clip of `durationMs` can land inside `capBytes` at all once
+ * encoded — the one question the pick asks of a clip over the cap.
+ *
+ * THE CAP GOVERNS WHAT IS SENT, NOT WHAT WAS PICKED (jakob, 2026-09-23: "a
+ * video with 300mb that compresses to less than 100mb is eligible"). The plan
+ * scales the picture's rate down to fit any cap, but never below the floor, so
+ * the only clip no encode can fit is one whose floor-rate picture plus its
+ * sound, over its whole length, is already more than the cap holds. `audioBps`
+ * is the sound the encode will carry: 128 kbps encoded, the measured rate of a
+ * copied AAC track, or 0 for a silent clip.
+ *
+ * Against the cap itself, not the planned headroom: the question is whether
+ * the clip is PROVABLY unfittable, and a clip inside the cap but past the
+ * headroom may still land — the size check on the encoded bytes
+ * (`runVideoUpload`) is what catches one that does not. A clip of unknown
+ * length cannot be proven either way and is let through to that check.
+ */
+export function fitsAtFloor(durationMs: number, capBytes: number, audioBps: number): boolean {
+  if (!(durationMs > 0)) return true;
+  const floorBits = ((FLOOR_VIDEO_BPS + audioBps) * durationMs) / 1000;
+  return floorBits <= capBytes * BITS_PER_BYTE;
+}
+
+/**
  * Whether a clip carries more bits than we mean to send — Android's
  * `richerThan`.
  *

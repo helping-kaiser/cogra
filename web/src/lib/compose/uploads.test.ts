@@ -9,7 +9,7 @@ import { PICTURE_MAX_BYTES, POST_VIDEO_MAX_BYTES } from "@/lib/ui2/media/caps";
 import { createGuard, type AuthGuard } from "@/lib/session/guard";
 import { createTokenStore } from "@/lib/session/token-store";
 import type { Refresher } from "@/lib/session/refresher";
-import { TOO_BIG_PICTURE } from "./pick";
+import { COMMENT_SCALE, POST_SCALE, TOO_BIG_PICTURE } from "./pick";
 import { runUpload, runVideoUpload, waitingAssets } from "./uploads";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
@@ -29,7 +29,8 @@ vi.mock("@/lib/ui2/media/strip-video", () => ({ stripVideoMetadata }));
 const compressVideo = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/ui2/media/compress-video", () => ({ compressVideo }));
 
-/** A post's video cap — the destination the upload path is told about. */
+/** A post — the destination the upload path is told about — and its video cap. */
+const SCALE = POST_SCALE;
 const CAP = POST_VIDEO_MAX_BYTES;
 
 const asset: PickedAsset = {
@@ -368,7 +369,7 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, CAP);
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, SCALE);
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     expect(calls).toHaveLength(2);
@@ -387,7 +388,7 @@ describe("runVideoUpload", () => {
     const client = clientUnauthenticatedOnce("media-cover");
     const poster = steps();
 
-    await runVideoUpload(client, healing, clip, cover, steps().step, poster.step, CAP);
+    await runVideoUpload(client, healing, clip, cover, steps().step, poster.step, SCALE);
 
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
@@ -403,7 +404,7 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, null, video.step, poster.step, CAP);
+    await runVideoUpload(client, guard, clip, null, video.step, poster.step, SCALE);
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     // One call, not two: there is no cover leg to run.
@@ -438,7 +439,7 @@ describe("runVideoUpload", () => {
       },
     };
 
-    await runVideoUpload(client, priming, clip, null, steps().step, steps().step, CAP);
+    await runVideoUpload(client, priming, clip, null, steps().step, steps().step, SCALE);
 
     expect(order).toEqual(["prime", "upload"]);
   });
@@ -447,7 +448,7 @@ describe("runVideoUpload", () => {
     encodable();
     const client = clientAnsweringInTurn("media-video");
 
-    await runVideoUpload(client, guard, clip, null, steps().step, steps().step, CAP);
+    await runVideoUpload(client, guard, clip, null, steps().step, steps().step, SCALE);
 
     expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
     const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[0]![0].variables.input
@@ -459,7 +460,7 @@ describe("runVideoUpload", () => {
     encodable();
     const client = clientAnsweringInTurn("media-cover", "media-video");
 
-    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, CAP);
+    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, SCALE);
 
     expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
     const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[1]![0].variables.input
@@ -477,7 +478,7 @@ describe("runVideoUpload", () => {
     const client = clientAnsweringInTurn("media-cover", "media-video");
     const video = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, steps().step, CAP);
+    await runVideoUpload(client, guard, clip, cover, video.step, steps().step, SCALE);
 
     // Falling back to the picked bytes would upload the file with its metadata
     // intact — the exact outcome the strip exists to prevent. And it is not
@@ -499,7 +500,7 @@ describe("runVideoUpload", () => {
     compressVideo.mockResolvedValueOnce({ blob: encoded, path: "encoded", tookMs: 900 });
     const client = clientAnsweringInTurn("media-cover", "media-video");
 
-    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, CAP);
+    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, SCALE);
 
     // Identity, not equality: two Blobs compare equal structurally, and what
     // matters is WHICH bytes each step was handed.
@@ -512,12 +513,72 @@ describe("runVideoUpload", () => {
     expect(stripVideoMetadata.mock.calls[0]![0]).toBe(encoded);
   });
 
+  // THE CAP IS WEIGHED ON WHAT IS SENT (jakob 2026-09-23). The pick lets an
+  // over-cap clip in wherever this browser can encode it down, so the size
+  // question is answered here, on the stripped bytes — the picture path's
+  // `TOO_BIG_PICTURE`, in the destination's own video sentence.
+  it("refuses in the destination's words when what would be sent is over its cap", async () => {
+    encodable();
+    const over = { size: CAP + 1, type: "video/mp4" } as Blob;
+    stripVideoMetadata.mockResolvedValueOnce({ blob: over, tookMs: 12 });
+    const client = clientAnsweringInTurn("media-video");
+    const video = steps();
+
+    await runVideoUpload(client, guard, clip, null, video.step, steps().step, SCALE);
+
+    expect(video.seen.at(-1)).toEqual({
+      kind: "failed",
+      message: POST_SCALE.tooBigVideo,
+      retryable: false,
+    });
+    expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
+  });
+
+  it("weighs a comment's clip against a comment's cap", async () => {
+    encodable();
+    const between = { size: COMMENT_SCALE.videoMaxBytes + 1, type: "video/mp4" } as Blob;
+    stripVideoMetadata.mockResolvedValueOnce({ blob: between, tookMs: 12 });
+    const video = steps();
+
+    await runVideoUpload(
+      clientAnsweringInTurn("media-video"),
+      guard,
+      clip,
+      null,
+      video.step,
+      steps().step,
+      COMMENT_SCALE,
+    );
+
+    expect(compressVideo.mock.calls[0]![1]).toBe(COMMENT_SCALE.videoMaxBytes);
+    expect(video.seen.at(-1)).toMatchObject({ kind: "failed", message: COMMENT_SCALE.tooBigVideo });
+  });
+
+  it("sends a clip that lands exactly at the cap", async () => {
+    encodable();
+    // A cap the stripped test bytes meet exactly: the cap is inclusive.
+    const tight = { ...SCALE, videoMaxBytes: STRIPPED.size };
+    const video = steps();
+
+    await runVideoUpload(
+      clientAnsweringInTurn("media-video"),
+      guard,
+      clip,
+      null,
+      video.step,
+      steps().step,
+      tight,
+    );
+
+    expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
+  });
+
   it("reports the compression as the same `encoding` stage, adding no state", async () => {
     encodable();
     const client = clientAnsweringInTurn("media-video");
     const video = steps();
 
-    await runVideoUpload(client, guard, clip, null, video.step, steps().step, CAP);
+    await runVideoUpload(client, guard, clip, null, video.step, steps().step, SCALE);
 
     expect(video.seen.map((s) => s.kind)).toEqual(["encoding", "uploading", "done"]);
   });
@@ -533,7 +594,7 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, CAP);
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, SCALE);
 
     // The refusal on the cover, named as a cover rather than as a file…
     expect(poster.seen.at(-1)).toEqual({
@@ -558,7 +619,7 @@ describe("runVideoUpload", () => {
       }),
     );
     await expect(
-      runVideoUpload(clientAnswering({}), guard, clip, cover, () => {}, () => {}, CAP),
+      runVideoUpload(clientAnswering({}), guard, clip, cover, () => {}, () => {}, SCALE),
     ).resolves.toBeUndefined();
   });
 });
