@@ -1,11 +1,13 @@
-/* SEARCH IN THIS CHAT — the details' door into what was said (round B1 of
-   the chats work; jakob's rulings 2026-09-23).
+/* SEARCH IN THIS CHAT — the search glyph on the thread's header (round B1 of
+   the chats work; jakob's rulings 2026-09-23, the fix pass: search left the
+   details page for the header, beside the details door, on every thread —
+   `ChatThreadHeader`). The way back is the thread it was opened from.
 
    ONE CHAT, WORD BY WORD, NEWEST FIRST — the contract's own shape: the scoped
    `chatSearch` read (chats.md §7, *Searching*; api-spec.md), which keeps chat
    messages out of the global index and searches exactly one chat. The field
    is the Explore field (`SearchBar`), and it stands under a titled header
-   rather than in place of one, because this is a subpage of the details with
+   rather than in place of one, because this is a subpage of the thread with
    a way back, not a tab.
 
    THE RESULTS ARE MESSAGES AT CHAT SCALE: the list row every chats surface
@@ -30,7 +32,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="Search in this chat" backHref="#" backLabel="Back to chat details" />
+      <PageHeader title="Search in this chat" backHref="#" backLabel="Back to the chat" />
       <div style={{ flex: "none" }}>
         <SearchBar query="tide" placeholder="Search messages" />
         <div style={{ padding: "0 24px 4px" }}>

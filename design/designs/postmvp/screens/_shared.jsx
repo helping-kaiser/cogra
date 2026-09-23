@@ -1137,6 +1137,14 @@ function DayDivider({ children }) {
    outside the chat — drawn by the chat details round, which resolved the gap
    the chats round left here on purpose.
 
+   SEARCH RIDES THE HEADER'S TRAILING EDGE (jakob 2026-09-23, the details
+   round's fix pass). `Search in this chat` left the details page for a glyph
+   beside the door — the messenger's place for it, one tap from the thread a
+   reader is searching. The door keeps the whole middle of the band, and the
+   glyph is a 48px target of its own, so the two never share a tap. Every
+   thread wears it, a reader's outside the chat included: plaintext is a public
+   read, and the search's truth note says the same to both.
+
    IT PINS. A thread is where a reader writes, and the way back and the chat's
    own name must never leave mid-conversation — readme §2's Pins column. The
    list above it collapses; the thread does not. */
@@ -1167,6 +1175,14 @@ function ChatThreadHeader({ name, image, backLabel = "Back to your chats" }) {
         <span style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {name}
         </span>
+      </button>
+      <button
+        type="button"
+        aria-label="Search in this chat"
+        className="cg-state cg-focus"
+        style={{ height: 48, width: 48, flex: "none", display: "grid", placeItems: "center", border: 0, padding: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer" }}
+      >
+        <Icon name="search" />
       </button>
     </header>
   );
@@ -1508,9 +1524,10 @@ function OpenDecisionsEmpty() {
 
 /* THE MEMBER LIST — `ReferenceRow` at person kind, the picker's row: the
    face, the name, the handle under it, and on the trailing edge the ROLE
-   (jakob 2026-09-23), in the row's own `value` slot — `Admin`, `Moderator`,
-   `Member`, the default map's three roles (chats.md §5) in the reader's words.
-   Every member row carries its word, `Member` included, so the one row that
+   (jakob 2026-09-23) — `Admin`, `Moderator`, `Member`, the default map's
+   three roles (chats.md §5) in the reader's words. For a member the word is a
+   door (`RoleDoor`, below); for a reader outside it is the row's plain
+   `value`. Every member row carries its word, `Member` included, so the one row that
    carries none is the one that is not a member yet.
 
    THE FOUNDER HOLDS ADMIN FROM THE FOUNDING ACT (jakob 2026-09-23, chats.md
@@ -1536,24 +1553,82 @@ function OpenDecisionsEmpty() {
 const ROLE_WORD = { admin: "Admin", chat_mod: "Moderator", member: "Member" };
 const PENDING_INVITE_LINE = "Invited — hasn't joined yet";
 
-function MemberRows({ members }) {
-  return members.map((m) => (
-    <ReferenceRow
-      key={m.handle}
-      kind="person"
-      name={m.name}
-      src={m.src}
-      sub={m.pending ? PENDING_INVITE_LINE : m.sub ?? `@${m.handle}`}
-      value={m.pending ? undefined : ROLE_WORD[m.role]}
-      onOpen={() => {}}
-    />
-  ));
+/* THE ROLE READOUT IS A DOOR (jakob 2026-09-23, the details round's fix
+   pass). Tapping `Admin`, `Moderator` or `Member` opens the role-change flow —
+   `decision:change_role`, a multi-voice act whose face is round B2's. The
+   grammar is the stance row's split (`StanceRow`, the change-histories round):
+   a readout at a row's end that opens its own surface splits the row, so the
+   person area opens the person and the word opens the role — never a control
+   inside a control. And a door has to look like one, so the word takes the
+   `EditedMarker`'s tappable form — the same quiet ink, the same underline —
+   and a spoken name that says where it goes (`Admin — change the role`).
+
+   A MEMBER'S DOOR, ON EVERY MEMBER'S ROW, the reader's own included: the
+   default map lets every active member propose a role change (chats.md §5),
+   and excludes the subject only from the tally, never from being asked
+   about. A reader outside the chat is not eligible, so their list keeps the
+   plain readout (`roleDoors` off). THE PENDING INVITEE HAS NO ROLE AND NO
+   DOOR — there is nothing to change until they join. */
+function RoleDoor({ role }) {
+  const word = ROLE_WORD[role];
+  return (
+    <button
+      type="button"
+      aria-label={`${word} — change the role`}
+      className="cg-state cg-focus cg-hit"
+      style={{ flex: "none", alignSelf: "stretch", display: "inline-flex", alignItems: "center", border: 0, background: "none", padding: "0 24px 0 12px", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", textDecoration: "underline" }}
+    >
+      {word}
+    </button>
+  );
+}
+
+/* The person half of a split member row — `ReferenceRow`'s person anatomy to
+   the pixel (its disc, its two lines, its gutter), stopping where the role
+   door begins. */
+function MemberPerson({ m }) {
+  return (
+    <button
+      type="button"
+      className="cg-state cg-focus"
+      style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "var(--space-3)", minHeight: "var(--touch-target-min)", border: 0, background: "none", padding: "var(--space-1) 0 var(--space-1) var(--space-6)", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" }}
+    >
+      <MonogramAvatar name={m.name} src={m.src} size="md" />
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.name}</span>
+        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {m.sub ?? `@${m.handle}`}
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function MemberRows({ members, roleDoors = false }) {
+  return members.map((m) =>
+    roleDoors && !m.pending ? (
+      <div key={m.handle} style={{ display: "flex", alignItems: "stretch" }}>
+        <MemberPerson m={m} />
+        <RoleDoor role={m.role} />
+      </div>
+    ) : (
+      <ReferenceRow
+        key={m.handle}
+        kind="person"
+        name={m.name}
+        src={m.src}
+        sub={m.pending ? PENDING_INVITE_LINE : m.sub ?? `@${m.handle}`}
+        value={m.pending ? undefined : ROLE_WORD[m.role]}
+        onOpen={() => {}}
+      />
+    ),
+  );
 }
 
 /* The members' section: the label, then — for a member — the way to invite
    more people first, the messenger's place for it and `ChatPicker`'s own
    head-row grammar (`ContentRow`'s door, 16px gutter), then the rows. */
-function MembersSection({ members, addPeople = false }) {
+function MembersSection({ members, addPeople = false, roleDoors = false }) {
   return (
     <div style={{ flex: "none", display: "flex", flexDirection: "column" }}>
       <SectionLabel>Members</SectionLabel>
@@ -1562,7 +1637,7 @@ function MembersSection({ members, addPeople = false }) {
           <ContentRow variant="door" title="Add people" glyph="add" onOpen={() => {}} />
         </div>
       )}
-      <MemberRows members={members} />
+      <MemberRows members={members} roleDoors={roleDoors} />
     </div>
   );
 }
@@ -1600,10 +1675,9 @@ function ChatDetailsBody() {
         </ChatIdentity>
         <DetailsGroup ariaLabel="In this chat">
           <SettingsRow label="Media in this chat" onOpen={() => {}} />
-          <SettingsRow label="Search in this chat" onOpen={() => {}} />
         </DetailsGroup>
         <OpenDecisionsEmpty />
-        <MembersSection members={COAST_WALKERS_MEMBERS} addPeople />
+        <MembersSection members={COAST_WALKERS_MEMBERS} addPeople roleDoors />
         <DetailsGroup ariaLabel="This chat">
           <SettingsRow checked={false} label="Mute this chat" status="No push for its messages. It keeps its place and its dot on your list." onOpen={() => {}} />
           <SettingsRow label="Edit history" onOpen={() => {}} />

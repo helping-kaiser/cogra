@@ -3,18 +3,21 @@
    chats work; jakob's rulings 2026-09-23).
 
    CHATS ARE PUBLIC, SO THE DETAILS ARE THE DETAILS (jakob). The face, the
-   name, the words, the members and their roles, the edit history, the media
-   and the search are all public records or public reads (chats.md §1), so a
-   non-member meets the member's page in the member's order. Open decisions
+   name, the words, the members and their roles, the edit history and the
+   media are all public records or public reads (chats.md §1), so a
+   non-member meets the member's page in the member's order — and search,
+   which rides the thread's header on every thread, theirs included (jakob,
+   the fix pass). Open decisions
    are public too — a chat's decisions to act are visible facts even when
    their content rides encrypted (§7, *What encryption does not hide*) — so
    the section stands here, empty in this fixture as on the member's board.
 
    WHAT A NON-MEMBER CANNOT DO IS SIMPLY ABSENT. No `Edit chat` (the map's
    eligibility is its active members), no `Add people` (an invitation is a
-   member's vouch), no mute (there is nothing of theirs to silence) and no
-   leave (there is nothing to leave). Absent, not disabled: a greyed row is a
-   promise the reader cannot keep.
+   member's vouch), no mute (there is nothing of theirs to silence), no leave
+   (there is nothing to leave), and no role doors — the role words stay plain
+   readouts, because proposing a role change is an active member's act.
+   Absent, not disabled: a greyed row is a promise the reader cannot keep.
 
    THE JOIN TAKES EDIT'S PLACE ON THE ACTIONS ROW, worded by the chat's
    policy — the same words as the thread's foot (`ChatJoinFoot`) and the
@@ -53,7 +56,6 @@ export function Screen() {
         </ChatIdentity>
         <DetailsGroup ariaLabel="In this chat">
           <SettingsRow label="Media in this chat" onOpen={() => {}} />
-          <SettingsRow label="Search in this chat" onOpen={() => {}} />
         </DetailsGroup>
         <OpenDecisionsEmpty />
         <MembersSection members={HARBOUR_OFFICE_MEMBERS} />

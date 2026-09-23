@@ -13,12 +13,18 @@
      it where the profile's `Message` stands. WhatsApp puts a group's edit in
      the header's corner; CoGra's own profile puts `Edit profile` on this row
      instead, and the chat follows the profile.
-   · MEDIA AND SEARCH — the doors into what was said, first, as WhatsApp puts
-     them first: they are what a reader opens this page for most.
+   · MEDIA — the door into what was shown, first, as WhatsApp puts it first.
+     SEARCH IS NOT HERE (jakob, the fix pass): it rides the thread's header as
+     a glyph beside the details door (`ChatThreadHeader`), one tap from the
+     thread being searched.
    · OPEN DECISIONS — beside media (jakob), drawn empty: `Nothing is being
      decided.`
    · MEMBERS — `Add people` heading the list, then the rows, each wearing its
      role. One member is a Collective; one invited person has not joined yet.
+     EACH ROLE WORD IS A DOOR (jakob, the fix pass) to the role-change flow —
+     `decision:change_role`'s multi-voice face, round B2's, an intended gap.
+     The stance row's split grammar (`RoleDoor`): the person area opens the
+     person, the underlined word opens the role. The invitee has neither.
    · THE CHAT'S OWN SETTINGS — mute, and the door to its edit history.
    · LEAVE — last, alone in its group, quiet at rest (the account deletion's
      rule: the weight of an act lives in the dialog it opens, not in a red row).
