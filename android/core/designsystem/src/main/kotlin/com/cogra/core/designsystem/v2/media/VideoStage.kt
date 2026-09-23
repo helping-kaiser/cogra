@@ -8,7 +8,9 @@ import androidx.compose.runtime.setValue
 import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 
 /**
  * The one clip the app is playing, and whichever surface is showing it.
@@ -46,7 +48,8 @@ import androidx.media3.exoplayer.ExoPlayer
  * **The parked cost.** Exactly one decoder stays held once a clip has
  * played, paused and idle. That is the price of continuity and it is
  * bounded at one; a second clip claims the stage and the first is
- * released.
+ * released. The parked player does not go on downloading: a paused
+ * player stops loading ([VideoLoadControl]).
  */
 @UnstableApi
 object VideoStage {
@@ -68,6 +71,16 @@ object VideoStage {
      */
     var holding: Holding? by mutableStateOf(null)
         private set
+
+    /**
+     * Where every player the stage builds reads its clip from.
+     *
+     * The app shell installs the process's disk cache here at startup
+     * ([VideoCache]). Left unset, a player reads straight from the
+     * network, which is Media3's own default.
+     */
+    @Volatile
+    var dataSources: DataSource.Factory? = null
 
     /**
      * Takes the stage for [token], on [url].
@@ -92,9 +105,21 @@ object VideoStage {
         // frame says nothing about this one, and inheriting it would
         // skip the cover on a clip that has not drawn anything yet.
         hasRendered = false
+        val appContext = context.applicationContext
         holding = Holding(
             url = url,
-            player = ExoPlayer.Builder(context.applicationContext)
+            player = ExoPlayer.Builder(appContext)
+                // Every read goes through what the app installed — the
+                // process's disk cache, so a loop replays from disk and a
+                // clip scrolled back to is not fetched again.
+                .apply {
+                    dataSources?.let {
+                        setMediaSourceFactory(DefaultMediaSourceFactory(appContext).setDataSourceFactory(it))
+                    }
+                }
+                // Seconds of read-ahead rather than 50 s, and none of it
+                // while paused — see [VideoLoadControl].
+                .setLoadControl(VideoLoadControl.create())
                 // THE SKIPS ARE TEN SECONDS, said by the board's own labels
                 // ("Back ten seconds", `VideoControls.jsx:196`). They are the
                 // PLAYER's increments rather than arithmetic in the control,
