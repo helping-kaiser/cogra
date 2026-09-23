@@ -449,9 +449,13 @@ the start — and delivery splits by content kind.
   per-type size caps; `durationMs` reading a value.
 - The wizard's cover step, and animated WebP and GIF.
 - The upload accepts **MP4 / H.264 + AAC** at 100 MiB and animated
-  WebP at the picture's own cap, validated and never transcoded; a
-  still GIF converts on the device and an animated one is refused
-  there. A video is the whole body and its poster rides the
+  WebP at the picture's own cap, validated; a still GIF converts on
+  the device and an animated one is refused there. Video is served
+  at the Android composer's target: clients compress where they
+  can, and the server re-encodes an upload that exceeds it before
+  it can be attached — `PROCESSING` until the rendition exists,
+  refused by prepare until `READY` — so the served bytes are always
+  the witnessed ones. A video is the whole body and its poster rides the
   placement, named at prepare. A comment carries one too, at half
   the byte budget.
 - Metadata is stripped on the device and **checked again here**,
