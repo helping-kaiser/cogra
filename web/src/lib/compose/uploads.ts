@@ -13,6 +13,7 @@ import type { Outcome, UserError } from "@/lib/api/outcome";
 import type { AuthGuard } from "@/lib/session/guard";
 import { mediaRefusalMessage } from "@/lib/ui/error-messages";
 import { pictureTooBig } from "@/lib/ui2/media/caps";
+import { compressVideo } from "@/lib/ui2/media/compress-video";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import { stripVideoMetadata } from "@/lib/ui2/media/strip-video";
 import { TOO_BIG_PICTURE } from "./pick";
@@ -129,12 +130,14 @@ export function waitingAssets(assets: readonly PickedAsset[]): readonly PickedAs
  * the video too, said in those words rather than leaving a video stuck at
  * "uploading" with no explanation.
  *
- * THE CLIP IS STRIPPED BEFORE IT GOES, on the device, exactly as a picture is.
- * The still path re-encodes through a canvas and the metadata cannot survive;
- * a video is remuxed instead — its encoded packets copied into a fresh
- * container with no metadata boxes — so the quality is untouched and the tags
- * are gone. The server checks and re-strips regardless; this is the first line,
- * not the only one.
+ * THE CLIP IS COMPRESSED, THEN STRIPPED, BEFORE IT GOES. Where the browser can
+ * encode H.264 and AAC, a clip outside the upload target is encoded to it
+ * first (`compress-video.ts` — the same target as Android's), and a browser
+ * that cannot hands the picked bytes on unchanged. Either way the result is
+ * then remuxed — its encoded packets copied into a fresh container with no
+ * metadata boxes — so the tags are gone on every path. The server checks,
+ * re-strips and transcodes regardless; this is the first line, not the only
+ * one.
  *
  * A FAILED STRIP FAILS THE UPLOAD. Falling back to the picked bytes would
  * upload the file with its GPS tag intact, which is the outcome the strip
@@ -160,9 +163,14 @@ export async function runVideoUpload(
   cover: CoverAsset | null,
   onVideo: UploadStep,
   onCover: UploadStep,
+  /**
+   * The destination's video cap — a post's or a comment's. A long clip is
+   * encoded at the rate that fits it, exactly as Android plans one.
+   */
+  videoMaxBytes: number,
 ): Promise<void> {
   if (cover === null) {
-    await sendVideo(client, guard, video, onVideo);
+    await sendVideo(client, guard, video, onVideo, videoMaxBytes);
     return;
   }
   let encoded;
@@ -198,11 +206,11 @@ export async function runVideoUpload(
   }
   onCover({ kind: "done", mediaId: poster.value.id });
 
-  await sendVideo(client, guard, video, onVideo);
+  await sendVideo(client, guard, video, onVideo, videoMaxBytes);
 }
 
 /**
- * The clip's own leg: strip, then upload.
+ * The clip's own leg: compress, strip, then upload.
  *
  * Shared by both entries so a faceless clip takes exactly the path a covered
  * one does — the alternative was a second copy of the strip and its refusal
@@ -213,14 +221,19 @@ async function sendVideo(
   guard: AuthGuard,
   video: PickedAsset,
   onVideo: UploadStep,
+  videoMaxBytes: number,
 ): Promise<void> {
-  // The strip is reported as `encoding`: it is the same stage in the same
-  // story — bytes being made ready — and inventing a fourth state for it would
-  // put a word on screen that means nothing to the person reading it.
+  // The compression and the strip are both reported as `encoding`: they are
+  // the same stage in the same story — bytes being made ready — and inventing
+  // a further state for either would put a word on screen that means nothing
+  // to the person reading it.
   onVideo({ kind: "encoding" });
+  // Never throws: a browser that cannot encode, or an encode that fails, hands
+  // back the picked bytes and the clip carries on exactly as it would have.
+  const compressed = await compressVideo(video.file, videoMaxBytes);
   let stripped;
   try {
-    stripped = await stripVideoMetadata(video.file);
+    stripped = await stripVideoMetadata(compressed.blob);
   } catch {
     onVideo({
       kind: "failed",
