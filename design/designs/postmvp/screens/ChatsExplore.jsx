@@ -1,5 +1,5 @@
 /* CHATS · all chats — the explorer, the page's second face (would-like #3;
-   jakob's rulings 2026-09-23).
+   jakob's rulings and canvas review 2026-09-23).
 
    EVERY CHAT, BY THE ORDINARY RANK, AND NO SECOND ALGORITHM (jakob, the reel's
    precedent). The list is the slice-3 rank narrowed to chats: the same graph,
@@ -9,11 +9,15 @@
    needs. The rank orders the list and yields the row's edge to the join
    (`ReferenceRow`'s picker rule), so no number is drawn.
 
-   ONE TOGGLE: `Not already a member` (jakob). A filter chip at the head of the
-   list — `Chip`'s own job, a condition the reader turns on and off — which,
-   when on, leaves out the chats the reader is already in. Drawn OFF, so the
-   board can show every row the explorer carries: two chats the reader is in,
-   wearing `Member`, among the ones they are not.
+   ONE FILTER, A QUIET SWITCH, ON (jakob): `Hide chats you're in`
+   (`HideJoinedSwitch`). This face exists to find chats the reader is not in,
+   so every row drawn is one they could join; the chats they are in are the
+   other tab. Off, those rows join the list wearing `Member`.
+
+   THE LAST MESSAGE IS THE SECOND LINE, AND HERE IT IS OFTEN LOCKED. A
+   non-member holds no key to any chat, so every encrypted last message reads
+   `An encrypted message` with the lock before it — three of the six rows. The
+   plaintext ones read in full: chats are public reads.
 
    THE ROW'S JOIN SPEAKS THE CHAT'S POLICY (jakob). An open chat says `Join`;
    one that takes requests says `Ask to join`; an invite-only chat is listed
@@ -22,33 +26,32 @@
    the chat's governance, which ships its default silently — nothing about it
    is said here.
 
-   READING COMES FIRST. A row opens the chat itself: chats are public reads
-   (readme §13, the search rulings — encrypted messages show as what they are,
-   but they show), so a reader who is not a member reads the thread before
-   deciding. That non-member face — the thread with the join where the foot
-   would be — is not drawn this round (graph: a gap); a chat the reader is in
-   opens `ChatThread`.
+   READING COMES FIRST. A row opens the chat itself — `ChatThreadReader`, the
+   thread with the join where a member's foot would be — so a reader reads
+   before deciding.
+
+   THE TOP RETRACTS ON SCROLL AND THE FAB STAYS, exactly as on `Your chats`:
+   the same control in the same corner on both faces.
 
    THE GUEST'S FACE IS THIS ONE (not drawn as a variant). A guest reads the
-   explorer exactly as drawn, rows and threads alike; the joins and the swap
-   back to `Your chats` are where a guest meets the join prompt, the ordinary
-   guest gate, because those are the first acts on this page that need an
-   account. */
+   explorer exactly as drawn, rows and threads alike; the joins, the FAB and
+   the swap back to `Your chats` are where a guest meets the join prompt, the
+   ordinary guest gate, because those are the first acts on this page that
+   need an account. */
 export function Screen() {
   return (
     <>
       <ChatsTop face="all" />
-      <div style={{ flex: "none", display: "flex", padding: "12px 16px 0" }}>
-        <Chip label="Not already a member" selected={false} />
-      </div>
+      <HideJoinedSwitch on />
       <ChatsColumn>
-        <ChatExploreRow name="Harbour office" about="Opening hours, notices, and the lost-and-found." join="request" />
-        <ChatExploreRow name="Coast walkers" image="post-photo.jpg" about="Low-tide walks on the flats, planned the night before." join="member" />
-        <ChatExploreRow name="Slipway repairs" about="Volunteers for the spring repair — tools, tides, tea." join="open" />
-        <ChatExploreRow name="Salt-crust rubbings" about="Paper, wax, and whatever the wind allows." join="member" />
-        <ChatExploreRow name="Night fishing crew" about="Tides, weather, and who has the boat this week." join="invite" />
-        <ChatExploreRow name="Sea wall market" about="Who is selling what on Sunday, and where to find them." join="open" />
+        <ChatExploreRow name="Harbour office" preview={<NoKeyPreview sender="Kel Moreau" />} join="request" />
+        <ChatExploreRow name="Sea wall market" image="gallery-honey.jpg" preview="Mira Voss: Honey is back on the stand from Saturday." join="open" />
+        <ChatExploreRow name="Night fishing crew" preview={<NoKeyPreview sender="Tobias Lindqvist" />} join="invite" />
+        <ChatExploreRow name="Slipway repairs" preview="Juno Baptiste: Bring gloves — the new planks splinter." join="open" />
+        <ChatExploreRow name="Birdwatch at the point" preview={<NoKeyPreview sender="Ada Okonkwo" />} join="request" />
+        <ChatExploreRow name="Tide tables" preview="Kel Moreau: Spring tides this weekend, lowest on Sunday." join="open" />
       </ChatsColumn>
+      <NewChatFab />
       <BottomNav active={null} slots={ALL_SLOTS} inline />
     </>
   );
