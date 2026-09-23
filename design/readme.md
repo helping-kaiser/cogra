@@ -6118,6 +6118,45 @@ jakob ruled it as the video path's rule applied to pictures:
   draft. Drawn on canonical (`ComposePicked`'s remove edge,
   docblocks there and on `ComposeDetails`), merged as its own PR.
 
+### The chats base round — 2026-09-23
+
+Would-like #3, the third round in the post-MVP tree: the four base
+boards, `ChatsHome`, `ChatsExplore`, `ChatThread` and `ChatCreate`, on a
+page of their own. The masters (`ChatRow`, `ChatExploreRow`,
+`ChatBubble`, `ChatSealedNotice`, `ChatFoot`) live in the tree's
+prelude until the round migrates.
+
+- **Messenger clothes over the proposal primitive (jakob).** A chat's
+  backbone is the proposal machinery, and nothing on these surfaces may
+  look like a proposal. This is the one place CoGra adopts messenger
+  convention wholesale: a list of your chats, bubbles, your own on the
+  right.
+- **The send arrow is the seal (jakob).** The signing ceremony
+  compresses into the send act: a tap signs the message and sends it;
+  press and hold opens the what-you-sign sheet; a one-time quiet line
+  under the foot on the first send says so. The field is live — the
+  question the foot ruling left to this round — and the comment foot's
+  inheritance is not taken here.
+- **The lock toggle (jakob).** Per-message encryption beside the field,
+  sticky per chat, plaintext by default for a fresh chat, the state
+  shown by the lock's fill (`lock_outline` / `lock`). Every encrypted
+  message wears a quiet lock by its time, readable or not; one the
+  reader holds no key for shows a friendly notice with the raw text
+  one tap under it.
+- **Bubbles carry content, time and the lock, nothing else (jakob).**
+  Opinions, citing, saving and commenting live behind a long-press.
+  Messages never edit.
+- **Two faces, one page (jakob).** `Your chats` and `All chats` swap
+  both ways; the explorer is the ordinary rank narrowed to chats, with
+  no second algorithm and no header claiming one, and one toggle, `Not
+  already a member`. A guest reads the explorer; the swap to their own
+  chats is where the join prompt meets them.
+- **The founding is minimal (jakob).** Name, picture and description,
+  all optional; who can join as three choice rows — open, on request,
+  invite only — never a segmented pill. The governance map ships its
+  default silently. A 1:1 and a group both start from the list's `New
+  chat`.
+
 ---
 
 ## 14. The canvases
@@ -6149,8 +6188,8 @@ round.
 
 The fifth is the post-MVP tree's own —
 [CoGra · Post-MVP rounds](https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2),
-id `postmvp`, serving the Push notifications and Change histories pages
-and opening on the first. It lives in the successor canvas tooling
+id `postmvp`, serving the Push notifications, Change histories and Chats
+pages and opening on the first. It lives in the successor canvas tooling
 (the Design Artifact type): the same seed manifests, published as the
 artifact's own board files rather than through the old seeded editor.
 Its predecessor artifact stands frozen with the pre-migration

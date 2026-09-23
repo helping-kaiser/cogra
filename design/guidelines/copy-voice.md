@@ -1863,3 +1863,52 @@ to be opened.
   where a row splits, and the pad's label line becomes `Current opinion ·
   see how it built`. Authoring doors are faces and fields; a history
   door is a readout.
+
+## Awaiting blessing — the chats base round
+
+The words of would-like #3's base boards (post-MVP tree, 2026-09-23).
+Every string below is a candidate; none is blessed yet.
+
+**The page.** `Chats` titles it; the faces are `Your chats` and `All
+chats`, a two-cell row named `Which chats` for the ear. The one "?" is
+`How chats work` — a trigger only this round; its text will carry the
+what-you-sign education. The standing entry point is a noun, `New chat`,
+`Invites`' split kept.
+
+**A row on your list.** The last message's words, prefixed in a group by
+the sender's display name and a colon (`Mira Voss: Six it is.`), by
+`You:` for the reader's own, and bare in a 1:1. A message the reader
+cannot read previews as `An encrypted message`. A muted chat's mark is
+named `Muted` for the ear. Ages speak the ladder (`35m`, `1d`).
+
+**The explorer.** The toggle is jakob's own `Not already a member`. The
+join speaks the chat's policy: `Join` (open), `Ask to join` (on request);
+an invite-only chat's slot says `Invite only`, and a chat the reader is
+in says `Member` — the toggle's word, so the two agree.
+
+**The thread.**
+
+- A bubble's time is the ages ladder, never a clock time — the older
+  rule, kept against messenger habit.
+- The encrypted mark is named `End-to-end encrypted` for the ear;
+  nothing is printed beside it.
+- The notice for a message the reader holds no key for: `An encrypted
+  message — you don't have the key to read it.`, with `Show the
+  encrypted text` under it.
+
+**The foot.**
+
+- The field is labelled `Message`.
+- The lock toggle is named `Encrypt end to end` and pressed or not; the
+  fill says the state.
+- The send arrow is named `Sign and send` — the seal's rule that the
+  label names the act.
+- The first send's quiet line: `Sending signs the message in your name.
+  Press and hold the arrow to see what you sign.`
+
+**The founding.** `New chat` titles it. `Choose a picture`; `Name` and
+`Description`, each `Optional`. The group `Who can join` holds three
+choice rows: `Open` · `Anyone can join straight away.`, `On request` ·
+`Anyone can ask to join.`, `Invite only` · `Only people who are invited
+can join.` — each line says what a joiner meets and never who decides,
+because governance ships silently. The forward action is `Next`.
