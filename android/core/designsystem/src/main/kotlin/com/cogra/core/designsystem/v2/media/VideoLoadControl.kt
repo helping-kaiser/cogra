@@ -24,6 +24,14 @@ import androidx.media3.exoplayer.upstream.Allocator
  * the default: at these durations it never binds first.
  *
  * **A paused player stops reading** ([PausedStopsLoading]).
+ *
+ * **One control for the player and the preloads beside it.** The stage's
+ * player is built by the preload manager's builder ([VideoPreload]), and
+ * Media3 shares this control between the two: the preload manager asks it
+ * about every clip it reads ahead of the reader, under
+ * `PlayerId.PRELOAD`. `DefaultLoadControl` answers those by bytes alone —
+ * the preloads' own share, [PRELOAD_BUFFER_BYTES] — and how many seconds
+ * each clip gets is the preload manager's decision, not this one's.
  */
 @UnstableApi
 internal object VideoLoadControl {
@@ -34,7 +42,20 @@ internal object VideoLoadControl {
     const val BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS =
         DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
 
-    /** A fresh load control for one player — Media3 builds one per player too. */
+    /**
+     * The memory every preloaded clip together may hold: 16 MiB.
+     *
+     * Media3's own default is about 137 MiB — sized for a player, and held
+     * in memory rather than on disk. The window [VideoPreload] asks for is
+     * at most three clips' opening seconds (3 s, 3 s and 1 s) plus two
+     * clips' headers; at the feed's highest measured bitrate, 9.7 Mbps,
+     * that is about 8.5 MB, and the loader reads in 1 MiB steps past it.
+     * 16 MiB holds that with room, and a clip past it is not refused: the
+     * preload manager clears the lowest-ranked clip to make space.
+     */
+    const val PRELOAD_BUFFER_BYTES = 16 * 1024 * 1024
+
+    /** A fresh load control for one preload manager and the player built beside it. */
     fun create(): LoadControl = PausedStopsLoading(
         delegate = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
@@ -43,6 +64,7 @@ internal object VideoLoadControl {
                 BUFFER_FOR_PLAYBACK_MS,
                 BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS,
             )
+            .setPlayerTargetBufferBytes(PlayerId.PRELOAD.name, PRELOAD_BUFFER_BYTES)
             .build(),
         pausedBufferUs = BUFFER_FOR_PLAYBACK_MS * 1_000L,
     )
@@ -65,12 +87,28 @@ internal object VideoLoadControl {
  * Everything else is [delegate]'s. It is asked first on every call, so
  * its own start-and-stop bookkeeping stays exactly what it would have
  * been; this only ever turns a "continue" into a "stop".
+ *
+ * **A preload is not a paused player.** The preload manager asks this
+ * same control about each clip it reads ahead, as `PlayerId.PRELOAD`, and
+ * Media3 hands those questions `playWhenReady = false` every time — a
+ * preload is never playing (`PreloadMediaSource`'s own load parameters).
+ * Reading that as a pause would stop every preload at the half-second
+ * floor, whatever the preload manager asked for. So a preload's answer is
+ * the delegate's alone: its bytes against [VideoLoadControl.PRELOAD_BUFFER_BYTES].
+ *
+ * Nor does a stopped player hold the preloads back. The delegate still
+ * counts a player this class stopped as loading — its own answer was
+ * "continue" — but it reads that only in `shouldContinuePreloading`,
+ * which serves ExoPlayer's playlist preloading, a feature the stage does
+ * not use. A `PlayerId.PRELOAD` question is answered by bytes alone,
+ * never by what any player is doing.
  */
 @UnstableApi
 internal class PausedStopsLoading(private val delegate: LoadControl, private val pausedBufferUs: Long) : LoadControl {
 
     override fun shouldContinueLoading(parameters: LoadControl.Parameters): Boolean {
         val delegateWants = delegate.shouldContinueLoading(parameters)
+        if (parameters.playerId == PlayerId.PRELOAD) return delegateWants
         return delegateWants && (parameters.playWhenReady || parameters.bufferedDurationUs < pausedBufferUs)
     }
 

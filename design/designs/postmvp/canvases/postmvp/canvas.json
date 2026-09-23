@@ -190,6 +190,141 @@
       "page": "histories"
     },
     {
+      "file": "ChatsHome.dc.html",
+      "title": "Chats · your chats",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatsExplore.dc.html",
+      "title": "Chats · all chats, the explorer face",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThread.dc.html",
+      "title": "A chat · the thread and the foot that seals",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatCreate.dc.html",
+      "title": "New group chat · the founding",
+      "x": 1440,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatCreateSeal.dc.html",
+      "title": "New group chat · the founding's seal",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatsHelp.dc.html",
+      "title": "Chats · the ? dialog, How chats work",
+      "x": 0,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatRowMenu.dc.html",
+      "title": "Chats · a chat's options, long-press on a row",
+      "x": 480,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatPicker.dc.html",
+      "title": "New chat · the people picker",
+      "x": 960,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatPickerGroup.dc.html",
+      "title": "New group chat · picking the people",
+      "x": 1440,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatExistingAsk.dc.html",
+      "title": "New chat · you already share a 1:1",
+      "x": 1920,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadReader.dc.html",
+      "title": "A chat · read from outside, the join as its foot",
+      "x": 0,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadMedia.dc.html",
+      "title": "A chat · pictures and clips at chat scale",
+      "x": 480,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadKeyboard.dc.html",
+      "title": "A chat · the keyboard up, the lock on",
+      "x": 960,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatMessageMenu.dc.html",
+      "title": "A chat · a message's acts, long-press on a bubble",
+      "x": 1440,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatSignSheet.dc.html",
+      "title": "A chat · what you sign, press and hold the arrow",
+      "x": 1920,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
       "file": "MapPush.dc.html",
       "x": -1580,
       "y": 0,
@@ -206,6 +341,15 @@
       "h": 1200,
       "page": "histories",
       "title": "Change histories · flow map"
+    },
+    {
+      "file": "MapChats.dc.html",
+      "x": -1870,
+      "y": 0,
+      "w": 1450,
+      "h": 1511,
+      "page": "chats",
+      "title": "Chats · flow map"
     }
   ],
   "annotations": [
@@ -224,6 +368,14 @@
       "w": 560,
       "text": "CHANGE HISTORIES — would-like #2, drawn 2026-09-22. Two kinds of history, one door rule. A post, a comment and a profile each open a chronicle: every version WHOLE, newest first, the current one marked, never a diff — the store keeps complete states, and on L1 every edit signs a full new record of its own. A removed version keeps its row and wears the mark. A stance is a history too: the bundle IS the list of records ever cast from one node to another, and the timeline says in plain words what the standing adds up to, because a sum that clips hides the conviction behind it. The doors follow one law — authoring doors are faces and fields, HISTORY DOORS ARE READOUTS: the stance face on a card is untouched, the value at a row's end opens the timeline, and the pad's Current opinion line carries the only new ink. Timelines are public to everyone, signed out included; the gates stay on acting.",
       "page": "histories"
+    },
+    {
+      "id": "chats",
+      "x": -340,
+      "y": 0,
+      "w": 560,
+      "text": "CHATS — would-like #3, drawn and revised 2026-09-23. The one surface where CoGra takes messenger convention whole: a list of your chats with a floating New chat (the product's first FAB), bubbles with your own on the right, a live field at the foot. Underneath, a chat is the proposal primitive in messenger clothes — nothing here may look like a proposal. The send arrow IS the seal: tapping it signs the message in your name, and holding it opens what you sign. Each message is plaintext or encrypted by the lock beside the field — plaintext by default, sticky per chat, the state shown by the lock's fill — and every encrypted message wears a quiet lock; previews and bubbles show the words wherever you hold the key. Rows keep the ages ladder, the thread prints the clock and divides the days. The page has two faces that swap both ways: your chats, and all chats — the ordinary rank narrowed to chats, no second algorithm, your own chats hidden by default. Long-press is the second gesture: a row for the chat's options, a bubble for the message's acts. Messages never edit. The chat's detail surface, behind the thread's header, is the one destination left undrawn on purpose.",
+      "page": "chats"
     }
   ],
   "launch": {
@@ -238,6 +390,10 @@
     {
       "id": "histories",
       "name": "Change histories"
+    },
+    {
+      "id": "chats",
+      "name": "Chats"
     }
   ]
 }

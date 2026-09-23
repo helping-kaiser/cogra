@@ -152,6 +152,21 @@ const PATHS = {
   lock: [
     "M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z",
   ],
+  /* The chat foot's lock toggle, off (the chats round, post-MVP, 2026-09-23).
+     `person`'s precedent: the one kind of place a second cut is allowed is a
+     control whose STATE is its fill — the bar's selected slot there, the
+     per-message encryption choice here (jakob: "state shown by the lock's
+     fill"). `lock_outline` from the same classic set, verbatim, so the two
+     cuts are one drawing at two fills rather than two drawings. */
+  lock_outline: [
+    "M12,17c1.1,0,2-0.9,2-2s-0.9-2-2-2s-2,0.9-2,2S10.9,17,12,17z M18,8h-1V6c0-2.76-2.24-5-5-5S7,3.24,7,6v2H6 c-1.1,0-2,0.9-2,2v10c0,1.1,0.9,2,2,2h12c1.1,0,2-0.9,2-2V10C20,8.9,19.1,8,18,8z M8.9,6c0-1.71,1.39-3.1,3.1-3.1 s3.1,1.39,3.1,3.1v2H8.9V6z M18,20H6V10h12V20z",
+  ],
+  /* The chats list's floating New chat (the chats round, post-MVP,
+     2026-09-23). A bubble with a plus: the one glyph that says "a new
+     conversation" — `add` alone would be the bar's New post a second time on
+     the same screen, and `forum` is already the band's chats door. Classic
+     filled, verbatim. */
+  add_comment: ["M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM17 11h-4v4h-2v-4H7V9h4V5h2v4h4v2z"],
   expand_more: ["M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"],
   /* The Saved list's own control (the review-fix round). A filled bookmark is
      the one glyph a reader already reads as "kept", so the row's unsave needs
