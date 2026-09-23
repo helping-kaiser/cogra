@@ -8,7 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
-import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -18,6 +17,7 @@ import androidx.media3.exoplayer.source.preload.DefaultPreloadManager.PreloadSta
 import androidx.media3.exoplayer.source.preload.TargetPreloadStatusControl
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlin.math.abs
+import androidx.media3.common.MediaItem as Media3Item
 
 /**
  * The first seconds of the clips a reader is about to reach, read before

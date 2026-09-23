@@ -92,7 +92,11 @@ class FeedClipsTest {
         // down, the second in the list.
         val clips = FeedClips.of(listOf(video(0), words(1), words(2), video(3)))
         val layout = Layout(
-            listOf(row("p0", top = -500, size = 600), row("p1", top = 108, size = 400), row("p2", top = 516, size = 400)),
+            listOf(
+                row("p0", top = -500, size = 600),
+                row("p1", top = 108, size = 400),
+                row("p2", top = 516, size = 400),
+            ),
         )
 
         assertThat(clips.focus(layout)).isEqualTo(1)
