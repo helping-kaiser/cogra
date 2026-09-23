@@ -47,7 +47,7 @@ import {
 } from "@/lib/compose/wizard";
 import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
 import { newComposeId } from "@/lib/compose/ids";
-import { screenPick, type PickRefusal } from "@/lib/compose/pick";
+import { POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import {
   composeDraftStore,
   draftIsWorthKeeping,
@@ -417,6 +417,7 @@ export function ComposeWizard({
         cover,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
         (upload) => dispatch({ type: "coverUpload", upload }),
+        POST_SCALE.videoMaxBytes,
       );
       return;
     }
