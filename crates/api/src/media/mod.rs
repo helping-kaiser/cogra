@@ -912,15 +912,15 @@ fn usable_asset<'a>(
     }
     match asset.state {
         store::AssetState::Ready => Ok(asset),
-        store::AssetState::Processing => Err(GalleryError::at(
-            path.to_vec(),
-            NOT_READY_MESSAGE,
-        )),
+        store::AssetState::Processing => Err(GalleryError::at(path.to_vec(), NOT_READY_MESSAGE)),
         store::AssetState::Failed => Err(GalleryError::at(
             path.to_vec(),
             format!(
                 "this asset could not be processed: {}",
-                asset.failure_reason.as_deref().unwrap_or("no reason recorded")
+                asset
+                    .failure_reason
+                    .as_deref()
+                    .unwrap_or("no reason recorded")
             ),
         )),
     }

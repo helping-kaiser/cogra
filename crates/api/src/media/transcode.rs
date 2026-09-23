@@ -229,17 +229,11 @@ impl Ffmpeg {
     /// - `+faststart` puts the movie header ahead of the media, so a reader
     ///   can start playing before the whole file has arrived.
     pub fn args(&self, input: &Path, output: &Path, video_bps: u64) -> Vec<OsString> {
-        let mut args: Vec<OsString> = [
-            "-nostdin",
-            "-hide_banner",
-            "-loglevel",
-            "error",
-            "-y",
-            "-i",
-        ]
-        .into_iter()
-        .map(OsString::from)
-        .collect();
+        let mut args: Vec<OsString> =
+            ["-nostdin", "-hide_banner", "-loglevel", "error", "-y", "-i"]
+                .into_iter()
+                .map(OsString::from)
+                .collect();
         args.push(input.as_os_str().to_owned());
         let video_bps = video_bps.to_string();
         let audio_bps = AUDIO_BPS.to_string();

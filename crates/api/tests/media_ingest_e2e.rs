@@ -156,8 +156,8 @@ impl Rig {
             "mutation($input: UploadMediaInput!) {{ uploadMedia(input: $input) {{ \
              media {{ {MEDIA_FIELDS} }} userErrors {{ code message field }} }} }}"
         );
-        let operations = json!({ "query": query, "variables": { "input": { "file": null }}})
-            .to_string();
+        let operations =
+            json!({ "query": query, "variables": { "input": { "file": null }}}).to_string();
         let mut body: Vec<u8> = Vec::new();
         let part = |headers: &str, payload: &[u8], body: &mut Vec<u8>| {
             body.extend_from_slice(format!("--{BOUNDARY}\r\n{headers}\r\n\r\n").as_bytes());
@@ -218,12 +218,9 @@ impl Rig {
     }
 
     async fn media_attachment(&self, token: &str, id: &str) -> Value {
-        let query = format!(
-            "query($id: UUID!) {{ mediaAttachment(id: $id) {{ {MEDIA_FIELDS} }} }}"
-        );
-        self.gql(Some(token), &query, json!({ "id": id }))
-            .await["mediaAttachment"]
-            .clone()
+        let query =
+            format!("query($id: UUID!) {{ mediaAttachment(id: $id) {{ {MEDIA_FIELDS} }} }}");
+        self.gql(Some(token), &query, json!({ "id": id })).await["mediaAttachment"].clone()
     }
 
     /// A video post naming one asset, returning the prepare's user errors.
@@ -389,7 +386,10 @@ async fn an_over_target_upload_is_not_attachable_until_ready(pool: PgPool) {
     );
 
     let wide = rig.upload(&token, &h264_movie(2560, 1440, 2_500)).await;
-    assert_eq!(wide["state"], "PROCESSING", "1440 on the short side: {wide}");
+    assert_eq!(
+        wide["state"], "PROCESSING",
+        "1440 on the short side: {wide}"
+    );
     let wide_id = wide["id"].as_str().expect("id");
     assert!(
         rig.blobs
@@ -427,7 +427,10 @@ async fn the_uploader_polls_its_own_asset_and_nobody_else_can(pool: PgPool) {
     let wide = rig.upload(&token, &h264_movie(2560, 1440, 2_500)).await;
     let id = wide["id"].as_str().expect("id");
 
-    assert_eq!(rig.media_attachment(&token, id).await["state"], "PROCESSING");
+    assert_eq!(
+        rig.media_attachment(&token, id).await["state"],
+        "PROCESSING"
+    );
     assert!(rig.media_attachment(&other, id).await.is_null());
     let anonymous = rig
         .gql(
@@ -505,7 +508,10 @@ async fn an_upload_the_server_cannot_encode_fails_with_a_reason(pool: PgPool) {
     let again = rig.upload(&token, &clip).await;
     assert_ne!(again["id"], first["id"], "a fresh attempt, not the failure");
     assert_eq!(again["state"], "PROCESSING");
-    assert_eq!(rig.ingest(None).await, Settled::Failed(ingest::REASON_NO_ENCODER.into()));
+    assert_eq!(
+        rig.ingest(None).await,
+        Settled::Failed(ingest::REASON_NO_ENCODER.into())
+    );
     assert_eq!(rig.ingest(None).await, Settled::Idle);
 }
 
@@ -587,7 +593,10 @@ async fn an_over_target_upload_is_re_encoded_to_the_target(pool: PgPool) {
 
     let ready = rig.media_attachment(&token, &id).await;
     assert_eq!(ready["state"], "READY", "{ready}");
-    assert_ne!(ready["digest"], arrived_digest, "the rendition has its own digest");
+    assert_ne!(
+        ready["digest"], arrived_digest,
+        "the rendition has its own digest"
+    );
     assert_eq!(ready["options"]["aspectRatio"], "16:9");
 
     let key = ready["url"]
@@ -622,7 +631,10 @@ async fn an_over_target_upload_is_re_encoded_to_the_target(pool: PgPool) {
             .position(|w| w == fourcc)
             .expect("an MP4 box")
     };
-    assert!(at(b"moov") < at(b"mdat"), "fast-start: the movie header leads the media");
+    assert!(
+        at(b"moov") < at(b"mdat"),
+        "fast-start: the movie header leads the media"
+    );
 
     let accepted = rig.prepare_video_post(&token, &id).await;
     assert_eq!(accepted, json!([]), "a ready asset is attachable");

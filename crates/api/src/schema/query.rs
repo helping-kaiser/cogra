@@ -14,10 +14,10 @@ use uuid::Uuid;
 
 use super::types::{
     Actor, CommentType, HashtagType, InviteLinkCheck, KeysetConnection, MediaAttachmentType, Node,
-    PostType, Record,
-    RecordConnection, RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType,
-    User, borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
-    keyset_page, list_cost, list_limit, record_connection, resolve_reference_target,
+    PostType, Record, RecordConnection, RecordFamily, RecordId, ReferenceCandidate,
+    ReferenceTarget, StagedWriteType, User, borrowed_vantage, connection_cost, content_cursor,
+    content_cursor_key, keyset_connection, keyset_page, list_cost, list_limit, record_connection,
+    resolve_reference_target,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
