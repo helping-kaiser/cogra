@@ -192,8 +192,8 @@ fun VideoPlayer(
     val traced = remember(url) { VideoTrace.clip(url) }
 
     // Read from the stage rather than held: a second clip taking the
-    // stage releases this one's player, and a surface holding its own
-    // reference would go on talking to a released instance.
+    // stage takes this one's player over to itself, and a surface holding
+    // its own reference would go on driving somebody else's clip.
     val player = borrowFromStage(url, token, traced)
 
     // Whether the clip this surface is for is the one on stage — asked
@@ -234,8 +234,11 @@ fun VideoPlayer(
                 // the stage rather than the player: a line here means a
                 // clip genuinely arrived, not that a four-second loop
                 // came round again.
-                if (!VideoStage.hasRendered) VideoTrace.firstFrame(traced)
-                VideoStage.rendered()
+                //
+                // Every surface bound to the one player hears every
+                // frame, so the stage is told which clip this surface is
+                // for and decides whether the frame can be that clip's.
+                if (VideoStage.rendered(url)) VideoTrace.firstFrame(traced)
             }
         }
         player?.addListener(listener)

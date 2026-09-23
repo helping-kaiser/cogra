@@ -39,17 +39,29 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
  * gives ownership back only if it still holds it, so a departing screen
  * can never take the surface away from the one that replaced it.
  *
- * **Nobody holds a reference of their own.** A feed can have two clips
- * on screen at once, and the second claiming the stage releases the
- * first's player. So a surface never keeps the instance — it reads
- * [holding] each time and gets null the moment the stage moved on,
- * which is what keeps a released player from being touched.
+ * **One player for every clip, too.** A new clip is swapped into the
+ * player already on stage — `setMediaItem`, then `prepare` — rather than
+ * given a player of its own. That is Media3's feed recipe: the app keeps
+ * one player and hands it each item as the item is about to be shown
+ * (developer.android.com/media/media3/exoplayer/preloading-media/preloadmanager/manage-play).
+ * Tearing a player down and building the next one is main-thread work
+ * — `release` waits for the playback thread to let go of its codecs —
+ * and it landed inside the very frame that scrolled a clip into view.
  *
- * **The parked cost.** Exactly one decoder stays held once a clip has
- * played, paused and idle. That is the price of continuity and it is
- * bounded at one; a second clip claims the stage and the first is
- * released. The parked player does not go on downloading: a paused
- * player stops loading ([VideoLoadControl]).
+ * **Nobody holds a reference of their own.** A feed can have two clips
+ * on screen at once, and the second claiming the stage takes the player
+ * over to its own clip. So a surface never keeps the instance — it reads
+ * [holding] each time and gets null the moment the stage moved on,
+ * which is what keeps a surface from driving a player that is now
+ * playing somebody else's clip, or one that has been released.
+ *
+ * **The parked cost.** Exactly one player — one clip's decoders — stays
+ * held once a clip has played, paused and idle. That is the price of
+ * continuity and it is bounded at one: every clip shares that player,
+ * so a second clip replaces the first inside it rather than beside it.
+ * The parked player does not go on downloading: a paused player stops
+ * loading ([VideoLoadControl]). It is released only when the app leaves
+ * the screen ([VideoStageLifecycle]), and the next claim builds it again.
  */
 @UnstableApi
 object VideoStage {
@@ -73,11 +85,11 @@ object VideoStage {
         private set
 
     /**
-     * Where every player the stage builds reads its clip from.
+     * Where the stage's player reads every clip from.
      *
      * The app shell installs the process's disk cache here at startup
-     * ([VideoCache]). Left unset, a player reads straight from the
-     * network, which is Media3's own default.
+     * ([VideoCache]), before any player is built. Left unset, the player
+     * reads straight from the network, which is Media3's own default.
      */
     @Volatile
     var dataSources: DataSource.Factory? = null
@@ -88,7 +100,9 @@ object VideoStage {
      * Claiming the clip already on stage keeps the same player
      * untouched — no `prepare`, no seek, no reset — which is precisely
      * what carries the position across a screen change. A different clip
-     * releases the one before it: the stage holds one decoder.
+     * replaces the one before it inside the same player: the stage holds
+     * one decoder, and moving to the next clip builds and releases
+     * nothing. The first claim, and the first after [release], builds it.
      *
      * **Call this from an effect, never while composing.** It writes
      * Compose state, and a write during composition is a side effect in
@@ -100,51 +114,91 @@ object VideoStage {
             if (current.owner !== token) holding = current.copy(owner = token)
             return
         }
-        current?.player?.release()
         // A new clip has its own face to earn: the last one's rendered
         // frame says nothing about this one, and inheriting it would
         // skip the cover on a clip that has not drawn anything yet.
         hasRendered = false
-        val appContext = context.applicationContext
-        holding = Holding(
-            url = url,
-            player = ExoPlayer.Builder(appContext)
-                // Every read goes through what the app installed — the
-                // process's disk cache, so a loop replays from disk and a
-                // clip scrolled back to is not fetched again.
-                .apply {
-                    dataSources?.let {
-                        setMediaSourceFactory(DefaultMediaSourceFactory(appContext).setDataSourceFactory(it))
-                    }
-                }
-                // Seconds of read-ahead rather than 50 s, and none of it
-                // while paused — see [VideoLoadControl].
-                .setLoadControl(VideoLoadControl.create())
-                // THE SKIPS ARE TEN SECONDS, said by the board's own labels
-                // ("Back ten seconds", `VideoControls.jsx:196`). They are the
-                // PLAYER's increments rather than arithmetic in the control,
-                // because `seekBack`/`seekForward` are what Media3's own seek
-                // commands act on — including the notification and any future
-                // media button — and a control that did its own subtraction
-                // would leave those two answering five seconds
-                // (developer.android.com/media/media3/exoplayer/listening-to-player-events).
-                .setSeekBackIncrementMs(SKIP_MS)
-                .setSeekForwardIncrementMs(SKIP_MS)
-                .build()
-                .apply {
-                    setMediaItem(Media3Item.fromUri(url))
-                    // A clip on a card loops: it is a moment rather than a
-                    // programme, and the alternative is a card that goes
-                    // still and dead while the reader is still looking. The
-                    // surface showing the clip settles it from here — a clip
-                    // under the full transport stops at its end — and this is
-                    // the reading surfaces' answer, which is every surface a
-                    // clip starts on.
-                    repeatMode = Player.REPEAT_MODE_ONE
-                    prepare()
-                },
-            owner = token,
-        )
+        val player = current?.player ?: build(context.applicationContext)
+        player.apply {
+            // Each clip starts as a freshly built player would: still until
+            // the surface showing it says to play, rather than inheriting the
+            // last clip's "play" and starting before anyone decided it should.
+            playWhenReady = false
+            // A clip on a card loops: it is a moment rather than a
+            // programme, and the alternative is a card that goes
+            // still and dead while the reader is still looking. The
+            // surface showing the clip settles it from here — a clip
+            // under the full transport stops at its end — and this is
+            // the reading surfaces' answer, which is every surface a
+            // clip starts on.
+            repeatMode = Player.REPEAT_MODE_ONE
+            // Replaces the last clip and starts this one from its beginning.
+            // `prepare` is what a fresh player needs and what a player the
+            // last clip left failed (idle, with its error) needs again; on a
+            // player that is already prepared it does nothing.
+            setMediaItem(Media3Item.fromUri(url))
+            prepare()
+        }
+        if (current != null) fencePreviousClip(player)
+        holding = Holding(url = url, player = player, owner = token)
+    }
+
+    /** The one player every clip plays in — built on the first claim, and again after [release]. */
+    private fun build(appContext: Context): ExoPlayer = ExoPlayer.Builder(appContext)
+        // Every read goes through what the app installed — the
+        // process's disk cache, so a loop replays from disk and a
+        // clip scrolled back to is not fetched again.
+        .apply {
+            dataSources?.let {
+                setMediaSourceFactory(DefaultMediaSourceFactory(appContext).setDataSourceFactory(it))
+            }
+        }
+        // Seconds of read-ahead rather than 50 s, and none of it
+        // while paused — see [VideoLoadControl].
+        .setLoadControl(VideoLoadControl.create())
+        // THE SKIPS ARE TEN SECONDS, said by the board's own labels
+        // ("Back ten seconds", `VideoControls.jsx:196`). They are the
+        // PLAYER's increments rather than arithmetic in the control,
+        // because `seekBack`/`seekForward` are what Media3's own seek
+        // commands act on — including the notification and any future
+        // media button — and a control that did its own subtraction
+        // would leave those two answering five seconds
+        // (developer.android.com/media/media3/exoplayer/listening-to-player-events).
+        .setSeekBackIncrementMs(SKIP_MS)
+        .setSeekForwardIncrementMs(SKIP_MS)
+        .build()
+
+    /**
+     * Set by a swap, cleared once the player has put the previous clip
+     * behind it — until then a "first frame" may be the previous clip's.
+     *
+     * **Why a swap needs this and a fresh player did not.** The video
+     * renderer reports a first frame from the playback thread by posting
+     * to the main thread, and it does so on every loop of a card clip. A
+     * report of the *previous* clip can therefore still be queued when the
+     * swap happens, and would land after it — lifting the cover off a clip
+     * that has drawn nothing, over a surface that may still hold the last
+     * clip's picture. A released player dropped such reports with its
+     * listeners; a reused one delivers them.
+     *
+     * The fence is a player message sent right after the swap and
+     * delivered on the main thread. The playback thread handles the new
+     * playlist before the message, so every report of the previous clip
+     * was posted before the fence's own delivery, and both travel through
+     * the same main-thread queue in order: once the fence has arrived,
+     * the next first frame is this clip's.
+     */
+    private var pendingSwap: Any? = null
+
+    private fun fencePreviousClip(player: ExoPlayer) {
+        val fence = Any()
+        pendingSwap = fence
+        player.createMessage { _, _ -> if (pendingSwap === fence) pendingSwap = null }
+            // A player message is delivered on the playback thread unless
+            // told otherwise, and the fence only orders anything on the
+            // thread the first-frame reports arrive on.
+            .setLooper(player.applicationLooper)
+            .send()
     }
 
     /**
@@ -153,7 +207,7 @@ object VideoStage {
      *
      * Both halves of the question matter: a surface that has lost
      * ownership must not bind, and a surface whose clip was replaced
-     * must not touch what is now a released instance.
+     * must not drive what is now another clip's player.
      */
     fun playerFor(token: Any, url: String): ExoPlayer? =
         holding?.takeIf { it.owner === token && it.url == url }?.player
@@ -214,16 +268,29 @@ object VideoStage {
     var hasRendered: Boolean by mutableStateOf(false)
         private set
 
-    /** The player rendered — from here on this clip needs no stand-in. */
-    fun rendered() {
+    /**
+     * The player drew a first frame, reported by a surface showing [url] —
+     * from here on this clip needs no stand-in.
+     *
+     * Counted only when it can be this clip's: [url] is the clip on
+     * stage, and no report of the clip it replaced can still be in
+     * flight ([pendingSwap]). True the one time it lifts the cover.
+     */
+    fun rendered(url: String): Boolean {
+        if (hasRendered || pendingSwap != null || holding?.url != url) return false
         hasRendered = true
+        return true
     }
 
-    /** Lets go of the decoder entirely. */
+    /**
+     * Lets go of the decoder entirely — the one path that releases the
+     * player. The next claim builds a new one.
+     */
     fun release() {
         holding?.player?.release()
         holding = null
         hasRendered = false
+        pendingSwap = null
     }
 
     /** What one press of a skip is worth, on every clip this stage plays. */
