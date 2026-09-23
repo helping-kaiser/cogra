@@ -28,7 +28,8 @@
     "ProfileHistoryOwn": "your own profile's ⋮, whose roster gains the row — a canonical menu, so its owner lands on the register",
     "OpinionsRowDoors": "the opinions count on a post's detail, which opens this sheet — this round's excerpt of canonical's `PostOpinions`, drawn for the split its rows gain",
     "ProfileStancesDoors": "a profile's figures row, which opens the opinions page — this round's excerpt of canonical's `ProfileStances`, drawn for the same split",
-    "PadHistoryDoor": "a stance face, tapped anywhere a stance face is drawn — the pad is a cross-cutting overlay, and the shell beneath it is the everyday one rather than the state's own"
+    "PadHistoryDoor": "a stance face, tapped anywhere a stance face is drawn — the pad is a cross-cutting overlay, and the shell beneath it is the everyday one rather than the state's own",
+    "ChatsHome": "the band's chats icon, on every tab root — canonical's band, which this graph cannot name; until the round migrates the icon opens `ChatsComingSoon` there"
   },
   "boardKinds": {},
   "edges": [
@@ -399,6 +400,183 @@
       "kind": "back",
       "label": "scrim — tap outside",
       "to": [{ "terminal": "back", "case": "the dialog closes" }]
+    },
+
+    {
+      "from": "ChatsHome",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the root the chats icon was tapped on" }]
+    },
+    {
+      "from": "ChatsHome",
+      "via": 2,
+      "kind": "detour",
+      "label": "? — How chats work",
+      "to": [{ "gap": "the How-chats-work sheet — it will hold the what-you-sign education; only the trigger is drawn in the base round" }]
+    },
+    {
+      "from": "ChatsHome",
+      "via": 3,
+      "kind": "advance",
+      "label": "All chats",
+      "to": [{ "board": "ChatsExplore", "case": "the explorer face — every chat, by the ordinary rank" }]
+    },
+    {
+      "from": "ChatsHome",
+      "via": 4,
+      "kind": "advance",
+      "label": "New chat",
+      "to": [
+        { "board": "ChatCreate", "case": "a group — the founding: name, picture, description, who can join" },
+        { "gap": "a 1:1 — choosing the one person, and the choice between the two kinds the button opens onto; not drawn in the base round" }
+      ]
+    },
+    {
+      "from": "ChatsHome",
+      "via": 5,
+      "kind": "advance",
+      "label": "a chat",
+      "to": [{ "board": "ChatThread", "case": "the chat's thread, its foot live — every row on this face is a chat the reader is in" }]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the root the chats icon was tapped on — the faces are one page, so back leaves the page rather than swapping" }]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 2,
+      "kind": "detour",
+      "label": "? — How chats work",
+      "to": [{ "gap": "the How-chats-work sheet — the same one Your chats opens; not drawn in the base round" }]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 3,
+      "kind": "advance",
+      "label": "Your chats",
+      "to": [{ "board": "ChatsHome", "case": "the list of chats the reader is in — for a guest, the join prompt instead (the ordinary guest gate)" }]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 4,
+      "kind": "advance",
+      "label": "Not already a member",
+      "to": [{ "terminal": "self", "case": "the chip flips — on, the chats the reader is already in leave the list; the order is untouched" }]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 5,
+      "kind": "advance",
+      "label": "a chat",
+      "to": [
+        { "board": "ChatThread", "case": "a chat the reader is in — its thread, foot live" },
+        { "gap": "a chat the reader is not in — its read face: the thread without a foot, the join where the foot would be; chats are public reads, so a guest lands here too" }
+      ]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 6,
+      "kind": "advance",
+      "label": "Join",
+      "to": [
+        { "board": "ChatThread", "case": "an open chat — the reader joins and the chat opens with them in it" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 7,
+      "kind": "advance",
+      "label": "Ask to join",
+      "to": [
+        { "terminal": "self", "case": "a chat that takes requests — the request is sent and the row says so; how it is decided is the chat's governance, which this surface never names" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatThread",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThread",
+      "via": 2,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text, under the notice" }]
+    },
+    {
+      "from": "ChatThread",
+      "via": 3,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties — the next message's encryption, sticky for this chat until flipped back; plaintext by default" }]
+    },
+    {
+      "from": "ChatThread",
+      "via": 4,
+      "kind": "advance",
+      "label": "Message",
+      "to": [{ "terminal": "self", "case": "typing — the field grows a line at a time and takes its room from the thread above" }]
+    },
+    {
+      "from": "ChatThread",
+      "via": 5,
+      "kind": "advance",
+      "label": "the send arrow — Sign and send",
+      "to": [
+        { "terminal": "self", "case": "a tap — the arrow is the seal: the message is signed in the reader's name and joins the thread; the first-send line goes for good" },
+        { "gap": "press and hold — the what-you-sign sheet for this one message; not drawn in the base round" }
+      ]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatsHome", "case": "back to your chats — nothing is founded" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 2,
+      "kind": "advance",
+      "label": "Choose a picture",
+      "to": [{ "terminal": "os", "case": "the platform's own picture picker; the crop that follows is canonical's avatar crop at chat scale, not drawn here" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 3,
+      "kind": "advance",
+      "label": "Name",
+      "to": [{ "terminal": "self", "case": "typing" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 4,
+      "kind": "advance",
+      "label": "Description",
+      "to": [{ "terminal": "self", "case": "typing — the field grows by the growth law" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 5,
+      "kind": "advance",
+      "label": "Who can join — a choice row",
+      "to": [{ "terminal": "self", "case": "the dot moves — Open, On request or Invite only" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 6,
+      "kind": "advance",
+      "label": "Next",
+      "to": [{ "gap": "the founding's seal — what the new chat signs, read back before it is signed; not drawn in the base round" }]
     }
   ]
 }

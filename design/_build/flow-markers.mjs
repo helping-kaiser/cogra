@@ -2280,4 +2280,43 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Close</button>", tag: "button" },
     { n: 2, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
   ],
+
+  // ── The chats round (post-MVP) ───────────────────────────────────────────
+  // A list's row is marked on its FIRST row only, the repeated-element
+  // convention: one edge covers every row, and its cases say where each kind
+  // of row lands. The explorer's two join words are marked where each first
+  // appears, for the same reason.
+  ChatsHome: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="How chats work"', tag: "button" },
+    { n: 3, find: ">All chats</button>", tag: "button" },
+    { n: 4, find: ">New chat</button>", tag: "button" },
+    { n: 5, find: ">Coast walkers</span>", tag: "button" },
+  ],
+  ChatsExplore: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="How chats work"', tag: "button" },
+    { n: 3, find: ">Your chats</button>", tag: "button" },
+    { n: 4, find: ">Not already a member</button>", tag: "button" },
+    { n: 5, find: ">Harbour office</span>", tag: "button" },
+    { n: 6, find: ">Join</button>", tag: "button" },
+    { n: 7, find: ">Ask to join</button>", tag: "button" },
+  ],
+  // The foot's field is found by its wrapper — a replaced element cannot host
+  // the badge (`TextField`'s own note) — and the seal by its accessible name.
+  ChatThread: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: ">Show the encrypted text</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 4, find: 'data-field="Message"', tag: "div" },
+    { n: 5, find: 'aria-label="Sign and send"', tag: "button" },
+  ],
+  ChatCreate: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: ">Choose a picture</button>", tag: "button" },
+    { n: 3, find: 'data-field="Name"', tag: "div" },
+    { n: 4, find: 'data-field="Description"', tag: "div" },
+    { n: 5, find: ">Open</span>", tag: "label" },
+    { n: 6, find: ">Next</button>", tag: "button" },
+  ],
 });
