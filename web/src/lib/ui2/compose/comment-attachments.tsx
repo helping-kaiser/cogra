@@ -149,7 +149,10 @@ export function CommentAttachments({
               fit="contain"
               durationMs={durationMs}
               progress={
-                upload.kind === "encoding" || upload.kind === "uploading" || upload.kind === "waiting"
+                upload.kind === "encoding" ||
+                upload.kind === "uploading" ||
+                upload.kind === "waiting" ||
+                upload.kind === "processing"
                   ? "indeterminate"
                   : undefined
               }
@@ -236,7 +239,10 @@ export function CommentAttachments({
                   // The model reports a stage, not a fraction, so the ring
                   // turns rather than inventing a percentage.
                   progress={
-                    upload.kind === "encoding" || upload.kind === "uploading" || upload.kind === "waiting"
+                    upload.kind === "encoding" ||
+                    upload.kind === "uploading" ||
+                    upload.kind === "waiting" ||
+                    upload.kind === "processing"
                       ? "indeterminate"
                       : undefined
                   }

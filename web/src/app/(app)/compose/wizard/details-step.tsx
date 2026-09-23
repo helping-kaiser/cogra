@@ -171,6 +171,7 @@ export function thumbState(asset: PickedAsset): Pick<PickedThumb, "progress" | "
     case "waiting":
     case "encoding":
     case "uploading":
+    case "processing":
       // No fraction is measured, so the ring turns rather than claiming one.
       return { progress: "indeterminate" };
     case "failed":

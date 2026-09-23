@@ -7,7 +7,13 @@ import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { graphql, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
-import { uploadFilename, uploadMedia, uploadVideo, UploadPartsError } from "./media-api";
+import {
+  fetchMediaAttachmentStatus,
+  uploadFilename,
+  uploadMedia,
+  uploadVideo,
+  UploadPartsError,
+} from "./media-api";
 import type { PartUploader } from "./part-uploader";
 import type { AuthGuard } from "@/lib/session/guard";
 import { startMswServer } from "@/test/msw";
@@ -31,14 +37,19 @@ function payload(media: unknown, userErrors: unknown[] = []) {
   return { __typename: "UploadMediaPayload", media, userErrors };
 }
 
-function media(id: string) {
+function media(id: string, extra: Record<string, unknown> = {}) {
   return {
     __typename: "MediaAttachment",
     id,
     url: `https://media.example/${id}`,
     altText: null,
     status: "NORMAL",
-    options: { __typename: "MediaOptions", aspectRatio: "1:1" },
+    mimeType: "image/webp",
+    options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+    coverMedia: null,
+    state: "READY",
+    failureReason: null,
+    ...extra,
   };
 }
 
@@ -313,5 +324,32 @@ describe("uploadVideo", () => {
       { uploader: uploader().stub, thresholdBytes: 64 },
     );
     expect(wrapped).toEqual(["call-0", "call-1"]);
+  });
+});
+
+describe("fetchMediaAttachmentStatus", () => {
+  it("returns the asset when found", async () => {
+    server.use(
+      graphql.query("MediaAttachmentStatus", () =>
+        HttpResponse.json({ data: { mediaAttachment: media("m-1", { state: "PROCESSING" }) } }),
+      ),
+    );
+    const outcome = await fetchMediaAttachmentStatus(client(), "m-1");
+    expect(outcome).toEqual({
+      kind: "success",
+      value: expect.objectContaining({ id: "m-1", state: "PROCESSING" }),
+    });
+  });
+
+  it("returns success(null) for an asset this viewer cannot read", async () => {
+    server.use(
+      graphql.query("MediaAttachmentStatus", () =>
+        HttpResponse.json({ data: { mediaAttachment: null } }),
+      ),
+    );
+    expect(await fetchMediaAttachmentStatus(client(), "m-1")).toEqual({
+      kind: "success",
+      value: null,
+    });
   });
 });
