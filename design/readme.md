@@ -6149,14 +6149,73 @@ prelude until the round migrates.
   Messages never edit.
 - **Two faces, one page (jakob).** `Your chats` and `All chats` swap
   both ways; the explorer is the ordinary rank narrowed to chats, with
-  no second algorithm and no header claiming one, and one toggle, `Not
-  already a member`. A guest reads the explorer; the swap to their own
-  chats is where the join prompt meets them.
+  no second algorithm and no header claiming one. A guest reads the
+  explorer; the swap to their own chats is where the join prompt meets
+  them.
 - **The founding is minimal (jakob).** Name, picture and description,
   all optional; who can join as three choice rows — open, on request,
   invite only — never a segmented pill. The governance map ships its
   default silently. A 1:1 and a group both start from the list's `New
   chat`.
+
+### The chats round, completed — 2026-09-23
+
+jakob reviewed the base boards on the canvas the same day and ruled the
+revisions and the rest of the round: eleven more boards, fifteen in all
+on the Chats page. The masters grew in the tree's prelude —
+`NewChatFab`, `NoKeyPreview`, `HideJoinedSwitch`, `DayDivider`,
+`ChatThreadHeader`, `ChatJoinFoot` — and `ChatBubble` took media.
+
+- **The product's first FAB (jakob).** `New chat` floats bottom-right
+  over the list on both faces and stays while the list scrolls — the
+  messenger's grammar, and the one place the "no FAB" rule the
+  `Invites` entry point records gives way. It is glyph-only
+  (`add_comment`, so it never reads as a second New post) and tonal
+  (`secondary-container`): the bar's compose action keeps the one loud
+  surface, and opening a picker commits nothing.
+- **The list collapses; the thread pins (jakob).** The chats list is a
+  surface a reader dwells in, so it moves to §2's Collapses column and
+  takes `CollapsingTop`; a chat's thread keeps its pin.
+- **Previews decrypt wherever the reader holds the key (jakob).** Push
+  already shows the words, so hiding them on the list is annoyance
+  without honesty. `An encrypted message`, with the lock, appears only
+  where the key is genuinely absent — rare on your own list (a message
+  from before you joined), common in the explorer (a non-member holds
+  no key).
+- **Two clocks (jakob).** Rows keep the ages ladder — a row answers
+  freshness. The thread prints exact clock times on every bubble and a
+  day divider wherever it crosses a day — it is a coordination surface,
+  the one place CoGra needs when-exactly. The divider speaks the
+  dateline's date and never `Today`.
+- **The thread's header is the door (jakob).** The chat's picture and
+  name open its detail surface — members, description, mute, leave,
+  the history of its metadata. That surface is a later sub-round and
+  the one gap this round leaves on purpose.
+- **The explorer's filter is a quiet switch, on (jakob):** `Hide chats
+  you're in` — the face exists to discover.
+- **Contrast (jakob's review, conformance).** Text on the reader's own
+  bubble and the no-key notice take `text-body`: the fill's formal
+  `on-` pair measures 4.58:1, AA at the floor.
+- **`Invite only` is the preselected policy (jakob)** — what people
+  already know, and what a chat founded by picking people is.
+- **Long-press is the chats' second gesture (jakob).** On a row it
+  opens the chat's options (`Mute`, `Chat details`); on a bubble, the
+  message's acts — the comment's menu pointed at a message, with `Give
+  your opinion` and `Reply` added and no Edit row, ever.
+- **One door for both kinds (jakob).** The FAB opens a people picker
+  with `New group chat` at its head: a person opens the 1:1, the group
+  row turns the list into a multi-pick that ends in the founding. Tapping
+  someone you already share a 1:1 with asks — carry on, or start a
+  separate chat — because several 1:1s with one person are legal
+  (`chats.md` §9).
+- **The seals.** Holding the send arrow opens what one message signs,
+  in the compose seal's vocabulary; the founding's `Next` reaches its
+  own seal — the chat and one invitation per picked person, signed
+  together — on the profile Save's precedent.
+- **The non-member's face** is the thread itself with the join, worded
+  by the chat's policy, where the foot would be; a guest gets the same
+  face.
+- **Stickers are parked (jakob).**
 
 ---
 

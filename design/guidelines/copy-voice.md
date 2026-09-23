@@ -58,7 +58,10 @@ One vocabulary for every timestamp, everywhere (ruled 2026-09-09): the
 minutes/hours/days ladder — `now`, `35m`, `2h`, `3d` — up to 30 days,
 and the date (`06.09.2024`) past it. No other words: no "today", no
 weeks, no months. Recency is a feeling and gets the ladder; history is
-a date. The removal mark's `when` speaks this vocabulary like any
+a date. One exception, ruled by jakob for the post-MVP chats round
+(2026-09-23): a chat's thread prints exact clock times on its bubbles,
+with a day divider in the dateline's words wherever it crosses a day —
+a thread is where people agree on when. The chats list keeps the ladder. The removal mark's `when` speaks this vocabulary like any
 other timestamp — it is the redaction's own moment, not the content's
 age.
 
@@ -1864,37 +1867,76 @@ to be opened.
   see how it built`. Authoring doors are faces and fields; a history
   door is a readout.
 
-## Awaiting blessing — the chats base round
+## Awaiting blessing — the chats round
 
-The words of would-like #3's base boards (post-MVP tree, 2026-09-23).
-Every string below is a candidate; none is blessed yet.
+The words of would-like #3 (post-MVP tree, 2026-09-23: the base boards
+and the round's completion). Every string below is a candidate; none is
+blessed yet.
 
 **The page.** `Chats` titles it; the faces are `Your chats` and `All
-chats`, a two-cell row named `Which chats` for the ear. The one "?" is
-`How chats work` — a trigger only this round; its text will carry the
-what-you-sign education. The standing entry point is a noun, `New chat`,
-`Invites`' split kept.
+chats`, a two-cell row named `Which chats` for the ear. The floating
+button is named `New chat` — a noun, `Invites`' split kept — and wears
+no word.
+
+**The "?" — `How chats work`**, a plain dialog:
+Chats are public: anyone can read a chat and see who is in it and who
+talks to whom. The lock beside the field encrypts the message you are
+writing, so only the chat's members can read its words — everyone can
+still see that it was sent. / Sending signs the message in your name,
+like any post. Press and hold the send arrow to see exactly what you
+sign. A sent message never changes — a correction is the next message.
 
 **A row on your list.** The last message's words, prefixed in a group by
 the sender's display name and a colon (`Mira Voss: Six it is.`), by
-`You:` for the reader's own, and bare in a 1:1. A message the reader
-cannot read previews as `An encrypted message`. A muted chat's mark is
-named `Muted` for the ear. Ages speak the ladder (`35m`, `1d`).
+`You:` for the reader's own, and bare in a 1:1. An encrypted message the
+reader holds the key for previews its words like any other; one they
+cannot open previews as `An encrypted message` after the lock, named
+`End-to-end encrypted` for the ear. A muted chat's mark is named `Muted`
+for the ear. Ages speak the ladder (`35m`, `1d`).
 
-**The explorer.** The toggle is jakob's own `Not already a member`. The
-join speaks the chat's policy: `Join` (open), `Ask to join` (on request);
-an invite-only chat's slot says `Invite only`, and a chat the reader is
-in says `Member` — the toggle's word, so the two agree.
+**A chat's options** (long-press a row): the sheet is titled by the
+chat's name and named `{chat} — chat options` for the ear; `Mute`
+(`Unmute` on a muted chat) and `Chat details`. The message's sheet is
+named `Message actions`.
+
+**The explorer.** The switch is `Hide chats you're in`, on. The join
+speaks the chat's policy: `Join` (open), `Ask to join` (on request); an
+invite-only chat's slot says `Invite only`, and a chat the reader is in,
+shown once the switch is off, says `Member`.
 
 **The thread.**
 
-- A bubble's time is the ages ladder, never a clock time — the older
-  rule, kept against messenger habit.
+- The header's door is named `{chat} — chat details`; the way back is
+  `Back to your chats`, or `Back to all chats` from the explorer.
+- A bubble's time is the clock (`08:40`, in the device's own 12/24-hour
+  form), and a day divider names the day in the dateline's words (`22
+  September`) — never `Today` or `Yesterday`. See *Ages* for the
+  exception this is.
 - The encrypted mark is named `End-to-end encrypted` for the ear;
   nothing is printed beside it.
 - The notice for a message the reader holds no key for: `An encrypted
   message — you don't have the key to read it.`, with `Show the
   encrypted text` under it.
+
+**A message's acts** (long-press a bubble), in order: `Save`, `Cite in a
+new post`, `Give your opinion`, `Reply`, `Cited by`, `Opinions on this`,
+`License terms` — the comment menu's words, with the two a bubble cannot
+wear on its face added. No `Edit`, ever.
+
+**Read from outside.** The foot is `Ask to join` or `Join` by the
+chat's policy; an invite-only chat's foot says `Invite only — a member
+can invite you.`
+
+**Starting a chat.**
+
+- The picker is titled `New chat`, its field `Search people`, its head
+  row `New group chat`; the group picker is titled `New group chat`, its
+  way back `Back to new chat`, its forward action `Next`. A staged
+  person's × is `Remove {name}`, `StagedReference`'s own words.
+- Someone you already share a 1:1 with: title `You already have a chat
+  with {name}`, body `Carry on where you left off, or start a separate
+  chat — you can have more than one with the same person.`, `Start a new
+  chat` (quiet) and `Open that chat` (filled).
 
 **The foot.**
 
@@ -1905,10 +1947,30 @@ in says `Member` — the toggle's word, so the two agree.
   label names the act.
 - The first send's quiet line: `Sending signs the message in your name.
   Press and hold the arrow to see what you sign.`
+- The keyboard board's slab says `The device's own keyboard` — a board
+  device, never product copy.
 
-**The founding.** `New chat` titles it. `Choose a picture`; `Name` and
-`Description`, each `Optional`. The group `Who can join` holds three
-choice rows: `Open` · `Anyone can join straight away.`, `On request` ·
-`Anyone can ask to join.`, `Invite only` · `Only people who are invited
-can join.` — each line says what a joiner meets and never who decides,
-because governance ships silently. The forward action is `Next`.
+**What you sign, for one message** (press and hold the arrow): the
+sheet is `What you sign` with the seal's `How signing works`; the acts
+card reads `Message` · the words · `1 thing, signed`; the facts are
+`Into` · `{chat}`, `Encrypted` · `No — anyone can read it` (`Yes — only
+members can read it` when the lock is on), `License` · `Public domain —
+your default`, `Your opinion` · the readout; the act is `Sign and send`.
+
+**The founding.** `New group chat` titles it; its way back is `Back to
+the people you picked`. `Choose a picture`; `Name` and `Description`,
+each `Optional`; the picked people said back as `Inviting Ada Okonkwo
+and Tobias Lindqvist.` The group `Who can join` holds three choice rows:
+`Open` · `Anyone can join straight away.`, `On request` · `Anyone can
+ask to join.`, `Invite only` · `Only people who are invited can join.` —
+each line says what a joiner meets and never who decides, because
+governance ships silently. `Invite only` starts chosen. The forward
+action is `Next`.
+
+**The founding's seal.** `What you sign`, `Last step`, the leave named
+`Leave — nothing is started`; the chat shown back as `Low-tide walks` ·
+`A new group chat — invite only.`; the acts card `Chat` · the name and
+`Invitations` · the names, `3 things, signed together`, `They land
+together, or none does.`; the fact `Who can join` · `Invite only`; the
+line `A chat is public: its name, who is in it and who talks to whom
+are there for anyone to read.`; the act `Sign and start the chat`.
