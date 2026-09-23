@@ -500,14 +500,17 @@ separate metadata fold and no in-place carrier.
   a frozen lineage (§3) and a hard history boundary for encrypted
   chats (§7).
 
-**A superseded version's payload can be redacted, by decision.**
-A chat has no author — the creator is only the creator — so no
-single hand may empty a version; a passed
-`decision:redact_version` (§5) names one version of the lineage,
-and its payload is removed per the redaction policy
+**Any version's payload can be redacted, by decision — the
+current one included.** A chat has no author — the creator is
+only the creator — so no single hand may empty a version; a
+passed `decision:redact_version` (§5) names one version of the
+lineage, and its payload is removed per the redaction policy
 ([layers.md §5](../primitive/layers.md#5-deletion-policy)): the
 version keeps its place in the history, tombstoned with a
 visible mark, and the store's version row records the redaction.
+Redacting the current version never promotes an earlier one —
+the chat shows its head as removed until a new version is
+signed, the same no-fallback rule every content history follows.
 The canonical case: a metadata change put up a picture a member
 never wanted public — the chat can take the *version* away
 without rewriting its history. The structural record — that a
