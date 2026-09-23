@@ -1165,6 +1165,8 @@ mod planning_tests {
             mime_type: mime.into(),
             size_bytes: Some(1024),
             options: serde_json::json!({}),
+            state: store::AssetState::Ready,
+            failure_reason: None,
             redaction_reason: None,
             redacted_at: None,
             created_at: chrono::Utc::now(),
