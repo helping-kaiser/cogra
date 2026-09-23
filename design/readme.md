@@ -6032,6 +6032,39 @@ onto both. Backlog item 34.
   with one picture fewer. `copy-voice.md`'s *Editing* line carries that
   framing, and every chronicle closes on it in the reader's words.
 
+### The sheet's short-viewport clause — 2026-09-23
+
+The implementation session measured the sensitive sheet on web: its
+fixed furniture totals 286px, and on a small phone with the keyboard
+up the dvh-capped ceiling leaves the growing Why field no room — on
+the most extreme heights the furniture alone overflows. jakob ruled
+the gap in the growth law's cap clause:
+
+- **Pinned ends, scrolling middle.** A sheet that cannot fit its
+  furniture pins its grab area and its Done row and scrolls what
+  stands between them; nothing is shed, and the growing field's
+  floor is the last thing to leave view. The explainer line is
+  simply the first thing to slide away. One anatomy at every
+  height — no threshold variant, no keyboard-avoidance change —
+  for every sheet with a growing field, both platforms.
+
+### The compose last-picture ruling — 2026-09-23
+
+The picture path's manager had no edge for removing the last
+picture, and the fallout was an empty Details walking to the seal.
+jakob ruled it as the video path's rule applied to pictures:
+
+- **The last × gives the pick step back.** Removing the last
+  picture closes the manager and returns the pick step, tray
+  empty; the stage never stands on a body that is gone, so no
+  empty post reaches the seal. It does NOT become the words path —
+  that fork was the author's explicit early choice, and edit's
+  body-becomes-words rule exists only because the edit wizard has
+  no pick step to give back. The removal is never refused, and the
+  staged title, description, tags and references wait in the
+  draft. Drawn on canonical (`ComposePicked`'s remove edge,
+  docblocks there and on `ComposeDetails`), merged as its own PR.
+
 ---
 
 ## 14. The canvases
