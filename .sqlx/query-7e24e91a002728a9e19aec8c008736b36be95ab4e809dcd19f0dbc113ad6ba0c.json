@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT id, author_id, digest, digest_algo, storage_key,\n               mime_type, size_bytes,\n               options AS \"options!: serde_json::Value\",\n               state AS \"state: AssetState\", failure_reason,\n               redaction_reason, redacted_at, created_at\n        FROM media_attachments\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "digest",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 3,
+        "name": "digest_algo",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "options!: serde_json::Value",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 8,
+        "name": "state: AssetState",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "failure_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "redaction_reason",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "redacted_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "7e24e91a002728a9e19aec8c008736b36be95ab4e809dcd19f0dbc113ad6ba0c"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE media_attachments\n         SET state = 'failed', failure_reason = $2, lease_until = NULL\n         WHERE id = $1 AND state = 'processing'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8b5e4a94b9dc9c739b323a624961e8d05feaeef2af2c72be00361fbf18709fd7"
+}

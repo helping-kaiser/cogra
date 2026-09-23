@@ -375,21 +375,14 @@ pub async fn renew_ingest_lease(
 
 /// Hands a lease back after a failure worth retrying, holding the row off
 /// for `retry_after_secs` so a fault that is still there is not hit again
-/// at once.
+/// at once. The same statement as a renewal: what differs is only that
+/// nobody renews it again, so it lapses when the wait is over.
 pub async fn release_ingest(
     pool: &PgPool,
     id: Uuid,
     retry_after_secs: f64,
 ) -> Result<(), sqlx::Error> {
-    sqlx::query!(
-        "UPDATE media_attachments
-         SET lease_until = now() + make_interval(secs => $2)
-         WHERE id = $1 AND state = 'processing'",
-        id,
-        retry_after_secs,
-    )
-    .execute(pool)
-    .await?;
+    renew_ingest_lease(pool, id, retry_after_secs).await?;
     Ok(())
 }
 
@@ -1028,7 +1021,10 @@ pub async fn expired_upload_sessions(
 /// An upload precedes the write that references it, so a compose the
 /// author abandoned leaves a row and an object that no parent will ever
 /// point at. Nothing else collects them: staged writes have their own
-/// epoch-denominated GC, and an asset is not a staged write.
+/// epoch-denominated GC, and an asset is not a staged write. A `failed`
+/// asset is one of these by construction — nothing may reference it — and
+/// ages out the same way, as would a `processing` one the ingest worker
+/// never settled.
 ///
 /// **The join is the seam.** "Orphaned" means no reference from any of
 /// the four content junctions, none from the profile and chat image
