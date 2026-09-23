@@ -153,7 +153,13 @@ internal fun ColumnScope.SealStepBody(
         ) {
             // `ComposeSealUploading`: while this shows, the sign button is
             // disabled — nothing signs until the content it signs exists.
-            if (state.mode == BodyMode.Media && !state.uploadsComplete) {
+            // Strictly the in-flight gate
+            // (design/components/compose/UploadNotice.prompt.md lines 1,
+            // 11): `picked.isNotEmpty()` keeps it from ever rendering
+            // "Uploading 0 of 0" for an emptied media-mode batch — the
+            // gate `state.mode == BodyMode.Media` alone does not, since
+            // mode survives a removal that empties the tray.
+            if (state.mode == BodyMode.Media && state.picked.isNotEmpty() && !state.uploadsComplete) {
                 UploadStatusLine(
                     done = state.uploadsDone,
                     total = state.picked.size,

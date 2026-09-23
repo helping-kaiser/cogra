@@ -1,6 +1,10 @@
 package com.cogra.feature.content.wizard
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -33,7 +37,10 @@ class ComposeWizardVideoDescribeTest {
     private var removals = mutableListOf<Int>()
 
     @Composable
-    private fun Wizard(state: ComposeWizardState) {
+    private fun Wizard(
+        state: ComposeWizardState,
+        onRemovePickAt: (Int) -> Unit = { removals += it },
+    ) {
         ComposeWizardScreen(
             state = state,
             permission = MediaPermissionController(
@@ -72,7 +79,7 @@ class ComposeWizardVideoDescribeTest {
             onDescribePictures = {},
             onDescribeAt = {},
             onMovePick = { _, _ -> },
-            onRemovePickAt = { removals += it },
+            onRemovePickAt = onRemovePickAt,
             onSign = {},
             onContinueDraft = {},
             onDiscardDraft = {},
@@ -149,5 +156,28 @@ class ComposeWizardVideoDescribeTest {
         assertThat(removals).containsExactly(0)
 
         compose.onNodeWithText("Describe the video").assertExists()
+    }
+
+    // Finding 4 of jakob's round-four review, 2026-09-23
+    // (ComposeDetailsVideo.jsx:23-32): removal wires only the take-away
+    // half of "taking it away gives back the step that takes picks" —
+    // this proves the wizard actually lands back on the pick step, not
+    // just that the callback fired.
+    @Test
+    fun removingTheVideosOnlyPickLandsOnThePickStep() {
+        var state by mutableStateOf(onVideoDetails)
+        compose.setContent {
+            Wizard(
+                state = state,
+                onRemovePickAt = { index -> state = state.removePick(state.picked[index].uri) },
+            )
+        }
+
+        compose.onNodeWithTag("media_thumb_remove_badge", useUnmergedTree = true).performClick()
+
+        // The Details tile is gone with the stage it stood on; the pick
+        // step's own Next pill is what replaces it.
+        compose.onNodeWithTag("wizard_picked_row").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_pick_next").assertIsDisplayed()
     }
 }
