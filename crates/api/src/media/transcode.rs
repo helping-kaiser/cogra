@@ -209,6 +209,11 @@ impl Ffmpeg {
         self.h264
     }
 
+    /// The ffmpeg this was detected at.
+    pub fn program(&self) -> &Path {
+        &self.program
+    }
+
     /// The arguments for one transcode, in the order ffmpeg reads them.
     ///
     /// - The first video stream and the first audio stream, if there is
