@@ -6,6 +6,7 @@ import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaAssetState
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedContentView
@@ -19,6 +20,7 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaDestination
+import com.cogra.domain.media.MediaReadiness
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
@@ -104,6 +106,17 @@ class ComposeWizardViewModelTest {
         /** The URI each call is for, in order, so failures can be aimed. */
         var pending = ArrayDeque<String>()
 
+        /**
+         * Assets the next upload should come back PROCESSING for, by the
+         * id it will be minted with (`"m$next"`) — set before the pick
+         * that should be affected.
+         */
+        var processing = mutableSetOf<String>()
+
+        /** What each polled id settles into, and its reason if FAILED. */
+        var pollAnswers = mutableMapOf<String, Pair<MediaAssetState, String?>>()
+        var pollCalls = 0
+
         override suspend fun uploadMedia(
             picture: ProcessedPicture,
         ): Outcome<MediaAssetView> {
@@ -114,9 +127,17 @@ class ComposeWizardViewModelTest {
             }
             next += 1
             order += "still"
+            val id = "m$next"
+            val state = if (id in processing) MediaAssetState.PROCESSING else MediaAssetState.READY
             return Outcome.Success(
-                MediaAssetView("m$next", "https://media/m$next", null, FieldStatus.NORMAL, 1f),
+                MediaAssetView(id, "https://media/$id", null, FieldStatus.NORMAL, 1f, state = state),
             )
+        }
+
+        override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> {
+            pollCalls += 1
+            val (state, reason) = pollAnswers[id] ?: (MediaAssetState.READY to null)
+            return Outcome.Success(MediaReadiness(id, state, reason))
         }
 
         /** Every upload in the order it was made — stills and clips alike. */
@@ -327,6 +348,72 @@ class ComposeWizardViewModelTest {
         assertThat(media.uploads).isEqualTo(2)
         assertThat(vm.state.value.picked.map { it.upload })
             .containsExactly(AssetUpload.Done("m1"), AssetUpload.Done("m2"))
+        // THE READY-AT-ONCE PATH COSTS NOTHING EXTRA: Android's own
+        // uploads are always within target, so the gate never has reason
+        // to poll `mediaAttachment` at all.
+        assertThat(media.pollCalls).isEqualTo(0)
+    }
+
+    /**
+     * THE BACKSTOP, not the shipped path: a future server-side rule
+     * change could hand back PROCESSING even though Android's own
+     * uploads are always within target. `uploadsComplete` — and the sign
+     * gate riding it — has to stay shut until the poll reads READY.
+     */
+    @Test
+    fun aProcessingPictureHoldsTheGateShutThenOpensOnceThePollReadsReady() = runTest(dispatcher) {
+        media.processing += "m1"
+        media.pollAnswers["m1"] = MediaAssetState.READY to null
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+
+        // The upload answered, but the asset is not attachable yet — the
+        // pick stays "not done" through the wizard's ordinary uploading
+        // mechanics, exactly as a slow `Sending` would.
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+        assertThat(vm.state.value.canSign).isFalse()
+
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.pollCalls).isEqualTo(1)
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    /**
+     * A PROCESSING asset the server only refused after accepting the
+     * bytes surfaces through the existing failure line, worded with the
+     * server's own reason — and offers no retry, because the identical
+     * bytes already made one round trip into that answer.
+     */
+    @Test
+    fun aProcessingPictureThatFailsSurfacesTheServersReasonWithNoRetry() = runTest(dispatcher) {
+        media.processing += "m1"
+        media.pollAnswers["m1"] = MediaAssetState.FAILED to "not a readable picture"
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val failed = vm.state.value.picked.single().upload
+        assertThat(failed).isInstanceOf(AssetUpload.Failed::class.java)
+        failed as AssetUpload.Failed
+        assertThat(failed.reason).isEqualTo(UploadFailure.REFUSED_PICTURE)
+        assertThat(failed.serverMessage).isEqualTo("not a readable picture")
+        assertThat(failed.retryable).isFalse()
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+        assertThat(vm.state.value.canSign).isFalse()
     }
 
     /**
