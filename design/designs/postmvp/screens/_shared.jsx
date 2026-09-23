@@ -56,6 +56,8 @@ const {
   TabBar,
   RedactedContent,
   HelpDot,
+  TextField,
+  Chip,
 } = components;
 
 function SettingsExcerpt({ children }) {
@@ -690,5 +692,359 @@ function ProfileStancesExcerpt({ onOpenHistory }) {
       </div>
       <BottomNav active={null} slots={ALL_SLOTS} inline />
     </>
+  );
+}
+
+/* ══ THE CHATS ROUND ═════════════════════════════════════════════════════════
+
+   Would-like #3, the third round in the post-MVP tree: the four base boards
+   (jakob's rulings 2026-09-23). What the band's chats icon opens once chats
+   exist — `ChatsComingSoon` stands in for this page until then.
+
+   A CHAT IS A PROPOSAL IN MESSENGER CLOTHES (jakob 2026-09-23). The backbone
+   is the proposal primitive — a message is a signed record put into a chat,
+   and membership and the chat's rules ride the same machinery — but NOTHING
+   ON THESE BOARDS MAY LOOK LIKE A PROPOSAL. No tallies, no pending-vote
+   chrome, no rules panel: a reader meets a messenger, and the primitive stays
+   underneath where it belongs. This is the ONE surface where CoGra adopts
+   messenger convention wholesale — the list, the bubbles, own messages on the
+   right — because chat-app grammar is the thing every reader already knows,
+   and inventing a second one would cost them the only fluency they bring.
+
+   MESSAGES NEVER EDIT (jakob 2026-09-23). A sent message is a signed record
+   and stays exactly as it was signed, so no bubble carries an `Edited` marker
+   and no menu offers Edit — the change-histories round's chronicles have no
+   chat twin, by design rather than by omission.
+
+   THE PEOPLE are the tree's own fixture cast — Mira is canonical's Mira, with
+   her picture — and the reader is Sol, as on every board of this tree. */
+
+const CHAT_MIRA = { name: "Mira Voss", src: "inviter.jpg" };
+const CHAT_TOBIAS = { name: "Tobias Lindqvist" };
+const CHAT_JUNO = { name: "Juno Baptiste" };
+const CHAT_KEL = { name: "Kel Moreau" };
+
+/* THE PAGE'S TOP, both faces. The header is the page's, the "?" is the page's
+   one — `How chats work`, the dialog its sheet will hold once written: what a
+   sent message signs, and what encryption does and does not hide. Only the
+   trigger is drawn this round; the text is owed with the what-you-sign
+   education (graph: a gap).
+
+   THE TWO FACES SWAP BOTH WAYS through `TabBar` — the opinions page's own row,
+   and the right one for the job: its cells are toggles that filter the list
+   beneath them (the master's own charter), which is exactly what `Your chats`
+   and `All chats` are — one page, two readings of one kind of thing. Two
+   cells, words, a hairline: never a segmented pill. */
+function ChatsTop({ face }) {
+  return (
+    <>
+      <PageHeader title="Chats" backHref="#" backLabel="Back" action={<HelpDot ariaLabel="How chats work" />} />
+      <TabBar
+        ariaLabel="Which chats"
+        value={face}
+        tabs={[
+          { id: "yours", label: "Your chats" },
+          { id: "all", label: "All chats" },
+        ]}
+      />
+    </>
+  );
+}
+
+/* The list column — the notifications list's shape (`ChronicleList`): rows are
+   `ContentRow` cards 8px apart in the 16px gutter. */
+function ChatsColumn({ children }) {
+  return (
+    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px 0" }}>
+      {children}
+    </div>
+  );
+}
+
+/* THE MUTED MARK — the one glyph the row adds, riding the name's baseline in
+   `ContentRow`'s `titleAside` slot. `volume_off` is already in the set (the
+   sound toggle), and a silenced speaker is the mark every messenger a reader
+   uses already draws for a muted chat; a new glyph for the same idea would be
+   a second drawing of one meaning. Quiet ink, and a name for the ear. */
+function MutedMark() {
+  return (
+    <span role="img" aria-label="Muted" style={{ alignSelf: "center", display: "inline-flex", color: "var(--text-secondary)" }}>
+      <Icon name="volume_off" size={14} />
+    </span>
+  );
+}
+
+/* ONE CHAT ON YOUR LIST — `ContentRow`'s chronicle variant, unchanged, which
+   already is the messenger row: the disc, the name, one ellipsized line of the
+   last message, the age on the trailing edge and the unread dot under it.
+
+   THE DISC IS THE CHAT'S PICTURE, or the partner's face on a 1:1 — the row's
+   own precedence (a picture, else a monogram for a name, else the glyph), so a
+   group with no picture wears `forum`, the chat's own `NODE_GLYPHS` mark.
+
+   UNREAD IS THE DOT, NEVER A COUNT. The bell's rule at row scale: the honest
+   thing the list knows is that something arrived, and `12` is an errand.
+
+   THE PREVIEW IS THE LAST MESSAGE'S WORDS, prefixed by who sent it in a group
+   (`You:` for the reader's own) and bare in a 1:1, where there is only one
+   other person it could be. A message the reader cannot read previews as what
+   it is — `An encrypted message` — never as its scrambled text. */
+function ChatRow({ name, image, person, preview, when, unread = false, muted = false }) {
+  return (
+    <ContentRow
+      variant="chronicle"
+      chevron={false}
+      title={name}
+      titleAside={muted ? <MutedMark /> : undefined}
+      image={image}
+      name={person}
+      glyph="forum"
+      second={preview}
+      trailing={when}
+      unread={unread}
+      onOpen={() => {}}
+    />
+  );
+}
+
+/* A WORD STANDING IN THE ROW'S ACTION SLOT that is not an action — the
+   change-histories round's `Already removed` idiom: `label-small` in
+   `text-secondary`, not pressable, exactly where the act would stand. */
+function ChatRowWord({ children }) {
+  return (
+    <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+      {children}
+    </span>
+  );
+}
+
+/* ONE CHAT IN THE EXPLORER. The same row, with the chat's description on its
+   second line — the explorer is where a reader decides whether a chat is for
+   them, and what it is about answers that better than its latest message.
+
+   THE ROW'S ONE CONTROL IS THE JOIN, AND ITS WORD IS THE CHAT'S POLICY
+   (jakob 2026-09-23): an open chat says `Join` and joins; one that takes
+   requests says `Ask to join`. An invite-only chat has no act a stranger can
+   take, so its slot carries the quiet word `Invite only`, and a chat the
+   reader is already in says `Member` — the toggle's own word. All four are
+   drawn as `InlineAction` or the quiet word, never a filled button: a list of
+   six filled pills is six calls to action, and the explorer is for reading.
+
+   THE RANK YIELDS THE EDGE TO THE ACT — `ReferenceRow`'s picker rule: where a
+   row's edge is an action, ranking still orders the list and the number is
+   not drawn. */
+const JOIN_WORD = {
+  open: <InlineAction size="sm">Join</InlineAction>,
+  request: <InlineAction size="sm">Ask to join</InlineAction>,
+  invite: <ChatRowWord>Invite only</ChatRowWord>,
+  member: <ChatRowWord>Member</ChatRowWord>,
+};
+
+function ChatExploreRow({ name, image, about, join }) {
+  return (
+    <ContentRow
+      variant="chronicle"
+      chevron={false}
+      title={name}
+      image={image}
+      glyph="forum"
+      second={about}
+      action={JOIN_WORD[join]}
+      onOpen={() => {}}
+    />
+  );
+}
+
+/* ── THE THREAD ──────────────────────────────────────────────────────────────
+
+   THE BUBBLE CARRIES CONTENT, TIME, AND THE LOCK WHERE ENCRYPTED — AND NOTHING
+   ELSE (jakob 2026-09-23). Everything CoGra does to a message — an opinion, a
+   citation, saving it, commenting on it — lives behind a long-press and the ⋮
+   it opens, never worn on the bubble. A bubble with a stance face and a score
+   on it would be a post card in a costume, and a thread of them would read as
+   a feed.
+
+   OWN ON THE RIGHT, OTHERS ON THE LEFT, messenger grammar. The reader's own
+   bubbles take `secondary-container` — the tonal role the system already
+   spends on "yours, chosen" (a selected chip, a monogram's own fill) — and
+   everyone else's take `surface-card`, the card rung every other piece of
+   content stands on. `primary-container` is spoken for (one loud place per
+   screen), and on this screen that place is nobody's bubble.
+
+   AUTHORSHIP IN A GROUP: the name opens a run of someone's bubbles and their
+   face closes it, the corner nearest the face tightening to point at it —
+   every group messenger's arrangement. The name is the display name, the way
+   the bubble reads a person rather than an account.
+
+   THE TIME SPEAKS THE AGES LADDER (copy-voice, *Ages*) — `35m`, `2h` — not a
+   clock time. Messenger convention would print 14:05; the product's one
+   vocabulary for every timestamp is the older rule, and this board keeps it.
+
+   `sealed` IS THE QUIET LOCK (jakob 2026-09-23: "even if you can read a
+   message you should be aware that it was sent e2e"). A 12px `lock` beside the
+   time, in the time's own ink — present on every encrypted message whether or
+   not the reader can open it, and absent on plaintext. Never a banner, never
+   a colour: a reader should know, not be alarmed. */
+function ChatBubble({ own = false, author, first = true, last = true, when, sealed = false, children }) {
+  const ink = own ? "var(--on-secondary-container)" : "var(--text-secondary)";
+  const tail = own ? { borderBottomRightRadius: "var(--radius-extra-small)" } : { borderBottomLeftRadius: "var(--radius-extra-small)" };
+  return (
+    <div style={{ display: "flex", justifyContent: own ? "flex-end" : "flex-start", alignItems: "flex-end", gap: 8 }}>
+      {!own && (last ? <MonogramAvatar name={author.name} src={author.src} size="md" /> : <span style={{ flex: "none", width: 32 }} />)}
+      <div
+        style={{
+          maxWidth: "78%",
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          padding: "8px 12px",
+          borderRadius: "var(--radius-large)",
+          ...(last ? tail : {}),
+          background: own ? "var(--secondary-container)" : "var(--surface-card)",
+          color: own ? "var(--on-secondary-container)" : "var(--on-surface)",
+        }}
+      >
+        {!own && first && (
+          <span style={{ fontSize: "var(--text-label-medium)", lineHeight: "var(--text-label-medium--line-height)", fontWeight: "var(--text-label-medium--font-weight)" }}>
+            {author.name}
+          </span>
+        )}
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
+          {children}
+        </div>
+        <span style={{ alignSelf: "flex-end", display: "inline-flex", alignItems: "center", gap: 4, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: ink }}>
+          {sealed && (
+            <span role="img" aria-label="End-to-end encrypted" style={{ display: "inline-flex" }}>
+              <Icon name="lock" size={12} />
+            </span>
+          )}
+          {when}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* THE MESSAGE THE READER HOLDS NO KEY FOR. Its bubble is an ordinary bubble —
+   it has an author and a time like any other, and it wears the lock like any
+   other encrypted message — and its content is a friendly notice in the
+   bubble's secondary ink: what this is, and why it will not open. The notice
+   is the face; the raw text is one tap under it. `Show the encrypted text`
+   expands the bubble in place to the scrambled text itself, set in the
+   platform monospace (`TextField`'s `mono` register for strings read character
+   by character), and the notice stays above it. Drawn: the notice state; the
+   expanded state is behaviour, stated here.
+
+   A MESSAGE WITH NO KEY IS NOT AN ERROR. Nothing failed — the sender chose to
+   encrypt, and the key that opens it is not with this reader. So no `error`
+   ink and no warning glyph; and not the `tertiary` waiting register either,
+   because nothing here changes by waiting. */
+function ChatSealedNotice() {
+  return (
+    <>
+      <span style={{ color: "var(--text-secondary)" }}>An encrypted message — you don't have the key to read it.</span>
+      <InlineAction size="sm" selfStart>
+        Show the encrypted text
+      </InlineAction>
+    </>
+  );
+}
+
+/* The thread column: newest at the foot, the way a thread is read, so a short
+   thread sits on the foot rather than hanging from the header. */
+function ChatThreadColumn({ children }) {
+  return (
+    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 12, padding: "8px 16px 12px" }}>
+      {children}
+    </div>
+  );
+}
+
+/* ── THE FOOT — A LIVE FIELD, AND THE ARROW THAT SEALS ────────────────────────
+
+   THE SEND ARROW IS THE SEAL (jakob 2026-09-23). A message is a signed record,
+   and the signing ceremony compresses into the send act: tapping the arrow
+   signs the message in the reader's name and puts it into the chat — no seal
+   page, no second tap. It is the seal's own filled `primary` in round form,
+   and its accessible name says what it does: `Sign and send`, the seal's
+   verb-names-the-act rule (`SealFooter`).
+
+   LONG-PRESS ON THE ARROW OPENS THE WHAT-YOU-SIGN SHEET — the seal's reading,
+   for the reader who wants it: this one message, its encryption, what it
+   costs (graph: a gap until the sheet is drawn). And the reader is told so
+   ONCE: a quiet line under the foot on their FIRST send ever, gone after it.
+   This board draws that line as the first send's state; see `ChatThread` for
+   the tension with the own bubbles above it.
+
+   THE LOCK TOGGLE — THE PER-MESSAGE ENCRYPTION CHOICE (jakob 2026-09-23).
+   Beside the field, where the thumb already is. Its state is the lock's
+   FILL: `lock_outline` off, `lock` on, in the same quiet `text-secondary` ink
+   either way, `aria-pressed` for the ear — never a colour change, never a
+   banner. STICKY PER CHAT: the choice holds for the next message in this chat
+   until the reader flips it. DEFAULT PLAINTEXT for a fresh chat, which is the
+   state drawn. The lock's accessible name is the act it takes: `Encrypt end
+   to end`.
+
+   THE FIELD IS LIVE — the comment foot's door ruling (readme §13, *The foot
+   ruling*) left this question to the chats round, and a chat is an inline
+   signed send, so here the field is typed in. It is `TextField` at `rows={1}`
+   and grows by the growth law, taking its room from the thread above it — the
+   sheets-and-video round's "every chat app" case. Whether the comment foot
+   now inherits a live field is a separate ruling this round does not take.
+
+   KEY ABSENT GATES THE FOOT — the `KeyElsewhere` pattern, not drawn here:
+   without the signing key the arrow cannot seal, so the reader meets the
+   restore-first notice rather than a send that silently waits, and the thread
+   above keeps reading. Its drawing is owed to a later chats board. */
+function LockToggle({ on = false }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on ? "true" : "false"}
+      aria-label="Encrypt end to end"
+      className="cg-state cg-focus cg-hit"
+      style={{ display: "grid", placeItems: "center", width: 40, height: 40, flex: "none", border: 0, padding: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer" }}
+    >
+      <Icon name={on ? "lock" : "lock_outline"} size={22} />
+    </button>
+  );
+}
+
+function SendSeal() {
+  return (
+    <button
+      type="button"
+      aria-label="Sign and send"
+      className="cg-state cg-focus cg-hit"
+      style={{ display: "grid", placeItems: "center", width: 40, height: 40, flex: "none", border: 0, padding: 0, background: "var(--primary)", color: "var(--on-primary)", borderRadius: "var(--radius-full)", cursor: "pointer" }}
+    >
+      <Icon name="send" size={20} />
+    </button>
+  );
+}
+
+/* The foot's two icon controls sit on the FIELD's centre line, not the label's:
+   each rides in a box the single-line field's own height (24px of body-large
+   leading, 16px of padding, the 1px border twice). */
+function FieldAligned({ children }) {
+  return <span style={{ flex: "none", height: 42, display: "grid", placeItems: "center" }}>{children}</span>;
+}
+
+function ChatFoot({ draft = "", sealed = false, firstSend = false }) {
+  return (
+    <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px 16px", borderTop: "1px solid var(--border-hairline)" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+        <FieldAligned>
+          <LockToggle on={sealed} />
+        </FieldAligned>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <TextField label="Message" rows={1} value={draft} />
+        </div>
+        <FieldAligned>
+          <SendSeal />
+        </FieldAligned>
+      </div>
+      {firstSend && <QuietNote>Sending signs the message in your name. Press and hold the arrow to see what you sign.</QuietNote>}
+    </div>
   );
 }
