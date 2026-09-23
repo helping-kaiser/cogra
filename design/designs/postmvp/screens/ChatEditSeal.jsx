@@ -7,28 +7,35 @@
    `SealFooter` with `Sign the change`. The founding's seal (`ChatCreateSeal`)
    wears the same parts, so a chat's two signed moments read as one family.
 
-   ONE THING SIGNED (jakob): the change, in the reader's name. The acts card
-   has one row — the chat, and what is new about it — because what a reader
-   decides here is one decision.
+   THREE THINGS, SIGNED TOGETHER (jakob 2026-09-23, the fix pass — the
+   founding seal's exact precedent). A change to a chat's metadata is always a
+   decision, even a solo admin's: the default map's `decision:set:metadata`
+   gate is > 50% of the weighted cast with a 10% quorum (chats.md §5), so the
+   change is a proposal that passes on its proposer's own ballot. The reader
+   therefore signs three records, and the card counts all three:
+   · `Change` — the proposal's anchor, carrying the new version as its text;
+   · `Chat` — its reference to the subject, the chat it changes;
+   · `Your opinion` · `For the change` — the proposer's own +1 ballot, which
+     the client signs with the anchor (governance.md: authoring is never a
+     vote, so the ballot is its own priced act).
+   They land together, or none does.
 
-   HOW THE CHANGE LANDS — THE SUCCESSION, EXECUTED FOR THE CHAT. A chat's
-   metadata never changes in place: the new state is a succession, a new
-   lineage head whose founding payload carries the whole new version, and it
-   is always authored by the chat's own system actor, executing the chat's
-   passed decision (chats.md §3, §5, §8). What the reader signs is that
-   decision. Where their own voice suffices under the chat's governance map —
-   this fixture: the founder and admin under the default map — it passes the
-   moment it lands (governance.md: the first epoch whose tally crosses), the
-   system actor executes, and the details show the new version
-   with the old one kept in the edit history. Where the map needs more voices,
-   the same `Sign the change` leaves the change waiting: a quiet pending card
-   in the thread and a row under `Open decisions`. That multi-voice face is
-   round B2's, and the graph carries it as an intended gap on this seal's act.
+   THE INSTANT PASS, TRUTHFULLY. In this fixture the reader is the founder and
+   admin: their ballot is the only one cast, it is 100% of the cast, and its
+   weight clears the 10% quorum, so the tally crosses at the first epoch it
+   lands in (governance.md) — to the reader, the change simply happens. What
+   follows is not theirs to sign: the chat authority's finalization, and the
+   SUCCESSION — a new lineage head whose founding payload carries the whole
+   new version — signed by the chat's own system actor (chats.md §3, §8). The
+   system actor's record never joins the reader's count. Where the reader's
+   voice does NOT carry the tally, the same three records leave the change
+   waiting: a quiet pending card in the thread and a row under `Open
+   decisions` — round B2's face, an intended gap on this seal's act.
 
-   MESSENGER CLOTHES, EVEN HERE. Nothing on the seal says proposal, ballot or
-   tally: the reader changes their chat's description, and the machinery that
-   makes it a community's decision stays underneath (the chats round's
-   charter). The "?" is the seal's own, `How signing works`.
+   MESSENGER CLOTHES, EVEN HERE. The rows say what a reader recognises — a
+   change, the chat, their opinion for it — and never proposal, ballot or
+   tally; the count is honest and the vocabulary stays the product's (the
+   chats round's charter). The "?" is the seal's own, `How signing works`.
 
    THE ONE LINE says what a reader from any other messenger cannot guess: the
    change is public, and the old version stays readable. */
@@ -44,12 +51,20 @@ export function Screen() {
               Coast walkers
             </span>
             <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-              Name, picture and description — one signed change.
+              Name, picture and description — one change to the chat.
             </span>
           </span>
         </div>
 
-        <ActsCard rows={[{ label: "Chat", value: "A new description", count: "1", countNoun: "chat change" }]} total="1 thing, signed" />
+        <ActsCard
+          rows={[
+            { label: "Change", value: "A new description", count: "1", countNoun: "change" },
+            { label: "Chat", value: "Coast walkers", count: "1", countNoun: "link to the chat" },
+            { label: "Your opinion", value: "For the change", count: "1", countNoun: "opinion" },
+          ]}
+          total="3 things, signed together"
+          note="They land together, or none does."
+        />
 
         <QuietNote>The change is public, and the chat's earlier versions stay readable in its edit history.</QuietNote>
 

@@ -23,7 +23,11 @@
    and a dialog that guessed would be wrong for someone.
 
    THE OPTIONAL PARTING REASON (jakob: the Leave record carries one as its
-   payload). One field, the sensitive sheet's `Why?` exactly — `TextField` at
+   payload). ITS LEGITIMACY IS ON RECORD: layer1-interface.md's act payload
+   schema (`tbl:nodes:act-payload-schema`) names the Leave act's canonical
+   payload a "parting reason", and jakob kept the field on the fix pass
+   against his own first instinct — "if the interface says so then the L1
+   author intended it to exist" (2026-09-23). One field, the sensitive sheet's `Why?` exactly — `TextField` at
    `rows={1}`, its corner saying it is optional and where it will be read —
    and it GROWS by the growth law: a reason that runs past one line takes a
    second and the dialog's body grows with it. With the keyboard up on a short
