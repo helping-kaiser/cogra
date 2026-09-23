@@ -42,8 +42,8 @@
    never write bell rows, so there is no tray share to silence. The chat keeps
    its place and its unread dot on the list.
 
-   THE PENDING INVITE. Ada was invited at the founding and has not pointed
-   back, so her row says `Invited — hasn't joined yet` and carries no role
+   THE PENDING INVITE. The reader invited Ada on 20 September (the edit
+   history's newest row) and she has not pointed back, so her row says `Invited — hasn't joined yet` and carries no role
    (`MemberRows`). The thread carries the same fact as a quiet line — a state
    of the drawn thread (`ChatThread`), not redrawn here.
 
@@ -59,7 +59,7 @@
    THE FRAME IS TALLER THAN A PHONE so the whole page reads at once, down to
    the leave — the page scrolls in the product, and its bottom is the part a
    review most needs to see. */
-export const FRAME = { width: 390, height: 1560 };
+export const FRAME = { width: 390, height: 1112 };
 
 export function Screen() {
   return <ChatDetailsBody />;

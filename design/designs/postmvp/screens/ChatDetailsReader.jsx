@@ -36,8 +36,6 @@
 
    THE FIXTURE IS `ChatThreadReader`'s chat: Harbour office, no picture, on
    request, four members. */
-export const FRAME = { width: 390, height: 900 };
-
 const HARBOUR_OFFICE_MEMBERS = [
   { name: "Tobias Lindqvist", handle: "tobias", role: "admin" },
   { name: "Mira Voss", handle: "mira", src: "inviter.jpg", role: "chat_mod" },
