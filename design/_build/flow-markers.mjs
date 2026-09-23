@@ -2468,4 +2468,100 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Stay</button>", tag: "button" },
     { n: 4, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
   ],
+
+  // ── The chats governance round (post-MVP) ───────────────────────────────
+  // A decision's act is found by its spoken name, which carries what it agrees
+  // to — two cards in one thread would otherwise share one `>Agree<`. The
+  // details' decision row is marked on its FIRST row (the repeated-element
+  // convention), its door and its act as two numbers, `RoleDoor`'s split. A
+  // sheet or dialog over a surface marks only its own controls, as the leave
+  // dialog and the message's seal do.
+  ChatThreadDecisions: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Salt-crust rubbings — chat details"', tag: "button" },
+    { n: 3, find: 'aria-label="Agree — Mira Voss wants to remove Kel Moreau from the chat"', tag: "button" },
+    { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 5, find: 'data-field="Message"', tag: "div" },
+    { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 7, find: 'aria-label="Search in this chat"', tag: "button" },
+  ],
+  ChatDetailsDecisions: [
+    { n: 1, find: 'aria-label="Back to the chat"', tag: "a" },
+    { n: 2, find: 'aria-label="Give your opinion on Salt-crust rubbings"', tag: "button" },
+    { n: 2, find: ">Choose your opinion on Salt-crust rubbings</button>", tag: "button" },
+    { n: 3, find: ">Edit chat</button>", tag: "button" },
+    { n: 4, find: ">Media in this chat</span>", tag: "button" },
+    { n: 5, find: 'aria-label="Mira Voss wants to remove Kel Moreau from the chat, 2 of 5 so far — see it in the chat"', tag: "button" },
+    { n: 6, find: 'aria-label="Agree — Mira Voss wants to remove Kel Moreau from the chat"', tag: "button" },
+    { n: 7, find: ">Add people</span>", tag: "button" },
+    { n: 8, find: ">Juno Baptiste</span>", tag: "button" },
+    { n: 9, find: 'aria-label="Admin — change the role"', tag: "button" },
+    { n: 10, find: ">Mute this chat</span>", tag: "button" },
+    { n: 11, find: ">Edit history</span>", tag: "button" },
+    { n: 12, find: ">Leave this chat</span>", tag: "button" },
+  ],
+  ChatInvitePicker: [
+    { n: 1, find: 'aria-label="Back to chat details"', tag: "a" },
+    { n: 2, find: ">Search people<", tag: "div" },
+    { n: 3, find: 'aria-label="Remove Wren Aliyev"', tag: "button" },
+    { n: 4, find: ">Sal Torres<", tag: "button" },
+    { n: 5, find: ">Next</button>", tag: "button" },
+  ],
+  ChatInviteSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — nobody is invited"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Sign and invite</button>", tag: "button" },
+    { n: 5, find: ">Back</button>", tag: "button" },
+  ],
+  ChatThreadInvited: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="Night fishing crew — chat details"', tag: "button" },
+    { n: 3, find: ">Show the encrypted text</button>", tag: "button" },
+    { n: 4, find: ">Join</button>", tag: "button" },
+    { n: 5, find: 'aria-label="Search in this chat"', tag: "button" },
+  ],
+  ChatJoinSeal: [
+    { n: 1, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 2, find: ">Sign and join</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ChatThreadRequested: [
+    { n: 1, find: 'aria-label="Back to all chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Harbour office — chat details"', tag: "button" },
+    { n: 3, find: ">Show the encrypted text</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Search in this chat"', tag: "button" },
+  ],
+  ChatThreadApproved: [
+    { n: 1, find: 'aria-label="Back to all chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Harbour office — chat details"', tag: "button" },
+    { n: 3, find: ">Show the encrypted text</button>", tag: "button" },
+    { n: 4, find: ">Join</button>", tag: "button" },
+    { n: 5, find: 'aria-label="Search in this chat"', tag: "button" },
+  ],
+  ChatRequestApprove: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Headland honey — chat details"', tag: "button" },
+    { n: 3, find: 'aria-label="Approve — Sal Torres asks to join"', tag: "button" },
+    { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 5, find: 'data-field="Message"', tag: "div" },
+    { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 7, find: 'aria-label="Search in this chat"', tag: "button" },
+  ],
+  // The choice rows are found by their words; the details beneath print the
+  // same role words only inside the role doors' buttons.
+  ChatRoleSheet: [
+    { n: 1, find: ">Admin</span>", tag: "label" },
+    { n: 2, find: ">Member</span>", tag: "label" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ChatVersionRemoveConfirm: [
+    { n: 1, find: ">Remove version</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ChatHistoryRemoved: [
+    { n: 1, find: 'aria-label="Back to chat details"', tag: "a" },
+    { n: 2, find: ">Remove this version</button>", tag: "button" },
+  ],
 });
