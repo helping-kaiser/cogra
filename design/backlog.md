@@ -3427,3 +3427,19 @@ does not exist yet (`notifications.md`, *The kinds later slices add*).
 This also files the per-kind muting that readme §13, *The notifications
 round* left as *filed post-MVP* — it is this item, and the nine rows are
 it.
+
+### 103 · The veiled clip's playback state is undrawn · *design* · **open**
+
+Filed by the implementation session 2026-09-23, surfaced by their
+feed-video preload work (pre-existing behavior their V3 lane made
+visible): a sensitive post keeps its media mounted under the veil —
+the revealing-moves-nothing ruling — so a veiled clip already
+**autoplays behind the blur**, and now also gets preloaded. The
+sensitive-veil boards say what the veil looks like; nothing rules
+what the media *does* beneath it. The question: does a veiled clip
+play, or even load, before the reader unveils? Candidate reading:
+the veil is a reader's declared not-yet, so playback (and the sound
+disc's presence in the stage rotation) should wait for the unveil —
+but autoplay-on-unveil vs cover-at-rest-on-unveil is a real choice,
+and preload is a second knob. Implementation is trivial once ruled
+(gate autoplay/preload on the veil state). Needs jakob.
