@@ -1286,15 +1286,42 @@ function ChatFoot({ draft = "", sealed = false, firstSend = false }) {
    non-member's Send would never reach the transcript (chats.md §2 — the
    membership gate is the read-side fold). An invite-only chat offers nothing a
    stranger can press; its foot carries the quiet `Invite only` line instead
-   (stated here, not drawn). */
-function ChatJoinFoot({ policy = "request" }) {
+   (stated here, not drawn).
+
+   THE FOOT MOVES WITH THE READER'S OWN STANDING (the chats governance round,
+   2026-09-23). `state` draws the three moments between asking and belonging,
+   each still a non-member's foot — no field, no lock, no arrow:
+   · `invited` — someone's Invitation names the reader. The foot says who, in
+     one quiet line, and the join stands under it, filled. There is no Decline:
+     ignoring an invitation needs no record at all (chats.md §4), so a refusal
+     act would be a button for a thing that happens by doing nothing.
+   · `requested` — the reader asked; the foot says the request is sent and
+     nothing more is pressable. It names no one who decides — the chats
+     round's rule that governance ships silently.
+   · `approved` — the request passed; the join stands alone, filled, because
+     the transcript's outcome line directly above it says why. */
+function ChatJoinFoot({ policy = "request", state, invitedBy }) {
+  const join = <Button style={{ width: "100%" }}>Join</Button>;
+  let body;
+  if (state === "invited") {
+    body = (
+      <>
+        <QuietNote>{`${invitedBy} invited you.`}</QuietNote>
+        {join}
+      </>
+    );
+  } else if (state === "requested") {
+    body = <QuietNote>Your request is sent — you can join once it's approved.</QuietNote>;
+  } else if (state === "approved") {
+    body = join;
+  } else if (policy === "invite") {
+    body = <QuietNote>Invite only — a member can invite you.</QuietNote>;
+  } else {
+    body = <Button style={{ width: "100%" }}>{policy === "open" ? "Join" : "Ask to join"}</Button>;
+  }
   return (
     <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px 16px", borderTop: "1px solid var(--border-hairline)" }}>
-      {policy === "invite" ? (
-        <QuietNote>Invite only — a member can invite you.</QuietNote>
-      ) : (
-        <Button style={{ width: "100%" }}>{policy === "open" ? "Join" : "Ask to join"}</Button>
-      )}
+      {body}
     </div>
   );
 }
@@ -1355,6 +1382,34 @@ function CoastWalkersThread() {
       <ChatBubble author={CHAT_MIRA} when="08:40">
         Six it is. Meet at the harbour office.
       </ChatBubble>
+    </ChatThreadColumn>
+  );
+}
+
+/* THE HARBOUR OFFICE THREAD, as a reader outside the chat reads it — two of
+   its four messages sealed, so they show as notices to a non-member. Drawn
+   once because three boards draw it: the reader's thread, and the requester's
+   two moments after asking (`ChatThreadRequested`, `ChatThreadApproved`),
+   which are the same transcript with one card more. `after` is what stands at
+   the transcript's foot after the last message. */
+function HarbourOfficeThread({ after }) {
+  return (
+    <ChatThreadColumn>
+      <DayDivider>22 September</DayDivider>
+      <ChatBubble author={CHAT_KEL} when="17:45" sealed>
+        <ChatSealedNotice />
+      </ChatBubble>
+      <ChatBubble author={CHAT_MIRA} when="18:02">
+        The lost-and-found has a blue wool hat and one glove. Whose?
+      </ChatBubble>
+      <DayDivider>23 September</DayDivider>
+      <ChatBubble author={CHAT_TOBIAS} when="08:30">
+        Opening at nine this morning, not eight.
+      </ChatBubble>
+      <ChatBubble author={CHAT_JUNO} when="08:44" sealed>
+        <ChatSealedNotice />
+      </ChatBubble>
+      {after}
     </ChatThreadColumn>
   );
 }
@@ -1659,16 +1714,19 @@ const COAST_WALKERS_MEMBERS = [
   { name: "Ada Okonkwo", handle: "ada", pending: true },
 ];
 
-/* THE MEMBER'S DETAILS, WHOLE — drawn once because two boards draw it: the
-   surface itself and the leave dialog over it (`ThreadDetail`'s rule: what a
-   modal covers is the real surface, inert). The anatomy's order and its
-   reasons are `ChatDetails`' docblock. */
-function ChatDetailsBody() {
+/* THE MEMBER'S DETAILS, WHOLE — drawn once because every board over it draws
+   it: the surface itself, the leave dialog and the role sheet over it
+   (`ThreadDetail`'s rule: what a modal covers is the real surface, inert), and
+   the governance round's filled twin. The anatomy's order and its reasons are
+   `ChatDetails`' docblock. `chat`, `members` and `decisions` default to Coast
+   walkers with nothing being decided; `decisions` fills the section
+   (`OpenDecisions`) where the governance round's fixture has some. */
+function ChatDetailsBody({ chat = COAST_WALKERS, members = COAST_WALKERS_MEMBERS, decisions }) {
   return (
     <>
       <PageHeader title="Chat details" backHref="#" backLabel="Back to the chat" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", paddingBottom: 24 }}>
-        <ChatIdentity {...COAST_WALKERS}>
+        <ChatIdentity {...chat}>
           <Button variant="outline" style={{ flex: "none" }}>
             Edit chat
           </Button>
@@ -1676,8 +1734,8 @@ function ChatDetailsBody() {
         <DetailsGroup ariaLabel="In this chat">
           <SettingsRow label="Media in this chat" onOpen={() => {}} />
         </DetailsGroup>
-        <OpenDecisionsEmpty />
-        <MembersSection members={COAST_WALKERS_MEMBERS} addPeople roleDoors />
+        {decisions ? <OpenDecisions rows={decisions} /> : <OpenDecisionsEmpty />}
+        <MembersSection members={members} addPeople roleDoors />
         <DetailsGroup ariaLabel="This chat">
           <SettingsRow checked={false} label="Mute this chat" status="No push for its messages. It keeps its place and its dot on your list." onOpen={() => {}} />
           <SettingsRow label="Edit history" onOpen={() => {}} />
@@ -1747,5 +1805,341 @@ function ChatEventRow({ who, src, when, reason, children }) {
       </span>
       <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{when}</span>
     </div>
+  );
+}
+
+/* ══ THE CHATS GOVERNANCE ROUND ══════════════════════════════════════════════
+
+   Round B2 of the chats work (jakob's rulings 2026-09-23): the multi-voice
+   acts the details round left as intended gaps — the pending card and the
+   filled `Open decisions`, the invitation into an existing chat, the join in
+   its three routes, the request's two sides, the role change and a version's
+   removal.
+
+   THE LAW (jakob 2026-09-23). A chat's backbone is the proposal machinery, and
+   NOTHING MAY LOOK LIKE A PROPOSAL. An act whose actor's own say clears its
+   gate is INSTANT: it is a proposal passing on its proposer's first ballot, so
+   its seal counts the anchor, its reference to the subject and the proposer's
+   own ballot — `3 things, signed together`, `ChatEditSeal`'s precedent. An act
+   that needs more voices becomes a QUIET PENDING CARD IN THE THREAD, at the
+   moment it was proposed: a plain sentence (`Mira Voss wants to remove Kel
+   Moreau from the chat`), an `Agree` that is a ballot in disguise, and a plain
+   count of PEOPLE (`2 of 5 so far`). When the tally crosses, the card settles
+   into its outcome line (`Kel Moreau was removed`). The same open decisions
+   stand as rows under `Open decisions` on the details. Proposals never expire,
+   so no card carries a clock or a deadline.
+
+   THE COUNT CONVENTION — the brief's recommendation, flagged for jakob's
+   canvas review. A card counts PEOPLE and never shows weight: `2 of 5` is two
+   of the five who have a say. The tally underneath is weighted (the default
+   map: admin 5, moderator 3, member 1; chats.md §5), so a card can settle
+   "early" — at 3 of 5, if an admin is among the three — and it simply settles
+   when it settles; no card promises a number of people it will take. GEEK MODE
+   REVEALS THE ARITHMETIC in the geek-pair grammar (`ExactTail`: a `cg-exact`
+   span that paints only with exact values on, and a spoken twin that says it
+   in both modes). This extends the geek round's "the pairs, and only the pairs"
+   to a governance tally — named here, because it is a widening of that ruling
+   and not a reading of it. */
+
+/* THE DECISIONS CHAT — Salt-crust rubbings, where the reader is a plain
+   member. The fixture moved off Coast walkers ON PURPOSE: there the reader is
+   the founder and admin, and an admin's own say clears the rename gate in any
+   chat this size (`decision:set:metadata`: > 50% of the cast, a 10% quorum —
+   5 of Coast walkers' 12 is 42%), so the reader's own pending rename the round
+   needs cannot honestly stand there. Here the reader weighs 1.
+
+   THE ARITHMETIC, checkable by hand (chats.md §5, the default map; quorum is
+   the share of the eligible weight that has cast, governance.md §2.4):
+   · Juno admin 5 · Mira moderator 3 · Tobias moderator 3 · Sol, Ada, Kel
+     members 1 each — 14 in all, six people.
+   · THE KICK (`decision:disavow_member`, ≥ 2/3 of the cast, ≥ 40% quorum,
+     the subject excluded): five people have a say, 13 by role; the quorum is
+     5.2. Mira (3) and Ada (1) have agreed — 4, short of 5.2 — so the card reads
+     `2 of 5 so far`. The reader's Agree makes 5, still short; Juno's or
+     Tobias's alone would carry it.
+   · THE RENAME (`decision:set:metadata`, > 50% of the cast, ≥ 10% quorum):
+     all six have a say, 14 by role; the quorum is 1.4. The reader's own ballot
+     is 1, short of it, so their card reads `1 of 6 so far`; any one more voice
+     carries it.
+   · TOBIAS'S ROLE (`decision:change_role`) settled before the fixture opens;
+     he wears `Moderator` on the member list and in the weights above. */
+const SALT_CRUST = {
+  name: "Salt-crust rubbings",
+  policy: "invite",
+  description: "Rubbings and prints from the flats, and the loft they dry in.",
+};
+
+const SALT_CRUST_MEMBERS = [
+  { name: "Juno Baptiste", handle: "juno", role: "admin" },
+  { name: "Mira Voss", handle: "mira", src: "inviter.jpg", role: "chat_mod" },
+  { name: "Tobias Lindqvist", handle: "tobias", role: "chat_mod" },
+  { name: "Sol Ferreira", handle: "sol", sub: "@sol · you", role: "member" },
+  { name: "Ada Okonkwo", handle: "ada", role: "member" },
+  { name: "Kel Moreau", handle: "kel", role: "member" },
+];
+
+const KICK_LINE = "Mira Voss wants to remove Kel Moreau from the chat";
+const RENAME_LINE = "You want to rename the chat to “Salt prints”";
+
+/* THE COUNT, IN PEOPLE, WITH THE ARITHMETIC UNDER IT. The face is the plain
+   count; the exact tail says the weighted sum, the eligible total, the role
+   weights and where it settles, and paints only in geek mode. */
+const ROLE_WEIGHTS = "admin 5, moderator 3, member 1";
+
+function PeopleSoFar({ agreed, of, sum, total, settles, share }) {
+  return (
+    <>
+      {`${agreed} of ${of} so far`}
+      <ExactTail
+        exact={` · ${sum} of ${total} by role (${ROLE_WEIGHTS}) — settles at ${settles}, ${share} for`}
+        spoken={`By role — ${ROLE_WEIGHTS} — ${sum} of ${total} so far; it settles at ${settles}, with ${share === "⅔" ? "two thirds" : share} for`}
+      />
+    </>
+  );
+}
+
+const KICK_COUNT = <PeopleSoFar agreed={2} of={5} sum={4} total={13} settles="5.2" share="⅔" />;
+const RENAME_COUNT = <PeopleSoFar agreed={1} of={6} sum={1} total={14} settles="1.4" share="over half" />;
+
+/* THE BALLOT IN DISGUISE. `Agree` rides the end of the count's line, so it is
+   the bare word (`InlineAction`'s own test: an act at the end of somebody
+   else's line), never a pill — a thread of cards with filled buttons would be
+   a thread of calls to action. ITS NAME CARRIES WHAT IT AGREES TO: two cards
+   in one thread would otherwise be two identical `Agree`s to an ear. A tap
+   signs one record in the reader's name — the send arrow's precedent, one
+   record and one tap — and the slot then says `You agreed`, the quiet finished
+   word (`Already removed`'s idiom), stated here, not drawn. `Approve` is the
+   same act on a join request, worded for the one decision where the voice is
+   an approver's. */
+function AgreeAct({ what }) {
+  return <InlineAction ariaLabel={`Agree — ${what}`}>Agree</InlineAction>;
+}
+
+function ApproveAct({ what }) {
+  return <InlineAction ariaLabel={`Approve — ${what}`}>Approve</InlineAction>;
+}
+
+/* THE PENDING CARD — one decision waiting for more voices, in the transcript at
+   the moment it was proposed.
+
+   NEITHER A BUBBLE NOR A BANNER. A bubble belongs to a person (the reader's in
+   `secondary-container` on the right, everyone else's in `surface-card` on the
+   left); this is the chat's, so it takes neither fill and no side. It stands
+   the column's full width on the page ground, bounded by the hairline at the
+   bubbles' own corner — Material's outlined card, the one quiet container the
+   thread does not already spend. No icon, no colour, no count of votes against
+   a bar: nothing on it is louder than a message.
+
+   ITS ANATOMY: the sentence, in the product's words and the proposer's name;
+   a quoted line under it where the record carries one (a join request's
+   message, the leave reason's grammar); and a count line — the people so far,
+   then the act at its end where the reader has one. THE READER'S OWN CARD
+   carries the count only: their ballot was signed with the proposal, so there
+   is nothing left for them to press. A card whose gate is one approval (a join
+   request under the default map) carries no count at all — `0 of 1` is noise,
+   and the first approval settles it.
+
+   NO CLOCK. The card is placed by its moment and the day divider dates it; a
+   decision is not a message, and a time on it would ask when it ends — it
+   never does. */
+function PendingCard({ children, quote, count, act }) {
+  return (
+    <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 4, padding: "12px 16px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-large)" }}>
+      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{children}</span>
+      {quote && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>“{quote}”</span>}
+      {(count || act) && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 24 }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{count}</span>
+          {act}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* THE OUTCOME LINE — what a pending card settles into when its tally crosses:
+   one quiet centred sentence saying what is now true (`Tobias Lindqvist is now
+   a moderator`, `Kel Moreau was removed`), in the day divider's register at
+   body scale. IT SETTLES IN PLACE, at the proposal's moment — the lane's
+   reading of "settling into", flagged: one fact, one line, and the transcript
+   keeps its order. */
+function DecisionOutcome({ children }) {
+  return (
+    <div style={{ alignSelf: "center", maxWidth: "88%", padding: "4px 0", textAlign: "center", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+      {children}
+    </div>
+  );
+}
+
+/* OPEN DECISIONS, FILLED — the same decisions the thread carries as cards,
+   as compact rows under the section's label (`OpenDecisionsEmpty`'s place and
+   label). A row reads what, then the count; where the reader has a voice, the
+   act stands at its end.
+
+   THE ROW SPLITS `RoleDoor`'s way (the stance row's grammar): the words are a
+   door to the card in the thread, scrolled to its moment, and the act is its
+   own target — never a control inside a control. The door's spoken name says
+   where it goes. A row carries no act of its own for the reader's own
+   proposal, as its card carries none; the words keep the full width then. */
+function OpenDecisions({ rows }) {
+  return (
+    <div style={{ flex: "none", display: "flex", flexDirection: "column" }}>
+      <SectionLabel>Open decisions</SectionLabel>
+      {rows.map((r) => (
+        <div key={r.what} style={{ display: "flex", alignItems: "stretch" }}>
+          <button
+            type="button"
+            aria-label={`${r.what}, ${r.people} so far — see it in the chat`}
+            className="cg-state cg-focus"
+            style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", justifyContent: "center", gap: 2, minHeight: "var(--touch-target-min)", border: 0, background: "none", padding: `var(--space-2) ${r.act ? "0" : "var(--space-6)"} var(--space-2) var(--space-6)`, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" }}
+          >
+            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{r.what}</span>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{r.count}</span>
+          </button>
+          {r.act && <span style={{ flex: "none", display: "flex", alignItems: "center", padding: "0 24px 0 12px" }}>{r.act}</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const SALT_CRUST_DECISIONS = [
+  { what: KICK_LINE, people: "2 of 5", count: KICK_COUNT, act: <AgreeAct what={KICK_LINE} /> },
+  { what: RENAME_LINE, people: "1 of 6", count: RENAME_COUNT },
+];
+
+/* THE SALT-CRUST THREAD — three days back, because the chats list reads its
+   last message at `3d` and the transcript has to end where the list says it
+   does: on Juno's line about the loft. Both open decisions sit in it at their
+   own moments, and Tobias's settled role sits earlier, as its outcome line. */
+function SaltCrustThread() {
+  return (
+    <ChatThreadColumn>
+      <DayDivider>19 September</DayDivider>
+      <ChatBubble author={CHAT_JUNO} when="17:30">
+        First sheets are pegged up under the skylight.
+      </ChatBubble>
+      <DecisionOutcome>Tobias Lindqvist is now a moderator</DecisionOutcome>
+      <ChatBubble author={CHAT_TOBIAS} when="18:02">
+        Thanks all — the loft key stays on the hook by the door.
+      </ChatBubble>
+      <DayDivider>20 September</DayDivider>
+      <PendingCard count={KICK_COUNT} act={<AgreeAct what={KICK_LINE} />}>
+        {KICK_LINE}
+      </PendingCard>
+      <ChatBubble author={CHAT_ADA} when="10:15">
+        Two of the prints smudged overnight — the damp got in.
+      </ChatBubble>
+      <PendingCard count={RENAME_COUNT}>{RENAME_LINE}</PendingCard>
+      <ChatBubble own when="11:02">
+        Most of what we make now are prints — the name could say so.
+      </ChatBubble>
+      <ChatBubble author={CHAT_JUNO} when="11:40">
+        The new rubbings are drying in the loft.
+      </ChatBubble>
+    </ChatThreadColumn>
+  );
+}
+
+/* ── THE INVITED READER'S THREAD ─────────────────────────────────────────────
+   Night fishing crew — invite only, the explorer's third row, its last message
+   Tobias's and sealed. Mira has invited the reader. Drawn once because two
+   boards draw it: the invitee's thread and the join's seal over it. The reader
+   is not a member yet, so they hold no key: every sealed message is a notice. */
+function NightFishingThread() {
+  return (
+    <ChatThreadColumn>
+      <DayDivider>22 September</DayDivider>
+      <ChatBubble author={CHAT_TOBIAS} when="21:40" sealed>
+        <ChatSealedNotice />
+      </ChatBubble>
+      <ChatBubble author={CHAT_MIRA} when="21:52">
+        The boat leaves the slipway at eleven if the wind drops.
+      </ChatBubble>
+      <DayDivider>23 September</DayDivider>
+      <ChatBubble author={CHAT_KEL} when="06:10">
+        Wind dropped. Four mackerel and a very cold hour.
+      </ChatBubble>
+      <ChatBubble author={CHAT_TOBIAS} when="06:30" sealed>
+        <ChatSealedNotice />
+      </ChatBubble>
+    </ChatThreadColumn>
+  );
+}
+
+function ChatThreadInvitedBody() {
+  return (
+    <>
+      <ChatThreadHeader name="Night fishing crew" backLabel="Back" />
+      <NightFishingThread />
+      <ChatJoinFoot state="invited" invitedBy="Mira Voss" />
+    </>
+  );
+}
+
+/* A REMOVED CHAT VERSION — `ProfileVersionTombstone`'s shape at chat scale.
+   Everything a chat version holds was its payload — the picture, the name, the
+   words, who could join — so all of it goes and the mark stands in its place,
+   beside the reserved disc a kept space wears. Nothing survives beside the
+   disc, because nothing of a chat version lives outside it. The mark is the
+   chat's own (`RedactedContent`'s `chat` reason): a chat has no author, and
+   its members decided. */
+function ChatVersionTombstone({ note }) {
+  return (
+    <Card>
+      <MonogramAvatar name="" size="lg" redacted />
+      <RedactedContent reason="chat" note={note} />
+    </Card>
+  );
+}
+
+/* THE CHAT'S EDIT HISTORY, WHOLE — drawn once because three boards draw it:
+   the chronicle itself (`ChatHistory`), the removal's dialog over it
+   (`ChatVersionRemoveConfirm`), and the chronicle after the removal passed
+   (`ChatHistoryRemoved`, `removed`). The chronicle's reasons are
+   `ChatHistory`'s docblock. `removed` tombstones the 10 September version in
+   place — its row, its dateline and its date kept, the chat's own mark where
+   its card stood, and `Already removed` in its act's slot. */
+function ChatHistoryBody({ removed = false }) {
+  return (
+    <>
+      <PageHeader title="Edit history" backHref="#" backLabel="Back to chat details" />
+      <HistoryColumn>
+        <ChatEventRow who="Sol Ferreira" when="20 September">
+          You invited Ada Okonkwo
+        </ChatEventRow>
+        <VersionBlock label="Current version · signed 18 September" action={<RemoveVersionAct />}>
+          <ChatVersionCard {...COAST_WALKERS} />
+        </VersionBlock>
+        <ChatEventRow who="Sal Torres" when="14 September" reason="Moving inland for the winter. Thank you for the walks.">
+          Sal Torres left
+        </ChatEventRow>
+        <ChatEventRow who="Harbour Rowing Club" when="12 September">
+          Harbour Rowing Club joined
+        </ChatEventRow>
+        <ChatEventRow who="Mira Voss" src="inviter.jpg" when="11 September">
+          Mira Voss invited Harbour Rowing Club
+        </ChatEventRow>
+        <VersionBlock label="Earlier version · signed 10 September" action={removed ? <AlreadyRemoved /> : <RemoveVersionAct />}>
+          {removed ? (
+            <ChatVersionTombstone note="A version stood here from 10 September. Its name, picture and words were removed; the record of the change stays." />
+          ) : (
+            <ChatVersionCard name="Coast walkers" policy="invite" description="Who is out on the flats, and when the crust holds." />
+          )}
+        </VersionBlock>
+        <ChatEventRow who="Sal Torres" when="3 September">
+          Sal Torres joined
+        </ChatEventRow>
+        <ChatEventRow who="Juno Baptiste" when="1 September">
+          Juno Baptiste invited Sal Torres
+        </ChatEventRow>
+        <VersionBlock label="Earlier version · signed 24 August" action={<RemoveVersionAct />}>
+          <ChatVersionCard name="Low-tide walks" policy="invite" description="Who is out on the flats, and when the crust holds." />
+        </VersionBlock>
+        <ChatEventRow who="Kel Moreau" when="23 August">
+          Kel Moreau joined
+        </ChatEventRow>
+      </HistoryColumn>
+    </>
   );
 }
