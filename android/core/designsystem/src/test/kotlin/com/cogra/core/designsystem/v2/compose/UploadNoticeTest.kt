@@ -1,7 +1,5 @@
 package com.cogra.core.designsystem.v2.compose
 
-import androidx.compose.ui.test.assertDoesNotExist
-import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
