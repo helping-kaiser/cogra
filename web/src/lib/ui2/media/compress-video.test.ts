@@ -7,7 +7,9 @@
 //  · no WebCodecs at all → the clip is not even opened;
 //  · a clip already within target → passed on untouched, nothing encoded;
 //  · the capability check asks at the EXACT size and rate the encode uses,
-//    and needs AAC too whenever the clip has sound;
+//    and asks the source side too — the picture must be decodable here;
+//  · a clip with sound needs an AAC encoder, OR sound that is already AAC,
+//    which is then copied across and planned at its own rate;
 //  · anything the encoder cannot carry, or any failure mid-way, returns the
 //    picked bytes — never a throw, never a clip without its sound.
 
@@ -23,7 +25,14 @@ type FakeTrack = {
   getRotation?: () => Promise<number>;
   getNumberOfChannels?: () => Promise<number>;
   getSampleRate?: () => Promise<number>;
+  canDecode: () => Promise<boolean>;
+  computePacketStats?: () => Promise<{ averageBitrate: number }>;
 };
+
+/** Whether this "browser" can decode each kind of track; reset per test. */
+let decodes = { video: true, audio: true };
+/** The measured rate of the clip's sound, as the packet table states it. */
+let soundBps = 256_000;
 
 function videoTrack(codec: string, width: number, height: number, rotation = 0): FakeTrack {
   return {
@@ -34,6 +43,7 @@ function videoTrack(codec: string, width: number, height: number, rotation = 0):
     getSquarePixelWidth: async () => width,
     getSquarePixelHeight: async () => height,
     getRotation: async () => rotation,
+    canDecode: async () => decodes.video,
   };
 }
 
@@ -45,10 +55,14 @@ function audioTrack(codec: string | null, channels = 2, rate = 44_100): FakeTrac
     getCodec: async () => codec,
     getNumberOfChannels: async () => channels,
     getSampleRate: async () => rate,
+    canDecode: async () => decodes.audio,
+    computePacketStats: async () => ({ averageBitrate: soundBps }),
   };
 }
 
 let tracks: FakeTrack[] = [];
+/** Set to make the demuxer fail, as it does on bytes it cannot parse. */
+let unreadable: Error | null = null;
 let durationS = 30;
 const dispose = vi.fn();
 const inputsOpened = vi.fn();
@@ -64,6 +78,7 @@ let encodedBuffer: ArrayBuffer | null = new ArrayBuffer(64);
 
 vi.mock("mediabunny", () => ({
   MP4: "MP4-format",
+  QTFF: "QTFF-format",
   BlobSource: class {
     constructor(readonly file: unknown) {}
   },
@@ -87,7 +102,10 @@ vi.mock("mediabunny", () => ({
     constructor(readonly options: unknown) {
       inputsOpened(options);
     }
-    getTracks = async () => tracks;
+    getTracks = async () => {
+      if (unreadable !== null) throw unreadable;
+      return tracks;
+    };
     getPrimaryVideoTrack = async () => tracks.find((t) => t.type === "video") ?? null;
     getPrimaryAudioTrack = async () => tracks.find((t) => t.type === "audio") ?? null;
     computeDuration = async () => durationS;
@@ -110,7 +128,7 @@ vi.mock("mediabunny", () => ({
   canEncodeAudio,
 }));
 
-const { compressVideo } = await import("./compress-video");
+const { clipOutlook, compressVideo } = await import("./compress-video");
 
 const POST_CAP = 100 * 1024 * 1024;
 
@@ -132,9 +150,12 @@ beforeEach(() => {
   // A phone's 4K landscape recording with sound: over the bound on both counts.
   tracks = [videoTrack("avc", 3840, 2160), audioTrack("aac")];
   durationS = 30;
+  unreadable = null;
   conversionValid = true;
   discarded = [];
   encodedBuffer = new ArrayBuffer(64);
+  decodes = { video: true, audio: true };
+  soundBps = 256_000;
   canEncodeVideo.mockResolvedValue(true);
   canEncodeAudio.mockResolvedValue(true);
   execute.mockResolvedValue(undefined);
@@ -152,7 +173,7 @@ describe("compressVideo — the capability gate", () => {
 
     const result = await compressVideo(picked, POST_CAP);
 
-    expect(result).toMatchObject({ blob: picked, path: "unsupported" });
+    expect(result).toMatchObject({ blob: picked, path: "unsupported", videoCodec: null });
     expect(inputsOpened).not.toHaveBeenCalled();
     expect(init).not.toHaveBeenCalled();
   });
@@ -196,15 +217,30 @@ describe("compressVideo — the capability gate", () => {
     expect(init).not.toHaveBeenCalled();
   });
 
-  it("falls back when the clip has sound and there is no AAC encoder", async () => {
-    // Firefox desktop and desktop Linux: H.264 yes, AAC no. Encoding the
-    // picture alone would drop the sound, so the clip goes up as picked.
+  it("falls back when the sound is neither AAC nor encodable here", async () => {
+    // Firefox desktop and desktop Linux: H.264 yes, AAC no — and a sound that
+    // cannot be copied either. Encoding the picture alone would drop it.
+    tracks = [videoTrack("avc", 3840, 2160), audioTrack("opus")];
     canEncodeAudio.mockResolvedValue(false);
     const picked = clip(200_000_000);
 
     const result = await compressVideo(picked, POST_CAP);
 
     expect(result).toMatchObject({ blob: picked, path: "unsupported" });
+    expect(init).not.toHaveBeenCalled();
+  });
+
+  it("falls back when this browser cannot decode the picture", async () => {
+    // An HEVC clip where WebCodecs has no HEVC decoder.
+    tracks = [videoTrack("hevc", 3840, 2160), audioTrack("aac")];
+    decodes.video = false;
+    const picked = clip(200_000_000);
+
+    const result = await compressVideo(picked, POST_CAP);
+
+    // The codec rides along, so the upload can refuse rather than send it.
+    expect(result).toMatchObject({ blob: picked, path: "unsupported", videoCodec: "hevc" });
+    expect(canEncodeVideo).not.toHaveBeenCalled();
     expect(init).not.toHaveBeenCalled();
   });
 
@@ -219,6 +255,139 @@ describe("compressVideo — the capability gate", () => {
   });
 });
 
+describe("compressVideo — AAC carried across (no AAC encoder)", () => {
+  beforeEach(() => {
+    // Firefox desktop, desktop Linux, Safari 16.4–18: H.264 yes, AAC no.
+    canEncodeAudio.mockResolvedValue(false);
+  });
+
+  it("encodes the picture and copies the AAC sound untouched", async () => {
+    const result = await compressVideo(clip(200_000_000), POST_CAP);
+
+    expect(result.path).toBe("encoded");
+    const options = init.mock.calls[0]![0];
+    expect(options.video).toMatchObject({ codec: "avc", forceTranscode: true });
+    // Only the codec: a quality or forceTranscode would each force a re-encode.
+    expect(options.audio).toEqual({ codec: "aac" });
+  });
+
+  it("copies the sound, too, where the encoder exists but cannot read it", async () => {
+    canEncodeAudio.mockResolvedValue(true);
+    decodes.audio = false;
+
+    await compressVideo(clip(200_000_000), POST_CAP);
+
+    expect(init.mock.calls[0]![0].audio).toEqual({ codec: "aac" });
+  });
+
+  it("plans the picture in what the copied sound leaves of the cap", async () => {
+    // 6:28 against the post cap, with 256 kbps of AAC carried across: 128 kbps
+    // more than Android's audio budget, taken from the picture.
+    durationS = 388;
+    soundBps = 256_000;
+
+    await compressVideo(clip(900_000_000), POST_CAP);
+
+    const [, asked] = canEncodeVideo.mock.calls[0]!;
+    expect(qualityOf(asked.quality)).toEqual({ bitrate: 1_733_051, bitrateMode: "variable" });
+    expect(init.mock.calls[0]![0].video.quality).toBe(asked.quality);
+  });
+
+  it("falls back when the copy would be discarded after all", async () => {
+    discarded = [{ track: { type: "audio" }, reason: "no_encodable_target_codec" }];
+    const picked = clip(200_000_000);
+
+    const result = await compressVideo(picked, POST_CAP);
+
+    expect(result).toMatchObject({ blob: picked, path: "unsupported" });
+    expect(execute).not.toHaveBeenCalled();
+  });
+});
+
+// The pick's question of an over-cap clip, answered from the same probe and
+// the same capability checks the encode itself will run.
+describe("clipOutlook — can the encode bring it inside the cap?", () => {
+  it("lets an H.264 clip within the cap through without asking the encoder", async () => {
+    await expect(clipOutlook(clip(POST_CAP), POST_CAP)).resolves.toBe("as-picked");
+    expect(canEncodeVideo).not.toHaveBeenCalled();
+    expect(dispose).toHaveBeenCalledOnce();
+  });
+
+  it("weighs the picked bytes where the browser has no VideoEncoder", async () => {
+    vi.stubGlobal("VideoEncoder", undefined);
+    await expect(clipOutlook(clip(200_000_000), POST_CAP)).resolves.toBe("as-picked");
+    expect(canEncodeVideo).not.toHaveBeenCalled();
+  });
+
+  it("lets in an over-cap clip this browser will encode inside the cap", async () => {
+    await expect(clipOutlook(clip(300 * 1024 * 1024), POST_CAP)).resolves.toBe("compressible");
+    // Asked, never encoded.
+    expect(canEncodeVideo).toHaveBeenCalledOnce();
+    expect(init).not.toHaveBeenCalled();
+    expect(dispose).toHaveBeenCalledOnce();
+  });
+
+  it("names the clip even the floor rate cannot fit", async () => {
+    // 800 s × (1 Mbps + 128 kbps) = 902.4 Mbit, over the post cap's 838.9.
+    durationS = 800;
+    await expect(clipOutlook(clip(900_000_000), POST_CAP)).resolves.toBe("too-long");
+  });
+
+  it("counts no sound for a silent clip", async () => {
+    // 800 s × 1 Mbps = 800 Mbit: inside the cap once there is no sound to carry.
+    tracks = [videoTrack("avc", 3840, 2160)];
+    durationS = 800;
+    await expect(clipOutlook(clip(900_000_000), POST_CAP)).resolves.toBe("compressible");
+  });
+
+  it("counts a copied AAC track at its own measured rate", async () => {
+    // 700 s: fits with 128 kbps encoded (789.6 Mbit), not with 256 kbps
+    // carried across (879.2 Mbit).
+    durationS = 700;
+    await expect(clipOutlook(clip(900_000_000), POST_CAP)).resolves.toBe("compressible");
+    canEncodeAudio.mockResolvedValue(false);
+    await expect(clipOutlook(clip(900_000_000), POST_CAP)).resolves.toBe("too-long");
+  });
+
+  it("weighs the picked bytes where this browser cannot encode the clip", async () => {
+    canEncodeVideo.mockResolvedValue(false);
+    await expect(clipOutlook(clip(200_000_000), POST_CAP)).resolves.toBe("as-picked");
+  });
+
+  describe("a picture that is not H.264 — an iPhone's HEVC", () => {
+    beforeEach(() => {
+      tracks = [videoTrack("hevc", 1080, 1920), audioTrack("aac")];
+    });
+
+    it("goes in where this browser decodes it and encodes H.264 (Safari)", async () => {
+      await expect(clipOutlook(clip(40_000_000), POST_CAP)).resolves.toBe("as-picked");
+      await expect(clipOutlook(clip(300_000_000), POST_CAP)).resolves.toBe("compressible");
+    });
+
+    it("cannot go where this browser cannot decode it, whatever its size", async () => {
+      decodes.video = false;
+      await expect(clipOutlook(clip(40_000_000), POST_CAP)).resolves.toBe("unconvertible");
+      await expect(clipOutlook(clip(300_000_000), POST_CAP)).resolves.toBe("unconvertible");
+    });
+
+    it("cannot go where there is no WebCodecs encoder at all", async () => {
+      vi.stubGlobal("VideoEncoder", undefined);
+      await expect(clipOutlook(clip(40_000_000), POST_CAP)).resolves.toBe("unconvertible");
+    });
+
+    it("cannot go where there is no H.264 encoder for it", async () => {
+      canEncodeVideo.mockResolvedValue(false);
+      await expect(clipOutlook(clip(40_000_000), POST_CAP)).resolves.toBe("unconvertible");
+    });
+  });
+
+  it("never throws, and weighs the picked bytes when the clip cannot be read", async () => {
+    unreadable = new Error("not a movie");
+    await expect(clipOutlook(clip(200_000_000), POST_CAP)).resolves.toBe("as-picked");
+    expect(dispose).toHaveBeenCalledOnce();
+  });
+});
+
 describe("compressVideo — pass-through", () => {
   it("passes a clip already within target on untouched, encoding nothing", async () => {
     // 720p, H.264 + AAC, 30 s at 2 Mbps overall.
@@ -230,6 +399,13 @@ describe("compressVideo — pass-through", () => {
     expect(result).toMatchObject({ blob: picked, path: "within-target" });
     expect(canEncodeVideo).not.toHaveBeenCalled();
     expect(init).not.toHaveBeenCalled();
+  });
+
+  it("opens the clip as MP4 or an iPhone's QuickTime, and nothing else", async () => {
+    await compressVideo(clip(7_500_000), POST_CAP);
+    expect(inputsOpened).toHaveBeenCalledWith(
+      expect.objectContaining({ formats: ["MP4-format", "QTFF-format"] }),
+    );
   });
 
   it("reads the size after rotation, as the clip is displayed", async () => {
@@ -290,13 +466,14 @@ describe("compressVideo — the encode", () => {
   it("returns the encoded MP4 bytes", async () => {
     const result = await compressVideo(clip(200_000_000), POST_CAP);
     expect(result.path).toBe("encoded");
+    expect(result.videoCodec).toBe("avc");
     expect(result.blob.size).toBe(64);
     expect(result.blob.type).toBe("video/mp4");
     expect(result.tookMs).toBeGreaterThanOrEqual(0);
   });
 
   it("falls back when the conversion would discard a track", async () => {
-    // An HEVC source on a browser that cannot decode it.
+    // `Conversion.init` answering no where the capability checks said yes.
     discarded = [{ track: { type: "video" }, reason: "undecodable_source_codec" }];
     conversionValid = false;
     const picked = clip(200_000_000);

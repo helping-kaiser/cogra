@@ -19,6 +19,7 @@
 // able to state directly.
 
 import type { MediaScale } from "@/__generated__/graphql";
+import { clipOutlook } from "@/lib/ui2/media/compress-video";
 import { isAnimatedGif } from "@/lib/ui2/media/gif";
 import {
   COMMENT_VIDEO_MAX_BYTES,
@@ -26,7 +27,7 @@ import {
   POST_VIDEO_MAX_BYTES,
   megabytes,
 } from "@/lib/ui2/media/caps";
-import { looksLikeMp4 } from "@/lib/ui2/media/video";
+import { pickedContainer } from "@/lib/ui2/media/video";
 import { newComposeId } from "./ids";
 import type { MediaKind } from "./wizard";
 
@@ -89,6 +90,10 @@ export const MIXED_BODY_COMMENT = "A comment carries pictures or one video, not 
  */
 export type PickScale = {
   readonly videoMaxBytes: number;
+  /**
+   * Spoken here for a clip provably over the cap, and by the upload
+   * (`runVideoUpload`) for one whose encoded bytes still came out over it.
+   */
   readonly tooBigVideo: string;
   readonly mixedBody: string;
   readonly destination: MediaScale;
@@ -140,12 +145,30 @@ export async function screenPick(
     if (isVideoType(file)) {
       // The container is read from the BYTES: a File's type is the operating
       // system's guess from the extension, so a renamed .mkv claims video/mp4
-      // and is not one. The server reads the same header.
-      if (!(await looksLikeMp4(file))) {
+      // and is not one. MP4 and an iPhone's QuickTime get in; both leave the
+      // device as MP4 (`strip-video.ts`).
+      if ((await pickedContainer(file)) === null) {
         refuse(file, UNREADABLE);
         continue;
       }
-      if (file.size > scale.videoMaxBytes) {
+      // THE CAP IS ON WHAT IS SENT (jakob, 2026-09-23: "a video with 300mb that
+      // compresses to less than 100mb is eligible"). A clip over it as picked
+      // gets in wherever this browser will encode it down and the encode can
+      // fit; the one it provably cannot fit — so long that even the floor
+      // rate overflows — is refused now, in the same words, rather than after
+      // the wait. Where there is no encode, the picked bytes are what go, and
+      // they are weighed as they are. Whatever still comes out over the cap is
+      // refused at upload (`runVideoUpload`), as a picture is.
+      const outlook = await clipOutlook(file, scale.videoMaxBytes);
+      // A picture that is not H.264 — an iPhone's HEVC — on a browser that
+      // cannot turn it into H.264 is a video CoGra cannot take from here: the
+      // server admits H.264 alone, and sending it would only earn that refusal
+      // after the whole upload. The container line says so in its own words.
+      if (outlook === "unconvertible") {
+        refuse(file, UNREADABLE);
+        continue;
+      }
+      if (outlook === "too-long" || (outlook === "as-picked" && file.size > scale.videoMaxBytes)) {
         refuse(file, scale.tooBigVideo);
         continue;
       }

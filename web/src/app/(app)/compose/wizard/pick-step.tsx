@@ -25,14 +25,16 @@ import { useObjectUrl } from "@/lib/compose/previews";
 import type { PickRefusal } from "@/lib/compose/pick";
 import type { PickedAsset } from "@/lib/compose/wizard";
 import { BODY_MAX_CHARS, kindOf, POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
+import { PICKABLE_VIDEO_TYPES } from "@/lib/ui2/media/video";
 
 /**
  * What the picker accepts. Pictures are re-written to WebP by the encoder
- * whatever they arrive as, so `image/*` is honest there; video is named by its
- * one accepted type, because MP4 is the only container the server stores and
- * offering the dialog a wider net would only move the refusal later.
+ * whatever they arrive as, so `image/*` is honest there; video is named by the
+ * two containers the composer can read — MP4, and the QuickTime an iPhone
+ * records, which leaves the device rewritten as MP4 — because offering the
+ * dialog a wider net would only move the refusal later.
  */
-const ACCEPT = "image/*,video/mp4";
+const ACCEPT = `image/*,${PICKABLE_VIDEO_TYPES}`;
 
 export function PickStep({
   mode,

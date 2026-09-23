@@ -31,6 +31,7 @@ import {
 } from "@/lib/compose/comment-media";
 import type { PickRefusal } from "@/lib/compose/pick";
 import type { CoverAsset } from "@/lib/compose/wizard";
+import { PICKABLE_VIDEO_TYPES } from "../media/video";
 import { PillButton } from "../pill-button";
 import { CoverRow } from "./cover-row";
 import { MediaThumb } from "./media-thumb";
@@ -299,7 +300,7 @@ export function CommentAttachments({
               screen at comment scale. */}
           <input
             type="file"
-            accept="image/*,video/mp4"
+            accept={`image/*,${PICKABLE_VIDEO_TYPES}`}
             multiple
             disabled={full}
             data-testid={`${testIdPrefix}-media-input`}
