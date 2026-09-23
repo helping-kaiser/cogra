@@ -1905,6 +1905,29 @@ mod tests {
         );
     }
 
+    /// A comment's video cap is half a post's; a picture's is one number
+    /// wherever it goes; and the configured video cap bounds both, being
+    /// the widest any upload may be.
+    ///
+    /// An upload's video cap is its destination's, bounded by the configured one, and a picture's is the same at either.
+    /// ´claim:media:an-uploads-cap-is-its-destinations´
+    #[test]
+    fn an_uploads_caps_are_its_destinations() {
+        let config = MediaConfig::default();
+        let post = config.caps_for(GalleryKind::Post);
+        let comment = config.caps_for(GalleryKind::Comment);
+        assert_eq!(post.video_bytes as i64, MAX_POST_VIDEO_BYTES);
+        assert_eq!(comment.video_bytes as i64, MAX_COMMENT_VIDEO_BYTES);
+        assert_eq!(post.still_bytes, comment.still_bytes);
+
+        let narrow = MediaConfig {
+            max_video_upload_bytes: 1024,
+            ..MediaConfig::default()
+        };
+        assert_eq!(narrow.caps_for(GalleryKind::Post).video_bytes, 1024);
+        assert_eq!(narrow.caps_for(GalleryKind::Comment).video_bytes, 1024);
+    }
+
     /// A file's own claim about its type never gets a vote — the caller
     /// hands over bytes and the bytes decide.
     ///

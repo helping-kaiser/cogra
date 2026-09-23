@@ -16,9 +16,9 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use api::media::{BlobStore, GalleryKind};
 use api::media::ingest_queue::{self as ingest, IngestSettings, Settled};
 use api::media::transcode::Ffmpeg;
+use api::media::{BlobStore, GalleryKind};
 use axum::body::Body;
 use axum::http::Request;
 use http_body_util::BodyExt;
@@ -152,12 +152,22 @@ impl Rig {
     /// One `uploadMedia` multipart request (the GraphQL multipart request
     /// specification): operations, map, and the binary part.
     async fn upload(&self, token: &str, file: &[u8]) -> Value {
+        self.upload_input(token, file, json!({ "file": null }))
+            .await
+    }
+
+    /// An upload headed for a named destination.
+    async fn upload_for(&self, token: &str, file: &[u8], scale: &str) -> Value {
+        self.upload_input(token, file, json!({ "file": null, "scale": scale }))
+            .await
+    }
+
+    async fn upload_input(&self, token: &str, file: &[u8], input: Value) -> Value {
         let query = format!(
             "mutation($input: UploadMediaInput!) {{ uploadMedia(input: $input) {{ \
              media {{ {MEDIA_FIELDS} }} userErrors {{ code message field }} }} }}"
         );
-        let operations =
-            json!({ "query": query, "variables": { "input": { "file": null }}}).to_string();
+        let operations = json!({ "query": query, "variables": { "input": input }}).to_string();
         let mut body: Vec<u8> = Vec::new();
         let part = |headers: &str, payload: &[u8], body: &mut Vec<u8>| {
             body.extend_from_slice(format!("--{BOUNDARY}\r\n{headers}\r\n\r\n").as_bytes());
@@ -463,6 +473,43 @@ async fn a_retried_over_target_upload_is_the_same_asset(pool: PgPool) {
         .await
         .expect("count");
     assert_eq!(rows, 1);
+}
+
+/// The destination an upload names is the one its job is planned for: a
+/// comment clip waiting to be re-encoded is claimed as a comment job, and
+/// one that named no destination as a post's.
+///
+/// An over-target upload's ingest job carries the destination the upload named.
+/// ´claim:media:an-ingest-job-knows-its-destination´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_ingest_job_carries_the_destination_its_upload_named(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let reply = rig
+        .upload_for(&token, &h264_movie(2560, 1440, 2_500), "COMMENT")
+        .await;
+    assert_eq!(reply["state"], "PROCESSING");
+    let post = rig.upload(&token, &h264_movie(1440, 2560, 2_500)).await;
+    assert_eq!(post["state"], "PROCESSING");
+
+    let first = postgres_store::media::claim_ingest(&rig.pool, 60.0)
+        .await
+        .expect("claim")
+        .expect("a job");
+    let second = postgres_store::media::claim_ingest(&rig.pool, 60.0)
+        .await
+        .expect("claim")
+        .expect("a job");
+    for job in [first, second] {
+        let expected = if job.id.to_string() == reply["id"].as_str().expect("id") {
+            postgres_store::media::MediaScale::Comment
+        } else {
+            postgres_store::media::MediaScale::Post
+        };
+        assert_eq!(job.scale, expected, "job {}", job.id);
+    }
 }
 
 /// Without an encoder the job fails rather than hanging: the author reads

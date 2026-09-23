@@ -389,6 +389,34 @@ mod tests {
         );
     }
 
+    /// The same clip can be in target for a post and not for a comment:
+    /// at 150 s a post still gets the standard rate, while a comment's half
+    /// cap scales its budget to 2 444 506 + 128 000 bps, and 4.2 Mbps
+    /// overall is over that budget's headroom line (2 796 202).
+    ///
+    /// Whether a clip is within target depends on the cap of the destination it was uploaded for.
+    /// ´claim:media:within-target-is-read-against-the-destinations-cap´
+    #[test]
+    fn a_clip_in_target_for_a_post_may_not_be_for_a_comment() {
+        const COMMENT_CAP: u64 = 50 * 1024 * 1024;
+        let long_phone_clip = 4_200_000 * 150 / 8;
+        assert!(within_target(
+            1080,
+            1920,
+            Some(150_000),
+            long_phone_clip,
+            CAP
+        ));
+        assert!(!within_target(
+            1080,
+            1920,
+            Some(150_000),
+            long_phone_clip,
+            COMMENT_CAP
+        ));
+        assert_eq!(video_bps_for(Some(150_000), COMMENT_CAP), 2_444_506);
+    }
+
     /// The invocation carries every part of the target: the rate, the
     /// audio rate, the scale step, and the metadata and layout flags.
     ///

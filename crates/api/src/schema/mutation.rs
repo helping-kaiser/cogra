@@ -2200,21 +2200,20 @@ impl Mutation {
             }
         };
 
-        let row = match media::store_asset(pool, blobs.as_ref(), v.user_id, destination, asset)
-            .await
-        {
-            Ok(row) => row,
-            Err(media::GalleryPlanError::BadInput(e)) => {
-                return Ok(UploadMediaPayload::refused(UserError::at(
-                    ErrorCode::BadInput,
-                    e.message,
-                    e.path,
-                )));
-            }
-            Err(media::GalleryPlanError::Internal(e)) => {
-                return Err(async_graphql::Error::new(e));
-            }
-        };
+        let row =
+            match media::store_asset(pool, blobs.as_ref(), v.user_id, destination, asset).await {
+                Ok(row) => row,
+                Err(media::GalleryPlanError::BadInput(e)) => {
+                    return Ok(UploadMediaPayload::refused(UserError::at(
+                        ErrorCode::BadInput,
+                        e.message,
+                        e.path,
+                    )));
+                }
+                Err(media::GalleryPlanError::Internal(e)) => {
+                    return Err(async_graphql::Error::new(e));
+                }
+            };
         Ok(UploadMediaPayload {
             media: Some(MediaAttachmentType::asset(row)),
             user_errors: vec![],

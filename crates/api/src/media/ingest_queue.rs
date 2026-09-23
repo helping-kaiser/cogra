@@ -42,7 +42,7 @@ use postgres_store::media as store;
 use uuid::Uuid;
 
 use super::transcode::{Ffmpeg, TranscodeError, video_bps_for};
-use super::{BlobStore, MediaConfig, asset_options, process, storage_key, video};
+use super::{BlobStore, MediaConfig, UploadCaps, asset_options, process, storage_key, video};
 
 /// How many times a job is claimed before it is failed for good.
 ///
@@ -239,12 +239,7 @@ async fn run_job(
         .await
         .map_err(|e| JobError::Transient(format!("writing the upload to scratch: {e}")))?;
 
-    // The destination the upload named decides the cap the rate is planned
-    // for and the rendition is held to: a comment clip is re-encoded to fit
-    // a comment, never to a size only a post may carry.
-    let caps = config.caps_for(job.scale.into());
-    let duration_ms = job.options.get("duration_ms").and_then(|v| v.as_u64());
-    let video_bps = video_bps_for(duration_ms, caps.video_bytes as u64);
+    let (caps, video_bps) = plan(config, job.scale, &job.options);
     match ffmpeg
         .transcode(&input, &output, video_bps, settings.deadline)
         .await
@@ -280,6 +275,23 @@ async fn run_job(
         .await
         .map_err(|e| JobError::Transient(format!("writing the rendition: {e}")))?;
     Ok(written)
+}
+
+/// The caps a job's rendition is held to, and the video rate it is encoded
+/// at.
+///
+/// Both follow from the destination the upload named: a comment clip is
+/// re-encoded to fit a comment, never to a size only a post may carry, and
+/// the rendition is validated against the same cap the rate was planned
+/// for.
+fn plan(
+    config: &MediaConfig,
+    scale: store::MediaScale,
+    options: &serde_json::Value,
+) -> (UploadCaps, u64) {
+    let caps = config.caps_for(scale.into());
+    let duration_ms = options.get("duration_ms").and_then(|v| v.as_u64());
+    (caps, video_bps_for(duration_ms, caps.video_bytes as u64))
 }
 
 /// The author-facing sentence for a rendition the pipeline refused.
@@ -347,5 +359,31 @@ async fn fail(
 async fn discard(blobs: &dyn BlobStore, key: &str) {
     if let Err(e) = blobs.delete(key).await {
         tracing::warn!(error = %e, key, "media ingest left an unreferenced object");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A 150-second clip fits a post at the standard rate, and a comment
+    /// only at a lower one: 92 % of 50 MiB is 385 875 968 bits, over 150 s
+    /// is 2 572 506 bps, less the 128 000 of audio is 2 444 506. The
+    /// rendition is then held to the cap the rate was planned for.
+    ///
+    /// A re-encode plans for, and validates against, the cap of the destination the upload named.
+    /// ´claim:media:a-re-encode-is-sized-for-its-destination´
+    #[test]
+    fn a_job_is_planned_for_the_destination_it_named() {
+        let config = MediaConfig::default();
+        let options = serde_json::json!({ "v": 1, "duration_ms": 150_000 });
+
+        let (post_caps, post_bps) = plan(&config, store::MediaScale::Post, &options);
+        assert_eq!(post_bps, super::super::transcode::STANDARD_VIDEO_BPS);
+        assert_eq!(post_caps.video_bytes, 100 * 1024 * 1024);
+
+        let (comment_caps, comment_bps) = plan(&config, store::MediaScale::Comment, &options);
+        assert_eq!(comment_bps, 2_444_506);
+        assert_eq!(comment_caps.video_bytes, 50 * 1024 * 1024);
     }
 }
