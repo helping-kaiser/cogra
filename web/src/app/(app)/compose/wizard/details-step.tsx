@@ -93,6 +93,7 @@ export function DetailsStep({
           assets={assets}
           previews={previews}
           clipFace={clipFace}
+          coverPreview={coverPreview}
           durationMs={durationMs}
           onManage={onManage}
           onDescribe={onDescribe}
@@ -101,12 +102,13 @@ export function DetailsStep({
         />
       )}
 
-      {/* The clip and its cover are TWO STANDALONE ASSETS, so the board gives
-          the cover its own field under the body rather than folding it into
-          the clip's tile. A gallery has no such field: its cover is its
-          order. */}
-      {mode === "media" && assets[0] !== undefined && kindOf(assets[0]) === "video" && (
-        <CoverField face={coverPreview} onOpen={onCover} />
+      {/* THE DOOR ONLY, AND ONLY WHILE NO FACE IS CHOSEN (jakob's ruling;
+          `ComposeDetailsVideo.jsx:19-21`, design/readme.md §13 "The cover's
+          tile"). Once a face exists it rides the clip's own tile above as
+          its inset corner mark instead of a second field — a gallery has no
+          such field either way: its cover is its order. */}
+      {mode === "media" && assets[0] !== undefined && kindOf(assets[0]) === "video" && coverPreview === null && (
+        <CoverField onOpen={onCover} />
       )}
 
       <TextField
@@ -179,53 +181,28 @@ export function thumbState(asset: PickedAsset): Pick<PickedThumb, "progress" | "
 }
 
 /**
- * The cover as the details board draws it — a FIELD with two states, never a
- * second entrance (`ComposeDetailsVideo`, `CommentEditVideo`).
- *
- * Empty, it is the door: "Add a cover" over the line that says what a clip
- * without one does. Filled, it is the face: the 56px still and "Change the
- * cover". Both reach the same stage, which is one Back away — the cover is
- * the clip's own standalone asset and this is where the post says whether
- * there is one.
+ * The vertical/no-cover default's door — the details board's Cover field
+ * where no face has been chosen (`ComposeDetailsVideo.jsx` lines 19-21,
+ * design/readme.md §13 "The cover's tile"). A clip that has a chosen face
+ * shows no Cover section at all — the caller only reaches here while
+ * `coverPreview` is null, and the face rides the clip's own tile instead
+ * once one exists.
  */
-function CoverField({ face, onOpen }: { face: string | null; onOpen: () => void }) {
+function CoverField({ onOpen }: { onOpen: () => void }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-label-large">Cover</span>
-      {face === null ? (
-        <>
-          <button
-            type="button"
-            data-testid="wizard-cover-door"
-            onClick={onOpen}
-            className="cg-state cg-focus cg-hit m-0 cursor-pointer self-start border-0 bg-transparent p-0 text-label-small text-primary"
-          >
-            Add a cover
-          </button>
-          <p className="m-0 text-label-small text-on-surface-variant">
-            It plays the moment it is on screen, so it starts on its own first frame.
-          </p>
-        </>
-      ) : (
-        <div className="flex items-center gap-2">
-          {/* A plain `img`: an object URL for bytes already in memory. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={face}
-            alt=""
-            data-testid="wizard-cover-face"
-            className="size-14 flex-none rounded-small bg-surface-container-high object-cover"
-          />
-          <button
-            type="button"
-            data-testid="wizard-cover-change"
-            onClick={onOpen}
-            className="cg-state cg-focus min-h-8 cursor-pointer rounded-full border border-transparent bg-transparent px-4 py-1.5 text-label-large text-primary"
-          >
-            Change the cover
-          </button>
-        </div>
-      )}
+      <button
+        type="button"
+        data-testid="wizard-cover-door"
+        onClick={onOpen}
+        className="cg-state cg-focus cg-hit m-0 cursor-pointer self-start border-0 bg-transparent p-0 text-label-small text-primary"
+      >
+        Add a cover
+      </button>
+      <p className="m-0 text-label-small text-on-surface-variant">
+        It plays the moment it is on screen, so it starts on its own first frame.
+      </p>
     </div>
   );
 }
@@ -234,6 +211,7 @@ function BodyStrip({
   assets,
   previews,
   clipFace,
+  coverPreview,
   durationMs,
   onManage,
   onDescribe,
@@ -243,6 +221,7 @@ function BodyStrip({
   assets: readonly PickedAsset[];
   previews: Readonly<Record<string, string>>;
   clipFace: string | null;
+  coverPreview: string | null;
   durationMs: number;
   onManage: () => void;
   onDescribe: () => void;
@@ -269,6 +248,11 @@ function BodyStrip({
           // video post never reaches the crop screen, so it has none to draw.
           crop: isVideo ? null : asset.crop,
           durationMs: isVideo ? durationMs : undefined,
+          // ONE ATTACHMENT IS ONE TILE (jakob's ruling; `ComposeDetailsVideo
+          // .jsx:19-21`, design/readme.md §13 "The cover's tile"): the chosen
+          // cover rides the clip's own tile as its inset corner mark rather
+          // than a second Cover section. Pictures carry none.
+          coverSrc: isVideo ? coverPreview : undefined,
           ...thumbState(asset),
         }))}
         // THE BOARD NAMES THE CLIP, IT DOES NOT COUNT IT. A gallery reads
@@ -283,7 +267,13 @@ function BodyStrip({
               ? "1 picture — the body"
               : `${assets.length} pictures — the body`
         }
-        onManage={onManage}
+        // A CLIP HAS NO MANAGER (jakob's ruling 2026-09-15: "one clip is not
+        // a set") — the row opens the Show all sheet for a gallery only; the
+        // video tile wears its own × via `onRemove` instead
+        // (`ComposeDetailsVideo.jsx` lines 22-32).
+        onManage={isVideo ? null : onManage}
+        onRemove={isVideo ? (index) => onRemove(assets[index]!.id) : undefined}
+        removeLabel={isVideo ? "Remove this video" : undefined}
         testId="wizard-picked-row"
       />
 

@@ -41,6 +41,13 @@ export function UploadStatusLine({
   progress?: number;
   testId?: string;
 }) {
+  // STRICTLY THE IN-FLIGHT UPLOAD GATE (design/components/compose/
+  // UploadNotice.prompt.md lines 1, 11): "most posts never show either" and
+  // it exists to hold the sign button while bytes are still moving. An empty
+  // batch has nothing moving, so this must never render for one — a caller
+  // bug that reaches here with `total <= 0` draws nothing rather than a
+  // nonsense "Uploading 0 of 0".
+  if (total <= 0) return null;
   return (
     <div
       data-testid={testId}
