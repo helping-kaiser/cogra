@@ -238,7 +238,7 @@ private fun UploadFailures(
             // then refused them on inspection (a PROCESSING asset gone
             // FAILED): the same bytes would only earn the same answer, so
             // the way out is picking a different file, not this link.
-            onRetry = if (failure.retryable) { { onRetry(asset.uri) } } else null,
+            onRetry = { onRetry(asset.uri) }.takeIf { failure.retryable },
             onRemove = { onRemove(index) },
             testTag = "wizard_upload_failed_$index",
         )

@@ -1,9 +1,9 @@
 package com.cogra.domain.media
 
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.FieldStatus
 import com.cogra.domain.MediaAssetState
 import com.cogra.domain.MediaAssetView
-import com.cogra.domain.FieldStatus
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
 import com.google.common.truth.Truth.assertThat

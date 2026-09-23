@@ -311,14 +311,7 @@ class ReplyWizardViewModel @Inject constructor(
                 is Outcome.Success -> {
                     val resolved = outcome.value.toResolvedUpload(UploadFailure.REFUSED_VIDEO)
                     _state.update { it.withUpload(clip.uri, resolved) }
-                    // A retryable failure keeps the transcoded file for a
-                    // fast retry; READY and a non-retryable FAILED both
-                    // have nothing left to retry for, so the cache copy
-                    // has served its purpose either way.
-                    if (resolved !is AssetUpload.Failed || !resolved.retryable) {
-                        runCatching { File(processed.path).delete() }
-                        transcoded = null
-                    }
+                    clearTranscodedCacheUnlessRetryable(resolved, processed.path)
                 }
                 is Outcome.Refused -> _state.update {
                     it.withUpload(
@@ -331,6 +324,18 @@ class ReplyWizardViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * A retryable failure keeps the transcoded file for a fast retry;
+     * READY and a non-retryable FAILED both have nothing left to retry
+     * for, so the cache copy has served its purpose either way.
+     */
+    private fun clearTranscodedCacheUnlessRetryable(resolved: AssetUpload, path: String) {
+        val stillRetryable = resolved is AssetUpload.Failed && resolved.retryable
+        if (stillRetryable) return
+        runCatching { File(path).delete() }
+        transcoded = null
     }
 
     /**
