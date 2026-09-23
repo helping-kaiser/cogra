@@ -11,10 +11,14 @@ export interface PendingMarkerProps {
 
 export declare function PendingMarker(props: PendingMarkerProps): JSX.Element;
 
-/** The edit marker, with an optional tap to see what changed. */
+/** The edit marker, with an optional tap onto the edit history. */
 export interface EditedMarkerProps {
   label?: string;
-  /** Present it as a control only when there is a diff to open. */
+  /**
+   * Present it as a control only where the history is reachable — which is only
+   * once a second version exists. The history is every version whole, newest
+   * first; nothing in this product stores or draws a diff.
+   */
   onInspect?: () => void;
 }
 

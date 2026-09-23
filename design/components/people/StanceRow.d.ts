@@ -11,6 +11,16 @@ export interface StanceRowProps {
   pDirected?: number;
   pInterest?: number;
   onOpen?: () => void;
+  /**
+   * Makes the VALUE its own target, opening the timeline this stance was summed
+   * from (the change-histories round). The row then splits — person area to the
+   * person, readout to the history — the way `ContentRow` splits around an
+   * `action`. Without it the row stays one element and renders as it always has.
+   */
+  onOpenHistory?: () => void;
 }
+
+/** The spoken name of the value's history door. */
+export declare const HISTORY_DOOR_LABEL: string;
 
 export declare function StanceRow(props: StanceRowProps): JSX.Element;

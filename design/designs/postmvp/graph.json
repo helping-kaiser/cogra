@@ -4,13 +4,31 @@
   "terminals": {
     "back": "Back — returns to the previous screen",
     "self": "Acts on this screen — state changes in place",
-    "os": "Hands off to the OS — the platform's own permission ask, browser download, system sheet"
+    "os": "Hands off to the OS — the platform's own permission ask, browser download, system sheet",
+    "canonical": "Hands back to the MVP tree — a board this graph cannot name, because a tree's graph stops at the tree (readme §14). The destination exists and is drawn; it takes an ordinary edge the day this round migrates into canonical"
   },
-  "scanExempt": {},
+  "scanExempt": {
+    "HistoryMenu": "the own-post sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "VersionRemoveConfirm": "the think-twice dialog covers the author's register — every row beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "OpinionsRowDoors": "the opinions sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "StanceTimeline": "the timeline sheet covers the opinions page — every row beneath the scrim is inactive in this state; only the sheet (and its scrim) is live, and it is a reading surface with nothing to act on",
+    "StanceTimelinePost": "the timeline sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "PadHistoryDoor": "the scrim wash covers the shell — the back arrow, the post card's own controls and the nav are inactive in this state; only the parked pad is live",
+    "TimelineHelp": "the \"?\" dialog covers the timeline sheet, which covers the opinions page — two washes deep, and only the dialog (and its scrim) is live"
+  },
   "entries": {
     "PushSettings": "the settings page at the notifications group — this round's excerpt of canonical's Settings, not a screen of its own",
     "NotificationsOffer": "the notifications list as a reader who has never been asked about push meets it — a state the account arrives in, not a tap",
-    "PushDenied": "the settings page after the platform refused the ask — a state the device brings, not a tap"
+    "PushDenied": "the settings page after the platform refused the ask — a state the device brings, not a tap",
+    "HistoryMenu": "the own post's ⋮, opened on its detail surface — this round's excerpt of canonical's own-post sheet, not a screen of its own",
+    "EditedMarkerDoor": "the post's detail surface, reached the ordinary way — this round's excerpt of it, drawn for the one marker the round makes tappable",
+    "CommentHistory": "the comment's ⋮ in the thread, whose roster gains the same row the post's does — a menu this graph cannot name, because it lives in canonical",
+    "ProfileHistory": "the profile's ⋮, whose roster gains the same row — likewise a canonical menu",
+    "CommentHistoryOwn": "your own comment's ⋮ in the thread, whose roster gains the same Edit history row — a canonical menu, so its author lands on the register",
+    "ProfileHistoryOwn": "your own profile's ⋮, whose roster gains the row — a canonical menu, so its owner lands on the register",
+    "OpinionsRowDoors": "the opinions count on a post's detail, which opens this sheet — this round's excerpt of canonical's `PostOpinions`, drawn for the split its rows gain",
+    "ProfileStancesDoors": "a profile's figures row, which opens the opinions page — this round's excerpt of canonical's `ProfileStances`, drawn for the same split",
+    "PadHistoryDoor": "a stance face, tapped anywhere a stance face is drawn — the pad is a cross-cutting overlay, and the shell beneath it is the everyday one rather than the state's own"
   },
   "boardKinds": {},
   "edges": [
@@ -128,6 +146,259 @@
       "kind": "back",
       "label": "back arrow",
       "to": [{ "terminal": "back", "case": "back where the gear was — the profile, in canonical" }]
+    },
+
+    {
+      "from": "HistoryMenu",
+      "via": 1,
+      "kind": "advance",
+      "label": "Edit history",
+      "to": [{ "board": "PostHistoryOwn", "case": "the author's own sheet, so the row lands on the register — the same chronicle every reader gets, with their two acts joined" }]
+    },
+    {
+      "from": "EditedMarkerDoor",
+      "via": 1,
+      "kind": "advance",
+      "label": "Edited — the marker in its tappable form",
+      "to": [
+        { "board": "PostHistory", "case": "any reader — the chronicle, whole and public, gates being on acting rather than on reading" },
+        { "board": "PostHistoryOwn", "case": "its author — the same list with the whole-post removal leading it and one act on every version that still has a payload, the current one included" }
+      ]
+    },
+    {
+      "from": "PostHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the post the history is of" }]
+    },
+    {
+      "from": "PostHistory",
+      "via": 2,
+      "kind": "advance",
+      "label": "the current version",
+      "to": [{ "terminal": "canonical", "case": "the post's own detail — the current version IS the post, so its row opens the post rather than a historic copy of it" }]
+    },
+    {
+      "from": "PostHistory",
+      "via": 3,
+      "kind": "advance",
+      "label": "an earlier version",
+      "to": [
+        { "board": "PostVersionDetail", "case": "a words version — that version whole, at detail size, under the panel that says which version it is" },
+        { "board": "PostVersionDetailMedia", "case": "a picture version — the same surface on canonical's media detail anatomy, under the same panel" }
+      ]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the post the history is of" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove the whole post",
+      "to": [{ "terminal": "canonical", "case": "the post's own think-twice dialog, which this round does not touch — removing the post removes every version at once" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 3,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at version scale, over the register it was reached from — on any version with a payload, the current one included; a tombstone's slot says Already removed and is not pressable" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 4,
+      "kind": "advance",
+      "label": "the current version",
+      "to": [{ "terminal": "canonical", "case": "the post's own detail, exactly as the reader's chronicle opens it" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 5,
+      "kind": "advance",
+      "label": "an earlier version",
+      "to": [
+        { "board": "PostVersionDetail", "case": "a words version, whole — the author reads a version on the same surface everybody else does" },
+        { "board": "PostVersionDetailMedia", "case": "a picture version, whole, on the media detail's anatomy" }
+      ]
+    },
+    {
+      "from": "VersionRemoveConfirm",
+      "via": 1,
+      "kind": "advance",
+      "label": "Remove version",
+      "to": [
+        { "board": "PostHistoryOwn", "case": "the list stands and the version becomes a mark in its own row; had it been the current version, the post would go on showing it removed — no earlier version takes its place" },
+        { "board": "CommentHistoryOwn", "case": "reached at comment scale — the same outcome on the comment's register; a whole-comment removal marks every row at once" },
+        { "board": "ProfileHistoryOwn", "case": "reached at profile scale — the same outcome on the profile's register; an every-version removal marks every row at once, and the account, the handle and everything published stay" }
+      ]
+    },
+    {
+      "from": "VersionRemoveConfirm",
+      "via": 2,
+      "kind": "cancel",
+      "label": "Keep it",
+      "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }]
+    },
+    {
+      "from": "PostVersionDetail",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the chronicle the version was opened from" }]
+    },
+    {
+      "from": "PostVersionDetail",
+      "via": 2,
+      "kind": "advance",
+      "label": "See the current version",
+      "to": [{ "terminal": "canonical", "case": "the post as it stands — the way out for a reader who arrived here by link rather than through the chronicle" }]
+    },
+    {
+      "from": "PostVersionDetailMedia",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the chronicle the version was opened from" }]
+    },
+    {
+      "from": "PostVersionDetailMedia",
+      "via": 2,
+      "kind": "advance",
+      "label": "See the current version",
+      "to": [{ "terminal": "canonical", "case": "the post as it stands — its current version is words, and it opens on the post's own detail" }]
+    },
+    {
+      "from": "CommentHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the thread the comment is read in" }]
+    },
+    {
+      "from": "CommentHistoryOwn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the thread the comment is read in" }]
+    },
+    {
+      "from": "CommentHistoryOwn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove the whole comment",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at whole-comment scale (master — the post boards' dialog; no comment confirm is drawn) — every version goes at once and the comment keeps its place in the thread, wearing the mark" }]
+    },
+    {
+      "from": "CommentHistoryOwn",
+      "via": 3,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at comment-version scale (master) — on any version with a payload, the current one included; a tombstone's slot says Already removed and is not pressable" }]
+    },
+    {
+      "from": "ProfileHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the profile" }]
+    },
+    {
+      "from": "ProfileHistoryOwn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to your profile" }]
+    },
+    {
+      "from": "ProfileHistoryOwn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove every version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at whole-profile scale (master — the post boards' dialog; no profile confirm is drawn) — every version's contents at once, while the account, the handle and everything published stay; account deletion is a different act, in settings" }]
+    },
+    {
+      "from": "ProfileHistoryOwn",
+      "via": 3,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at profile-version scale (master) — on any version with a payload, the current one included; a tombstone's slot says Already removed and is not pressable" }]
+    },
+
+    {
+      "from": "OpinionsRowDoors",
+      "via": 1,
+      "kind": "advance",
+      "label": "a row's person area",
+      "to": [{ "terminal": "canonical", "case": "their profile — acting on an opinion happens where the pad and its context live, which is the standing ruling this half of the row keeps" }]
+    },
+    {
+      "from": "OpinionsRowDoors",
+      "via": 2,
+      "kind": "advance",
+      "label": "a row's value readout",
+      "to": [{ "board": "StanceTimelinePost", "case": "every record that person has signed on this post — a history door is a readout, so the value is the door" }]
+    },
+    {
+      "from": "ProfileStancesDoors",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the profile the figures row was on" }]
+    },
+    {
+      "from": "ProfileStancesDoors",
+      "via": 2,
+      "kind": "advance",
+      "label": "a row's person area",
+      "to": [{ "terminal": "canonical", "case": "their profile — the same half of the same row, on the page the sheet mirrors" }]
+    },
+    {
+      "from": "ProfileStancesDoors",
+      "via": 3,
+      "kind": "advance",
+      "label": "a row's value readout",
+      "to": [{ "board": "StanceTimeline", "case": "every record that person has signed toward this one, in the direction the tab is showing" }]
+    },
+    {
+      "from": "PadHistoryDoor",
+      "via": 1,
+      "kind": "advance",
+      "label": "Current opinion · see how it built",
+      "to": [{ "board": "StanceTimeline", "case": "the records the standing above the field was summed from — the pad stays parked beneath the sheet, the pick untouched" }]
+    },
+    {
+      "from": "StanceTimeline",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How opinions build",
+      "to": [{ "board": "TimelineHelp", "case": "the How-opinions-build text, over this sheet" }]
+    },
+    {
+      "from": "StanceTimelinePost",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How opinions build",
+      "to": [{ "board": "TimelineHelp", "case": "the How-opinions-build text (master — drawn over the person↔person sheet; the words do not change with the target)" }]
+    },
+    {
+      "from": "TimelineHelp",
+      "via": 1,
+      "kind": "back",
+      "label": "Close",
+      "to": [{ "terminal": "back", "case": "the dialog closes — back to the timeline that asked" }]
+    },
+    {
+      "from": "TimelineHelp",
+      "via": 2,
+      "kind": "back",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes" }]
     }
   ]
 }

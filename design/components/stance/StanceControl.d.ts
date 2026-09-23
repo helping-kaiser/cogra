@@ -59,6 +59,12 @@ export interface StanceControlProps {
    * that says an axis out loud.
    */
   axes?: PadAxes;
+  /**
+   * The standing's own door (the change-histories round): the "Current opinion"
+   * line above the field opens the timeline the sum was built from. Pure
+   * pass-through to `StanceStanding`.
+   */
+  onOpenHistory?: () => void;
 }
 
 export declare function StanceControl(props: StanceControlProps): JSX.Element;
