@@ -2376,6 +2376,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
     { n: 5, find: 'data-field="Message"', tag: "div" },
     { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 7, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
   ChatThreadKeyboard: [
     { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },

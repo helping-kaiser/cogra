@@ -414,7 +414,7 @@
       "via": 2,
       "kind": "detour",
       "label": "? — How chats work",
-      "to": [{ "gap": "the How-chats-work sheet — it will hold the what-you-sign education; only the trigger is drawn in the base round" }]
+      "to": [{ "board": "ChatsHelp", "case": "the page's one dialog — chats are public, encryption is per message, sending signs" }]
     },
     {
       "from": "ChatsHome",
@@ -427,18 +427,18 @@
       "from": "ChatsHome",
       "via": 4,
       "kind": "advance",
-      "label": "New chat",
-      "to": [
-        { "board": "ChatCreate", "case": "a group — the founding: name, picture, description, who can join" },
-        { "gap": "a 1:1 — choosing the one person, and the choice between the two kinds the button opens onto; not drawn in the base round" }
-      ]
+      "label": "New chat — the floating button",
+      "to": [{ "board": "ChatPicker", "case": "the people picker — a person for a 1:1, New group chat for a group" }]
     },
     {
       "from": "ChatsHome",
       "via": 5,
       "kind": "advance",
-      "label": "a chat",
-      "to": [{ "board": "ChatThread", "case": "the chat's thread, its foot live — every row on this face is a chat the reader is in" }]
+      "label": "a chat — tap, or press and hold",
+      "to": [
+        { "board": "ChatThread", "case": "a tap — the chat's thread, its foot live; every row on this face is a chat the reader is in" },
+        { "board": "ChatRowMenu", "case": "press and hold — the chat's options over the list" }
+      ]
     },
     {
       "from": "ChatsExplore",
@@ -452,21 +452,24 @@
       "via": 2,
       "kind": "detour",
       "label": "? — How chats work",
-      "to": [{ "gap": "the How-chats-work sheet — the same one Your chats opens; not drawn in the base round" }]
+      "to": [{ "board": "ChatsHelp", "case": "the same dialog Your chats opens (master — drawn over that face; the words do not change with the face)" }]
     },
     {
       "from": "ChatsExplore",
       "via": 3,
       "kind": "advance",
       "label": "Your chats",
-      "to": [{ "board": "ChatsHome", "case": "the list of chats the reader is in — for a guest, the join prompt instead (the ordinary guest gate)" }]
+      "to": [
+        { "board": "ChatsHome", "case": "the list of chats the reader is in" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
     },
     {
       "from": "ChatsExplore",
       "via": 4,
       "kind": "advance",
-      "label": "Not already a member",
-      "to": [{ "terminal": "self", "case": "the chip flips — on, the chats the reader is already in leave the list; the order is untouched" }]
+      "label": "Hide chats you're in",
+      "to": [{ "terminal": "self", "case": "the switch flips — off, the chats the reader is in join the list wearing Member; the order is untouched" }]
     },
     {
       "from": "ChatsExplore",
@@ -474,8 +477,8 @@
       "kind": "advance",
       "label": "a chat",
       "to": [
-        { "board": "ChatThread", "case": "a chat the reader is in — its thread, foot live" },
-        { "gap": "a chat the reader is not in — its read face: the thread without a foot, the join where the foot would be; chats are public reads, so a guest lands here too" }
+        { "board": "ChatThreadReader", "case": "a chat the reader is not in — the thread, readable, the join where the foot would be; a guest lands here too" },
+        { "board": "ChatThread", "case": "a chat the reader is in, once the switch is off — its thread, foot live" }
       ]
     },
     {
@@ -499,6 +502,16 @@
       ]
     },
     {
+      "from": "ChatsExplore",
+      "via": 8,
+      "kind": "advance",
+      "label": "New chat — the floating button",
+      "to": [
+        { "board": "ChatPicker", "case": "the people picker — the same control in the same corner as on Your chats" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
       "from": "ChatThread",
       "via": 1,
       "kind": "back",
@@ -509,39 +522,53 @@
       "from": "ChatThread",
       "via": 2,
       "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "gap": "the chat's detail surface — members, description, mute, leave, the history of its name and picture; a later chats sub-round, left undrawn on purpose" }]
+    },
+    {
+      "from": "ChatThread",
+      "via": 3,
+      "kind": "advance",
       "label": "Show the encrypted text",
       "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text, under the notice" }]
     },
     {
       "from": "ChatThread",
-      "via": 3,
+      "via": 4,
       "kind": "advance",
       "label": "the lock toggle — Encrypt end to end",
       "to": [{ "terminal": "self", "case": "the lock fills or empties — the next message's encryption, sticky for this chat until flipped back; plaintext by default" }]
     },
     {
       "from": "ChatThread",
-      "via": 4,
+      "via": 5,
       "kind": "advance",
       "label": "Message",
-      "to": [{ "terminal": "self", "case": "typing — the field grows a line at a time and takes its room from the thread above" }]
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus — the keyboard comes up and the foot rises with it" }]
     },
     {
       "from": "ChatThread",
-      "via": 5,
+      "via": 6,
       "kind": "advance",
       "label": "the send arrow — Sign and send",
       "to": [
         { "terminal": "self", "case": "a tap — the arrow is the seal: the message is signed in the reader's name and joins the thread; the first-send line goes for good" },
-        { "gap": "press and hold — the what-you-sign sheet for this one message; not drawn in the base round" }
+        { "board": "ChatSignSheet", "case": "press and hold — what this one message signs, over the thread" }
       ]
+    },
+    {
+      "from": "ChatThread",
+      "via": 7,
+      "kind": "advance",
+      "label": "a bubble — press and hold",
+      "to": [{ "board": "ChatMessageMenu", "case": "the message's acts, over the thread — on any bubble, the reader's own adding Remove" }]
     },
     {
       "from": "ChatCreate",
       "via": 1,
       "kind": "back",
       "label": "back arrow",
-      "to": [{ "board": "ChatsHome", "case": "back to your chats — nothing is founded" }]
+      "to": [{ "board": "ChatPickerGroup", "case": "back to the people picked — nothing is founded" }]
     },
     {
       "from": "ChatCreate",
@@ -569,14 +596,369 @@
       "via": 5,
       "kind": "advance",
       "label": "Who can join — a choice row",
-      "to": [{ "terminal": "self", "case": "the dot moves — Open, On request or Invite only" }]
+      "to": [{ "terminal": "self", "case": "the dot moves — Open, On request or Invite only; Invite only is where it starts" }]
     },
     {
       "from": "ChatCreate",
       "via": 6,
       "kind": "advance",
       "label": "Next",
-      "to": [{ "gap": "the founding's seal — what the new chat signs, read back before it is signed; not drawn in the base round" }]
+      "to": [{ "board": "ChatCreateSeal", "case": "the founding's seal — what the new chat and its invitations sign" }]
+    },
+    {
+      "from": "ChatRowMenu",
+      "via": 1,
+      "kind": "advance",
+      "label": "Mute",
+      "to": [{ "board": "ChatsHome", "case": "the sheet closes and the row wears the silenced speaker; on a muted chat the row reads Unmute and takes it off" }]
+    },
+    {
+      "from": "ChatRowMenu",
+      "via": 2,
+      "kind": "advance",
+      "label": "Chat details",
+      "to": [{ "gap": "the chat's detail surface — the same destination the thread's header opens; a later chats sub-round, left undrawn on purpose" }]
+    },
+    {
+      "from": "ChatRowMenu",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the sheet closes, nothing changed" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 1,
+      "kind": "advance",
+      "label": "Save",
+      "to": [{ "terminal": "self", "case": "the message joins Saved and the sheet closes; kept, the row reads Unsave" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 2,
+      "kind": "advance",
+      "label": "Cite in a new post",
+      "to": [{ "terminal": "canonical", "case": "the post wizard at its start with the message staged as its citation — canonical's ComposeCited arrival" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 3,
+      "kind": "advance",
+      "label": "Give your opinion",
+      "to": [{ "terminal": "canonical", "case": "the ordinary opinion pad, parked over the thread — canonical's pad" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 4,
+      "kind": "advance",
+      "label": "Reply",
+      "to": [{ "terminal": "self", "case": "the sheet closes and the foot takes the quote, field ready — the quote strip is not drawn this round" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 5,
+      "kind": "advance",
+      "label": "Cited by",
+      "to": [{ "terminal": "canonical", "case": "what cites this message — canonical's cited-by sheet" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 6,
+      "kind": "advance",
+      "label": "Opinions on this",
+      "to": [{ "terminal": "canonical", "case": "who holds an opinion on this message — canonical's opinions sheet" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 7,
+      "kind": "advance",
+      "label": "License terms",
+      "to": [{ "terminal": "canonical", "case": "the message's terms in a sheet over the thread — canonical's license sheet" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 8,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the sheet closes" }]
+    },
+    {
+      "from": "ChatPicker",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the chats page face the button was on" }]
+    },
+    {
+      "from": "ChatPicker",
+      "via": 2,
+      "kind": "advance",
+      "label": "Search people",
+      "to": [{ "terminal": "self", "case": "typing — the list narrows by name and handle" }]
+    },
+    {
+      "from": "ChatPicker",
+      "via": 3,
+      "kind": "advance",
+      "label": "New group chat",
+      "to": [{ "board": "ChatPickerGroup", "case": "the same list, now staging people for a group" }]
+    },
+    {
+      "from": "ChatPicker",
+      "via": 4,
+      "kind": "advance",
+      "label": "a person",
+      "to": [
+        { "board": "ChatThread", "case": "someone the reader has no 1:1 with — the 1:1 opens, empty (master: the thread's anatomy)" },
+        { "board": "ChatExistingAsk", "case": "someone the reader already shares a 1:1 with — the dialog asks which they mean" }
+      ]
+    },
+    {
+      "from": "ChatPickerGroup",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatPicker", "case": "back to the plain picker; the staged people are let go" }]
+    },
+    {
+      "from": "ChatPickerGroup",
+      "via": 2,
+      "kind": "advance",
+      "label": "Search people",
+      "to": [{ "terminal": "self", "case": "typing — the list narrows by name and handle" }]
+    },
+    {
+      "from": "ChatPickerGroup",
+      "via": 3,
+      "kind": "advance",
+      "label": "× — remove a staged person",
+      "to": [{ "terminal": "self", "case": "the person leaves the staged rows and returns to the list" }]
+    },
+    {
+      "from": "ChatPickerGroup",
+      "via": 4,
+      "kind": "advance",
+      "label": "a person — stage them",
+      "to": [{ "terminal": "self", "case": "the person joins the staged rows above the list" }]
+    },
+    {
+      "from": "ChatPickerGroup",
+      "via": 5,
+      "kind": "advance",
+      "label": "Next",
+      "to": [{ "board": "ChatCreate", "case": "the founding, with the staged people said back as the ones invited" }]
+    },
+    {
+      "from": "ChatExistingAsk",
+      "via": 1,
+      "kind": "advance",
+      "label": "Open that chat",
+      "to": [{ "board": "ChatThread", "case": "the 1:1 the reader already has (master: the thread's anatomy)" }]
+    },
+    {
+      "from": "ChatExistingAsk",
+      "via": 2,
+      "kind": "advance",
+      "label": "Start a new chat",
+      "to": [{ "board": "ChatThread", "case": "a second, separate 1:1 with the same person, empty (master: the thread's anatomy)" }]
+    },
+    {
+      "from": "ChatExistingAsk",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes; the picker stands" }]
+    },
+    {
+      "from": "ChatSignSheet",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How signing works",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog — what signing is does not change with what is signed" }]
+    },
+    {
+      "from": "ChatSignSheet",
+      "via": 2,
+      "kind": "advance",
+      "label": "Sign and send",
+      "to": [{ "board": "ChatThread", "case": "the sheet closes and the message joins the thread — the same act as a tap on the arrow" }]
+    },
+    {
+      "from": "ChatSignSheet",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the sheet closes, nothing sent; the draft stays in the field" }]
+    },
+    {
+      "from": "ChatsHelp",
+      "via": 1,
+      "kind": "back",
+      "label": "Close",
+      "to": [{ "terminal": "back", "case": "the dialog closes — back to the face that asked" }]
+    },
+    {
+      "from": "ChatsHelp",
+      "via": 2,
+      "kind": "back",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "gap": "the chat's detail surface — the same destination as the thread's other header; a later chats sub-round, left undrawn on purpose" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 3,
+      "kind": "advance",
+      "label": "a picture or a clip in a bubble",
+      "to": [{ "terminal": "canonical", "case": "the fullscreen viewer — canonical's, where the transport lives" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 4,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 5,
+      "kind": "advance",
+      "label": "Message",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus and the keyboard comes up" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 6,
+      "kind": "advance",
+      "label": "the send arrow — Sign and send",
+      "to": [
+        { "terminal": "self", "case": "a tap — signed and sent" },
+        { "board": "ChatSignSheet", "case": "press and hold — what the message signs" }
+      ]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 7,
+      "kind": "advance",
+      "label": "the clip's sound disc",
+      "to": [{ "terminal": "self", "case": "sound on or off — the one control a clip wears in a bubble" }]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the keyboard goes down and the thread closes — the draft stays in the chat's field" }]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "gap": "the chat's detail surface — a later chats sub-round, left undrawn on purpose" }]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 3,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock empties — back to plaintext for this chat" }]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 4,
+      "kind": "advance",
+      "label": "Message",
+      "to": [{ "terminal": "self", "case": "typing — the field grows a line at a time and takes its room from the thread" }]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 5,
+      "kind": "advance",
+      "label": "the send arrow — Sign and send",
+      "to": [
+        { "board": "ChatThread", "case": "a tap — signed and sent, encrypted; the keyboard stays up in the product, and the thread board is the master" },
+        { "board": "ChatSignSheet", "case": "press and hold — what the message signs" }
+      ]
+    },
+    {
+      "from": "ChatThreadReader",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatsExplore", "case": "back to all chats" }]
+    },
+    {
+      "from": "ChatThreadReader",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "gap": "the chat's detail surface, public to a non-member as to a member — a later chats sub-round, left undrawn on purpose" }]
+    },
+    {
+      "from": "ChatThreadReader",
+      "via": 3,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text" }]
+    },
+    {
+      "from": "ChatThreadReader",
+      "via": 4,
+      "kind": "advance",
+      "label": "Ask to join — the join, worded by the chat's policy",
+      "to": [
+        { "terminal": "self", "case": "a chat that takes requests — the request is sent and the foot says so; an open chat's Join lands the reader in its thread, foot live" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow — a step back",
+      "to": [{ "board": "ChatCreate", "case": "back to the founding's fields, everything as it was" }]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 2,
+      "kind": "cancel",
+      "label": "X — Leave",
+      "to": [{ "board": "ChatsHome", "case": "nothing is founded and nobody is invited" }]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 3,
+      "kind": "detour",
+      "label": "? — How signing works",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog" }]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 4,
+      "kind": "advance",
+      "label": "Sign and start the chat",
+      "to": [{ "board": "ChatThread", "case": "the new chat opens, empty but for its founding, the invitations on their way (master: the thread's anatomy)" }]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 5,
+      "kind": "back",
+      "label": "Back",
+      "to": [{ "board": "ChatCreate", "case": "the seal's own way back — the arrow said again at the foot" }]
     }
   ]
 }
