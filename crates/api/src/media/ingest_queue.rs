@@ -239,8 +239,12 @@ async fn run_job(
         .await
         .map_err(|e| JobError::Transient(format!("writing the upload to scratch: {e}")))?;
 
+    // The destination the upload named decides the cap the rate is planned
+    // for and the rendition is held to: a comment clip is re-encoded to fit
+    // a comment, never to a size only a post may carry.
+    let caps = config.caps_for(job.scale.into());
     let duration_ms = job.options.get("duration_ms").and_then(|v| v.as_u64());
-    let video_bps = video_bps_for(duration_ms, config.max_video_upload_bytes as u64);
+    let video_bps = video_bps_for(duration_ms, caps.video_bytes as u64);
     match ffmpeg
         .transcode(&input, &output, video_bps, settings.deadline)
         .await
@@ -256,7 +260,6 @@ async fn run_job(
     let rendition = tokio::fs::read(&output)
         .await
         .map_err(|e| JobError::Transient(format!("reading the rendition: {e}")))?;
-    let caps = config.caps();
     let processed = tokio::task::spawn_blocking(move || process(&rendition, caps))
         .await
         .map_err(|e| JobError::Transient(e.to_string()))?

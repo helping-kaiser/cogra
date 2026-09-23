@@ -16,7 +16,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use api::media::BlobStore;
+use api::media::{BlobStore, GalleryKind};
 use api::media::ingest_queue::{self as ingest, IngestSettings, Settled};
 use api::media::transcode::Ffmpeg;
 use axum::body::Body;
@@ -619,7 +619,8 @@ async fn an_over_target_upload_is_re_encoded_to_the_target(pool: PgPool) {
         "the original is discarded"
     );
 
-    let probe = api::media::process(&stored, rig.media.caps()).expect("the rendition validates");
+    let probe = api::media::process(&stored, rig.media.caps_for(GalleryKind::Post))
+        .expect("the rendition validates");
     assert_eq!((probe.width, probe.height), (1920, 1080));
     assert!(!probe.needs_transcode, "the rendition is within target");
     assert_eq!(probe.bytes, stored, "nothing left for the strip to remove");
