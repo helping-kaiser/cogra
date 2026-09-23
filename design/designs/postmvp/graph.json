@@ -564,6 +564,13 @@
       "to": [{ "board": "ChatMessageMenu", "case": "the message's acts, over the thread — on any bubble, the reader's own adding Remove" }]
     },
     {
+      "from": "ChatThread",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat — the plaintext messages that match" }]
+    },
+    {
       "from": "ChatCreate",
       "via": 1,
       "kind": "back",
@@ -857,6 +864,13 @@
       "to": [{ "terminal": "self", "case": "sound on or off — the one control a clip wears in a bubble" }]
     },
     {
+      "from": "ChatThreadMedia",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
       "from": "ChatThreadKeyboard",
       "via": 1,
       "kind": "back",
@@ -895,6 +909,13 @@
       ]
     },
     {
+      "from": "ChatThreadKeyboard",
+      "via": 6,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "the keyboard goes down and search opens, the draft kept in the field" }]
+    },
+    {
       "from": "ChatThreadReader",
       "via": 1,
       "kind": "back",
@@ -924,6 +945,13 @@
         { "terminal": "self", "case": "a chat that takes requests — the request is sent and the foot says so; an open chat's Join lands the reader in its thread, foot live" },
         { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
       ]
+    },
+    {
+      "from": "ChatThreadReader",
+      "via": 5,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "a reader outside searches the same plaintext — the public read (master: the search's anatomy)" }]
     },
     {
       "from": "ChatCreateSeal",
@@ -992,25 +1020,25 @@
       "from": "ChatDetails",
       "via": 5,
       "kind": "advance",
-      "label": "Search in this chat",
-      "to": [{ "board": "ChatSearchIn", "case": "the field, the plaintext messages that match, and the note on what is not searched" }]
-    },
-    {
-      "from": "ChatDetails",
-      "via": 6,
-      "kind": "advance",
       "label": "Add people",
       "to": [{ "gap": "the invitation flow into an existing chat — round B2 of the chats work, left undrawn on purpose" }]
     },
     {
       "from": "ChatDetails",
-      "via": 7,
+      "via": 6,
       "kind": "advance",
-      "label": "a member row",
+      "label": "a member row — the person",
       "to": [
         { "terminal": "canonical", "case": "a person, or the invited person not yet joined — their profile, canonical's" },
         { "gap": "a Collective member — its own page; the Collective actor variant is specified and not yet built (readme §7)" }
       ]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 7,
+      "kind": "advance",
+      "label": "a member row — the role word (Admin / Moderator / Member)",
+      "to": [{ "gap": "the role-change flow — decision:change_role's multi-voice face, round B2 of the chats work; the pending invitee's row has no role and no door" }]
     },
     {
       "from": "ChatDetails",
@@ -1071,19 +1099,12 @@
       "from": "ChatDetailsReader",
       "via": 5,
       "kind": "advance",
-      "label": "Search in this chat",
-      "to": [{ "board": "ChatSearchIn", "case": "the same search — plaintext is a public read (master: the search's anatomy)" }]
-    },
-    {
-      "from": "ChatDetailsReader",
-      "via": 6,
-      "kind": "advance",
       "label": "a member row",
       "to": [{ "terminal": "canonical", "case": "the member's profile, canonical's" }]
     },
     {
       "from": "ChatDetailsReader",
-      "via": 7,
+      "via": 6,
       "kind": "advance",
       "label": "Edit history",
       "to": [{ "board": "ChatHistory", "case": "the same chronicle — a chat's history is public (master: the chronicle's anatomy)" }]
@@ -1170,11 +1191,18 @@
       "to": [{ "terminal": "back", "case": "the details it was opened from — a member's or a reader's" }]
     },
     {
+      "from": "ChatHistory",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "gap": "the version-removal flow — decision:redact_version's multi-voice face, round B2 of the chats work; any member may start it" }]
+    },
+    {
       "from": "ChatSearchIn",
       "via": 1,
       "kind": "back",
       "label": "back arrow",
-      "to": [{ "terminal": "back", "case": "the details it was opened from — a member's or a reader's" }]
+      "to": [{ "terminal": "back", "case": "the thread whose header opened it — a member's or a reader's" }]
     },
     {
       "from": "ChatSearchIn",

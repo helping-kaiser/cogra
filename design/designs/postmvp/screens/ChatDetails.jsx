@@ -49,8 +49,8 @@
    its place and its unread dot on the list.
 
    THE PENDING INVITE. The reader invited Ada on 20 September (the edit
-   history's newest row) and she has not pointed back, so her row says `Invited — hasn't joined yet` and carries no role
-   (`MemberRows`). The thread carries the same fact as a quiet line — a state
+   history's newest row) and she has not pointed back, so her row says
+   `Invited — hasn't joined yet` and carries no role (`MemberRows`). The thread carries the same fact as a quiet line — a state
    of the drawn thread (`ChatThread`), not redrawn here.
 
    NO PRESENCE, ANYWHERE ON THE PAGE (jakob). A member row is a name, a handle
@@ -58,14 +58,14 @@
    records. Online, last seen and typing are not records and are never drawn.
 
    WHAT IS DEFERRED. Disavowing a message and everything else moderation-
-   flavoured is the moderation slice's (jakob) — no row for it here, and none
-   on a member's row. The governance map is not shown and not editable here:
+   flavoured is the moderation slice's (jakob) — no row for it here, and no
+   removal act on a member's row; the role door is governance, not moderation. The governance map is not shown and not editable here:
    it ships its default silently, as at the founding.
 
    THE FRAME IS TALLER THAN A PHONE so the whole page reads at once, down to
    the leave — the page scrolls in the product, and its bottom is the part a
    review most needs to see. */
-export const FRAME = { width: 390, height: 1112 };
+export const FRAME = { width: 390, height: 1056 };
 
 export function Screen() {
   return <ChatDetailsBody />;
