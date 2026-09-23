@@ -24,14 +24,15 @@ are public records.
 Chat topology — the Chat node, the membership record set, the
 message record set — is always public
 ([graph-model.md §1](../primitive/graph-model.md#1-core-principles)). Only the
-**body** of individual Messages is private, and only when the
-chat runs encrypted (§7). There is no "private chat" mode that
-hides membership or metadata.
+**body** of individual Messages is private, and only when that
+message was sent encrypted — privacy is a per-message choice, and
+a chat mixes plaintext and encrypted bodies freely (§7). There is
+no "private chat" mode that hides membership or metadata.
 
 Chats and Messages are **first-class content**: stance-able,
 reviewable, taggable, rankable in feeds — just like Posts. A chat
-is a public discussion space that happens to have members, some
-of which may choose to run with encrypted content.
+is a public discussion space that happens to have members, any of
+whom may send any given message encrypted.
 
 ---
 
