@@ -23,6 +23,7 @@ import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoProcessor
+import com.cogra.domain.media.awaitReady
 import com.cogra.domain.media.overPictureCap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -102,9 +103,12 @@ internal class WizardUploader(
                 onUploadSessionStarted(progress.uploadId)
                 state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
             }
-            when (val outcome = media.uploadVideo(processed, scale.destination, sending)) {
+            // READY answers here at once — no extra request. `awaitReady`
+            // only starts polling for the backstop case, a PROCESSING
+            // asset (Android's own uploads are always within target).
+            when (val outcome = media.awaitReady(media.uploadVideo(processed, scale.destination, sending))) {
                 is Outcome.Success -> state.update {
-                    it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id))
+                    it.withUpload(clip.uri, outcome.value.toResolvedUpload(UploadFailure.REFUSED_VIDEO))
                 }
                 is Outcome.Refused -> state.update {
                     it.withUpload(
@@ -156,8 +160,16 @@ internal class WizardUploader(
             state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.PICTURE_TOO_BIG)) }
             return null
         }
-        return when (val outcome = media.uploadMedia(picture)) {
-            is Outcome.Success -> outcome.value.id
+        // READY answers here at once — no extra request. `awaitReady`
+        // only starts polling for the backstop case, a PROCESSING cover.
+        return when (val outcome = media.awaitReady(media.uploadMedia(picture))) {
+            is Outcome.Success -> when (val resolved = outcome.value.toResolvedUpload(UploadFailure.REFUSED_COVER)) {
+                is AssetUpload.Done -> resolved.mediaId
+                else -> {
+                    state.update { it.withUpload(clip.uri, resolved) }
+                    null
+                }
+            }
             is Outcome.Refused -> {
                 state.update {
                     it.withUpload(

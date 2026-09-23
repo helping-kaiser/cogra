@@ -194,7 +194,13 @@ private fun ReplyClip(
     // every other transport fault does. The tile then loses its × —
     // Remove it lives in the error line, and the two removals must never
     // sit two pixels apart meaning the same thing.
-    val failure = (clip.upload as? AssetUpload.Failed)?.text()
+    //
+    // The one exception is a PROCESSING asset the server only refused
+    // after accepting the bytes: the round trip already happened once,
+    // so retrying sends the identical bytes into the identical answer —
+    // `retryable` is what tells this failure apart from an ordinary one.
+    val failed = clip.upload as? AssetUpload.Failed
+    val failure = failed?.text()
     MediaThumb(
         item = MediaItem(clip.uri, clip.sourceRatio ?: 1f, clip.altText.ifBlank { null }),
         width = if (failure != null) CLIP_FRAME_FAILED else CLIP_FRAME,
@@ -223,7 +229,7 @@ private fun ReplyClip(
     failure?.let { message ->
         UploadErrorLine(
             message = message,
-            onRetry = onRetry,
+            onRetry = if (failed?.retryable == true) onRetry else null,
             onRemove = onRemove,
             testTag = "reply_clip_failed",
         )

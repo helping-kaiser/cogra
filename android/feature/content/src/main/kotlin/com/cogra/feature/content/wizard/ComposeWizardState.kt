@@ -102,8 +102,18 @@ sealed interface AssetUpload {
      * shows. [serverMessage] is the server's own words where it gave
      * any — deliberately preferred, so a refusal that names the file
      * says so rather than reading as a generic fault.
+     *
+     * [retryable] is false for an asset the server accepted, held as
+     * PROCESSING, and only then refused: the bytes already made the
+     * round trip once, so asking again sends the identical bytes into
+     * the identical answer. The way out is picking a different file, not
+     * a retry link that is certain to fail the same way twice.
      */
-    data class Failed(val reason: UploadFailure, val serverMessage: String? = null) : AssetUpload
+    data class Failed(
+        val reason: UploadFailure,
+        val serverMessage: String? = null,
+        val retryable: Boolean = true,
+    ) : AssetUpload
 }
 
 /**

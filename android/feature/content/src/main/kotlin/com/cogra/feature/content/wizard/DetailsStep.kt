@@ -234,7 +234,11 @@ private fun UploadFailures(
             // The server's own words where it gave any, so a refusal that
             // names the file says so rather than reading as a generic fault.
             message = failure.text(),
-            onRetry = { onRetry(asset.uri) },
+            // Not retryable once the server accepted the bytes and only
+            // then refused them on inspection (a PROCESSING asset gone
+            // FAILED): the same bytes would only earn the same answer, so
+            // the way out is picking a different file, not this link.
+            onRetry = if (failure.retryable) { { onRetry(asset.uri) } } else null,
             onRemove = { onRemove(index) },
             testTag = "wizard_upload_failed_$index",
         )
