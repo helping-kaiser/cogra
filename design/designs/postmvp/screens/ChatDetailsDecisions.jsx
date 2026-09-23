@@ -30,7 +30,7 @@
 
    THE FRAME IS TALLER THAN A PHONE so the whole page reads at once, as
    `ChatDetails`' does. */
-export const FRAME = { width: 390, height: 1176 };
+export const FRAME = { width: 390, height: 1104 };
 
 export function Screen() {
   return <ChatDetailsBody chat={SALT_CRUST} members={SALT_CRUST_MEMBERS} decisions={SALT_CRUST_DECISIONS} />;

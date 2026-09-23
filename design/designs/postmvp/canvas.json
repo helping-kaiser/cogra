@@ -411,7 +411,7 @@
       "x": 480,
       "y": 5032,
       "w": 390,
-      "h": 1176,
+      "h": 1104,
       "page": "chats"
     },
     {
@@ -445,7 +445,7 @@
       "file": "ChatInvitePicker.dc.html",
       "title": "Add people · picking who to invite",
       "x": 0,
-      "y": 6328,
+      "y": 6256,
       "w": 390,
       "h": 844,
       "page": "chats"
@@ -454,7 +454,7 @@
       "file": "ChatInviteSeal.dc.html",
       "title": "Add people · the invitations' seal",
       "x": 480,
-      "y": 6328,
+      "y": 6256,
       "w": 390,
       "h": 844,
       "page": "chats"
@@ -463,7 +463,7 @@
       "file": "ChatThreadInvited.dc.html",
       "title": "A chat · invited, the join as its foot",
       "x": 960,
-      "y": 6328,
+      "y": 6256,
       "w": 390,
       "h": 844,
       "page": "chats"
@@ -472,7 +472,7 @@
       "file": "ChatJoinSeal.dc.html",
       "title": "Joining a chat · what you sign, one seal for three routes",
       "x": 1440,
-      "y": 6328,
+      "y": 6256,
       "w": 390,
       "h": 844,
       "page": "chats"
@@ -481,7 +481,7 @@
       "file": "ChatThreadRequested.dc.html",
       "title": "A chat · asked to join, the request sent",
       "x": 0,
-      "y": 7292,
+      "y": 7220,
       "w": 390,
       "h": 844,
       "page": "chats"
@@ -490,7 +490,7 @@
       "file": "ChatThreadApproved.dc.html",
       "title": "A chat · the request approved, the join as its foot",
       "x": 480,
-      "y": 7292,
+      "y": 7220,
       "w": 390,
       "h": 844,
       "page": "chats"
@@ -499,7 +499,7 @@
       "file": "ChatRequestApprove.dc.html",
       "title": "A chat · a join request, met by a moderator",
       "x": 960,
-      "y": 7292,
+      "y": 7220,
       "w": 390,
       "h": 844,
       "page": "chats"

@@ -2020,9 +2020,6 @@ function SaltCrustThread() {
         First sheets are pegged up under the skylight.
       </ChatBubble>
       <DecisionOutcome>Tobias Lindqvist is now a moderator</DecisionOutcome>
-      <ChatBubble author={CHAT_TOBIAS} when="18:02">
-        Thanks all — the loft key stays on the hook by the door.
-      </ChatBubble>
       <DayDivider>20 September</DayDivider>
       <PendingCard count={KICK_COUNT} act={<AgreeAct what={KICK_LINE} />}>
         {KICK_LINE}
