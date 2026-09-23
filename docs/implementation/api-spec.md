@@ -3506,9 +3506,11 @@ input PrepareChatInput {
 }
 
 "Post a message — stages the Send (the terminal leg mints the
- Message). For an encrypted message, `content` is the ciphertext
- and `epoch` names the chat-key epoch it is under; for plaintext,
- `epoch` is null. Membership is CoGra's read-side fold policy —
+ Message). For an encrypted message, `content` is the ciphertext,
+ `epoch` names the chat-key epoch it is under, and every
+ attachment's bytes are client-encrypted under that same epoch
+ key before upload (chats.md §7); for plaintext, `epoch` is null.
+ Membership is CoGra's read-side fold policy —
  prepare enforces it as L2 policy."
 input PrepareChatMessageInput {
   chat: UUID!

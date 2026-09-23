@@ -78,7 +78,10 @@ whatever it carries
 **Founding a Chat** is the founder's own **Participant** act,
 both legs targeting the fresh mint: its act identifier mints the
 Chat node, fixes the founder as creator, and is simultaneously
-the first membership signal. The founding payload carries the
+the first membership signal. The founder holds the **admin**
+role from the founding act; every other role assignment comes
+later, through `decision:change_role` (§5). The founding payload
+carries the
 initial chat metadata — name, description, image digests — the
 chat's governance map (§5), and the name of the chat's **system
 actor** (below), in the Peer Content Envelope
@@ -370,6 +373,15 @@ bytes; confidentiality is key custody, not record hiding
 Privacy is per-message — a chat can mix plaintext and encrypted
 bodies freely; each body row carries a privacy flag and, for
 ciphertext, the key-epoch index it was encrypted under.
+
+**An encrypted message encrypts its attachments too.** The
+client encrypts the media bytes under the same epoch key before
+upload, so carriage holds only ciphertext and the witness binds
+those bytes; a plaintext thumbnail beside an encrypted body would
+make the lock a lie. The server can never thumbnail or transcode
+such a blob — clients process media before encrypting.
+References are never encrypted: they are edges on the shared
+graph and have no payload body to hide.
 
 ### Keys, organized in epochs
 
