@@ -67,10 +67,7 @@ internal object VideoLoadControl {
  * been; this only ever turns a "continue" into a "stop".
  */
 @UnstableApi
-internal class PausedStopsLoading(
-    private val delegate: LoadControl,
-    private val pausedBufferUs: Long,
-) : LoadControl {
+internal class PausedStopsLoading(private val delegate: LoadControl, private val pausedBufferUs: Long) : LoadControl {
 
     override fun shouldContinueLoading(parameters: LoadControl.Parameters): Boolean {
         val delegateWants = delegate.shouldContinueLoading(parameters)
