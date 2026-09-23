@@ -6006,7 +6006,16 @@ onto both. Backlog item 34.
   cannot tell one gentle pick from twenty-seven years of them — and that
   accumulated conviction is the thing a reader wants. The sentence
   carries it; the exact pair rides `cg-exact` and paints in geek mode
-  only, both markups always drawn.
+  only, both markups always drawn. The sentence has rules for any count
+  and any span (`copy-voice.md`, jakob, canvas review): numerals for the
+  count, `in` days or weeks under a month and `over` months or years from
+  one, the weight clause only when the raw sum passes the dial, and
+  `One pick, {date}.` for a single record.
+- **Both timelines carry the one "?" (jakob, canvas review).** `How
+  opinions build` rides the sheet title's row and opens `TimelineHelp` —
+  `HelpDialog`'s shape over the real sheet: an opinion is the sum of
+  every signed pick, the sum keeps counting past the dial, and walking
+  back is one more record, never a deletion.
 - **The door rule: authoring doors are faces and fields, history doors
   are readouts (jakob).** The stance face is fully spent — tap opens the
   pad, hold signs a gentle positive — so it never opens a history. On a

@@ -19,9 +19,15 @@
 
    THE NUMBERS ARE A POST'S NUMBERS. The person↔person board carries the round's
    own illustration — twenty-seven picks over three years, which is what a
-   relationship looks like. A post is months old, so its sum line says months and
+   relationship looks like. A post is days old, so its sum line says days and
    single digits, and its count is the length of the list beneath it. The same
-   sentence at the wrong scale would teach a reader that the line is decoration. */
+   sentence at the wrong scale would teach a reader that the line is decoration.
+
+   AND IT OBEYS THE SUM RULES (`copy-voice.md`). Four picks from 5 to 12
+   September span seven days — under two weeks, and quickly, so `in seven days`.
+   Its rows add up to +2.40 / +1.50, past the dial on both axes, so the weight
+   clause stands and the tail reads `before the cap`. The "?" on the title row is
+   the same one the person↔person sheet carries, opening the same dialog. */
 export function Screen() {
   return (
     <>
@@ -30,7 +36,7 @@ export function Screen() {
         <TimelineHeader
           pDirected={1}
           pInterest={1}
-          sum="Built from 4 picks in ten days — more weight than the dial can show."
+          sum="Built from 4 picks in seven days — more weight than the dial can show."
           exact="+2.40 / +1.50 before the cap"
           spoken="Raw sum before the cap: For or against +2.40, How much reaches you +1.50"
         />

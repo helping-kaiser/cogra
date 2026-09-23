@@ -2270,4 +2270,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="See how this opinion built"', tag: "button" },
   ],
   PadHistoryDoor: [{ n: 1, find: ">Current opinion · see how it built</button>", tag: "button" }],
+  // The timeline sheets' one "?", on the title row (`SheetTitle`'s trailing).
+  StanceTimeline: [{ n: 1, find: 'aria-label="How opinions build"', tag: "button" }],
+  StanceTimelinePost: [{ n: 1, find: 'aria-label="How opinions build"', tag: "button" }],
+  // Two washes stack under this dialog — the sheet's and its own — so the scrim
+  // is found by the DIALOG's wrapper, the one that centres the surface; the
+  // bare wash string would land on the sheet's.
+  TimelineHelp: [
+    { n: 1, find: ">Close</button>", tag: "button" },
+    { n: 2, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
+  ],
 });

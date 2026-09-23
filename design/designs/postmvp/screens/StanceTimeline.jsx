@@ -11,7 +11,14 @@
    cannot tell one gentle pick from twenty-seven years of them — and that
    accumulated conviction is exactly what a person wants to know about somebody.
    The sentence carries it; the digits ride `cg-exact` and paint only in geek
-   mode, the way every number in this product does.
+   mode, the way every number in this product does. The sentence obeys the sum
+   rules (`copy-voice.md`): 27 picks, oldest to newest across three years, so
+   `over three years`; a raw sum past the dial on both axes, so the weight clause
+   and a tail reading `before the cap`.
+
+   THE "?" ON THE TITLE ROW explains what the sheet shows and a reader cannot
+   guess — that the sum keeps counting past the dial, and that walking back is
+   one more record. It opens `TimelineHelp`.
 
    SEVERANCE IS A ROW, NOT AN ABSENCE. Walking an opinion back signs a
    counter-record like any other, so it stands in the list at its own date
@@ -29,19 +36,5 @@
    make a cross-cutting overlay look like that surface's own, which is the
    argument `PadStanding` settled for the pad. */
 export function Screen() {
-  return (
-    <>
-      <ProfileStancesExcerpt onOpenHistory={() => {}} />
-      <TimelineSheet title="@tobias on @ada" ariaLabel="Every opinion @tobias has signed on @ada">
-        <TimelineHeader
-          pDirected={1}
-          pInterest={1}
-          sum="Built from 27 picks over three years — more weight than the dial can show."
-          exact="+27.40 / +26.10 before the cap"
-          spoken="Raw sum before the cap: For or against +27.40, How much reaches you +26.10"
-        />
-        <TimelineRecords />
-      </TimelineSheet>
-    </>
-  );
+  return <PersonTimeline />;
 }

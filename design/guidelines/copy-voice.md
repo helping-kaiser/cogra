@@ -1813,6 +1813,42 @@ to be opened.
   over three years — more weight than the dial can show.` The exact raw
   sum rides a `cg-exact` tail — `+27.40 / +26.10 before the cap` — so
   the digits paint only in geek mode while the sentence stands in both.
+- **The sum sentence's rules, for any count of picks and any span.**
+  - Shape: `Built from {N} picks {period}[ — more weight than the dial
+    can show].`
+  - `{N}` is numerals. One pick is its own line, `One pick, {date}.`,
+    with no sum clause and no tail — a single record IS the sum, and its
+    pair is the one the standing above already reads.
+  - `{period}` runs from the oldest pick to the newest and is spelled in
+    words. Under a month the picks came quickly and it says `in`: `in
+    {n} days` below two weeks (`in seven days`), `in {n} weeks` from two
+    weeks (`in two weeks`). From a month on they were sustained and it
+    says `over`: `over {n} months`, then `over {n} years` from a year
+    (`over three years`). Whole units, rounded down. Every pick on one
+    day: `today` — and `on {date}` when that day is not today.
+  - The weight clause ` — more weight than the dial can show` appears
+    ONLY when the raw sum passes the dial on either axis (|Σp| > 1).
+    Within the dial the sentence ends at its period: `Built from 3 picks
+    in two weeks.`
+  - Geek register (`cg-exact`): `{pd} / {pi} before the cap` when the
+    sum clipped, `{pd} / {pi} summed` when it did not. The spoken twin
+    carries the same words and the same pair, axis by axis.
+  - The drawn cases: 27 picks across three years, raw +27.40 / +26.10 —
+    `over three years`, clause, `before the cap`; 4 picks from 5 to 12
+    September, raw +2.40 / +1.50 — `in seven days`, clause, `before the
+    cap`.
+- **The timeline's "?"** — `How opinions build`, on both timeline
+  sheets' title row, opening a plain dialog:
+  An opinion is not one number — it is every pick ever signed from one
+  side toward the other, added up. Each row here is one signed pick,
+  exactly as it was made. / The dial only reaches so far, but the sum
+  underneath keeps counting. A long history can weigh far more than any
+  one pick can move — which is why walking something back takes as many
+  picks as building it did. / Walking back is not deleting. A pick in the
+  other direction is one more signed record, and the whole history stays
+  readable, right here.
+  *(Three paragraphs where the "?" dialogs hold to two — drafted
+  2026-09-23 and flagged for review rather than trimmed.)*
 - A row is the face it was cast at and the date it was signed. A
   counter-record stands in the list at its own date wearing `Walked
   back`, the system's own word: severance is records, never an absence.

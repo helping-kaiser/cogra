@@ -13,7 +13,8 @@
     "OpinionsRowDoors": "the opinions sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "StanceTimeline": "the timeline sheet covers the opinions page — every row beneath the scrim is inactive in this state; only the sheet (and its scrim) is live, and it is a reading surface with nothing to act on",
     "StanceTimelinePost": "the timeline sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
-    "PadHistoryDoor": "the scrim wash covers the shell — the back arrow, the post card's own controls and the nav are inactive in this state; only the parked pad is live"
+    "PadHistoryDoor": "the scrim wash covers the shell — the back arrow, the post card's own controls and the nav are inactive in this state; only the parked pad is live",
+    "TimelineHelp": "the \"?\" dialog covers the timeline sheet, which covers the opinions page — two washes deep, and only the dialog (and its scrim) is live"
   },
   "entries": {
     "PushSettings": "the settings page at the notifications group — this round's excerpt of canonical's Settings, not a screen of its own",
@@ -370,6 +371,34 @@
       "kind": "advance",
       "label": "Current opinion · see how it built",
       "to": [{ "board": "StanceTimeline", "case": "the records the standing above the field was summed from — the pad stays parked beneath the sheet, the pick untouched" }]
+    },
+    {
+      "from": "StanceTimeline",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How opinions build",
+      "to": [{ "board": "TimelineHelp", "case": "the How-opinions-build text, over this sheet" }]
+    },
+    {
+      "from": "StanceTimelinePost",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How opinions build",
+      "to": [{ "board": "TimelineHelp", "case": "the How-opinions-build text (master — drawn over the person↔person sheet; the words do not change with the target)" }]
+    },
+    {
+      "from": "TimelineHelp",
+      "via": 1,
+      "kind": "back",
+      "label": "Close",
+      "to": [{ "terminal": "back", "case": "the dialog closes — back to the timeline that asked" }]
+    },
+    {
+      "from": "TimelineHelp",
+      "via": 2,
+      "kind": "back",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes" }]
     }
   ]
 }

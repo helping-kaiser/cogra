@@ -172,6 +172,15 @@
       "page": "histories"
     },
     {
+      "file": "TimelineHelp.dc.html",
+      "title": "A stance timeline · the ? dialog",
+      "x": 2880,
+      "y": 1940,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
       "file": "PadHistoryDoor.dc.html",
       "title": "The pad · Current opinion becomes a door",
       "x": 0,

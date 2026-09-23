@@ -54,6 +54,7 @@ const {
   SR_ONLY,
   TabBar,
   RedactedContent,
+  HelpDot,
 } = components;
 
 function SettingsExcerpt({ children }) {
@@ -536,7 +537,16 @@ function TimelineRow({ pDirected, pInterest, when, note }) {
 
 /* The header: what it stands at, and what it is built from. The label is the
    pad's own word for the same quantity, so a reader who taps through from the
-   pad meets the line they just left. */
+   pad meets the line they just left.
+
+   THE SUM SENTENCE HAS RULES, for any count of picks and any span of time
+   (`copy-voice.md`, the change-histories round): `Built from {N} picks
+   {period}` — `in` days or weeks under a month, `over` months or years from a
+   month on — with ` — more weight than the dial can show` only when the raw sum
+   passes the dial on either axis, and a `cg-exact` tail reading `before the
+   cap` when it clipped and `summed` when it did not. One pick is its own line.
+   The boards pass the finished strings; the rules are what they are checked
+   against. */
 function TimelineHeader({ pDirected, pInterest, sum, exact, spoken }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", padding: "0 24px 8px" }}>
@@ -559,12 +569,44 @@ function TimelineHeader({ pDirected, pInterest, sum, exact, spoken }) {
   );
 }
 
+/* THE TIMELINE EARNS ITS ONE "?" (jakob's canvas review, 2026-09-23). What a
+   reader cannot guess here is the thing the sheet exists to show — that an
+   opinion is a sum of every signed pick, that the sum keeps counting past the
+   dial, and that walking back is one more record rather than a deletion. That
+   is a "?" by the system's own test: the explanation is too long for a caption
+   and the reader who wants it is a different reader from the one who does not.
+
+   IT RIDES THE SHEET TITLE'S OWN ROW, `SheetTitle`'s `trailing` slot — "top-right
+   of the header or of the sheet it explains" — the way the filter sheet carries
+   its own, and it is named by the dialog it opens (`How opinions build`). Both
+   timelines carry it, because it explains the sheet rather than either target. */
 function TimelineSheet({ title, ariaLabel, children }) {
   return (
     <BottomSheet open ariaLabel={ariaLabel} maxHeight="88%">
-      <SheetTitle>{title}</SheetTitle>
+      <SheetTitle trailing={<HelpDot ariaLabel="How opinions build" />}>{title}</SheetTitle>
       {children}
     </BottomSheet>
+  );
+}
+
+/* The person↔person timeline, whole — drawn once because two boards draw it:
+   the timeline itself and the "?" dialog over it (`HelpDialog`'s rule: what a
+   modal covers is the real surface, inert, never a stand-in). */
+function PersonTimeline() {
+  return (
+    <>
+      <ProfileStancesExcerpt onOpenHistory={() => {}} />
+      <TimelineSheet title="@tobias on @ada" ariaLabel="Every opinion @tobias has signed on @ada">
+        <TimelineHeader
+          pDirected={1}
+          pInterest={1}
+          sum="Built from 27 picks over three years — more weight than the dial can show."
+          exact="+27.40 / +26.10 before the cap"
+          spoken="Raw sum before the cap: For or against +27.40, How much reaches you +26.10"
+        />
+        <TimelineRecords />
+      </TimelineSheet>
+    </>
   );
 }
 
@@ -587,9 +629,11 @@ const TIMELINE_RECORDS = [
 ];
 
 /* A PERSON→POST BUNDLE, WHOLE. A post that went up on 3 September cannot carry
-   a record from 2024, so the content-side fixture is its own: four picks in ten
-   days, every one of them drawn, and a raw sum the board's own rows add up to.
-   Its header's numbers are checkable by hand against these four. */
+   a record from 2024, so the content-side fixture is its own: four picks from 5
+   to 12 September — seven days, oldest to newest — every one of them drawn, and
+   a raw sum the board's own rows add up to (+2.40 / +1.50, past the dial on
+   both axes). Its header's words and numbers are checkable by hand against
+   these four. */
 const POST_TIMELINE_RECORDS = [
   { pDirected: 0.9, pInterest: 0.6, when: "12 September" },
   { pDirected: 0.5, pInterest: 0.3, when: "10 September" },
