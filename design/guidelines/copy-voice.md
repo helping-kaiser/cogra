@@ -1798,6 +1798,16 @@ that the feature does nothing.
   version never takes its place.`; `Remove version` (quiet) and `Keep
   it` (filled). The last sentence is the one a reader cannot guess, so
   it is spelled before the act rather than explained after it.
+- The nouns swap per kind, nothing else moves (jakob 2026-09-23). The
+  comment version's body reads `…the comment shows it as removed…`; the
+  profile version's opens `Its contents leave every reader's view` and
+  closes `…the profile shows it as removed…`. The whole-comment confirm
+  is the post's `RemoveConfirm` body with `…along with every earlier
+  version's, and the comment's spot in its thread stays with it.` The
+  profile's `Remove every version` confirm reads `The contents of every
+  profile version leave every reader's view at once, and marks stay in
+  their place. Your account, your handle and everything you published
+  stay.`
 
 **A historic version, opened.** `A historic version — changed 12
 September.` on the banner's own panel, with `See the current version`
@@ -1842,13 +1852,10 @@ to be opened.
   An opinion is not one number — it is every pick ever signed from one
   side toward the other, added up. Each row here is one signed pick,
   exactly as it was made. / The dial only reaches so far, but the sum
-  underneath keeps counting. A long history can weigh far more than any
-  one pick can move — which is why walking something back takes as many
-  picks as building it did. / Walking back is not deleting. A pick in the
-  other direction is one more signed record, and the whole history stays
-  readable, right here.
-  *(Three paragraphs where the "?" dialogs hold to two — drafted
-  2026-09-23 and flagged for review rather than trimmed.)*
+  underneath keeps counting — so walking something back takes as many
+  picks as building it did. And walking back is not deleting: a pick in
+  the other direction is one more signed record, and the whole history
+  stays readable, right here.
 - A row is the face it was cast at and the date it was signed. A
   counter-record stands in the list at its own date wearing `Walked
   back`, the system's own word: severance is records, never an absence.

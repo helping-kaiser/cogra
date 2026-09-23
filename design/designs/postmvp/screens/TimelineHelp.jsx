@@ -9,9 +9,10 @@
    opinion is the sum of every signed pick, read row by row beneath; that the sum
    keeps counting past the dial, so a long history outweighs any one pick and
    walking it back takes as many; and that walking back is one more signed
-   record rather than a deletion. It is THREE paragraphs where the "?" dialogs
-   hold to two (`copy-voice.md`), because each of the three is a fact on its
-   own — drafted for jakob's review, and flagged there rather than trimmed here.
+   record rather than a deletion. Two paragraphs, back inside the "?" dialogs'
+   own cap (jakob's canvas review, 2026-09-23: shorten without losing the
+   facts) — the second and third facts share a paragraph because the second is
+   why walking back is expensive and the third is what walking back is.
 
    THE SURFACE BENEATH IS `PersonTimeline`, the timeline's real drawing — the
    opinions page, the sheet's wash and the sheet — for `HelpDialog`'s reason: the
@@ -41,12 +42,9 @@ export function Screen() {
               signed pick, exactly as it was made.
             </p>
             <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-              The dial only reaches so far, but the sum underneath keeps counting. A long history can weigh far more than any one pick can
-              move — which is why walking something back takes as many picks as building it did.
-            </p>
-            <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-              Walking back is not deleting. A pick in the other direction is one more signed record, and the whole history stays readable,
-              right here.
+              The dial only reaches so far, but the sum underneath keeps counting — so walking something back takes as many picks as
+              building it did. And walking back is not deleting: a pick in the other direction is one more signed record, and the whole
+              history stays readable, right here.
             </p>
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <Button>Close</Button>
