@@ -15,6 +15,7 @@ import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
+import com.cogra.domain.media.awaitReady
 import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
@@ -37,6 +38,7 @@ import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.attachmentFieldIndex
 import com.cogra.feature.content.wizard.refusesVideo
 import com.cogra.feature.content.wizard.screenPicture
+import com.cogra.feature.content.wizard.toResolvedUpload
 import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -302,11 +304,14 @@ class ReplyWizardViewModel @Inject constructor(
                 uploadSession = progress.uploadId
                 _state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
             }
-            when (val outcome = media.uploadVideo(processed, scale.destination, sending)) {
+            // READY answers here at once — no extra request. `awaitReady`
+            // only starts polling for the backstop case, a PROCESSING
+            // asset (Android's own uploads are always within target).
+            when (val outcome = media.awaitReady(media.uploadVideo(processed, scale.destination, sending))) {
                 is Outcome.Success -> {
-                    _state.update { it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id)) }
-                    runCatching { File(processed.path).delete() }
-                    transcoded = null
+                    val resolved = outcome.value.toResolvedUpload(UploadFailure.REFUSED_VIDEO)
+                    _state.update { it.withUpload(clip.uri, resolved) }
+                    clearTranscodedCacheUnlessRetryable(resolved, processed.path)
                 }
                 is Outcome.Refused -> _state.update {
                     it.withUpload(
@@ -319,6 +324,18 @@ class ReplyWizardViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * A retryable failure keeps the transcoded file for a fast retry;
+     * READY and a non-retryable FAILED both have nothing left to retry
+     * for, so the cache copy has served its purpose either way.
+     */
+    private fun clearTranscodedCacheUnlessRetryable(resolved: AssetUpload, path: String) {
+        val stillRetryable = resolved is AssetUpload.Failed && resolved.retryable
+        if (stillRetryable) return
+        runCatching { File(path).delete() }
+        transcoded = null
     }
 
     /**
@@ -354,8 +371,16 @@ class ReplyWizardViewModel @Inject constructor(
             _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.PICTURE_TOO_BIG)) }
             return null
         }
-        return when (val outcome = media.uploadMedia(picture)) {
-            is Outcome.Success -> outcome.value.id
+        // READY answers here at once — no extra request. `awaitReady`
+        // only starts polling for the backstop case, a PROCESSING cover.
+        return when (val outcome = media.awaitReady(media.uploadMedia(picture))) {
+            is Outcome.Success -> when (val resolved = outcome.value.toResolvedUpload(UploadFailure.REFUSED_COVER)) {
+                is AssetUpload.Done -> resolved.mediaId
+                else -> {
+                    _state.update { it.withUpload(clip.uri, resolved) }
+                    null
+                }
+            }
             is Outcome.Refused -> {
                 _state.update {
                     it.withUpload(

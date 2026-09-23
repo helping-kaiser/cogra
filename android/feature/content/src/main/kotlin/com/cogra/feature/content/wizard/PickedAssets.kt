@@ -9,10 +9,13 @@ package com.cogra.feature.content.wizard
 import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.media.CropFraming
 import com.cogra.core.designsystem.v2.media.MediaItem
+import com.cogra.domain.MediaAssetState
+import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.awaitReady
 import com.cogra.domain.media.overPictureCap
 
 /** Records one asset's upload state without disturbing the others (D5). */
@@ -81,9 +84,33 @@ internal suspend fun uploadPicture(
         ?: return AssetUpload.Failed(unreadable)
     // Not worth retrying: the same source encodes to the same bytes.
     if (picture.overPictureCap()) return AssetUpload.Failed(UploadFailure.PICTURE_TOO_BIG)
-    return when (val outcome = media.uploadMedia(picture)) {
-        is Outcome.Success -> AssetUpload.Done(outcome.value.id)
+    // READY answers here at once — no extra request: Android's own
+    // uploads are always within target. `awaitReady` only starts
+    // polling for the backstop case, a PROCESSING asset.
+    return when (val outcome = media.awaitReady(media.uploadMedia(picture))) {
+        is Outcome.Success -> outcome.value.toResolvedUpload(refused)
         is Outcome.Refused -> AssetUpload.Failed(refused, outcome.errors.firstOrNull()?.message)
         is Outcome.Failed -> AssetUpload.Failed(UploadFailure.TRANSPORT)
     }
+}
+
+/**
+ * The upload state a *resolved* asset settles into — one already past
+ * `awaitReady`, so never PROCESSING. Shared by every call site that
+ * uploads a picture, a clip, or a clip's cover
+ * (`uploadPicture`, `WizardUploader`, `ReplyWizardViewModel`): each
+ * only differs in which [UploadFailure] names a business refusal for
+ * its own kind of asset.
+ *
+ * FAILED is never retryable here: the bytes already made the round
+ * trip and the server refused them on inspection, so asking again would
+ * send the identical bytes into the identical answer. UNKNOWN — a
+ * server state this build was not shipped knowing about — is treated
+ * the same way, conservatively.
+ */
+internal fun MediaAssetView.toResolvedUpload(refused: UploadFailure): AssetUpload = when (state) {
+    MediaAssetState.READY -> AssetUpload.Done(id)
+    MediaAssetState.FAILED, MediaAssetState.UNKNOWN ->
+        AssetUpload.Failed(refused, failureReason, retryable = false)
+    MediaAssetState.PROCESSING -> error("awaitReady never returns Success while PROCESSING")
 }

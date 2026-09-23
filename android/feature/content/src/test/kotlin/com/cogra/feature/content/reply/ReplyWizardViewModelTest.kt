@@ -6,12 +6,14 @@ import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaAssetState
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaDestination
+import com.cogra.domain.media.MediaReadiness
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
@@ -129,9 +131,19 @@ class ReplyWizardViewModelTest {
             aborted += uploadId
         }
 
+        /** What `mediaAttachment` answers for the given id — the poll's own script. */
+        var pollAnswers = mutableMapOf<String, Pair<MediaAssetState, String?>>()
+        var pollCalls = 0
+
+        override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> {
+            pollCalls += 1
+            val (state, reason) = pollAnswers[id] ?: (MediaAssetState.READY to null)
+            return Outcome.Success(MediaReadiness(id, state, reason))
+        }
+
         companion object {
-            fun asset(id: String) =
-                MediaAssetView(id, "https://media/$id", null, FieldStatus.NORMAL, 1f)
+            fun asset(id: String, state: MediaAssetState = MediaAssetState.READY) =
+                MediaAssetView(id, "https://media/$id", null, FieldStatus.NORMAL, 1f, state = state)
         }
     }
 
@@ -213,6 +225,52 @@ class ReplyWizardViewModelTest {
         assertThat(asset.upload).isEqualTo(AssetUpload.Done("m1"))
         assertThat(asset.sourceRatio).isEqualTo(0.5f)
         assertThat(media.order).containsExactly("still")
+        // THE READY-AT-ONCE PATH COSTS NOTHING EXTRA: no poll at all.
+        assertThat(media.pollCalls).isEqualTo(0)
+    }
+
+    /**
+     * THE BACKSTOP, not the shipped path (Android's own uploads are
+     * always within target): a PROCESSING answer holds the pick "not
+     * done" through the wizard's ordinary uploading mechanics until the
+     * poll reads READY.
+     */
+    @Test
+    fun aProcessingPictureHoldsUploadsCompleteShutThenOpensOnPoll() = runTest(dispatcher) {
+        media.still = Outcome.Success(ScriptedMedia.asset("m1", MediaAssetState.PROCESSING))
+        media.pollAnswers["m1"] = MediaAssetState.READY to null
+        val vm = viewModel()
+
+        vm.onPicked("a.jpg")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.pollCalls).isEqualTo(1)
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    /**
+     * A PROCESSING asset the server only refuses after accepting the
+     * bytes surfaces through the existing failure line with the server's
+     * own reason, and offers no retry — the round trip already happened
+     * once.
+     */
+    @Test
+    fun aProcessingPictureThatFailsCarriesTheReasonAndBlocksRetry() = runTest(dispatcher) {
+        media.still = Outcome.Success(ScriptedMedia.asset("m1", MediaAssetState.PROCESSING))
+        media.pollAnswers["m1"] = MediaAssetState.FAILED to "not a readable picture"
+        val vm = viewModel()
+
+        vm.onPicked("a.jpg")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val failed = vm.state.value.picked.single().upload
+        assertThat(failed).isInstanceOf(AssetUpload.Failed::class.java)
+        failed as AssetUpload.Failed
+        assertThat(failed.reason).isEqualTo(UploadFailure.REFUSED_PICTURE)
+        assertThat(failed.serverMessage).isEqualTo("not a readable picture")
+        assertThat(failed.retryable).isFalse()
+        assertThat(vm.state.value.uploadsComplete).isFalse()
     }
 
     @Test
