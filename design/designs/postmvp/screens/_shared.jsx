@@ -1482,7 +1482,7 @@ function ChatIdentity({ name, image, policy, description, children }) {
    but its accessible name: the rows name themselves. */
 function DetailsGroup({ ariaLabel, children }) {
   return (
-    <div style={{ flex: "none", padding: "8px 16px 0" }}>
+    <div style={{ flex: "none", padding: "12px 16px 0" }}>
       <SettingsGroup ariaLabel={ariaLabel}>{children}</SettingsGroup>
     </div>
   );
