@@ -154,6 +154,18 @@ describe("DetailsStep", () => {
       expect(screen.getByTestId("wizard-picked-row-thumb-0-cover-mark")).toBeInTheDocument();
     });
 
+    it("uses the clip's first frame as the tile's face, never the chosen cover", () => {
+      renderStep({
+        mode: "media",
+        assets: [VIDEO_ASSET],
+        clipFace: "blob:clip-face",
+        coverPreview: "blob:cover-face",
+      });
+
+      const tileImage = screen.getByTestId("wizard-picked-row-thumb-0-image");
+      expect(tileImage).toHaveAttribute("src", "blob:clip-face");
+    });
+
     it("draws no cover mark while no face is chosen", () => {
       renderStep({
         mode: "media",
