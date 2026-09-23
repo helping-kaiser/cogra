@@ -6217,6 +6217,106 @@ on the Chats page. The masters grew in the tree's prelude —
   face.
 - **Stickers are parked (jakob).**
 
+### The chat details round — 2026-09-23
+
+Round B1 of the chats work: the detail surface the chats round left as
+its one deliberate gap, and its satellites — eight boards on the Chats
+page (`ChatDetails`, `ChatDetailsReader`, `ChatEdit`, `ChatEditSeal`,
+`ChatHistory`, `ChatSearchIn`, `ChatMediaGallery`, `ChatLeaveConfirm`).
+The five gap edges that pointed at it — the four thread headers and the
+row menu's `Chat details` — now land on it. The masters (`ChatIdentity`,
+`ChatDisc`, `MemberRows`, `OpenDecisionsEmpty`, `ChatVersionCard`,
+`ChatEventRow`) live in the tree's prelude.
+
+- **Multi-voice acts wear messenger clothes (jakob).** An act is instant
+  where the actor's own voice suffices under the chat's governance map;
+  otherwise it waits as a quiet pending card in the thread and a row
+  under an `Open decisions` section on the details, beside media. This
+  round draws the section and its empty state (`Nothing is being
+  decided.`); the pending card and the filled section are round B2's,
+  an intended gap on the edit seal's act.
+- **No presence, ever (jakob).** No online, last-seen or typing signal
+  on a member row or anywhere else.
+- **The chat's opinion control sits on the details (jakob)** — the
+  profile header's stance-anchor precedent: the wide anchor leads the
+  actions row, and the row's second act (`Edit chat` for an eligible
+  member, the join for a reader outside) takes its word's width.
+- **Founding creates the chat whole; an invitee who has not pointed
+  back is pending (jakob).** The member list marks them `Invited —
+  hasn't joined yet`, with no role. The thread's quiet line for the same
+  fact is a state of the drawn thread, not a board.
+- **The founder holds admin; roles show on member rows (jakob)** —
+  `Admin`, `Moderator`, `Member`, the default map's three roles. A
+  member can be a Collective, drawn as the person row it looks like
+  (`ActorChip`'s rule) with `a collective` on its second line.
+- **Metadata grows like posts and profiles (jakob).** Layered full-state
+  versions, the L1 mechanism being succession. The chronicle is the
+  change-histories pattern verbatim — whole versions newest first, the
+  current one marked, never a diff — with membership events (joined,
+  left, invited) as quiet rows between the versions, never part of one.
+- **Mute lives on the row menu and on the details (jakob)**, one
+  per-chat setting, and it silences the device push only — messages
+  write no bell rows.
+- **Leave is unilateral and unconditional (jakob)**, and the Leave
+  record's optional parting reason is a field in its confirm and a
+  quoted line under `left` in the chronicle.
+- **Chats are public (jakob)**, so the details are readable by
+  non-members and guests: the member's acts are absent, and the join,
+  worded by the chat's policy, stands where `Edit chat` stands.
+- **Deferred (jakob):** message disavowal and everything
+  moderation-flavoured — the moderation slice's.
+- **The lane's calls, flagged for review:** the anatomy's order
+  (WhatsApp's group info filtered: identity, actions row, media, open
+  decisions, members, mute and history, leave); `Edit chat` on the
+  actions row rather than in the header; the leave confirm not offering
+  the opinion door; the clip tile wearing the sound disc and no duration
+  (the one-duration ruling); the leave dialog keeping its heading and
+  answers pinned while a grown reason scrolls (the sheet's
+  short-viewport clause, read for a dialog).
+
+jakob reviewed the round on the canvas the same day and ruled five
+corrections:
+
+- **Search rides the thread's header (jakob).** `Search in this chat`
+  left the details for a glyph at the pinned header's trailing edge,
+  beside the details door, on every thread — the reader's outside the
+  chat included, since plaintext is a public read and the truth note
+  says the same to both. `ChatSearchIn`'s way back is the thread.
+- **Role readouts are doors (jakob).** On a member's details, tapping
+  `Admin`, `Moderator` or `Member` opens the role-change flow —
+  `decision:change_role`'s multi-voice face, round B2's. The row splits
+  the stance row's way (the person area opens the person, the value its
+  own surface), and the word wears the `Edited` marker's tappable
+  underline. A reader outside keeps plain readouts; the pending invitee
+  has neither word nor door.
+- **A chat's versions are removable by decision (jakob).** His case: a
+  picture changed to one a member never wanted public. `Remove this
+  version` rides every version with a payload, opening
+  `decision:redact_version`'s multi-voice face (B2's; the decision joins
+  chats.md §5, gated as `disavow_message`: > 50% cast, ≥ 20% quorum). A
+  chat has no author — its creator is only its creator — so the door
+  shows for every member, where a post's shows for its author alone. A
+  removed version tombstones by the change-histories grammar.
+- **The edit's seal says three (jakob).** The default map's
+  `set:metadata` gate (> 50% weighted cast, 10% quorum) makes even a
+  solo admin's change a proposal passing on its proposer's own ballot,
+  so the reader signs the anchor, its reference to the chat and their
+  +1 ballot — `3 things, signed together`, the founding seal's exact
+  precedent, worded `Change`, `Chat` and `Your opinion` · `For the
+  change`. The system actor signs the succession on its own and never
+  joins the reader's count.
+- **The `Why?` field stays (jakob).** `layer1-interface.md`'s act
+  payload schema gives Leave a "parting reason" — "if the interface
+  says so then the L1 author intended it to exist" — and the leave
+  confirm's docblock cites it.
+- **The gate**: canonical holds byte-identical — **217 screens · 1568
+  edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 44
+  screens and 167 edges. The chats round's five gaps are resolved, and
+  five stand in their place: the four intended B2 faces
+  (Add people, the role change, a version's removal, the change that
+  waits for more voices) and a Collective member's own page, owed since
+  the Collective actor variant (§7).
+
 ---
 
 ## 14. The canvases
