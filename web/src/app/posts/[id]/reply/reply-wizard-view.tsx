@@ -37,6 +37,7 @@ import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useWriteSigner } from "@/lib/signing/provider";
+import { useStageHistory } from "@/lib/compose/stage-history";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { commentAttachmentClaims } from "@/lib/compose/comment-media";
@@ -50,6 +51,7 @@ import {
   replyHasContent,
   replyReducer,
   sealGate,
+  stepIndex,
   type ReplyAction,
   type ReplyState,
   type ReplyTarget,
@@ -203,6 +205,7 @@ export function ReplyWizard({
         cover,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
         (upload) => dispatch({ type: "coverUpload", upload }),
+        COMMENT_SCALE.videoMaxBytes,
       );
       return;
     }
@@ -251,6 +254,25 @@ export function ReplyWizard({
     }
     onLeave();
   };
+
+  /**
+   * The arrow: ONE STAGE BACK, and from the first stage that is the thread —
+   * which discards the comment just as the X does.
+   */
+  const stepBack = () => (state.step === "compose" ? leave() : dispatch({ type: "back" }));
+
+  // The browser's Back is the same arrow (design/readme.md: "the platform
+  // back gesture does the same"). This surface is not a route, so being OPEN
+  // is an entry of its own above the thread's, and each stage past the first
+  // one more: a Back press on the composer reaches the thread through the
+  // arrow's own leave — asking first when something is written — rather
+  // than taking the reader off the page the thread is on.
+  useStageHistory({
+    surface: "reply",
+    level: stepIndex(state) + 1,
+    onBack: stepBack,
+    onForward: () => dispatch({ type: "advance" }),
+  });
 
   const pick = async (files: readonly File[]) => {
     const outcome = await screenPick(
@@ -374,9 +396,6 @@ export function ReplyWizard({
       <HeaderBar
         title={title}
         backLabel={state.step === "compose" ? "Back to the thread" : "Back a step"}
-        // The arrow is ONE STAGE BACK, and from the first stage that is the
-        // thread — which discards the comment just as the X does.
-        //
         // IT ASKS NOTHING, because the boards do not: every reply board carries
         // the confirm on its "X — leave" edge (via 2) and none carries it on
         // the back arrow (via 1), which is drawn as a plain cancel to
@@ -384,7 +403,7 @@ export function ReplyWizard({
         // the asymmetry means the arrow can still lose a written comment
         // silently, which is the exact thing the confirm exists to prevent, so
         // it is reported rather than quietly patched.
-        onBack={() => (state.step === "compose" ? leave() : dispatch({ type: "back" }))}
+        onBack={stepBack}
         onLeave={leave}
         leaveLabel={LEAVE_LABEL}
         action={

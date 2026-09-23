@@ -155,9 +155,13 @@ async function toSeal(words = "The third headland light is real.") {
   return screen.findByTestId("reply-seal");
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   installEncoder();
   push.mockClear();
+  // An open wizard rides history entries, and jsdom's history outlives a
+  // test: the last test's traversals are let finish, and its marks cleared.
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  window.history.replaceState(null, "");
 });
 
 afterEach(() => {
@@ -626,6 +630,79 @@ describe("the reply wizard", () => {
       // exactly why the confirm has to be asked before this point.
       draw();
       await waitFor(() => expect(screen.getAllByTestId("reply-words")[1]).toHaveValue(""));
+    });
+  });
+
+  // jakob's hand test, 2026-09-23: the platform back gesture left the wizard
+  // for the page behind it. The law (design/readme.md): the arrow steps ONE
+  // STAGE BACK and "the platform back gesture does the same" — for this
+  // surface, down to the thread it was opened over, never past it.
+  describe("the browser's back and forward", () => {
+    const stageDepth = () =>
+      (window.history.state as { cograStage?: { depth: number } } | null)?.cograStage?.depth ?? 0;
+
+    it("takes Back from the seal to the words, which are still there", async () => {
+      const { onLeave } = draw();
+      await toSeal("Worth keeping.");
+      expect(stageDepth()).toBe(2);
+
+      window.history.back();
+      expect(await screen.findByTestId("reply-words")).toHaveValue("Worth keeping.");
+      expect(screen.queryByTestId("reply-seal")).toBeNull();
+      expect(onLeave).not.toHaveBeenCalled();
+    });
+
+    it("takes Back from an empty composer to the thread, as the arrow does", async () => {
+      const { onLeave } = draw();
+      expect(stageDepth()).toBe(1);
+
+      window.history.back();
+      await waitFor(() => expect(onLeave).toHaveBeenCalledOnce());
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    it("asks before Back discards written words, and keeps the wizard's entry", async () => {
+      const { onLeave } = draw();
+      write("half a thought");
+
+      window.history.back();
+      await waitFor(() =>
+        expect(screen.getByTestId("reply-discard-confirm")).toHaveAttribute("open"),
+      );
+      expect(onLeave).not.toHaveBeenCalled();
+      // The press is spent on the question; the wizard is still open, so it
+      // stands on its own entry again.
+      await waitFor(() => expect(stageDepth()).toBe(1));
+
+      // A second Back is a close request on the question — the safe answer.
+      window.history.back();
+      await waitFor(() =>
+        expect(screen.getByTestId("reply-discard-confirm")).not.toHaveAttribute("open"),
+      );
+      expect(onLeave).not.toHaveBeenCalled();
+      expect(screen.getByTestId("reply-words")).toHaveValue("half a thought");
+    });
+
+    it("re-advances to the seal on Forward", async () => {
+      draw();
+      await toSeal();
+      window.history.back();
+      await screen.findByTestId("reply-words");
+
+      window.history.forward();
+      expect(await screen.findByTestId("reply-seal")).toBeInTheDocument();
+    });
+
+    it("closes an open sheet on Back before the stage steps back", async () => {
+      draw();
+      await toSeal();
+      fireEvent.click(screen.getByTestId("reply-open-license"));
+      const sheet = (await screen.findByTestId("reply-license-rows")).closest("dialog")!;
+      expect(sheet).toHaveAttribute("open");
+
+      window.history.back();
+      await waitFor(() => expect(sheet).not.toHaveAttribute("open"));
+      expect(screen.getByTestId("reply-seal")).toBeInTheDocument();
     });
   });
 });

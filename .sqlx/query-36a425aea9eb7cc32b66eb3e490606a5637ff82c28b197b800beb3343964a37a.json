@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE media_attachments\n         SET lease_until = now() + make_interval(secs => $2)\n         WHERE id = $1 AND state = 'processing'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "36a425aea9eb7cc32b66eb3e490606a5637ff82c28b197b800beb3343964a37a"
+}

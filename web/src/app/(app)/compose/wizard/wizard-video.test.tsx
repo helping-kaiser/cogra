@@ -378,6 +378,69 @@ describe("picking a video", () => {
     expect(screen.queryByLabelText(/Remove picture/)).toBeNull();
   });
 
+  // W4: the pick tray used to hand `<img>` the video's own object URL —
+  // undecodable, so it drew the browser's broken-image icon. Extraction now
+  // starts as soon as the clip is picked, not only once the cover screen is
+  // reached, so the tray always has a still to stand the clip on.
+  it("shows the clip's own first frame on the pick tray, not the video's bytes", async () => {
+    distinctObjectUrls();
+    const clip = aVideo();
+    render();
+    await pickFiles([clip]);
+
+    const thumb = await screen.findByTestId(/^wizard-unpick-.*-image$/);
+    const videoUrl = URL.createObjectURL(clip);
+    expect(thumb).toHaveAttribute("src");
+    expect(thumb.getAttribute("src")).not.toBe(videoUrl);
+  });
+
+  // W5: the details tile used to show the CHOSEN COVER as its face, so with
+  // the inset mark the cover appeared twice. The face is always the clip's
+  // own first frame; the chosen cover — a different frame here — rides only
+  // the inset mark (jakob's hand-test ruling 2026-09-23).
+  it("keeps the details tile on the first frame even when a different frame is chosen as cover", async () => {
+    distinctObjectUrls();
+    const frames = [0, 1, 2, 3].map(
+      (n) => new Blob([new Uint8Array([n]) as BlobPart], { type: "image/png" }),
+    );
+    vi.mocked(captureFrames).mockResolvedValueOnce(frames);
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+    // A frame OTHER than the first, so the face and the cover can never be
+    // the same URL by coincidence.
+    fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    const tileImage = await screen.findByTestId("wizard-picked-row-thumb-0-image");
+    const coverMarkImage = screen
+      .getByTestId("wizard-picked-row-thumb-0-cover-mark")
+      .querySelector("img");
+
+    expect(tileImage).toHaveAttribute("src", URL.createObjectURL(frames[0]!));
+    expect(coverMarkImage).toHaveAttribute("src", URL.createObjectURL(frames[2]!));
+  });
+
+  // Same defect as W4, on the sheet the describe counter opens: it read the
+  // video's own object URL too.
+  it("shows the clip's own first frame in the describe sheet, not the video's bytes", async () => {
+    distinctObjectUrls();
+    const clip = aVideo();
+    render();
+    await pickFiles([clip]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId("wizard-cover-frame-0"));
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    fireEvent.click(await screen.findByTestId("wizard-describe-counter"));
+
+    const strip = await screen.findByTestId("wizard-describe-sheet-strip");
+    const image = strip.querySelector("img");
+    const videoUrl = URL.createObjectURL(clip);
+    expect(image).not.toBeNull();
+    expect(image!.getAttribute("src")).not.toBe(videoUrl);
+  });
+
   it("asks for one description of the video, and none of its cover", async () => {
     render();
     await pickFiles([aVideo()]);
