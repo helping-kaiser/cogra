@@ -29,13 +29,24 @@
 //!    transaction. An orphaned object is collectable garbage; a row
 //!    pointing at nothing is a render that can never succeed.
 //!
-//! Nothing here transforms the picture: no thumbnails, no downscale, no
-//! rendition ladder. Clients crop and re-encode on device, so the stored
-//! bytes are already the bytes the post is made of, and the URL carries
-//! no size — renditions stay addable later without a contract change.
+//! Nothing here transforms a picture: no thumbnails, no downscale, no
+//! rendition ladder. Clients crop and re-encode stills on device, so the
+//! stored bytes are already the bytes the post is made of, and the URL
+//! carries no size — renditions stay addable later without a contract
+//! change.
+//!
+//! **A video is held to a target instead.** Clients compress where they
+//! can, and the same probe that proves an upload decides whether it is
+//! within the served target ([`transcode`]). One that is stored `ready`
+//! at once; one that is not is stored `processing`, and the [`ingest_queue`]
+//! worker re-encodes it before anything may attach it. Either way the
+//! bytes a digest is committed over are the only bytes the asset ever
+//! serves.
 
 pub mod blob;
+pub mod ingest_queue;
 pub mod resumable;
+pub mod transcode;
 pub mod video;
 pub mod webp;
 
@@ -148,9 +159,27 @@ pub struct MediaConfig {
     /// How long an unfinished upload may sit before the sweep collects
     /// it and releases its parts.
     pub upload_session_ttl_secs: f64,
+    /// The ffmpeg the ingest worker drives — a name looked up on `PATH`,
+    /// or a path.
+    pub ffmpeg: String,
+    /// The longest one re-encode may run before it is killed and retried.
+    pub transcode_timeout_secs: u64,
+    /// How long an idle ingest worker waits before looking for work.
+    pub ingest_poll_secs: u64,
+    /// How long a worker's claim on a job holds without renewal — the
+    /// most a restart delays the job that was in flight.
+    pub ingest_lease_secs: u64,
+    /// How many ingest workers run in this process. Each drives one
+    /// ffmpeg at a time, and ffmpeg spreads one encode over every core,
+    /// so one is the right number until uploads queue behind each other.
+    pub ingest_workers: usize,
 }
 
 const DEFAULT_MAX_UPLOAD_BYTES: usize = 10 * 1024 * 1024;
+const DEFAULT_TRANSCODE_TIMEOUT_SECS: u64 = 1800;
+const DEFAULT_INGEST_POLL_SECS: u64 = 2;
+const DEFAULT_INGEST_LEASE_SECS: u64 = 60;
+const DEFAULT_INGEST_WORKERS: usize = 1;
 const DEFAULT_MAX_VIDEO_UPLOAD_BYTES: usize = 100 * 1024 * 1024;
 const DEFAULT_ORPHAN_REAPER_INTERVAL_SECS: u64 = 600;
 const DEFAULT_ORPHAN_MAX_AGE_SECS: f64 = 86_400.0;
@@ -211,6 +240,11 @@ impl Default for MediaConfig {
             orphan_max_age_secs: DEFAULT_ORPHAN_MAX_AGE_SECS,
             upload_part_size_bytes: DEFAULT_UPLOAD_PART_SIZE_BYTES,
             upload_session_ttl_secs: DEFAULT_UPLOAD_SESSION_TTL_SECS,
+            ffmpeg: "ffmpeg".into(),
+            transcode_timeout_secs: DEFAULT_TRANSCODE_TIMEOUT_SECS,
+            ingest_poll_secs: DEFAULT_INGEST_POLL_SECS,
+            ingest_lease_secs: DEFAULT_INGEST_LEASE_SECS,
+            ingest_workers: DEFAULT_INGEST_WORKERS,
         }
     }
 }
@@ -255,6 +289,23 @@ impl MediaConfig {
                 "MEDIA_UPLOAD_SESSION_TTL_SECS",
                 base.upload_session_ttl_secs,
             )?,
+            ffmpeg: env_or("MEDIA_FFMPEG", &base.ffmpeg),
+            transcode_timeout_secs: env_parsed(
+                "MEDIA_TRANSCODE_TIMEOUT_SECS",
+                base.transcode_timeout_secs,
+            )?,
+            ingest_poll_secs: env_parsed("MEDIA_INGEST_POLL_SECS", base.ingest_poll_secs)?,
+            ingest_lease_secs: {
+                let lease = env_parsed("MEDIA_INGEST_LEASE_SECS", base.ingest_lease_secs)?;
+                if lease < 3 {
+                    anyhow::bail!(
+                        "MEDIA_INGEST_LEASE_SECS must be at least 3: the lease is renewed \
+                         every third of itself"
+                    );
+                }
+                lease
+            },
+            ingest_workers: env_parsed("MEDIA_INGEST_WORKERS", base.ingest_workers)?,
         })
     }
 
@@ -308,6 +359,10 @@ pub struct ProcessedAsset {
     /// video always, an animated still when its frames state one. Null on
     /// a single-frame picture, which is what `durationMs` reads.
     pub duration_ms: Option<u64>,
+    /// Whether these bytes must be re-encoded before they may be served:
+    /// a video outside the target [`transcode::within_target`] states.
+    /// Always false on a still.
+    pub needs_transcode: bool,
 }
 
 impl ProcessedAsset {
@@ -354,6 +409,10 @@ fn gcd(a: u32, b: u32) -> u32 {
 /// reading the container that will actually be stored, so a rewrite that
 /// damaged the file refuses the upload instead of publishing something
 /// that will not play.
+///
+/// The probe's answer also decides whether a video needs re-encoding —
+/// canvas, duration and byte count are all it takes — so a clip already
+/// within target costs nothing beyond this call.
 pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaError> {
     let format = Format::of(bytes).ok_or(MediaError::Unsupported)?;
     let limit = format.cap(caps);
@@ -362,6 +421,14 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
     }
     let stripped = (format.strip)(bytes)?;
     let probe = (format.probe)(&stripped)?;
+    let needs_transcode = !format.still
+        && !transcode::within_target(
+            probe.width,
+            probe.height,
+            probe.duration_ms,
+            stripped.len() as u64,
+            caps.video_bytes as u64,
+        );
     Ok(ProcessedAsset {
         digest: Sha256::digest(&stripped).into(),
         bytes: stripped,
@@ -369,6 +436,7 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
         height: probe.height,
         mime: format.mime,
         duration_ms: probe.duration_ms,
+        needs_transcode,
     })
 }
 
@@ -808,14 +876,24 @@ fn resolve_cover<'a>(
     Ok(Some(cover))
 }
 
-/// The three rules every asset reference runs before it may be used: the
-/// asset is there, this author uploaded it, and it has not been removed.
+/// The four rules every asset reference runs before it may be used: the
+/// asset is there, this author uploaded it, it has not been removed, and
+/// its bytes are final.
 ///
 /// Written once because it is the anti-hijack rule (data-model.md "Why
 /// parents point at attachments") and three surfaces — a gallery entry, a
 /// poster, a profile picture — each carried their own copy. Only the
 /// ownership sentence differs, because each names a different thing to
 /// the author.
+///
+/// **The last rule is the witness guarantee's gate.** Every path from an
+/// asset id to a payload envelope passes through here, and the envelope
+/// commits the asset's digest. An asset that is still `processing` has a
+/// digest that is about to change, so committing it would publish a
+/// witness the served bytes will never match; refusing here is what
+/// makes "the bytes behind a committed digest never change" a property of
+/// the code rather than of timing. A failed asset is refused with the
+/// reason it failed, which is the one thing its author can act on.
 fn usable_asset<'a>(
     asset: Option<&'a store::MediaAttachment>,
     author: Uuid,
@@ -832,8 +910,25 @@ fn usable_asset<'a>(
             "this asset has been removed",
         ));
     }
-    Ok(asset)
+    match asset.state {
+        store::AssetState::Ready => Ok(asset),
+        store::AssetState::Processing => Err(GalleryError::at(path.to_vec(), NOT_READY_MESSAGE)),
+        store::AssetState::Failed => Err(GalleryError::at(
+            path.to_vec(),
+            format!(
+                "this asset could not be processed: {}",
+                asset
+                    .failure_reason
+                    .as_deref()
+                    .unwrap_or("no reason recorded")
+            ),
+        )),
+    }
 }
+
+/// What prepare says about an asset that is still `processing`.
+pub const NOT_READY_MESSAGE: &str =
+    "this asset is still being processed; attach it once its state is READY";
 
 /// The description as the manifest will carry it: trimmed, length-checked,
 /// and blank folded to absent so `""` and null cannot mean two different
@@ -1040,11 +1135,36 @@ pub fn public_url(base_url: &str, storage_key: &str) -> String {
     format!("{}/{}", base_url.trim_end_matches('/'), storage_key)
 }
 
+/// Where an upload waiting to be re-encoded is kept.
+///
+/// Under a prefix of its own, like a resumable upload's staging key, so
+/// the bytes that will never be served are told apart from the ones that
+/// are at a glance. The rendition gets an ordinary asset key when it
+/// exists, and this object is deleted.
+pub fn ingest_key(id: Uuid) -> String {
+    format!("ingest/{id}.mp4")
+}
+
+/// The layout facts a row carries about its bytes.
+pub(crate) fn asset_options(asset: &ProcessedAsset) -> serde_json::Value {
+    let mut options = serde_json::json!({ "v": 1, "aspect_ratio": asset.aspect_ratio() });
+    if let Some(duration_ms) = asset.duration_ms
+        && let Some(map) = options.as_object_mut()
+    {
+        map.insert("duration_ms".into(), duration_ms.into());
+    }
+    options
+}
+
 /// Writes the object, then the row.
 ///
 /// Bytes and derived facts only: the row carries nothing the author typed,
 /// which is what lets a picture upload the moment it is picked
 /// (data-model.md "Media attachments").
+///
+/// A video outside the served target is written `processing`, under its
+/// [`ingest_key`], for the [`ingest_queue`] worker to re-encode; everything else
+/// is written `ready` under its final key, and is attachable at once.
 ///
 /// A retried upload of the same picture by the same author resolves to
 /// the row that already exists — the object written on this attempt is
@@ -1059,32 +1179,30 @@ pub async fn store_asset(
     asset: ProcessedAsset,
 ) -> Result<store::MediaAttachment, GalleryPlanError> {
     let id = Uuid::new_v4();
-    let key = storage_key(id, asset.mime);
+    let key = if asset.needs_transcode {
+        ingest_key(id)
+    } else {
+        storage_key(id, asset.mime)
+    };
     let size_bytes = i64::try_from(asset.bytes.len()).map_err(internal)?;
-    let mut options = serde_json::json!({ "v": 1, "aspect_ratio": asset.aspect_ratio() });
-    if let Some(duration_ms) = asset.duration_ms
-        && let Some(map) = options.as_object_mut()
-    {
-        map.insert("duration_ms".into(), duration_ms.into());
-    }
+    let options = asset_options(&asset);
+    let digest = asset.digest;
+    let mime = asset.mime;
+    let needs_transcode = asset.needs_transcode;
 
-    blobs
-        .put(&key, asset.bytes, asset.mime)
+    blobs.put(&key, asset.bytes, mime).await.map_err(internal)?;
+
+    let row = if needs_transcode {
+        store::insert_processing(
+            pool, id, author, &digest, "sha256", &key, mime, size_bytes, &options,
+        )
         .await
-        .map_err(internal)?;
-
-    let row = store::insert(
-        pool,
-        id,
-        author,
-        &asset.digest,
-        "sha256",
-        &key,
-        asset.mime,
-        size_bytes,
-        &options,
-    )
-    .await
+    } else {
+        store::insert(
+            pool, id, author, &digest, "sha256", &key, mime, size_bytes, &options,
+        )
+        .await
+    }
     .map_err(internal)?;
 
     if row.storage_key != key
@@ -1165,6 +1283,8 @@ mod planning_tests {
             mime_type: mime.into(),
             size_bytes: Some(1024),
             options: serde_json::json!({}),
+            state: store::AssetState::Ready,
+            failure_reason: None,
             redaction_reason: None,
             redacted_at: None,
             created_at: chrono::Utc::now(),
@@ -1470,6 +1590,68 @@ mod planning_tests {
         );
     }
 
+    /// Nothing that is not `ready` reaches a manifest: a clip still being
+    /// re-encoded is refused as the attachment and as a poster alike, and a
+    /// failed one is refused with the reason it failed — so no envelope can
+    /// commit a digest the served bytes will not match.
+    ///
+    /// Prepare refuses an asset whose bytes are not final, naming the field that carried it.
+    /// ´claim:media:prepare-refuses-an-asset-that-is-not-ready´
+    #[test]
+    fn prepare_refuses_an_asset_that_is_not_ready() {
+        let author = Uuid::new_v4();
+        let processing = store::MediaAttachment {
+            state: store::AssetState::Processing,
+            ..asset(author, video::MIME)
+        };
+        let refused = resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &[entry(processing.id, None)],
+            std::slice::from_ref(&processing),
+        )
+        .expect_err("a processing clip is not attachable");
+        assert_eq!(path_of(&refused), gallery_path(0, "mediaId"));
+        assert_eq!(refused.to_string(), NOT_READY_MESSAGE);
+
+        let failed = store::MediaAttachment {
+            state: store::AssetState::Failed,
+            failure_reason: Some(ingest_queue::REASON_DID_NOT_ENCODE.into()),
+            ..asset(author, video::MIME)
+        };
+        let refused = resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &[entry(failed.id, None)],
+            std::slice::from_ref(&failed),
+        )
+        .expect_err("a failed clip is not attachable");
+        assert!(
+            refused
+                .to_string()
+                .contains(ingest_queue::REASON_DID_NOT_ENCODE),
+            "the author reads why: {refused}"
+        );
+
+        let video = asset(author, video::MIME);
+        let pending_poster = store::MediaAttachment {
+            state: store::AssetState::Processing,
+            ..asset(author, webp::MIME)
+        };
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Post,
+                    &[entry(video.id, Some(pending_poster.id))],
+                    &[video.clone(), pending_poster],
+                )
+                .expect_err("a poster is held to the same rule")
+            ),
+            gallery_path(0, "coverMediaId")
+        );
+    }
+
     /// The slot's own rules: the author's own asset, still there, and a
     /// picture rather than a video.
     ///
@@ -1581,6 +1763,7 @@ mod tests {
             height,
             mime: webp::MIME,
             duration_ms: None,
+            needs_transcode: false,
         }
         .aspect_ratio()
     }

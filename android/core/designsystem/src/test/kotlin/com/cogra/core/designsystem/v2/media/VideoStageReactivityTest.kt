@@ -71,7 +71,7 @@ class VideoStageReactivityTest {
         compose.setContent { PosterProbe(clip) }
         compose.onNodeWithTag("poster").assertIsDisplayed()
 
-        compose.runOnIdle { VideoStage.rendered() }
+        compose.runOnIdle { VideoStage.rendered(clip) }
 
         compose.onNodeWithTag("poster").assertDoesNotExist()
     }
@@ -80,7 +80,7 @@ class VideoStageReactivityTest {
     @Test
     fun aClipThatHasRenderedOpensWithoutACover() {
         VideoStage.claim(context, clip, Any())
-        VideoStage.rendered()
+        VideoStage.rendered(clip)
 
         compose.setContent { PosterProbe(clip) }
 

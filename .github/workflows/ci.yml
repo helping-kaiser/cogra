@@ -232,6 +232,11 @@ jobs:
       # query string.
       - name: Check .sqlx metadata is current
         run: cargo sqlx prepare --workspace --check
+      # The media ingest tests drive a real re-encode. Locally they skip
+      # without ffmpeg; under CI (the `CI` variable Actions sets) they fail
+      # instead, so this step is what keeps them running.
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
       - name: Run tests
         run: cargo test --all
       # Redundant with the api schema_drift test on purpose: a named CI

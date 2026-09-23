@@ -43,6 +43,7 @@ export function PickStep({
   error,
   blocked,
   coverSrc,
+  clipFace,
   onWords,
   onMode,
   onPick,
@@ -65,6 +66,13 @@ export function PickStep({
    * a picture post, and on a video whose cover is not yet settled.
    */
   coverSrc?: string | null;
+  /**
+   * The clip's own first frame — the tray's tile face, extracted as soon as
+   * it is picked. Null while extraction has not landed or found nothing; the
+   * tray then draws the neutral tile rather than the video's own bytes,
+   * which an `<img>` cannot decode.
+   */
+  clipFace?: string | null;
   onWords: (next: string) => void;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
@@ -90,6 +98,7 @@ export function PickStep({
       error={error}
       blocked={blocked}
       coverSrc={coverSrc}
+      clipFace={clipFace}
       onMode={onMode}
       onPick={onPick}
       onUnpick={onUnpick}
@@ -207,6 +216,7 @@ function MediaBody({
   error,
   blocked,
   coverSrc,
+  clipFace,
   onMode,
   onPick,
   onUnpick,
@@ -220,6 +230,7 @@ function MediaBody({
   error: string | null;
   blocked: boolean;
   coverSrc?: string | null;
+  clipFace?: string | null;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
@@ -290,7 +301,11 @@ function MediaBody({
               {assets.map((asset, index) => (
                 <li key={asset.id} className="flex-none">
                   <MediaThumb
-                    src={previews[asset.id] ?? null}
+                    // A VIDEO'S TILE STANDS FOR THE CLIP, never the video's
+                    // own bytes: an `<img>` cannot decode them, so the tray
+                    // shows the clip's own first frame instead of the raw
+                    // preview `usePreviewUrls` mints for every asset.
+                    src={holdsVideo ? (clipFace ?? null) : (previews[asset.id] ?? null)}
                     crop={asset.crop}
                     // A video is never the post's "cover" picture — that word
                     // names a different, later choice (the video's own face,

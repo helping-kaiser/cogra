@@ -165,7 +165,8 @@ type AttachActorKeyPayload {
 
 """
 One attachment placement within a gallery. Assets are uploaded first
-via `uploadMedia`; the envelope commits their digests.
+via `uploadMedia`; the envelope commits their digests, so every asset
+named here — the attachment and its cover alike — must be READY.
 
 The list is the gallery in order, so `displayOrder` states the entry's
 own index and `isCover` is true on the first entry and nowhere else —
@@ -176,9 +177,9 @@ galleries only; a comment gallery ignores it.
 """
 input AttachmentInput {
 	"""
-	An asset **this author uploaded**. Cross-author re-use is not
-	supported through this path: sharing someone else's picture is a
-	link to their post, never a reference to their asset.
+	An asset **this author uploaded**, and READY. Cross-author re-use
+	is not supported through this path: sharing someone else's picture
+	is a link to their post, never a reference to their asset.
 	"""
 	mediaId: UUID!
 	displayOrder: Int!
@@ -808,6 +809,22 @@ type MediaAttachment {
 	digestAlgo: String!
 	mimeType: String!
 	"""
+	Whether the bytes are final. An upload the server has to re-encode
+	first reads PROCESSING, and prepare refuses it until it reads
+	READY — the envelope commits `digest`, so it may only ever commit
+	one that will not change. Every asset a parent carries is READY.
+	
+	While PROCESSING, `url`, `digest` and `sizeBytes` describe the
+	bytes as they arrived; at READY they describe the rendition, the
+	only bytes the asset will ever serve from then on.
+	"""
+	state: MediaAttachmentState!
+	"""
+	Why the asset is FAILED, worded for its author. Null in every
+	other state.
+	"""
+	failureReason: String
+	"""
 	The stored size. `Int` is 32-bit per the GraphQL specification
 	while the column is 64-bit, so a value past that range reads null
 	rather than wrapping into a wrong number — unreachable under the
@@ -864,6 +881,27 @@ type MediaAttachment {
 	"""
 	author: User
 	createdAt: DateTime!
+}
+
+"""
+Where an uploaded asset stands between its upload and its first use
+(api-spec.md "Upload and gallery limits").
+"""
+enum MediaAttachmentState {
+	"""
+	Uploaded; the server is re-encoding it to the served target. Not
+	attachable yet — poll `mediaAttachment` until it is READY.
+	"""
+	PROCESSING
+	"""
+	The bytes are final and `digest` names them.
+	"""
+	READY
+	"""
+	The upload could not be made servable; `failureReason` says why.
+	Uploading the file again is a fresh attempt.
+	"""
+	FAILED
 }
 
 """
@@ -1140,6 +1178,12 @@ type Mutation {
 	both blocking work, so they run on the blocking pool — left on
 	the async runtime, one upload would stall every other request
 	behind it.
+	
+	The asset comes back READY when its bytes are already within the
+	served target — every still, and every video a client compressed
+	— and PROCESSING when the server has to re-encode it first. A
+	PROCESSING asset cannot be attached yet: poll `mediaAttachment`
+	until it reads READY (or FAILED, with the reason).
 	"""
 	uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
 	"""
@@ -1167,6 +1211,9 @@ type Mutation {
 	Safe to retry. A client whose connection dropped waiting for this
 	reply calls it again and is handed the same asset, because the
 	session remembers what it produced.
+	
+	Like `uploadMedia`, the asset may come back PROCESSING, and is
+	attachable once `mediaAttachment` reads it READY.
 	"""
 	completeMediaUpload(input: CompleteMediaUploadInput!): UploadMediaPayload!
 	"""
@@ -1910,6 +1957,14 @@ type Query {
 	the staging actor's session; null otherwise.
 	"""
 	stagedWrite(id: UUID!): StagedWrite
+	"""
+	One of the viewer's own uploads — how a client learns that an
+	asset it uploaded as PROCESSING has become READY (or FAILED).
+	Polled the way `stagedWrite` is. Null for an unknown id, for
+	somebody else's asset, and without a session: an upload is
+	nobody else's business until a parent carries it.
+	"""
+	mediaAttachment(id: UUID!): MediaAttachment
 	"""
 	One post by id; null for an unknown id.
 	"""
