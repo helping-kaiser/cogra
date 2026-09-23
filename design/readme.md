@@ -6317,6 +6317,91 @@ corrections:
   waits for more voices) and a Collective member's own page, owed since
   the Collective actor variant (§7).
 
+### The chats governance round — 2026-09-23
+
+Round B2 of the chats work: the multi-voice faces the details round left
+as intended gaps — twelve boards on the Chats page (`ChatThreadDecisions`,
+`ChatDetailsDecisions`, `ChatInvitePicker`, `ChatInviteSeal`,
+`ChatThreadInvited`, `ChatJoinSeal`, `ChatThreadRequested`,
+`ChatThreadApproved`, `ChatRequestApprove`, `ChatRoleSheet`,
+`ChatVersionRemoveConfirm`, `ChatHistoryRemoved`). The masters
+(`PendingCard`, `DecisionOutcome`, `OpenDecisions`, `PeopleSoFar`,
+`AgreeAct`, `ApproveAct`, `ChatVersionTombstone`) live in the tree's
+prelude with the bodies the boards share; `ChatJoinFoot` gained the
+invited, requested and approved states, and `RedactedContent` a fourth
+mark.
+
+- **Nothing may look like a proposal (jakob).** A chat's backbone is the
+  proposal machinery. An act whose actor's own say clears its gate is
+  instant: a proposal that passes on its proposer's first ballot, sealed
+  as `3 things, signed together` (the change, its link to the subject,
+  the proposer's own opinion for it — `ChatEditSeal`'s precedent). An act
+  that needs more voices is a quiet card in the thread at the moment it
+  was proposed: a plain sentence (`Mira Voss wants to remove Kel Moreau
+  from the chat`), an `Agree` that is a ballot in disguise, and a count
+  of people (`2 of 5 so far`). When the tally crosses, the card settles
+  into one outcome line (`Kel Moreau was removed`). The same open
+  decisions stand as rows under `Open decisions` on the details, where
+  the words are a door to the card and the act is its own target.
+  Proposals never expire, so no card carries a clock.
+- **The count convention — the brief's recommendation, awaiting jakob's
+  canvas review.** A card counts people and never shows weight. The tally
+  underneath is weighted (admin 5, moderator 3, member 1), so a card can
+  settle early (at 3 of 5 if an admin is among the three) and simply
+  settles when it settles. Geek mode paints the weighted arithmetic after
+  the count in the geek-pair grammar, which widens the geek round's
+  "the pairs, and only the pairs" to a governance tally.
+- **An invitation is the inviter's own act (jakob).** It is a public,
+  priced vouch and never a chat decision: a picker over the people not in
+  the chat, then a seal counting one invitation per person, and no card.
+  Withdrawing your own invitation (a De-invite) is a later surface.
+- **Joining is always the joiner's own record (jakob).** One seal, a sheet
+  over the thread at `1 thing, signed`, serves the three routes: an open
+  chat's `Join`, an accepted invitation and an approved request. Only the
+  fact row saying how the reader comes to be joining swaps its nouns. An
+  invitee reads the chat from outside with `{name} invited you.` and
+  `Join` at the foot, and no Decline, because ignoring an invitation needs
+  no record. A requester's thread carries their own card, `You asked to
+  join`, over a foot that says the request is sent. Once it is approved,
+  the card settles into `Your request was approved` and `Join` returns.
+- **A join request meets its approver as a card.**
+  Under the default map one approval settles it, so the card carries no
+  count, and `Approve` on it is the approver's ballot, signed on the tap.
+- **Roles and removals go through the same seal.** A role word opens a
+  sheet of the three roles with the current one marked. A version's
+  removal opens `VersionRemoveConfirm`'s dialog with the nouns swapped
+  and a paragraph saying the chat decides it. Both proposals go through
+  `ChatEditSeal`'s seal, not drawn again. A removed version keeps its
+  row and date under the chat's own mark, `Removed by the chat's
+  decision`, because a chat has no author and the members' choice is no
+  platform verdict.
+- **The lane's calls, flagged for review:** the decisions fixture moved to
+  Salt-crust rubbings, where the reader is a plain member (in Coast
+  walkers the admin reader's own say clears the rename gate, so their
+  pending rename could not honestly stand there); outcome lines settle in
+  place at the proposal's moment; the card is an outlined card on the page
+  ground, neither bubble fill; a tap on `Agree` or `Approve` signs
+  directly, the send arrow's precedent, and the after-state `You agreed`
+  is stated rather than drawn; the card offers only `Agree`, though the
+  ballot primitive has an against; the requester's two moments are two
+  boards; an approval shows both as a card and as a row; the role and
+  removal seals are docblocked to `ChatEditSeal` rather than drawn; the
+  role sheet's rows carry no lines; the invite picker leaves out people
+  already invited; names are spelled whole (`Mira Voss`, not `Mira`), as
+  the chronicle's event rows spell them.
+- **Owed, and named:** no drawn surface writes a join request's message
+  or an invitation's message (both are their records' payloads); the
+  invitation and approval notification rows are round B3's, and the
+  graph enters `ChatThreadInvited` and `ChatThreadApproved` there; the
+  explorer row's word for an invited reader waits for B3; starting a kick
+  and message disavowal stay with the moderation slice. chats.md §8
+  speaks of redacting a superseded version while the details round's
+  ruling covers the current one too.
+- **The gate**: canonical holds byte-identical — **217 screens · 1568
+  edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 56
+  screens and 228 edges. The four intended B2 gaps are resolved; the one
+  gap left is a Collective member's own page (§7).
+
 ---
 
 ## 14. The canvases
