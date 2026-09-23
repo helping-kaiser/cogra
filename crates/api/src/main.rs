@@ -41,9 +41,10 @@ fn auth_config() -> anyhow::Result<AuthConfig> {
 }
 
 /// Builds the server from the environment and serves it: the GraphQL
-/// surface, the L1 stand-in behind the seam, and four background loops —
+/// surface, the L1 stand-in behind the seam, and the background loops —
 /// mirror ingestion, the dev epoch clock, the account reaper (auth.md
-/// "Reaper"), and the auth-throttle GC sweep (auth.md "Rate limiting").
+/// "Reaper"), the auth-throttle GC sweep (auth.md "Rate limiting"), the
+/// media orphan sweep, and the media ingest workers.
 ///
 /// `.env` is read before anything else, so a plain `cargo run` matches the
 /// make targets; real environment variables still win, because dotenvy
@@ -148,6 +149,36 @@ async fn main() -> anyhow::Result<()> {
         media.orphan_reaper_interval_secs,
         media.orphan_max_age_secs,
     ));
+
+    // The server still serves without ffmpeg: every upload already within
+    // target is unaffected, and one that needs re-encoding fails with a
+    // reason its author reads. What an operator reads is this line.
+    let ffmpeg = match api::media::transcode::Ffmpeg::detect(&media.ffmpeg).await {
+        Ok(ffmpeg) => {
+            tracing::info!(
+                encoder = ffmpeg.h264_encoder(),
+                workers = media.ingest_workers,
+                "media ingest re-encodes through ffmpeg"
+            );
+            Some(Arc::new(ffmpeg))
+        }
+        Err(e) => {
+            tracing::error!(
+                error = %e,
+                "ffmpeg unavailable (MEDIA_FFMPEG): videos over the served target will fail \
+                 processing until it is installed"
+            );
+            None
+        }
+    };
+    for _ in 0..media.ingest_workers {
+        tokio::spawn(api::media::ingest::ingest_loop(
+            pool.clone(),
+            blobs.clone(),
+            media.clone(),
+            ffmpeg.clone(),
+        ));
+    }
 
     let auth = auth_config()?;
     let uploads = api::UploadRouting {
