@@ -111,11 +111,21 @@ export type Step = "pick" | "crop" | "cover" | "details" | "seal";
  * because they fail differently and the reader can act on only one of them: an
  * encode that fails is a picture this browser cannot read, an upload that fails
  * is worth a retry.
+ *
+ * `processing` is the bytes' own wait, after the upload has already landed:
+ * the server answered PROCESSING rather than READY and is re-encoding the
+ * asset (api-spec.md "Upload and gallery limits") — every Android upload and
+ * every web upload this browser could compress lands READY at once and never
+ * passes through it; it is the fallback-browser-original's path alone. It
+ * reads exactly like `uploading` everywhere the reader sees it (the ring
+ * turns, the seal waits) because there is nothing more specific to say yet —
+ * the distinction only matters to the code deciding what to poll next.
  */
 export type AssetUpload =
   | { readonly kind: "waiting" }
   | { readonly kind: "encoding" }
   | { readonly kind: "uploading" }
+  | { readonly kind: "processing"; readonly mediaId: string }
   | { readonly kind: "done"; readonly mediaId: string }
   | { readonly kind: "failed"; readonly message: string; readonly retryable: boolean };
 
@@ -319,7 +329,11 @@ function allUploads(state: WizardState): readonly AssetUpload[] {
 
 export function uploadsPending(state: WizardState): number {
   return allUploads(state).filter(
-    (upload) => upload.kind === "waiting" || upload.kind === "encoding" || upload.kind === "uploading",
+    (upload) =>
+      upload.kind === "waiting" ||
+      upload.kind === "encoding" ||
+      upload.kind === "uploading" ||
+      upload.kind === "processing",
   ).length;
 }
 

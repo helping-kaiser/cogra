@@ -106,7 +106,8 @@ export function uploadsPending(media: CommentMedia): number {
     (asset) =>
       asset.upload.kind === "waiting" ||
       asset.upload.kind === "encoding" ||
-      asset.upload.kind === "uploading",
+      asset.upload.kind === "uploading" ||
+      asset.upload.kind === "processing",
   ).length;
 }
 
@@ -159,7 +160,8 @@ export function commentGate(
     };
   }
   const pending = uploads.filter(
-    (u) => u.kind === "waiting" || u.kind === "encoding" || u.kind === "uploading",
+    (u) =>
+      u.kind === "waiting" || u.kind === "encoding" || u.kind === "uploading" || u.kind === "processing",
   ).length;
   if (pending > 0) {
     return {

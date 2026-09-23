@@ -2,16 +2,20 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ApolloClient } from "@apollo/client";
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { graphql, HttpResponse } from "msw";
 import { CENTERED } from "@/lib/ui2/media/crop";
 import { PICTURE_MAX_BYTES, POST_VIDEO_MAX_BYTES } from "@/lib/ui2/media/caps";
 import { createGuard, type AuthGuard } from "@/lib/session/guard";
 import { createTokenStore } from "@/lib/session/token-store";
 import type { Refresher } from "@/lib/session/refresher";
+import { startMswServer } from "@/test/msw";
 import { COMMENT_SCALE, POST_SCALE, TOO_BIG_PICTURE } from "./pick";
 import { runUpload, runVideoUpload, waitingAssets } from "./uploads";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
+
+const mswServer = startMswServer();
 
 // The remux is mocked: it is covered on its own in `strip-video.test.ts`, and
 // Node cannot run a real one. What matters here is that the upload path calls
@@ -333,6 +337,144 @@ describe("runUpload", () => {
     // Not retryable: the same source encodes to the same bytes next time.
     expect(seen.at(-1)).toEqual({ kind: "failed", message: TOO_BIG_PICTURE, retryable: false });
     expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
+  });
+});
+
+/** A real Apollo client over MSW — the network-boundary idiom `media-api.test.ts` uses. */
+function apolloClient(): ApolloClient {
+  return new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new HttpLink({ uri: "http://localhost/graphql" }),
+  });
+}
+
+function mediaFields(id: string, extra: Record<string, unknown> = {}) {
+  return {
+    __typename: "MediaAttachment",
+    id,
+    url: `https://media.example/${id}`,
+    altText: null,
+    status: "NORMAL",
+    mimeType: "image/webp",
+    options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+    coverMedia: null,
+    state: "READY",
+    failureReason: null,
+    ...extra,
+  };
+}
+
+const noSleep = async () => {};
+
+// THE UPLOAD ITSELF ALREADY CARRIES `state` (media.graphql's UploadMedia).
+// EVERY STILL COMES BACK READY, so the common case — every picture, every
+// clip this browser could compress — takes today's path with no extra
+// request; a PROCESSING answer is the fallback-browser-original path alone,
+// and this suite drives it end to end against the generated operations
+// rather than the hand-rolled `.mutate` stub the rest of the file uses,
+// because the wait now spans a second operation (`MediaAttachmentStatus`).
+describe("runUpload — waiting for a PROCESSING asset", () => {
+  it("goes straight to done when the upload answers READY", async () => {
+    encodable();
+    mswServer.use(
+      graphql.mutation("UploadMedia", () =>
+        HttpResponse.json({
+          data: {
+            uploadMedia: {
+              __typename: "UploadMediaPayload",
+              media: mediaFields("m-ready"),
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    const { seen, step } = steps();
+
+    await runUpload(apolloClient(), guard, asset, 4 / 5, step, { sleep: noSleep });
+
+    expect(seen).toEqual([
+      { kind: "encoding" },
+      { kind: "uploading" },
+      { kind: "done", mediaId: "m-ready" },
+    ]);
+  });
+
+  it("reports processing, then polls until READY", async () => {
+    encodable();
+    mswServer.use(
+      graphql.mutation("UploadMedia", () =>
+        HttpResponse.json({
+          data: {
+            uploadMedia: {
+              __typename: "UploadMediaPayload",
+              media: mediaFields("m-slow", { state: "PROCESSING" }),
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    let polls = 0;
+    mswServer.use(
+      graphql.query("MediaAttachmentStatus", () => {
+        polls += 1;
+        const state = polls < 2 ? "PROCESSING" : "READY";
+        return HttpResponse.json({ data: { mediaAttachment: mediaFields("m-slow", { state }) } });
+      }),
+    );
+    const { seen, step } = steps();
+
+    await runUpload(apolloClient(), guard, asset, 4 / 5, step, { sleep: noSleep });
+
+    expect(seen).toEqual([
+      { kind: "encoding" },
+      { kind: "uploading" },
+      { kind: "processing", mediaId: "m-slow" },
+      { kind: "done", mediaId: "m-slow" },
+    ]);
+    expect(polls).toBe(2);
+  });
+
+  it("reports the server's own reason, not retryable, when the poll settles FAILED", async () => {
+    encodable();
+    mswServer.use(
+      graphql.mutation("UploadMedia", () =>
+        HttpResponse.json({
+          data: {
+            uploadMedia: {
+              __typename: "UploadMediaPayload",
+              media: mediaFields("m-bad", { state: "PROCESSING" }),
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+      graphql.query("MediaAttachmentStatus", () =>
+        HttpResponse.json({
+          data: {
+            mediaAttachment: mediaFields("m-bad", {
+              state: "FAILED",
+              failureReason: "This video's format isn't one the server can serve.",
+            }),
+          },
+        }),
+      ),
+    );
+    const { seen, step } = steps();
+
+    await runUpload(apolloClient(), guard, asset, 4 / 5, step, { sleep: noSleep });
+
+    expect(seen).toEqual([
+      { kind: "encoding" },
+      { kind: "uploading" },
+      { kind: "processing", mediaId: "m-bad" },
+      {
+        kind: "failed",
+        message: "This video's format isn't one the server can serve.",
+        retryable: false,
+      },
+    ]);
   });
 });
 

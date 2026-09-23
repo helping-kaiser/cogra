@@ -2317,6 +2317,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'data-field="Message"', tag: "div" },
     { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
     { n: 7, find: 'data-message="boots"', tag: "div" },
+    { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
   ],
   ChatCreate: [
     { n: 1, find: 'aria-label="Back to the people you picked"', tag: "a" },
@@ -2377,6 +2378,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'data-field="Message"', tag: "div" },
     { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
     { n: 7, find: 'aria-label="Turn sound on"', tag: "button" },
+    { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
   ],
   ChatThreadKeyboard: [
     { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
@@ -2384,12 +2386,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Encrypt end to end"', tag: "button" },
     { n: 4, find: 'data-field="Message"', tag: "div" },
     { n: 5, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 6, find: 'aria-label="Search in this chat"', tag: "button" },
   ],
   ChatThreadReader: [
     { n: 1, find: 'aria-label="Back to all chats"', tag: "a" },
     { n: 2, find: 'aria-label="Harbour office — chat details"', tag: "button" },
     { n: 3, find: ">Show the encrypted text</button>", tag: "button" },
     { n: 4, find: ">Ask to join</button>", tag: "button" },
+    { n: 5, find: 'aria-label="Search in this chat"', tag: "button" },
   ],
   ChatCreateSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -2397,5 +2401,71 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: ">Sign and start the chat</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
+  ],
+
+  // ── The chat details round (post-MVP) ───────────────────────────────────
+  // The opinion face and its skip-link are one control and one number
+  // (`ProfileOther`'s pair). A member list's row is marked on its FIRST row
+  // only, the repeated-element convention — the edge's cases say where each
+  // kind of row lands — and so are its role door, the chronicle's remove
+  // act, the gallery's first tile and the search's first result. The thread
+  // headers' search glyph takes the next free number on each thread board.
+  ChatDetails: [
+    { n: 1, find: 'aria-label="Back to the chat"', tag: "a" },
+    { n: 2, find: 'aria-label="Give your opinion on Coast walkers"', tag: "button" },
+    { n: 2, find: ">Choose your opinion on Coast walkers</button>", tag: "button" },
+    { n: 3, find: ">Edit chat</button>", tag: "button" },
+    { n: 4, find: ">Media in this chat</span>", tag: "button" },
+    { n: 5, find: ">Add people</span>", tag: "button" },
+    { n: 6, find: ">Sol Ferreira</span>", tag: "button" },
+    { n: 7, find: 'aria-label="Admin — change the role"', tag: "button" },
+    { n: 8, find: ">Mute this chat</span>", tag: "button" },
+    { n: 9, find: ">Edit history</span>", tag: "button" },
+    { n: 10, find: ">Leave this chat</span>", tag: "button" },
+  ],
+  ChatDetailsReader: [
+    { n: 1, find: 'aria-label="Back to the chat"', tag: "a" },
+    { n: 2, find: 'aria-label="Give your opinion on Harbour office"', tag: "button" },
+    { n: 2, find: ">Choose your opinion on Harbour office</button>", tag: "button" },
+    { n: 3, find: ">Ask to join</button>", tag: "button" },
+    { n: 4, find: ">Media in this chat</span>", tag: "button" },
+    { n: 5, find: ">Tobias Lindqvist</span>", tag: "button" },
+    { n: 6, find: ">Edit history</span>", tag: "button" },
+  ],
+  ChatEdit: [
+    { n: 1, find: 'aria-label="Back to chat details"', tag: "a" },
+    { n: 2, find: ">Change picture</button>", tag: "button" },
+    { n: 3, find: 'data-field="Name"', tag: "div" },
+    { n: 4, find: 'data-field="Description"', tag: "div" },
+    { n: 5, find: ">Save</button>", tag: "button" },
+  ],
+  ChatEditSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Sign the change</button>", tag: "button" },
+    { n: 5, find: ">Back</button>", tag: "button" },
+  ],
+  ChatHistory: [
+    { n: 1, find: 'aria-label="Back to chat details"', tag: "a" },
+    { n: 2, find: ">Remove this version</button>", tag: "button" },
+  ],
+  ChatSearchIn: [
+    { n: 1, find: 'aria-label="Back to the chat"', tag: "a" },
+    { n: 2, find: ">tide<", tag: "div" },
+    { n: 3, find: ">Mira Voss</span>", tag: "button" },
+  ],
+  ChatMediaGallery: [
+    { n: 1, find: 'aria-label="Back to chat details"', tag: "a" },
+    { n: 2, find: 'alt="A pot of dark honey', tag: "div" },
+    { n: 3, find: 'aria-label="Turn sound on"', tag: "button" },
+  ],
+  // The dialog's field by its wrapper (`TextField`'s own note), its scrim by
+  // the dialog's own wash, `TimelineHelp`'s way.
+  ChatLeaveConfirm: [
+    { n: 1, find: 'data-field="Why?"', tag: "div" },
+    { n: 2, find: ">Leave</button>", tag: "button" },
+    { n: 3, find: ">Stay</button>", tag: "button" },
+    { n: 4, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
   ],
 });
