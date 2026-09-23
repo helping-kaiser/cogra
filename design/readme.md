@@ -6051,6 +6051,55 @@ the gap in the growth law's cap clause:
   height — no threshold variant, no keyboard-avoidance change —
   for every sheet with a growing field, both platforms.
 
+### The feed-video rulings — 2026-09-23
+
+Two gaps from the implementation session's feed-video audit, both
+ruled before the chats work opened. The first completes the video
+conform round's one-at-a-time law: 70% said who *may* play, but not
+who *does* when two qualify at once — the audit measured the
+claim-order accident costing 4 of 39 clips the stage before they
+painted a frame.
+
+- **The stage law: incumbency, instant succession, topmost when
+  empty — continuously evaluated.** Each scroll surface has **one
+  stage**, and a post's clip and a comment's clip compete for the
+  same one. The playing clip **keeps the stage as long as it stays
+  past the 70% gate** — nothing takes the stage from a clip that
+  still qualifies, so a second clip scrolling into view changes
+  nothing, and scrolling back up past a playing clip never ricochets
+  playback to the one above. The instant the incumbent falls below
+  the gate the stage re-evaluates — **mid-scroll, finger down, never
+  waiting for the scroll to settle** — and the topmost qualifying
+  clip takes it in the same moment: the seamless swap, the old clip
+  freezing on its frame per the cover ruling, the new one starting
+  milliseconds behind. When nothing qualifies, nothing plays until
+  something does. jakob's reason for rejecting the library-standard
+  settle-deferral (Toro and its descendants start playback only at
+  scroll idle): *"users are not used to even stop scrolling
+  anymore"* — Instagram hands the stage over without a lifted
+  finger, and so does CoGra. A hard fling needs no clause of its
+  own: incumbents succeed each other faster than playback can
+  start, so a clip that leaves before painting simply never leaves
+  its still face.
+- **The first frame is stored, not derived.** *"The coverless
+  clip's face is its first frame"* was already the rule; what made
+  it a 1–3s empty box in practice was that no still existed and
+  the face could only paint once video data arrived. Now the
+  authoring fact is literal: on the vertical path, where the cover
+  step is skipped, the device **silently extracts frame 1 and
+  uploads it as the clip's still** — the frame-picker's own
+  extraction machinery, run without the step. Reading surfaces are
+  always handed a stored still, coverless or not, and a loading
+  clip loads exactly as a loading picture does. This cannot
+  reintroduce the flash the no-cover ruling guards against: the
+  flash came from a chosen cover differing from frame 1, and a
+  frame-1 still *is* the frame playback starts on — the drawn
+  QuietNote's "it starts on its own first frame" becomes seamless
+  rather than approximate. When silent extraction fails, the post
+  ships without a still and *Cover · no frames came back*'s neutral
+  tile already says what stands there. No new boards; both rulings
+  land as contracts to the implementation session.
+
 ### The compose last-picture ruling — 2026-09-23
 
 The picture path's manager had no edge for removing the last
@@ -6098,9 +6147,13 @@ round.
 | [CoGra · Entry, money and maps](https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5) | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
 
 The fifth is the post-MVP tree's own —
-[CoGra · Post-MVP rounds](https://claude.ai/artifact/Fejcck8Jfu2wghbdmHHEkn),
+[CoGra · Post-MVP rounds](https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2),
 id `postmvp`, serving the Push notifications and Change histories pages
-and opening on the first, seeded exactly as the four are.
+and opening on the first. It lives in the successor canvas tooling
+(the Design Artifact type): the same seed manifests, published as the
+artifact's own board files rather than through the old seeded editor.
+Its predecessor artifact stands frozen with the pre-migration
+versions in its picker.
 
 A canvas title never carries `< > & "` or a backslash — the editor
 refuses them at seed time, which is why the titles say "and". The old
