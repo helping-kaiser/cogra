@@ -41,6 +41,12 @@ vi.mock("@/lib/ui2/media/strip-video", () => ({
   })),
 }));
 
+// The compression likewise, answering as a browser without WebCodecs does: the
+// picked bytes, unchanged. `compress-video.test.ts` covers its decisions.
+vi.mock("@/lib/ui2/media/compress-video", () => ({
+  compressVideo: vi.fn(async (blob: Blob) => ({ blob, path: "unsupported", tookMs: 0 })),
+}));
+
 const server = startMswServer();
 
 const uploadOk = (id = "m1") =>

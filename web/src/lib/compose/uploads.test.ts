@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ApolloClient } from "@apollo/client";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { CENTERED } from "@/lib/ui2/media/crop";
-import { PICTURE_MAX_BYTES } from "@/lib/ui2/media/caps";
+import { PICTURE_MAX_BYTES, POST_VIDEO_MAX_BYTES } from "@/lib/ui2/media/caps";
 import { createGuard, type AuthGuard } from "@/lib/session/guard";
 import { createTokenStore } from "@/lib/session/token-store";
 import type { Refresher } from "@/lib/session/refresher";
@@ -21,6 +21,16 @@ const STRIPPED = new Blob([new Uint8Array(new ArrayBuffer(12)) as BlobPart], {
 });
 const stripVideoMetadata = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/ui2/media/strip-video", () => ({ stripVideoMetadata }));
+
+// The compression is mocked for the same reason, and by default declines — the
+// picked bytes come back — which is what every browser without WebCodecs does.
+// Its own decisions are `compress-video.test.ts`'s subject; what matters here
+// is that its output, whatever it is, is what goes on to the strip.
+const compressVideo = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/ui2/media/compress-video", () => ({ compressVideo }));
+
+/** A post's video cap — the destination the upload path is told about. */
+const CAP = POST_VIDEO_MAX_BYTES;
 
 const asset: PickedAsset = {
   id: "a0",
@@ -92,6 +102,12 @@ afterEach(() => {
 beforeEach(() => {
   stripVideoMetadata.mockReset();
   stripVideoMetadata.mockResolvedValue({ blob: STRIPPED, tookMs: 12 });
+  compressVideo.mockReset();
+  compressVideo.mockImplementation(async (blob: Blob) => ({
+    blob,
+    path: "unsupported",
+    tookMs: 0,
+  }));
 });
 
 /** A canvas that encodes to fixed bytes, so the encode is not what is under test. */
@@ -352,7 +368,7 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, poster.step);
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, CAP);
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     expect(calls).toHaveLength(2);
@@ -371,7 +387,7 @@ describe("runVideoUpload", () => {
     const client = clientUnauthenticatedOnce("media-cover");
     const poster = steps();
 
-    await runVideoUpload(client, healing, clip, cover, steps().step, poster.step);
+    await runVideoUpload(client, healing, clip, cover, steps().step, poster.step, CAP);
 
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
@@ -387,7 +403,7 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, null, video.step, poster.step);
+    await runVideoUpload(client, guard, clip, null, video.step, poster.step, CAP);
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     // One call, not two: there is no cover leg to run.
@@ -422,7 +438,7 @@ describe("runVideoUpload", () => {
       },
     };
 
-    await runVideoUpload(client, priming, clip, null, steps().step, steps().step);
+    await runVideoUpload(client, priming, clip, null, steps().step, steps().step, CAP);
 
     expect(order).toEqual(["prime", "upload"]);
   });
@@ -431,7 +447,7 @@ describe("runVideoUpload", () => {
     encodable();
     const client = clientAnsweringInTurn("media-video");
 
-    await runVideoUpload(client, guard, clip, null, steps().step, steps().step);
+    await runVideoUpload(client, guard, clip, null, steps().step, steps().step, CAP);
 
     expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
     const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[0]![0].variables.input
@@ -443,7 +459,7 @@ describe("runVideoUpload", () => {
     encodable();
     const client = clientAnsweringInTurn("media-cover", "media-video");
 
-    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step);
+    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, CAP);
 
     expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
     const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[1]![0].variables.input
@@ -461,7 +477,7 @@ describe("runVideoUpload", () => {
     const client = clientAnsweringInTurn("media-cover", "media-video");
     const video = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, steps().step);
+    await runVideoUpload(client, guard, clip, cover, video.step, steps().step, CAP);
 
     // Falling back to the picked bytes would upload the file with its metadata
     // intact — the exact outcome the strip exists to prevent. And it is not
@@ -475,6 +491,37 @@ describe("runVideoUpload", () => {
     expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
   });
 
+  it("compresses first, for the destination's cap, and strips what the compression made", async () => {
+    encodable();
+    const encoded = new Blob([new Uint8Array(new ArrayBuffer(5)) as BlobPart], {
+      type: "video/mp4",
+    });
+    compressVideo.mockResolvedValueOnce({ blob: encoded, path: "encoded", tookMs: 900 });
+    const client = clientAnsweringInTurn("media-cover", "media-video");
+
+    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, CAP);
+
+    // Identity, not equality: two Blobs compare equal structurally, and what
+    // matters is WHICH bytes each step was handed.
+    expect(compressVideo).toHaveBeenCalledOnce();
+    expect(compressVideo.mock.calls[0]![0]).toBe(clip.file);
+    expect(compressVideo.mock.calls[0]![1]).toBe(CAP);
+    // The strip runs on the ENCODED bytes — the metadata promise holds on the
+    // compressed path exactly as on the plain one.
+    expect(stripVideoMetadata).toHaveBeenCalledOnce();
+    expect(stripVideoMetadata.mock.calls[0]![0]).toBe(encoded);
+  });
+
+  it("reports the compression as the same `encoding` stage, adding no state", async () => {
+    encodable();
+    const client = clientAnsweringInTurn("media-video");
+    const video = steps();
+
+    await runVideoUpload(client, guard, clip, null, video.step, steps().step, CAP);
+
+    expect(video.seen.map((s) => s.kind)).toEqual(["encoding", "uploading", "done"]);
+  });
+
   it("fails the video when the cover fails, because the video cannot exist without it", async () => {
     encodable();
     const client = clientAnswering({
@@ -486,7 +533,7 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, poster.step);
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, CAP);
 
     // The refusal on the cover, named as a cover rather than as a file…
     expect(poster.seen.at(-1)).toEqual({
@@ -511,7 +558,7 @@ describe("runVideoUpload", () => {
       }),
     );
     await expect(
-      runVideoUpload(clientAnswering({}), guard, clip, cover, () => {}, () => {}),
+      runVideoUpload(clientAnswering({}), guard, clip, cover, () => {}, () => {}, CAP),
     ).resolves.toBeUndefined();
   });
 });
