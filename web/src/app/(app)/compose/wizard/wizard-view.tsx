@@ -429,6 +429,7 @@ export function ComposeWizard({
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
         (upload) => dispatch({ type: "coverUpload", upload }),
         POST_SCALE.videoMaxBytes,
+        POST_SCALE.destination,
       );
       return;
     }

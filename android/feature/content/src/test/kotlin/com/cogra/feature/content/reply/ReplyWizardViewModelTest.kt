@@ -11,6 +11,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.UserError
 import com.cogra.domain.media.CropSpec
+import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
@@ -110,11 +111,16 @@ class ReplyWizardViewModelTest {
             return still
         }
 
+        /** The destination each clip named, in order. */
+        val destinations = mutableListOf<MediaDestination>()
+
         override suspend fun uploadVideo(
             video: ProcessedVideo,
+            destination: MediaDestination,
             onProgress: (UploadProgress) -> Unit,
         ): Outcome<MediaAssetView> {
             order += "clip"
+            destinations += destination
             onProgress(UploadProgress("session-1", sentParts = 1, partCount = 2))
             return clip
         }
@@ -388,6 +394,8 @@ class ReplyWizardViewModelTest {
 
         // No "still" in the order: the cover leg never ran.
         assertThat(media.order).containsExactly("clip")
+        // A comment's clip names a comment, whose cap the server holds it to.
+        assertThat(media.destinations).containsExactly(MediaDestination.COMMENT)
         assertThat(vm.state.value.coverMediaId).isNull()
         assertThat(vm.state.value.uploadsComplete).isTrue()
 

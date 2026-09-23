@@ -122,6 +122,14 @@ image = { version = "0.25", default-features = false, features = ["webp"] }
 # nothing more; the re-encode itself is ffmpeg, run as a process.
 mp4 = { version = "0.14" }
 
+# The H.264 sequence parameter set parser beside it. The SPS rides the
+# header `mp4` already reads (`avcC`), and its VUI is where a clip states
+# its bit depth, chroma format and transfer characteristics — which is how
+# an HDR (PQ or HLG) or 10-bit upload is told apart from the 8-bit SDR the
+# readers are served, without decoding a frame. A parser for H.264
+# bitstream syntax, "not a video decoder".
+h264-reader = { version = "0.9" }
+
 # The ingest worker's scratch space: ffmpeg reads and writes files, and a
 # `TempDir` removes them however the job ends. Already in the tree through
 # async-graphql's upload spooling.
