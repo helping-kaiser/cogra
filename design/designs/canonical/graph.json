@@ -1461,7 +1461,7 @@
 
     { "from": "ComposePicked", "via": 1, "kind": "advance", "label": "drag handles", "to": [{ "terminal": "self", "case": "drag to reorder — the first is the cover" }] },
     { "from": "ComposePicked", "via": 2, "kind": "advance", "label": "Describe", "to": [{ "board": "ComposeDescribe" }] },
-    { "from": "ComposePicked", "via": 3, "kind": "advance", "label": "remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }] },
+    { "from": "ComposePicked", "via": 3, "kind": "advance", "label": "remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }, { "board": "ComposePick", "case": "the last one leaves — the manager closes and the pick step comes back, tray empty, the way the video path's × gives the step back; the details stay staged in the draft" }] },
     { "from": "ComposePicked", "via": 4, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the pick or the details stage, wherever it opened" }] },
     { "from": "ComposePicked", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 

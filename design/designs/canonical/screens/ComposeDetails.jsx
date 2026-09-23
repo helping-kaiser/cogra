@@ -16,7 +16,12 @@
    beside it open theirs.
 
    THE BODY IS `_shared.jsx`'s `ComposeDetailsBody`, because the reference pair
-   sheet stands on this stage and draws it whole. */
+   sheet stands on this stage and draws it whole.
+
+   THIS STAGE NEVER STANDS ON AN EMPTY BODY (jakob's ruling, 2026-09-23).
+   Removing the last picture in the manager gives the pick step back — the
+   `ComposePicked` remove edge's last-one case — so no empty Details ever
+   reaches the seal. The stage's words stay staged in the draft. */
 export function Screen() {
   return <ComposeDetailsBody />;
 }
