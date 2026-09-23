@@ -53,6 +53,7 @@ const {
   SEVERED_LABEL,
   SR_ONLY,
   TabBar,
+  RedactedContent,
 } = components;
 
 function SettingsExcerpt({ children }) {
@@ -330,6 +331,113 @@ function ProfileVersionCard({ displayName, handle, avatarSrc, bio, website }) {
       <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p>
       <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{website}</span>
     </Card>
+  );
+}
+
+/* A REMOVED PROFILE VERSION — the post's tombstone at profile scale. The name,
+   the words, the face and the address were the version's payload, so all four
+   go and the mark stands in their place; what survives is what never rode a
+   version — the handle, the account's own — beside the reserved disc a kept
+   space wears (`MonogramAvatar`'s `redacted`). It is NOT the deleted-account
+   treatment: the account stands, and the chip saying `Deleted account` would be
+   a lie about it. */
+function ProfileVersionTombstone({ handle, note }) {
+  return (
+    <Card>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <MonogramAvatar name={handle} size="lg" redacted />
+        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>
+      </div>
+      <RedactedContent reason="author" note={note} />
+    </Card>
+  );
+}
+
+/* ── THE COMMENT'S AND THE PROFILE'S CHRONICLES ─────────────────────────────
+
+   Each drawn ONCE for both its readers, `PostChronicle`'s rule: the author's
+   register is the same list with the acts joined, never a second list, so the
+   reader's board and the author's can never disagree about which versions
+   exist. The acts are the post's, word for word — the removal of the whole
+   thing leading, `Remove this version` on every version that still has a
+   payload, `Already removed` in a tombstone's slot.
+
+   THE CONFIRM IS THE POST BOARD'S MASTER AT EACH SCALE. No comment or profile
+   confirm is drawn: a per-version removal opens `VersionRemoveConfirm`'s dialog,
+   and the lead's whole-thing removal opens the same anatomy — one think-twice
+   shape for one kind of decision, whatever is being removed. */
+const TOMBSTONE_NOTE = (date) => `A version stood here from ${date}. Its words and pictures were removed; the record of the change stays.`;
+
+function CommentVersion({ children }) {
+  return <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>{children}</ul>;
+}
+
+function CommentChronicle({ own = false }) {
+  const act = own ? <RemoveVersionAct /> : undefined;
+  return (
+    <HistoryColumn>
+      {own && <RegisterLead action="Remove the whole comment" note={REMOVE_ONE_LEAVES_THE_REST} />}
+      <VersionBlock label="Current version · signed 12 September" action={act}>
+        <CommentVersion>
+          <CommentCard
+            author={SOL}
+            showStance={false}
+            content="The third headland light is real — I have a print from 2019 that almost catches it. It is the bend that does it, not the light."
+          />
+        </CommentVersion>
+      </VersionBlock>
+      <VersionBlock label="Earlier version · signed 8 September" action={act}>
+        <CommentVersion>
+          <CommentCard author={SOL} showStance={false} content="The third headland light is real — I have a print from 2019 that almost catches it." />
+        </CommentVersion>
+      </VersionBlock>
+      <VersionBlock label="Earlier version · signed 5 September" action={own ? <AlreadyRemoved /> : undefined}>
+        <CommentVersion>
+          <CommentCard author={SOL} showStance={false} redacted={{ reason: "author", note: TOMBSTONE_NOTE("5 September") }} />
+        </CommentVersion>
+      </VersionBlock>
+      <ChronicleFootnote>{CHRONICLE_FOOTNOTE}</ChronicleFootnote>
+    </HistoryColumn>
+  );
+}
+
+/* THE PROFILE'S LEAD SAYS WHERE ITS EDGE IS (jakob's canvas review, 2026-09-23:
+   "removing the contents of your profile is not deleting your account — you need
+   to be able to do so"). A profile is the one kind whose removal a reader can
+   mistake for leaving, so the footnote names what stays: the account, the handle
+   and everything published under it. Account deletion is its own act, in
+   settings, with its own seven days. */
+const PROFILE_LEAD_NOTE =
+  "Removes the contents of every profile version at once. Your account, your handle and everything you published stay — this only empties the profile's history.";
+
+function ProfileChronicle({ own = false }) {
+  const act = own ? <RemoveVersionAct /> : undefined;
+  return (
+    <HistoryColumn>
+      {own && <RegisterLead action="Remove every version" note={PROFILE_LEAD_NOTE} />}
+      <VersionBlock label="Current version · signed 12 September" action={act}>
+        <ProfileVersionCard
+          displayName="Mira Voss"
+          handle="mira"
+          avatarSrc="inviter.jpg"
+          bio="Runs the stand by the sea wall — honey from the headland hives, and whatever the flats give up that morning."
+          website="tidemarket.example"
+        />
+      </VersionBlock>
+      <VersionBlock label="Earlier version · signed 8 September" action={act}>
+        <ProfileVersionCard displayName="Mira Voss" handle="mira" bio="Runs the stand by the sea wall — honey from the headland hives." website="tidemarket.example" />
+      </VersionBlock>
+      <VersionBlock label="Earlier version · signed 3 September" action={act}>
+        <ProfileVersionCard displayName="M. Voss" handle="mira" bio="Beekeeper. Market on Sundays." website="voss.example" />
+      </VersionBlock>
+      <VersionBlock label="Earlier version · signed 20 August" action={own ? <AlreadyRemoved /> : undefined}>
+        <ProfileVersionTombstone
+          handle="mira"
+          note="A version stood here from 20 August. Its name, words, picture and address were removed; the record of the change stays."
+        />
+      </VersionBlock>
+      <ChronicleFootnote>{CHRONICLE_FOOTNOTE}</ChronicleFootnote>
+    </HistoryColumn>
   );
 }
 

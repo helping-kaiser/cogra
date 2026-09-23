@@ -5978,6 +5978,17 @@ onto both. Backlog item 34.
   leaves the older versions standing and the post rendering removed. A
   tombstoned version's slot never goes empty: it carries the quiet word
   `Already removed`, `PickedSheet`'s "Described" idiom, not pressable.
+- **Comments and profiles get the same register (jakob, canvas review).**
+  "Removing the contents of your profile is not deleting your account —
+  you need to be able to do so." `CommentHistoryOwn` leads with `Remove
+  the whole comment`, `ProfileHistoryOwn` with `Remove every version`,
+  whose footnote draws the account's edge: the account, the handle and
+  everything published stay. Both carry `Remove this version` on every
+  version with a payload and `Already removed` in a tombstone's slot, and
+  both open `VersionRemoveConfirm` — the post board is the confirm's
+  master at every scale, and no comment or profile confirm is drawn. The
+  reader's chronicles gained the matching tombstone rows, which is why
+  `CommentCard` now takes `PostCard`'s optional `redacted` skeleton.
 - **Two doors, both appearing only once a second version exists
   (jakob).** An `Edit history` row in the ⋮ — beside `Edit`, because
   `History` is taken twice over (your own profile's ⋮, the wallet's

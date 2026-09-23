@@ -91,12 +91,30 @@
       "page": "histories"
     },
     {
-      "file": "ProfileHistory.dc.html",
-      "title": "A profile's edit history",
+      "file": "CommentHistoryOwn.dc.html",
+      "title": "A comment's edit history · the author's register",
       "x": 2400,
       "y": 0,
       "w": 390,
-      "h": 844,
+      "h": 860,
+      "page": "histories"
+    },
+    {
+      "file": "ProfileHistory.dc.html",
+      "title": "A profile's edit history",
+      "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 1116,
+      "page": "histories"
+    },
+    {
+      "file": "ProfileHistoryOwn.dc.html",
+      "title": "A profile's edit history · the author's register",
+      "x": 3360,
+      "y": 0,
+      "w": 390,
+      "h": 1264,
       "page": "histories"
     },
     {
@@ -173,9 +191,9 @@
     },
     {
       "file": "MapHistories.dc.html",
-      "x": -2160,
+      "x": -2740,
       "y": 0,
-      "w": 1740,
+      "w": 2320,
       "h": 1200,
       "page": "histories",
       "title": "Change histories · flow map"

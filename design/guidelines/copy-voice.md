@@ -1780,6 +1780,17 @@ that the feature does nothing.
   being a rare path. A tombstoned version's slot says `Already removed`
   instead, in `text-secondary` and not pressable: a finished act's word
   where the act would stand, the way the picked sheet says `Described`.
+- The comment's register leads with `Remove the whole comment` under the
+  post's own footnote. The profile's leads with `Remove every version`
+  under `Removes the contents of every profile version at once. Your
+  account, your handle and everything you published stay — this only
+  empties the profile's history.` — the one kind whose removal can be
+  mistaken for leaving, so the line names what it does not touch.
+- A removed profile version keeps the handle beside the reserved disc and
+  carries `A version stood here from 20 August. Its name, words, picture
+  and address were removed; the record of the change stays.` — the post's
+  tombstone line, naming the profile's own four fields. A removed comment
+  version carries the post's line unchanged.
 - The confirm is `RemoveConfirm` at version scale. Title `Remove this
   version?`; body `Its words and pictures leave every reader's view, and
   a mark stays in their place. The other versions keep standing. If this

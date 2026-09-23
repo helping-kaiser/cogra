@@ -2243,6 +2243,18 @@ Object.assign(FLOW_MARKERS, {
   ],
   CommentHistory: [{ n: 1, find: 'aria-label="Back to the comment"', tag: "a" }],
   ProfileHistory: [{ n: 1, find: 'aria-label="Back to the profile"', tag: "a" }],
+  // The registers' per-version act is marked on its FIRST row only — the
+  // repeated-element convention; one edge covers every version that carries it.
+  CommentHistoryOwn: [
+    { n: 1, find: 'aria-label="Back to the comment"', tag: "a" },
+    { n: 2, find: ">Remove the whole comment</button>", tag: "button" },
+    { n: 3, find: ">Remove this version</button>", tag: "button" },
+  ],
+  ProfileHistoryOwn: [
+    { n: 1, find: 'aria-label="Back to the profile"', tag: "a" },
+    { n: 2, find: ">Remove every version</button>", tag: "button" },
+    { n: 3, find: ">Remove this version</button>", tag: "button" },
+  ],
   HistoryMenu: [{ n: 1, find: ">Edit history</button>", tag: "button" }],
   EditedMarkerDoor: [{ n: 1, find: ">Edited</button>", tag: "button" }],
   // The split row: the two halves are marked on the FIRST row only, the

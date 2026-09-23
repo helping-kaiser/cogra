@@ -23,6 +23,8 @@
     "EditedMarkerDoor": "the post's detail surface, reached the ordinary way — this round's excerpt of it, drawn for the one marker the round makes tappable",
     "CommentHistory": "the comment's ⋮ in the thread, whose roster gains the same row the post's does — a menu this graph cannot name, because it lives in canonical",
     "ProfileHistory": "the profile's ⋮, whose roster gains the same row — likewise a canonical menu",
+    "CommentHistoryOwn": "your own comment's ⋮ in the thread, whose roster gains the same Edit history row — a canonical menu, so its author lands on the register",
+    "ProfileHistoryOwn": "your own profile's ⋮, whose roster gains the row — a canonical menu, so its owner lands on the register",
     "OpinionsRowDoors": "the opinions count on a post's detail, which opens this sheet — this round's excerpt of canonical's `PostOpinions`, drawn for the split its rows gain",
     "ProfileStancesDoors": "a profile's figures row, which opens the opinions page — this round's excerpt of canonical's `ProfileStances`, drawn for the same split",
     "PadHistoryDoor": "a stance face, tapped anywhere a stance face is drawn — the pad is a cross-cutting overlay, and the shell beneath it is the everyday one rather than the state's own"
@@ -229,7 +231,11 @@
       "via": 1,
       "kind": "advance",
       "label": "Remove version",
-      "to": [{ "board": "PostHistoryOwn", "case": "the list stands and the version becomes a mark in its own row; had it been the current version, the post would go on showing it removed — no earlier version takes its place" }]
+      "to": [
+        { "board": "PostHistoryOwn", "case": "the list stands and the version becomes a mark in its own row; had it been the current version, the post would go on showing it removed — no earlier version takes its place" },
+        { "board": "CommentHistoryOwn", "case": "reached at comment scale — the same outcome on the comment's register; a whole-comment removal marks every row at once" },
+        { "board": "ProfileHistoryOwn", "case": "reached at profile scale — the same outcome on the profile's register; an every-version removal marks every row at once, and the account, the handle and everything published stay" }
+      ]
     },
     {
       "from": "VersionRemoveConfirm",
@@ -274,11 +280,53 @@
       "to": [{ "terminal": "back", "case": "back to the thread the comment is read in" }]
     },
     {
+      "from": "CommentHistoryOwn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the thread the comment is read in" }]
+    },
+    {
+      "from": "CommentHistoryOwn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove the whole comment",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at whole-comment scale (master — the post boards' dialog; no comment confirm is drawn) — every version goes at once and the comment keeps its place in the thread, wearing the mark" }]
+    },
+    {
+      "from": "CommentHistoryOwn",
+      "via": 3,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at comment-version scale (master) — on any version with a payload, the current one included; a tombstone's slot says Already removed and is not pressable" }]
+    },
+    {
       "from": "ProfileHistory",
       "via": 1,
       "kind": "back",
       "label": "back arrow",
       "to": [{ "terminal": "back", "case": "back to the profile" }]
+    },
+    {
+      "from": "ProfileHistoryOwn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to your profile" }]
+    },
+    {
+      "from": "ProfileHistoryOwn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove every version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at whole-profile scale (master — the post boards' dialog; no profile confirm is drawn) — every version's contents at once, while the account, the handle and everything published stay; account deletion is a different act, in settings" }]
+    },
+    {
+      "from": "ProfileHistoryOwn",
+      "via": 3,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at profile-version scale (master) — on any version with a payload, the current one included; a tombstone's slot says Already removed and is not pressable" }]
     },
 
     {

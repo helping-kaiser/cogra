@@ -15,7 +15,13 @@
    post goes on showing it, removed: the head never falls through (erasure.md
    §1), so no earlier version is republished by an act of removal. That last
    sentence is the one a reader cannot guess, and it is why it is spelled out
-   before the act rather than explained after it. */
+   before the act rather than explained after it.
+
+   IT IS THE MASTER AT EVERY SCALE (jakob's canvas review, 2026-09-23). The
+   comment's and the profile's registers (`CommentHistoryOwn`,
+   `ProfileHistoryOwn`) draw no confirm of their own: their per-version acts and
+   their whole-thing leads all open this dialog's anatomy, the kind's noun in
+   place of "post". One think-twice shape for one kind of decision. */
 export function Screen() {
   return (
     <>
