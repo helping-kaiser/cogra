@@ -368,13 +368,16 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, CAP);
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, CAP, "POST");
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     expect(calls).toHaveLength(2);
-    // Both go up as bytes alone: neither upload names the other.
+    // Both go up as bytes alone: neither upload names the other. The clip
+    // names the parent it is headed for, whose cap the server sizes it to; the
+    // cover is a still, whose cap is the same at either, and names none.
     expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
-    expect(calls[1]![0].variables.input).toEqual({ file: expect.any(File) });
+    expect(calls[0]![0].variables.input.scale).toBeUndefined();
+    expect(calls[1]![0].variables.input).toEqual({ file: expect.any(File), scale: "POST" });
     expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
   });
@@ -387,7 +390,7 @@ describe("runVideoUpload", () => {
     const client = clientUnauthenticatedOnce("media-cover");
     const poster = steps();
 
-    await runVideoUpload(client, healing, clip, cover, steps().step, poster.step, CAP);
+    await runVideoUpload(client, healing, clip, cover, steps().step, poster.step, CAP, "POST");
 
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
@@ -403,14 +406,15 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, null, video.step, poster.step, CAP);
+    await runVideoUpload(client, guard, clip, null, video.step, poster.step, CAP, "COMMENT");
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     // One call, not two: there is no cover leg to run.
     expect(calls).toHaveLength(1);
-    // The clip goes up as bytes alone, exactly as a covered one does; what
-    // faceless means is that the placement names no poster at prepare.
-    expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
+    // The clip goes up as bytes and its destination, exactly as a covered one
+    // does; what faceless means is that the placement names no poster at
+    // prepare.
+    expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File), scale: "COMMENT" });
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
     // The cover reports nothing at all: there was no cover to report on.
     expect(poster.seen).toEqual([]);
@@ -438,7 +442,7 @@ describe("runVideoUpload", () => {
       },
     };
 
-    await runVideoUpload(client, priming, clip, null, steps().step, steps().step, CAP);
+    await runVideoUpload(client, priming, clip, null, steps().step, steps().step, CAP, "POST");
 
     expect(order).toEqual(["prime", "upload"]);
   });
@@ -447,7 +451,7 @@ describe("runVideoUpload", () => {
     encodable();
     const client = clientAnsweringInTurn("media-video");
 
-    await runVideoUpload(client, guard, clip, null, steps().step, steps().step, CAP);
+    await runVideoUpload(client, guard, clip, null, steps().step, steps().step, CAP, "POST");
 
     expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
     const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[0]![0].variables.input
@@ -459,7 +463,7 @@ describe("runVideoUpload", () => {
     encodable();
     const client = clientAnsweringInTurn("media-cover", "media-video");
 
-    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, CAP);
+    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, CAP, "POST");
 
     expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
     const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[1]![0].variables.input
@@ -477,7 +481,7 @@ describe("runVideoUpload", () => {
     const client = clientAnsweringInTurn("media-cover", "media-video");
     const video = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, steps().step, CAP);
+    await runVideoUpload(client, guard, clip, cover, video.step, steps().step, CAP, "POST");
 
     // Falling back to the picked bytes would upload the file with its metadata
     // intact — the exact outcome the strip exists to prevent. And it is not
@@ -499,7 +503,7 @@ describe("runVideoUpload", () => {
     compressVideo.mockResolvedValueOnce({ blob: encoded, path: "encoded", tookMs: 900 });
     const client = clientAnsweringInTurn("media-cover", "media-video");
 
-    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, CAP);
+    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, CAP, "POST");
 
     // Identity, not equality: two Blobs compare equal structurally, and what
     // matters is WHICH bytes each step was handed.
@@ -517,7 +521,7 @@ describe("runVideoUpload", () => {
     const client = clientAnsweringInTurn("media-video");
     const video = steps();
 
-    await runVideoUpload(client, guard, clip, null, video.step, steps().step, CAP);
+    await runVideoUpload(client, guard, clip, null, video.step, steps().step, CAP, "POST");
 
     expect(video.seen.map((s) => s.kind)).toEqual(["encoding", "uploading", "done"]);
   });
@@ -533,7 +537,7 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, CAP);
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, CAP, "POST");
 
     // The refusal on the cover, named as a cover rather than as a file…
     expect(poster.seen.at(-1)).toEqual({
@@ -558,7 +562,7 @@ describe("runVideoUpload", () => {
       }),
     );
     await expect(
-      runVideoUpload(clientAnswering({}), guard, clip, cover, () => {}, () => {}, CAP),
+      runVideoUpload(clientAnswering({}), guard, clip, cover, () => {}, () => {}, CAP, "POST"),
     ).resolves.toBeUndefined();
   });
 });

@@ -8,6 +8,7 @@
 
 import type { ApolloClient } from "@apollo/client";
 
+import type { MediaScale } from "@/__generated__/graphql";
 import { uploadMedia, uploadVideo, UploadPartsError } from "@/lib/api/media-api";
 import type { Outcome, UserError } from "@/lib/api/outcome";
 import type { AuthGuard } from "@/lib/session/guard";
@@ -168,9 +169,14 @@ export async function runVideoUpload(
    * encoded at the rate that fits it, exactly as Android plans one.
    */
   videoMaxBytes: number,
+  /**
+   * The same destination, named to the server, which sizes, re-encodes and
+   * validates the clip for that parent's cap.
+   */
+  destination: MediaScale,
 ): Promise<void> {
   if (cover === null) {
-    await sendVideo(client, guard, video, onVideo, videoMaxBytes);
+    await sendVideo(client, guard, video, onVideo, videoMaxBytes, destination);
     return;
   }
   let encoded;
@@ -206,7 +212,7 @@ export async function runVideoUpload(
   }
   onCover({ kind: "done", mediaId: poster.value.id });
 
-  await sendVideo(client, guard, video, onVideo, videoMaxBytes);
+  await sendVideo(client, guard, video, onVideo, videoMaxBytes, destination);
 }
 
 /**
@@ -222,6 +228,7 @@ async function sendVideo(
   video: PickedAsset,
   onVideo: UploadStep,
   videoMaxBytes: number,
+  destination: MediaScale,
 ): Promise<void> {
   // The compression and the strip are both reported as `encoding`: they are
   // the same stage in the same story — bytes being made ready — and inventing
@@ -247,7 +254,10 @@ async function sendVideo(
   // THE CLIP IS THE BODY WORTH PROTECTING. A picture sent twice costs a
   // moment; a video sent twice is the whole wait, twice.
   await guard.prime();
-  const uploaded = await uploadVideo(client, guard, { blob: stripped.blob });
+  const uploaded = await uploadVideo(client, guard, {
+    blob: stripped.blob,
+    scale: destination,
+  });
 
   if (uploaded.kind === "success") {
     onVideo({ kind: "done", mediaId: uploaded.value.id });

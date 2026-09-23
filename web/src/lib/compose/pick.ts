@@ -18,6 +18,7 @@
 // the product's format rules, and every one of them is a rule a test should be
 // able to state directly.
 
+import type { MediaScale } from "@/__generated__/graphql";
 import { isAnimatedGif } from "@/lib/ui2/media/gif";
 import {
   COMMENT_VIDEO_MAX_BYTES,
@@ -81,25 +82,30 @@ export const MIXED_BODY_COMMENT = "A comment carries pictures or one video, not 
  * What a surface's video costs and what it says when a file exceeds it.
  *
  * A comment is the post's grammar at half the byte budget, so the two differ in
- * exactly these two values and nothing else — which is why they are a parameter
- * rather than a second copy of the screening.
+ * exactly these values and nothing else — which is why they are a parameter
+ * rather than a second copy of the screening. `destination` is the same fact
+ * said to the server: the upload names it, and the server sizes the clip for
+ * that parent's cap.
  */
 export type PickScale = {
   readonly videoMaxBytes: number;
   readonly tooBigVideo: string;
   readonly mixedBody: string;
+  readonly destination: MediaScale;
 };
 
 export const POST_SCALE: PickScale = {
   videoMaxBytes: POST_VIDEO_MAX_BYTES,
   tooBigVideo: TOO_BIG_VIDEO_POST,
   mixedBody: MIXED_BODY,
+  destination: "POST",
 };
 
 export const COMMENT_SCALE: PickScale = {
   videoMaxBytes: COMMENT_VIDEO_MAX_BYTES,
   tooBigVideo: TOO_BIG_VIDEO_COMMENT,
   mixedBody: MIXED_BODY_COMMENT,
+  destination: "COMMENT",
 };
 
 function isVideoType(file: File): boolean {

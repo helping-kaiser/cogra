@@ -18,6 +18,7 @@ import {
   BeginMediaUploadDocument,
   CompleteMediaUploadDocument,
   UploadMediaDocument,
+  type MediaScale,
   type MediaUploadKind,
   type UploadMediaMutation,
 } from "@/__generated__/graphql";
@@ -54,10 +55,14 @@ export function uploadFilename(type: string = OUTPUT_TYPE): string {
  * A cover is a fact about where the clip sits rather than about its bytes, so
  * the poster and the video are two ordinary uploads and the placement is what
  * ties them together.
+ *
+ * `scale` names the parent a clip is headed for, whose cap the server sizes it
+ * against — a comment's video cap is half a post's. A picture's cap is the
+ * same at either, so a still leaves it out and the server reads POST.
  */
 export async function uploadMedia(
   client: ApolloClient,
-  asset: { blob: Blob },
+  asset: { blob: Blob; scale?: MediaScale },
 ): Promise<Outcome<MediaAsset>> {
   const file = new File([asset.blob], uploadFilename(asset.blob.type), {
     type: asset.blob.type,
@@ -66,7 +71,7 @@ export async function uploadMedia(
     () =>
       client.mutate({
         mutation: UploadMediaDocument,
-        variables: { input: { file } },
+        variables: { input: { file, scale: asset.scale } },
       }),
     (data) => data.uploadMedia.userErrors,
     (data) => data.uploadMedia.media,
@@ -126,12 +131,13 @@ function defaultUploader(): PartUploader {
 export async function uploadVideo(
   client: ApolloClient,
   guard: AuthGuard,
-  asset: { blob: Blob },
+  asset: { blob: Blob; scale: MediaScale },
   deps: ResumableDeps = {},
 ): Promise<Outcome<MediaAsset>> {
+  const { scale } = asset;
   const threshold = deps.thresholdBytes ?? RESUMABLE_THRESHOLD_BYTES;
   if (asset.blob.size < threshold) {
-    return guard.run(() => uploadMedia(client, { blob: asset.blob }));
+    return guard.run(() => uploadMedia(client, { blob: asset.blob, scale }));
   }
 
   // `kind` is VIDEO at every call site: `MediaUploadKind.STILL` is reserved
@@ -142,7 +148,7 @@ export async function uploadVideo(
       () =>
         client.mutate({
           mutation: BeginMediaUploadDocument,
-          variables: { declaredBytes: asset.blob.size, kind },
+          variables: { declaredBytes: asset.blob.size, kind, scale },
         }),
       (data) => data.beginMediaUpload.userErrors,
       (data) => data.beginMediaUpload.upload,
