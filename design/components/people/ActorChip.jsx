@@ -103,8 +103,18 @@ export function MonogramAvatar({ name, size = "sm", src, redacted = false }) {
   );
 }
 
+/* THE ROW NEVER WRAPS AND NEVER CROWDS (jakob's ruling, 2026-09-23). A name
+   too long for the room ELLIPSIZES; the handle is the identity and stays
+   whole until it alone cannot fit, and only then ellipsizes too. The chip
+   yields (`minWidth: 0`) and whatever stands beside it — timestamp, ⋮ —
+   keeps its full width and the row's gap as the hard floor. The two-stage
+   yield is flexbox's own arithmetic: the name's `flexShrink: 999` absorbs
+   the squeeze ahead of the handle's 1, so the handle gives way only after
+   the name is spent. Every list row and card reads this one law from here —
+   no board and no client re-decides it. */
 export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redacted = false }) {
   const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
+  const clip = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 };
   return (
     <a
       href={href ?? `/u/${handle}`}
@@ -113,6 +123,7 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
       style={{
         display: "inline-flex",
         minHeight: "24px",
+        minWidth: 0,
         alignItems: "center",
         gap: "var(--space-2)",
         color: "var(--on-surface)",
@@ -123,6 +134,8 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
       <MonogramAvatar name={name} src={avatarSrc} redacted={redacted} />
       <span
         style={{
+          ...clip,
+          flexShrink: 999,
           fontSize: "var(--text-label-large)",
           fontWeight: "var(--text-label-large--font-weight)",
           color: redacted ? "var(--text-secondary)" : undefined,
@@ -130,7 +143,7 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
       >
         {name}
       </span>
-      {!redacted && <span style={{ fontSize: "var(--text-label-medium)", color: "var(--text-secondary)" }}>@{handle}</span>}
+      {!redacted && <span style={{ ...clip, flexShrink: 1, fontSize: "var(--text-label-medium)", color: "var(--text-secondary)" }}>@{handle}</span>}
     </a>
   );
 }
