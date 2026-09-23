@@ -102,7 +102,7 @@ internal class WizardUploader(
                 onUploadSessionStarted(progress.uploadId)
                 state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
             }
-            when (val outcome = media.uploadVideo(processed, sending)) {
+            when (val outcome = media.uploadVideo(processed, scale.destination, sending)) {
                 is Outcome.Success -> state.update {
                     it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id))
                 }

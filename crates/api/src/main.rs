@@ -159,9 +159,16 @@ async fn main() -> anyhow::Result<()> {
         Ok(ffmpeg) => {
             tracing::info!(
                 encoder = ffmpeg.h264_encoder(),
+                tone_map = ffmpeg.tone_maps(),
                 workers = media.ingest_workers,
                 "media ingest re-encodes through ffmpeg"
             );
+            if !ffmpeg.tone_maps() {
+                tracing::error!(
+                    "ffmpeg lacks zscale, tonemap or h264_metadata (a build without zimg?): \
+                     HDR videos will fail processing until it has them"
+                );
+            }
             Some(Arc::new(ffmpeg))
         }
         Err(e) => {

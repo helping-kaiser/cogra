@@ -205,7 +205,7 @@ export function ReplyWizard({
         cover,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
         (upload) => dispatch({ type: "coverUpload", upload }),
-        COMMENT_SCALE.videoMaxBytes,
+        COMMENT_SCALE,
       );
       return;
     }

@@ -18,6 +18,7 @@ import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.DeviceMediaSource
+import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
@@ -123,11 +124,16 @@ class ComposeWizardViewModelTest {
 
         var videoRefused = false
 
+        /** The destination each clip named, in order. */
+        val destinations = mutableListOf<MediaDestination>()
+
         override suspend fun uploadVideo(
             video: ProcessedVideo,
+            destination: MediaDestination,
             onProgress: (UploadProgress) -> Unit,
         ): Outcome<MediaAssetView> {
             order += "video"
+            destinations += destination
             // One tick, so the composer learns the session it would
             // have to abort if the author walked away.
             onProgress(UploadProgress(uploadId = "session-1", sentParts = 1, partCount = 2))
@@ -1057,6 +1063,8 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
         assertThat(vm.state.value.coverMediaId).isNull()
         assertThat(media.order).containsExactly("video")
+        // A post's clip is sized for a post's cap on the server too.
+        assertThat(media.destinations).containsExactly(MediaDestination.POST)
 
         vm.onNext() // details -> seal
         dispatcher.scheduler.advanceUntilIdle()

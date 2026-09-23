@@ -9,6 +9,7 @@ import com.apollographql.apollo.api.DefaultUpload
 import com.apollographql.apollo.api.Optional
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
+import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.PartFailure
 import com.cogra.domain.media.ProcessedPicture
@@ -20,6 +21,7 @@ import com.cogra.network.graphql.AbortMediaUploadMutation
 import com.cogra.network.graphql.BeginMediaUploadMutation
 import com.cogra.network.graphql.CompleteMediaUploadMutation
 import com.cogra.network.graphql.UploadMediaMutation
+import com.cogra.network.graphql.type.MediaScale
 import com.cogra.network.graphql.type.MediaUploadKind
 import com.cogra.network.graphql.type.UploadMediaInput
 import com.cogra.network.payloadOutcome
@@ -101,13 +103,15 @@ class MediaRepositoryImpl @Inject constructor(
      */
     override suspend fun uploadVideo(
         video: ProcessedVideo,
+        destination: MediaDestination,
         onProgress: (UploadProgress) -> Unit,
     ): Outcome<MediaAssetView> {
         val file = File(video.path)
+        val scale = destination.toScale()
         if (video.byteCount < resumableThresholdBytes) {
-            return sendWhole(file, video.byteCount)
+            return sendWhole(file, video.byteCount, scale)
         }
-        return sendInParts(file, video.byteCount, onProgress)
+        return sendInParts(file, video.byteCount, scale, onProgress)
     }
 
     /**
@@ -121,6 +125,7 @@ class MediaRepositoryImpl @Inject constructor(
     private suspend fun sendWhole(
         file: File,
         byteCount: Long,
+        scale: MediaScale,
     ): Outcome<MediaAssetView> = guard.run {
         val upload = DefaultUpload.Builder()
             .fileName(VIDEO_FILENAME)
@@ -130,7 +135,7 @@ class MediaRepositoryImpl @Inject constructor(
             .build()
 
         client.mutation(
-            UploadMediaMutation(UploadMediaInput(file = upload)),
+            UploadMediaMutation(UploadMediaInput(file = upload, scale = Optional.present(scale))),
         ).payloadOutcome({ it.uploadMedia.userErrors.map { e -> e.userErrorFields } }) { data ->
             data.uploadMedia.media?.mediaFields?.toDomain()
         }
@@ -146,6 +151,7 @@ class MediaRepositoryImpl @Inject constructor(
     private suspend fun sendInParts(
         file: File,
         byteCount: Long,
+        scale: MediaScale,
         onProgress: (UploadProgress) -> Unit,
     ): Outcome<MediaAssetView> {
         val session = guard.run {
@@ -153,6 +159,7 @@ class MediaRepositoryImpl @Inject constructor(
                 BeginMediaUploadMutation(
                     declaredBytes = byteCount.toInt(),
                     kind = MediaUploadKind.VIDEO,
+                    scale = scale,
                 ),
             ).payloadOutcome({ it.beginMediaUpload.userErrors.map { e -> e.userErrorFields } }) { data ->
                 data.beginMediaUpload.upload
@@ -202,6 +209,12 @@ class MediaRepositoryImpl @Inject constructor(
             client.mutation(AbortMediaUploadMutation(uploadId = uploadId)).execute()
         }
     }
+}
+
+/** The destination as the contract names it. */
+private fun MediaDestination.toScale(): MediaScale = when (this) {
+    MediaDestination.POST -> MediaScale.POST
+    MediaDestination.COMMENT -> MediaScale.COMMENT
 }
 
 /** Carries a non-success across a change of value type. */

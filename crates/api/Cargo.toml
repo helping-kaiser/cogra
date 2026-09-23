@@ -66,6 +66,7 @@ sha1               = { workspace = true }
 object_store       = { workspace = true }
 image              = { workspace = true }
 mp4                = { workspace = true }
+h264-reader        = { workspace = true }
 tempfile           = { workspace = true }
 
 [dev-dependencies]
