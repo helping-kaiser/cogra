@@ -151,4 +151,71 @@ describe("MediaThumb", () => {
       expect(screen.getByTestId("thumb").querySelector("svg")).not.toBeNull();
     });
   });
+
+  // The disc's own math (design/components/compose/MediaThumb.jsx:86,151):
+  // 26% of the tile's short edge, clamped to [20, 56]px, with a 57%-of-disc
+  // glyph. Unlike the duration pill, the disc has no floor of its own — the
+  // clamp IS the floor, so it draws at every size.
+  describe("the composer's play disc", () => {
+    it("floors to 20px below the clamp's low end", () => {
+      // min(50, 50) * 0.26 = 13, under the 20px floor.
+      render(<MediaThumb src="blob:one" durationMs={42_000} size={50} testId="thumb" />);
+      const disc = screen.getByTestId("thumb-play");
+      expect(disc.style.width).toBe("20px");
+      expect(disc.style.height).toBe("20px");
+      const glyph = disc.querySelector("svg");
+      expect(glyph).toHaveAttribute("width", "11");
+      expect(glyph).toHaveAttribute("height", "11");
+    });
+
+    it("computes the plain 26%/57% math on a mid-size tile", () => {
+      // min(150, 150) * 0.26 = 39, inside the clamp.
+      render(<MediaThumb src="blob:one" durationMs={42_000} size={150} testId="thumb" />);
+      const disc = screen.getByTestId("thumb-play");
+      expect(disc.style.width).toBe("39px");
+      expect(disc.style.height).toBe("39px");
+      const glyph = disc.querySelector("svg");
+      expect(glyph).toHaveAttribute("width", "22");
+      expect(glyph).toHaveAttribute("height", "22");
+    });
+
+    it("ceilings to 56px above the clamp's high end", () => {
+      // min(300, 300) * 0.26 = 78, over the 56px ceiling.
+      render(<MediaThumb src="blob:one" durationMs={42_000} size={300} testId="thumb" />);
+      const disc = screen.getByTestId("thumb-play");
+      expect(disc.style.width).toBe("56px");
+      expect(disc.style.height).toBe("56px");
+      const glyph = disc.querySelector("svg");
+      expect(glyph).toHaveAttribute("width", "32");
+      expect(glyph).toHaveAttribute("height", "32");
+    });
+
+    it("never draws on the sourceless neutral tile, even for a known-length clip", () => {
+      // No frame yet (extraction hasn't produced one) — a control drawn on
+      // nothing would read as chrome (MediaThumb.jsx:87-90).
+      render(<MediaThumb src={null} durationMs={42_000} testId="thumb" />);
+      expect(screen.queryByTestId("thumb-play")).toBeNull();
+    });
+
+    it("never rides over the upload ring", () => {
+      render(<MediaThumb src="blob:one" durationMs={42_000} progress={0.3} testId="thumb" />);
+      expect(screen.queryByTestId("thumb-play")).toBeNull();
+      expect(screen.getByTestId("thumb-progress")).toBeInTheDocument();
+    });
+
+    it("never rides over an indeterminate upload ring either", () => {
+      render(<MediaThumb src="blob:one" durationMs={42_000} progress="indeterminate" testId="thumb" />);
+      expect(screen.queryByTestId("thumb-play")).toBeNull();
+    });
+
+    it("never draws once the upload has failed", () => {
+      render(<MediaThumb src="blob:one" durationMs={42_000} failed testId="thumb" />);
+      expect(screen.queryByTestId("thumb-play")).toBeNull();
+    });
+
+    it("never draws on a plain picture with no known duration", () => {
+      render(<MediaThumb src="blob:one" testId="thumb" />);
+      expect(screen.queryByTestId("thumb-play")).toBeNull();
+    });
+  });
 });

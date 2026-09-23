@@ -401,8 +401,29 @@ export function VideoPlayer({
           // `text-*` Tailwind classes built from them compile to nothing:
           // read as `var()` here instead, matching the master
           // (`design/components/media/MediaAttachment.jsx:127-128`).
-          className="cg-state cg-focus absolute bottom-2 right-2 grid size-9 cursor-pointer place-items-center rounded-full border-0 p-0"
-          style={{ background: "var(--surface-snackbar)", color: "var(--on-surface-snackbar)" }}
+          // WHY THE CORNER IS A STYLE AND NOT `absolute bottom-2 right-2`
+          // (jakob's round-three hand test, 2026-09-22): tokens-2.css is
+          // `@import`ed AFTER `tailwindcss` and its rules are therefore
+          // UNLAYERED, while every Tailwind utility lives in
+          // `@layer utilities` — and an unlayered declaration beats a layered
+          // one whatever the source order. So `.cg-state`'s `position:
+          // relative` (tokens-2.css:207) silently outranked the `absolute`
+          // utility, the disc dropped out of the corner into normal flow at
+          // the frame's left edge, and the card's section below clipped it.
+          // The master positions this control with an inline style for its
+          // own reasons (`MediaAttachment.jsx:117-131`) and an inline style
+          // is the one thing an unlayered rule cannot outrank, so the two
+          // answers are the same answer. Same file, same mechanism, same
+          // shape as the snackbar colours below.
+          className="cg-state cg-focus grid size-9 cursor-pointer place-items-center rounded-full border-0 p-0"
+          style={{
+            position: "absolute",
+            bottom: "8px",
+            right: "8px",
+            zIndex: 2,
+            background: "var(--surface-snackbar)",
+            color: "var(--on-surface-snackbar)",
+          }}
         >
           <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
             {muted ? (

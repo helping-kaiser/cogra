@@ -428,8 +428,12 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_cover_change").assertDoesNotExist()
     }
 
+    // Finding 6, jakob's ruling 2026-09-22 (design/readme.md §13 "The
+    // cover's tile"): ONE ATTACHMENT IS ONE TILE. A clip that walked the
+    // cover step draws no separate Cover section at all — the chosen
+    // frame rides the picked row's own tile as its inset corner mark.
     @Test
-    fun theDetailsStepShowsTheChosenCoverFaceAndChangeAction() {
+    fun theDetailsStepMergesTheChosenCoverIntoTheVideoTilesOwnMark() {
         val withVideoCover = ComposeWizardState(
             step = WizardStep.Details,
             picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
@@ -438,10 +442,11 @@ class ComposeWizardScreenTest {
         )
         compose.setContent { Wizard(withVideoCover) }
 
-        compose.onNodeWithTag("wizard_cover_face", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("wizard_picked_row").assertIsDisplayed()
+        compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("wizard_cover_door").assertDoesNotExist()
-        compose.onNodeWithTag("wizard_cover_change").assertIsDisplayed().performClick()
-        assertThat(backs).isEqualTo(1)
+        compose.onNodeWithTag("wizard_cover_face", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("wizard_cover_change").assertDoesNotExist()
     }
 
     @Test

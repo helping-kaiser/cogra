@@ -1,6 +1,16 @@
 /* Show all over the pick step (media slice): the per-picture manager —
    reorder (first = cover), remove, describe. The tray behind is `PickTray`,
-   the sheet over it `PickedSheet`. */
+   the sheet over it `PickedSheet`.
+
+   THE LAST × GIVES THE PICK STEP BACK (jakob's ruling, 2026-09-23). A wizard
+   stage never stands on a body that is gone: removing the last picture closes
+   the manager and returns the pick step, tray empty — the video path's rule
+   ("taking it away gives back the step that takes picks"), applied to the
+   picture it always shared a tray with. The stage does NOT become the words
+   path (that fork was the author's explicit early choice, and edit's
+   body-becomes-words rule exists only because edit has no pick step to give
+   back), and the removal is never refused. Title, description, tags and
+   references stay staged in the draft, waiting for the body to return. */
 const PICKED = [
   { src: "post-photo.jpg", alt: "The coast road", described: true },
   { src: "gallery-market.jpg", alt: "", onDescribe: () => {}, onRemove: () => {} },
