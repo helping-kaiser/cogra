@@ -80,13 +80,13 @@ pub use blob::{BlobError, BlobStore, ObjectBlobStore, S3Config};
 /// carries — and it clears DCI 4K (4096 × 2160).
 pub const MAX_PIXEL_DIMENSION: u32 = 4096;
 
-/// What a probe learned about the stored bytes: the canvas, and the
-/// playing time where the format states one.
+/// What a probe learned about the stored bytes: the canvas, the playing
+/// time where the format states one, and a video's signal.
 ///
-/// One type for both formats. They differ only in whether a duration is
-/// always present, which is what the `Option` says — two structurally
-/// identical types differing in that one field is a distinction the
-/// caller has to re-unify anyway.
+/// One type for both formats. They differ only in which facts are always
+/// present, which is what the `Option`s say — two nearly identical types
+/// differing in those fields is a distinction the caller has to re-unify
+/// anyway.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Probe {
     pub width: u32,
@@ -95,6 +95,10 @@ pub struct Probe {
     /// the asset, never a limit on it: there is deliberately no duration
     /// cap. A still states one only when it is animated.
     pub duration_ms: Option<u64>,
+    /// What a video's own bitstream says about its samples — bit depth,
+    /// chroma format, transfer. Absent on a still, and on a clip whose
+    /// sequence parameter set does not parse.
+    pub signal: Option<video::Signal>,
 }
 
 /// What the byte pipeline can refuse, and why. Every variant is a
@@ -423,8 +427,10 @@ fn gcd(a: u32, b: u32) -> u32 {
 /// that will not play.
 ///
 /// The probe's answer also decides whether a video needs re-encoding —
-/// canvas, duration and byte count are all it takes — so a clip already
-/// within target costs nothing beyond this call.
+/// canvas, duration, byte count, and the signal its sequence parameter set
+/// states are all it takes — so a clip already within target costs nothing
+/// beyond this call. A clip that is HDR, deeper than 8 bits, or not 4:2:0
+/// is outside the target whatever its rate: readers are served 8-bit SDR.
 pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaError> {
     let format = Format::of(bytes).ok_or(MediaError::Unsupported)?;
     let limit = format.cap(caps);
@@ -434,13 +440,13 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
     let stripped = (format.strip)(bytes)?;
     let probe = (format.probe)(&stripped)?;
     let needs_transcode = !format.still
-        && !transcode::within_target(
+        && (!transcode::within_target(
             probe.width,
             probe.height,
             probe.duration_ms,
             stripped.len() as u64,
             caps.video_bytes as u64,
-        );
+        ) || probe.signal.is_some_and(|signal| !signal.is_served()));
     Ok(ProcessedAsset {
         digest: Sha256::digest(&stripped).into(),
         bytes: stripped,

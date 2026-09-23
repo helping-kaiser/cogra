@@ -444,6 +444,7 @@ label.
 | `test:unit:the-node-status-and-the-body-read-one-state`                                     | the_node_status_and_the_body_read_one_state                              |
 | `test:unit:the-other-passive-classes-stay-reference-targets`                                | the_other_passive_classes_stay_reference_targets                         |
 | `test:unit:the-page-arguments-are-refused-by-one-rule`                                      | the_page_arguments_are_refused_by_one_rule                               |
+| `test:unit:the-probe-reads-the-signal-its-sps-states`                                       | the_probe_reads_the_signal_its_sps_states                                |
 | `test:unit:the-rate-mirrors-the-composer`                                                   | the_rate_mirrors_the_composer                                            |
 | `test:unit:the-reference-gesture-writes-the-act-tuple-never-a-leg-rendering`                | the_reference_gesture_writes_the_act_tuple_never_a_leg_rendering         |
 | `test:unit:the-self-mark-is-readable-apart-from-the-veil`                                   | the_self_mark_is_readable_apart_from_the_veil                            |
