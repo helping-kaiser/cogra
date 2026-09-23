@@ -4,11 +4,19 @@ import android.content.Context
 import android.net.Uri
 import android.os.Looper
 import androidx.media3.common.C
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.BaseDataSource
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
+import androidx.media3.datasource.TransferListener
+import androidx.media3.exoplayer.analytics.PlayerId
+import androidx.media3.exoplayer.source.BaseMediaSource
+import androidx.media3.exoplayer.source.MediaPeriod
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.upstream.Allocator
+import androidx.media3.exoplayer.upstream.BandwidthMeter
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
@@ -214,26 +222,72 @@ class VideoStageTest {
     @Test
     fun aFrameReportedBeforeTheSwapSettlesIsTheLastClips() {
         // A first-frame report of the previous clip can still be queued on
-        // the main thread when the swap happens. Until the player's own
-        // fence message arrives, no report counts; after it, the next one
-        // is this clip's.
+        // the main thread when the swap happens. Until the new clip's source
+        // has posted its fence, no report counts; after it, the next one is
+        // this clip's.
         VideoStage.claim(context, clip, Any())
         VideoStage.claim(context, other, Any())
 
         assertThat(VideoStage.rendered(other)).isFalse()
         assertThat(VideoStage.hasRendered).isFalse()
 
-        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10)
+        assertThat(countedWithin(10)).isTrue()
+        assertThat(VideoStage.hasRendered).isTrue()
+    }
+
+    @Test
+    fun theFenceCannotLandBeforeThePlayerHasTakenUpTheNewClip() {
+        // A preloaded clip needs no network before its first frame, so the
+        // fence must be tied to the player taking the clip up — not to the
+        // main thread getting round to a second call. With the playback
+        // thread held, nothing of the new clip can have happened, and the
+        // main thread idling as long as it likes must not lift the fence.
+        VideoStage.claim(context, clip, Any())
+        val player = checkNotNull(VideoStage.holding?.player)
+        val hold = CountDownLatch(1)
+        val held = CountDownLatch(1)
+        player.createMessage { _, _ ->
+            held.countDown()
+            hold.await(10, TimeUnit.SECONDS)
+        }.send()
+        try {
+            assertThat(held.await(10, TimeUnit.SECONDS)).isTrue()
+            VideoStage.claim(context, other, Any())
+
+            assertThat(countedWithin(1)).isFalse()
+        } finally {
+            hold.countDown()
+        }
+
+        assertThat(countedWithin(10)).isTrue()
+    }
+
+    @Test
+    fun theFenceIsPostedBeforeTheNewClipsSourceIsPrepared() {
+        // Every report of the new clip needs a period of its source, and
+        // there is none before the source is prepared: a fence posted first
+        // is ahead of all of them in the main thread's queue.
+        val order = mutableListOf<String>()
+        val fenced = VideoStage.FencedSource(Recording(order)) { order += "fence" }
+
+        fenced.prepareSource({ _, _ -> }, PlayerId.UNSET, BandwidthMeter.NO_OP)
+
+        assertThat(order).containsExactly("fence", "source prepared").inOrder()
+    }
+
+    /**
+     * Idles the paused main looper — where the fence is delivered — until
+     * the stage counts a first frame of [other], or [seconds] pass.
+     */
+    private fun countedWithin(seconds: Long): Boolean {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(seconds)
         var counted = false
         while (!counted && System.nanoTime() < deadline) {
-            // The fence is posted from the playback thread; the paused
-            // main looper runs it only when the test lets it.
             shadowOf(Looper.getMainLooper()).idle()
             counted = VideoStage.rendered(other)
             if (!counted) Thread.sleep(10)
         }
-        assertThat(counted).isTrue()
-        assertThat(VideoStage.hasRendered).isTrue()
+        return counted
     }
 
     @Test
@@ -251,6 +305,27 @@ class VideoStageTest {
         VideoStage.claim(context, clip, Any())
 
         assertThat(asked.await(10, TimeUnit.SECONDS)).isTrue()
+    }
+
+    /** A source that only says when it has been prepared. */
+    private class Recording(private val order: MutableList<String>) : BaseMediaSource() {
+        override fun getMediaItem(): MediaItem = MediaItem.fromUri("https://media/recorded.mp4")
+
+        override fun maybeThrowSourceInfoRefreshError() = Unit
+
+        override fun prepareSourceInternal(mediaTransferListener: TransferListener?) {
+            order += "source prepared"
+        }
+
+        override fun createPeriod(
+            id: MediaSource.MediaPeriodId,
+            allocator: Allocator,
+            startPositionUs: Long,
+        ): MediaPeriod = throw UnsupportedOperationException("never played")
+
+        override fun releasePeriod(mediaPeriod: MediaPeriod) = Unit
+
+        override fun releaseSourceInternal() = Unit
     }
 
     /** A reader with no network behind it — the test only asks whether it was used. */
