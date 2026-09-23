@@ -1,13 +1,21 @@
 package com.cogra.core.designsystem.v2.media
 
 import android.content.Context
+import android.net.Uri
+import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.BaseDataSource
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DataSpec
 import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.io.IOException
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * The stage that carries one clip between two screens.
@@ -28,7 +36,10 @@ class VideoStageTest {
     private val other = "https://media/other.mp4"
 
     @After
-    fun tearDown() = VideoStage.release()
+    fun tearDown() {
+        VideoStage.release()
+        VideoStage.dataSources = null
+    }
 
     @Test
     fun theSameClipOnASecondSurfaceIsTheSamePlayer() {
@@ -123,5 +134,33 @@ class VideoStageTest {
         VideoStage.claim(context, clip, Any())
         VideoStage.release()
         assertThat(VideoStage.holding).isNull()
+    }
+
+    @Test
+    fun aClaimedClipIsReadThroughWhatTheAppInstalled() {
+        // The app installs the disk cache here; a player built around it
+        // would re-fetch every loop. The player opens its reader on its
+        // own playback thread, so the test waits for it rather than
+        // assuming it has happened by the time `claim` returns.
+        val asked = CountDownLatch(1)
+        VideoStage.dataSources = DataSource.Factory {
+            asked.countDown()
+            Offline()
+        }
+
+        VideoStage.claim(context, clip, Any())
+
+        assertThat(asked.await(10, TimeUnit.SECONDS)).isTrue()
+    }
+
+    /** A reader with no network behind it — the test only asks whether it was used. */
+    private class Offline : BaseDataSource(true) {
+        override fun open(dataSpec: DataSpec): Long = throw IOException("offline")
+
+        override fun read(buffer: ByteArray, offset: Int, length: Int): Int = C.RESULT_END_OF_INPUT
+
+        override fun getUri(): Uri? = null
+
+        override fun close() = Unit
     }
 }

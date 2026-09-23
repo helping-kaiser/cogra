@@ -3,11 +3,15 @@ package com.cogra.app
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.media3.common.util.UnstableApi
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.video.VideoFrameDecoder
+import com.cogra.core.designsystem.v2.media.VideoCache
+import com.cogra.core.designsystem.v2.media.VideoStage
 import com.cogra.core.designsystem.v2.media.VideoStageLifecycle
 import com.cogra.domain.CograLog
 import dagger.hilt.android.HiltAndroidApp
@@ -27,11 +31,15 @@ import dagger.hilt.android.HiltAndroidApp
  * user is running rather than the variant some library was compiled as.
  *
  * It is also where the video stage meets the only lifecycle whose scope
- * matches it — the process's, so a backgrounded app holds no decoder.
+ * matches it — the process's, so a backgrounded app holds no decoder —
+ * and the disk cache every clip is read through, one per process as
+ * Media3's caching recipe asks (`VideoCache`). The cache itself opens on
+ * the first clip read, not here.
  */
 @HiltAndroidApp
 class CograApp : Application(), SingletonImageLoader.Factory {
 
+    @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
         if (BuildConfig.DEBUG) {
@@ -40,6 +48,7 @@ class CograApp : Application(), SingletonImageLoader.Factory {
             }
         }
         ProcessLifecycleOwner.get().lifecycle.addObserver(VideoStageLifecycle)
+        VideoStage.dataSources = VideoCache.dataSourceFactory(this)
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =

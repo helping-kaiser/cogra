@@ -55,6 +55,13 @@ dependencies {
     api(libs.media3.exoplayer)
     api(libs.media3.common)
     implementation(libs.media3.ui.compose)
+    // The stage's disk cache: `SimpleCache` + `CacheDataSource` live in
+    // the datasource module, the index database in the database module
+    // (developer.android.com/media/media3/exoplayer/network-stacks).
+    // api: the stage's installable `dataSources` is a `DataSource.Factory`,
+    // which the app shell sets at startup.
+    api(libs.media3.datasource)
+    implementation(libs.media3.database)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // The key gate: BiometricPrompt needs the hosting FragmentActivity,

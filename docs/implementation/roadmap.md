@@ -178,6 +178,14 @@ event-driven and is not an MVP dependency.
   plus the settings-surface conformance and the audit's open
   decision tables — touched surfaces ship 100% conform to the
   canonical boards.
+- **The shell's navigation contract** — the bottom bar's re-tap
+  ladder and the platform-back semantics ruled 2026-09-10
+  (design/readme.md "The bottom bar's re-tap ladder": system back
+  pops within the current stack, then from another tab's root to
+  Feed's root, then leaves; web tabs are routes and the browser
+  owns history) — implemented and conform on both clients. Flows
+  with their own step stacks (wizards, crop) route the platform
+  back gesture through their in-flow back first.
 - **Slice 9 — production deployment** and **slice 10 — release
   engineering** below, both minted for the MVP.
 
