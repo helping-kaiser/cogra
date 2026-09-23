@@ -1474,8 +1474,8 @@ function ChatPickerBody() {
    A MULTI-VOICE ACT IS INSTANT WHERE THE ACTOR'S OWN VOICE SUFFICES under the
    chat's governance map, and otherwise it waits as a quiet pending card IN THE
    THREAD and a row under `Open decisions` here. This round draws the section
-   and its empty state only; the pending card and the filled section are round
-   B2's, and the graph carries them as one intended gap.
+   and its empty state; the pending card and the filled section are the
+   governance round's (`PendingCard`, `OpenDecisions`, below).
 
    NO PRESENCE, EVER (jakob 2026-09-23). No online dot, no last-seen, no
    typing line on any member row or anywhere else: the member list says who is
@@ -1565,7 +1565,7 @@ function DetailsGroup({ ariaLabel, children }) {
    (`WalletEmpty`: the section's own label, one quiet line in `body-medium`
    `text-secondary` at the label's gutter) — never a hidden section, because a
    section that appears only when something is pending teaches a reader that
-   its absence means something else. The filled rows are round B2's. */
+   its absence means something else. Filled, it is `OpenDecisions`. */
 function OpenDecisionsEmpty() {
   return (
     <div style={{ flex: "none" }}>
@@ -1610,7 +1610,7 @@ const PENDING_INVITE_LINE = "Invited — hasn't joined yet";
 
 /* THE ROLE READOUT IS A DOOR (jakob 2026-09-23, the details round's fix
    pass). Tapping `Admin`, `Moderator` or `Member` opens the role-change flow —
-   `decision:change_role`, a multi-voice act whose face is round B2's. The
+   `decision:change_role`, a multi-voice act whose face is `ChatRoleSheet`. The
    grammar is the stance row's split (`StanceRow`, the change-histories round):
    a readout at a row's end that opens its own surface splits the row, so the
    person area opens the person and the word opens the role — never a control
