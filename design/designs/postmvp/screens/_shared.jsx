@@ -333,29 +333,45 @@ function ProfileVersionCard({ displayName, handle, avatarSrc, bio, website }) {
   );
 }
 
-/* THE HISTORIC BANNER IS A NOTE, NOT A WARNING. A reader who opened a version
-   from its chronicle knows where they are; the line exists for the one who
-   arrived by link, and for the one who scrolled far enough to forget. So it
-   takes `QuietNote`'s register on the ground a kept space wears
-   (`RedactedContent`'s own), with the way back out riding its end — and no
-   error colour, because nothing here went wrong. */
+/* THE HISTORIC BANNER — the tree's own notice panel, drawn the way the
+   key-absent notice is (jakob's canvas review, 2026-09-23: the first drawing
+   butted straight onto the card and read as the card's own header).
+
+   IT IS A PANEL OF ITS OWN, ON ITS OWN SURFACE. `tertiary-container` with its
+   `on-` pair, the card's medium rung, the card's 16px padding and 12px inner
+   gap — `WalletKeyAbsent`'s anatomy, the one notice panel canonical draws — and
+   that notice's placement rule, "inset to the same margins as every card": on
+   the detail surface the card runs the column's full width, so the panel does
+   too, and the two read as one column of surfaces. The column's own 12px gap is what stands
+   between it and the card, so the two never touch and never share a colour:
+   the panel sits a tonal family away from the card's `surface-card`, which is
+   what tells a reader it is a statement ABOUT the post rather than part of it.
+
+   IT IS A NOTE, NOT A WARNING. The line is `body-medium` in the panel's own ink
+   — no error colour, no icon — because nothing here went wrong. The way back to
+   the current version owns its line under it, so it is a `Button` rather than a
+   word riding the sentence (`InlineAction`'s own test), and on a tonal panel the
+   filled button is `inverse`: the panel's pair turned over, one colour family.
+   Small, and left-aligned — it is the way out, not the point. */
 function HistoricNote({ line, action }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "var(--space-2)",
-        margin: "0 16px",
-        padding: "var(--space-3) var(--space-4)",
-        borderRadius: "var(--radius-medium)",
-        background: "var(--surface-container-high)",
-      }}
-    >
-      <QuietNote>{line}</QuietNote>
-      <InlineAction size="sm">{action}</InlineAction>
+    <div style={{ paddingTop: 4 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "var(--card-gap)",
+          borderRadius: "var(--radius-medium)",
+          background: "var(--tertiary-container)",
+          color: "var(--on-tertiary-container)",
+          padding: "var(--card-padding)",
+        }}
+      >
+        <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{line}</p>
+        <Button variant="inverse" size="sm" selfStart>
+          {action}
+        </Button>
+      </div>
     </div>
   );
 }

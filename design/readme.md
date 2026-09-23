@@ -5952,7 +5952,16 @@ onto both. Backlog item 34.
 - **Any kind of post, one chronicle (jakob).** A body is words xor media
   per version, so a post can change kind between two versions and the
   chronicle draws both side by side, each by the same master at the same
-  variant.
+  variant. A picture version opens `PostVersionDetailMedia` — canonical's
+  media detail anatomy, nothing added and nothing moved — and a words
+  version opens `PostVersionDetail`.
+- **The historic banner is a panel of its own (jakob, canvas review).**
+  The first drawing butted onto the card and read as its header. It is
+  now the key-absent notice's anatomy — `tertiary-container` with its
+  `on-` pair, the card's rung, padding and gap — at the card's own width,
+  one column gap above it, the line in `body-medium` and the way back as
+  an `inverse` button on its own line. Both detail boards wear it
+  unchanged.
 - **A tombstoned version always keeps its row (jakob).** Removal takes
   the payload and never the record (`erasure.md` §1), so the mark stands
   in the content's place at the version's own date — whether one version

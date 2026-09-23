@@ -181,7 +181,10 @@
       "via": 3,
       "kind": "advance",
       "label": "an earlier version",
-      "to": [{ "board": "PostVersionDetail", "case": "that version whole, at detail size, wearing the line that says which version it is" }]
+      "to": [
+        { "board": "PostVersionDetail", "case": "a words version — that version whole, at detail size, under the panel that says which version it is" },
+        { "board": "PostVersionDetailMedia", "case": "a picture version — the same surface on canonical's media detail anatomy, under the same panel" }
+      ]
     },
     {
       "from": "PostHistoryOwn",
@@ -216,7 +219,10 @@
       "via": 5,
       "kind": "advance",
       "label": "an earlier version",
-      "to": [{ "board": "PostVersionDetail", "case": "that version whole — the author reads a version on the same surface everybody else does" }]
+      "to": [
+        { "board": "PostVersionDetail", "case": "a words version, whole — the author reads a version on the same surface everybody else does" },
+        { "board": "PostVersionDetailMedia", "case": "a picture version, whole, on the media detail's anatomy" }
+      ]
     },
     {
       "from": "VersionRemoveConfirm",
@@ -245,6 +251,20 @@
       "kind": "advance",
       "label": "See the current version",
       "to": [{ "terminal": "canonical", "case": "the post as it stands — the way out for a reader who arrived here by link rather than through the chronicle" }]
+    },
+    {
+      "from": "PostVersionDetailMedia",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the chronicle the version was opened from" }]
+    },
+    {
+      "from": "PostVersionDetailMedia",
+      "via": 2,
+      "kind": "advance",
+      "label": "See the current version",
+      "to": [{ "terminal": "canonical", "case": "the post as it stands — its current version is words, and it opens on the post's own detail" }]
     },
     {
       "from": "CommentHistory",

@@ -1789,7 +1789,8 @@ that the feature does nothing.
   it is spelled before the act rather than explained after it.
 
 **A historic version, opened.** `A historic version — changed 12
-September.` with `See the current version` beside it. The marker's own
+September.` on the banner's own panel, with `See the current version`
+under it — the same two lines over a words version and a picture version. The marker's own
 accessible name in its tappable form is `Edited — see the edit history`.
 
 **The stance timeline.** A stance IS a history, so this surface only had

@@ -2233,6 +2233,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to the edit history"', tag: "a" },
     { n: 2, find: ">See the current version</button>", tag: "button" },
   ],
+  PostVersionDetailMedia: [
+    { n: 1, find: 'aria-label="Back to the edit history"', tag: "a" },
+    { n: 2, find: ">See the current version</button>", tag: "button" },
+  ],
   VersionRemoveConfirm: [
     { n: 1, find: ">Remove version</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
