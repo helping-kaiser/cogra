@@ -41,7 +41,7 @@ use postgres_store::PgPool;
 use postgres_store::media as store;
 use uuid::Uuid;
 
-use super::transcode::{Ffmpeg, TranscodeError, video_bps_for};
+use super::transcode::{Ffmpeg, TranscodeError, Transfer, video_bps_for};
 use super::{BlobStore, MediaConfig, UploadCaps, asset_options, process, storage_key, video};
 
 /// How many times a job is claimed before it is failed for good.
@@ -68,6 +68,10 @@ pub const REASON_DID_NOT_ENCODE: &str = "the video could not be re-encoded";
 /// act on, by trimming the clip.
 pub const REASON_TOO_LONG: &str =
     "the video is too long to fit the size limit at a watchable quality";
+/// The upload is HDR and the server's ffmpeg cannot tone-map it. Served
+/// without the tone map it would play washed out, under a digest that can
+/// never be replaced, so it is refused instead.
+pub const REASON_NO_TONE_MAP: &str = "the server cannot convert HDR video right now";
 /// The job was claimed [`MAX_ATTEMPTS`] times without settling.
 pub const REASON_GAVE_UP: &str = "processing did not finish after several attempts";
 /// The rendition is byte-identical to a live asset this author holds.
@@ -235,13 +239,17 @@ async fn run_job(
         .map_err(|e| JobError::Transient(format!("scratch directory: {e}")))?;
     let input = scratch.path().join("upload.mp4");
     let output = scratch.path().join("rendition.mp4");
+
+    let (caps, video_bps) = plan(config, job.scale, &job.options);
+    let transfer = source_transfer(&source);
+    if transfer.is_hdr() && !ffmpeg.tone_maps() {
+        return Err(JobError::Refused(REASON_NO_TONE_MAP));
+    }
     tokio::fs::write(&input, source)
         .await
         .map_err(|e| JobError::Transient(format!("writing the upload to scratch: {e}")))?;
-
-    let (caps, video_bps) = plan(config, job.scale, &job.options);
     match ffmpeg
-        .transcode(&input, &output, video_bps, settings.deadline)
+        .transcode(&input, &output, video_bps, transfer, settings.deadline)
         .await
     {
         Ok(()) => {}
@@ -292,6 +300,17 @@ fn plan(
     let caps = config.caps_for(scale.into());
     let duration_ms = options.get("duration_ms").and_then(|v| v.as_u64());
     (caps, video_bps_for(duration_ms, caps.video_bytes as u64))
+}
+
+/// The transfer the upload's own SPS states — the same header read the
+/// upload ran, repeated here because the job holds the bytes and nothing
+/// else. An upload this probe cannot read was accepted without a signal,
+/// and is re-encoded as the SDR it is taken to be.
+fn source_transfer(source: &[u8]) -> Transfer {
+    video::probe(source)
+        .ok()
+        .and_then(|probe| probe.signal)
+        .map_or(Transfer::Sdr, |signal| signal.transfer)
 }
 
 /// The author-facing sentence for a rendition the pipeline refused.
@@ -385,5 +404,46 @@ mod tests {
         let (comment_caps, comment_bps) = plan(&config, store::MediaScale::Comment, &options);
         assert_eq!(comment_bps, 2_444_506);
         assert_eq!(comment_caps.video_bytes, 50 * 1024 * 1024);
+    }
+
+    /// An HDR upload on a server whose ffmpeg cannot tone-map is refused
+    /// with a reason its author reads, before ffmpeg runs: re-encoded
+    /// without the tone map it would play washed out under a digest that
+    /// can never be replaced.
+    ///
+    /// An HDR upload fails with a reason when the server's ffmpeg cannot tone-map it.
+    /// ´claim:media:hdr-without-a-tone-map-fails-with-a-reason´
+    #[tokio::test]
+    async fn an_hdr_upload_without_a_tone_map_is_refused() {
+        let blobs = super::super::blob::in_memory();
+        let source = video::tests::h264_with_sps(&video::tests::SPS_PQ);
+        assert!(source_transfer(&source).is_hdr());
+        blobs
+            .put("ingest/hdr.mp4", source, video::MIME)
+            .await
+            .expect("the upload is stored");
+        let job = store::IngestJob {
+            id: Uuid::new_v4(),
+            author_id: Uuid::new_v4(),
+            storage_key: "ingest/hdr.mp4".into(),
+            mime_type: video::MIME.into(),
+            options: serde_json::json!({ "v": 1, "duration_ms": 2_500 }),
+            scale: store::MediaScale::Post,
+            attempts: 1,
+        };
+        let config = MediaConfig::default();
+        let outcome = run_job(
+            &blobs,
+            &config,
+            Some(&Ffmpeg::without_tone_map()),
+            IngestSettings::from_config(&config),
+            &job,
+            "rendition.mp4",
+        )
+        .await;
+        assert!(
+            matches!(outcome, Err(JobError::Refused(REASON_NO_TONE_MAP))),
+            "refused for want of a tone map"
+        );
     }
 }

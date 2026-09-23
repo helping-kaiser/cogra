@@ -560,7 +560,7 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     fn ftyp(major: &[u8; 4], compatible: &[&[u8; 4]]) -> Vec<u8> {
@@ -731,7 +731,7 @@ mod tests {
     }
 
     /// A movie whose track carries `sps` as its sequence parameter set.
-    fn h264_with_sps(sps: &[u8]) -> Vec<u8> {
+    pub(crate) fn h264_with_sps(sps: &[u8]) -> Vec<u8> {
         movie(
             mp4::MediaConfig::AvcConfig(mp4::AvcConfig {
                 width: 320,
@@ -751,7 +751,7 @@ mod tests {
         0x67, 0x42, 0xC0, 0x14, 0x8C, 0x68, 0x14, 0x19, 0x79, 0xF0, 0x16, 0xA1, 0x20, 0x21, 0x20,
         0xF0, 0x88, 0x46, 0xA0,
     ];
-    const SPS_PQ: [u8; 19] = [
+    pub(crate) const SPS_PQ: [u8; 19] = [
         0x67, 0x42, 0xC0, 0x14, 0x8C, 0x68, 0x14, 0x19, 0x79, 0xF0, 0x16, 0xA1, 0x22, 0x01, 0x20,
         0xF0, 0x88, 0x46, 0xA0,
     ];
