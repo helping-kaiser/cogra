@@ -33,12 +33,22 @@ function file(name: string, type: string, bytes: Uint8Array<ArrayBuffer>, size?:
   return made;
 }
 
-function mp4(size?: number): File {
+/** A clip whose `ftyp` names `brand` as the major one. */
+function movie(name: string, type: string, brand: string, size?: number): File {
   const bytes = new Uint8Array(new ArrayBuffer(32));
   bytes[3] = 16;
   for (const [i, ch] of [..."ftyp"].entries()) bytes[4 + i] = ch.charCodeAt(0);
-  for (const [i, ch] of [..."isom"].entries()) bytes[8 + i] = ch.charCodeAt(0);
-  return file("clip.mp4", "video/mp4", bytes, size);
+  for (const [i, ch] of [...brand].entries()) bytes[8 + i] = ch.charCodeAt(0);
+  return file(name, type, bytes, size);
+}
+
+function mp4(size?: number): File {
+  return movie("clip.mp4", "video/mp4", "isom", size);
+}
+
+/** What an iPhone records: QuickTime, major brand `qt  `. */
+function mov(size?: number): File {
+  return movie("IMG_0001.MOV", "video/quicktime", "qt  ", size);
 }
 
 function picture(name = "shot.jpg", size?: number): File {
@@ -142,6 +152,15 @@ describe("screenPick", () => {
     const outcome = await screenPick([renamed], EMPTY);
     expect(outcome.accepted).toHaveLength(0);
     expect(outcome.refusals[0]!.reason).toBe(UNREADABLE);
+  });
+
+  it("takes an iPhone's QuickTime clip as readily as an MP4", async () => {
+    // It leaves the device as MP4 — the strip rewrites the container — so the
+    // server never sees the `.mov` it would refuse.
+    const outcome = await screenPick([mov()], EMPTY);
+    expect(outcome.accepted.map((f) => f.name)).toEqual(["IMG_0001.MOV"]);
+    expect(outcome.kind).toBe("video");
+    expect(outcome.refusals).toHaveLength(0);
   });
 
   it("refuses a video over the cap", async () => {

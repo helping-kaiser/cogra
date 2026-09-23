@@ -76,6 +76,7 @@ let encodedBuffer: ArrayBuffer | null = new ArrayBuffer(64);
 
 vi.mock("mediabunny", () => ({
   MP4: "MP4-format",
+  QTFF: "QTFF-format",
   BlobSource: class {
     constructor(readonly file: unknown) {}
   },
@@ -307,6 +308,13 @@ describe("compressVideo — pass-through", () => {
     expect(result).toMatchObject({ blob: picked, path: "within-target" });
     expect(canEncodeVideo).not.toHaveBeenCalled();
     expect(init).not.toHaveBeenCalled();
+  });
+
+  it("opens the clip as MP4 or an iPhone's QuickTime, and nothing else", async () => {
+    await compressVideo(clip(7_500_000), POST_CAP);
+    expect(inputsOpened).toHaveBeenCalledWith(
+      expect.objectContaining({ formats: ["MP4-format", "QTFF-format"] }),
+    );
   });
 
   it("reads the size after rotation, as the clip is displayed", async () => {

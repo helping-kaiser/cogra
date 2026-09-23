@@ -55,12 +55,17 @@
 // `Conversion` does internally anyway, so this is the same operation without
 // the condition that disqualifies it.
 //
-// `formats: [MP4]` rather than `ALL_FORMATS` is deliberate: the docs note "The
-// `formats` parameter enables tree-shaking"
+// `formats: [MP4, QTFF]` rather than `ALL_FORMATS` is deliberate: the docs note
+// "The `formats` parameter enables tree-shaking"
 // (https://mediabunny.dev/guide/reading-media-files), and every other demuxer
-// would otherwise be bundled for a path that only ever sees MP4 — which the
-// pick screening has already guaranteed by sniffing the container from the
-// bytes.
+// would otherwise be bundled for a path that only ever sees the two containers
+// the pick screening admits by sniffing the bytes (`video.ts`). QuickTime is
+// how an iPhone records; mediabunny reads it with its own `QTFF` format — the
+// `MP4` reader refuses the `qt  ` brand — and the output is an MP4 either way,
+// so this remux is what turns a `.mov` into the only container the server
+// takes, on every browser, with or without WebCodecs. The timed-metadata
+// tracks an iPhone adds beside picture and sound are never surfaced as tracks
+// by the reader, so they are not copied either.
 //
 // WHAT THIS DOES NOT REMOVE, stated because a security claim must be honest.
 // The output's `mvhd`/`tkhd` creation time is set to the moment of the remux by
@@ -82,6 +87,7 @@ import {
   MP4,
   Mp4OutputFormat,
   Output,
+  QTFF,
   type AudioCodec,
   type InputAudioTrack,
   type InputVideoTrack,
@@ -124,7 +130,7 @@ export type StripResult = {
  */
 export async function stripVideoMetadata(file: Blob): Promise<StripResult> {
   const started = performance.now();
-  const input = new Input({ formats: [MP4], source: new BlobSource(file) });
+  const input = new Input({ formats: [MP4, QTFF], source: new BlobSource(file) });
   const output = new Output({
     // With `BufferTarget` the default fast-start behaviour is "in-memory",
     // which writes the `moov` box at the FRONT — so the uploaded file begins

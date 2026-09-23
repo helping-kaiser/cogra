@@ -62,6 +62,7 @@ import {
   MP4,
   Mp4OutputFormat,
   Output,
+  QTFF,
   Quality,
   canEncodeAudio,
   canEncodeVideo,
@@ -130,7 +131,9 @@ export async function compressVideo(file: Blob, capBytes: number): Promise<Compr
     return keep("unsupported", "this browser has no VideoEncoder");
   }
 
-  const input = new Input({ formats: [MP4], source: new BlobSource(file) });
+  // The two containers the pick admits (`video.ts`); an iPhone's QuickTime is
+  // read by `QTFF`, and the output is MP4 whichever came in.
+  const input = new Input({ formats: [MP4, QTFF], source: new BlobSource(file) });
   try {
     const probed = await probe(input, file.size);
     if (typeof probed === "string") return keep("unsupported", probed);

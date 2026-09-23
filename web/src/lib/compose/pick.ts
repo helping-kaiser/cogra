@@ -25,7 +25,7 @@ import {
   POST_VIDEO_MAX_BYTES,
   megabytes,
 } from "@/lib/ui2/media/caps";
-import { looksLikeMp4 } from "@/lib/ui2/media/video";
+import { pickedContainer } from "@/lib/ui2/media/video";
 import { newComposeId } from "./ids";
 import type { MediaKind } from "./wizard";
 
@@ -134,8 +134,9 @@ export async function screenPick(
     if (isVideoType(file)) {
       // The container is read from the BYTES: a File's type is the operating
       // system's guess from the extension, so a renamed .mkv claims video/mp4
-      // and is not one. The server reads the same header.
-      if (!(await looksLikeMp4(file))) {
+      // and is not one. MP4 and an iPhone's QuickTime get in; both leave the
+      // device as MP4 (`strip-video.ts`).
+      if ((await pickedContainer(file)) === null) {
         refuse(file, UNREADABLE);
         continue;
       }
