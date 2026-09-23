@@ -105,7 +105,8 @@ export function SealStep({
     (asset) =>
       asset.upload.kind === "waiting" ||
       asset.upload.kind === "encoding" ||
-      asset.upload.kind === "uploading",
+      asset.upload.kind === "uploading" ||
+      asset.upload.kind === "processing",
   ).length;
   const bodyLine =
     state.mode === "media"
