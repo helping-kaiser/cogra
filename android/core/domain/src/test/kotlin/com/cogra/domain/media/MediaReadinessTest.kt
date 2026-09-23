@@ -119,18 +119,26 @@ class MediaReadinessTest {
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
     }
 
-    /** A PROCESSING asset that outlasts the poll budget fails rather than holding the gate shut forever. */
+    /**
+     * NO ATTEMPT CAP: a real transcode legitimately takes minutes, and the
+     * SERVER bounds how long an asset stays PROCESSING (the ingest worker
+     * gives it at most three lease-reclaimed attempts before marking the
+     * row FAILED), so the client keeps polling rather than guessing a
+     * budget of its own. A long run of PROCESSING answers is still
+     * outlived — every one of them, not just the first few.
+     */
     @Test
-    fun aProcessingAssetThatNeverSettlesGivesUpRatherThanHangs() = runTest {
+    fun aLongRunOfProcessingAnswersIsOutlivedRatherThanCapped() = runTest {
         val repo = ScriptedMediaRepository().apply {
-            repeat(MEDIA_READY_POLL_ATTEMPTS + 1) {
+            repeat(200) {
                 answers += Outcome.Success(MediaReadiness("m1", MediaAssetState.PROCESSING, null))
             }
+            answers += Outcome.Success(MediaReadiness("m1", MediaAssetState.READY, null))
         }
 
         val outcome = repo.awaitReady(Outcome.Success(asset(MediaAssetState.PROCESSING)))
 
-        assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
-        assertThat(repo.calls).isEqualTo(MEDIA_READY_POLL_ATTEMPTS)
+        assertThat((outcome as Outcome.Success).value.state).isEqualTo(MediaAssetState.READY)
+        assertThat(repo.calls).isEqualTo(201)
     }
 }

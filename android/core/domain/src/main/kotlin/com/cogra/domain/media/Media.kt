@@ -355,25 +355,33 @@ data class MediaReadiness(
 /**
  * Waits out a PROCESSING asset the way `WriteSigner.approveFrom` waits
  * out a sealing write: a fixed delay before each read of
- * `mediaAttachment`, bounded by an attempt budget that turns "never
- * settled" into a [Outcome.Failed] a caller already knows how to show.
+ * `mediaAttachment`, at the same 1-second spacing — but UNBOUNDED where
+ * the seal poll caps its attempts (web's `uploads.ts`'s own
+ * `awaitReady` reasons through the identical asymmetry).
  *
- * READY (or a business refusal, or a transport fault) answers at once —
- * no poll, no extra request. Android's own uploads are always within
- * target — the on-device pipeline re-encodes before send — so PROCESSING
- * is a backstop for a future server-side rule change, not the shipped
- * path.
+ * A staged write that outruns its poll budget falls back to `resume()`,
+ * replayed from handshake material the app persists — a PROCESSING
+ * asset has no such fallback, and nowhere to resume a still-processing
+ * leg from. What makes sleeping forever safe rather than a way to hang
+ * the gate shut is that the SERVER bounds it, not the client: the
+ * ingest worker gives a re-encode job at most three lease-reclaimed
+ * attempts before marking the row FAILED, so this loop always ends —
+ * on READY, on FAILED, or on a transport fault reading `mediaAttachment`
+ * itself (treated exactly like any other failed read: a retryable
+ * [Outcome.Failed]). A real transcode legitimately takes minutes; an
+ * attempt cap here would only dump a genuinely-processing asset into a
+ * failure the server was always going to resolve on its own.
+ *
+ * READY (or a business refusal, or a transport fault on the upload
+ * itself) answers at once — no poll, no extra request. Android's own
+ * uploads are always within target — the on-device pipeline re-encodes
+ * before send — so PROCESSING is a backstop for a future server-side
+ * rule change, not the shipped path.
  */
 suspend fun MediaRepository.awaitReady(uploaded: Outcome<MediaAssetView>): Outcome<MediaAssetView> {
     if (uploaded !is Outcome.Success) return uploaded
     var current = uploaded.value
-    var attempts = 0
     while (current.state == MediaAssetState.PROCESSING) {
-        if (attempts++ >= MEDIA_READY_POLL_ATTEMPTS) {
-            return Outcome.Failed(
-                IllegalStateException("media ${current.id} still PROCESSING after the poll budget"),
-            )
-        }
         delay(MEDIA_READY_POLL_DELAY_MS)
         when (val read = mediaAttachment(current.id)) {
             is Outcome.Success -> {
@@ -391,12 +399,3 @@ suspend fun MediaRepository.awaitReady(uploaded: Outcome<MediaAssetView>): Outco
 
 /** The poll idiom's own interval (`WriteSigner.sealPollDelayMs`) — shared rather than earning its own number. */
 internal const val MEDIA_READY_POLL_DELAY_MS = 1_000L
-
-/**
- * A generous backstop bound. PROCESSING should never outlast this on an
- * Android upload; a real out-of-target transcode is server-side work
- * this client cannot see progress on, so a budget — not an infinite
- * wait — is what keeps a stuck asset from holding the sign gate shut
- * forever.
- */
-internal const val MEDIA_READY_POLL_ATTEMPTS = 30
