@@ -37,6 +37,159 @@
       "page": "push"
     },
     {
+      "file": "PostHistory.dc.html",
+      "title": "A post's edit history · the reader's chronicle",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 1488,
+      "page": "histories"
+    },
+    {
+      "file": "PostHistoryOwn.dc.html",
+      "title": "A post's edit history · the author's register",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 1620,
+      "page": "histories"
+    },
+    {
+      "file": "PostVersionDetail.dc.html",
+      "title": "A historic version, opened whole",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
+      "file": "PostVersionDetailMedia.dc.html",
+      "title": "A historic picture version, opened whole",
+      "x": 960,
+      "y": 964,
+      "w": 390,
+      "h": 856,
+      "page": "histories"
+    },
+    {
+      "file": "VersionRemoveConfirm.dc.html",
+      "title": "Remove this version · the think-twice dialog",
+      "x": 1440,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
+      "file": "CommentHistory.dc.html",
+      "title": "A comment's edit history",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
+      "file": "CommentHistoryOwn.dc.html",
+      "title": "A comment's edit history · the author's register",
+      "x": 2400,
+      "y": 0,
+      "w": 390,
+      "h": 860,
+      "page": "histories"
+    },
+    {
+      "file": "ProfileHistory.dc.html",
+      "title": "A profile's edit history",
+      "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 1116,
+      "page": "histories"
+    },
+    {
+      "file": "ProfileHistoryOwn.dc.html",
+      "title": "A profile's edit history · the author's register",
+      "x": 3360,
+      "y": 0,
+      "w": 390,
+      "h": 1264,
+      "page": "histories"
+    },
+    {
+      "file": "HistoryMenu.dc.html",
+      "title": "The ⋮ door · Edit history beside Edit",
+      "x": 0,
+      "y": 1940,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
+      "file": "EditedMarkerDoor.dc.html",
+      "title": "The Edited marker, tappable",
+      "x": 480,
+      "y": 1940,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
+      "file": "OpinionsRowDoors.dc.html",
+      "title": "Opinions on this post · the rows split",
+      "x": 960,
+      "y": 1940,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
+      "file": "StanceTimelinePost.dc.html",
+      "title": "A stance timeline · one person on one post",
+      "x": 1440,
+      "y": 1940,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
+      "file": "ProfileStancesDoors.dc.html",
+      "title": "The opinions page · the rows split",
+      "x": 1920,
+      "y": 1940,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
+      "file": "StanceTimeline.dc.html",
+      "title": "A stance timeline · one person on another",
+      "x": 2400,
+      "y": 1940,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
+      "file": "TimelineHelp.dc.html",
+      "title": "A stance timeline · the ? dialog",
+      "x": 2880,
+      "y": 1940,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
+      "file": "PadHistoryDoor.dc.html",
+      "title": "The pad · Current opinion becomes a door",
+      "x": 0,
+      "y": 2904,
+      "w": 390,
+      "h": 844,
+      "page": "histories"
+    },
+    {
       "file": "MapPush.dc.html",
       "x": -1580,
       "y": 0,
@@ -44,6 +197,15 @@
       "h": 752,
       "page": "push",
       "title": "Push notifications · flow map"
+    },
+    {
+      "file": "MapHistories.dc.html",
+      "x": -2740,
+      "y": 0,
+      "w": 2320,
+      "h": 1200,
+      "page": "histories",
+      "title": "Change histories · flow map"
     }
   ],
   "annotations": [
@@ -54,6 +216,14 @@
       "w": 560,
       "text": "POST-MVP — rounds drawn before their slice is the work. The four canonical canvases and designs/canonical are the MVP baseline implementation reads from; this tree is where a later round is drawn, reviewed and held until its slice becomes current, at which point its boards move across to canonical as a reviewed round. Same design system, same flow grammar, same build: boards render from design/components, the page opens with a generated flow map, and graph.json binds each orange number to its outcomes. Nothing implementation needs is ever only here.",
       "page": "push"
+    },
+    {
+      "id": "histories",
+      "x": -340,
+      "y": 0,
+      "w": 560,
+      "text": "CHANGE HISTORIES — would-like #2, drawn 2026-09-22. Two kinds of history, one door rule. A post, a comment and a profile each open a chronicle: every version WHOLE, newest first, the current one marked, never a diff — the store keeps complete states, and on L1 every edit signs a full new record of its own. A removed version keeps its row and wears the mark. A stance is a history too: the bundle IS the list of records ever cast from one node to another, and the timeline says in plain words what the standing adds up to, because a sum that clips hides the conviction behind it. The doors follow one law — authoring doors are faces and fields, HISTORY DOORS ARE READOUTS: the stance face on a card is untouched, the value at a row's end opens the timeline, and the pad's Current opinion line carries the only new ink. Timelines are public to everyone, signed out included; the gates stay on acting.",
+      "page": "histories"
     }
   ],
   "launch": {
@@ -64,6 +234,10 @@
     {
       "id": "push",
       "name": "Push notifications"
+    },
+    {
+      "id": "histories",
+      "name": "Change histories"
     }
   ]
 }

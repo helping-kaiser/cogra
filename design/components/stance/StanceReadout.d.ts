@@ -79,9 +79,19 @@ export interface StanceStandingProps {
   targetLabel: string;
   /** The record family's axis questions, for the two spoken readings. */
   names?: AxisNames;
+  /**
+   * Makes the "Current opinion" label a door onto the timeline the standing was
+   * summed from (the change-histories round). The line takes the tappable
+   * marker's form — underlined, plus `HISTORY_DOOR_TAIL` — and the readout under
+   * it is untouched. Without it the label is the plain `aria-hidden` line.
+   */
+  onOpenHistory?: () => void;
 }
 
 export declare function StanceStanding(props: StanceStandingProps): JSX.Element;
+
+/** What the standing's label gains when it becomes a history door. */
+export declare const HISTORY_DOOR_TAIL: string;
 /** The landing line — the one line below the field. */
 export interface StanceLandingLineProps {
   landing: StanceLanding | null;

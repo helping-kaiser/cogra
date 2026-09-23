@@ -35,6 +35,12 @@ export interface PostCardProps {
   /** Authored and signed, not yet ordered on L1. Shows in full regardless. */
   pending?: boolean;
   edited?: boolean;
+  /**
+   * Opens the edit history from the marker (the change-histories round): handed
+   * one, `EditedMarker` takes its tappable form. Reachable only where a second
+   * version exists, which is also the only case the marker is drawn in.
+   */
+  onInspectEdit?: () => void;
   bundle?: StanceBundle | null;
   signedIn?: boolean;
   /**
@@ -76,6 +82,12 @@ export interface PostCardProps {
    * so an origin pick reads as its nearest neighbour.
    */
   stanceDefaultPick?: { pDirected: number; pInterest: number };
+  /**
+   * Makes the pad's "Current opinion" line a door onto the timeline the
+   * standing was summed from (the change-histories round). Pass-through to
+   * `StanceControl`'s `onOpenHistory`.
+   */
+  stanceOnOpenHistory?: () => void;
   /**
    * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
