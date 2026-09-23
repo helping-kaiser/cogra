@@ -47,7 +47,8 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
  * **The parked cost.** Exactly one decoder stays held once a clip has
  * played, paused and idle. That is the price of continuity and it is
  * bounded at one; a second clip claims the stage and the first is
- * released.
+ * released. The parked player does not go on downloading: a paused
+ * player stops loading ([VideoLoadControl]).
  */
 @UnstableApi
 object VideoStage {
@@ -104,6 +105,9 @@ object VideoStage {
                     DefaultMediaSourceFactory(appContext)
                         .setDataSourceFactory(VideoCache.dataSourceFactory(appContext)),
                 )
+                // Seconds of read-ahead rather than 50 s, and none of it
+                // while paused — see [VideoLoadControl].
+                .setLoadControl(VideoLoadControl.create())
                 // THE SKIPS ARE TEN SECONDS, said by the board's own labels
                 // ("Back ten seconds", `VideoControls.jsx:196`). They are the
                 // PLAYER's increments rather than arithmetic in the control,
