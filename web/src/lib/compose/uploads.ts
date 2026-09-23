@@ -8,7 +8,13 @@
 
 import type { ApolloClient } from "@apollo/client";
 
-import { uploadMedia, uploadVideo, UploadPartsError } from "@/lib/api/media-api";
+import {
+  fetchMediaAttachmentStatus,
+  uploadMedia,
+  uploadVideo,
+  UploadPartsError,
+  type MediaAsset,
+} from "@/lib/api/media-api";
 import type { Outcome, UserError } from "@/lib/api/outcome";
 import type { AuthGuard } from "@/lib/session/guard";
 import { mediaRefusalMessage } from "@/lib/ui/error-messages";
@@ -21,11 +27,93 @@ import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
 export type UploadStep = (next: AssetUpload) => void;
 
+/** Injectable timing, the way `write-signer.ts`'s `createWriteSigner` takes it. */
+export type UploadDeps = {
+  /** Injectable for tests; production uses the real timer. */
+  sleep?: (ms: number) => Promise<void>;
+};
+
+function realSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * The media-poll's own interval — the seal-poll's idiom
+ * (`write-signer.ts`'s `SEAL_POLL_DELAY_MS`: sleep, then read, on a fixed
+ * interval), at the same 1-second spacing, but UNBOUNDED where the seal
+ * poll caps its attempts.
+ *
+ * A staged write that outruns its budget falls back to `resume()`, replayed
+ * from handshake material the app persists. A PROCESSING asset has no such
+ * fallback: `draft-store.ts`'s `afterReload` already resets anything short
+ * of `done` to `waiting` across a reload, so there is nowhere to resume a
+ * still-processing leg FROM. A fixed attempt budget would only strand the
+ * draft on a wait it can never finish, so this keeps sleeping until the
+ * server answers READY or FAILED — a closed tab simply stops polling,
+ * exactly as it already stops mid-upload.
+ */
+export const MEDIA_POLL_DELAY_MS = 1_000;
+
 function refusalFor(errors: readonly UserError[], subject: string): string {
   const first = errors[0];
   return first === undefined
     ? `The server refused that ${subject}.`
     : mediaRefusalMessage(first.code, subject);
+}
+
+/**
+ * From an upload leg's own answer to the step the reader sees.
+ *
+ * EVERY STILL COMES BACK READY (api-spec.md "Upload and gallery limits") —
+ * only a video the server has to re-encode reads PROCESSING — so a picture
+ * leg reading `media.state` here costs it nothing extra: the state is
+ * already on the response this call already made, and the branch falls
+ * through to `done` at once. A video that needs the wait is watched until
+ * the server settles it, on the poll `mediaAttachment` is meant for (the
+ * same query `stagedWrite` is read back through).
+ */
+async function awaitReady(
+  client: ApolloClient,
+  guard: AuthGuard,
+  media: MediaAsset,
+  step: UploadStep,
+  subject: string,
+  sleep: (ms: number) => Promise<void>,
+): Promise<void> {
+  if (media.state !== "PROCESSING") {
+    step({ kind: "done", mediaId: media.id });
+    return;
+  }
+  step({ kind: "processing", mediaId: media.id });
+  for (;;) {
+    await sleep(MEDIA_POLL_DELAY_MS);
+    const read = await guard.run(() => fetchMediaAttachmentStatus(client, media.id));
+    if (read.kind === "refused") {
+      step({ kind: "failed", message: refusalFor(read.errors, subject), retryable: true });
+      return;
+    }
+    if (read.kind === "failed" || read.value === null) {
+      // A transport fault, or the asset vanished mid-poll — either way this
+      // leg cannot see the server's answer, exactly as any other read fault.
+      step({ kind: "failed", message: "Couldn't reach the server.", retryable: true });
+      return;
+    }
+    if (read.value.state === "FAILED") {
+      // Not retryable: the bytes this leg already sent are what failed to
+      // become servable, and re-picking is what sends different ones.
+      step({
+        kind: "failed",
+        message: read.value.failureReason ?? "The server couldn't finish that upload.",
+        retryable: false,
+      });
+      return;
+    }
+    if (read.value.state === "READY") {
+      step({ kind: "done", mediaId: read.value.id });
+      return;
+    }
+    // Still PROCESSING: sleep and read again.
+  }
 }
 
 /**
@@ -70,7 +158,9 @@ export async function runUpload(
    */
   ratio: number | undefined,
   step: UploadStep,
+  deps: UploadDeps = {},
 ): Promise<void> {
+  const sleep = deps.sleep ?? realSleep;
   let encoded;
   try {
     step({ kind: "encoding" });
@@ -95,7 +185,7 @@ export async function runUpload(
   const uploaded = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
 
   if (uploaded.kind === "success") {
-    step({ kind: "done", mediaId: uploaded.value.id });
+    await awaitReady(client, guard, uploaded.value, step, "picture", sleep);
     return;
   }
   if (uploaded.kind === "refused") {
@@ -171,9 +261,10 @@ export async function runVideoUpload(
    * validates the clip for that parent's cap.
    */
   scale: PickScale,
+  deps: UploadDeps = {},
 ): Promise<void> {
   if (cover === null) {
-    await sendVideo(client, guard, video, onVideo, scale);
+    await sendVideo(client, guard, video, onVideo, scale, deps);
     return;
   }
   let encoded;
@@ -209,7 +300,7 @@ export async function runVideoUpload(
   }
   onCover({ kind: "done", mediaId: poster.value.id });
 
-  await sendVideo(client, guard, video, onVideo, scale);
+  await sendVideo(client, guard, video, onVideo, scale, deps);
 }
 
 /**
@@ -225,7 +316,9 @@ async function sendVideo(
   video: PickedAsset,
   onVideo: UploadStep,
   scale: PickScale,
+  deps: UploadDeps = {},
 ): Promise<void> {
+  const sleep = deps.sleep ?? realSleep;
   // The compression and the strip are both reported as `encoding`: they are
   // the same stage in the same story — bytes being made ready — and inventing
   // a further state for either would put a word on screen that means nothing
@@ -285,7 +378,7 @@ async function sendVideo(
   });
 
   if (uploaded.kind === "success") {
-    onVideo({ kind: "done", mediaId: uploaded.value.id });
+    await awaitReady(client, guard, uploaded.value, onVideo, "video", sleep);
     return;
   }
   if (uploaded.kind === "refused") {

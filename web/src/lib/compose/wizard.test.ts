@@ -353,6 +353,20 @@ describe("the uploads", () => {
     expect(sealGate(nearly)).toEqual({ ok: false, reason: "2 pictures are still uploading." });
   });
 
+  // jakob's ruling: the seal waits for media to be READY to sign, not merely
+  // uploaded — a still-PROCESSING asset (the fallback-browser-original re-encode)
+  // counts exactly as an in-flight upload does, everywhere the count is read.
+  it("counts a still-processing asset as pending, not done", () => {
+    const state = run(
+      emptyWizard(),
+      picks(2),
+      { type: "upload", id: "a0", upload: { kind: "done", mediaId: "m0" } },
+      { type: "upload", id: "a1", upload: { kind: "processing", mediaId: "m1" } },
+    );
+    expect(uploadsPending(state)).toBe(1);
+    expect(sealGate(state)).toEqual({ ok: false, reason: "One picture is still uploading." });
+  });
+
   it("reports a failure ahead of a wait, because only one of them is actionable", () => {
     const state = run(
       emptyWizard(),
