@@ -1,5 +1,6 @@
-/* THE AUTHOR'S REGISTER — the same chronicle every reader sees, with the two
-   acts only its author has (jakob's rulings 2026-09-22).
+/* THE AUTHOR'S REGISTER — the same chronicle every reader sees, with the acts
+   only its author has (jakob's rulings 2026-09-22; the canvas review
+   2026-09-23).
 
    IT IS ONE LIST, NOT A SECOND PAGE. An author reading their own history is
    reading what everybody else reads; what changes is that some of the rows can
@@ -14,16 +15,29 @@
    thing on the page, with the footnote saying plainly what the per-version act
    does instead.
 
-   PER-VERSION REMOVAL IS A RARE PATH, AND IT IS DRAWN AS ONE. It rides the
-   version's own dateline as a word, not a button of its own: an act that is
-   reached deliberately and used once in a hundred visits must not compete with
-   the reading. The tombstoned version carries none — its payload is already
-   gone.
+   EVERY VERSION WITH A PAYLOAD CARRIES THE ACT — THE CURRENT ONE INCLUDED.
+   Removing the head's payload is a real thing an author may want: the older
+   versions keep standing and the post renders as removed, the no-fallback rule
+   the confirm words before it is pressed (`VersionRemoveConfirm`). It rides the
+   version's own dateline as a word, not a button of its own: an act reached
+   deliberately and used once in a hundred visits must not compete with the
+   reading.
+
+   THE TOMBSTONE'S SLOT SAYS `Already removed`. Its payload is gone, so there is
+   no act to offer — but an empty slot on one row of a register reads as an act
+   that forgot to draw. The quiet word (`PickedSheet`'s "Described" idiom) stands
+   exactly where the act would, in `text-secondary`, not pressable.
+
+   TAGS ARE NOT VERSIONS HERE EITHER. A tag or a reference is its own edge onto
+   the post; removing one is done on the edit screen, where it signs its own
+   record — never through this register, which acts on versions only.
 
    THE FRAME IS TALLER THAN A PHONE, for `PostHistory`'s reason and one more:
    the register puts a card above the list, so the scroll this board has to
-   show whole is longer than the reader's by exactly that card. */
-export const FRAME = { width: 390, height: 1000 };
+   show whole is longer than the reader's by exactly that card. The column
+   measures 1502px whole; with the 48px header and the 65px bar that is 1615,
+   drawn at 1620. */
+export const FRAME = { width: 390, height: 1620 };
 
 export function Screen() {
   return (

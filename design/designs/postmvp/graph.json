@@ -159,7 +159,7 @@
       "label": "Edited — the marker in its tappable form",
       "to": [
         { "board": "PostHistory", "case": "any reader — the chronicle, whole and public, gates being on acting rather than on reading" },
-        { "board": "PostHistoryOwn", "case": "its author — the same list with the whole-post removal leading it and one act per earlier version" }
+        { "board": "PostHistoryOwn", "case": "its author — the same list with the whole-post removal leading it and one act on every version that still has a payload, the current one included" }
       ]
     },
     {
@@ -202,7 +202,7 @@
       "via": 3,
       "kind": "advance",
       "label": "Remove this version",
-      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at version scale, over the register it was reached from" }]
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at version scale, over the register it was reached from — on any version with a payload, the current one included; a tombstone's slot says Already removed and is not pressable" }]
     },
     {
       "from": "PostHistoryOwn",

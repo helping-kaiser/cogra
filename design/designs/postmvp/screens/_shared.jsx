@@ -96,21 +96,47 @@ const MIRA = { handle: "mira", displayName: "Mira Voss" };
 const CHRONICLE_FOOTNOTE =
   "Every version is its own signed record. Editing adds a new one on top — nothing is rewritten, and removing one leaves a mark in its place.";
 
-/* The post four boards are the history OF — the chronicle, its own detail, the
-   author's register and the confirm over it. Its subject is a durable one on
-   purpose: a post about tomorrow's tide, edited over nine days, would have the
-   reader reading the dates as a mistake rather than as the point. */
+/* The post the chronicle boards are the history OF — the chronicle, its two
+   detail surfaces, the author's register and the confirm over it. Its subject is
+   a durable one on purpose: a post about tomorrow's tide, edited over nine days,
+   would have the reader reading the dates as a mistake rather than as the point.
+
+   A VERSION IS THE CONTENT STATE, AND NOTHING ELSE (jakob's ruling on the canvas
+   review, 2026-09-23): title, description, body, media and the sensitive mark —
+   the columns `post_versions` keeps. ADDING OR REMOVING A TAG OR A REFERENCE IS
+   NOT AN EDIT. Each is a standalone edge pointing at the post, signed on its own;
+   the edit screen merely gathers them beside the words. So no version in this
+   fixture differs from another by a tag, and every version card wears the SAME
+   tags line — the post's current tags, which are facts about the post rather
+   than about any one of its versions.
+
+   AND THE BODY'S KIND CAN CHANGE BETWEEN VERSIONS. A post's body is words XOR
+   media, per version, so a chronicle has to draw both kinds side by side: the
+   5 September version was a picture — the MVP tree's own salt-maps post, one
+   frame of it — and the author rewrote it as words three days later. */
+const SALT_MAPS_TOPICS = ["fieldnotes", "saltmaps"];
+
 const SALT_MAPS_CURRENT = {
   author: SOL,
   content:
     "Salt maps of the coast road — the rubbings are up at the harbour office until the end of the month. Paper against the salt crust, the side of a wax stick, and whatever the wind allowed.",
-  topics: ["fieldnotes", "saltmaps"],
+  topics: SALT_MAPS_TOPICS,
 };
 
 const SALT_MAPS_EARLIER = {
   author: SOL,
   content: "Salt maps of the coast road — the rubbings are up at the harbour office. Paper against the salt crust and the side of a wax stick.",
-  topics: ["fieldnotes"],
+  topics: SALT_MAPS_TOPICS,
+};
+
+/* The picture version: canonical's `SOL_POST` words and crop, one frame. */
+const SALT_MAPS_PICTURE = {
+  author: SOL,
+  title: "Salt maps of the coast road",
+  description:
+    "Rubbings from three weekends at low tide — paper against the salt crust, the side of a wax stick, and whatever the wind allowed.",
+  media: [{ src: "post-photo.jpg", ratio: "square", fit: "cover" }],
+  topics: SALT_MAPS_TOPICS,
 };
 
 const SALT_MAPS_TOMBSTONE = {
@@ -131,11 +157,21 @@ function HistoryColumn({ children }) {
 }
 
 /* One version: the line that dates it, whatever act the author may take on it,
-   and the version itself drawn by its own master. */
+   and the version itself drawn by its own master. The act sits on the label's
+   BASELINE — both are `label-small`, and the label carries its own asymmetric
+   padding, so aligning the boxes' bottoms would drop the act 4px under the
+   words it ends.
+
+   THE ROW TAKES NO GAP OF ITS OWN: the label's own 24px right gutter is the
+   space between the two. The longest dateline the chronicle can print —
+   `Current version · signed 12 September`, September being the longest month —
+   measures 208px of text, and with its gutters, the 109px act and the row's
+   16px edge it comes to 381 of the 390; a 12px gap on top overran the frame and
+   folded both the dateline and the act onto two lines. */
 function VersionBlock({ label, action, children }) {
   return (
     <>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, paddingRight: 16 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", paddingRight: 16 }}>
         <SectionLabel>{label}</SectionLabel>
         {action}
       </div>
@@ -144,6 +180,50 @@ function VersionBlock({ label, action, children }) {
   );
 }
 
+/* THE AUTHOR'S ACT ON ONE VERSION, AND WHAT STANDS IN ITS SLOT ONCE IT IS SPENT
+   (jakob's ruling on the canvas review, 2026-09-23). Every version with a
+   payload carries `Remove this version` — the CURRENT one included: removing
+   the head leaves the older versions standing and the post rendering removed,
+   the no-fallback rule `VersionRemoveConfirm` already words. A tombstoned
+   version's slot does not go empty, because an empty slot on one row of a
+   register reads as an act that forgot to draw; it carries the quiet word
+   `Already removed` — `PickedSheet`'s "Described" idiom, a finished act's word
+   in `text-secondary`, not pressable, standing exactly where the act would. */
+function RemoveVersionAct() {
+  return (
+    <InlineAction size="sm" style={{ flex: "none" }}>
+      Remove this version
+    </InlineAction>
+  );
+}
+
+function AlreadyRemoved() {
+  return (
+    <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+      Already removed
+    </span>
+  );
+}
+
+/* THE LEAD OF EVERY AUTHOR'S REGISTER — the act that does what an author who
+   wants the thing gone actually means, with the line that says what the
+   per-version act does instead. One shape for the post, the comment and the
+   profile; only the words change with the kind. */
+function RegisterLead({ action, note }) {
+  return (
+    <div style={{ padding: "12px 16px 4px" }}>
+      <Card>
+        <Button variant="text" selfStart>
+          {action}
+        </Button>
+        <QuietNote>{note}</QuietNote>
+      </Card>
+    </div>
+  );
+}
+
+const REMOVE_ONE_LEAVES_THE_REST = "Removes every version at once. Removing a single version leaves the rest standing.";
+
 function ChronicleFootnote({ children }) {
   return <div style={{ padding: "16px 16px 0" }}><QuietNote>{children}</QuietNote></div>;
 }
@@ -151,8 +231,10 @@ function ChronicleFootnote({ children }) {
 /* A VERSION CARD CARRIES NO AFFORDANCES, and that is a ruling the card makes
    for itself: the opinion, the score and the comment count belong to the POST,
    and a chronicle drawing them three times would be drawing one fact three
-   times. What a version card has is what the author signed — the words, the
-   topics, and the author's own chip — plus the way into that version's detail. */
+   times. What a version card has is what the author signed in it — the words or
+   the picture, and the author's own chip — plus the way into that version's
+   detail. Its tags line is the post's CURRENT tags, identical on every card:
+   a tag is its own edge onto the post, never part of a version. */
 function PostVersionCard({ version, href }) {
   return <PostCard {...version} variant="summary" showStance={false} href={href} onOpen={() => {}} />;
 }
@@ -160,38 +242,34 @@ function PostVersionCard({ version, href }) {
 /* THE CHRONICLE, DRAWN ONCE FOR BOTH ITS READERS (canonical's `ThreadDetail`
    rule — a body on a second screen stops being screen-local). The author's
    register is the same list with two things added, never a second list: the
-   whole-post removal leading it, and one act per earlier version.
+   whole-post removal leading it, and one act on every version that still has a
+   payload.
 
    THE WHOLE-POST REMOVAL LEADS, AND IT IS THE POINT OF THE REGISTER. Left to
    per-version acts alone, an author who wanted a post gone would remove version
    after version and still leave the head standing — the head never falls
    through to a predecessor (erasure.md §1). So the act that does what they
-   actually mean is the first thing on the page. */
+   actually mean is the first thing on the page.
+
+   ANY KIND OF VERSION, ONE LIST. The picture version is drawn by the same
+   master at the same variant as the words around it — the card re-proportions
+   for a picture the way it does in the feed — so a reader meets a change of
+   kind as one more version, never as a different sort of row. */
 function PostChronicle({ own = false }) {
+  const act = own ? <RemoveVersionAct /> : undefined;
   return (
     <HistoryColumn>
-      {own && (
-        <div style={{ padding: "12px 16px 4px" }}>
-          <Card>
-            <Button variant="text" selfStart>
-              Remove the whole post
-            </Button>
-            <QuietNote>Removes every version at once. Removing a single version leaves the rest standing.</QuietNote>
-          </Card>
-        </div>
-      )}
-      <VersionBlock label="Current version · signed 12 September">
+      {own && <RegisterLead action="Remove the whole post" note={REMOVE_ONE_LEAVES_THE_REST} />}
+      <VersionBlock label="Current version · signed 12 September" action={act}>
         <PostVersionCard version={SALT_MAPS_CURRENT} href="/p/salt-maps/v/12-september" />
       </VersionBlock>
-      <VersionBlock
-        label="Earlier version · signed 8 September"
-        action={own ? <InlineAction size="sm">Remove this version</InlineAction> : undefined}
-      >
+      <VersionBlock label="Earlier version · signed 8 September" action={act}>
         <PostVersionCard version={SALT_MAPS_EARLIER} href="/p/salt-maps/v/8-september" />
       </VersionBlock>
-      {/* NO ACT ON A TOMBSTONE. Its payload is already gone, and an act that
-          could only repeat itself is an act that teaches the reader nothing. */}
-      <VersionBlock label="Earlier version · signed 3 September">
+      <VersionBlock label="Earlier version · signed 5 September" action={act}>
+        <PostVersionCard version={SALT_MAPS_PICTURE} href="/p/salt-maps/v/5-september" />
+      </VersionBlock>
+      <VersionBlock label="Earlier version · signed 3 September" action={own ? <AlreadyRemoved /> : undefined}>
         <PostCard {...SALT_MAPS_TOMBSTONE} variant="summary" showStance={false} />
       </VersionBlock>
       <ChronicleFootnote>{CHRONICLE_FOOTNOTE}</ChronicleFootnote>

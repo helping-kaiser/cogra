@@ -5939,6 +5939,20 @@ onto both. Backlog item 34.
   would also be a claim about which change mattered, which is the
   author's business rather than the product's. From a row a reader opens
   that version's own detail surface where the kind has one.
+- **A version is the content state only; tag and reference changes are
+  not edits (jakob, canvas review 2026-09-23).** "Only adding or removing
+  a tag or reference are not edits of the post. They are standalone edges
+  pointing to it — they are just baked into the edit screen in UI." A
+  version row carries exactly what `post_versions` keeps — title,
+  description, body, media and the sensitive mark — and nothing else. So
+  no version can differ from another by a tag, a tag change never mints
+  a version, and every version card wears the same tags line: the post's
+  current tags, a fact about the post rather than about any one of its
+  versions. Implementation reads this as contract.
+- **Any kind of post, one chronicle (jakob).** A body is words xor media
+  per version, so a post can change kind between two versions and the
+  chronicle draws both side by side, each by the same master at the same
+  variant.
 - **A tombstoned version always keeps its row (jakob).** Removal takes
   the payload and never the record (`erasure.md` §1), so the mark stands
   in the content's place at the version's own date — whether one version
@@ -5950,7 +5964,11 @@ onto both. Backlog item 34.
   absent, so an author working version by version ends with a post that
   still stands wearing a mark. The act that does what they mean is
   therefore the first thing on the page, and the confirm words the
-  consequence before it is pressed.
+  consequence before it is pressed. `Remove this version` rides EVERY
+  version with a payload, the current one included — removing the head
+  leaves the older versions standing and the post rendering removed. A
+  tombstoned version's slot never goes empty: it carries the quiet word
+  `Already removed`, `PickedSheet`'s "Described" idiom, not pressable.
 - **Two doors, both appearing only once a second version exists
   (jakob).** An `Edit history` row in the ⋮ — beside `Edit`, because
   `History` is taken twice over (your own profile's ⋮, the wallet's

@@ -1775,8 +1775,11 @@ that the feature does nothing.
   exists because the head never falls through: an author removing
   version after version ends with a post that still stands, wearing a
   mark.
-- `Remove this version` rides an earlier version's own dateline — a word,
-  not a button, this being a rare path.
+- `Remove this version` rides the dateline of every version that still
+  has a payload, the current one included — a word, not a button, this
+  being a rare path. A tombstoned version's slot says `Already removed`
+  instead, in `text-secondary` and not pressable: a finished act's word
+  where the act would stand, the way the picked sheet says `Described`.
 - The confirm is `RemoveConfirm` at version scale. Title `Remove this
   version?`; body `Its words and pictures leave every reader's view, and
   a mark stays in their place. The other versions keep standing. If this

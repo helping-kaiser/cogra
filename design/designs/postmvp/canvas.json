@@ -42,7 +42,7 @@
       "x": 0,
       "y": 0,
       "w": 390,
-      "h": 880,
+      "h": 1488,
       "page": "histories"
     },
     {
@@ -51,7 +51,7 @@
       "x": 480,
       "y": 0,
       "w": 390,
-      "h": 1000,
+      "h": 1620,
       "page": "histories"
     },
     {
@@ -94,7 +94,7 @@
       "file": "HistoryMenu.dc.html",
       "title": "The ⋮ door · Edit history beside Edit",
       "x": 0,
-      "y": 1120,
+      "y": 1740,
       "w": 390,
       "h": 844,
       "page": "histories"
@@ -103,7 +103,7 @@
       "file": "EditedMarkerDoor.dc.html",
       "title": "The Edited marker, tappable",
       "x": 480,
-      "y": 1120,
+      "y": 1740,
       "w": 390,
       "h": 844,
       "page": "histories"
@@ -112,7 +112,7 @@
       "file": "OpinionsRowDoors.dc.html",
       "title": "Opinions on this post · the rows split",
       "x": 960,
-      "y": 1120,
+      "y": 1740,
       "w": 390,
       "h": 844,
       "page": "histories"
@@ -121,7 +121,7 @@
       "file": "StanceTimelinePost.dc.html",
       "title": "A stance timeline · one person on one post",
       "x": 1440,
-      "y": 1120,
+      "y": 1740,
       "w": 390,
       "h": 844,
       "page": "histories"
@@ -130,7 +130,7 @@
       "file": "ProfileStancesDoors.dc.html",
       "title": "The opinions page · the rows split",
       "x": 1920,
-      "y": 1120,
+      "y": 1740,
       "w": 390,
       "h": 844,
       "page": "histories"
@@ -139,7 +139,7 @@
       "file": "StanceTimeline.dc.html",
       "title": "A stance timeline · one person on another",
       "x": 2400,
-      "y": 1120,
+      "y": 1740,
       "w": 390,
       "h": 844,
       "page": "histories"
@@ -148,7 +148,7 @@
       "file": "PadHistoryDoor.dc.html",
       "title": "The pad · Current opinion becomes a door",
       "x": 0,
-      "y": 2084,
+      "y": 2704,
       "w": 390,
       "h": 844,
       "page": "histories"
@@ -167,7 +167,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 969,
+      "h": 1105,
       "page": "histories",
       "title": "Change histories · flow map"
     }
