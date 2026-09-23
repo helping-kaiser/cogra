@@ -6217,6 +6217,68 @@ on the Chats page. The masters grew in the tree's prelude —
   face.
 - **Stickers are parked (jakob).**
 
+### The chat details round — 2026-09-23
+
+Round B1 of the chats work: the detail surface the chats round left as
+its one deliberate gap, and its satellites — eight boards on the Chats
+page (`ChatDetails`, `ChatDetailsReader`, `ChatEdit`, `ChatEditSeal`,
+`ChatHistory`, `ChatSearchIn`, `ChatMediaGallery`, `ChatLeaveConfirm`).
+The five gap edges that pointed at it — the four thread headers and the
+row menu's `Chat details` — now land on it. The masters (`ChatIdentity`,
+`ChatDisc`, `MemberRows`, `OpenDecisionsEmpty`, `ChatVersionCard`,
+`ChatEventRow`) live in the tree's prelude.
+
+- **Multi-voice acts wear messenger clothes (jakob).** An act is instant
+  where the actor's own voice suffices under the chat's governance map;
+  otherwise it waits as a quiet pending card in the thread and a row
+  under an `Open decisions` section on the details, beside media. This
+  round draws the section and its empty state (`Nothing is being
+  decided.`); the pending card and the filled section are round B2's,
+  an intended gap on the edit seal's act.
+- **No presence, ever (jakob).** No online, last-seen or typing signal
+  on a member row or anywhere else.
+- **The chat's opinion control sits on the details (jakob)** — the
+  profile header's stance-anchor precedent: the wide anchor leads the
+  actions row, and the row's second act (`Edit chat` for an eligible
+  member, the join for a reader outside) takes its word's width.
+- **Founding creates the chat whole; an invitee who has not pointed
+  back is pending (jakob).** The member list marks them `Invited —
+  hasn't joined yet`, with no role. The thread's quiet line for the same
+  fact is a state of the drawn thread, not a board.
+- **The founder holds admin; roles show on member rows (jakob)** —
+  `Admin`, `Moderator`, `Member`, the default map's three roles. A
+  member can be a Collective, drawn as the person row it looks like
+  (`ActorChip`'s rule) with `a collective` on its second line.
+- **Metadata grows like posts and profiles (jakob).** Layered full-state
+  versions, the L1 mechanism being succession. The chronicle is the
+  change-histories pattern verbatim — whole versions newest first, the
+  current one marked, never a diff — with membership events (joined,
+  left, invited) as quiet rows between the versions, never part of one.
+- **Mute lives on the row menu and on the details (jakob)**, one
+  per-chat setting, and it silences the device push only — messages
+  write no bell rows.
+- **Leave is unilateral and unconditional (jakob)**, and the Leave
+  record's optional parting reason is a field in its confirm and a
+  quoted line under `left` in the chronicle.
+- **Chats are public (jakob)**, so the details are readable by
+  non-members and guests: the member's acts are absent, and the join,
+  worded by the chat's policy, stands where `Edit chat` stands.
+- **Deferred (jakob):** message disavowal and everything
+  moderation-flavoured — the moderation slice's.
+- **The lane's calls, flagged for review:** the anatomy's order
+  (WhatsApp's group info filtered: identity, actions row, media and
+  search, open decisions, members, mute and history, leave); `Edit chat`
+  on the actions row rather than in the header; the leave confirm not
+  offering the opinion door; the clip tile wearing the sound disc and no
+  duration (the one-duration ruling); the leave dialog keeping its
+  heading and answers pinned while a grown reason scrolls (the sheet's
+  short-viewport clause, read for a dialog).
+- **The gate**: canonical holds byte-identical — **217 screens · 1568
+  edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 44
+  screens and 163 edges, its gaps 5 → 3: the two intended B2 gaps and a
+  Collective member's own page, owed since the Collective actor variant
+  (§7).
+
 ---
 
 ## 14. The canvases
