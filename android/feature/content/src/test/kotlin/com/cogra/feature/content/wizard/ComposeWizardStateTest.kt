@@ -106,6 +106,59 @@ class ComposeWizardStateTest {
         assertThat(closed.retreated()?.step).isEqualTo(WizardStep.Crop)
     }
 
+    // -- The last removal gives the pick step back (jakob 2026-09-23) --
+
+    @Test
+    fun removingTheVideosOnlyPickReturnsThePickStep() {
+        // ComposeDetailsVideo.jsx:23-32 — "taking it away gives back the
+        // step that takes picks".
+        val atDetails = video.copy(step = WizardStep.Details)
+
+        val after = atDetails.removePick("clip")
+
+        assertThat(after.picked).isEmpty()
+        assertThat(after.step).isEqualTo(WizardStep.Body)
+        // The stage never becomes the words path.
+        assertThat(after.mode).isEqualTo(BodyMode.Media)
+    }
+
+    @Test
+    fun removingTheLastPictureFromTheManagerClosesItAndReturnsThePickStep() {
+        // jakob's 2026-09-23 ruling (ComposePicked.jsx / ComposeDetails.jsx):
+        // the manager's own last x behaves like the video path's one.
+        val staged = media.copy(
+            picked = listOf(PickedAsset("a")),
+            step = WizardStep.Details,
+            pickedSheetOpen = true,
+            title = "Salt maps of the coast road",
+            description = "Stood there long enough that the midges found me.",
+            tagSection = TagSectionState(tags = listOf(TagRow("fieldnotes"))),
+        )
+
+        val after = staged.removePick("a")
+
+        assertThat(after.picked).isEmpty()
+        assertThat(after.step).isEqualTo(WizardStep.Body)
+        assertThat(after.pickedSheetOpen).isFalse()
+        // Staged title/description/tags stay in the draft, waiting for
+        // the body to return — the removal is never refused and the
+        // stage never becomes a words-mode post.
+        assertThat(after.title).isEqualTo("Salt maps of the coast road")
+        assertThat(after.description).isEqualTo("Stood there long enough that the midges found me.")
+        assertThat(after.tagSection.tags).containsExactly(TagRow("fieldnotes"))
+        assertThat(after.mode).isEqualTo(BodyMode.Media)
+    }
+
+    @Test
+    fun removingOnePictureOfSeveralStaysOnTheSameStage() {
+        val atDetails = media.copy(step = WizardStep.Details)
+
+        val after = atDetails.removePick("a")
+
+        assertThat(after.picked.map { it.uri }).containsExactly("b")
+        assertThat(after.step).isEqualTo(WizardStep.Details)
+    }
+
     @Test
     fun describingCountsOnlyWhatWasActuallyWritten() {
         val state = media.copy(

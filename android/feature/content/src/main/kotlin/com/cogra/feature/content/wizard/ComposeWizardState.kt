@@ -657,18 +657,36 @@ fun ComposeWizardState.clearedCover(): ComposeWizardState = copy(
     coverMediaId = null,
 )
 
-/** Drops a pick from the tray without touching the rest of the order. */
-fun ComposeWizardState.removePick(uri: String): ComposeWizardState = copy(
-    picked = picked.filterNot { it.uri == uri },
-    // The framing cursor must not point past the end after a removal.
-    framingIndex = framingIndex.coerceAtMost((picked.size - 2).coerceAtLeast(0)),
-    // A framing describes a picture that is no longer in the post. Kept,
-    // it would be handed to a re-pick of the same asset as if the author
-    // had framed it this time.
-    crops = crops - uri,
-    // A sheet describing the removed picture has nothing left to describe.
-    describingIndex = null,
-)
+/**
+ * Drops a pick from the tray without touching the rest of the order.
+ *
+ * **THE LAST × GIVES THE PICK STEP BACK** (the video path's ruling,
+ * `design/designs/canonical/screens/ComposeDetailsVideo.jsx:23-32`, and
+ * jakob's 2026-09-23 ruling applying it to the manager,
+ * `ComposePicked.jsx`/`ComposeDetails.jsx`). A wizard stage never stands
+ * on a body that is gone: emptying the tray — the video's own ×, or the
+ * last picture in the Show-all manager — returns [WizardStep.Body] with
+ * the manager closed, so an empty Details or Seal is never reachable.
+ * [BodyMode] is untouched: the stage does not become the words path,
+ * only the picked media picker's own toggle does that.
+ */
+fun ComposeWizardState.removePick(uri: String): ComposeWizardState {
+    val remaining = picked.filterNot { it.uri == uri }
+    val emptied = remaining.isEmpty() && picked.isNotEmpty()
+    return copy(
+        picked = remaining,
+        // The framing cursor must not point past the end after a removal.
+        framingIndex = framingIndex.coerceAtMost((remaining.size - 1).coerceAtLeast(0)),
+        // A framing describes a picture that is no longer in the post. Kept,
+        // it would be handed to a re-pick of the same asset as if the author
+        // had framed it this time.
+        crops = crops - uri,
+        // A sheet describing the removed picture has nothing left to describe.
+        describingIndex = null,
+        step = if (emptied) WizardStep.Body else step,
+        pickedSheetOpen = if (emptied) false else pickedSheetOpen,
+    )
+}
 
 /**
  * Moves one pick in the order — `PickedSheet`'s drag, and its move-earlier
