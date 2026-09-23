@@ -365,21 +365,34 @@ mod tests {
     /// ´claim:media:a-clip-within-target-passes-through´
     #[test]
     fn within_target_is_the_composers_rule_with_its_headroom() {
-        let mb_per_s = |bps: u64, seconds: u64| bps * seconds / 8;
+        let bytes_at = |bps: u64, seconds: u64| bps * seconds / 8;
 
-        // A 30 s phone clip at 4.3 Mbps overall: the planned 4.128 Mbps
-        // plus a busy passage's overshoot, under 4.128 / 0.92 = 4.487.
-        assert!(within_target(1080, 1920, Some(30_000), mb_per_s(4_300_000, 30), CAP));
-        // The web clip the feed audit found: 1080p at 9.7 Mbps.
-        assert!(!within_target(1920, 1080, Some(30_000), mb_per_s(9_700_000, 30), CAP));
-        // Just over the headroom line.
-        assert!(!within_target(1080, 1080, Some(30_000), mb_per_s(4_500_000, 30), CAP));
-        // A lean clip whose canvas is too big still gets scaled.
-        assert!(!within_target(2560, 1440, Some(30_000), mb_per_s(1_000_000, 30), CAP));
-        // 6.7 min at 2 Mbps, the long clip already in the dev store: its
-        // rate is scaled to the cap, so the rule reads "fits the cap".
-        assert!(within_target(1920, 1080, Some(402_000), 101_000_000, CAP));
-        assert!(!within_target(720, 1280, None, 1_000, CAP));
+        assert!(
+            within_target(1080, 1920, Some(30_000), bytes_at(4_300_000, 30), CAP),
+            "a 30 s phone clip at 4.3 Mbps overall — the planned 4.128 plus a \
+             busy passage's overshoot — is under 4.128 / 0.92 = 4.487"
+        );
+        assert!(
+            !within_target(1920, 1080, Some(30_000), bytes_at(9_700_000, 30), CAP),
+            "the web clip the feed audit found: 1080p at 9.7 Mbps"
+        );
+        assert!(
+            !within_target(1080, 1080, Some(30_000), bytes_at(4_500_000, 30), CAP),
+            "just over the headroom line"
+        );
+        assert!(
+            !within_target(2560, 1440, Some(30_000), bytes_at(1_000_000, 30), CAP),
+            "a lean clip whose canvas is too big is still scaled"
+        );
+        assert!(
+            within_target(1920, 1080, Some(402_000), 101_000_000, CAP),
+            "6.7 min at 2 Mbps, the long clip already in the dev store: its \
+             rate is scaled to the cap, so the rule reads \"fits the cap\""
+        );
+        assert!(
+            !within_target(720, 1280, None, 1_000, CAP),
+            "a clip that states no duration is treated as too rich"
+        );
     }
 
     /// The invocation carries every part of the target: the rate, the

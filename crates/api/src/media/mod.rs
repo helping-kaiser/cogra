@@ -38,13 +38,13 @@
 //! **A video is held to a target instead.** Clients compress where they
 //! can, and the same probe that proves an upload decides whether it is
 //! within the served target ([`transcode`]). One that is stored `ready`
-//! at once; one that is not is stored `processing`, and the [`ingest`]
+//! at once; one that is not is stored `processing`, and the [`ingest_queue`]
 //! worker re-encodes it before anything may attach it. Either way the
 //! bytes a digest is committed over are the only bytes the asset ever
 //! serves.
 
 pub mod blob;
-pub mod ingest;
+pub mod ingest_queue;
 pub mod resumable;
 pub mod transcode;
 pub mod video;
@@ -1163,7 +1163,7 @@ pub(crate) fn asset_options(asset: &ProcessedAsset) -> serde_json::Value {
 /// (data-model.md "Media attachments").
 ///
 /// A video outside the served target is written `processing`, under its
-/// [`ingest_key`], for the [`ingest`] worker to re-encode; everything else
+/// [`ingest_key`], for the [`ingest_queue`] worker to re-encode; everything else
 /// is written `ready` under its final key, and is attachable at once.
 ///
 /// A retried upload of the same picture by the same author resolves to
@@ -1616,7 +1616,7 @@ mod planning_tests {
 
         let failed = store::MediaAttachment {
             state: store::AssetState::Failed,
-            failure_reason: Some(ingest::reason::DID_NOT_ENCODE.into()),
+            failure_reason: Some(ingest_queue::REASON_DID_NOT_ENCODE.into()),
             ..asset(author, video::MIME)
         };
         let refused = resolve_gallery(
@@ -1629,7 +1629,7 @@ mod planning_tests {
         assert!(
             refused
                 .to_string()
-                .contains(ingest::reason::DID_NOT_ENCODE),
+                .contains(ingest_queue::REASON_DID_NOT_ENCODE),
             "the author reads why: {refused}"
         );
 

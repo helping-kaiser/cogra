@@ -46,6 +46,11 @@ fn auth_config() -> anyhow::Result<AuthConfig> {
 /// "Reaper"), the auth-throttle GC sweep (auth.md "Rate limiting"), the
 /// media orphan sweep, and the media ingest workers.
 ///
+/// The server serves without ffmpeg too: every upload already within the
+/// video target is unaffected, and one that needs re-encoding fails with
+/// a reason its author reads. What an operator reads is the error logged
+/// here at startup.
+///
 /// `.env` is read before anything else, so a plain `cargo run` matches the
 /// make targets; real environment variables still win, because dotenvy
 /// never overrides. Every knob read here is an operational parameter
@@ -150,9 +155,6 @@ async fn main() -> anyhow::Result<()> {
         media.orphan_max_age_secs,
     ));
 
-    // The server still serves without ffmpeg: every upload already within
-    // target is unaffected, and one that needs re-encoding fails with a
-    // reason its author reads. What an operator reads is this line.
     let ffmpeg = match api::media::transcode::Ffmpeg::detect(&media.ffmpeg).await {
         Ok(ffmpeg) => {
             tracing::info!(
@@ -172,7 +174,7 @@ async fn main() -> anyhow::Result<()> {
         }
     };
     for _ in 0..media.ingest_workers {
-        tokio::spawn(api::media::ingest::ingest_loop(
+        tokio::spawn(api::media::ingest_queue::ingest_loop(
             pool.clone(),
             blobs.clone(),
             media.clone(),

@@ -17,7 +17,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use api::media::BlobStore;
-use api::media::ingest::{self, IngestSettings, Settled};
+use api::media::ingest_queue::{self as ingest, IngestSettings, Settled};
 use api::media::transcode::Ffmpeg;
 use axum::body::Body;
 use axum::http::Request;
@@ -82,6 +82,8 @@ impl Rig {
         }
     }
 
+    /// A member funded with enough θ for the prepares below: one that
+    /// passes the gallery rules is then priced like any other act.
     async fn seed_member(&self, handle: &str, email: &str) -> Uuid {
         let key = common::l1::client::ActorKey::generate();
         let id = Uuid::new_v4();
@@ -105,8 +107,6 @@ impl Rig {
         )
         .await
         .expect("credentials");
-        // Enough θ for the prepares below: a prepare that passes the
-        // gallery rules is then priced like any other act.
         self.standin
             .credit_burn(&key.address(), 10_000_000)
             .await
@@ -481,11 +481,11 @@ async fn an_upload_the_server_cannot_encode_fails_with_a_reason(pool: PgPool) {
 
     assert_eq!(
         rig.ingest(None).await,
-        Settled::Failed(ingest::reason::NO_ENCODER.into())
+        Settled::Failed(ingest::REASON_NO_ENCODER.into())
     );
     let polled = rig.media_attachment(&token, id).await;
     assert_eq!(polled["state"], "FAILED");
-    assert_eq!(polled["failureReason"], ingest::reason::NO_ENCODER);
+    assert_eq!(polled["failureReason"], ingest::REASON_NO_ENCODER);
     assert!(
         !rig.blobs
             .exists(&format!("ingest/{id}.mp4"))
@@ -498,14 +498,14 @@ async fn an_upload_the_server_cannot_encode_fails_with_a_reason(pool: PgPool) {
     assert!(
         refused[0]["message"]
             .as_str()
-            .is_some_and(|m| m.contains(ingest::reason::NO_ENCODER)),
+            .is_some_and(|m| m.contains(ingest::REASON_NO_ENCODER)),
         "prepare says why: {refused}"
     );
 
     let again = rig.upload(&token, &clip).await;
     assert_ne!(again["id"], first["id"], "a fresh attempt, not the failure");
     assert_eq!(again["state"], "PROCESSING");
-    assert_eq!(rig.ingest(None).await, Settled::Failed(ingest::reason::NO_ENCODER.into()));
+    assert_eq!(rig.ingest(None).await, Settled::Failed(ingest::REASON_NO_ENCODER.into()));
     assert_eq!(rig.ingest(None).await, Settled::Idle);
 }
 
@@ -527,18 +527,15 @@ async fn an_abandoned_job_is_picked_up_again_until_it_gives_up(pool: PgPool) {
         .expect("id")
         .to_string();
 
-    // Three workers each claim the job and die: a zero-second lease is one
-    // that has lapsed by the next claim.
     for attempt in 1..=ingest::MAX_ATTEMPTS {
         let job = postgres_store::media::claim_ingest(&rig.pool, 0.0)
             .await
             .expect("claim")
-            .expect("the job is claimable again");
+            .expect("a worker that died holds a zero-second lease, lapsed by the next claim");
         assert_eq!(job.id.to_string(), id);
         assert_eq!(job.attempts, attempt);
     }
 
-    // A live lease keeps a second worker away.
     let held = postgres_store::media::claim_ingest(&rig.pool, 60.0)
         .await
         .expect("claim");
@@ -548,7 +545,7 @@ async fn an_abandoned_job_is_picked_up_again_until_it_gives_up(pool: PgPool) {
             .await
             .expect("claim")
             .is_none(),
-        "a held lease is skipped"
+        "a live lease keeps a second worker away"
     );
     sqlx::query("UPDATE media_attachments SET lease_until = now() - interval '1 second'")
         .execute(&rig.pool)
@@ -557,7 +554,7 @@ async fn an_abandoned_job_is_picked_up_again_until_it_gives_up(pool: PgPool) {
 
     assert_eq!(
         rig.ingest(None).await,
-        Settled::Failed(ingest::reason::GAVE_UP.into())
+        Settled::Failed(ingest::REASON_GAVE_UP.into())
     );
 }
 
@@ -658,7 +655,7 @@ async fn an_upload_ffmpeg_refuses_fails_in_the_authors_words(pool: PgPool) {
         .to_string();
     assert_eq!(
         rig.ingest(Some(&ffmpeg)).await,
-        Settled::Failed(ingest::reason::DID_NOT_ENCODE.into())
+        Settled::Failed(ingest::REASON_DID_NOT_ENCODE.into())
     );
     assert_eq!(rig.media_attachment(&token, &id).await["state"], "FAILED");
 }

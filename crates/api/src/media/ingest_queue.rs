@@ -1,4 +1,4 @@
-//! ´mod:module:ingest´
+//! ´mod:module:ingest-queue´
 //!
 //! The ingest worker: what happens to an upload between the moment it
 //! lands and the moment it may be attached.
@@ -57,16 +57,21 @@ pub const MAX_ATTEMPTS: i32 = 3;
 /// short enough that the author's poll still ends in minutes.
 const RETRY_AFTER: Duration = Duration::from_secs(30);
 
-/// What an author reads when their upload could not be made servable.
-///
-/// Worded for the author rather than the operator — the operator's detail
-/// goes to the log — and kept here so the tests can name them.
-pub mod reason {
-    pub const NO_ENCODER: &str = "the server cannot re-encode video right now";
-    pub const DID_NOT_ENCODE: &str = "the video could not be re-encoded";
-    pub const GAVE_UP: &str = "processing did not finish after several attempts";
-    pub const DUPLICATE: &str = "an identical video is already among your uploads";
-}
+/// The server has no usable ffmpeg. Each `REASON_*` is what an author
+/// reads when their upload could not be made servable — worded for the
+/// author rather than the operator, whose detail goes to the log.
+pub const REASON_NO_ENCODER: &str = "the server cannot re-encode video right now";
+/// ffmpeg ran and refused the file, or produced something the byte
+/// pipeline would not store.
+pub const REASON_DID_NOT_ENCODE: &str = "the video could not be re-encoded";
+/// Even the floor rate overruns the cap: the one refusal an author can
+/// act on, by trimming the clip.
+pub const REASON_TOO_LONG: &str =
+    "the video is too long to fit the size limit at a watchable quality";
+/// The job was claimed [`MAX_ATTEMPTS`] times without settling.
+pub const REASON_GAVE_UP: &str = "processing did not finish after several attempts";
+/// The rendition is byte-identical to a live asset this author holds.
+pub const REASON_DUPLICATE: &str = "an identical video is already among your uploads";
 
 /// How the ingest worker runs.
 #[derive(Debug, Clone, Copy)]
@@ -148,6 +153,11 @@ pub async fn ingest_loop(
 }
 
 /// Claims one job, if there is one, and settles it.
+///
+/// The rendition is written under a key of its own per attempt, never one
+/// derived from the asset id: two attempts at one job — a lease that
+/// lapsed under a stalled worker — then write two objects, and each
+/// attempt can only ever delete its own.
 pub async fn ingest_once(
     pool: &PgPool,
     blobs: &dyn BlobStore,
@@ -161,12 +171,9 @@ pub async fn ingest_once(
     };
 
     if job.attempts > MAX_ATTEMPTS {
-        return fail(pool, blobs, &job, reason::GAVE_UP).await;
+        return fail(pool, blobs, &job, REASON_GAVE_UP).await;
     }
 
-    // A key of its own per attempt, never derived from the asset id: two
-    // attempts at one job — a lease that lapsed under a stalled worker —
-    // then write two objects, and each can only ever delete its own.
     let rendition_key = storage_key(Uuid::new_v4(), video::MIME);
     let work = run_job(blobs, config, ffmpeg, settings, &job, &rendition_key);
     tokio::pin!(work);
@@ -216,7 +223,7 @@ async fn run_job(
     job: &store::IngestJob,
     key: &str,
 ) -> Result<Written, JobError> {
-    let ffmpeg = ffmpeg.ok_or(JobError::Refused(reason::NO_ENCODER))?;
+    let ffmpeg = ffmpeg.ok_or(JobError::Refused(REASON_NO_ENCODER))?;
     let source = blobs
         .get(&job.storage_key)
         .await
@@ -241,7 +248,7 @@ async fn run_job(
         Ok(()) => {}
         Err(e @ TranscodeError::Failed { .. }) => {
             tracing::warn!(id = %job.id, error = %e, "ffmpeg refused an upload");
-            return Err(JobError::Refused(reason::DID_NOT_ENCODE));
+            return Err(JobError::Refused(REASON_DID_NOT_ENCODE));
         }
         Err(e) => return Err(JobError::Transient(e.to_string())),
     }
@@ -280,10 +287,8 @@ async fn run_job(
 /// server's fault and reads as a failed re-encode.
 fn refusal(e: &super::MediaError) -> &'static str {
     match e {
-        super::MediaError::TooLarge { .. } => {
-            "the video is too long to fit the size limit at a watchable quality"
-        }
-        _ => reason::DID_NOT_ENCODE,
+        super::MediaError::TooLarge { .. } => REASON_TOO_LONG,
+        _ => REASON_DID_NOT_ENCODE,
     }
 }
 
@@ -311,7 +316,7 @@ async fn settle_ready(
         }
         Err(sqlx::Error::Database(e)) if e.is_unique_violation() => {
             discard(blobs, &written.key).await;
-            fail(pool, blobs, job, reason::DUPLICATE).await
+            fail(pool, blobs, job, REASON_DUPLICATE).await
         }
         Err(e) => Err(e),
     }
