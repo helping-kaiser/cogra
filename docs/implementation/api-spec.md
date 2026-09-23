@@ -882,6 +882,15 @@ type MediaAttachment {
   "The algorithm `digest` is under — `sha256` today."
   digestAlgo: String!
   mimeType: String!
+  "Whether the bytes are final. PROCESSING while the server re-encodes
+   an upload to the served target, READY once the stored bytes are the
+   ones the asset will always serve, FAILED when it cannot be made
+   servable. Prepare refuses anything but READY, so every asset a
+   parent carries is READY. While PROCESSING, `url`, `digest` and
+   `sizeBytes` describe the bytes as they arrived."
+  state: MediaAttachmentState!
+  "Why the asset is FAILED, worded for its author; null otherwise."
+  failureReason: String
   "Null past 32 bits rather than wrapping: the column is 64-bit."
   sizeBytes: Int
   "The description the referencing version witnessed for this
@@ -909,6 +918,8 @@ type MediaAttachment {
   author: User
   createdAt: DateTime!
 }
+
+enum MediaAttachmentState { PROCESSING READY FAILED }
 
 type MediaOptions {
   "The displayed shape after container rotation, as \"W:H\", so layout reserves space pre-load."
@@ -2077,6 +2088,11 @@ type Query {
    actor's session; null otherwise."
   stagedWrite(id: UUID!): StagedWrite
 
+  "One of the viewer's own uploads, polled like stagedWrite until a
+   PROCESSING asset reads READY or FAILED. Null for an unknown id,
+   another account's asset, and without a session."
+  mediaAttachment(id: UUID!): MediaAttachment
+
   "The host key the device verifies seals against before approving
    (base64) — realization transparency: every host-added field of a
    verified act is checkable on-device (substrate.md §6)."
@@ -2850,7 +2866,8 @@ photo — needs.
 
 ```graphql
 "One attachment placement within a gallery. Assets are uploaded
- first via uploadMedia; the envelope commits their digests.
+ first via uploadMedia; the envelope commits their digests, so
+ every asset named here must be READY.
 
  The list is the gallery in order, so displayOrder states the
  entry's own index and isCover is true on the first entry and
@@ -3282,13 +3299,38 @@ says so.
   refused if it does not decode — a file that does not decode is
   not an image whatever its header says — and a video is refused
   unless its tracks are **H.264 video and AAC audio**, the pair
-  the readers are promised. The server **validates and never
-  transcodes**: clients re-encode on device, so the bytes that
-  arrive are the bytes that are stored.
+  the readers are promised.
+- **Video is served at one target, enforced before signing.**
+  The target is the Android composer's: 1080 on the short side,
+  H.264 at 4 Mbps scaled down so a long clip fits the upload cap,
+  never below 1 Mbps, AAC at 128 kbps. Clients compress to it
+  wherever they can; the server probes every upload and re-encodes
+  what exceeds it. The probe that validates the upload decides:
+  a clip whose short side is within 1080 and whose container rate
+  is within the target's video-plus-audio budget over the 0.92 cap
+  headroom — the overshoot the composer's own plan allows for — is
+  stored as it arrived and is `READY` at once, which is every
+  Android upload and every compressed web upload. Anything else is
+  stored `PROCESSING` and re-encoded with ffmpeg (fast-start, no
+  source metadata); only the rendition is kept, validated by the
+  same pipeline an upload runs, and the original is discarded. The
+  re-encode plans for the upload cap because the parent is not
+  known yet, so a comment's narrower cap still applies at prepare.
+- **Served bytes are witnessed bytes.** The envelope commits an
+  asset's digest at prepare, so every change to an asset's bytes
+  happens before prepare can see it: **prepare refuses an asset
+  that is not `READY`**, at the field that named it —
+  `["attachments", "<i>", "mediaId"]`, `coverMediaId`,
+  `["avatarMediaId"]`. A client reads the state off the upload's
+  own answer and polls `mediaAttachment(id)` until it leaves
+  `PROCESSING`; a clip that cannot be made servable reads `FAILED`
+  with a `failureReason`, and uploading the file again is a fresh
+  attempt. An asset is never re-encoded once it is `READY` — its
+  digest may already be witnessed.
 - **Animation is a still.** An animated WebP is accepted as the
   picture it is, and **a still GIF converts on the device** — one
-  image format reaches the server, and an encoder never has to live
-  in the upload path to make that true. **An animated GIF is refused
+  image format reaches the server, and no picture encoder has to
+  live in the upload path to make that true. **An animated GIF is refused
   on the device, with words.** Neither client platform has a
   documented way to encode animated WebP, so converting one would
   silently keep a single frame and drop what the author picked;

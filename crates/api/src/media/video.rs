@@ -4,12 +4,12 @@
 //! prove its tracks carry the codecs the policy admits, and read the
 //! duration the container states.
 //!
-//! **The server validates and never transcodes.** Clients re-encode on
-//! device, exactly as they already do for stills, so the bytes that
-//! arrive are the bytes that are stored and the server's whole job is to
-//! refuse what it will not serve. That is what keeps an encoder — and the
-//! CPU budget, the format matrix and the quality argument that come with
-//! one — out of the upload path.
+//! **This reader validates; it never re-encodes.** Refusing what the
+//! server will not serve is its whole job, and what it learns proving an
+//! upload — the displayed canvas and the duration — is also what decides
+//! whether the clip is within the served target. A clip that is not is
+//! re-encoded by the ingest worker (`super::ingest_queue`), whose output comes
+//! back through this same reader before it is stored.
 //!
 //! **Metadata is stripped on the device, and checked here.** The same
 //! posture the picture path carries: the client removes what identifies
@@ -33,7 +33,7 @@ use mp4::{MediaType, Mp4Reader, TrackType};
 
 use super::{MAX_PIXEL_DIMENSION, MediaError, Probe};
 
-/// The single stored moving format. Clients re-encode to it on device.
+/// The single stored moving format.
 pub const MIME: &str = "video/mp4";
 
 /// The `ftyp` brands an MP4 may announce.
