@@ -42,6 +42,7 @@ const {
   SectionLabel,
   Card,
   Button,
+  WashCard,
   DialogSurface,
   BottomSheet,
   SheetItem,
@@ -442,45 +443,38 @@ function ProfileChronicle({ own = false }) {
   );
 }
 
-/* THE HISTORIC BANNER — the tree's own notice panel, drawn the way the
-   key-absent notice is (jakob's canvas review, 2026-09-23: the first drawing
-   butted straight onto the card and read as the card's own header).
+/* THE HISTORIC BANNER — the brand wash, not the account-notice olive
+   (jakob's canvas review, 2026-09-23, second pass: `tertiary-container` is
+   the register of system notices about YOUR ACCOUNT — the key-absent panel,
+   the join-time prompts — and a history banner wearing it reads as the system
+   talking. The surface he named instead is the wallet balance card's:
+   "very nice cogra identity").
 
-   IT IS A PANEL OF ITS OWN, ON ITS OWN SURFACE. `tertiary-container` with its
-   `on-` pair, the card's medium rung, the card's 16px padding and 12px inner
-   gap — `WalletKeyAbsent`'s anatomy, the one notice panel canonical draws — and
-   that notice's placement rule, "inset to the same margins as every card": on
-   the detail surface the card runs the column's full width, so the panel does
-   too, and the two read as one column of surfaces. The column's own 12px gap is what stands
-   between it and the card, so the two never touch and never share a colour:
-   the panel sits a tonal family away from the card's `surface-card`, which is
-   what tells a reader it is a statement ABOUT the post rather than part of it.
+   SO IT IS `WashCard` — `--surface-hero`, the wash that dresses a page's ONE
+   moment (the component's own charter), which is exactly what this banner is:
+   the page's single statement that what stands below is a historic version.
+   `ghost={false}`, because the oversized coin is money's identity and history
+   is not money; `margin: 0`, because the detail column already carries the
+   card margins and the wash must align with the card below it. The column's
+   own 12px gap keeps the two surfaces apart, and the wash sits a family away
+   from `surface-card`, which is what tells a reader the banner is a statement
+   ABOUT the post rather than part of it.
 
-   IT IS A NOTE, NOT A WARNING. The line is `body-medium` in the panel's own ink
-   — no error colour, no icon — because nothing here went wrong. The way back to
-   the current version owns its line under it, so it is a `Button` rather than a
-   word riding the sentence (`InlineAction`'s own test), and on a tonal panel the
-   filled button is `inverse`: the panel's pair turned over, one colour family.
-   Small, and left-aligned — it is the way out, not the point. */
+   IT IS A NOTE, NOT A WARNING. The line is `body-medium` in the surface's own
+   ink — no error colour, no icon — because nothing here went wrong. The way
+   back to the current version owns its line under it, so it is a `Button`
+   rather than a word riding the sentence (`InlineAction`'s own test); on the
+   wash the ordinary filled button reads as every primary action does. Small,
+   and left-aligned — it is the way out, not the point. */
 function HistoricNote({ line, action }) {
   return (
     <div style={{ paddingTop: 4 }}>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "var(--card-gap)",
-          borderRadius: "var(--radius-medium)",
-          background: "var(--tertiary-container)",
-          color: "var(--on-tertiary-container)",
-          padding: "var(--card-padding)",
-        }}
-      >
+      <WashCard ghost={false} style={{ margin: 0 }}>
         <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{line}</p>
-        <Button variant="inverse" size="sm" selfStart>
+        <Button size="sm" selfStart>
           {action}
         </Button>
-      </div>
+      </WashCard>
     </div>
   );
 }
