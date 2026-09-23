@@ -250,6 +250,15 @@ internal fun MediaFields.toDomain(): MediaAssetView = MediaAssetView(
  * keeps its own `status` — a cover redacted alone reads REDACTED here
  * while the video it covers still plays.
  */
+internal fun MediaFields.CoverMedia.toDomain(): MediaAssetView = MediaAssetView(
+    id = id,
+    url = url,
+    altText = null,
+    status = status.toDomain(),
+    aspectRatio = MediaAssetView.ratioOf(options.aspectRatio),
+    mimeType = "",
+)
+
 /**
  * The upload path's own answer — the shared fragment plus the two
  * fields only it selects (`media.graphql`'s own comment explains why
@@ -267,15 +276,6 @@ internal fun MediaAttachmentQuery.MediaAttachment.toDomain(): MediaReadiness = M
     id = id,
     state = state.toDomain(),
     failureReason = failureReason,
-)
-
-internal fun MediaFields.CoverMedia.toDomain(): MediaAssetView = MediaAssetView(
-    id = id,
-    url = url,
-    altText = null,
-    status = status.toDomain(),
-    aspectRatio = MediaAssetView.ratioOf(options.aspectRatio),
-    mimeType = "",
 )
 
 internal fun PostFields.Title.toDomain() = ModeratedField(value, status.toDomain())
