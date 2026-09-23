@@ -45,7 +45,12 @@ vi.mock("@/lib/ui2/media/strip-video", () => ({
 // picked bytes, unchanged, and weighed at the pick as they are.
 // `compress-video.test.ts` covers its decisions.
 vi.mock("@/lib/ui2/media/compress-video", () => ({
-  compressVideo: vi.fn(async (blob: Blob) => ({ blob, path: "unsupported", tookMs: 0 })),
+  compressVideo: vi.fn(async (blob: Blob) => ({
+    blob,
+    path: "unsupported",
+    tookMs: 0,
+    videoCodec: null,
+  })),
   clipOutlook: vi.fn(async () => "as-picked"),
 }));
 

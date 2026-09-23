@@ -232,6 +232,23 @@ async function sendVideo(
   // Never throws: a browser that cannot encode, or an encode that fails, hands
   // back the picked bytes and the clip carries on exactly as it would have.
   const compressed = await compressVideo(video.file, scale.videoMaxBytes);
+  // A picture that is not H.264 and was not encoded here — the pick found this
+  // browser able to, and the encode then failed or was refused — is one the
+  // server admits no other way. Saying so now spares the author the upload
+  // that would only earn that refusal. A failure mid-encode may pass on a
+  // second try; a refusal of the configuration will not.
+  if (
+    compressed.path !== "encoded" &&
+    compressed.videoCodec !== null &&
+    compressed.videoCodec !== "avc"
+  ) {
+    onVideo({
+      kind: "failed",
+      message: "This browser couldn't prepare that video.",
+      retryable: compressed.path === "failed",
+    });
+    return;
+  }
   let stripped;
   try {
     stripped = await stripVideoMetadata(compressed.blob);

@@ -98,6 +98,12 @@ export type CompressResult = {
   readonly path: CompressPath;
   /** Wall time this step took, whichever way it went. */
   readonly tookMs: number;
+  /**
+   * The picked clip's picture codec, as mediabunny names it — null when the
+   * clip was never read. Anything but `avc` that was not encoded here is a
+   * clip the server will refuse, and the upload says so instead of sending it.
+   */
+  readonly videoCodec: string | null;
 };
 
 /**
@@ -118,10 +124,11 @@ const TAG = "[compress-video]";
  */
 export async function compressVideo(file: Blob, capBytes: number): Promise<CompressResult> {
   const started = performance.now();
+  let videoCodec: string | null = null;
   const keep = (path: Exclude<CompressPath, "encoded">, reason: string): CompressResult => {
     const log = path === "failed" ? console.warn : console.info;
     log(`${TAG} uploading the clip as picked (${path}): ${reason}`);
-    return { blob: file, path, tookMs: Math.round(performance.now() - started) };
+    return { blob: file, path, tookMs: Math.round(performance.now() - started), videoCodec };
   };
 
   // The cheapest honest answer first: a browser with no WebCodecs video encoder
@@ -138,6 +145,7 @@ export async function compressVideo(file: Blob, capBytes: number): Promise<Compr
   try {
     const probed = await probe(input, file.size);
     if (typeof probed === "string") return keep("unsupported", probed);
+    videoCodec = probed.clip.videoCodec;
 
     const ready = await readiness(probed, capBytes);
     if (ready.kind === "remux") return keep("within-target", "already H.264 + AAC within target");
@@ -156,7 +164,12 @@ export async function compressVideo(file: Blob, capBytes: number): Promise<Compr
       `${TAG} encoded (${plan.reason}) to ${plan.size.width}x${plan.size.height} at ` +
         `${plan.videoBps} bps, sound ${audio.kind}: ${file.size} -> ${blob.size} bytes`,
     );
-    return { blob, path: "encoded", tookMs: Math.round(performance.now() - started) };
+    return {
+      blob,
+      path: "encoded",
+      tookMs: Math.round(performance.now() - started),
+      videoCodec,
+    };
   } catch (error) {
     // The probe itself failed — a container the demuxer cannot read. The strip
     // reads it the same way and is where that becomes the author's refusal.
@@ -174,6 +187,12 @@ export async function compressVideo(file: Blob, capBytes: number): Promise<Compr
  * picked is asked the same questions `compressVideo` will ask — can this
  * browser encode it, and at what rate — and the answer says whether the encode
  * can bring it inside.
+ *
+ * A PICTURE THAT IS NOT H.264 MUST BE ENCODED HERE OR NOT GO AT ALL. The server
+ * admits H.264 and nothing else. An iPhone records HEVC by default, and where
+ * this browser can decode HEVC and encode H.264 — Safari can — the clip is
+ * simply encoded; where it cannot, sending it would spend the whole upload to
+ * earn the server's refusal, so the pick says no first.
  */
 export type ClipOutlook =
   /**
@@ -185,7 +204,9 @@ export type ClipOutlook =
   /** Over the cap as picked, but this browser encodes it and the encode can fit. */
   | "compressible"
   /** This browser encodes it, but even the floor rate is more than the cap holds. */
-  | "too-long";
+  | "too-long"
+  /** Its picture is not H.264, and this browser cannot re-encode it. */
+  | "unconvertible";
 
 /**
  * The outlook for a picked clip bound for `capBytes`.
@@ -196,16 +217,19 @@ export type ClipOutlook =
  * the pick always did.
  */
 export async function clipOutlook(file: Blob, capBytes: number): Promise<ClipOutlook> {
-  // Within the cap as picked, the answer is settled before anything is read.
-  if (file.size <= capBytes) return "as-picked";
-  if (typeof VideoEncoder === "undefined") return "as-picked";
-
   const input = new Input({ formats: [MP4, QTFF], source: new BlobSource(file) });
   try {
     const probed = await probe(input, file.size);
     if (typeof probed === "string") return "as-picked";
-    const ready = await readiness(probed, capBytes);
-    if (ready.kind !== "encode") return "as-picked";
+    const h264 = probed.clip.videoCodec === "avc";
+    // An H.264 clip within the cap goes whichever way the encode turns out.
+    if (h264 && file.size <= capBytes) return "as-picked";
+
+    // WebCodecs is secure-context only and absent from Firefox on Android;
+    // with no encoder at all, nothing else is worth asking.
+    const ready = typeof VideoEncoder === "undefined" ? null : await readiness(probed, capBytes);
+    if (ready?.kind !== "encode") return h264 ? "as-picked" : "unconvertible";
+    if (file.size <= capBytes) return "as-picked";
     const soundBps =
       ready.audio.kind === "none" ? 0 : ready.audio.kind === "copy" ? ready.audio.bps : AUDIO_BPS;
     return fitsAtFloor(probed.clip.durationMs, capBytes, soundBps) ? "compressible" : "too-long";

@@ -174,6 +174,15 @@ describe("screenPick", () => {
     expect(outcome.refusals).toHaveLength(0);
   });
 
+  it("refuses a picture this browser cannot turn into H.264, in the container line's words", async () => {
+    // An iPhone's HEVC clip where WebCodecs cannot decode HEVC: the server
+    // admits H.264 alone, so the clip could only go up to be refused.
+    clipOutlook.mockResolvedValue("unconvertible");
+    const outcome = await screenPick([mov()], EMPTY);
+    expect(outcome.accepted).toHaveLength(0);
+    expect(outcome.refusals.map((r) => r.reason)).toEqual([UNREADABLE]);
+  });
+
   it("refuses a video over the cap where nothing here will make it smaller", async () => {
     const outcome = await screenPick([mp4(POST_VIDEO_MAX_BYTES + 1)], EMPTY);
     expect(outcome.refusals[0]!.reason).toBe(TOO_BIG_VIDEO_POST);

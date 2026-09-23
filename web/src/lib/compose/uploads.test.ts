@@ -108,6 +108,7 @@ beforeEach(() => {
     blob,
     path: "unsupported",
     tookMs: 0,
+    videoCodec: null,
   }));
 });
 
@@ -497,7 +498,12 @@ describe("runVideoUpload", () => {
     const encoded = new Blob([new Uint8Array(new ArrayBuffer(5)) as BlobPart], {
       type: "video/mp4",
     });
-    compressVideo.mockResolvedValueOnce({ blob: encoded, path: "encoded", tookMs: 900 });
+    compressVideo.mockResolvedValueOnce({
+      blob: encoded,
+      path: "encoded",
+      tookMs: 900,
+      videoCodec: "hevc",
+    });
     const client = clientAnsweringInTurn("media-cover", "media-video");
 
     await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, SCALE);
@@ -532,6 +538,77 @@ describe("runVideoUpload", () => {
       retryable: false,
     });
     expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
+  });
+
+  // THE SERVER ADMITS H.264 ALONE. An iPhone's HEVC clip that this browser
+  // did not, in the end, encode would spend the whole upload to earn that
+  // refusal — so it is said here, before a byte goes.
+  it("refuses a picture that is not H.264 and was not encoded here", async () => {
+    encodable();
+    compressVideo.mockImplementationOnce(async (blob: Blob) => ({
+      blob,
+      path: "unsupported",
+      tookMs: 3,
+      videoCodec: "hevc",
+    }));
+    const client = clientAnsweringInTurn("media-video");
+    const video = steps();
+
+    await runVideoUpload(client, guard, clip, null, video.step, steps().step, SCALE);
+
+    expect(video.seen.at(-1)).toEqual({
+      kind: "failed",
+      message: "This browser couldn't prepare that video.",
+      retryable: false,
+    });
+    expect(stripVideoMetadata).not.toHaveBeenCalled();
+    expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
+  });
+
+  it("offers a retry when that encode failed mid-way rather than being refused", async () => {
+    encodable();
+    compressVideo.mockImplementationOnce(async (blob: Blob) => ({
+      blob,
+      path: "failed",
+      tookMs: 3,
+      videoCodec: "hevc",
+    }));
+    const video = steps();
+
+    await runVideoUpload(
+      clientAnsweringInTurn("media-video"),
+      guard,
+      clip,
+      null,
+      video.step,
+      steps().step,
+      SCALE,
+    );
+
+    expect(video.seen.at(-1)).toMatchObject({ kind: "failed", retryable: true });
+  });
+
+  it("sends an H.264 clip that was not encoded, as it always has", async () => {
+    encodable();
+    compressVideo.mockImplementationOnce(async (blob: Blob) => ({
+      blob,
+      path: "unsupported",
+      tookMs: 3,
+      videoCodec: "avc",
+    }));
+    const video = steps();
+
+    await runVideoUpload(
+      clientAnsweringInTurn("media-video"),
+      guard,
+      clip,
+      null,
+      video.step,
+      steps().step,
+      SCALE,
+    );
+
+    expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
   });
 
   it("weighs a comment's clip against a comment's cap", async () => {

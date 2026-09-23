@@ -154,6 +154,14 @@ export async function screenPick(
       // they are weighed as they are. Whatever still comes out over the cap is
       // refused at upload (`runVideoUpload`), as a picture is.
       const outlook = await clipOutlook(file, scale.videoMaxBytes);
+      // A picture that is not H.264 — an iPhone's HEVC — on a browser that
+      // cannot turn it into H.264 is a video CoGra cannot take from here: the
+      // server admits H.264 alone, and sending it would only earn that refusal
+      // after the whole upload. The container line says so in its own words.
+      if (outlook === "unconvertible") {
+        refuse(file, UNREADABLE);
+        continue;
+      }
       if (outlook === "too-long" || (outlook === "as-picked" && file.size > scale.videoMaxBytes)) {
         refuse(file, scale.tooBigVideo);
         continue;

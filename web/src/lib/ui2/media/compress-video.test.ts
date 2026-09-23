@@ -173,7 +173,7 @@ describe("compressVideo — the capability gate", () => {
 
     const result = await compressVideo(picked, POST_CAP);
 
-    expect(result).toMatchObject({ blob: picked, path: "unsupported" });
+    expect(result).toMatchObject({ blob: picked, path: "unsupported", videoCodec: null });
     expect(inputsOpened).not.toHaveBeenCalled();
     expect(init).not.toHaveBeenCalled();
   });
@@ -238,7 +238,8 @@ describe("compressVideo — the capability gate", () => {
 
     const result = await compressVideo(picked, POST_CAP);
 
-    expect(result).toMatchObject({ blob: picked, path: "unsupported" });
+    // The codec rides along, so the upload can refuse rather than send it.
+    expect(result).toMatchObject({ blob: picked, path: "unsupported", videoCodec: "hevc" });
     expect(canEncodeVideo).not.toHaveBeenCalled();
     expect(init).not.toHaveBeenCalled();
   });
@@ -306,15 +307,16 @@ describe("compressVideo — AAC carried across (no AAC encoder)", () => {
 // The pick's question of an over-cap clip, answered from the same probe and
 // the same capability checks the encode itself will run.
 describe("clipOutlook — can the encode bring it inside the cap?", () => {
-  it("settles a clip within the cap without opening it", async () => {
+  it("lets an H.264 clip within the cap through without asking the encoder", async () => {
     await expect(clipOutlook(clip(POST_CAP), POST_CAP)).resolves.toBe("as-picked");
-    expect(inputsOpened).not.toHaveBeenCalled();
+    expect(canEncodeVideo).not.toHaveBeenCalled();
+    expect(dispose).toHaveBeenCalledOnce();
   });
 
   it("weighs the picked bytes where the browser has no VideoEncoder", async () => {
     vi.stubGlobal("VideoEncoder", undefined);
     await expect(clipOutlook(clip(200_000_000), POST_CAP)).resolves.toBe("as-picked");
-    expect(inputsOpened).not.toHaveBeenCalled();
+    expect(canEncodeVideo).not.toHaveBeenCalled();
   });
 
   it("lets in an over-cap clip this browser will encode inside the cap", async () => {
@@ -350,6 +352,33 @@ describe("clipOutlook — can the encode bring it inside the cap?", () => {
   it("weighs the picked bytes where this browser cannot encode the clip", async () => {
     canEncodeVideo.mockResolvedValue(false);
     await expect(clipOutlook(clip(200_000_000), POST_CAP)).resolves.toBe("as-picked");
+  });
+
+  describe("a picture that is not H.264 — an iPhone's HEVC", () => {
+    beforeEach(() => {
+      tracks = [videoTrack("hevc", 1080, 1920), audioTrack("aac")];
+    });
+
+    it("goes in where this browser decodes it and encodes H.264 (Safari)", async () => {
+      await expect(clipOutlook(clip(40_000_000), POST_CAP)).resolves.toBe("as-picked");
+      await expect(clipOutlook(clip(300_000_000), POST_CAP)).resolves.toBe("compressible");
+    });
+
+    it("cannot go where this browser cannot decode it, whatever its size", async () => {
+      decodes.video = false;
+      await expect(clipOutlook(clip(40_000_000), POST_CAP)).resolves.toBe("unconvertible");
+      await expect(clipOutlook(clip(300_000_000), POST_CAP)).resolves.toBe("unconvertible");
+    });
+
+    it("cannot go where there is no WebCodecs encoder at all", async () => {
+      vi.stubGlobal("VideoEncoder", undefined);
+      await expect(clipOutlook(clip(40_000_000), POST_CAP)).resolves.toBe("unconvertible");
+    });
+
+    it("cannot go where there is no H.264 encoder for it", async () => {
+      canEncodeVideo.mockResolvedValue(false);
+      await expect(clipOutlook(clip(40_000_000), POST_CAP)).resolves.toBe("unconvertible");
+    });
   });
 
   it("never throws, and weighs the picked bytes when the clip cannot be read", async () => {
@@ -437,6 +466,7 @@ describe("compressVideo — the encode", () => {
   it("returns the encoded MP4 bytes", async () => {
     const result = await compressVideo(clip(200_000_000), POST_CAP);
     expect(result.path).toBe("encoded");
+    expect(result.videoCodec).toBe("avc");
     expect(result.blob.size).toBe(64);
     expect(result.blob.type).toBe("video/mp4");
     expect(result.tookMs).toBeGreaterThanOrEqual(0);
