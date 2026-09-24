@@ -29,8 +29,12 @@
    new version — signed by the chat's own system actor (chats.md §3, §8). The
    system actor's record never joins the reader's count. Where the reader's
    voice does NOT carry the tally, the same three records leave the change
-   waiting: a quiet pending card in the thread and a row under `Open
-   decisions` — round B2's face, an intended gap on this seal's act.
+   waiting: the reader's own quiet card in the thread, counting people with
+   nothing left to press, and a row under `Open decisions`
+   (`ChatThreadDecisions`, `ChatDetailsDecisions`). THIS SEAL IS ALSO THE
+   MASTER for the governance round's other two proposals — a role change
+   (`ChatRoleSheet`) and a version's removal (`ChatVersionRemoveConfirm`) —
+   drawn once here and read with the nouns swapped.
 
    MESSENGER CLOTHES, EVEN HERE. The rows say what a reader recognises — a
    change, the chat, their opinion for it — and never proposal, ballot or

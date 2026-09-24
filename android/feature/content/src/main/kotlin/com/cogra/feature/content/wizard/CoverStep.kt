@@ -26,6 +26,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.media.CoverPick
 import com.cogra.core.designsystem.v2.media.CoverRow
 import com.cogra.core.designsystem.v2.media.cappedToTallestTile
@@ -183,11 +184,47 @@ internal fun coverPreviewRatio(sourceRatio: Float?): Float =
  * The chosen face's bytes, the chosen picture, or null for no cover —
  * what the stage's preview draws, and what the details field reads to
  * know whether it is a door or a face.
+ *
+ * The skipped step's first frame is null here too: it is a still the
+ * clip is stored with, not a face anyone chose, so the details field
+ * stays a door over it (`ComposeDetailsVideo`).
  */
 internal fun ComposeWizardState.coverModel(): Any? = when (val choice = coverChoice) {
-    CoverChoice.None -> null
+    CoverChoice.None, CoverChoice.FirstFrame, CoverChoice.NoStill -> null
     is CoverChoice.Frame -> coverFrames.getOrNull(choice.index)?.picture?.bytes
     is CoverChoice.Picture -> choice.uri
+}
+
+/**
+ * The cover field's empty state — "Add a cover" and the line under it —
+ * wherever a vertical clip stands without a chosen face: the details
+ * stage (`ComposeDetailsVideo`) and the reply composer
+ * (`ReplyVideoFailed`, which draws it at comment scale). A field's empty
+ * state, never a second entrance: for a vertical clip it is the only
+ * way to a face (design/readme.md §13, "The door is a field's empty
+ * state").
+ */
+@Composable
+internal fun CoverDoor(onOpen: () -> Unit, testTag: String) {
+    // The boards' own section rhythm, off the 4dp grid like the columns
+    // that hold it.
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = "Cover",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        InlineAction(
+            text = "Add a cover",
+            onClick = onOpen,
+            testTag = testTag,
+        )
+        Text(
+            text = "It plays the moment it is on screen, so it starts on its own first frame.",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 /**
@@ -204,7 +241,8 @@ internal fun ComposeWizardState.coverModel(): Any? = when (val choice = coverCho
  * about what the post is going to carry.
  */
 internal fun CoverChoice.toPick(): CoverPick = when (this) {
-    CoverChoice.None -> CoverPick.None
+    // The first frame was never picked, so no tile rings for it.
+    CoverChoice.None, CoverChoice.FirstFrame, CoverChoice.NoStill -> CoverPick.None
     is CoverChoice.Frame -> CoverPick.Frame(index)
     is CoverChoice.Picture -> CoverPick.OwnPicture
 }

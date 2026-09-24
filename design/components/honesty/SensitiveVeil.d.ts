@@ -47,10 +47,12 @@ export interface RedactedContentProps {
   /**
    * "illegal" — removed for cause by a passing proposal. "author" — removed by
    * choice (erasure §1). "account" — a whole account deleted by the person who
-   * had it (erasure §2). These must read differently: collapsing them would let
-   * a moderation verdict hide behind an author's decision, or the reverse.
+   * had it (erasure §2). "chat" — a chat's version removed by the chat's own
+   * passed decision (chats.md §8; a chat has no author). These must read
+   * differently: collapsing them would let a moderation verdict hide behind an
+   * author's decision, or the reverse.
    */
-  reason?: "illegal" | "author" | "account";
+  reason?: "illegal" | "author" | "account" | "chat";
   /** When it was removed, in the reader's words. */
   when?: string;
   /** Replaces the second line where a case needs its own wording. */

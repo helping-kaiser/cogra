@@ -2050,3 +2050,113 @@ signed, and it shows in the chat's history.`; the field `Why?` with
 sheet's own pairing; `Leave` (quiet) and `Stay` (filled). It promises
 nothing about coming back, because whether a return needs a new
 invitation turns on the chat's rules.
+
+### The chats governance round — same day
+
+Round B2's words (post-MVP tree, 2026-09-23, with jakob's fix pass of
+2026-09-24). Candidates, none blessed. The register: a decision is said as
+what a person wants, then how many people agree so far. `Vote` is the
+reader's own word for what they cast (jakob's, in the fix pass); proposal,
+ballot, tally, quorum and weight stay off the screen.
+
+**A decision waiting in the thread.**
+
+- The sentence names the proposer and what they want, in full display
+  names: `Mira Voss wants to remove Kel Moreau from the chat`; the
+  reader's own reads `You want to change the chat's name, picture and
+  description`; a role change `{name} wants to make {name} a moderator`; a
+  removal `{name} wants to remove the version of 10 September`.
+- The count is the people who agree: `2 of 5 so far`, `3 of 6 so far`. It
+  never names a threshold and never promises how many it will take.
+- The two words are `Disagree` and `Agree`, named `Disagree — {the
+  sentence}` and `Agree — {the sentence}` for the ear. On a join request
+  the act is `Approve` alone, named `Approve — Sal Torres asks to join`.
+- The card's words are a door, named `{the sentence} — see the decision`.
+- A card the reader has voted on shows a readout, not a button: `You
+  agreed` or `You disagreed` where the two words stood, and the whole card
+  is the door, named `{the sentence}, {count}, You agreed — see the
+  decision`. The reader's own card always reads `You agreed`.
+- Settled, a card becomes one line saying what is now true. Passed: `Tobias
+  Lindqvist is now a moderator`, `Kel Moreau was removed`, `The chat is
+  now called “Salt prints”`, `Sal Torres's request was approved`, and for
+  the requester `Your request was approved`. Failed: `The chat kept its
+  name`, `Kel Moreau stays in the chat` — what stayed, never "rejected" or
+  "voted down".
+- A join request: `Sal Torres asks to join`, the request's message quoted
+  under it; the requester's own card `You asked to join`.
+
+**The vote's small seal.** The sheet `What you sign` with `How signing
+works`; one sentence — `You agree that Kel Moreau should be removed from
+the chat.`, `You disagree that Kel Moreau should be removed from the
+chat.`, `You approve Sal Torres joining the chat.`, or for a withdrawal
+`You take back your vote on changing the chat's name, picture and
+description.`; the line `Your vote is public, and it is yours to change or
+take back later.`; the act `Sign and agree`, `Sign and disagree`, `Sign and
+approve` or `Sign and withdraw`.
+
+**A decision, opened.** Titled `Decision`, back `Back`. The sentence as
+its heading, and under it `Proposed by you on 20 September · open` (`Proposed
+by {name}` for someone else's; `passed on {date}` or `failed on {date}` once
+settled). The sections `If it passes` and `The chat now`; the proposed
+picture on its card is a door named `Open the proposed picture`. `Votes`, over `3
+agreed · 1 disagreed · 2 haven't voted`; each row the voter, the date they
+voted (`you · 20 September` for the reader's own), and `Agreed` or
+`Disagreed`; under the list `Every vote is a public record. Each person's
+newest vote is the one that counts.` Geek mode adds `· by role 3 for, 3
+against — 6 of 14 cast (admin 5, moderator 3, member 1); either side past
+half the cast settles it`, spoken in both modes as `By role — admin 5,
+moderator 3, member 1 — 3 for and 3 against, 6 of 14 cast; either side past
+half of the cast settles it`. `Your vote`, over `You agreed when you
+proposed it, on 20 September.`, with `Disagree instead` and `Take back your
+vote`. The change act names the other direction: `Disagree instead` over an
+agreement, `Agree instead` over a disagreement.
+
+**Open decisions, filled.** Each row is the card's sentence over its
+count, with the two words under them at the row's edge — or, once the
+reader has voted, `You agreed` at the count line's end inside the door. The
+door is named `{sentence}, {count} — see the decision`, with `, You agreed`
+before the dash on a voted row.
+
+**Adding people.** Titled `Add people`, back `Back to chat details`, the
+field `Search people`, the forward action `Next`; under the list `People
+already in the chat, or already invited, aren't listed.` The seal: `What
+you sign`, `Last step`, the leave `Leave — nobody is invited`; the chat
+shown back as `Coast walkers` · `Inviting two people into the chat.`; the
+acts card `Invitations` · the names, `2 things, signed together`, `They
+land together, or none does.`; the line `An invitation is public and
+vouches that they belong here. They join only if they accept.`; the act
+`Sign and invite`.
+
+**The foot of a chat you are not in yet.** Invited: `Mira Voss invited
+you.` over `Join`. Asked: `Your request is sent — you can join once it's
+approved.` Approved: `Join` alone, under the outcome line.
+
+**Joining's seal.** The sheet `What you sign` with `How signing works`;
+the acts card `Joining` · the chat · `1 thing, signed` (spoken `1 join`);
+the route's fact row — `Invited by` · `Mira Voss`, `Your request` ·
+`Approved`, or `Who can join` · `Anyone`; `Your opinion` · the readout;
+the line `Joining is public — your name joins the member list. Encrypted
+messages sent before you join stay closed to you.`; the act `Sign and
+join`.
+
+**A member's role.** The sheet is titled `{name}'s role`; the rows
+`Admin`, `Moderator`, `Member`, the current one chosen; under them `The
+chat decides roles together. If your say is enough, the change is made at
+once; if not, it waits in the chat until enough members agree.`
+
+**Removing a chat's version.** `Remove this version?`; `Its name, picture
+and words leave every reader's view, and a mark stays in their place. The
+other versions keep standing. If this is the current version, the chat
+shows it as removed — an earlier version never takes its place.`; `The
+chat decides this together. If your say is enough, it's removed at once;
+if not, it waits in the chat until enough members agree.`; `Remove
+version` (quiet) and `Keep it` (filled) — the post's confirm with the
+nouns swapped and the chat's paragraph added.
+
+**The fourth removal mark.** Next to the three already in use: `Removed
+by the chat's decision` — `Its members decided to take it down. The
+decision is public.` A chat has no author, so the author's mark would
+name nobody, and the platform's would dress the members' choice as a
+verdict. A removed chat version reads `A version stood here from 10
+September. Its name, picture and words were removed; the record of the
+change stays.`

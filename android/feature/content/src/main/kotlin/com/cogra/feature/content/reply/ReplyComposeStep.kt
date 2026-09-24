@@ -37,6 +37,7 @@ import com.cogra.feature.content.R
 import com.cogra.feature.content.wizard.AssetUpload
 import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.CoverChoice
+import com.cogra.feature.content.wizard.CoverDoor
 import com.cogra.feature.content.wizard.inFlight
 import com.cogra.feature.content.wizard.percentOrNull
 import com.cogra.feature.content.wizard.text
@@ -71,6 +72,7 @@ internal fun ColumnScope.ReplyComposeStepBody(
     onDescribePictures: () -> Unit,
     onPickCoverFrame: (Int) -> Unit,
     onPickCoverPicture: () -> Unit,
+    onOpenCoverRow: () -> Unit,
     onDismissRefusal: (Int) -> Unit,
     onRetryUpload: (String) -> Unit,
 ) {
@@ -123,6 +125,7 @@ internal fun ColumnScope.ReplyComposeStepBody(
             onDescribe = onDescribePictures,
             onPickCoverFrame = onPickCoverFrame,
             onPickCoverPicture = onPickCoverPicture,
+            onOpenCoverRow = onOpenCoverRow,
         )
     }
 
@@ -187,6 +190,7 @@ private fun ReplyClip(
     onDescribe: () -> Unit,
     onPickCoverFrame: (Int) -> Unit,
     onPickCoverPicture: () -> Unit,
+    onOpenCoverRow: () -> Unit,
 ) {
     // **A failed upload is not a refused file** (`ReplyVideoFailed`). A
     // refusal is an answer and retrying cannot change it; a fault means
@@ -245,14 +249,22 @@ private fun ReplyClip(
         subject = DescribeSubject.Video,
         testTag = "reply_describe_counter",
     )
-    CoverRow(
-        frames = state.coverFrames.map { it.picture.bytes },
-        picked = state.coverChoice.toPick(),
-        onPickFrame = onPickCoverFrame,
-        onPickOwnPicture = onPickCoverPicture,
-        ownPicture = (state.coverChoice as? CoverChoice.Picture)?.uri,
-        testTagPrefix = "reply_cover",
-    )
+    // A VERTICAL CLIP OPENS WITH THE DOOR (`ReplyVideoFailed`): there is
+    // no step to skip in a one-screen composer, so the row is what gives
+    // way, and the row is what the door opens (`ReplyVideo`). A
+    // horizontal or square clip wears the row from the start.
+    if (state.coverDoorShowing) {
+        CoverDoor(onOpen = onOpenCoverRow, testTag = "reply_cover_door")
+    } else {
+        CoverRow(
+            frames = state.coverFrames.map { it.picture.bytes },
+            picked = state.coverChoice.toPick(),
+            onPickFrame = onPickCoverFrame,
+            onPickOwnPicture = onPickCoverPicture,
+            ownPicture = (state.coverChoice as? CoverChoice.Picture)?.uri,
+            testTagPrefix = "reply_cover",
+        )
+    }
 }
 
 /**
