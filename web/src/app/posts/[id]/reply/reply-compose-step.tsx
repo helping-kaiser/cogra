@@ -52,6 +52,7 @@ export function ReplyComposeStep({
   state,
   previews,
   framePreviews,
+  clipFace,
   capturing,
   durationMs,
   refusals,
@@ -70,6 +71,8 @@ export function ReplyComposeStep({
   state: ReplyState;
   previews: Readonly<Record<string, string>>;
   framePreviews: readonly string[];
+  /** The clip's stored frame 0 — the coverless fallback face (item 106). */
+  clipFace: string | null;
   capturing: boolean;
   durationMs: number;
   refusals: readonly PickRefusal[];
@@ -143,6 +146,7 @@ export function ReplyComposeStep({
         previews={previews}
         cover={state.cover}
         framePreviews={framePreviews}
+        clipFace={clipFace}
         capturing={capturing}
         durationMs={durationMs}
         refusals={refusals}

@@ -6143,7 +6143,14 @@ painted a frame.
   chosen, the taken frame 1 where none was; the COMPOSE WIZARD's
   own tiles are a different rule and always wear the clip's first
   frame, the chosen cover riding as the ringed inset only (the
-  video-cover round). No new boards; both rulings
+  video-cover round). **The rule holds at both scales** (jakob
+  2026-09-24, when the platforms' reply tiles diverged): the
+  reply composer's clip tile is an authoring tile like the
+  tray's — frame 0 as its face, the chosen frame as the ringed
+  inset — because a divergence between the two composers would
+  be invisible until it confused, and the inline cover row
+  already shows the chosen frame at full prominence right below
+  it. No new boards; both rulings
   land as contracts to the implementation session.
 
 ### The compose last-picture ruling — 2026-09-23
@@ -6610,7 +6617,7 @@ slots.
 - **Pending and didn't-land (design.md §9).** A message still settling shows
   whole with `Still settling ·` before its clock; one that expires leaves
   every reader's view and its author gets a calm notice where it stood —
-  `Nothing was spent.`, `Dismiss` and `Put it back`.
+  `Nothing was spent.`, `Dismiss` and `Try again`.
 - **Removed messages (round A's docblock, drawn).** The author's own `Remove`
   sits among the acts on their own bubble's menu, behind the post's confirm
   with the nouns swapped; the removed message is `RedactedContent` where the
@@ -6647,7 +6654,7 @@ slots.
   opinion row too; the approval row names the chat as its actor; the chat rows speak handles, the
   list's grammar; the three new push kinds default on, by analogy; the
   invitation's message field sits on the seal; the explorer's word is
-  `You're invited`; `Put it back` returns the words without signing.
+  `You're invited`; `Try again` returns the words without signing.
 - **The componentization law (jakob, the fix pass: "we want actual
   components. ALWAYS!").** A board mounts the real master wherever one
   exists; hand-drawn look-alikes stand only in explicit show-me-options

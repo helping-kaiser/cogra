@@ -914,6 +914,13 @@ type MediaAttachment {
    asset, and it is a real foreign key so the poster is redacted with
    its video (data-model.md)."
   coverMedia: MediaAttachment
+  "True when coverMedia is a frame taken from the clip rather than a
+   still its author chose — the authoring fact the version's manifest
+   witnessed beside the cover (data-model.md, per-asset map key 4).
+   Resolved from the junction row like coverMedia, and only ever true
+   where the placement names a cover: false on a chosen cover, on a
+   placement without one, and outside a placement."
+  coverTaken: Boolean!
   "The account that uploaded the asset."
   author: User
   createdAt: DateTime!
@@ -2900,12 +2907,19 @@ input AttachmentInput {
    never a re-upload."
   altText: String
   "The video's poster — an asset this author uploaded, either a frame
-   the client cut out of the clip or a picture chosen instead. Only a
-   video placement takes one. Authored here for the same reason
-   altText is: it is a fact about this placement, so changing the
-   cover is a new version of the parent rather than a re-upload of
-   the clip."
+   the client cut out of the clip or a picture chosen instead, and
+   coverTaken says which. Only a video placement takes one. Authored
+   here for the same reason altText is: it is a fact about this
+   placement, so changing the cover is a new version of the parent
+   rather than a re-upload of the clip."
   coverMediaId: UUID
+  "True when the cover is a frame taken from the clip rather than a
+   still the author chose; absent or null reads as chosen. The bytes
+   cannot say which, so the client states it and the manifest
+   witnesses it beside the cover (data-model.md, per-asset map
+   key 4). Refused without a coverMediaId, and on a placement that
+   is not a video."
+  coverTaken: Boolean
 }
 
 "A topic declaration — one Tag record toward the canonical Type
@@ -3406,6 +3420,9 @@ says so.
   another account's, a video, removed, or absent is refused at
   `["attachments", "<i>", "coverMediaId"]`, as is a cover named on
   an attachment that is not a video.
+- **A taken mark qualifies a video's cover.** `coverTaken: true`
+  without a `coverMediaId`, or on an attachment that is not a
+  video, is refused at `["attachments", "<i>", "coverTaken"]`.
 - **A profile picture is the uploader's own still**, so an avatar
   answers to the picture cap and never the video one — the profile
   carries one image, picked and cropped circular 1:1, and no
