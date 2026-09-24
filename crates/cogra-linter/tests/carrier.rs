@@ -5,9 +5,15 @@
 //! the five document rules preceding the package rule that would otherwise
 //! take them, the tree rules preceding the docs residual, and the empty
 //! prefix that makes Ω total — and a fixture partition would test the test.
+//!
+//! Each fixture root is a repository of its own with every file it was
+//! built with tracked, because the carrier is what git lists
+//! (´dec:lint:tracked-carrier´); what a test writes afterwards is untracked
+//! unless it tracks it again.
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use cogra_linter::{Adoption, Language, OwnerId, SourceFile, Walk, carrier};
 
@@ -19,10 +25,8 @@ fn ruled() -> Adoption {
     .expect("the corpus's own adoption data is ruled")
 }
 
-/// A tree of empty-ish files at `paths`, under a root of its own.
-fn tree(name: &str, paths: &[&str]) -> PathBuf {
-    let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(name);
-    let _ = fs::remove_dir_all(&root);
+/// Files at `paths` under `root`, each holding a line naming itself.
+fn written(root: &Path, paths: &[&str]) {
     for path in paths {
         let file = root.join(path);
         if let Some(parent) = file.parent() {
@@ -30,7 +34,42 @@ fn tree(name: &str, paths: &[&str]) -> PathBuf {
         }
         fs::write(&file, format!("the bytes of {path}\n")).expect("a fixture file");
     }
+}
+
+/// Makes `root` a repository and tracks everything now standing in it.
+fn track(root: &Path) {
+    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
+        let done = Command::new("git")
+            .arg("-C")
+            .arg(root)
+            .args(args)
+            .output()
+            .expect("git runs");
+        assert!(
+            done.status.success(),
+            "git {args:?}: {}",
+            String::from_utf8_lossy(&done.stderr)
+        );
+    }
+}
+
+/// A tree of empty-ish files at `paths`, under a root of its own, every one
+/// of them tracked.
+fn tree(name: &str, paths: &[&str]) -> PathBuf {
+    let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(name);
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(&root).expect("the fixture root");
+    written(&root, paths);
+    track(&root);
     root
+}
+
+/// The paths of a source list, spelled as the adoption data spells them.
+fn paths_of(sources: &[SourceFile]) -> Vec<String> {
+    sources
+        .iter()
+        .map(|source| source.path.to_string_lossy().into_owned())
+        .collect()
 }
 
 const CORPUS: [&str; 10] = [
@@ -315,6 +354,158 @@ fn a_present_optional_root_is_walked_like_any_other() {
     );
 }
 
+/// The working notes are gitignored wherever they exist, so an optional root
+/// is read off the disk and never off the index.
+///
+/// An optional root is walked on disk though git tracks nothing under it.
+/// ´claim:walk:an-untracked-optional-root-is-walked´
+#[test]
+fn an_optional_root_is_walked_though_git_tracks_nothing_under_it() {
+    let root = tree("carrier-untracked-optional", &["README.md"]);
+    written(&root, &["tmp_research_files/2026-09-24-notes/README.md"]);
+    let adoption = ruled();
+    let sources = Walk::new(&adoption, &root)
+        .sources()
+        .expect("a readable tree");
+    assert_eq!(
+        paths_of(&sources),
+        vec![
+            String::from("README.md"),
+            String::from("tmp_research_files/2026-09-24-notes/README.md"),
+        ]
+    );
+}
+
+/// This is the class of the per-module build output and the gradle caches a
+/// local build leaves: no exclusion row names these paths, and they stay out
+/// because nobody committed them.
+///
+/// A file git does not track is outside the carrier with no row naming it.
+/// ´claim:walk:an-untracked-file-is-outside-the-carrier´
+#[test]
+fn an_untracked_file_is_outside_the_carrier_with_no_row_naming_it() {
+    let root = tree(
+        "carrier-untracked",
+        &["README.md", "android/core/crypto/src/main/kotlin/Crypto.kt"],
+    );
+    written(
+        &root,
+        &[
+            "docs/draft.md",
+            "android/core/crypto/reports/detekt/detekt.md",
+            "android/.kotlin/sessions/one.salive",
+            "web/coverage/index.html",
+        ],
+    );
+    let adoption = ruled();
+    let sources = Walk::new(&adoption, &root)
+        .sources()
+        .expect("a readable tree");
+    assert_eq!(
+        paths_of(&sources),
+        vec![
+            String::from("README.md"),
+            String::from("android/core/crypto/src/main/kotlin/Crypto.kt"),
+        ],
+        "the carrier is what the commit holds, not what the checkout does"
+    );
+}
+
+/// An empty carrier would let every judgment pass for the wrong reason, so
+/// the failure travels beside whatever the walk did reach — here the working
+/// notes, which are read off the disk and need no listing.
+///
+/// A root git will not list is a diagnostic, never an empty carrier.
+/// ´claim:walk:an-unlisted-root-is-a-diagnostic´
+#[test]
+fn a_root_git_will_not_list_is_a_diagnostic_and_never_an_empty_carrier() {
+    let root = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("carrier-unlisted");
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(&root).expect("the fixture root");
+    written(&root, &["README.md", "tmp_dev/notes.md"]);
+    fs::write(root.join(".git"), "gitdir: no-such-repository\n").expect("a broken repository");
+    let adoption = ruled();
+
+    let outcome = Walk::new(&adoption, &root)
+        .sources()
+        .expect_err("a root git cannot list");
+    assert_eq!(
+        paths_of(&outcome.sources),
+        vec![String::from("tmp_dev/notes.md")],
+        "the sources it did reach, never an empty carrier"
+    );
+    assert_eq!(outcome.failures.len(), 1);
+    let failure = &outcome.failures[0];
+    assert_eq!(failure.rule, carrier::UNREADABLE_TREE);
+    assert!(
+        failure.message.starts_with("git ls-files: "),
+        "git's own account is carried rather than paraphrased: {}",
+        failure.message
+    );
+}
+
+/// A new kind of file arrives as a decision: the finding names the type once,
+/// at its first file by path, and fails the lane though the file sits in a
+/// tree the enforcement partition leaves advisory. The working notes are no
+/// commit's content and are not asked.
+///
+/// A tracked file type no catalogue row answers for fails the check once per type.
+/// ´claim:walk:an-uncatalogued-type-fails-once´
+#[test]
+fn a_tracked_type_no_row_answers_for_fails_once_per_type() {
+    let root = tree(
+        "carrier-uncatalogued",
+        &[
+            "README.md",
+            "Makefile",
+            "web/scripts/dev.mjs",
+            "tools/b/probe.py",
+            "tools/a/probe.py",
+        ],
+    );
+    written(&root, &["tmp_dev/scratch.py"]);
+    let adoption = ruled();
+    let sources = Walk::new(&adoption, &root)
+        .sources()
+        .expect("a readable tree");
+
+    let found = carrier::uncatalogued(&adoption, &sources);
+    assert_eq!(found.len(), 1, "{found:?}");
+    let finding = &found[0];
+    assert_eq!(finding.rule, carrier::UNCATALOGUED_TYPE);
+    assert_eq!(finding.primary.path, PathBuf::from("tools/a/probe.py"));
+    assert_eq!(finding.enforcement, cogra_linter::Enforcement::Failing);
+    assert!(
+        finding.message.contains(".py (2 in the carrier"),
+        "{}",
+        finding.message
+    );
+}
+
+/// The index lists a file the checkout no longer holds; a source some reader
+/// consumes is reported where the read fails, exactly as an unreadable file
+/// of a walked tree is.
+///
+/// A tracked source that is gone from disk is reported where it is read.
+/// ´claim:walk:a-tracked-source-gone-from-disk-is-reported´
+#[test]
+fn a_tracked_source_gone_from_disk_is_reported_where_it_is_read() {
+    let root = tree("carrier-gone", &["README.md", "docs/gone.md"]);
+    fs::remove_file(root.join("docs/gone.md")).expect("the fixture file is removable");
+    let adoption = ruled();
+
+    let outcome = Walk::new(&adoption, &root)
+        .sources()
+        .expect_err("one tracked source cannot be read");
+    assert_eq!(paths_of(&outcome.sources), vec![String::from("README.md")]);
+    assert_eq!(outcome.failures.len(), 1);
+    assert_eq!(outcome.failures[0].rule, carrier::UNREADABLE_SOURCE);
+    assert_eq!(
+        outcome.failures[0].primary.path,
+        PathBuf::from("docs/gone.md")
+    );
+}
+
 /// The ruled adoption with one more root configured: absent from every tree
 /// and not marked optional — the shape the audit reproduced F8 with.
 ///
@@ -498,10 +689,15 @@ fn unprivileged(case: &str) {
     eprintln!("{case}: skipped, this platform would not create a link");
 }
 
-/// A tree outside the corpus root, for a link to point at.
+/// A tree outside the corpus root, for a link to point at: a plain directory
+/// and no repository, as the working-note trees a junction reaches are.
 #[cfg(any(unix, windows))]
 fn outside(name: &str) -> PathBuf {
-    tree(name, &["notes.md", "deeper/more.md"])
+    let target = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join(name);
+    let _ = fs::remove_dir_all(&target);
+    fs::create_dir_all(&target).expect("the link target");
+    written(&target, &["notes.md", "deeper/more.md"]);
+    target
 }
 
 /// The bytes come from the target and the name comes from the corpus, which
@@ -539,7 +735,8 @@ fn a_link_at_a_configured_optional_root_is_crossed_under_its_own_name() {
 /// This is the case that made the corpus a property of the checkout: a
 /// worktree where a lane wrote its own scratch directory, and a machine
 /// where the same name is a junction into another repository, walked
-/// identically because the walk never asked which it was.
+/// identically because the walk never asked which it was. The link is
+/// tracked, so it is the index's own mode that refuses it.
 ///
 /// A link that is not a configured optional root is not followed.
 /// ´claim:walk:an-unconfigured-link-is-not-followed´
@@ -551,6 +748,7 @@ fn a_directory_link_outside_the_configured_roots_is_not_followed() {
     let Some(()) = link_dir(&target, &root.join("elsewhere")) else {
         return unprivileged("a_directory_link_outside_the_configured_roots_is_not_followed");
     };
+    track(&root);
     let adoption = ruled();
     let sources = Walk::new(&adoption, &root)
         .sources()
@@ -577,6 +775,7 @@ fn a_file_link_outside_the_configured_roots_is_not_read() {
     let Some(()) = link_file(&target.join("notes.md"), &root.join("borrowed.md")) else {
         return unprivileged("a_file_link_outside_the_configured_roots_is_not_read");
     };
+    track(&root);
     let adoption = ruled();
     let sources = Walk::new(&adoption, &root)
         .sources()
@@ -624,13 +823,20 @@ fn two_configured_roots_resolving_to_one_tree_are_walked_once() {
     );
 }
 
+/// The dangling link stands in a walked tree, the one place the walk reads
+/// the disk entry by entry.
+///
 /// An unreadable entry is a diagnostic beside a shorter list, never an empty carrier.
 /// ´claim:walk:an-unreadable-entry-is-a-diagnostic´
 #[cfg(any(unix, windows))]
 #[test]
 fn an_unreadable_entry_is_a_diagnostic_beside_a_shorter_list() {
     let root = tree("carrier-unreadable", &["README.md", "docs/README.md"]);
-    let Some(()) = link_file(&root.join("nowhere.md"), &root.join("dangling.md")) else {
+    written(&root, &["tmp_dev/notes.md"]);
+    let Some(()) = link_file(
+        &root.join("tmp_dev/nowhere.md"),
+        &root.join("tmp_dev/dangling.md"),
+    ) else {
         return unprivileged("an_unreadable_entry_is_a_diagnostic_beside_a_shorter_list");
     };
     let adoption = ruled();
@@ -640,14 +846,14 @@ fn an_unreadable_entry_is_a_diagnostic_beside_a_shorter_list() {
         .expect_err("one entry the walk cannot read");
     assert_eq!(
         outcome.sources.len(),
-        2,
+        3,
         "the sources it did reach, never an empty carrier"
     );
     assert_eq!(outcome.failures.len(), 1);
     let failure = &outcome.failures[0];
     assert_eq!(failure.rule, cogra_linter::carrier::UNREADABLE_SOURCE);
     assert_eq!(failure.severity, cogra_linter::Severity::Error);
-    assert_eq!(failure.primary.path, PathBuf::from("dangling.md"));
+    assert_eq!(failure.primary.path, PathBuf::from("tmp_dev/dangling.md"));
     assert_eq!(
         failure.enforcement,
         cogra_linter::Enforcement::Advisory,

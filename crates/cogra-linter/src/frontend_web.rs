@@ -1,14 +1,20 @@
 //! ´mod:module:frontend-web´
 //!
-//! `swc`: the comment regions of TypeScript and TSX.
+//! `swc`: the comment regions of TypeScript and JavaScript, JSX included.
 //!
 //! `swc_ecma_parser` retains what `syn` drops. Its parser takes a comments
 //! store beside the source and fills it as it lexes, so the comments arrive
 //! out of band, keyed by the byte position of the token they attach to
 //! (´[ARCH-conv:linter:web-frontend]´). Those comments are the whole of what this
 //! frontend produces: `[scanned-regions]` scans the three comment forms of
-//! TypeScript and nothing else, and `[head-recognition]` gives the language
-//! no head form, so a region here carries occurrences and heads nothing.
+//! both languages and nothing else, and `[head-recognition]` gives neither
+//! a head form, so a region here carries occurrences and heads nothing.
+//!
+//! The two are two `[scanned-regions]` rows and one frontend, because `swc`
+//! reads both through one parser and one comments store: the row's language
+//! picks `Syntax::Typescript` or `Syntax::Es`, which is the whole of the
+//! difference. Reading JavaScript as TypeScript was the alternative, and it
+//! would hold a `.mjs` config file to a grammar its author never wrote in.
 //!
 //! # Coordinates
 //!
@@ -40,17 +46,20 @@ use swc_common::comments::{Comment, CommentKind, SingleThreadedComments};
 use swc_common::sync::Lrc;
 use swc_common::{BytePos, FileName, SourceMap, Spanned};
 use swc_ecma_ast::EsVersion;
-use swc_ecma_parser::{Syntax, TsSyntax, parse_file_as_program};
+use swc_ecma_parser::{EsSyntax, Syntax, TsSyntax, parse_file_as_program};
 
-use crate::adopt::Adoption;
+use crate::adopt::{Adoption, Language};
 use crate::carrier::SourceFile;
 use crate::diag::{ByteSpan, Diagnostic, Enforcement, Location, RuleId, Severity};
 use crate::frontend::{Parsed, Region, RegionKind, append, degutter};
 use crate::pretokenize::{CommentForm, located};
 use crate::scan::Syntax as RegionSyntax;
 
-/// The `[scanned-regions]` language this frontend reads.
+/// The `[scanned-regions]` language this frontend reads as TypeScript.
 pub const TYPESCRIPT: &str = "typescript";
+
+/// The `[scanned-regions]` language this frontend reads as JavaScript.
+pub const JAVASCRIPT: &str = "javascript";
 
 /// A TypeScript source that is not UTF-8 at all, so no parser can read it.
 ///
@@ -73,6 +82,9 @@ pub const RULES: [RuleId; 2] = [NOT_TEXT, UNPARSABLE];
 
 /// The TSX extension, which is the one syntax setting the file name decides.
 const TSX: &str = ".tsx";
+
+/// The JSX extension, the same setting for JavaScript.
+const JSX: &str = ".jsx";
 
 /// The declaration-file extension, whose sources are types and no values.
 const DTS: &str = ".d.ts";
@@ -160,17 +172,25 @@ pub fn parse(src: &SourceFile, a: &Adoption) -> Result<Parsed, Vec<Diagnostic>> 
     Ok(out)
 }
 
-/// The syntax settings one source's name decides.
+/// The syntax settings one source's language and name decide.
 ///
-/// Two of `TsSyntax`' fields are per-file facts rather than corpus-wide
-/// ones, and both are read off the extension the file was given: `tsx`
-/// switches on the JSX grammar, which a `.ts` file may not use and a `.tsx`
-/// file may, and `dts` marks an ambient declaration file, whose bodies are
-/// types where a `.ts` file's are values. Everything else `TsSyntax` offers
-/// stays at its default, which is what `swc` documents as the plain
-/// TypeScript reading.
+/// The language picks the grammar: a source the `javascript` row names is
+/// read as ECMAScript, and every other source this frontend is handed as
+/// TypeScript. Two of `TsSyntax`' fields are per-file facts rather than
+/// corpus-wide ones, and both are read off the extension the file was
+/// given: `tsx` switches on the JSX grammar, which a `.ts` file may not use
+/// and a `.tsx` file may, and `dts` marks an ambient declaration file, whose
+/// bodies are types where a `.ts` file's are values. `EsSyntax`' `jsx` is
+/// the first of those for JavaScript. Everything else either offers stays at
+/// its default, which is what `swc` documents as the plain reading.
 fn syntax_of(src: &SourceFile) -> Syntax {
     let name = src.path.to_string_lossy().into_owned();
+    if src.language.as_ref().map(Language::as_str) == Some(JAVASCRIPT) {
+        return Syntax::Es(EsSyntax {
+            jsx: name.ends_with(JSX),
+            ..EsSyntax::default()
+        });
+    }
     Syntax::Typescript(TsSyntax {
         tsx: name.ends_with(TSX),
         dts: name.ends_with(DTS),
