@@ -3,6 +3,7 @@ package com.cogra.core.designsystem.v2.media
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -23,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -147,7 +149,21 @@ private fun BoxScope.VeilFace(
                 MaterialTheme.colorScheme.scrim.copy(
                     alpha = if (canBlur) Veil.ScrimAlpha else Veil.OpaqueFallbackAlpha,
                 ),
-            ),
+            )
+            // THE WASH IS THE ONLY DOOR THROUGH THE VEIL
+            // (design/components/honesty/SensitiveVeil.jsx: the reveal is a
+            // full-tile button, and its handler's own comment reads "The
+            // veil is a decision, not a route: it must not also open the
+            // post it sits in"). Without pointer input of its own, the wash
+            // is invisible to Compose's hit test and a tap on it falls
+            // through to the still-composed body underneath — this is that
+            // pointer input, tapping anywhere on the wash reveals. Raw
+            // pointerInput rather than clickable: it must not add a second
+            // accessible control next to the reveal button below, and
+            // `awaitFirstDown(requireUnconsumed = true)` — detectTapGestures'
+            // default — already skips a down the button itself consumed, so
+            // the button's own click still fires once, not twice.
+            .pointerInput(onReveal) { detectTapGestures(onTap = { onReveal() }) },
         contentAlignment = Alignment.Center,
     ) {
         Column(
