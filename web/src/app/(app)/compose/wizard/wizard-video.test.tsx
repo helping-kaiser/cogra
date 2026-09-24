@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { PORTRAIT_CAP } from "@/lib/ui2/media/aspect";
-import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
+import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
@@ -22,6 +22,10 @@ import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { ComposeWizard } from "./wizard-view";
 
 const FRAME = new Blob([new Uint8Array([9]) as BlobPart], { type: "image/png" });
+// A frame distinct from `FRAME` above, so a test can tell "the tray's frames"
+// and "the silent still's own extraction" apart by which blob actually rode
+// the upload — proving the two are no longer the same read.
+const FRAME_ZERO = new Blob([new Uint8Array([0]) as BlobPart], { type: "image/png" });
 
 vi.mock("@/lib/ui2/media/video", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/ui2/media/video")>();
@@ -33,6 +37,10 @@ vi.mock("@/lib/ui2/media/video", async (importOriginal) => {
     // FOUR, not three (CW-13): the 1s-clamped opening plus the three
     // fractional offers ("FOUR FRAMES, NOT THREE: 1s, 10%, 50%, 90%").
     captureFrames: vi.fn(async () => [FRAME, FRAME, FRAME, FRAME]),
+    // The silent still's own, independent extraction (FRAME 1 MEANS FRAME 0,
+    // STRICTLY, jakob 2026-09-24) — a different blob than the tray's above,
+    // so nothing here can pass by coincidence.
+    captureFrameZero: vi.fn(async () => FRAME_ZERO),
   };
 });
 
@@ -580,13 +588,15 @@ describe("picking a video", () => {
     });
   });
 
-  // The feed-video rulings, 2026-09-23: a clip that reaches upload with no
-  // chosen cover gets its own frame 1 uploaded silently, through the same
-  // leg a chosen cover would ride. Asserted here through the DRAFT the
-  // wizard keeps — it carries the whole `WizardState`, including the field
-  // no screen ever draws — rather than through the network, so this needs
-  // no image-encoder shim: what is under test is whether the still gets
-  // MATERIALIZED at all, not whether a browser can re-encode it.
+  // The feed-video rulings, 2026-09-23, sharpened 2026-09-24 ("FRAME 1 MEANS
+  // FRAME 0, STRICTLY" — design/readme.md §13, the MediaAttachment docblock):
+  // a clip that reaches upload with no chosen cover gets its own frame 0
+  // uploaded silently, through the same leg a chosen cover would ride.
+  // Asserted here through the DRAFT the wizard keeps — it carries the whole
+  // `WizardState`, including the field no screen ever draws — rather than
+  // through the network, so this needs no image-encoder shim: what is under
+  // test is whether the still gets MATERIALIZED at all, not whether a
+  // browser can re-encode it.
   describe("the silent auto-cover", () => {
     async function settle() {
       // The 200ms coalescing window `draft-store.ts` documents, plus the
@@ -596,7 +606,7 @@ describe("picking a video", () => {
       });
     }
 
-    it("materializes the clip's own frame 1 once details is reached with nothing chosen", async () => {
+    it("materializes the clip's own frame 0 once details is reached with nothing chosen", async () => {
       const drafts = fakeDrafts();
       renderWithProviders(
         <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
@@ -616,10 +626,17 @@ describe("picking a video", () => {
       // handed a video with no face at all.
       expect(saved?.autoCover).not.toBeNull();
       expect(saved?.autoCover?.frame).toBe(0);
+      // AND IT IS THE RIGHT BYTES: `captureFrameZero`'s own read of the
+      // clip, never the tray's ~1s offer — `frames[0]` and `FRAME_ZERO` are
+      // deliberately different blobs above, so this could only pass for the
+      // right reason.
+      expect(saved?.autoCover?.file).toBe(FRAME_ZERO);
     });
 
-    it("ships the clip with no still at all when extraction finds no frames", async () => {
-      vi.mocked(captureFrames).mockRejectedValueOnce(new Error("no decoder"));
+    it("ships the clip with no still at all when its own frame-0 extraction finds nothing", async () => {
+      // The tray's own capture still succeeds — its offers are a separate
+      // concern the silent still's extraction failing must not touch.
+      vi.mocked(captureFrameZero).mockRejectedValueOnce(new Error("no decoder"));
       const drafts = fakeDrafts();
       renderWithProviders(
         <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
