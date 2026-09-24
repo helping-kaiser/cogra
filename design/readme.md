@@ -6466,7 +6466,7 @@ the rest of the product, and what the rest of the product owes a chat.
 Twenty boards on the Chats page (`ChatThreadReactions`,
 `ChatMessageOpinions`, `ChatMessagePad`, `ChatThreadReply`,
 `ChatMessageMenuOwn`, `ChatMessageRemoveConfirm`, `ChatThreadRemoved`,
-`ChatThreadRecording`, `ChatThreadRecordingLocked`, `ChatThreadVoice`,
+`ChatThreadRecording`, `ChatThreadRecordingPaused`, `ChatThreadVoice`,
 `ChatThreadSealedMedia`, `ChatThreadPending`, `ChatThreadSentPost`,
 `ChatSendSheet`, `ChatAskSheet`, `ChatJoinSealPad`, `ChatNotifications`,
 `ChatFeedCards`, `ChatSearchResults`, `ChatSaved`), and revisions to boards
@@ -6475,12 +6475,15 @@ already drawn (`PushKinds`, `ChatsExplore`, `ChatInviteSeal`,
 `ChatJoinSeal`, `ChatCreateSeal`, `ChatSignSheet`, and every thread through
 its masters). The prelude's masters for it are `ReactionTrace`,
 `BubbleQuote`, `ReplyQuoteStrip`, `RemovedBubble`, `VoiceNote`, `NoKeyMedia`,
-`MicSeal`, `ChatFootRecording`, `ChatFootLocked`, `DidntLand`,
-`BubbleCitation`, `ChatFeedCard`, `MessageFeedCard`, `SealStance` and
-`ChatSealSubject`; `ChatBubble` gained `quote`, `trace`, `pending`,
-`removed`, `fill`, `voice` and the timestamp tuck, `ChatFoot` the quote strip
-and the mic, `ChatJoinFoot` the invitation's message. The design system
-gained the `mic` and `delete` glyphs (§5) and `Timeline`'s `surface` tone.
+`MicSeal`, `ChatFootRecording`, `DidntLand`, `BubbleCitation`,
+`ChatFeedCard`, `MessageFeedCard`, `SealStance` and `ChatSealSubject`;
+`ChatBubble` gained `quote`, `trace`, `pending`, `removed`, `fill`, `voice`,
+`avatar`, `onCard` and the timestamp tuck, `ChatFoot` the quote strip and the
+mic, `ChatJoinFoot` the invitation's message. The design system gained, all
+additively and with every canonical board rendering byte-identically: the
+`mic` and `delete` glyphs (§5), `Timeline`'s `surface` tone,
+`StanceControl`'s `firstConnection` mode and `PostCard`'s `lead` and `main`
+slots.
 
 - **Reactions are the opinions already cast on a message (jakob).** No new
   record kind and no emoji system: every Opinion → Message already carries
@@ -6498,12 +6501,15 @@ gained the `mic` and `delete` glyphs (§5) and `Timeline`'s `surface` tone.
   timeline.
 - **Voice notes are a chat-scale media kind only (jakob).** Post audio stays
   parked. The mic stands where the send arrow stands while the field is
-  empty; hold to record, with the slide-to-lock lane over the held mic;
-  release signs and sends, sealed by the foot's sticky lock. Locked — after
-  the slide or a plain tap, the non-drag equivalent (§10) — the foot is
-  WhatsApp's whole: the running length and `Describe`, then delete, the lock
-  toggle visible and flippable until send (jakob: the sticky lock governs a
-  voice message like any message), pause and the explicit send arrow. The
+  empty. **Tap to record, one state (jakob, the final micro-fix):** the tap
+  turns the foot into the recording's controls — the running length and
+  `Describe`, then delete, the lock toggle visible and flippable until send
+  (jakob: the sticky lock governs a voice message like any message), pause
+  and the explicit send arrow. There is no hold, no slide and no release that
+  sends: hidden gestures fight the product's visible-controls honesty, and a
+  release that signed would sign by accident, against the sign-step ruling —
+  the arrow is the only way a note is signed. **Pause flips to play**, `Keep
+  recording`, which extends the same note (`ChatThreadRecordingPaused`). The
   bubble is compact — play, the transport's own `Timeline`, the length and
   the clock in one 40px band; a note is described like all media, the
   author's words where given and `Voice message, 0:42` where not.
@@ -6528,10 +6534,16 @@ gained the `mic` and `delete` glyphs (§5) and `Timeline`'s `surface` tone.
   mounted, with its header, its ⋮ and the normal action row — the opinion
   face, the score, the comments, the share — and the card itself is the
   door: a chat's to its thread, a message's to its thread at the message; the
-  join lives inside. The chat card's title is the name, its words the
-  description, its second line the policy line, the member count and the last
-  message's age; the message card's author is the sender, its body the words,
-  its second line `in {chat}`. The ⋮ had gone missing because the first
+  join lives inside. Redrawn for jakob to judge on the canvas (the final
+  micro-fix; the direction blessed conditionally): through `PostCard`'s
+  additive `lead` and `main` slots, the message card's author line is the
+  sender's `ActorChip` and `· in {chat}`, and its body is the message as the
+  thread's own `ChatBubble` — tail and tucked clock, the face dropped because
+  the author line names the sender, the fill lifted a tonal step so it shows
+  on the card; the chat card's author line is its disc, its name with the
+  `forum` kind mark and the policy line under them, and its body is its last
+  message as a `ContentRow` preview row. Nothing but a chat looks like a
+  bubble, and a row-body breaks the text-post look. The ⋮ had gone missing because the first
   drawing hand-built both cards on `Card`, and handed the real `PostCard`
   below them a fixture with no `license` and no `menuItems`, for which the
   card draws no dot.
@@ -6548,10 +6560,10 @@ gained the `mic` and `delete` glyphs (§5) and `Timeline`'s `surface` tone.
   to the platform's own sheet": every share glyph, on every card, detail and
   reel, opens the send sheet, and the platform's share lives inside it as
   `Share outside CoGra`. One symbol — the share glyph everywhere; the send
-  arrow stays the seal's alone. One collision stands outside this round's
-  reach, flagged: the system's node glyphs give the message kind `send`
-  (`NODE_GLYPHS`, on reference and search rows and on Saved), and changing
-  that re-renders canonical. The sheet: the reader's chats as choice rows,
+  arrow stays the seal's alone. The system's node glyphs give the message
+  kind `send` (`NODE_GLYPHS`, on reference and search rows and on Saved); it
+  stays as it is (jakob: the contexts disambiguate), closed. The sheet: the
+  reader's chats as choice rows,
   and the chat's own foot, whose arrow signs one message citing the post. The
   sent post reads back as its `ReferenceRow` at chat scale. A Reference is
   never encrypted, so the lock seals the words beside a sent post and never
@@ -6561,9 +6573,12 @@ gained the `mic` and `delete` glyphs (§5) and `Timeline`'s `surface` tone.
   creating a request").** The join's seal, the request's sheet and the
   founding's seal hold `StanceControl` itself in their `Your opinion` row — the
   pressable face, its pair in geek mode — and a tap opens the ordinary pad
-  over the seal (`ChatJoinSealPad`); what it sets is what the seal signs. The
-  message's own seal keeps the compose seal's one-axis grammar,
-  `OwnStanceReadout` with `Adjust`.
+  over the seal (`ChatJoinSealPad`); what it sets is what the seal signs. On
+  these seals the control runs in its first-connection mode (jakob, the final
+  micro-fix): a first connection has nothing to walk back, so the pad omits
+  the walk-away; the message's pad keeps the full control, an opinion on a
+  message being a real, revisitable stance. The message's own seal keeps the
+  compose seal's one-axis grammar, `OwnStanceReadout` with `Adjust`.
 - **Pending and didn't-land (design.md §9).** A message still settling shows
   whole with `Still settling ·` before its clock; one that expires leaves
   every reader's view and its author gets a calm notice where it stood —
@@ -6591,17 +6606,17 @@ gained the `mic` and `delete` glyphs (§5) and `Timeline`'s `surface` tone.
   invited`, in the join's register, and lands on the join's seal.
 - **The lane's calls, flagged for review:** the mic replaces the arrow while
   the field is empty, rather than standing beside it; the recording's live
-  mark is a `primary` mic, not a red dot; the locked foot adds `Describe` to
-  WhatsApp's anatomy; the trace hangs outside the bubble, which bends round
-  A's "nothing on the bubble" only that far; geek mode's trace lists pairs
-  rather than any summary; the no-key tile stands at the wide rung (a band
-  for voice), not the payload's shape; the chat card carries no picture,
-  because `PostCard` has no slot a chat's disc fits; only plaintext messages
-  are message-card candidates; the send sheet sends to one chat at a time
-  and reads the sent post back without its pair; the founding's seal gains
-  the opinion row too; the seal's pad shows the master's `Walk it back`,
-  because `StanceControl` has no staged state (a design-system seam); the
-  approval row names the chat as its actor; the chat rows speak handles, the
+  mark is a `primary` mic, not a red dot; the recording foot adds `Describe`
+  to WhatsApp's anatomy; the paused state is a board of its own, since its
+  middle control has its own edge; the trace hangs outside the bubble, which
+  bends round A's "nothing on the bubble" only that far; geek mode's trace
+  lists pairs rather than any summary; the no-key tile stands at the wide
+  rung (a band for voice), not the payload's shape; the message card's bubble
+  takes `surface-container-high` on the card; `PostCard`'s two new slots are
+  the micro-fix's second design-system touch; only plaintext messages are
+  message-card candidates; the send sheet sends to one chat at a time and
+  reads the sent post back without its pair; the founding's seal gains the
+  opinion row too; the approval row names the chat as its actor; the chat rows speak handles, the
   list's grammar; the three new push kinds default on, by analogy; the
   invitation's message field sits on the seal; the explorer's word is
   `You're invited`; `Put it back` returns the words without signing.
@@ -6631,7 +6646,7 @@ gained the `mic` and `delete` glyphs (§5) and `Timeline`'s `surface` tone.
   backlog's to reconcile.
 - **The gate**: canonical holds byte-identical — **217 screens · 1568
   edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 78 screens
-  and 378 edges, with the one gap it had: a Collective member's own page
+  and 385 edges, with the one gap it had: a Collective member's own page
   (§7). Every destination this round cannot name — canonical's feed,
   search, Saved, notifications, the share glyph, the score, the viewer — is
   the `canonical` terminal, re-wired at migration.

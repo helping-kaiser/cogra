@@ -2179,19 +2179,17 @@ mark's first line, `Removed by its author`.
 
 **The mic and the recording.**
 
-- The mic is named `Record a voice message`. (Candidates: `Hold to record`,
-  `Voice message`.)
-- Recording, the held mic is named `Recording — release to sign and send`;
-  the length is a live timer named `Recording, 0:07`; the middle reads `Slide
-  left to cancel`.
-- The line under it: `Not encrypted — anyone can hear it. Release to sign and
-  send; slide up to lock.` and, with the lock on, `Encrypted — only the chat's
-  members can hear it. Release to sign and send; slide up to lock.`
-- Locked (the fix pass, drawn): the timer as held, `Describe` at its line's
-  end; `Delete the recording` (the `delete` glyph), the lock toggle's own
-  `Encrypt end to end`, `Pause the recording`, and the arrow's `Sign and
-  send`. The line: `Not encrypted — anyone can hear it. The lock beside
-  delete encrypts it.`, or `Encrypted — only the chat's members can hear it.`
+- The mic is named `Record a voice message` (candidate: `Voice message`); a
+  tap starts the recording — no gesture has words, because none exists.
+- Recording: the length is a live timer named `Recording, 0:14`; `Describe`
+  at its line's end; `Delete the recording` (the `delete` glyph), the lock
+  toggle's own `Encrypt end to end`, `Pause the recording`, and the arrow's
+  `Sign and send`. The line: `Not encrypted — anyone can hear it. The lock
+  beside delete encrypts it.`, or `Encrypted — only the chat's members can
+  hear it.`
+- Paused: the length reads `0:22 · Paused`, the timer named `Recording paused
+  at 0:22`; the middle control is `Keep recording` (candidates: `Resume`,
+  `Continue recording`), and it extends the same note.
 
 **A message's opinions.** The pad is the ordinary pad, named `Opinion pad for
 {sender}'s message`. The sheet is titled `Opinions on this message` (the
@@ -2264,10 +2262,13 @@ message quoted as the second line; `@saltorres asks to join {chat}` with the
 request's message; `{chat} approved your request to join` (candidate: `Your
 request to join {chat} was approved`). Push says the same words.
 
-**The feed cards.** Rebuilt on the real card (the fix pass), they speak the
-card's own words: no `Join` and no `Open in the chat` on a card. The chat
-card's second line: `{policy line} {n} members · last message {age}.`; the
-message card's: `in {chat}`.
+**The feed cards.** On the real card, with the card's own words: no `Join`
+and no `Open in the chat` on a card. The message card's author line is the
+sender's chip then `· in {chat}` (candidates: `in {chat}`, `· {chat}`); its
+body is the message as a bubble with its clock. The chat card's author line is
+the chat's name with its kind mark, named `a chat` for the ear, over the
+policy line (`A group chat — anyone can join.`); its body is the last message
+as a row, the sender over the words.
 
 **Push.** The page's board is titled `Push notifications · the kinds and their
 defaults` (candidates: `… · what announces itself`, `… · every kind`). Three rows join `Announced right away`: `Invitations to chats`,
