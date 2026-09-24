@@ -2484,6 +2484,21 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'data-field="Message"', tag: "div" },
     { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
     { n: 7, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 8, find: ' — see the decision"', tag: "button", all: true },
+    { n: 9, find: 'aria-label="Disagree — Mira Voss wants to remove Kel Moreau from the chat"', tag: "button" },
+  ],
+  // The vote's small seal marks only its own controls, `ChatSignSheet`'s way.
+  ChatAgreeSheet: [
+    { n: 1, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 2, find: ">Sign and agree</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // A vote row is marked on its FIRST row, the repeated-element convention.
+  ChatDecisionDetail: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Mira Voss<", tag: "button" },
+    { n: 3, find: ">Disagree instead</button>", tag: "button" },
+    { n: 4, find: ">Take back your vote</button>", tag: "button" },
   ],
   ChatDetailsDecisions: [
     { n: 1, find: 'aria-label="Back to the chat"', tag: "a" },
@@ -2491,7 +2506,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Choose your opinion on Salt-crust rubbings</button>", tag: "button" },
     { n: 3, find: ">Edit chat</button>", tag: "button" },
     { n: 4, find: ">Media in this chat</span>", tag: "button" },
-    { n: 5, find: 'aria-label="Mira Voss wants to remove Kel Moreau from the chat, 2 of 5 so far — see it in the chat"', tag: "button" },
+    { n: 5, find: 'aria-label="Mira Voss wants to remove Kel Moreau from the chat, 2 of 5 so far — see the decision"', tag: "button" },
     { n: 6, find: 'aria-label="Agree — Mira Voss wants to remove Kel Moreau from the chat"', tag: "button" },
     { n: 7, find: ">Add people</span>", tag: "button" },
     { n: 8, find: ">Juno Baptiste</span>", tag: "button" },
@@ -2499,6 +2514,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: ">Mute this chat</span>", tag: "button" },
     { n: 11, find: ">Edit history</span>", tag: "button" },
     { n: 12, find: ">Leave this chat</span>", tag: "button" },
+    { n: 13, find: 'aria-label="Disagree — Mira Voss wants to remove Kel Moreau from the chat"', tag: "button" },
   ],
   ChatInvitePicker: [
     { n: 1, find: 'aria-label="Back to chat details"', tag: "a" },
@@ -2531,6 +2547,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Harbour office — chat details"', tag: "button" },
     { n: 3, find: ">Show the encrypted text</button>", tag: "button" },
     { n: 4, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 5, find: ' — see the decision"', tag: "button" },
   ],
   ChatThreadApproved: [
     { n: 1, find: 'aria-label="Back to all chats"', tag: "a" },
@@ -2547,6 +2564,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'data-field="Message"', tag: "div" },
     { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
     { n: 7, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 8, find: ' — see the decision"', tag: "button" },
   ],
   // The choice rows are found by their words; the details beneath print the
   // same role words only inside the role doors' buttons.

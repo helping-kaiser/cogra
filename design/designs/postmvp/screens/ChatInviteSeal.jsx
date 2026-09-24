@@ -24,8 +24,8 @@
    not drawn in this round.
 
    THE INVITATION'S OWN MESSAGE (the record's payload, layer1-interface.md's
-   act payload schema) has no field here, as it had none at the founding — a
-   gap flagged for review rather than a field invented in a seal.
+   act payload schema) has no field here, as it had none at the founding; its
+   composer is round B3's (jakob 2026-09-24).
 
    THE ONE LINE says what a reader from any other messenger cannot guess: an
    invitation is public, it vouches, and it adds no one by itself. */

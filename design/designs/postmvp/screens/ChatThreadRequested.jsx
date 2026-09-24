@@ -18,13 +18,15 @@
    (`decision:add_member`, 1 approver), and `0 of 1` is noise. The foot
    (`ChatJoinFoot`'s `requested` state) holds the persistent fact while the
    transcript scrolls — `Your request is sent — you can join once it's
-   approved.` — and names no one who decides: governance ships silently.
+   approved.` — and names no one who decides: governance ships silently. The
+   card's words open the decision whole (`ChatDecisionDetail`'s anatomy), as
+   every card's do.
 
-   NO MESSAGE RIDES THIS REQUEST. Round A's `Ask to join` sends on one tap, and
-   no drawn surface writes the request's optional message (the Join Request's
-   payload, layer1-interface.md's act payload schema) — a gap flagged for
-   review; `ChatRequestApprove` draws the message on the approver's side as the
-   record can carry it.
+   NO MESSAGE RIDES THIS REQUEST. Round A's `Ask to join` sends on one tap; the
+   composer for the request's optional message (the Join Request's payload,
+   layer1-interface.md's act payload schema) is round B3's (jakob 2026-09-24).
+   `ChatRequestApprove` draws the message on the approver's side as the record
+   can carry it.
 
    Withdrawing a request is not drawn: no record withdraws a Join Request in
    the docs.
