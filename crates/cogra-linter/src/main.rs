@@ -13,10 +13,11 @@
 //! `0` is a clean corpus, `1` is findings on the failing set
 //! (´dec:lint:enforcement-partition´), and `2` is the linter's own failure —
 //! a malformed adoption file, an unusable root, a write that failed, a
-//! precondition the sweep could not establish. That findings and crashes are
-//! different codes is what lets a CI lane tell "the corpus is wrong" from
-//! "the linter is broken", and the concept names that distinction as a
-//! consumer requirement (´sig:lint:consumers´).
+//! precondition the sweep or the regeneration could not establish
+//! (´dec:lint:fix-precondition´), (´dec:lint:regenerate-precondition´). That
+//! findings and crashes are different codes is what lets a CI lane tell "the
+//! corpus is wrong" from "the linter is broken", and the concept names that
+//! distinction as a consumer requirement (´sig:lint:consumers´).
 //!
 //! Only the check reports a verdict, so only the check reaches `1`. The other
 //! four exit `0` on any corpus they could read and `2` where they could not
@@ -38,7 +39,8 @@ use clap::{Parser, Subcommand};
 
 use cogra_linter::registers::{Register, Scope, committed, compare, regenerate_all, write_all};
 use cogra_linter::{
-    Adoption, Diagnostic, Label, OwnerId, Phase, ProfileId, fix, migrate, render, report,
+    Adoption, Diagnostic, Label, OwnerId, Phase, ProfileId, Run, carrier, fix, migrate, render,
+    report,
 };
 
 /// The corpus linter.
@@ -192,9 +194,16 @@ fn check(a: &Adoption, root: &Path, advisory: bool) -> Result<u8> {
 }
 
 /// The regeneration mode: the one generator's output, reported and written.
+///
+/// A write is refused while the adoption data disagrees with the tree, and
+/// only then (´dec:lint:regenerate-precondition´): a dry run writes nothing
+/// and is never refused.
 fn regenerate(a: &Adoption, root: &Path, owner: Option<&str>, dry_run: bool) -> Result<u8> {
     let checked = cogra_linter::check(a, root)
         .with_context(|| format!("checking the corpus at {}", root.display()))?;
+    if !dry_run {
+        refuse_incoherent_write(&checked)?;
+    }
     let scope = owner.map_or(Scope::WholeCorpus, |one| Scope::Owner(OwnerId::new(one)));
     let regs: Vec<Register> = regenerate_all(
         &checked.graph,
@@ -226,6 +235,48 @@ fn regenerate(a: &Adoption, root: &Path, owner: Option<&str>, dry_run: bool) -> 
         println!("  {}", path.display());
     }
     Ok(CLEAN)
+}
+
+/// Refuse a regeneration whose adoption data disagrees with the tree
+/// (´dec:lint:regenerate-precondition´).
+///
+/// The disagreeing findings are the carrier module's: a configured root the
+/// walk found nothing under, and a tree or file it could not read. Under any
+/// of them the registers would be generated from a carrier the run could not
+/// account for, and a writer that proceeded would record as current a
+/// conclusion drawn from a question the corpus had not answered. Every other
+/// finding leaves the write alone — a stale register above all, which is
+/// what regeneration exists to repair.
+///
+/// Only the failing set counts: the enforcement partition decides what
+/// fails, and an advisory finding that stopped a writer would be a warning
+/// deciding an exit code. The findings go to stderr and stdout stays empty,
+/// the refusal class of (´dec:lint:fix-precondition´).
+///
+/// The mechanism is adapted from the L1 author's linter
+/// (`orchestration-linter-0.1.0-416b136`, source commit 416b136,
+/// AGPL-3.0-only), whose writing modes refuse under a declaration that
+/// disagrees with the tree and never under a label or projection finding.
+/// The shape is re-derived rather than copied: there the guard is a separate
+/// verification pass, here it is a filter over the run the regeneration
+/// already made.
+fn refuse_incoherent_write(checked: &Run) -> Result<()> {
+    let disagreeing: Vec<&Diagnostic> = checked
+        .failing()
+        .filter(|one| carrier::RULES.contains(&one.rule))
+        .collect();
+    if disagreeing.is_empty() {
+        return Ok(());
+    }
+    eprintln!("{}", render::report(&disagreeing));
+    let (count, say) = match disagreeing.len() {
+        1 => (String::from("1 finding"), "says"),
+        many => (format!("{many} findings"), "say"),
+    };
+    anyhow::bail!(
+        "{count} {say} the adoption data disagrees with the tree, so no register is written; \
+         repair them first (`cogra-lint check` lists them), or pass --dry-run to see what would change"
+    )
 }
 
 /// The named regeneration: one profile's label registers, generated from its
@@ -514,5 +565,69 @@ mod tests {
                 .contains("not-a-real-profile is not a profile `[profiles]` registers"),
             "{err:#}"
         );
+    }
+
+    /// A run over no sources, carrying exactly one finding of `rule`.
+    fn run_with(rule: cogra_linter::RuleId, enforcement: cogra_linter::Enforcement) -> Run {
+        let mut run = cogra_linter::check_sources(&adoption(), Vec::new());
+        run.findings.clear();
+        run.findings.push(Diagnostic {
+            rule,
+            severity: cogra_linter::Severity::Error,
+            enforcement,
+            primary: cogra_linter::Location::new(
+                PathBuf::from("docs/"),
+                cogra_linter::ByteSpan::new(0, 0),
+                1,
+                1,
+            ),
+            related: Vec::new(),
+            message: String::from("a finding"),
+        });
+        run
+    }
+
+    /// (´dec:lint:regenerate-precondition´): every rule of the carrier module
+    /// is a disagreement between the adoption data and the tree, and each one
+    /// on the failing set refuses the write.
+    ///
+    /// A carrier the run could not account for refuses the regeneration's write.
+    /// ´claim:cli:a-disagreeing-carrier-refuses-the-write´
+    #[test]
+    fn a_disagreeing_carrier_refuses_the_write() {
+        for rule in carrier::RULES {
+            let run = run_with(rule, cogra_linter::Enforcement::Failing);
+            let err = refuse_incoherent_write(&run).expect_err("the carrier disagrees");
+            assert!(
+                format!("{err:#}").contains("disagrees with the tree"),
+                "{rule}: {err:#}"
+            );
+        }
+    }
+
+    /// (´dec:lint:regenerate-precondition´): a stale register fails the check
+    /// and is exactly what regeneration repairs, so it never refuses the write.
+    ///
+    /// A stale register leaves the regeneration's write alone.
+    /// ´claim:cli:a-stale-register-does-not-refuse-the-write´
+    #[test]
+    fn a_stale_register_does_not_refuse_the_write() {
+        let run = run_with(
+            cogra_linter::judge::freshness::STALE,
+            cogra_linter::Enforcement::Failing,
+        );
+        assert!(!run.is_clean(), "the stale register fails the check");
+        assert!(refuse_incoherent_write(&run).is_ok());
+    }
+
+    /// (´dec:lint:regenerate-precondition´): only the failing set decides, so
+    /// a disagreement outside it is reported by the check and refuses nothing.
+    ///
+    /// An advisory disagreement leaves the regeneration's write alone.
+    /// ´claim:cli:an-advisory-disagreement-does-not-refuse´
+    #[test]
+    fn an_advisory_disagreement_does_not_refuse_the_write() {
+        let run = run_with(carrier::UNMATCHED_ROOT, cogra_linter::Enforcement::Advisory);
+        assert!(refuse_incoherent_write(&run).is_ok());
     }
 }
