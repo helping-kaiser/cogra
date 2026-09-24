@@ -14,6 +14,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -189,8 +190,16 @@ private fun GalleryFrame(
             // decision buried in its own noise. The fraction is still
             // reported — read here, outside composition, so it says what
             // the frame measured at the moment the stage changed hands.
+            val said = remember(traced) { SaidPlaying() }
             LaunchedEffect(playing, traced) {
                 VideoTrace.autoplay(traced, stage.visibleOf(key), playing)
+                said.playing = playing
+            }
+            // A frame the list disposes while it plays stops playing with it,
+            // but no decision changes to say so — without this line the log
+            // would name it playing for as long as the log is read.
+            DisposableEffect(traced) {
+                onDispose { if (said.playing) VideoTrace.autoplay(traced, stage.visibleOf(key), false) }
             }
         }
         // Only the clip holding the stage composes a player, and composing
@@ -230,6 +239,11 @@ private fun GalleryFrame(
             )
         }
     }
+}
+
+/** The last autoplay verdict a frame put in the trace — read only when it leaves. */
+private class SaidPlaying {
+    var playing = false
 }
 
 /**
