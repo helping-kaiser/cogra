@@ -1097,7 +1097,13 @@ function BubbleStamp({ sealed, pending, when, ink, spacer = false }) {
   );
 }
 
-function ChatBubble({ own = false, author, first = true, last = true, when, sealed = false, media, id, quote, trace, pending = false, removed, fill = false, voice, children }) {
+/* `avatar={false}` drops the face beside a foreign bubble and keeps its tail —
+   for a bubble whose sender is already named by what holds it (the message
+   feed card's author line, the final micro-fix). `onCard` lifts a foreign
+   bubble's fill one tonal step (`surface-container-high`) where it stands on a
+   card rather than on the page ground: the thread's `surface-card` bubble on a
+   `surface-card` card would vanish into it — the lane's call, flagged. */
+function ChatBubble({ own = false, author, first = true, last = true, when, sealed = false, media, id, quote, trace, pending = false, removed, fill = false, voice, avatar = true, onCard = false, children }) {
   if (removed) return <RemovedBubble own={own} author={author} first={first} last={last} when={when} id={id} {...removed} />;
   const ink = own ? "var(--text-body)" : "var(--text-secondary)";
   const tail = own ? { borderBottomRightRadius: "var(--radius-extra-small)" } : { borderBottomLeftRadius: "var(--radius-extra-small)" };
@@ -1105,7 +1111,7 @@ function ChatBubble({ own = false, author, first = true, last = true, when, seal
   const tuck = typeof children === "string";
   const row = (
     <div style={{ display: "flex", justifyContent: own ? "flex-end" : "flex-start", alignItems: "flex-end", gap: 8 }}>
-      {!own && (last ? <MonogramAvatar name={author.name} src={author.src} size="md" /> : <span style={{ flex: "none", width: 32 }} />)}
+      {!own && avatar && (last ? <MonogramAvatar name={author.name} src={author.src} size="md" /> : <span style={{ flex: "none", width: 32 }} />)}
       <div
         data-message={id}
         style={{
@@ -1119,7 +1125,7 @@ function ChatBubble({ own = false, author, first = true, last = true, when, seal
           padding: "8px 12px",
           borderRadius: "var(--radius-large)",
           ...(last ? tail : {}),
-          background: own ? "var(--secondary-container)" : "var(--surface-card)",
+          background: own ? "var(--secondary-container)" : onCard ? "var(--surface-container-high)" : "var(--surface-card)",
           color: "var(--text-body)",
         }}
       >
@@ -1352,11 +1358,11 @@ function FieldAligned({ children }) {
    carries the voice note instead; the first typed character swaps the arrow
    back. The alternative — the mic always beside the arrow — costs the field
    48px on every thread for a control that is useless the moment there are
-   words. Holding the mic records; RELEASING SIGNS AND SENDS, so the mic is the
-   seal as much as the arrow is, and it wears the arrow's filled `primary`
-   disc. A plain tap starts the recording LOCKED — the hands-free state, where
-   cancel and send are buttons — which is the non-drag equivalent every drag
-   gesture owes (readme §10). */
+   words. A TAP STARTS THE RECORDING (jakob's ruling, the final micro-fix):
+   the foot becomes the recording's controls (`ChatFootRecording`) — no hold,
+   no slide, no release that signs; the note is signed only by the recording
+   foot's own send arrow. The mic wears the arrow's filled `primary` disc
+   because it holds the arrow's place. */
 function MicSeal() {
   return (
     <button
@@ -2731,8 +2737,8 @@ const REMOVED_MESSAGE_NOTE = "Its place in the chat stays, and so do the replies
    authored and optional and never invented (`MediaAttachment`); a voice note
    is the same: its accessible name is the author's description where they
    gave one, and `Voice message, 0:42` where they did not. The description is
-   written in the locked recording's `Describe` (the describe sheet, audio's
-   shape) — a held-and-released note goes as it is. Stated, not drawn.
+   written in the recording foot's `Describe` (the describe sheet, audio's
+   shape), before the note is sent.
 
    E2E LIKE ANY ATTACHMENT (chats.md §7): with the lock on, the audio bytes are
    encrypted on the device under the epoch key before upload. A keyed reader
@@ -2835,77 +2841,34 @@ function NoKeyMedia({ kind = "picture" }) {
 
 /* ── THE RECORDING FOOT ──────────────────────────────────────────────────────
 
-   HOLD TO RECORD, WITH WHATSAPP'S SLIDE-TO-LOCK (jakob 2026-09-24). The finger
-   is on the mic, so the foot gives up its row: the running length on the left
-   beside a small mic in `primary` — the one mark that says a recording is
-   live, calm rather than a red dot — `Slide left to cancel` in the middle, and
-   the held mic, grown to the FAB's 56px under the thumb, on the right. Above
-   the held mic stands the LOCK LANE: `lock_outline` over an upward chevron
-   (`expand_more` turned, the wallet badge's rotation precedent), the path a
-   thumb slides to keep recording hands-free.
+   TAP TO RECORD, ONE STATE (jakob's ruling, the final micro-fix). A tap on the
+   mic starts the recording and the foot becomes its controls, all of them
+   visible buttons: no hold, no slide to cancel, no slide to lock, and no
+   release that signs. Hidden gestures fight the product's visible-controls
+   honesty, and a release that sends would sign by accident — the sign-step
+   ruling says a signature is always a deliberate press. So the foot is
+   WhatsApp's locked recording, and nothing before it.
 
-   THE THREE ENDINGS. Release — the note is signed and sent, the mic being the
-   seal. Slide left past the lane's start — the recording is let go, nothing
-   signed. Slide up onto the lock — the LOCKED state (`ChatFootLocked`, drawn),
-   which is also where a plain tap on the mic lands (the non-drag equivalent,
-   readme §10).
+   TWO LINES. On top, the live mark — a small mic in `primary`, calm rather
+   than a red dot — and the running length, with `Describe` at the line's end:
+   the author's description, the one place a voice note is described
+   (`VoiceNote`). Under it: DELETE on the left (`delete`, the recording let go,
+   nothing signed), the E2E LOCK beside it, PAUSE in the middle, and the
+   explicit SEND ARROW on the right, the seal's own `SendSeal` — pressing it
+   signs and sends the note.
 
-   THE LOCK TOGGLE'S CHOICE CARRIES THROUGH (jakob's ruling, the fix pass: the
-   foot's sticky lock governs a voice message like any message — set before,
-   flippable until send). The toggle leaves the row while the finger is down,
-   and a released note is sealed or not by the chat's sticky choice exactly as
-   a typed message is; the one quiet line under the row says which, so the
-   reader never records into an encryption state they cannot see. Locked, the
-   toggle returns and can be flipped until the arrow is pressed. */
-function ChatFootRecording({ length, sealed = false }) {
-  return (
-    <div style={{ position: "relative", flex: "none", display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px 16px", borderTop: "1px solid var(--border-hairline)" }}>
-      <div
-        aria-hidden="true"
-        style={{ position: "absolute", right: 24, bottom: "calc(100% + 8px)", width: 40, height: 96, boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderRadius: "var(--radius-full)", background: "var(--surface-container-high)", color: "var(--text-secondary)" }}
-      >
-        <Icon name="lock_outline" size={20} />
-        <Icon name="expand_more" size={20} style={{ transform: "rotate(180deg)" }} />
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 56 }}>
-        <span role="timer" aria-label={`Recording, ${length}`} style={{ flex: "none", display: "inline-flex", alignItems: "center", gap: 6, color: "var(--text-body)", fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)", fontVariantNumeric: "tabular-nums" }}>
-          <span aria-hidden="true" style={{ display: "inline-flex", color: "var(--primary)" }}>
-            <Icon name="mic" size={20} />
-          </span>
-          {length}
-        </span>
-        <span style={{ flex: 1, minWidth: 0, textAlign: "center", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Slide left to cancel</span>
-        <button
-          type="button"
-          aria-label="Recording — release to sign and send"
-          className="cg-state cg-focus"
-          style={{ display: "grid", placeItems: "center", width: 56, height: 56, flex: "none", border: 0, padding: 0, background: "var(--primary)", color: "var(--on-primary)", borderRadius: "var(--radius-full)", cursor: "pointer" }}
-        >
-          <Icon name="mic" size={28} />
-        </button>
-      </div>
-      <QuietNote>{sealed ? "Encrypted — only the chat's members can hear it. Release to sign and send; slide up to lock." : "Not encrypted — anyone can hear it. Release to sign and send; slide up to lock."}</QuietNote>
-    </div>
-  );
-}
+   PAUSE ↔ PLAY (jakob, explicit). Paused, the middle control becomes PLAY —
+   `Keep recording` — and pressing it goes on recording INTO THE SAME NOTE: the
+   audio extends, the length counts on from where it stopped. The live mark
+   rests (the mic in `text-secondary`) and the length reads as held
+   (`paused`, drawn as `ChatThreadRecordingPaused`). Delete, the lock and the
+   arrow stand unchanged, so a paused note can be sent as it is.
 
-/* THE LOCKED RECORDING — hands-free, after slide-to-lock or a plain tap on the
-   mic (jakob's ruling, the fix pass: drawn, not docblocked; WhatsApp's full
-   anatomy, minus nothing).
-
-   TWO LINES. On top, the live mark and the running length, as the held state
-   drew them, with `Describe` at the line's end — the author's description,
-   written before sending, which is the one place a voice note is described
-   (`VoiceNote`). Under it, the three acts WhatsApp puts there: DELETE on the
-   left (`delete`, the recording let go, nothing signed), PAUSE in the middle
-   (a paused recording resumes from the same button, its glyph swapping to the
-   mic — stated), and the explicit SEND ARROW on the right, the seal's own
-   `SendSeal`: pressing it signs and sends the note.
-
-   THE E2E LOCK IS BACK, VISIBLE AND FLIPPABLE (the ruling): beside delete,
-   the foot's own `LockToggle`, holding the chat's sticky choice and flippable
-   until the arrow is pressed — the same toggle, in the same ink, as the
-   typed foot's. The quiet line under the acts says what the arrow will seal. */
+   THE E2E LOCK IS VISIBLE AND FLIPPABLE (jakob's ruling: the foot's sticky
+   lock governs a voice message like any message — set before, flippable until
+   send). The same `LockToggle`, in the same ink, as the typed foot's, holding
+   the chat's sticky choice; the quiet line under the acts says what the arrow
+   will seal. */
 function DeleteRecording() {
   return (
     <button
@@ -2919,28 +2882,29 @@ function DeleteRecording() {
   );
 }
 
-function PauseRecording() {
+function PauseOrPlay({ paused = false }) {
   return (
     <button
       type="button"
-      aria-label="Pause the recording"
+      aria-label={paused ? "Keep recording" : "Pause the recording"}
       className="cg-state cg-focus cg-hit"
       style={{ display: "grid", placeItems: "center", width: 48, height: 48, flex: "none", border: "1px solid var(--border-field)", padding: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--primary)", cursor: "pointer" }}
     >
-      <Icon name="pause" size={24} />
+      <Icon name={paused ? "play_arrow" : "pause"} size={24} />
     </button>
   );
 }
 
-function ChatFootLocked({ length, sealed = false }) {
+function ChatFootRecording({ length, sealed = false, paused = false }) {
   return (
     <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px 16px", borderTop: "1px solid var(--border-hairline)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 32 }}>
-        <span role="timer" aria-label={`Recording, ${length}`} style={{ flex: 1, display: "inline-flex", alignItems: "center", gap: 6, color: "var(--text-body)", fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)", fontVariantNumeric: "tabular-nums" }}>
-          <span aria-hidden="true" style={{ display: "inline-flex", color: "var(--primary)" }}>
+        <span role="timer" aria-label={paused ? `Recording paused at ${length}` : `Recording, ${length}`} style={{ flex: 1, display: "inline-flex", alignItems: "center", gap: 6, color: "var(--text-body)", fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)", fontVariantNumeric: "tabular-nums" }}>
+          <span aria-hidden="true" style={{ display: "inline-flex", color: paused ? "var(--text-secondary)" : "var(--primary)" }}>
             <Icon name="mic" size={20} />
           </span>
           {length}
+          {paused && <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>· Paused</span>}
         </span>
         <InlineAction size="sm">Describe</InlineAction>
       </div>
@@ -2949,7 +2913,7 @@ function ChatFootLocked({ length, sealed = false }) {
           <DeleteRecording />
           <LockToggle on={sealed} />
         </span>
-        <PauseRecording />
+        <PauseOrPlay paused={paused} />
         <SendSeal />
       </div>
       <QuietNote>{sealed ? "Encrypted — only the chat's members can hear it." : "Not encrypted — anyone can hear it. The lock beside delete encrypts it."}</QuietNote>
@@ -3044,21 +3008,31 @@ function BubbleCitation({ kind = "post", name, src, sub }) {
    reader's own), a message's card opens its thread scrolled to the message.
    The join lives inside, never on the card.
 
-   THE CHAT CARD: the name as the card's title, the description as its words,
-   and the card's second line saying what the chat is and that it is live —
-   the policy line (`CHAT_POLICY_LINE`), the member count and the last
-   message's age; the header's age is the last message's. No presence, ever:
-   members are counted, never shown as online. The chat's picture is NOT on
-   the card — `PostCard` has no slot for a disc, and its media slot is a
-   post's body (words XOR media), which a chat's picture is not; flagged as the
-   one thing the real card cannot yet carry.
+   REDRAWN FOR JAKOB TO JUDGE (the final micro-fix; he blessed the direction
+   conditionally — "lets see... i am interested to find out how it will
+   look"). The shell stays `PostCard`'s own; what changes is what stands in
+   its author line and its body, through the card's two additive slots
+   (`lead`, `main`), so neither card reads as a text post:
 
-   THE MESSAGE CARD: the sender as the card's author (the real `ActorChip`),
-   the message's words as its body, and `in {chat}` as its second line — the
-   comment row's `on {post}` and the search row's indirect-hit words, the one
-   line that says where this was said. ONLY PLAINTEXT MESSAGES ARE CANDIDATES
-   — the lane's reading, flagged: a feed reader mostly holds no key, and a
-   card whose body is a no-key notice is a card about nothing.
+   THE MESSAGE CARD: the author line is the sender — the real `ActorChip` —
+   and their chat, `· in Coast walkers`, with the age and the ⋮ at the right
+   as on every card. The BODY IS THE MESSAGE AS A REAL CHAT BUBBLE: the
+   thread's own `ChatBubble` master, its fill, its tail and its tucked clock,
+   the face beside it dropped (`avatar={false}`) because the author line
+   already names the sender, and its fill lifted one tonal step (`onCard`) so
+   it shows against the card. Nothing but a chat looks like a bubble, so the
+   card says what it is before a word is read. ONLY PLAINTEXT MESSAGES ARE
+   CANDIDATES — the lane's reading, flagged: a feed reader mostly holds no
+   key, and a card whose body is a no-key notice is a card about nothing.
+
+   THE CHAT CARD: the author line is the chat — its disc (`ChatDisc`), its name
+   with the `forum` glyph beside it (the chat's kind mark, `NODE_GLYPHS`'), and
+   the policy line under them as the calm subline; age and ⋮ at the right. The
+   BODY IS A PREVIEW ROW, not prose: the last message the way the chats list
+   previews it — the real `ContentRow` at its chronicle variant, the sender's
+   face and name over their words — so the card reads as a place where talk
+   is happening. The description lives on the chat's details. No presence,
+   ever: nothing on the card says who is online.
 
    THE ⋮ IS THE CARD'S OWN, AND IT NEEDS A MENU TO APPEAR: `PostCard` closes
    whatever `menuItems` it is handed with the license row, and draws no dot at
@@ -3133,12 +3107,26 @@ const CHAT_CARD_MENU = [
 ];
 const PUBLIC_DOMAIN = { attribution: 0, provenance: 0 };
 
-function ChatFeedCard({ name, policy, description, members, lastAge, score, comments }) {
+const FEED_LEAD_SMALL = { fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" };
+
+function ChatFeedCard({ name, image, policy, lastAge, last, score, comments }) {
   return (
     <PostCard
-      title={name}
-      content={description}
-      description={`${CHAT_POLICY_LINE[policy]} ${members} members · last message ${lastAge}.`}
+      lead={
+        <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <ChatDisc image={image} size={32} />
+          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
+              {name}
+              <span role="img" aria-label="a chat" style={{ display: "inline-flex", color: "var(--text-secondary)" }}>
+                <Icon name="forum" size={16} />
+              </span>
+            </span>
+            <span style={FEED_LEAD_SMALL}>{CHAT_POLICY_LINE[policy]}</span>
+          </span>
+        </span>
+      }
+      main={<ContentRow variant="chronicle" chevron={false} inert title={last.sender} name={last.sender} image={last.src} second={last.words} />}
       timestamp={lastAge}
       targetLabel={name}
       score={score}
@@ -3150,12 +3138,20 @@ function ChatFeedCard({ name, policy, description, members, lastAge, score, comm
   );
 }
 
-function MessageFeedCard({ chat, author, age, score, comments, children }) {
+function MessageFeedCard({ chat, author, bubbleAuthor, when, age, score, comments, children }) {
   return (
     <PostCard
-      author={author}
-      content={children}
-      description={`in ${chat}`}
+      lead={
+        <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+          <ActorChip handle={author.handle} displayName={author.displayName} />
+          <span style={{ ...FEED_LEAD_SMALL, flex: "none" }}>{`· in ${chat}`}</span>
+        </span>
+      }
+      main={
+        <ChatBubble author={bubbleAuthor} first={false} when={when} avatar={false} onCard>
+          {children}
+        </ChatBubble>
+      }
       timestamp={age}
       targetLabel={`${author.displayName}'s message`}
       score={score}

@@ -1,33 +1,31 @@
-/* RECORDING A VOICE NOTE — the foot while the mic is held (round B3 of the
-   chats work, the integration round; jakob 2026-09-24: voice notes join as a
-   chat-scale media kind, hold to record with WhatsApp's slide-to-lock).
+/* RECORDING A VOICE NOTE — what a tap on the mic opens (round B3 of the chats
+   work, the integration round; jakob 2026-09-24: voice notes join as a
+   chat-scale media kind, and — the final micro-fix — TAP TO RECORD, ONE STATE).
 
-   THE FOOT GIVES ITS ROW TO THE RECORDING (`ChatFootRecording`): the running
-   length beside a small `primary` mic on the left — the live mark, calm where
-   WhatsApp's is a red dot, because nothing here is an alarm — `Slide left to
-   cancel` in the middle, and under the thumb the held mic grown to 56px. The
-   LOCK LANE stands over the held mic: slide up onto its lock and the
-   recording goes hands-free.
+   ONE STATE, ALL OF IT VISIBLE (`ChatFootRecording`). The live mark and the
+   running length, with `Describe` at the line's end; under them DELETE, the
+   E2E LOCK, PAUSE and the explicit SEND ARROW. There is no hold, no slide to
+   cancel or to lock, and no release that sends: hidden gestures fight the
+   visible-controls honesty, and a release that signed would sign by accident,
+   against the sign-step ruling. The arrow is the only way a note is signed.
+   With nothing held down, the state is its own non-drag route (readme §10).
 
-   THREE WAYS OUT, and only release signs. Release — the note is signed and
-   sent, so the mic is a seal exactly as the arrow is. Slide left — the
-   recording is let go and nothing is signed. Slide up — the LOCKED state
-   (`ChatThreadRecordingLocked`): delete, the lock, pause and the send arrow as
-   buttons, which is also where a plain tap on the mic starts (the non-drag
-   equivalent every drag gesture owes, readme §10).
+   THE LOCK IS VISIBLE AND FLIPPABLE (jakob's ruling: the foot's sticky lock
+   governs a voice message like any message — set before, flippable until
+   send). The toggle holds Coast walkers' sticky choice, plaintext, and the
+   reader can flip it now; the arrow seals the note by whatever it says when
+   pressed.
 
-   THE QUIET LINE SAYS WHETHER THE NOTE WILL BE ENCRYPTED, because the lock
-   toggle leaves the row while the finger is down and the chat's sticky choice
-   still decides a released note (jakob's ruling, the fix pass). Coast walkers
-   sits at plaintext, the fresh chat's default.
+   PAUSE flips the middle control to PLAY, `Keep recording`, which extends the
+   same note (`ChatThreadRecordingPaused`).
 
-   THE THREAD ABOVE IS THE ORDINARY ONE, inert under the finger. */
+   THE THREAD ABOVE IS THE ORDINARY ONE, readable while the note records. */
 export function Screen() {
   return (
     <>
       <ChatThreadHeader name="Coast walkers" image="post-photo.jpg" />
       <CoastWalkersThread />
-      <ChatFootRecording length="0:07" />
+      <ChatFootRecording length="0:14" />
     </>
   );
 }

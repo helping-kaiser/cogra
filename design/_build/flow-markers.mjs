@@ -2575,13 +2575,24 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="See how this opinion built"', tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
-  ChatThreadRecordingLocked: [
+  ChatThreadRecording: [
     { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
     { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
     { n: 3, find: ">Describe</button>", tag: "button" },
     { n: 4, find: 'aria-label="Delete the recording"', tag: "button" },
     { n: 5, find: 'aria-label="Encrypt end to end"', tag: "button" },
     { n: 6, find: 'aria-label="Pause the recording"', tag: "button" },
+    { n: 7, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 9, find: ">Show the encrypted text</button>", tag: "button" },
+  ],
+  ChatThreadRecordingPaused: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: ">Describe</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Delete the recording"', tag: "button" },
+    { n: 5, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 6, find: 'aria-label="Keep recording"', tag: "button" },
     { n: 7, find: 'aria-label="Sign and send"', tag: "button" },
     { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
     { n: 9, find: ">Show the encrypted text</button>", tag: "button" },
@@ -2656,7 +2667,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
     { n: 9, find: 'data-message="boots"', tag: "div" },
   ],
-  ChatThreadRecording: [{ n: 1, find: 'aria-label="Recording — release to sign and send"', tag: "button" }],
   ChatThreadVoice: [
     { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
     { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
@@ -2755,8 +2765,8 @@ Object.assign(FLOW_MARKERS, {
   // number each across all three (`all`), the per-post convention.
   ChatFeedCards: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
-    { n: 2, find: ">Sea wall market</h2>", tag: "a" },
-    { n: 3, find: ">Bring gloves", tag: "a" },
+    { n: 2, find: ">Honey is back on the stand from Saturday.<", tag: "a" },
+    { n: 3, find: ">Six it is. Meet at the harbour office.", tag: "a" },
     { n: 4, find: '<a href="/u/', tag: "a", all: true },
     { n: 5, find: 'aria-label="Give your opinion on', tag: "button", all: true },
     { n: 5, find: ">Choose your opinion on", tag: "button", all: true },

@@ -9,12 +9,20 @@
 
    REAL CARDS, NOTHING HAND-BUILT (the componentization law). Both are the
    feed's own `PostCard`, mounted (`ChatFeedCard`, `MessageFeedCard`): its
-   header and ⋮, its body, and its NORMAL action row — the opinion face, the
+   header and ⋮, its license, and its NORMAL action row — the opinion face, the
    score, the comments, the share. THE CARD ITSELF IS THE DOOR, as a post card
    opens its detail: the chat's card opens its thread (read from outside with
    the join at the foot, or the reader's own), the message's card opens its
    thread scrolled to the message. No `Join`, no `Open in the chat` on a card —
    the join lives inside.
+
+   REDRAWN FOR JAKOB TO JUDGE ON THE CANVAS (the final micro-fix): the message
+   card's author line is `Mira Voss · in Coast walkers` and its body is the
+   message as the thread's own bubble, tail and tucked clock; the chat card's
+   author line is the chat's disc, its name and the `forum` kind mark, the
+   policy line under them, and its body is the last message as a preview row.
+   Neither reads as a text post. Both ride `PostCard`'s additive `lead` and
+   `main` slots — the second design-system touch of the micro-fix, flagged.
 
    THE ⋮ WENT MISSING, AND WHY (jakob's review). The first drawing hand-built
    both chat cards on `Card`, so they had no menu at all; and the ordinary post
@@ -36,8 +44,6 @@
    the two kinds as switches that change nothing drawn yet. At migration these
    cards join the feed's card set and this excerpt goes; the post below the two
    is this tree's own fixture standing for canonical's cards. */
-const JUNO = { handle: "juno", displayName: "Juno Baptiste" };
-
 export function Screen() {
   return (
     <>
@@ -45,15 +51,15 @@ export function Screen() {
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 0 0 0" }}>
         <ChatFeedCard
           name="Sea wall market"
+          image="gallery-honey.jpg"
           policy="open"
-          description="What's on the stands by the sea wall this week, and who is minding them."
-          members={14}
           lastAge="35m"
+          last={{ sender: "Mira Voss", src: "inviter.jpg", words: "Honey is back on the stand from Saturday." }}
           score="5.60"
           comments={4}
         />
-        <MessageFeedCard chat="Slipway repairs" author={JUNO} age="2h" score="2.30" comments={1}>
-          Bring gloves — the new planks splinter. We start at the north end at nine.
+        <MessageFeedCard chat="Coast walkers" author={MIRA} bubbleAuthor={CHAT_MIRA} when="08:40" age="2h" score="2.30" comments={1}>
+          Six it is. Meet at the harbour office.
         </MessageFeedCard>
         <PostCard {...SALT_MAPS_CURRENT} timestamp="3d" score="9.10" comments={2} license={PUBLIC_DOMAIN} menuItems={CHAT_CARD_MENU} onOpen={() => {}} />
       </div>
