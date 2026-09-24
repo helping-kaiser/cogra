@@ -1036,18 +1036,24 @@ class ContentScreensTest {
         )
         openComments()
 
-        // A `ModalBottomSheet` is its OWN window and its own root, so the
-        // sheet's offset inside that root is zero whatever it does — the
-        // measurable fact is its height against the screen's, taken from the
-        // tallest of the composition's roots.
+        // A `ModalBottomSheet` is its OWN window and its own root: the sheet
+        // is measured inside that root, against the tallest of the
+        // composition's roots (the full window in the sandbox).
         val screen = compose.onAllNodes(isRoot()).fetchSemanticsNodes().maxOf { it.size.height }
-        val sheet = compose.onNodeWithTag("comments_sheet").fetchSemanticsNode().size.height
+        val sheet = compose.onNodeWithTag("comments_sheet").fetchSemanticsNode()
         val sliver = with(compose.density) { SheetCeilingSliver.roundToPx() }
 
-        assertThat(sheet).isAtMost(screen - sliver)
-        // …and pinned AT the ceiling, not merely held under it: the thread is
-        // the tallest class.
-        assertThat(sheet).isGreaterThan(screen / 2)
+        // Pinned AT the ceiling, not merely held under it: the thread is the
+        // tallest class, so its height IS the room below the sliver.
+        assertThat(sheet.size.height.toFloat()).isWithin(1f).of((screen - sliver).toFloat())
+        // …and RISEN to that ceiling from the bottom edge, not hung from the
+        // window's top. A height fixed on the sheet's own modifier collapsed
+        // Material's expanded anchor to zero, and the sheet covered the
+        // status bar with a sliver-sized gap at its foot — the foot stands on
+        // the window's foot, gapless, and the top edge stays out of the
+        // sliver.
+        assertThat(sheet.positionInRoot.y + sheet.size.height).isWithin(1f).of(screen.toFloat())
+        assertThat(sheet.positionInRoot.y).isWithin(1f).of(sliver.toFloat())
     }
 
     /**
