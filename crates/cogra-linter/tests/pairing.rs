@@ -318,6 +318,18 @@ fn the_check_and_the_measurement_agree_over_a_fixture() {
     std::fs::write(src.join("alpha.rs"), "pub fn one() {}\n").expect("a file-backed module");
     std::fs::write(src.join("beta").join("mod.rs"), "pub fn two() {}\n")
         .expect("a directory-backed module");
+    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
+        let done = std::process::Command::new("git")
+            .arg("-C")
+            .arg(&at)
+            .args(args)
+            .output()
+            .expect("git runs");
+        assert!(
+            done.status.success(),
+            "git {args:?}: the carrier is what git lists"
+        );
+    }
 
     let walked = cogra_linter::Walk::new(ruled(), &at)
         .sources()
