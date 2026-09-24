@@ -1,3 +1,5 @@
+//! ´mod:module:common´
+//!
 //! Shared test-support helpers for cogra-linter's integration tests.
 //!
 //! Every fixture builds a throwaway repository under a temp or target
