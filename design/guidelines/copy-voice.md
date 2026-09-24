@@ -1199,7 +1199,7 @@ button: nothing the reader can do from here fills it.
 is named. Not *Activity*, which describes a log, and not *Alerts*, which
 describes an emergency.
 
-## Awaiting blessing — the account-deletion round
+## Deleting the account
 
 Drawn on `Settings`, `DeleteAccount`, `DeleteAccountMail`,
 `FeedDeleting`, `DeleteAccountCanceled` and `ProfileDeleted`. This
@@ -1274,7 +1274,7 @@ A deleted account must not read as a moderation verdict, and it must not
 read as `This profile doesn't exist.` — someone was here, and the product
 never pretends otherwise.
 
-## Awaiting blessing — the review round
+## The deleted actor's face
 
 Drawn on `ProfileDeleted` and on every card and row a deleted actor
 authored, plus the snackbar `FeedHidden` fires. The rest of the round's
@@ -1308,7 +1308,7 @@ have changed their own feed and nothing else. `Undo` beside it: hiding
 is a comfort a reader may have meant for one post rather than for a
 person, and the way back costs nothing.
 
-## Awaiting blessing — the score-and-opinions round
+## The score drill-down and the opinions sheets
 
 Every new line on the Post score's four drill-down boards and on the two
 opinions sheets. The register the round was ruled into is paths, people
