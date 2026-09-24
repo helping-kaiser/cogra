@@ -18,8 +18,8 @@
    see nothing where it was — on the graph it never existed — and the reader
    sees the calm notice in its place, on their own side, an outline rather than
    a bubble because it is no longer a message. `Nothing was spent.` `Dismiss`
-   takes the notice away; `Put it back` returns the words to the field, where
-   the arrow signs them again as always. Never `error` ink, never a warning
+   takes the notice away; `Try again` returns the words to the field, where the
+   arrow signs them again as always — nothing is re-signed on the tap. Never `error` ink, never a warning
    glyph. If the field already holds a draft, the words go in after it on a
    line of their own — stated, not drawn. */
 export function Screen() {
