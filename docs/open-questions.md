@@ -496,6 +496,9 @@ How does a split work? Specifically:
   `reserve_share`, generosity, and per-member caps, and how that
   sits with the network-wide pinned ceiling
   ([network.md §3](primitive/network.md#3-the-charter-anchor-and-the-parameter-schedule)).
+- **Custody.** A community that splits off must appoint custody of
+  its own pool's key; the global fund's key sits with the operator
+  ([ledger.md "Keys"](implementation/ledger.md#keys)).
 
 ### Related
 
