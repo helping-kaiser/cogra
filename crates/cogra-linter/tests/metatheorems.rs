@@ -46,6 +46,9 @@ use cogra_linter::judge::labels;
 use cogra_linter::scan::{Label, Prefix, Syntax};
 use cogra_linter::{Adoption, ByteSpan, Diagnostic, Language, OwnerId, SourceFile};
 
+mod common;
+use common::track;
+
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -617,25 +620,6 @@ fn temporary(name: &str) -> PathBuf {
     std::fs::write(docs.join("environment-kinds.md"), stale).expect("the registry document");
     track(&at);
     at
-}
-
-/// Makes `root` a repository and tracks everything now standing in it: the
-/// carrier is what git lists (´dec:lint:tracked-carrier´), so a register a
-/// test writes is in the carrier once it is tracked.
-fn track(root: &Path) {
-    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
-        let done = std::process::Command::new("git")
-            .arg("-C")
-            .arg(root)
-            .args(args)
-            .output()
-            .expect("git runs");
-        assert!(
-            done.status.success(),
-            "git {args:?}: {}",
-            String::from_utf8_lossy(&done.stderr)
-        );
-    }
 }
 
 /// The registry document, relative to the corpus root.

@@ -14,6 +14,8 @@ use std::sync::OnceLock;
 use cogra_linter::graph::{EdgeW, NodeKind, NodeW, nodes_of, out_along};
 use cogra_linter::{Adoption, Language, OwnerId, ProfileId, Run, SourceFile, check_sources};
 
+mod common;
+
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -318,18 +320,7 @@ fn the_check_and_the_measurement_agree_over_a_fixture() {
     std::fs::write(src.join("alpha.rs"), "pub fn one() {}\n").expect("a file-backed module");
     std::fs::write(src.join("beta").join("mod.rs"), "pub fn two() {}\n")
         .expect("a directory-backed module");
-    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
-        let done = std::process::Command::new("git")
-            .arg("-C")
-            .arg(&at)
-            .args(args)
-            .output()
-            .expect("git runs");
-        assert!(
-            done.status.success(),
-            "git {args:?}: the carrier is what git lists"
-        );
-    }
+    common::track(&at);
 
     let walked = cogra_linter::Walk::new(ruled(), &at)
         .sources()
