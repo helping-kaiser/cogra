@@ -861,10 +861,7 @@ ranks into the reader's feed. The system's voice for the same reason
 `Deleted account` is — it is the product saying what the tap does when
 it cannot say whose.
 
-## Awaiting blessing — the parked-rulings round
-
-Drawn, and up for review in the same pass. Kept apart from the blessed
-lines above until then.
+## A card's media description
 
 **A card's media description names the kind of thing it has.** The
 description is what a screen reader is given for a post card's body, so
@@ -877,12 +874,11 @@ looking alike until one plays:
   it, and the eye reads it off the cover.
 - `1 picture` · `4 pictures` — a picture post, the count alone.
 
-## Awaiting blessing — the tag round
+## Tagging
 
 Drawn on `TagPage`, `TagPageEmpty`, `TagPicker`, `TagPickerTyping` and
-`TagPair`, and up for review in the same pass. The naming law above is
-part of the same ruling and is written where it belongs; these are the
-new lines.
+`TagPair`. The naming law above is part of the same ruling and is
+written where it belongs.
 
 **The page carries no preamble.** The list opens directly under the
 title (jakob's review removed the explanatory line): the rows say what
@@ -939,12 +935,12 @@ carries how much the post is about that tag. / Names are lowercased,
 and a name can hold letters, digits, dot, dash and underscore. Tap a
 tag you have added to set how it relates.`
 
-## Awaiting blessing — the geek-mode round
+## The exact-values setting
 
 Drawn on `Settings` (and the two sheet boards that draw the page
-beneath them), and up for review in the same pass. The mode itself
-draws nothing new — it decides whether the numbers already on every
-board are painted — so the round's whole copy surface is one row.
+beneath them). The mode itself draws nothing new — it decides whether
+the numbers already on every board are painted — so its whole copy
+surface is one row.
 
 **The setting says what it shows, not how it works.** `Show exact
 values` — the switch in Settings' Reading group. *Exact* is the word
