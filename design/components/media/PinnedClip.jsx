@@ -33,7 +33,7 @@ export function PinnedClip({ item, elapsed, duration, progress, playing = true, 
       {...item}
       controls={sensitive ? "none" : "transport"}
       radius="0px"
-      playing={playing}
+      playing={sensitive ? false : playing}
       elapsed={elapsed}
       duration={duration}
       progress={progress}

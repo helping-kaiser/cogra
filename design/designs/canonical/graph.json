@@ -71,6 +71,7 @@
     "ProfileMoreFailed": "the page that didn't come — exempt for `NetworkError`'s reason, cited: the failed next page is the only thing this board is about, and the band, the header, the chronicle tabs, the rows and the five nav slots are `Profile`'s controls, wired on that board"
   },
   "entries": {
+    "PostDetailVideoSensitive": "the same video detail any non-portrait clip tap opens, when the post is sensitive and unrevealed — the state the record brings, not a different tap (jakob 2026-09-24)",
     "TagPageHeld": "the same tag page, opened by a reader whose netted Affinity on this topic is not (0, 0) — a state the record brings, not a different tap",
     "EditComposeUnchanged": "the same edit, opened and left as it was found — the state an empty acts batch leaves it in; content, not a tap",
     "TagPageEmpty": "a tag everything has been untagged out of — the same page any chip opens, in the state an unbinding leaves it: the list empty, the topic's history not (jakob 2026-09-15); content, not a tap",
