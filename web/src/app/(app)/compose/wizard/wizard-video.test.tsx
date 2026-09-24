@@ -579,4 +579,83 @@ describe("picking a video", () => {
       expect(screen.queryByTestId("wizard-title")).toBeNull();
     });
   });
+
+  // The feed-video rulings, 2026-09-23: a clip that reaches upload with no
+  // chosen cover gets its own frame 1 uploaded silently, through the same
+  // leg a chosen cover would ride. Asserted here through the DRAFT the
+  // wizard keeps — it carries the whole `WizardState`, including the field
+  // no screen ever draws — rather than through the network, so this needs
+  // no image-encoder shim: what is under test is whether the still gets
+  // MATERIALIZED at all, not whether a browser can re-encode it.
+  describe("the silent auto-cover", () => {
+    async function settle() {
+      // The 200ms coalescing window `draft-store.ts` documents, plus the
+      // microtask the capture and the materializing dispatch each cost.
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      });
+    }
+
+    it("materializes the clip's own frame 1 once details is reached with nothing chosen", async () => {
+      const drafts = fakeDrafts();
+      renderWithProviders(
+        <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
+        { store: signedInStore(), writeSigner: fakeWriteSigner() },
+      );
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+      // Straight through the cover screen — no tap on any offer.
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-title");
+      await settle();
+
+      const saved = await drafts.load();
+      // The door's own state is untouched: nothing was CHOSEN.
+      expect(saved?.cover).toBeNull();
+      // But the still exists, silently, so a reading surface is never
+      // handed a video with no face at all.
+      expect(saved?.autoCover).not.toBeNull();
+      expect(saved?.autoCover?.frame).toBe(0);
+    });
+
+    it("ships the clip with no still at all when extraction finds no frames", async () => {
+      vi.mocked(captureFrames).mockRejectedValueOnce(new Error("no decoder"));
+      const drafts = fakeDrafts();
+      renderWithProviders(
+        <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
+        { store: signedInStore(), writeSigner: fakeWriteSigner() },
+      );
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-title");
+      await settle();
+
+      const saved = await drafts.load();
+      expect(saved?.cover).toBeNull();
+      // No frame ever arrived, so there was nothing to upload — the neutral
+      // tile (`Cover · no frames came back`) stands for the reader, silently.
+      expect(saved?.autoCover).toBeNull();
+    });
+
+    it("lets a chosen cover win: the silent path never even starts", async () => {
+      const drafts = fakeDrafts();
+      renderWithProviders(
+        <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
+        { store: signedInStore(), writeSigner: fakeWriteSigner() },
+      );
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-title");
+      await settle();
+
+      const saved = await drafts.load();
+      expect(saved?.cover?.frame).toBe(2);
+      // The decision only ever runs while both are still null — a chosen
+      // cover already standing means it never fires at all.
+      expect(saved?.autoCover).toBeNull();
+    });
+  });
 });
