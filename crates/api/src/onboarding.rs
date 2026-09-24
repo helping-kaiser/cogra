@@ -284,9 +284,9 @@ pub async fn resend_verification(
 /// second admission behind an unlandable record.
 ///
 /// The ceremony's two outputs must cohere: the submitted address has
-/// to be the one the submitted public key controls. Approval funds a burn
-/// to that address, and funding one the key cannot spend from would
-/// strand the admission (substrate.md §6).
+/// to be the one the submitted public key controls. Approval funds an
+/// admission burn to that address, and funding one the key cannot spend
+/// from would strand the admission (substrate.md §6).
 pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
