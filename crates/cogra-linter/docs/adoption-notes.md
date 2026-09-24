@@ -756,6 +756,25 @@ can. The listing is transplanted from the L1 author's linter
 (orchestration-linter 0.1.0, commit 416b136), with provenance at the
 function.
 
+**R30 — Every tracked file type is scanned or declared.**
+`[scanned-regions]` is total over the tracked carrier
+(``dec:lint:catalogue-totality``): a type in no row fails the check.
+The split's rule: a comment-bearing type is scanned where a frontend
+reads it, and declared otherwise — in a row of comment-bearing formats
+awaiting a frontend, or a row of formats with no comment form. Under
+it the web tree's `.mjs` and `.mts` sources, and `design/`'s `.js` and
+`.mjs`, are read by the `swc` frontend (`.mts` as TypeScript, the rest
+through a `javascript` row as ECMAScript); `.html`, `.css`, `.xml`,
+`.cddl`, `.pro`, `.bat`, `.lock`, `Makefile`, `gradlew` and the git and
+editor dotfiles are declared for want of a frontend; `.txt`, the image
+and font types, `.nvmrc` and the two licence files are declared as
+carrying no comment. `.jsx` is declared in a row of its own: the
+frontend reads it, but `design/`'s prototypes cite doc labels in
+backtick form, and the first scan reported seven
+``label-backtick-in-code`` findings in `design/designs/postmvp/`, so
+moving the type to the `javascript` row is the design owner's ruling,
+taken with that sweep.
+
 ---
 
 ## Measurements

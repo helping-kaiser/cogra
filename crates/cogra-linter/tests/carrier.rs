@@ -444,6 +444,44 @@ fn a_root_git_will_not_list_is_a_diagnostic_and_never_an_empty_carrier() {
     );
 }
 
+/// A new kind of file arrives as a decision: the finding names the type once,
+/// at its first file by path, and fails the lane though the file sits in a
+/// tree the enforcement partition leaves advisory. The working notes are no
+/// commit's content and are not asked.
+///
+/// A tracked file type no catalogue row answers for fails the check once per type.
+/// ´claim:walk:an-uncatalogued-type-fails-once´
+#[test]
+fn a_tracked_type_no_row_answers_for_fails_once_per_type() {
+    let root = tree(
+        "carrier-uncatalogued",
+        &[
+            "README.md",
+            "Makefile",
+            "web/scripts/dev.mjs",
+            "tools/b/probe.py",
+            "tools/a/probe.py",
+        ],
+    );
+    written(&root, &["tmp_dev/scratch.py"]);
+    let adoption = ruled();
+    let sources = Walk::new(&adoption, &root)
+        .sources()
+        .expect("a readable tree");
+
+    let found = carrier::uncatalogued(&adoption, &sources);
+    assert_eq!(found.len(), 1, "{found:?}");
+    let finding = &found[0];
+    assert_eq!(finding.rule, carrier::UNCATALOGUED_TYPE);
+    assert_eq!(finding.primary.path, PathBuf::from("tools/a/probe.py"));
+    assert_eq!(finding.enforcement, cogra_linter::Enforcement::Failing);
+    assert!(
+        finding.message.contains(".py (2 in the carrier"),
+        "{}",
+        finding.message
+    );
+}
+
 /// The index lists a file the checkout no longer holds; a source some reader
 /// consumes is reported where the read fails, exactly as an unreadable file
 /// of a walked tree is.

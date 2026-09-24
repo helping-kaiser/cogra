@@ -1228,7 +1228,7 @@ note = "ARCH conv:linter:rust-frontend: Rust's scanned regions are exactly the d
 
 [[scanned-regions.language]]
 language   = "typescript"
-extensions = [".ts", ".tsx"]
+extensions = [".ts", ".tsx", ".mts"]
 frontend   = "swc_ecma_parser"
 slice      = 2
 scanned    = ["line comments (//)", "block comments (/* ... */)", "JSDoc block comments (/** ... */)"]
@@ -1248,14 +1248,55 @@ precondition = "the first-party grammar parses the whole Android corpus to ZERO 
 note = "MEASURED by the grammar itself over the tree it now parses: 173 .kt and 18 .kts files, ZERO error nodes in both. The precondition is met and the frontend is wired"
 script_note = "RULED 2026-08-26: both extensions are Kotlin here. KotlinParser.g4 defines two entry points over one grammar — kotlinFile, whose body is declarations, and script, whose body is statements — and a statement already admits a declaration, so script accepts a strict superset. tree-sitter has one start rule and no second entry point, so the grammar's root takes the wider shape and reads both. The cost is stated where it is taken (the grammar's source_file): a .kt file whose top level holds a bare expression parses here, where the compiler would reject it. That is the safe direction for a linter, whose error nodes are findings"
 
-# --- Languages present with NO frontend, hence no scanned regions ---
-# Listed so their absence is a decision rather than an oversight.
+[[scanned-regions.language]]
+language   = "javascript"
+extensions = [".js", ".mjs"]
+frontend   = "swc_ecma_parser"
+slice      = 2
+scanned    = ["line comments (//)", "block comments (/* ... */)", "JSDoc block comments (/** ... */)"]
+not_scanned = ["string, template and character literals", "JSX text nodes"]
+region_unit = "one comment from swc's out-of-band comments store, keyed by byte position"
+note = "ADDED 2026-09-24 with the catalogue's totality (crates/cogra-linter/docs/design.md, dec:lint:catalogue-totality): comment-bearing source is scanned wherever a frontend reads it, and swc reads ECMAScript through the same parser and comments store as TypeScript, as Syntax::Es rather than Syntax::Typescript. The same three comment forms, the same region unit, no ban on //"
+
+# --- Types present with NO frontend, hence no scanned regions ---
+# Listed so their absence is a decision rather than an oversight, and
+# the list is TOTAL (design.md, dec:lint:catalogue-totality): every file
+# type the tracked carrier holds is read by a row above or declared by
+# a row below, and a type in neither fails the check as
+# carrier-uncatalogued-type. extensions match the end of a file's name;
+# names match a whole file name, for the types no extension names.
 [[scanned-regions.none]]
 languages  = ["sql", "graphql", "toml", "shell", "properties", "json", "yaml", "svg"]
 extensions = [".sql", ".graphql", ".toml", ".sh", ".properties", ".json", ".yaml", ".yml", ".svg"]
 reason     = "no frontend exists; ARCH dec:linter:ast-frontends forbids analysing them as raw text. Files stay in the carrier and stay owned, carrying no occurrences"
 # LaTeX is absent from the corpus tree today; ARCH
 # open:linter:latex-frontend keeps its frontend deferred.
+
+# ADDED 2026-09-24: comment-bearing formats, declared for want of a
+# frontend — a frontend is what would move one to a language row.
+[[scanned-regions.none]]
+languages  = ["html", "css", "xml", "cddl", "proguard", "batch", "toml", "make", "shell", "gitattributes", "gitignore", "editorconfig", "dotenv"]
+extensions = [".html", ".css", ".xml", ".cddl", ".pro", ".bat", ".lock"]
+names      = ["Makefile", "gradlew", ".gitattributes", ".gitignore", ".editorconfig", ".env.example"]
+reason     = "comment-bearing formats with no frontend; ARCH dec:linter:ast-frontends forbids analysing them as raw text. Files stay in the carrier and stay owned, carrying no occurrences"
+
+# ADDED 2026-09-24: formats with no comment form at all.
+[[scanned-regions.none]]
+languages  = ["text", "jpeg", "png", "ico", "truetype", "version-pin"]
+extensions = [".txt", ".jpg", ".png", ".ico", ".ttf"]
+names      = [".nvmrc", "LICENSE-CODE", "LICENSE-DOCS"]
+reason     = "data, binary and asset formats carry no comment to scan: plain text, raster images, fonts, and a version pin. Files stay in the carrier and stay owned, carrying no occurrences"
+
+# ADDED 2026-09-24: JSX, declared though a frontend reads it. The
+# javascript row's parser reads .jsx (EsSyntax jsx), and the tree's only
+# .jsx files are design/'s prototypes, whose comments cite doc labels in
+# backtick form: the first scan reported seven label-backtick-in-code
+# findings in design/designs/postmvp/screens/. Moving .jsx to the
+# javascript row is the design owner's ruling, taken with that sweep.
+[[scanned-regions.none]]
+languages  = ["jsx"]
+extensions = [".jsx"]
+reason     = "design prototypes, not yet swept for the label syntax of scanned code; the javascript row reads the type once the design owner moves it there. Files stay in the carrier and stay owned, carrying no occurrences"
 
 
 ####################################################################
@@ -1366,7 +1407,7 @@ Title.
 # of them heads an environment, so none is validated against the kind
 # registry.
 [[head-recognition.none]]
-languages = ["rust", "typescript", "kotlin"]
+languages = ["rust", "typescript", "kotlin", "javascript"]
 reason    = "code comments carry occurrences, never environment heads"
 
 
@@ -1822,12 +1863,9 @@ failing = [
 #   that their 1,708 line comments and 681 KDoc blocks are read, and the
 #   read found nothing to sweep — no acute occurrence anywhere in the
 #   tree and no label-shaped backtick in any comment. The prefix
-#   enforces emptiness the way docs/ and web/ do. Its 18 .kts build
-#   scripts sit under the same prefix and carry no occurrence either:
-#   they have no frontend ([scanned-regions] no-frontend row), so they
-#   are owned, scanned for nothing, and cannot fail. The day one gets a
-#   frontend is the day that changes, and it is a ruling, not a
-#   consequence.
+#   enforces emptiness the way docs/ and web/ do. Its .kts build
+#   scripts sit under the same prefix and are read by the same Kotlin
+#   row of [scanned-regions], so they are held to the same emptiness.
 #
 # THE ADVISORY REMAINDER, which is now only what is never committed:
 #   Every tree of the carrier is failing. What the default still covers

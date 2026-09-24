@@ -58,14 +58,14 @@
 //! because refusing to follow a link is a decision and failing to read one
 //! is a defect, and the two must not look alike.
 
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::adopt::{Adoption, Language, OwnerId, relative_str};
-use crate::diag::{ByteSpan, Diagnostic, Location, RuleId, Severity};
+use crate::diag::{ByteSpan, Diagnostic, Enforcement, Location, RuleId, Severity};
 
 /// A tree that could not be read, or a root whose tracked set git would not
 /// list. The tree is skipped and the walk goes on: an unreadable tree is a
@@ -79,8 +79,17 @@ pub const UNREADABLE_SOURCE: RuleId = RuleId::new("carrier-unreadable-source");
 /// does not say its absence is legal (´conv:lint:owner-assignment´).
 pub const UNMATCHED_ROOT: RuleId = RuleId::new("carrier-unmatched-root");
 
+/// A file type the carrier holds that no frontend reads and no
+/// `[[scanned-regions.none]]` row declares (´dec:lint:catalogue-totality´).
+pub const UNCATALOGUED_TYPE: RuleId = RuleId::new("carrier-uncatalogued-type");
+
 /// Every rule this module can report, for the diagnostic inventory.
-pub const RULES: [RuleId; 3] = [UNREADABLE_TREE, UNREADABLE_SOURCE, UNMATCHED_ROOT];
+pub const RULES: [RuleId; 4] = [
+    UNREADABLE_TREE,
+    UNREADABLE_SOURCE,
+    UNMATCHED_ROOT,
+    UNCATALOGUED_TYPE,
+];
 
 /// One carrier source, with everything the harvest needs about it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -91,8 +100,9 @@ pub struct SourceFile {
     /// Its owner, by Ω's first match.
     pub owner: OwnerId,
     /// The language a frontend reads it as, where one does. `None` covers
-    /// the languages listed with no frontend and everything else: those
-    /// files are in the carrier and owned, and carry no occurrences.
+    /// the types a `[[scanned-regions.none]]` row declares and whatever
+    /// else the working notes hold: those files are in the carrier and
+    /// owned, and carry no occurrences.
     pub language: Option<Language>,
     /// Whether it is a committed generated file.
     pub generated: bool,
@@ -157,6 +167,94 @@ pub fn unmatched_roots(a: &Adoption, sources: &[SourceFile]) -> Vec<Diagnostic> 
             ),
         })
         .collect()
+}
+
+/// The file types the catalogue does not answer for, one finding each.
+///
+/// `[scanned-regions]` is total over the tracked carrier: every file type in
+/// it is either read by a frontend or declared in a `[[scanned-regions.none]]`
+/// row, so a new kind of file arrives as a decision and never as a file
+/// nobody scans without anybody having said so. The finding is located at
+/// the type's first file by path and counts the rest, because the repair is
+/// one row of the adoption data and not an edit per file.
+///
+/// It fails the lane wherever the file sits. The defect is the catalogue's,
+/// and a type first seen in an advisory tree is uncatalogued for the failing
+/// trees just the same.
+///
+/// The optional roots are outside the question: the working notes are no
+/// commit's content, and the catalogue is a claim about what the repository
+/// carries.
+///
+/// ```
+/// use cogra_linter::{Adoption, OwnerId, SourceFile, carrier};
+/// use std::path::{Path, PathBuf};
+///
+/// # let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-adoption.toml");
+/// # let adoption = Adoption::load(Path::new(path)).expect("ruled adoption data");
+/// let held = |path: &str| SourceFile {
+///     path: PathBuf::from(path),
+///     owner: OwnerId::new("tree.repo-root"),
+///     language: None,
+///     generated: false,
+///     bytes: Vec::new(),
+/// };
+/// let found = carrier::uncatalogued(
+///     &adoption,
+///     &[held("tools/a.py"), held("tools/b.py"), held("Makefile"), held("tmp_dev/x.py")],
+/// );
+/// assert_eq!(found.len(), 1, "one finding per type, and the working notes are exempt");
+/// assert_eq!(found[0].primary.path, PathBuf::from("tools/a.py"));
+/// ```
+#[must_use]
+pub fn uncatalogued(a: &Adoption, sources: &[SourceFile]) -> Vec<Diagnostic> {
+    let mut first: BTreeMap<String, (&Path, usize)> = BTreeMap::new();
+    for src in sources {
+        let walked = a
+            .partition
+            .rules
+            .iter()
+            .any(|rule| rule.optional && rule.path.matches(&src.path));
+        if walked || a.scanned_regions.catalogues(&src.path) {
+            continue;
+        }
+        first
+            .entry(type_of(&src.path))
+            .and_modify(|(at, count)| {
+                *count += 1;
+                if src.path.as_path() < *at {
+                    *at = &src.path;
+                }
+            })
+            .or_insert((&src.path, 1));
+    }
+    first
+        .into_iter()
+        .map(|(kind, (at, count))| Diagnostic {
+            rule: UNCATALOGUED_TYPE,
+            severity: Severity::Error,
+            enforcement: Enforcement::Failing,
+            primary: Location::new(at.to_path_buf(), ByteSpan::new(0, 0), 1, 1),
+            related: Vec::new(),
+            message: format!(
+                "the file type {kind} ({count} in the carrier, this the first) is neither read by a frontend nor declared by a [[scanned-regions.none]] row, and the catalogue must answer for every tracked type"
+            ),
+        })
+        .collect()
+}
+
+/// A file's type as a finding names it: the extension from the last dot of
+/// its name, or the whole name where no dot follows the first character —
+/// `Makefile`, `.gitignore`.
+fn type_of(path: &Path) -> String {
+    let name = path
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    match name.rfind('.') {
+        Some(dot) if dot > 0 => String::from(&name[dot..]),
+        _ => name,
+    }
 }
 
 /// The carrier walk, over one corpus root under one adoption.

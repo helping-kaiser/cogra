@@ -287,6 +287,64 @@ fn tsx_parses_where_ts_does_not() {
     );
 }
 
+/// A source under the `javascript` row, named as the caller chooses.
+fn script(name: &str, text: &str) -> SourceFile {
+    SourceFile {
+        language: Some(Language::new("javascript")),
+        ..named(name, text)
+    }
+}
+
+/// `[scanned-regions]`' javascript row: a `.mjs` module and a `.jsx`
+/// source reach this frontend through the dispatcher, and their comments
+/// are regions exactly as TypeScript's are (´dec:lint:catalogue-totality´).
+///
+/// A JavaScript source's comments are scanned regions, JSX containers included.
+/// ´claim:web:javascript-comments-are-regions´
+#[test]
+fn a_javascript_source_is_read_for_its_comments() {
+    for (name, text, expected) in [
+        (
+            "web/eslint.config.mjs",
+            "// one\nexport default [];\n",
+            " one",
+        ),
+        ("x.jsx", "const a = <p>{/* two */}hi</p>;\n", " two "),
+    ] {
+        let src = script(name, text);
+        let pre = pretokenize(src.language.as_ref(), &src.bytes);
+        let parsed = frontend::parse(&src, &pre, adoption()).expect("the source parses");
+        assert!(
+            parsed.diagnostics.is_empty(),
+            "{name}: {:?}",
+            parsed.diagnostics
+        );
+        let found: Vec<String> = parsed.regions.into_iter().map(|one| one.text).collect();
+        assert_eq!(found, vec![String::from(expected)], "{name}");
+    }
+}
+
+/// JavaScript is read as ECMAScript and not as TypeScript, so TypeScript's
+/// own syntax is a parse failure there: the grammar is the one the file's
+/// author wrote in.
+///
+/// A JavaScript source is parsed as ECMAScript, where a type annotation does not parse.
+/// ´claim:web:javascript-is-read-as-ecmascript´
+#[test]
+fn a_javascript_source_is_parsed_as_ecmascript() {
+    let text = "// one\nconst x: number = 1;\n";
+    assert!(frontend_web::parse(&named("x.ts", text), adoption()).is_ok());
+    let findings = frontend_web::parse(&script("x.mjs", text), adoption())
+        .map(|one| one.diagnostics)
+        .unwrap_or_else(|findings| findings);
+    assert!(
+        findings
+            .iter()
+            .any(|one| one.rule == frontend_web::UNPARSABLE),
+        "the same bytes under the javascript row reported {findings:?}"
+    );
+}
+
 /// An ambient declaration file parses as one: its bodies are types where a
 /// `.ts` file's are values.
 ///
