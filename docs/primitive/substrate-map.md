@@ -114,8 +114,8 @@ where each concept sits relative to the seam.
 
 | Concept | Primary | Mapping |
 |---|---|---|
-| Admission money | consume | the burn value behind `B_i` and the θ-debit — consume-only; CoGra reads `B_i` and the burn benchmarks (`B_W1`/`B_safety`/`B_door` — there is no universal admission price) through L1's interface and never authors a realization's records. |
-| CGT (reward economy) | off-graph | CoGra's own token — the campaign-pool currency, fully disconnected from the burn value. "Burn" means CGT supply destruction, never the θ-debit. |
+| Admission money | consume | The burn value `B_i` behind the θ-debit, recorded by a realization of the burn primitive — consume-only; CoGra reads `B_i` and the burn benchmarks (`B_W1`/`B_safety`/`B_door` — there is no universal admission price) through L1's interface. |
+| CGT (reward economy) | off-graph | CoGra's own token — the campaign-pool currency, fully disconnected from burn value. "Burn" means CGT supply destruction, never the θ-debit. |
 | Subsidised θ-debits | off-graph | Only the actor's own balance ever pays the actor's θ (W1). Community funding is admission burns to the member's own address (``rem:gates:guild-funding``) — funder-unconstrained, the comparator sees a funded member exactly as a self-funded one; generosity and caps are governed network parameters. System actors and Collectives draw on the CoGra community treasury. |
 | Campaigns, settlement, payouts | gesture | The campaign's public record rides L1: an advertiser-authored Content anchor carries the terms as witnessed payload, `(0,0)` References declare the targeting, and adjustments and settlement land as witnessed payloads on Opinions toward the anchor ([economics.md §3](economics.md#3-the-campaign-record), [§10](economics.md#10-the-settlement-record-and-the-payout-flow)). The money rail and payout plumbing stay CoGra's own, off-graph; the attribution they pay against is computed over L1 records (below). |
 | Inviter reward | off-graph | Single-hop 1% CGT to the accepted mutual-pair inviter (§1) — permanent, no chain of referrals. |
