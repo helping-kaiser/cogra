@@ -112,7 +112,8 @@ storage — partitioned around the L1 seam:
   committed in payloads (§7).
 
 Money sits in none of these. The admission money is the
-realization's, read only as `B_i`; CoGra's own reward economy has its own rail —
+realization's, read only as `B_i`; CoGra's own reward economy has
+its own rail —
 [economics.md](economics.md), [token.md](token.md),
 [ledger.md](../implementation/ledger.md).
 

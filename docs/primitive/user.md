@@ -105,9 +105,9 @@ The payout destination is thereby a public, actor-attributed
 record: it cannot be silently swapped.
 
 The realization address is not graph state at all — it is the
-address the actor's burns accrue at, bound to the actor by L1 and
-read only as the scalar `B_i`. One account = one realization
-address, self-custodied.
+address the actor's burns accrue at, which L1 binds to the actor
+and reads only through the scalar `B_i`. One account = one
+realization address, self-custodied.
 
 **In the overlay.**
 
