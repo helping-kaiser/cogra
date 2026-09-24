@@ -473,7 +473,9 @@ describe("ComposeForm", () => {
             isCover: true,
             altText: "A jetty",
             coverMediaId: null,
-            coverTaken: null,
+            // MediaAttachment.coverTaken is Boolean! — the server always
+            // answers false on a placement with no cover, never null.
+            coverTaken: false,
           },
           {
             mediaId: "m-2",
@@ -481,7 +483,7 @@ describe("ComposeForm", () => {
             isCover: false,
             altText: null,
             coverMediaId: null,
-            coverTaken: null,
+            coverTaken: false,
           },
         ],
         sensitive: false,
