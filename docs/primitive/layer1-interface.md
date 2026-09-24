@@ -2,13 +2,13 @@
 
 > **Provenance.** This document is a derived reference extracted from the
 > **PeerNetworks Layer 1** specification by the **Peer Team** (Peer Network,
-> v0.24.4, August 2026), reproducing its binding surface for the purpose
+> v0.25.0), reproducing its binding surface for the purpose
 > of building CoGra as a Layer 2 on it. It is not the normative source —
 > the PeerNetworks paper is. Licensed under CC-BY-4.0; see
 > [LICENSE-DOCS](../../LICENSE-DOCS).
 
-**Derived file — hard facts only.** v0.24.4 ships as the flat source
-(`PeerNetwork_PeerNetwork_v0.24.4_flat.tex`). It carries the **Edition 4**
+**Derived file — hard facts only.** v0.25.0 ships as the flat source
+(`PeerNetwork_PeerNetwork_v0.25.0_flat.tex`). It carries the **Edition 4**
 body rewrite (the authored-act ontology, the admission handshake, the
 authoritative act order) and the **Edition 5** refoundation of standing as
 one conserved allocation operator. This reference draws two scopes from it:
@@ -29,8 +29,8 @@ one conserved allocation operator. This reference draws two scopes from it:
 Proofs and motivation prose are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 364 distinct anchor names,
-`anchor_set_hash = 32495505d9d99edf2db0c709f9063fef0d3e015817cc1b98fd51c0cf9bb5de72`
+anchor-stability contract: 374 distinct anchor names,
+`anchor_set_hash = 88c0e4d9e51bfa34091d363236c61db1a3f8838047faad0f883617ade4ca83f4`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
@@ -46,15 +46,20 @@ anything not in the feedback closure below is a Layer 2's to reimplement
 
 ## 1 The layer model
 
-- **The burn primitive** (beneath the stack rather than a layer of it) — the frame source. Exports exactly one
-  object, the burn record, and by declining to price it guarantees its
-  neutrality. Knows nothing of clusters, terminal read-sites, or guild
-  policy. (`subsec:introduction:two-layers-derived`)
-- **Layer 1 (Peer Network)** — the binding. Reads the imported frame as the
-  network's source, welds it onto a public directed graph $G = (V, E)$ to
-  produce the relative-standing field $\alpha_i$
-  (`def:epoch:final-standing`), and publishes the closure quantities
-  admission reads. The public-auditability layer.
+- **The burn primitive** — the frame source. Not a layer of the stack but
+  what lies beneath it: a non-repayable, publicly verifiable, costly action
+  together with the record it leaves (`def:comparator:burn-primitive`). Any
+  system satisfying requirements R1–R11 (§1.1) is a *realization*; the
+  network reads a realization through exactly four interface objects and
+  nothing else. The burn value map is neutral because the primitive records
+  a destroyed magnitude and declines to price it. The primitive knows
+  nothing of clusters, terminal read-sites, or guild policy.
+  (`subsec:introduction:two-layers-derived`)
+- **Layer 1 (Peer Network)** — the root of the stack, and the binding.
+  Reads the imported frame as the network's source, welds it onto a public
+  directed graph $G = (V, E)$ to produce the relative-standing field
+  $\alpha_i$ (`def:epoch:final-standing`), and publishes the closure
+  quantities admission reads. The public-auditability layer.
 - **Terminal complement (Layer 2: guilds / consumers / services)** —
   read-sites. Downstream services consume $\alpha_i$, title, and other
   published values at terminal sites. The closure edition names the terminal
@@ -62,10 +67,10 @@ anything not in the feedback closure below is a Layer 2's to reimplement
   grant (`post:transport:guild-grant`); it specifies none of its mechanisms.
   Identity association and payload carriage are terminal.
 
-| Layer | Comparator role | Owns / prices |
+| Part | Comparator role | Owns / prices |
 |---|---|---|
 | The burn primitive (beneath Layer 1) | frame source — supplies the neutral exogenous scalar | owns nothing of the graph (`rem:comparator:neutrality-from-silence`) |
-| Layer 1 (Network) | the binding — welds the frame onto $G$, publishes the standing field, the ledger, and every closure constant | owns the public infrastructure; earns only the realization's fee |
+| Layer 1 (Network) | the binding — welds the frame onto $G$, publishes the standing field, the ledger, and every closure constant | owns the public infrastructure; prices nothing of its own |
 | Terminal complement | read-sites — downstream services may consume $\alpha_i$, title, and other published values at terminal sites | named only in `tbl:symbols:boundary`; mechanisms not specified in the closure edition |
 
 (`tbl:introduction:layer-roles`)
@@ -74,6 +79,77 @@ The map from an actor to the *person* behind it is never represented at
 Layer 1: it has no feedback read-site, hence terminal. Severing it changes
 no $\alpha_i$, no $W_{\text{end}}^{(k)}(u \to i)$, no title, and no gate.
 (`rem:comparator:identity-is-layer-2`)
+
+### 1.1 The burn interface and requirements R1–R11
+
+**The Burn Interface (`def:comparator:burn-interface`).** A realization
+exposes exactly four objects to the network, and the network reads nothing
+else of it:
+
+- **(B) burn value** — the map $B : \mathbb{A} \to \mathbb{R}_{\ge 0}$
+  recording, at each address, the magnitude destroyed there; $B_i$ is its
+  fiber at the address the network binds to actor $i$ (§14.1).
+- **($\mathbb{A}$) address space** — the opaque index set of that map. An
+  address is a name the primitive can write against; the primitive makes no
+  claim that it is a person, a holder, or an identity.
+- **($B_{\max}$) capacity bound** — the published bound on aggregate burn
+  value attainable before the realization opens to external acquisition
+  (`def:comparator:bootstrap-capacity`).
+- **($c_{\mathrm{u}}$) unit-cost projection** — the published cost, in the
+  external denomination the realization prices in, of acquiring one unit of
+  burn value at that realization's own terms.
+
+The first two are the frame; the last two are constants the network reads
+and never re-derives. Everything else a realization carries — an economy,
+instruments, prices, phases, an operator — is its own: no such quantity
+enters a network published-quantity formula
+(`rem:comparator:surface-readings`).
+
+**Burn Primitive Requirements (`post:comparator:burn-primitive`).** A
+system failing any of these is not a realization; a system meeting all of
+them is one. R1–R5 are the frame requirements; R6–R11 are what the
+network's machinery additionally reads.
+
+- **R1 exogenous origin** — $B$ is not derived from $G$; no network
+  operation writes it.
+- **R2 neutrality** — the primitive records a destroyed magnitude and
+  confers no claim at its own level: no value, no redemption, no
+  entitlement; it declines to price the record.
+- **R3 non-transferability** — no operation moves, merges, reassigns, or
+  pools burn value across addresses.
+- **R4 settlement-pinned monotone valuation** — (a) a value is pinned at a
+  settlement event; (b) successive pinned values at an address are
+  non-decreasing; (c) between settlements the published value never exceeds
+  the value the next settlement pins; (d) a published value is revisable
+  only downward, only as far as the last pinned value, and only when the
+  ordering of events at a settlement boundary is itself revised; (e) the
+  realization publishes a **settlement depth** beyond which no ordering is
+  revised, so a value sampled at or below it is order-free and equals its
+  pinned value.
+- **R5 bindability** — addresses are opaque, permanent, and carry no
+  identity claim; the network's map from actors into $\mathbb{A}$ is the
+  frame binding (`def:comparator:frame-binding`).
+- **R6 non-negativity** — every value of $B$ lies on the single ordered
+  line $\mathbb{R}_{\ge 0}$.
+- **R7 auditability by provenance** — every unit of $B$ is anchored to a
+  genuine, irrecoverable destruction and capped, per recording event, by the
+  destruction it rides on; a record not backed by destruction contributes
+  zero; the realization publishes the quantities a reader needs to
+  recompute this.
+- **R8 instantaneous costliness, append-only record** — what a burn
+  destroys is priced at the instant it occurs; its record is never removed;
+  no operation maps a record back to what was destroyed.
+- **R9 bootstrap capacity** — the realization publishes $B_{\max}$.
+- **R10 unit-cost projection** — the realization publishes $c_{\mathrm{u}}$,
+  so a burn-value quantity reads as an outlay by multiplication;
+  necessarily $c_{\mathrm{u}} \ge 1$.
+- **R11 operator bound** — if a realization has an operator that accrues
+  burn value from operating it, the realization bounds that operator's burn
+  value by a result it proves and publishes; the network reads the bound as
+  an interface constant and re-proves nothing.
+
+R1–R11 name the burn-primitive requirements only. The safety-threshold
+premises are X1–X7 (§11.8).
 
 ---
 
@@ -208,8 +284,9 @@ output **or validity verdict** re-enters the decision of what may be written
 to $E$, and *terminal* otherwise. Each object carries exactly one of
 the **five tags** (`tbl:network:object-taxonomy`):
 
-- **(interface·input)** — originates below the comparator seam; cited at import,
-  never authored.
+- **(interface·input)** — originates below the comparator seam, in a
+  realization of the burn primitive, and is read at import through the burn
+  interface; cited, never authored.
 - **(L1·closure)** — at least one read-site re-enters admission; consume the
   published value, recompute only to audit. **⋆** marks a *straddler*: binding
   as a feedback input, yet freely readable downstream.
@@ -415,9 +492,11 @@ Layer 1 / operator provides: the public append-only graph
 (`post:introduction:public-accessibility` … `post:introduction:epoch-edge-set`),
 the commitment ledger and standing-compilation infrastructure, and the
 epoch machinery (PN full §6, `subsec:epoch:epoch-boundary`). Publishes the
-binding constants and the host-cached raw defaults (§6 below). The
-operator's economic inflow is the realization's minting fee — the sole
-protocol-level value flow to the operator; no protocol-level fee is
+binding constants and the host-cached raw defaults (§6 below). From its
+foundation the network reads only the interface constants a realization
+publishes — $B_{\max}$ (R9), $c_{\mathrm{u}}$ (R10), and the R11 operator
+bound; nothing else a realization publishes enters a network formula. The
+network levies no protocol-level fee of its own; no protocol-level fee is
 extracted from content transactions, advertising spend, or guild reward
 pools.
 
@@ -432,9 +511,12 @@ parameters, reward distribution schedule, and bridge composition rule;
 scores, and standing values are public.
 
 Burn consumption (`def:transport:commitment-via-burn`, PN full §8): $B_i \in \mathbb{R}_{\ge 0}$ is
-the cumulative reserve-denominated value committed by actor $i$, read from
-the burn primitive. All formulas consume $B_i$ as a non-negative, non-decreasing,
-publicly auditable scalar; no surface quantity appears. Burn
+the cumulative burn-denominated value committed by actor $i$, read from
+the burn primitive; costliness and irrevocability are inherited at the
+network's sampling depth (R8). During bootstrapping, aggregate $B_i$ is
+capacity-bounded by $B_{\max}$. All formulas consume $B_i$ as a
+non-negative, non-decreasing, publicly auditable scalar; no surface
+quantity appears. Burn
 granularity (`rem:transport:burn-granularity`): compliant implementations must support precision
 such that the reduced rate $\hat{r}_i = r_i/\nu$ is representable
 to at least 8 significant figures.
@@ -471,8 +553,12 @@ Stated independently of any mechanism that achieves them.
   published.
 - **Irrevocability (`post:introduction:irrevocability`).** A ledger entry,
   once published, cannot be reversed, removed, or reduced. The monotone
-  non-decrease of the committed quantity $B_i$ is a property of the burn primitive the
-  network reads, not a network primitive.
+  non-decrease of the committed quantity $B_i$ is a property of the burn
+  primitive the network reads, not a network primitive: what a burn
+  destroys is priced at the instant it occurs and its record is never
+  removed (R8), so successive pinned values at an address cannot fall
+  (R4(b)); the network's frame stability at its own sampling depth follows
+  (`lem:comparator:frame-stability`).
 - **Authoritative Ordering (`post:introduction:authoritative-act-order`).**
   The host chooses a total **authoritative order** over the accepted
   authored acts of each epoch and assigns each act a logical time by its
@@ -561,14 +647,14 @@ formation, package validity, or the epoch target;
 |---|---|---|
 | $\beta$ | 1.386 ($= 2\ln 2$); enters the projected standing core as well as raw damping | `ax:epoch:thermodynamic-boundary` |
 | $\eta$ | 0.05 (bleed; enters the core $Q$) | `def:graph:path-view-extraction` |
-| $\nu$ | 0.10 (illustrative numéraire, reserve/action; structural after lock) | `def:comparator:numeraire` |
+| $\nu$ | 0.10 (illustrative numéraire, burn units per action-credit; structural after lock) | `def:comparator:numeraire` |
 | $\rho_{\text{pol}}$ | 1 (canonical default policy floor; dimensionless, host-dialed) | `def:epoch:policy-floor` |
-| $\theta$ | $\approx 0.05281$ at reference (reserve/action; **algorithmic per-epoch output**, one-boundary lead, never a host input; defined by the width-fence inversion $\theta = \nu\,\lambda_Q^{-1}(1/(m_\theta W_{\text{loc}}))$ at reference $W_{\text{loc}} = 1$) | `def:epoch:safety-threshold` |
+| $\theta$ | $\approx 0.05281$ at reference (burn units per action; **algorithmic per-epoch output**, one-boundary lead, never a host input; defined by the width-fence inversion $\theta = \nu\,\lambda_Q^{-1}(1/(m_\theta W_{\text{loc}}))$ at reference $W_{\text{loc}} = 1$) | `def:epoch:safety-threshold` |
 | $\rho_\theta = \theta/\nu$ | $\approx 0.5281$ at reference (the wall) | `def:epoch:safety-floor` |
 | $\rho_{\text{eff}}$ | $\max(\rho_{\text{pol}}, \rho_\theta)$; $= \rho_{\text{pol}} = 1$ on any valid certificate (derived) | `def:epoch:participation-floor` |
 | $m_\theta$ | $5/4$ (chartered margin factor; one dial read four ways) | `def:epoch:safety-threshold` |
 | $N_{\text{epoch}}$ | 10000 (illustrative **target** act budget, denominated in accepted authored acts; not yet locked) | `def:epoch:epoch-act-budget` |
-| $\delta_{\text{pos}}$ | 500 (illustrative burn-snapshot buffer; not yet locked) | `post:epoch:final-edge-set` |
+| $\delta_{\text{pos}}$ | 500 (illustrative burn-snapshot buffer, chosen to exceed the settlement depth the realization publishes, R4(e); not yet locked) | `post:epoch:final-edge-set` |
 | $L_{\text{hop}}$ | 4 (chartered transport depth, in hops of the conserved transport) | `def:epoch:standing-depth-mass` |
 | $\gamma$ | $1/4$ (chartered activation exponent; **not** the reciprocal of $L_{\text{hop}}$) | `def:epoch:responsive-vouch-activation` |
 | $Q(1)$ | $\approx 0.6975$ (activation normalization of the deployed core) | `def:epoch:responsive-vouch-activation` |
@@ -585,7 +671,7 @@ $\tilde{w}_{\max}^{\text{Op}} \approx 0.502$. The pre-Edition-4 raw
 precision clip $\epsilon_{\text{clip}}$ is **deleted with no successor**
 (`rem:sorting:raw-pruning-is-implementation`).
 
-The comparator's single reserve→action unit is the **numéraire** $\nu$; the
+The comparator's single burn-unit→action join is the **numéraire** $\nu$; the
 participation floor is a *pair* — the host-dialed $\rho_{\text{pol}}$ and the
 network-computed safety threshold $\theta$ — governed in §11.8. The wall
 $\rho_\theta$ is read by W2a and keys the below-wall activation clamp; the
@@ -596,14 +682,20 @@ reference calibration $(\nu, \rho_{\text{pol}}) = (0.10, 1)$, $\rho_{\text{eff}}
 No netting-clip constant exists: the stance-aggregation clip is the fixed
 $\mathrm{clip}_{[-1,1]}$ in `def:epoch:net-stance`, not a calibrated value.
 
-*Interface constants* are owned by the realization and
-surfaced through `PA-` citations; they enter no Layer-1 closure formula.
-The realization's unit-cost projection $1/((1-f)\zeta)$ converts the burn-value
-admission benchmarks into reserve deposits
-(`eq:comparator:admission-benchmark-deposits`, §7.1); the pre-Edition-4
-single entry-cost formula $\delta_{\min}$ is superseded by that benchmark
-family. Illustrative Layer 1 constants are subject to empirical calibration
-during the centralized deployment phase and are not yet locked.
+*Interface constants* — $B_{\max}$ (R9), $c_{\mathrm{u}} \ge 1$ (R10), and
+the settlement depth (R4(e)) — are published by the realization, read as
+constants, and re-derived nowhere. A realization's own fees, splits, phase
+leads, and any ceiling derived from them are its design; the network
+neither names nor recomputes them (`rem:comparator:surface-readings`).
+$c_{\mathrm{u}}$ turns a burn-value quantity into an outlay in the
+realization's external denomination by multiplication — the admission
+benchmarks of §7.1 (`eq:comparator:admission-benchmark-deposits`). The
+minimum deposit $\delta_{\min} = \rho_{\text{eff}}\,\nu\,c_{\mathrm{u}}$,
+the door price projected through $c_{\mathrm{u}}$, is the sole user-facing
+quantity carried in that external denomination
+(`subsec:necessity:floor-as-numeraire`). Illustrative Layer 1 constants are
+subject to empirical calibration during the centralized deployment phase and
+are not yet locked.
 
 ---
 
@@ -683,9 +775,9 @@ proposing $m \ge 1$ epoch acts:
 $$B_{\mathrm{W1}}(m) = m\theta, \qquad B_{\mathrm{safety}}(m) = 2m\theta,
 \qquad B_{\mathrm{door}}(m) = m(\theta + \nu\rho_{\text{eff}}),$$
 
-projected through the realization's cost interface as reserve deposits
-$\delta(m) = B(m)/((1-f)\zeta)$
-(`eq:comparator:admission-benchmark-deposits`,
+projected through the published unit cost as outlays in the realization's
+external denomination $\delta(m) = B(m)\,c_{\mathrm{u}}$ (R10;
+`eq:comparator:admission-benchmark-deposits`,
 `subsec:comparator:capacity-and-admission-benchmarks`). These are
 final-state gate benchmarks, not prices that guarantee selection into the
 finite write set; there is no universal admission price. Band dwell is
@@ -933,8 +1025,9 @@ with $\alpha$ an authored-act identifier, classed by outermost constructor:
 **minted** ($\mathsf{mint}$ — Content, Item, Chat, Offer, Comment,
 Message). Class is decidable syntactically, no census lookup
 (`lem:graph:identifier-disjointness`). Two constructors take atoms from
-outside the record set — $\mathsf{addr}$ anchors *mass* from the reserve,
-$\mathsf{name}$ anchors *reference* from the string commons;
+outside the record set — $\mathsf{addr}$ anchors *mass* from the
+primitive's address space $\mathbb{A}$, $\mathsf{name}$ anchors *reference*
+from the string commons;
 $\mathsf{prof}$ is the unique non-atomic grounded constructor (one atom,
 two identifiers — an Actor and its Profile are one anchoring). "A node
 cannot be re-minted" is a property of term formation, not a rule. An
@@ -2116,14 +2209,14 @@ debited at its writing-epoch price and never re-calibrated (the debit
 schedule is the sole vintage object). $r_i \ge 0$, $=0$ iff $b_i = 0$;
 decreasing under action ($\theta$ off the numerator, $+1$ on the
 denominator), non-decreasing in $B_i$. Published per-actor scalars;
-derivable from the public burn record, the committed act count, and
+derivable from the primitive's public record, the committed act count, and
 the published $\theta$-debit schedule without graph traversal. The frame is
 verified by recompute-and-verify-provenance, never scan-and-total
 (`rem:comparator:auditability`).
 
 **Funding is a Layer-2 freedom (`rem:gates:guild-funding`).** Nothing in
-the sustaining frontier assumes who funds an actor's burn-value: an admission
-burn is funder-unconstrained at the surface, and the resulting $B_i$
+the sustaining frontier assumes who funds an actor's burn value: a burn is
+funder-unconstrained and requires no recipient consent, and the resulting $B_i$
 accrues to the actor's address whoever paid for it
 (`def:comparator:imported-frame`). A terminal Layer-2 community may choose,
 under its own policy, to supply a member's sustaining burn — Layer 1
@@ -2575,14 +2668,14 @@ $\hat{r}_u/\rho_\theta$, carrying low-rate mass onward, so
 rate-proportional dilution persists, priced and bounded by the hull. The
 specification makes **no** claim that every unit of relational standing
 pressure is continuously backed by positive current residual balance;
-replacing full-pair transport with a source-root eligibility rule is an
+replacing graduated export with a hard source-root eligibility cutoff is an
 open question (`frontier:source-root-eligibility`).
 
 **Dilution cost (`prop:epoch:dilution-cost`):** coordinated low-rate
 endorsement is $\theta$-priced exactly — each ballast action debits
 $\theta$, sustained dilution pressure of $n$ endorsers costs $n\theta$ per
 epoch-action, and total grip is bounded by spent balance$/\theta$
-(capacity per reserve unit $= 1/\theta \approx 18.94$ at the chartered
+(capacity per burn unit $= 1/\theta \approx 18.94$ at the chartered
 value): grip is rented, not owned. Amplification by multiplicity is closed by
 conservation rather than by any per-path rule — a source apportions one unit
 however many acts it authors, so additional acts redistribute that unit
@@ -2661,7 +2754,10 @@ closure, satisfying `post:introduction:epoch-edge-set` with no appeal to
 any global position coordinate. Commitment rates are computed from $B_i$
 and $N_i$ accumulated within $E_k$; the boundary burn state is provided
 alongside, sampled at the settlement-stability depth $\delta_{\text{pos}}$
-— which buffers the *burn snapshot*, not edge membership. Any participant
+— chosen to exceed the settlement depth the realization publishes (R4(e)),
+so every sampled value is order-free and equal to its last pinned value
+(`lem:comparator:frame-stability`). $\delta_{\text{pos}}$ buffers the *burn
+snapshot*, not edge membership. Any participant
 accepting the same $E_k$ (and $\mathcal{Q}_k$) reproduces every epoch-$k$
 quantity from the published constants alone.
 
@@ -2770,23 +2866,24 @@ axes, never conflated — the **price axis** ($\nu$, $\theta$) and the
 
 Price axis:
 
-- **Numéraire $\nu$ (`def:comparator:numeraire`).** The sole reserve→action
-  unit and the reserve-economy↔action-economy join; every reserve-denominated
+- **Numéraire $\nu$ (`def:comparator:numeraire`).** Burn units per
+  action-credit — the sole join between the burn units the primitive
+  records in and the action economy; every burn-denominated
   input is divided by $\nu$ before it meets a count (the $\theta$-debit
   applies this join per act). Governs the reduction and the stability
   operating point — structural; moving it is a *migration event*, not a dial
   turn.
 - **Safety price $\theta$ (`def:epoch:safety-threshold`).** The per-act
   **debited** price and the minimum burn value behind a write the
-  coupled dynamics certifiably tolerate (reserve/action). The **only** debited
+  coupled dynamics certifiably tolerate (burn units per action). The **only** debited
   object (W1). **An algorithmic output of the epoch computation, never a host
   input** — certificate $k$ carries $\theta^{(k+1)}$ (one-boundary lead),
-  governed by requirements R1–R7 (derivability, sufficiency, step-boundedness,
-  hysteresis, lead, publication, declared covariance); the algorithm is a
-  calibration deliverable. Chartered interim rule
+  governed by premises X1–X7 (derivability, sufficiency with X2b width
+  dominance, step-boundedness, hysteresis, lead, publication, declared
+  covariance); the algorithm is a calibration deliverable. Chartered interim rule
   $\theta^{(k+1)} = \nu\,\lambda_Q^{-1}\!\big(1/(m_\theta\, W_{\text{loc}}^{(k)})\big)$
   with **margin factor $m_\theta = 5/4$** (fence slack
-  $\mu = 1 - 1/m_\theta = 0.20$; R3 per-boundary step bound; R4 Schmitt
+  $\mu = 1 - 1/m_\theta = 0.20$; X3 per-boundary step bound; X4 Schmitt
   hysteresis; escalation to $m_\theta = 1.5$ if p95 one-boundary
   $W_{\text{loc}}$ growth exceeds $\sqrt{m_\theta} = 1.118$).
 
@@ -2841,7 +2938,7 @@ $(\nu, \rho_{\text{pol}}) \to (c\nu, \rho_{\text{pol}}/c)$ the door product
 $\rho_{\text{pol}}\nu$ (admission set, per-act door benchmark) is invariant,
 the gate axis $\{\rho_{\text{pol}}, \rho_{\text{act}}, \rho_{\text{ep}}\}$
 is exactly invariant (stamps and floors co-scale), and reduced quantities
-scale by $1/c$; W1/W2a are $\theta$-mediated per the R7 declaration. The
+scale by $1/c$; W1/W2a are $\theta$-mediated per the X7 declaration. The
 historical capacity-crush is dissolved: the retroactive repricing branch
 was deleted by the $\theta$-debit ledger — a consummated debit is never
 re-calculated, so there is **no frozen stock to crush**. The door product
@@ -2878,12 +2975,12 @@ $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 
 Apply in both deployment phases; what changes is the consequence of failed
 verification, not the specification. Seven invariants bind the closure
-surface; the full paper's `app:deployment` additionally documents seven
-terminal invariants (client-reproducible feed ranking,
-device-local computation scope, concealment-entropy custody, auditable
-terminal centrality, attribution-view insulation of CAN enrichment,
-maturity-announcement irrevocability, time-locked supply auditability)
-reproduced by their own owners.
+surface; the full paper's `app:deployment` additionally documents five
+terminal invariants (client-reproducible feed ranking, device-local
+computation scope, concealment-entropy custody, auditable terminal
+centrality, attribution-view insulation of CAN enrichment), reproduced by
+their own owners, and one realization-side invariant (end of this
+section).
 
 - **Continuous Public Availability of Graph State
   (`subsec:deployment:public-availability`).** Every edge record —
@@ -2929,9 +3026,12 @@ reproduced by their own owners.
   derived raw constants ($\tilde{w}_{\text{spam}}, \tilde{w}_{\max},
   \tilde{w}_{\max}^{\text{Op}}$), **and the standing-census, complete-act
   compiler, coefficient, projected-activation, path-selection, allocator,
-  mediant, scalar-encoding, and certificate formula editions** are known to
-  all clients and do not change without clients being able to detect the
-  change and invalidate affected cached computations before it applies.
+  mediant, scalar-encoding, and certificate formula editions**, together
+  with the interface constants the network reads from its realization and
+  surfaces unmodified (`subsec:deployment:realization-obligations`), are
+  known to all clients and do not change without clients being able to
+  detect the change and invalidate affected cached computations before it
+  applies.
 - **Self-Sufficient Edge Record (`subsec:deployment:sufficiency`).** The
   published record for each edge contains exactly the fields required to
   recompute $\tilde{w}(e)$, $\epsilon(e)$, the CAN base value, and the
@@ -2976,17 +3076,25 @@ reproduced by their own owners.
   that reimplements a terminal default publishes its own complete
   specification in its place.
 
-Outside these (terminal or realization-side, reproduced by their own owners):
-feed ranking, device-local computation scope, centrality certificates, CAN
-attribution-view insulation, and the burn-primitive preservation properties (the
-immutability invariant covers ledger entries).
+**Realization Obligations (`subsec:deployment:realization-obligations`).**
+The deployment runs against a realization that publishes, and keeps
+published, the R7 audit quantities, $B_{\max}$ (R9), $c_{\mathrm{u}}$ (R10),
+the settlement depth (R4(e)), and — where the realization has an operator
+accruing burn value — the R11 operator bound. The network carries all of it
+to participants unmodified and without access control; the deployment adds
+no channel by which a published quantity could be silently dropped,
+replaced, or amended in transit. Two duties: *publication* on the
+realization, *non-occlusion* on the deployment. Design space: a pointer to
+the realization's own publication, a mirror in the network's append-log, or
+a periodic published snapshot beside the network's own constants.
 
 ---
 
 ## 14 Symbol ledger (Layer-1-tagged objects)
 
-Tag semantics (`app:symbols`): **(interface·input)** originates below the
-comparator seam, cited never authored; **(L1·closure)** at least one
+Tag semantics (`app:symbols`): **(interface·input)** originates below
+the comparator seam in a realization, read through the burn interface,
+cited never authored; **(L1·closure)** at least one
 read-site — output or validity verdict — re-enters admission; **⋆** marks a
 straddler; **(L1·verify)** evidence for reproducing or checking a closure
 output, consumed by no formula; **(L1·by-product)** a non-normative host
@@ -2998,8 +3106,8 @@ objects live only in the boundary ledger** (§3).
 
 | Symbol | Definition | Ref |
 |---|---|---|
-| $B_i$ | The imported frame, fiber-wise: $B_i := A_{\mathrm{key}(i)}$, the network's reading of the magnitude the burn primitive records as destroyed. Non-decreasing at sampling depth, publicly auditable, irrevocable. | `def:comparator:imported-frame` |
-| $B_{\max}$ | Bootstrap capacity bound $B_{\max} := A_{\max}$. | `def:comparator:bootstrap-capacity` |
+| $B_i$ | The imported frame, fiber-wise: $B_i := B(\mathrm{key}(i))$ with $\mathrm{key}(i) \in \mathbb{A}$, the network's reading of the magnitude the burn primitive records as destroyed. Non-decreasing at sampling depth, publicly auditable, irrevocable — all properties of the primitive, none of the network's. **(interface·input)** | `def:comparator:imported-frame` |
+| $B_{\max}$ | Bootstrap capacity bound: the maximum aggregate frame value attainable before a realization opens to external acquisition of burn value; an interface constant the realization publishes (R9) and the network re-derives nowhere. **(interface·input)** | `def:comparator:bootstrap-capacity` |
 | $q$ (act) | Authored act: the atomic public record — unit of formation, admission, ordering, dependency declaration, action counting, θ-debit, and final-set authorship. | `def:graph:authored-act` |
 | $\mathrm{actid}(q)$ | Act identifier $\mathsf{act}(\mathrm{author}, s_q, \mathrm{family})$; no host time, no minted target; mints nodes as $\mathsf{mint}(\mathrm{actid}(q))$. | `def:graph:act-identifier` |
 | $\mathrm{edges}(q)$, roles | Edge projection of an act (one binary edge, or A + T); a projection owns only incidence, role, and rendering. | `def:graph:act-edge-projection` |
@@ -3009,14 +3117,14 @@ objects live only in the boundary ledger** (§3).
 | $\prec$ (L1·closure), $\prec^*$ **(L1·verify)** | Authoritative-order precedence; identity-key refinement (audit tie-break only). | `def:graph:authoritative-act-order`, `def:epoch:log-position` |
 | $C^{\text{pre}}_q$, $V_q$, $\sigma^{\text{app}}_q$ | Proposal pre-commitment, host-sealed verified act, and approval witness of the admission handshake. | `def:graph:proposal-pre-commitment`, `def:graph:verified-act`, `def:graph:approval-witness` |
 | $\mathrm{deps}(q)$, dependency commitment | Actor-authored removable dependency projection and its retained binding commitment; tombstonable, reopenable for fraud proof **(L1·verify** when opened**)**. | `def:graph:act-dependency-projection`, `def:graph:ordering-fraud-proof` |
-| $\nu$ | Numéraire: the sole reserve→action unit and reserve-economy↔action-economy join (applied per act by the θ-debit); bond-kernel denominator. Structural; moving it is a migration event. | `def:comparator:numeraire` |
+| $\nu$ | Numéraire: burn units per action-credit, the sole join between the burn units the primitive records in and the action economy (applied per act by the θ-debit); bond-kernel denominator. Structural; moving it is a migration event. | `def:comparator:numeraire` |
 | $\rho_{\text{pol}}$ | Policy floor: the host's dimensionless gate-axis dial; announced at $k$, effective at $k+1$; valid iff $\rho_{\text{pol}}\nu \ge \theta$. Canonical default $1$. | `def:epoch:policy-floor` |
-| $\theta$ | Safety threshold (reserve/action): the minimum burn value behind a write the coupled dynamics tolerate. Algorithmic per-epoch output (R1–R7), one-boundary lead; never a host input. | `def:epoch:safety-threshold` |
+| $\theta$ | Safety threshold (burn units per action): the minimum burn value behind a write the coupled dynamics tolerate. Algorithmic per-epoch output (X1–X7), one-boundary lead; never a host input. | `def:epoch:safety-threshold` |
 | $\rho_\theta$, $\rho_{\text{eff}}$ | Safety floor $\theta/\nu$ (the wall: W2a, the activation-clamp key, the fence pin) and effective floor $\max(\rho_{\text{pol}}, \rho_\theta)$ (the door: W2b, the per-act door benchmark). | `def:epoch:safety-floor`, `def:epoch:participation-floor` |
 | $m_\theta$ | Chartered margin factor $5/4$: contraction-certificate margin (a rung certifies iff $m_\theta\,\mathcal{K}_k \le 1$), fence slack, escalation clause. | `def:epoch:safety-threshold` |
 | $\beta$, $\eta$ | Inverse temperature $2\ln 2 \approx 1.386$; bleed $0.05$ — binding (both enter the deployed core $Q$). | `ax:epoch:thermodynamic-boundary`, `def:graph:path-view-extraction` |
 | $N_{\text{epoch}}$ | Epoch **target** act budget, denominated in accepted authored acts. | `def:epoch:epoch-act-budget` |
-| $\delta_{\text{pos}}$ | Burn-snapshot buffer (settlement-stability depth); buffers the burn snapshot, not membership. | `post:epoch:final-edge-set` |
+| $\delta_{\text{pos}}$ | Burn-snapshot buffer (settlement-stability depth), chosen to exceed the settlement depth a realization publishes (R4(e)) so the frame is sampled settled; buffers the burn snapshot, not membership. | `post:epoch:final-edge-set` |
 | $M_{\text{payload}}$ | Maximum payload byte length **per act** (aggregate over a hyper-edge's projections); the structural bound is L1·closure, payload bytes terminal. | `def:graph:act-payload-projection` |
 | $L_{\text{hop}}$, $\gamma$ | Chartered transport depth 4, in hops of the conserved transport; and the chartered activation exponent $1/4$, which is deliberately not routed through it. | `def:epoch:standing-depth-mass`, `def:epoch:responsive-vouch-activation` |
 
@@ -3121,13 +3229,16 @@ Word register (closure edition symbol index, *Word Collisions*):
   public record; "edge records" are its projections; an edge projection
   owns only incidence, role, and rendering. A hyper-edge is one act, two
   projections, one payload, one debit, one stamp, one time.
-- **floor** — several distinct objects, one word: the realization's redemption-rate
-  floor | the numéraire $\nu$ (Layer 1 reserve→action unit) | the policy floor
+- **floor** — distinct objects, one word, never an edge-claim: the
+  numéraire $\nu$ (Layer 1 burn-unit→action join) | the policy floor
   $\rho_{\text{pol}}$, the safety floor $\rho_\theta = \theta/\nu$ (the wall),
   the effective floor $\rho_{\text{eff}} = \max(\rho_{\text{pol}}, \rho_\theta)$
   (the door) | the safety price $\theta$ | "through the floor" (the binding
-  axiom). Never conflate the price axis ($\nu$, $\theta$) with the position
-  axis ($\rho_{\text{pol}}, \rho_\theta, \rho_{\text{eff}}$).
+  axiom). Never a redemption floor of a realization's own economy — a
+  distinct object the network never reads
+  (`rem:comparator:surface-readings`). Never conflate the price axis ($\nu$,
+  $\theta$) with the position axis ($\rho_{\text{pol}}, \rho_\theta,
+  \rho_{\text{eff}}$).
 - **tilt rung vs. clip** — the certificate accepts one global tilt strength
   $t_k$ per epoch; "clip" is not normative Layer-1 vocabulary — net stance
   uses interval projection, activation uses the wall clamp, and an
@@ -3151,10 +3262,7 @@ Word register (closure edition symbol index, *Word Collisions*):
   leaves its own row at all. Two axes, never one dial
   (`rem:epoch:tilt-backoff-is-not-export-backoff`).
 - **maturity** — $\tau$ is graph connection-context maturity, a raw
-  (terminal) channel; burn-primitive maturity is a cycle/lead concept, cited only
-  through `PA-` labels. Raw maturity never enters the standing activation.
-- **cycle vs. epoch** — the burn primitive has cycles; Layer 1 has epochs. Never swap
-  the words.
+  (terminal) channel. Raw maturity never enters the standing activation.
 - **Reference vs. referenced** — the edge family (capitalized; Review
   transposed, mints nothing, `edge:nodes:hyper-reference`) vs. the identifier
   status "referenced" ($v \in V$, `def:graph:anchoring`) vs. "reference
@@ -3177,6 +3285,7 @@ coordinate) · $x$ is reserved for reduced standing · $g_{\text{vch}}$
 $W_{\text{loc}}$ (local width) · $\mathfrak{m}_m$ (depth mass) vs $m_\theta$
 (margin factor) vs $m^*$ (supported depth) ·
 $L_{\text{hop}}$ (transport) vs $L$/$L_{\text{feed}}$ (raw) · index $a$
-(an opaque address vs actor label after frame binding). **Full
+(an opaque address in $\mathbb{A}$ vs actor label after frame binding) ·
+$B_{\max}$ vs $B_i$ ("max" subscript). **Full
 (routing tier) vs full mask (stored shape)** remains a prose distinction —
 a Half edge is full-mask but Half-tier.

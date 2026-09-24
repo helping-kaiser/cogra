@@ -174,6 +174,16 @@ export interface PostCardProps {
    */
   menuItems?: readonly { label: string; onSelect?: () => void }[];
   /**
+   * Stands where the author chip stands, for a feed kind that is not a post —
+   * a message's sender and chat, a chat's disc, name and kind mark. Additive.
+   */
+  lead?: React.ReactNode;
+  /**
+   * Stands where the text block stands, inside the same door — a message as
+   * its chat bubble, a chat as its last message's row. Additive.
+   */
+  main?: React.ReactNode;
+  /**
    * Squares the top-left corner so a row flag (TaggedRow) fuses with the
    * card. Defaults to false.
    */

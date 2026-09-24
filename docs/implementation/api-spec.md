@@ -914,6 +914,13 @@ type MediaAttachment {
    asset, and it is a real foreign key so the poster is redacted with
    its video (data-model.md)."
   coverMedia: MediaAttachment
+  "True when coverMedia is a frame taken from the clip rather than a
+   still its author chose — the authoring fact the version's manifest
+   witnessed beside the cover (data-model.md, per-asset map key 4).
+   Resolved from the junction row like coverMedia, and only ever true
+   where the placement names a cover: false on a chosen cover, on a
+   placement without one, and outside a placement."
+  coverTaken: Boolean!
   "The account that uploaded the asset."
   author: User
   createdAt: DateTime!
@@ -2260,14 +2267,25 @@ the name-class fields and post titles: actor `handle` +
 `displayName`, Hashtag `name` (served by the naming-service
 registry — [hashtag.md §1](../instances/hashtag.md#1-identity-and-the-naming-service)),
 Chat `name`, Item `name`, and Post `title`. Bodies, descriptions,
-bios, and attachments are not indexed. A Comment carries no
-indexed field and is not a searchable kind — a comment is found
-through its post. Chat messages are excluded from the global
-index — casual conversation doesn't surface to strangers by
-keyword; their search surface is `chatSearch`, and only plaintext
-bodies are searchable — encrypted content never is, since the
-backend only ever holds ciphertext
+bios, and attachments are not indexed. A comment, a chat message
+and an offer carry no indexed field of their own and never appear
+in an unscoped result — casual conversation doesn't surface to
+strangers by keyword; per-chat body search is `chatSearch`'s, and
+only plaintext bodies are searchable there — encrypted content
+never is, since the backend only ever holds ciphertext
 ([chats.md §7](../instances/chats.md#7-encryption-as-the-privacy-mechanism)).
+
+**Scoped queries serve the indirect kinds.** A query carrying a
+scope operator (`@handle <text>`, `#tag <text>`) also returns the
+scoped author's comments, chat messages and offers, matched
+through the indexed fields alone: the remainder is matched against
+the names and titles of the acts' targets — a comment through its
+post's title, a message through its chat's name, an offer through
+its item's name — joined through authorship. No body index exists;
+the join runs against the same global index above. A scoped
+message result reaches any plaintext chat regardless of the
+viewer's membership — chats are public reads (the design record:
+readme §13, "The indirect kinds are scope-served").
 
 **Match semantics.** Name-class fields match case-insensitively
 by prefix and substring; Post titles and chat-message bodies
@@ -2889,12 +2907,19 @@ input AttachmentInput {
    never a re-upload."
   altText: String
   "The video's poster — an asset this author uploaded, either a frame
-   the client cut out of the clip or a picture chosen instead. Only a
-   video placement takes one. Authored here for the same reason
-   altText is: it is a fact about this placement, so changing the
-   cover is a new version of the parent rather than a re-upload of
-   the clip."
+   the client cut out of the clip or a picture chosen instead, and
+   coverTaken says which. Only a video placement takes one. Authored
+   here for the same reason altText is: it is a fact about this
+   placement, so changing the cover is a new version of the parent
+   rather than a re-upload of the clip."
   coverMediaId: UUID
+  "True when the cover is a frame taken from the clip rather than a
+   still the author chose; absent or null reads as chosen. The bytes
+   cannot say which, so the client states it and the manifest
+   witnesses it beside the cover (data-model.md, per-asset map
+   key 4). Refused without a coverMediaId, and on a placement that
+   is not a video."
+  coverTaken: Boolean
 }
 
 "A topic declaration — one Tag record toward the canonical Type
@@ -3156,7 +3181,13 @@ input PrepareProfileUpdateInput {
  on AttachmentInput at prepare."
 input UploadMediaInput {
   file: Upload!
+  "The parent the asset is headed for, whose cap a clip is sized,
+   re-encoded and validated for."
+  scale: MediaScale! = POST
 }
+"Only a video's cap differs between the two: a comment's is half a
+ post's."
+enum MediaScale { POST COMMENT }
 type UploadMediaPayload { media: MediaAttachment! }
 
 "A prepared content write: the staged handshake plus `node` — the
@@ -3298,24 +3329,41 @@ says so.
   bytes, never trusted from the declared content type. A still is
   refused if it does not decode — a file that does not decode is
   not an image whatever its header says — and a video is refused
-  unless its tracks are **H.264 video and AAC audio**, the pair
-  the readers are promised.
+  unless its video track is **H.264**, the codec every reader
+  decodes. Its audio track, if it carries one, may be any codec
+  the server's ffmpeg can decode — the ingest transcoder is the
+  universal fallback for a client that could not produce AAC
+  itself — and every stored video's audio is **AAC**, the pair
+  the readers are promised: audio that did not already arrive AAC
+  is re-encoded to it (below).
 - **Video is served at one target, enforced before signing.**
   The target is the Android composer's: 1080 on the short side,
   H.264 at 4 Mbps scaled down so a long clip fits the upload cap,
   never below 1 Mbps, AAC at 128 kbps. Clients compress to it
   wherever they can; the server probes every upload and re-encodes
   what exceeds it. The probe that validates the upload decides:
-  a clip whose short side is within 1080 and whose container rate
-  is within the target's video-plus-audio budget over the 0.92 cap
-  headroom — the overshoot the composer's own plan allows for — is
-  stored as it arrived and is `READY` at once, which is every
-  Android upload and every compressed web upload. Anything else is
-  stored `PROCESSING` and re-encoded with ffmpeg (fast-start, no
-  source metadata); only the rendition is kept, validated by the
-  same pipeline an upload runs, and the original is discarded. The
-  re-encode plans for the upload cap because the parent is not
-  known yet, so a comment's narrower cap still applies at prepare.
+  a clip whose short side is within 1080, whose container rate is
+  within the target's video-plus-audio budget over the 0.92 cap
+  headroom — the overshoot the composer's own plan allows for —
+  whose sequence parameter set states 8-bit 4:2:0 standard dynamic
+  range, and whose audio is already AAC, is stored as it arrived
+  and is `READY` at once, which is every Android upload and every
+  compressed web upload. Anything else is stored `PROCESSING` and
+  re-encoded with ffmpeg (fast-start, no source metadata): audio is
+  always re-encoded to AAC, and the video track is copied unchanged
+  when it alone was already within target, or re-encoded to it
+  otherwise. Only the rendition is kept, validated by the same
+  pipeline an upload runs, and the original is discarded. The
+  budget, the re-encode's rate and the rendition's validation all
+  use the cap of the destination the upload names (below).
+- **HDR is tone-mapped to SDR.** A clip whose SPS states a PQ
+  (SMPTE ST 2084) or HLG (ARIB STD-B67) transfer is re-encoded
+  through ffmpeg's `zscale` + `tonemap` recipe — linear light at a
+  nominal white of 203 cd/m² (ITU-R BT.2408's HDR reference white),
+  BT.2020 to BT.709 gamut, the `mobius` curve — into 8-bit 4:2:0
+  BT.709, and the rendition states BT.709 in its own VUI. A server
+  whose ffmpeg lacks the recipe fails an HDR upload with a
+  `failureReason` rather than serving it untone-mapped.
 - **Served bytes are witnessed bytes.** The envelope commits an
   asset's digest at prepare, so every change to an asset's bytes
   happens before prepare can see it: **prepare refuses an asset
@@ -3358,17 +3406,23 @@ says so.
   is refused at `["attachments", "<i>", "mediaId"]`.
 - **A comment's video is capped at 50 MiB**, half a post's, the same
   asymmetry its four pictures against a post's ten already carries;
-  the cover rides the still cap either way. The cap is checked when
-  the attachment is planned rather than at the upload, because an
-  asset is uploaded before it is attached and nothing at that moment
-  knows which parent it is headed for — so the upload admits the
-  widest limit and the parent narrows it, refusing at
+  the cover rides the still cap either way. **An upload names its
+  destination** — `scale: POST | COMMENT` on `uploadMedia` and
+  `beginMediaUpload`, POST when omitted — and a clip is sized,
+  judged within target, re-encoded and validated against that
+  destination's cap. A picture's cap is the same at either, so
+  `scale` changes nothing for a still. The parent applies its cap
+  again when the attachment is planned, because an asset uploaded
+  for a post can be attached to a comment, refusing at
   `["attachments", "<i>", "mediaId"]`.
 - **A poster is the uploader's own still.** `coverMediaId` names
   an asset this account uploaded and still holds; a cover that is
   another account's, a video, removed, or absent is refused at
   `["attachments", "<i>", "coverMediaId"]`, as is a cover named on
   an attachment that is not a video.
+- **A taken mark qualifies a video's cover.** `coverTaken: true`
+  without a `coverMediaId`, or on an attachment that is not a
+  video, is refused at `["attachments", "<i>", "coverTaken"]`.
 - **A profile picture is the uploader's own still**, so an avatar
   answers to the picture cap and never the video one — the profile
   carries one image, picked and cropped circular 1:1, and no
@@ -3443,9 +3497,10 @@ parts rather than the object.
   evidence.** `declaredBytes` and `kind` buy an early refusal at
   `["declaredBytes"]` and fix the part arithmetic; what the file
   *is* is decided by sniffing the assembled bytes, and the cap it
-  answers to follows from that. A still declared as a video is
-  refused at completion by the still cap, so under-declaring buys
-  no allowance.
+  answers to follows from that and from the session's `scale`,
+  which the session keeps until completion. A still declared as a
+  video is refused at completion by the still cap, so
+  under-declaring buys no allowance.
 - **One session costs one upload's rate limit**, consumed at
   `beginMediaUpload` and not per part — charging per part would
   price a large file out of an hourly budget sized for whole
@@ -3482,6 +3537,9 @@ input BeginMediaUploadInput {
   "Which cap the early refusal uses. The sniff at completion
    decides what the file actually is."
   kind: MediaUploadKind!
+  "The parent the upload is headed for, as on uploadMedia: the
+   early refusal and the processing at completion use its cap."
+  scale: MediaScale! = POST
 }
 enum MediaUploadKind { STILL VIDEO }
 type MediaUploadSession {
@@ -3548,9 +3606,11 @@ input PrepareChatInput {
 }
 
 "Post a message — stages the Send (the terminal leg mints the
- Message). For an encrypted message, `content` is the ciphertext
- and `epoch` names the chat-key epoch it is under; for plaintext,
- `epoch` is null. Membership is CoGra's read-side fold policy —
+ Message). For an encrypted message, `content` is the ciphertext,
+ `epoch` names the chat-key epoch it is under, and every
+ attachment's bytes are client-encrypted under that same epoch
+ key before upload (chats.md §7); for plaintext, `epoch` is null.
+ Membership is CoGra's read-side fold policy —
  prepare enforces it as L2 policy."
 input PrepareChatMessageInput {
   chat: UUID!
@@ -3650,7 +3710,7 @@ ride the same proposal machinery under the chat's governance map.
 Founding is a device-side ceremony: the creator's device generates
 the Collective's key and address (custody starts creator-held —
 [collectives.md §2](../instances/collectives.md#2-custody)), the
-θ-debits are treasury-funded, and the prepare stages the batch —
+θ-debits are community-funded, and the prepare stages the batch —
 the Collective's Registration (profile + social contract payload,
 signed with the new collective key on the creator's device) and
 the founder ↔ collective mutual Opinion pair (stance fabric, not

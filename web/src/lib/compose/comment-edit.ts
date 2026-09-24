@@ -162,7 +162,8 @@ export function uploadsPending(gallery: EditGallery): number {
       picture.kind === "added" &&
       (picture.asset.upload.kind === "waiting" ||
         picture.asset.upload.kind === "encoding" ||
-        picture.asset.upload.kind === "uploading"),
+        picture.asset.upload.kind === "uploading" ||
+        picture.asset.upload.kind === "processing"),
   ).length;
 }
 

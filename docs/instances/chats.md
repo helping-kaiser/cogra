@@ -78,7 +78,10 @@ whatever it carries
 **Founding a Chat** is the founder's own **Participant** act,
 both legs targeting the fresh mint: its act identifier mints the
 Chat node, fixes the founder as creator, and is simultaneously
-the first membership signal. The founding payload carries the
+the first membership signal. The founder holds the **admin**
+role from the founding act; every other role assignment comes
+later, through `decision:change_role` (§5). The founding payload
+carries the
 initial chat metadata — name, description, image digests — the
 chat's governance map (§5), and the name of the chat's **system
 actor** (below), in the Peer Content Envelope
@@ -310,6 +313,7 @@ Default map at founding:
 | `decision:rotate_key` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 50% quorum | — |
 | `decision:change_role` | active members | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 30% quorum | yes |
 | ``decision:set:metadata`` | active members | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 10% quorum | — |
+| `decision:redact_version` | active members | `admin:5, chat_mod:3, member:1` | > 50% cast, ≥ 20% quorum | — |
 | `decision:change_system_actor` | active members | `admin:5, chat_mod:3, member:1` | ≥ 2/3 cast, ≥ 50% quorum | — |
 
 Each entry carries its own `amend` triple (default: ≥ 2/3 cast,
@@ -370,6 +374,15 @@ bytes; confidentiality is key custody, not record hiding
 Privacy is per-message — a chat can mix plaintext and encrypted
 bodies freely; each body row carries a privacy flag and, for
 ciphertext, the key-epoch index it was encrypted under.
+
+**An encrypted message encrypts its attachments too.** The
+client encrypts the media bytes under the same epoch key before
+upload, so carriage holds only ciphertext and the witness binds
+those bytes; a plaintext thumbnail beside an encrypted body would
+make the lock a lie. The server can never thumbnail or transcode
+such a blob — clients process media before encrypting.
+References are never encrypted: they are edges on the shared
+graph and have no payload body to hide.
 
 ### Keys, organized in epochs
 
@@ -486,6 +499,22 @@ separate metadata fold and no in-place carrier.
   regain the update capability. The fork is also the escape from
   a frozen lineage (§3) and a hard history boundary for encrypted
   chats (§7).
+
+**Any version's payload can be redacted, by decision — the
+current one included.** A chat has no author — the creator is
+only the creator — so no single hand may empty a version; a
+passed `decision:redact_version` (§5) names one version of the
+lineage, and its payload is removed per the redaction policy
+([layers.md §5](../primitive/layers.md#5-deletion-policy)): the
+version keeps its place in the history, tombstoned with a
+visible mark, and the store's version row records the redaction.
+Redacting the current version never promotes an earlier one —
+the chat shows its head as removed until a new version is
+signed, the same no-fallback rule every content history follows.
+The canonical case: a metadata change put up a picture a member
+never wanted public — the chat can take the *version* away
+without rewriting its history. The structural record — that a
+change happened, when, by whose decision — is never removed.
 
 **Message bodies never edit** — a Message has no cover to resolve
 ([substrate.md §9](../primitive/substrate.md#9-node-values-and-updates));

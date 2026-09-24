@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
 import { PORTRAIT_CAP } from "@/lib/ui2/media/aspect";
-import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
+import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
@@ -22,6 +22,10 @@ import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { ComposeWizard } from "./wizard-view";
 
 const FRAME = new Blob([new Uint8Array([9]) as BlobPart], { type: "image/png" });
+// A frame distinct from `FRAME` above, so a test can tell "the tray's frames"
+// and "the silent still's own extraction" apart by which blob actually rode
+// the upload — proving the two are no longer the same read.
+const FRAME_ZERO = new Blob([new Uint8Array([0]) as BlobPart], { type: "image/png" });
 
 vi.mock("@/lib/ui2/media/video", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/ui2/media/video")>();
@@ -33,6 +37,10 @@ vi.mock("@/lib/ui2/media/video", async (importOriginal) => {
     // FOUR, not three (CW-13): the 1s-clamped opening plus the three
     // fractional offers ("FOUR FRAMES, NOT THREE: 1s, 10%, 50%, 90%").
     captureFrames: vi.fn(async () => [FRAME, FRAME, FRAME, FRAME]),
+    // The silent still's own, independent extraction (FRAME 1 MEANS FRAME 0,
+    // STRICTLY, jakob 2026-09-24) — a different blob than the tray's above,
+    // so nothing here can pass by coincidence.
+    captureFrameZero: vi.fn(async () => FRAME_ZERO),
   };
 });
 
@@ -378,6 +386,92 @@ describe("picking a video", () => {
     expect(screen.queryByLabelText(/Remove picture/)).toBeNull();
   });
 
+  // W4: the pick tray used to hand `<img>` the video's own object URL —
+  // undecodable, so it drew the browser's broken-image icon. Extraction now
+  // starts as soon as the clip is picked, not only once the cover screen is
+  // reached, so the tray always has a still to stand the clip on.
+  it("shows the clip's own first frame on the pick tray, not the video's bytes", async () => {
+    distinctObjectUrls();
+    const clip = aVideo();
+    render();
+    await pickFiles([clip]);
+
+    const thumb = await screen.findByTestId(/^wizard-unpick-.*-image$/);
+    const videoUrl = URL.createObjectURL(clip);
+    expect(thumb).toHaveAttribute("src");
+    expect(thumb.getAttribute("src")).not.toBe(videoUrl);
+    // THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog item
+    // 106): the tray's tile stands the clip on `captureFrameZero`'s own
+    // frame 0, never the tray's ~1s "opening" offer — FRAME and FRAME_ZERO
+    // are deliberately different blobs above, so this pins the right bytes
+    // for the right reason.
+    expect(thumb.getAttribute("src")).toBe(URL.createObjectURL(FRAME_ZERO));
+    expect(thumb.getAttribute("src")).not.toBe(URL.createObjectURL(FRAME));
+  });
+
+  // W5: the details tile used to show the CHOSEN COVER as its face, so with
+  // the inset mark the cover appeared twice. The face is always the clip's
+  // own first frame; the chosen cover — a different frame here — rides only
+  // the inset mark (jakob's hand-test ruling 2026-09-23). THE PREVIEW FACE
+  // IS THE STORED FACE (jakob 2026-09-24, backlog item 106) sharpens "first
+  // frame" to `captureFrameZero`'s own frame 0, never the tray's ~1s offer —
+  // proven here by choosing a tray frame OTHER than frame 0 as cover: the
+  // tile stays on FRAME_ZERO, not on `frames[0]`.
+  it("keeps the details tile on frame 0 even when a different frame is chosen as cover", async () => {
+    distinctObjectUrls();
+    const frames = [0, 1, 2, 3].map(
+      (n) => new Blob([new Uint8Array([n]) as BlobPart], { type: "image/png" }),
+    );
+    vi.mocked(captureFrames).mockResolvedValueOnce(frames);
+    render();
+    await pickFiles([aVideo()]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+    // A frame OTHER than the first, so the face and the cover can never be
+    // the same URL by coincidence.
+    fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    const tileImage = await screen.findByTestId("wizard-picked-row-thumb-0-image");
+    const coverMarkImage = screen
+      .getByTestId("wizard-picked-row-thumb-0-cover-mark")
+      .querySelector("img");
+
+    expect(tileImage).toHaveAttribute("src", URL.createObjectURL(FRAME_ZERO));
+    expect(coverMarkImage).toHaveAttribute("src", URL.createObjectURL(frames[2]!));
+  });
+
+  // Same defect as W4, on the sheet the describe counter opens: it read the
+  // video's own object URL too.
+  it("shows the clip's own first frame in the describe sheet, not the video's bytes", async () => {
+    distinctObjectUrls();
+    const clip = aVideo();
+    const frames = [0, 1, 2, 3].map(
+      (n) => new Blob([new Uint8Array([n]) as BlobPart], { type: "image/png" }),
+    );
+    vi.mocked(captureFrames).mockResolvedValueOnce(frames);
+    render();
+    await pickFiles([clip]);
+    fireEvent.click(await screen.findByTestId("wizard-next"));
+    // A tray frame OTHER than frame 0, so the sheet's face and the tray's
+    // opening offer can never be the same URL by coincidence (item 106).
+    fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
+    fireEvent.click(screen.getByTestId("wizard-next"));
+
+    fireEvent.click(await screen.findByTestId("wizard-describe-counter"));
+
+    const strip = await screen.findByTestId("wizard-describe-sheet-strip");
+    const image = strip.querySelector("img");
+    const videoUrl = URL.createObjectURL(clip);
+    expect(image).not.toBeNull();
+    expect(image!.getAttribute("src")).not.toBe(videoUrl);
+    // THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog item
+    // 106): the describe sheet stands the clip on `captureFrameZero`'s own
+    // frame 0, never the tray's own `frames[0]` opening offer nor the
+    // chosen cover (`frames[2]` here).
+    expect(image!.getAttribute("src")).toBe(URL.createObjectURL(FRAME_ZERO));
+    expect(image!.getAttribute("src")).not.toBe(URL.createObjectURL(frames[2]!));
+  });
+
   it("asks for one description of the video, and none of its cover", async () => {
     render();
     await pickFiles([aVideo()]);
@@ -514,6 +608,94 @@ describe("picking a video", () => {
       expect(await screen.findByTestId("wizard-drop")).toBeInTheDocument();
       expect(screen.queryByTestId("wizard-picked-count")).toBeNull();
       expect(screen.queryByTestId("wizard-title")).toBeNull();
+    });
+  });
+
+  // The feed-video rulings, 2026-09-23, sharpened 2026-09-24 ("FRAME 1 MEANS
+  // FRAME 0, STRICTLY" — design/readme.md §13, the MediaAttachment docblock):
+  // a clip that reaches upload with no chosen cover gets its own frame 0
+  // uploaded silently, through the same leg a chosen cover would ride.
+  // Asserted here through the DRAFT the wizard keeps — it carries the whole
+  // `WizardState`, including the field no screen ever draws — rather than
+  // through the network, so this needs no image-encoder shim: what is under
+  // test is whether the still gets MATERIALIZED at all, not whether a
+  // browser can re-encode it.
+  describe("the silent auto-cover", () => {
+    async function settle() {
+      // The 200ms coalescing window `draft-store.ts` documents, plus the
+      // microtask the capture and the materializing dispatch each cost.
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      });
+    }
+
+    it("materializes the clip's own frame 0 once details is reached with nothing chosen", async () => {
+      const drafts = fakeDrafts();
+      renderWithProviders(
+        <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
+        { store: signedInStore(), writeSigner: fakeWriteSigner() },
+      );
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+      // Straight through the cover screen — no tap on any offer.
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-title");
+      await settle();
+
+      const saved = await drafts.load();
+      // The door's own state is untouched: nothing was CHOSEN.
+      expect(saved?.cover).toBeNull();
+      // But the still exists, silently, so a reading surface is never
+      // handed a video with no face at all.
+      expect(saved?.autoCover).not.toBeNull();
+      expect(saved?.autoCover?.frame).toBe(0);
+      // AND IT IS THE RIGHT BYTES: `captureFrameZero`'s own read of the
+      // clip, never the tray's ~1s offer — `frames[0]` and `FRAME_ZERO` are
+      // deliberately different blobs above, so this could only pass for the
+      // right reason.
+      expect(saved?.autoCover?.file).toBe(FRAME_ZERO);
+    });
+
+    it("ships the clip with no still at all when its own frame-0 extraction finds nothing", async () => {
+      // The tray's own capture still succeeds — its offers are a separate
+      // concern the silent still's extraction failing must not touch.
+      vi.mocked(captureFrameZero).mockRejectedValueOnce(new Error("no decoder"));
+      const drafts = fakeDrafts();
+      renderWithProviders(
+        <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
+        { store: signedInStore(), writeSigner: fakeWriteSigner() },
+      );
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-title");
+      await settle();
+
+      const saved = await drafts.load();
+      expect(saved?.cover).toBeNull();
+      // No frame ever arrived, so there was nothing to upload — the neutral
+      // tile (`Cover · no frames came back`) stands for the reader, silently.
+      expect(saved?.autoCover).toBeNull();
+    });
+
+    it("lets a chosen cover win: the silent path never even starts", async () => {
+      const drafts = fakeDrafts();
+      renderWithProviders(
+        <ComposeWizard store={fakeIdentityStore({ keyOnDevice: true })} drafts={drafts} />,
+        { store: signedInStore(), writeSigner: fakeWriteSigner() },
+      );
+      await pickFiles([aVideo()]);
+      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
+      fireEvent.click(screen.getByTestId("wizard-next"));
+      await screen.findByTestId("wizard-title");
+      await settle();
+
+      const saved = await drafts.load();
+      expect(saved?.cover?.frame).toBe(2);
+      // The decision only ever runs while both are still null — a chosen
+      // cover already standing means it never fires at all.
+      expect(saved?.autoCover).toBeNull();
     });
   });
 });

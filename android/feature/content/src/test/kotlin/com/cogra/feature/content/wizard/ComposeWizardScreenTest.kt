@@ -91,6 +91,7 @@ class ComposeWizardScreenTest {
     private var sealBacks = 0
     private var coverFrames = mutableListOf<Int>()
     private var coverPickers = 0
+    private var coverDoors = 0
     private var dismissedRefusals = mutableListOf<Int>()
     private var restoreKeys = 0
     private var keepDrafts = 0
@@ -122,6 +123,7 @@ class ComposeWizardScreenTest {
             onCropsChanged = {},
             onPickCoverFrame = { coverFrames += it },
             onOpenCoverPicker = { coverPickers += 1 },
+            onOpenCoverStep = { coverDoors += 1 },
             onDismissRefusal = { dismissedRefusals += it },
             onTitleChange = {},
             onDescriptionChange = {},
@@ -412,23 +414,37 @@ class ComposeWizardScreenTest {
     }
 
     // The details board's Cover field (`ComposeDetailsVideo`, design/readme.md
-    // §13, 2026-09-22): a field with two states, never a second entrance. The
-    // door reaches the same cover stage as "Change the cover" — one Back away.
+    // §13): the door is a field's empty state, and for a vertical clip it is
+    // the only entrance to the step the clip skipped.
 
     @Test
-    fun theDetailsStepShowsTheCoverDoorWhenNoCoverIsChosen() {
-        val withVideoNoCover = ComposeWizardState(
+    fun aVerticalClipsDetailsOpenTheSkippedStepThroughTheDoor() {
+        val vertical = ComposeWizardState(
             step = WizardStep.Details,
             picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverChoice = CoverChoice.FirstFrame,
         )
-        compose.setContent { Wizard(withVideoNoCover) }
+        compose.setContent { Wizard(vertical) }
 
-        // The door reaches the cover stage the same way "Change the cover"
-        // does: one Back away, never a second entrance (jakob 2026-08-31).
+        // The first frame the clip carries is a still, not a face anyone
+        // chose: the field stays a door over it.
         compose.onNodeWithTag("wizard_cover_door").assertIsDisplayed().performClick()
-        assertThat(backs).isEqualTo(1)
-        compose.onNodeWithTag("wizard_cover_face", useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithTag("wizard_cover_change").assertDoesNotExist()
+        assertThat(coverDoors).isEqualTo(1)
+        assertThat(backs).isEqualTo(0)
+        compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    // "A clip that came through the cover step shows no door — its face is
+    // chosen, and the step is one Back away" (`ComposeDetailsVideo.jsx`).
+    @Test
+    fun aClipThatWalkedTheCoverStepShowsNoDoorEvenWithoutAFace() {
+        val walked = ComposeWizardState(
+            step = WizardStep.Details,
+            picked = listOf(PickedAsset("clip", 16f / 9f, durationMs = 42_000)),
+        )
+        compose.setContent { Wizard(walked) }
+
+        compose.onNodeWithTag("wizard_cover_door").assertDoesNotExist()
     }
 
     // Finding 6, jakob's ruling 2026-09-22 (design/readme.md §13 "The
@@ -476,13 +492,37 @@ class ComposeWizardScreenTest {
 
     // CW-06 (`ComposePickVideo`'s `PickTray`): one clip is not a set to
     // reorder, so the tray drops Show all and carries the caption this state
-    // needs instead of the sheet.
+    // needs instead of the sheet. A square clip keeps a cover step, so it
+    // gets the full caption.
     @Test
     fun theTraySwapsInTheClipsOwnCaptionAndDropsShowAll() {
         compose.setContent { Wizard(withVideoPicked) }
 
         compose.onNodeWithTag("wizard_picked_count").assertTextEquals("Picked · 1")
         compose.onNodeWithText("A video is the whole post. Its cover comes next.").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_show_all").assertDoesNotExist()
+    }
+
+    private val withVerticalVideoPicked = ComposeWizardState(
+        mode = BodyMode.Media,
+        picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+        deviceMedia = listOf(
+            DeviceMedia("clip", 0.5625f, durationMs = 42_000),
+            DeviceMedia("other", 1f),
+        ),
+    )
+
+    // jakob's ruling 2026-09-24, backlog item 104 (design/guidelines/copy-voice.md
+    // "Staging a video"; design/components/compose/PickTray.prompt.md "The clip
+    // caption is the shape's."): a vertical clip skips the cover step, so its
+    // second sentence — which previews that step — would be a false promise,
+    // and the tray wears the trim instead of the full caption.
+    @Test
+    fun theTrayTrimsTheCaptionForAVerticalClip() {
+        compose.setContent { Wizard(withVerticalVideoPicked) }
+
+        compose.onNodeWithText("A video is the whole post.").assertIsDisplayed()
+        compose.onNodeWithText("A video is the whole post. Its cover comes next.").assertDoesNotExist()
         compose.onNodeWithTag("wizard_show_all").assertDoesNotExist()
     }
 

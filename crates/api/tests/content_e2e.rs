@@ -717,6 +717,7 @@ async fn one_asset_reads_differently_in_two_posts(pool: PgPool) {
         "image/webp",
         1024,
         &json!({ "v": 1, "aspect_ratio": "1:1" }),
+        postgres_store::media::MediaScale::Post,
     )
     .await
     .expect("asset row");
@@ -779,5 +780,136 @@ async fn one_asset_reads_differently_in_two_posts(pool: PgPool) {
             gallery[0]["altText"], description,
             "each version serves the description its own manifest witnessed"
         );
+    }
+}
+
+/// A cover's provenance makes the whole trip: stated on the placement at
+/// prepare, sealed as manifest key 4 in the proposal the device signs,
+/// written onto the junction row from the decoded staged payload the
+/// moment the author pre-signs, kept by promotion, and served back as
+/// `coverTaken`. A chosen cover reads false the same way, and the two
+/// refusals answer at the placement's own `coverTaken`.
+///
+/// A taken cover is authored on the placement, witnessed in the record, and read back off the junction.
+/// ´claim:media:a-taken-cover-round-trips-to-the-reader´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_taken_cover_round_trips_to_the_reader(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (author_id, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let asset = |fill: u8, mime: &'static str, extension: &'static str| {
+        let pool = rig.pool.clone();
+        async move {
+            let id = Uuid::new_v4();
+            postgres_store::media::insert(
+                &pool,
+                id,
+                author_id,
+                &[fill; 32],
+                "sha256",
+                &format!("{id}.{extension}"),
+                mime,
+                4096,
+                &json!({ "v": 1, "aspect_ratio": "4:5" }),
+                postgres_store::media::MediaScale::Post,
+            )
+            .await
+            .expect("asset row");
+            id
+        }
+    };
+    let clip = asset(1, "video/mp4", "mp4").await;
+    let frame = asset(2, "image/webp", "webp").await;
+    let picture = asset(3, "image/webp", "webp").await;
+
+    let prepare = |attachment: Value| {
+        rig.gql(
+            Some(&token),
+            PREPARE_POST,
+            json!({ "input": {
+                "title": "Look",
+                "description": "A clip",
+                "license": { "attribution": 1.0, "provenance": 0.0 },
+                "attachments": [attachment],
+            }}),
+        )
+    };
+
+    for (attachment, message) in [
+        (
+            json!({ "mediaId": clip.to_string(), "displayOrder": 0, "coverTaken": true }),
+            "a taken cover needs the coverMediaId it was taken as",
+        ),
+        (
+            json!({
+                "mediaId": picture.to_string(), "displayOrder": 0,
+                "coverMediaId": frame.to_string(), "coverTaken": true,
+            }),
+            "only a video's cover can be taken",
+        ),
+    ] {
+        let refused = prepare(attachment).await;
+        let error = &refused["preparePost"]["userErrors"][0];
+        assert_eq!(error["code"], "BAD_INPUT", "{refused}");
+        assert_eq!(
+            error["field"],
+            json!(["attachments", "0", "coverTaken"]),
+            "{refused}"
+        );
+        assert_eq!(error["message"], message, "{refused}");
+    }
+
+    let read = |node: String| {
+        rig.gql(
+            None,
+            r#"query($id: UUID!) { post(id: $id) {
+                 attachments { id coverTaken coverMedia { id } }
+               } }"#,
+            json!({ "id": node }),
+        )
+    };
+
+    for taken in [true, false] {
+        let prepared = prepare(json!({
+            "mediaId": clip.to_string(), "displayOrder": 0, "isCover": true,
+            "coverMediaId": frame.to_string(), "coverTaken": taken,
+        }))
+        .await;
+        assert_eq!(
+            prepared["preparePost"]["userErrors"]
+                .as_array()
+                .expect("array"),
+            &Vec::<Value>::new()
+        );
+        let writes = &prepared["preparePost"]["writes"];
+        let proposal = wire::decode_proposal(
+            &B64.decode(writes[0]["canonicalProposal"].as_str().expect("proposal"))
+                .expect("b64"),
+        )
+        .expect("a proposal");
+        let witnessed = common::envelope::CograContent::decode_payload(&proposal.payload)
+            .expect("an admissible payload");
+        assert_eq!(
+            witnessed.media[0].cover_taken, taken,
+            "the proposal the device signs carries the mark"
+        );
+
+        let node = prepared["preparePost"]["node"]
+            .as_str()
+            .expect("node id")
+            .to_string();
+        rig.sign_prepared(&token, &key, writes).await;
+        let pending = read(node.clone()).await;
+        assert_eq!(
+            pending["post"]["attachments"][0]["coverTaken"], taken,
+            "the pending row, staged from the decoded payload: {pending}"
+        );
+
+        rig.close_and_ingest().await;
+        let landed = read(node).await;
+        let gallery = &landed["post"]["attachments"][0];
+        assert_eq!(gallery["coverTaken"], taken, "{landed}");
+        assert_eq!(gallery["coverMedia"]["id"], frame.to_string(), "{landed}");
     }
 }

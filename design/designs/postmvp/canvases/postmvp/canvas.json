@@ -11,11 +11,11 @@
     },
     {
       "file": "PushKinds.dc.html",
-      "title": "Push notifications · the nine kinds",
+      "title": "Push notifications · the kinds and their defaults",
       "x": 480,
       "y": 0,
       "w": 390,
-      "h": 820,
+      "h": 1180,
       "page": "push"
     },
     {
@@ -190,11 +190,524 @@
       "page": "histories"
     },
     {
+      "file": "ChatsHome.dc.html",
+      "title": "Chats · your chats",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatsExplore.dc.html",
+      "title": "Chats · all chats, the explorer face",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThread.dc.html",
+      "title": "A chat · the thread and the foot that seals",
+      "x": 960,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatCreate.dc.html",
+      "title": "New group chat · the founding",
+      "x": 1440,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatCreateSeal.dc.html",
+      "title": "New group chat · the founding's seal",
+      "x": 1920,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatsHelp.dc.html",
+      "title": "Chats · the ? dialog, How chats work",
+      "x": 0,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatRowMenu.dc.html",
+      "title": "Chats · a chat's options, long-press on a row",
+      "x": 480,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatPicker.dc.html",
+      "title": "New chat · the people picker",
+      "x": 960,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatPickerGroup.dc.html",
+      "title": "New group chat · picking the people",
+      "x": 1440,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatExistingAsk.dc.html",
+      "title": "New chat · you already share a 1:1",
+      "x": 1920,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadReader.dc.html",
+      "title": "A chat · read from outside, the join as its foot",
+      "x": 0,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadMedia.dc.html",
+      "title": "A chat · pictures and clips at chat scale",
+      "x": 480,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadKeyboard.dc.html",
+      "title": "A chat · the keyboard up, the lock on",
+      "x": 960,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatMessageMenu.dc.html",
+      "title": "A chat · a message's acts, long-press on a bubble",
+      "x": 1440,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatSignSheet.dc.html",
+      "title": "A chat · what you sign, press and hold the arrow",
+      "x": 1920,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatDetails.dc.html",
+      "title": "Chat details · the member's view",
+      "x": 0,
+      "y": 2892,
+      "w": 390,
+      "h": 1056,
+      "page": "chats"
+    },
+    {
+      "file": "ChatDetailsReader.dc.html",
+      "title": "Chat details · read from outside, the join on the actions row",
+      "x": 480,
+      "y": 2892,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatEdit.dc.html",
+      "title": "Edit chat · the name, the picture, the words",
+      "x": 960,
+      "y": 2892,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatEditSeal.dc.html",
+      "title": "Edit chat · the change's seal",
+      "x": 1440,
+      "y": 2892,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatHistory.dc.html",
+      "title": "A chat's edit history · versions, with who came and went between them",
+      "x": 1920,
+      "y": 2892,
+      "w": 390,
+      "h": 904,
+      "page": "chats"
+    },
+    {
+      "file": "ChatSearchIn.dc.html",
+      "title": "Search in this chat · the plaintext it can read",
+      "x": 0,
+      "y": 4068,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatMediaGallery.dc.html",
+      "title": "Media in this chat · the grid, each tile a door to its message",
+      "x": 480,
+      "y": 4068,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatLeaveConfirm.dc.html",
+      "title": "Leave the chat · the think-twice dialog and the parting reason",
+      "x": 960,
+      "y": 4068,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadDecisions.dc.html",
+      "title": "A chat · decisions waiting in the thread",
+      "x": 0,
+      "y": 5032,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatDetailsDecisions.dc.html",
+      "title": "Chat details · open decisions, filled",
+      "x": 480,
+      "y": 5032,
+      "w": 390,
+      "h": 1152,
+      "page": "chats"
+    },
+    {
+      "file": "ChatRoleSheet.dc.html",
+      "title": "Chat details · a member's role, the three roles",
+      "x": 960,
+      "y": 5032,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatVersionRemoveConfirm.dc.html",
+      "title": "A chat's edit history · removing a version, the think-twice dialog",
+      "x": 1440,
+      "y": 5032,
+      "w": 390,
+      "h": 904,
+      "page": "chats"
+    },
+    {
+      "file": "ChatHistoryRemoved.dc.html",
+      "title": "A chat's edit history · a version removed by the chat",
+      "x": 1920,
+      "y": 5032,
+      "w": 390,
+      "h": 904,
+      "page": "chats"
+    },
+    {
+      "file": "ChatInvitePicker.dc.html",
+      "title": "Add people · picking who to invite",
+      "x": 0,
+      "y": 6304,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatInviteSeal.dc.html",
+      "title": "Add people · the invitations' seal",
+      "x": 480,
+      "y": 6304,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadInvited.dc.html",
+      "title": "A chat · invited, the join as its foot",
+      "x": 960,
+      "y": 6304,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatJoinSeal.dc.html",
+      "title": "Joining a chat · what you sign, one seal for three routes",
+      "x": 1440,
+      "y": 6304,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadRequested.dc.html",
+      "title": "A chat · asked to join, the request sent",
+      "x": 0,
+      "y": 7268,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadApproved.dc.html",
+      "title": "A chat · the request approved, the join as its foot",
+      "x": 480,
+      "y": 7268,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatRequestApprove.dc.html",
+      "title": "A chat · a join request, met by a moderator",
+      "x": 960,
+      "y": 7268,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatAgreeSheet.dc.html",
+      "title": "A chat · a vote read back before it is signed, the small seal",
+      "x": 1440,
+      "y": 7268,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatDecisionDetail.dc.html",
+      "title": "A decision, opened whole · what would change, every vote, your own",
+      "x": 1920,
+      "y": 7268,
+      "w": 390,
+      "h": 960,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadReactions.dc.html",
+      "title": "A chat · opinions on its messages, the reaction trace",
+      "x": 0,
+      "y": 8348,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatMessageOpinions.dc.html",
+      "title": "A chat · opinions on this message, the sheet a trace opens",
+      "x": 480,
+      "y": 8348,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatMessagePad.dc.html",
+      "title": "A chat · your opinion on a message, the pad over the thread",
+      "x": 960,
+      "y": 8348,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadReply.dc.html",
+      "title": "A chat · a reply, its quote on the foot and on the bubble",
+      "x": 1440,
+      "y": 8348,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatMessageMenuOwn.dc.html",
+      "title": "A chat · your own message's acts, Remove among them",
+      "x": 1920,
+      "y": 8348,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatMessageRemoveConfirm.dc.html",
+      "title": "A chat · removing your message, the think-twice dialog",
+      "x": 0,
+      "y": 9312,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadRemoved.dc.html",
+      "title": "A chat · removed by its author, removed under the platform's rules",
+      "x": 480,
+      "y": 9312,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadRecording.dc.html",
+      "title": "A chat · recording a voice note — delete, lock, pause, send",
+      "x": 960,
+      "y": 9312,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadRecordingPaused.dc.html",
+      "title": "A chat · recording paused — Keep recording extends the note",
+      "x": 1440,
+      "y": 9312,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadVoice.dc.html",
+      "title": "A chat · voice notes, readable and not",
+      "x": 1920,
+      "y": 9312,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadSealedMedia.dc.html",
+      "title": "A chat · encrypted pictures, keyed and not",
+      "x": 0,
+      "y": 10276,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadPending.dc.html",
+      "title": "A chat · still settling, and a message that didn't land",
+      "x": 480,
+      "y": 10276,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadSentPost.dc.html",
+      "title": "A chat · a post sent into it",
+      "x": 960,
+      "y": 10276,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatSendSheet.dc.html",
+      "title": "Send to a chat · what every share opens",
+      "x": 1440,
+      "y": 10276,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatAskSheet.dc.html",
+      "title": "Asking to join · the request's sheet, its message and your opinion",
+      "x": 1920,
+      "y": 10276,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatJoinSealPad.dc.html",
+      "title": "Joining a chat · your opinion set on the pad, over the seal",
+      "x": 0,
+      "y": 11240,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatNotifications.dc.html",
+      "title": "Notifications · the three chat kinds",
+      "x": 480,
+      "y": 11240,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatFeedCards.dc.html",
+      "title": "The feed · a chat card and a message card, on the real card",
+      "x": 960,
+      "y": 11240,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatSearchResults.dc.html",
+      "title": "Explore, searching · a chat among the results",
+      "x": 1440,
+      "y": 11240,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatSaved.dc.html",
+      "title": "Saved · a chat message among what you kept",
+      "x": 1920,
+      "y": 11240,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
       "file": "MapPush.dc.html",
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 752,
+      "h": 911,
       "page": "push",
       "title": "Push notifications · flow map"
     },
@@ -206,6 +719,15 @@
       "h": 1200,
       "page": "histories",
       "title": "Change histories · flow map"
+    },
+    {
+      "file": "MapChats.dc.html",
+      "x": -1870,
+      "y": 0,
+      "w": 1450,
+      "h": 7223,
+      "page": "chats",
+      "title": "Chats · flow map"
     }
   ],
   "annotations": [
@@ -224,6 +746,38 @@
       "w": 560,
       "text": "CHANGE HISTORIES — would-like #2, drawn 2026-09-22. Two kinds of history, one door rule. A post, a comment and a profile each open a chronicle: every version WHOLE, newest first, the current one marked, never a diff — the store keeps complete states, and on L1 every edit signs a full new record of its own. A removed version keeps its row and wears the mark. A stance is a history too: the bundle IS the list of records ever cast from one node to another, and the timeline says in plain words what the standing adds up to, because a sum that clips hides the conviction behind it. The doors follow one law — authoring doors are faces and fields, HISTORY DOORS ARE READOUTS: the stance face on a card is untouched, the value at a row's end opens the timeline, and the pad's Current opinion line carries the only new ink. Timelines are public to everyone, signed out included; the gates stay on acting.",
       "page": "histories"
+    },
+    {
+      "id": "chats",
+      "x": -340,
+      "y": 0,
+      "w": 560,
+      "text": "CHATS — would-like #3, drawn and revised 2026-09-23. The one surface where CoGra takes messenger convention whole: a list of your chats with a floating New chat (the product's first FAB), bubbles with your own on the right, a live field at the foot. Underneath, a chat is the proposal primitive in messenger clothes — nothing here may look like a proposal. The send arrow IS the seal: tapping it signs the message in your name, and holding it opens what you sign. Each message is plaintext or encrypted by the lock beside the field — plaintext by default, sticky per chat, the state shown by the lock's fill — and every encrypted message wears a quiet lock; previews and bubbles show the words wherever you hold the key. Rows keep the ages ladder, the thread prints the clock and divides the days. The page has two faces that swap both ways: your chats, and all chats — the ordinary rank narrowed to chats, no second algorithm, your own chats hidden by default. Long-press is the second gesture: a row for the chat's options, a bubble for the message's acts. Messages never edit. The chat's detail surface, behind the thread's header, is drawn in the rows below.",
+      "page": "chats"
+    },
+    {
+      "id": "chats-details",
+      "x": -340,
+      "y": 2892,
+      "w": 560,
+      "text": "CHAT DETAILS — round B1 of the chats work, drawn 2026-09-23. What the thread's header and the row menu open: a messenger's group info through CoGra's grammar. The chat's face, name and words at the top, and its own OPINION control leading the actions row (the profile header's precedent), with Edit chat beside it wherever the governance map lets the reader propose a change. Media, then OPEN DECISIONS — where an act that needs more voices than its actor's waits; empty here, filled in round B2. Search rides the thread's header, beside the details door, on every thread. The members wear their roles, and for a member each role word is a door to the role change; a Collective can be a member; an invited person who has not joined yet is marked, and NO ROW EVER SHOWS PRESENCE. Mute silences push only and lives here and on the row menu. Leave is unilateral, with an optional parting reason that stands in the chat's history. The metadata grows in whole versions like a post's — its successions — and the edit history shows them newest first with who joined, left and was invited between them, never inside them, and every member may start a version's removal — a chat has no author. The edit's seal counts three things signed together: the change, its link to the chat, and the proposer's own opinion for it. Chats are public, so a reader outside gets the same page minus the member's acts, with the join on the actions row. The multi-voice faces behind Add people, the role change, a version's removal and the change that waits for more voices are the governance rows below.",
+      "page": "chats"
+    },
+    {
+      "id": "chats-governance",
+      "x": -340,
+      "y": 5032,
+      "w": 560,
+      "text": "CHATS GOVERNANCE — round B2 of the chats work, drawn 2026-09-23 and revised on jakob's canvas review 2026-09-24. The multi-voice acts, in messenger clothes: nothing here may look like a proposal. An act the actor's own say settles is INSTANT — a seal counting three things signed together, the change, its link and their own opinion for it. An act that needs more voices becomes a QUIET CARD IN THE THREAD at the moment it was proposed: a plain sentence, Disagree and Agree, and a count of the PEOPLE who agree — 2 of 5 so far. Both are real votes: every threshold reads what was cast, so a disagreement counts, and a decision whose against side crosses first FAILS for good — its outcome line says what stayed, as a passed one says what changed. No vote signs on a bare tap: each opens a small seal that says the vote in one sentence. A card's words open the DECISION WHOLE — what would change in full, the new picture included; every vote, who and which way; and your own, with Disagree instead and Take back your vote. The same decisions stand as rows under Open decisions on the details. THE COUNT CONVENTION, for review: cards count people and never show weight; the tally underneath is weighted by role, and the decision page shows both directions, with the arithmetic in geek mode. Nothing expires. Inviting is the inviter's own act, never a decision: a picker, then a seal counting one invitation per person. Joining is always the joiner's own record, one seal for three routes — open, invited, approved; an approval never joins anyone by itself. A request shows as a card the approver meets in the thread, with Approve. Role words open a sheet of the three roles; a version's removal is the chat's decision, and a removed version keeps its row under the chat's own mark.",
+      "page": "chats"
+    },
+    {
+      "id": "chats-integration",
+      "x": -340,
+      "y": 8348,
+      "w": 560,
+      "text": "CHATS INTEGRATION — round B3, drawn 2026-09-24, the round that closes the chats work. What a chat owes the rest of the product, and what the rest owes a chat. REACTIONS are the opinions already cast on a message: the faces aggregated with a count under the bubble, WhatsApp's shape, no new record and no emoji system; a tap opens Opinions on this. The foot takes a REPLY'S QUOTE, and a landed reply carries it. VOICE NOTES join as a chat-scale media kind: the mic stands where the arrow stands while the field is empty, tap to record, and the foot becomes the recording's controls — Describe, delete, the lock, pause (which flips to Keep recording and extends the note) and send; no hidden gesture ever signs. Tapping a trace opens the message's opinions, and Give your opinion opens the pad. AN ENCRYPTED MESSAGE ENCRYPTS ITS ATTACHMENTS on the device: a keyed reader sees the media with the quiet lock; a no-key reader gets a reserved tile with the lock and one friendly sentence — no expand to bytes, because cipher pixels are nothing, and no server path can ever process such a blob. A message PENDING shows whole, Still settling before its clock; one that expires leaves every reader's view and tells its author calmly. A REMOVED message is a mark where the bubble stood, and the author's removal never reads like the platform's. EVERY SHARE opens Send to a chat, the OS share inside it, and the sent post lands as a message citing it. The chat and the message become FEED CARDS; a chat is a SEARCH RESULT that opens its read surface for anyone; a message is SAVED like a comment. THREE NOTIFICATION KINDS — an invitation, a request awaiting you, your request approved — and push gains chat messages, which never write bell rows. ASK TO JOIN and INVITING each take an optional message, and an invited reader's explorer row says You're invited. EVERY SEAL THAT JOINS OR ASKS lets you set your opinion on the chat on the real pad. And every board here mounts the real masters — the feed cards are the feed's own card, ⋮ and action row included.",
+      "page": "chats"
     }
   ],
   "launch": {
@@ -238,6 +792,10 @@
     {
       "id": "histories",
       "name": "Change histories"
+    },
+    {
+      "id": "chats",
+      "name": "Chats"
     }
   ]
 }

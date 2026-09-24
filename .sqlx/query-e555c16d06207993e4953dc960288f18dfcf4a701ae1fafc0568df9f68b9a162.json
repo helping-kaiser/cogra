@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE media_attachments\n        SET lease_until = now() + make_interval(secs => $1),\n            attempts    = attempts + 1\n        WHERE id = (\n            SELECT id FROM media_attachments\n            WHERE state = 'processing'\n              AND (lease_until IS NULL OR lease_until < now())\n            ORDER BY created_at\n            FOR UPDATE SKIP LOCKED\n            LIMIT 1\n        )\n        RETURNING id, author_id, storage_key, mime_type,\n                  options AS \"options!: serde_json::Value\",\n                  scale AS \"scale: MediaScale\", attempts\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "storage_key",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "mime_type",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "options!: serde_json::Value",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "scale: MediaScale",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "attempts",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e555c16d06207993e4953dc960288f18dfcf4a701ae1fafc0568df9f68b9a162"
+}

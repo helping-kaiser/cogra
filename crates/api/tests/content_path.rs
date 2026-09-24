@@ -1393,6 +1393,7 @@ mod galleries {
             "image/webp",
             1024,
             &serde_json::json!({ "v": 1, "aspect_ratio": "4:5" }),
+            media_store::MediaScale::Post,
         )
         .await
         .expect("asset row");
@@ -1420,6 +1421,7 @@ mod galleries {
             "video/mp4",
             size,
             &serde_json::json!({ "v": 1, "aspect_ratio": "4:5", "duration_ms": 2500 }),
+            media_store::MediaScale::Post,
         )
         .await
         .expect("asset row");
@@ -1439,6 +1441,7 @@ mod galleries {
                 is_cover: Some(i == 0),
                 alt_text: Some(format!("picture {}", i + 1)),
                 cover_media_id: None,
+                cover_taken: false,
             })
             .collect()
     }
@@ -1838,6 +1841,7 @@ mod galleries {
                     is_cover: None,
                     alt_text: None,
                     cover_media_id: None,
+                    cover_taken: false,
                 }],
                 vec!["attachments".into(), "0".into(), "displayOrder".into()],
             ),
@@ -1849,6 +1853,7 @@ mod galleries {
                         is_cover: None,
                         alt_text: None,
                         cover_media_id: None,
+                        cover_taken: false,
                     },
                     AttachmentDraft {
                         media_id: mine,
@@ -1856,6 +1861,7 @@ mod galleries {
                         is_cover: None,
                         alt_text: None,
                         cover_media_id: None,
+                        cover_taken: false,
                     },
                 ],
                 vec!["attachments".into(), "1".into(), "mediaId".into()],
@@ -1876,6 +1882,7 @@ mod galleries {
                         is_cover: Some(true),
                         alt_text: Some("fine".into()),
                         cover_media_id: None,
+                        cover_taken: false,
                     },
                     AttachmentDraft {
                         media_id: second,
@@ -1883,6 +1890,7 @@ mod galleries {
                         is_cover: Some(false),
                         alt_text: Some("x".repeat(media::MAX_ALT_TEXT_CHARS + 1)),
                         cover_media_id: None,
+                        cover_taken: false,
                     },
                 ],
                 vec!["attachments".into(), "1".into(), "altText".into()],
@@ -1971,6 +1979,7 @@ mod galleries {
                 is_cover: Some(true),
                 alt_text: None,
                 cover_media_id: cover,
+                cover_taken: false,
             }]
         };
 
@@ -2073,6 +2082,7 @@ mod galleries {
                 is_cover: Some(true),
                 alt_text: None,
                 cover_media_id: Some(cover),
+                cover_taken: false,
             }]
         };
 

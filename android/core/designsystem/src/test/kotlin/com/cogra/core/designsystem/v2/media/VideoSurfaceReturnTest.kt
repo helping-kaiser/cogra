@@ -136,7 +136,7 @@ class VideoSurfaceReturnTest {
             }
         }
         compose.runOnIdle { screen.registry.currentState = Lifecycle.State.RESUMED }
-        compose.runOnIdle { VideoStage.rendered() }
+        compose.runOnIdle { VideoStage.rendered(clip) }
         compose.onNodeWithTag(POSTER_TAG).assertDoesNotExist()
 
         compose.runOnIdle {

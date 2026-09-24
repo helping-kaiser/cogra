@@ -33,10 +33,11 @@ operates is deliberately small:
 
 Two external surfaces complete the picture. **Layer 1** accepts
 CoGra's relayed records and publishes the accepted acts per epoch
-in their authoritative order `𝒬_k`. **A realization of the burn primitive** is read-only: CoGra consumes
-the admission balance `B_i` through L1's interface and never
-authors a realization's records. The two moneys never mix — admission money is
-the realization's, reward money is CGT on CoGra's own rail.
+in their authoritative order `𝒬_k`. **A realization of the burn
+primitive** beneath it is read-only: CoGra consumes the admission
+balance `B_i` through L1's interface. The two moneys never mix —
+admission money is the realization's, reward money is CGT on
+CoGra's own rail.
 
 Vocabulary used throughout: **display content** is what UIs render
 (bodies, names, galleries); **operational metadata** is what
@@ -78,7 +79,7 @@ ever what a record *is* — that is always the L1 record itself.
 | Store | PostgreSQL 16 (SQLx) — record mirror, overlay, L2 truth |
 | Media | A standalone S3-compatible object store, digest-verified against payload envelopes |
 | Graph substrate | PeerNetworks Layer 1, behind one interface boundary |
-| Admission balance | Burn value `B_i`, consume-only |
+| Admission balance | Burn value `B_i` from a realization, consume-only |
 | Money store | CGT rail — on-chain ledger ([ledger.md](ledger.md)) |
 | Android app | Kotlin + Jetpack Compose ([android.md](android.md)) |
 | Web app | Next.js + React + TypeScript ([web.md](web.md)) |
@@ -372,7 +373,7 @@ future, both running the same algorithm.
 
 The L1-side genesis sequence belongs to
 [network.md §2](../primitive/network.md#2-creation): the genesis
-admission burn, the Genesis Moderator's Registration, the system-actor
+admission burns, the Genesis Moderator's Registration, the system-actor
 and Treasury Registrations, the endorsement Opinions, the Charter,
 and the genesis role Tag land as the instance's first accepted
 records. The bootstrap is the one write that escapes the

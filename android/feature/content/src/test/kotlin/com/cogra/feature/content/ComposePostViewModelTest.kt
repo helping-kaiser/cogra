@@ -323,6 +323,42 @@ class ComposePostViewModelTest {
     }
 
     /**
+     * A covered clip's cover is the same kind of state as its alt text:
+     * carried by the load, never re-authored on this screen, and gone
+     * for good if the re-stated gallery omits it (root CLAUDE.md "never
+     * erase silently").
+     */
+    @Test
+    fun anEditCarriesTheClipsCoverThrough() = runTest(dispatcher) {
+        content.loadedAttachments = listOf(clip("m1", cover = picture("cover-1", null)))
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTitleChange("A new title")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.saved).isTrue()
+        assertThat(content.lastEditAttachments).containsExactly(AttachmentClaim("m1", null, "cover-1"))
+    }
+
+    /** A clip with no cover chosen re-states none — nothing to carry through. */
+    @Test
+    fun anEditOfAnUncoveredClipSendsNoCover() = runTest(dispatcher) {
+        content.loadedAttachments = listOf(clip("m1", cover = null))
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTitleChange("A new title")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastEditAttachments).containsExactly(AttachmentClaim("m1", null))
+    }
+
+    /**
      * Words XOR media (api-spec.md "The body XOR"): a media post's words
      * half would be refused on `["content"]`, so the edit sends none —
      * and the form draws no field that could put one there.
@@ -385,6 +421,17 @@ class ComposePostViewModelTest {
         status = FieldStatus.NORMAL,
         aspectRatio = 1f,
         mimeType = "image/webp",
+    )
+
+    private fun clip(id: String, cover: MediaAssetView?) = MediaAssetView(
+        id = id,
+        url = "https://media.example/$id",
+        altText = null,
+        status = FieldStatus.NORMAL,
+        aspectRatio = 16f / 9f,
+        mimeType = "video/mp4",
+        durationMs = 12_000,
+        cover = cover,
     )
 
     @Test

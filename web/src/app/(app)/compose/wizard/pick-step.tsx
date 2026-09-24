@@ -25,14 +25,16 @@ import { useObjectUrl } from "@/lib/compose/previews";
 import type { PickRefusal } from "@/lib/compose/pick";
 import type { PickedAsset } from "@/lib/compose/wizard";
 import { BODY_MAX_CHARS, kindOf, POST_ATTACHMENT_CAP } from "@/lib/compose/wizard";
+import { PICKABLE_VIDEO_TYPES } from "@/lib/ui2/media/video";
 
 /**
  * What the picker accepts. Pictures are re-written to WebP by the encoder
- * whatever they arrive as, so `image/*` is honest there; video is named by its
- * one accepted type, because MP4 is the only container the server stores and
- * offering the dialog a wider net would only move the refusal later.
+ * whatever they arrive as, so `image/*` is honest there; video is named by the
+ * two containers the composer can read — MP4, and the QuickTime an iPhone
+ * records, which leaves the device rewritten as MP4 — because offering the
+ * dialog a wider net would only move the refusal later.
  */
-const ACCEPT = "image/*,video/mp4";
+const ACCEPT = `image/*,${PICKABLE_VIDEO_TYPES}`;
 
 export function PickStep({
   mode,
@@ -43,6 +45,7 @@ export function PickStep({
   error,
   blocked,
   coverSrc,
+  clipFace,
   onWords,
   onMode,
   onPick,
@@ -65,6 +68,13 @@ export function PickStep({
    * a picture post, and on a video whose cover is not yet settled.
    */
   coverSrc?: string | null;
+  /**
+   * The clip's own first frame — the tray's tile face, extracted as soon as
+   * it is picked. Null while extraction has not landed or found nothing; the
+   * tray then draws the neutral tile rather than the video's own bytes,
+   * which an `<img>` cannot decode.
+   */
+  clipFace?: string | null;
   onWords: (next: string) => void;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
@@ -90,6 +100,7 @@ export function PickStep({
       error={error}
       blocked={blocked}
       coverSrc={coverSrc}
+      clipFace={clipFace}
       onMode={onMode}
       onPick={onPick}
       onUnpick={onUnpick}
@@ -207,6 +218,7 @@ function MediaBody({
   error,
   blocked,
   coverSrc,
+  clipFace,
   onMode,
   onPick,
   onUnpick,
@@ -220,6 +232,7 @@ function MediaBody({
   error: string | null;
   blocked: boolean;
   coverSrc?: string | null;
+  clipFace?: string | null;
   onMode: (next: "words" | "media") => void;
   onPick: (files: readonly File[]) => void;
   onUnpick: (id: string) => void;
@@ -290,7 +303,11 @@ function MediaBody({
               {assets.map((asset, index) => (
                 <li key={asset.id} className="flex-none">
                   <MediaThumb
-                    src={previews[asset.id] ?? null}
+                    // A VIDEO'S TILE STANDS FOR THE CLIP, never the video's
+                    // own bytes: an `<img>` cannot decode them, so the tray
+                    // shows the clip's own first frame instead of the raw
+                    // preview `usePreviewUrls` mints for every asset.
+                    src={holdsVideo ? (clipFace ?? null) : (previews[asset.id] ?? null)}
                     crop={asset.crop}
                     // A video is never the post's "cover" picture — that word
                     // names a different, later choice (the video's own face,

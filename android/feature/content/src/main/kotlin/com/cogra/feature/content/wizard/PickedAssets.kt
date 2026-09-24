@@ -9,10 +9,14 @@ package com.cogra.feature.content.wizard
 import com.cogra.core.designsystem.v2.compose.PickedPicture
 import com.cogra.core.designsystem.v2.media.CropFraming
 import com.cogra.core.designsystem.v2.media.MediaItem
+import com.cogra.domain.MediaAssetState
+import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.VideoProcessor
+import com.cogra.domain.media.awaitReady
 import com.cogra.domain.media.overPictureCap
 
 /** Records one asset's upload state without disturbing the others (D5). */
@@ -81,9 +85,87 @@ internal suspend fun uploadPicture(
         ?: return AssetUpload.Failed(unreadable)
     // Not worth retrying: the same source encodes to the same bytes.
     if (picture.overPictureCap()) return AssetUpload.Failed(UploadFailure.PICTURE_TOO_BIG)
-    return when (val outcome = media.uploadMedia(picture)) {
-        is Outcome.Success -> AssetUpload.Done(outcome.value.id)
+    // READY answers here at once — no extra request: Android's own
+    // uploads are always within target. `awaitReady` only starts
+    // polling for the backstop case, a PROCESSING asset.
+    return when (val outcome = media.awaitReady(media.uploadMedia(picture))) {
+        is Outcome.Success -> outcome.value.toResolvedUpload(refused)
         is Outcome.Refused -> AssetUpload.Failed(refused, outcome.errors.firstOrNull()?.message)
         is Outcome.Failed -> AssetUpload.Failed(UploadFailure.TRANSPORT)
     }
+}
+
+/** How the skipped step's still ended ([uploadFirstFrame]). */
+internal sealed interface FirstFrameStill {
+    /** Frame 1 is on the server: the clip names it as its still. */
+    data class Stored(val mediaId: String) : FirstFrameStill
+
+    /**
+     * No still could be made or kept. SILENT: the post ships without one
+     * and the reading surfaces' neutral tile stands (`Cover · no frames
+     * came back`) — the author chose nothing, so nothing is theirs to fix.
+     */
+    data object Absent : FirstFrameStill
+
+    /**
+     * The network failed underneath it — a fault, not an answer, so it
+     * rides the clip's own failure line and its retry, which extracts
+     * again.
+     */
+    data object Fault : FirstFrameStill
+}
+
+/**
+ * THE SKIPPED STEP STILL TAKES FRAME 1 (design/readme.md "The feed-video
+ * rulings — 2026-09-23"; `ComposeDetailsVideo.jsx`): skipping the cover
+ * step skips the CHOICE, not the still — and so does declining a face on
+ * the step (design's ruling 2026-09-24: every face-less clip is stored
+ * with a still; [storesFirstFrame]). Frame 1 is extracted with the frame
+ * picker's own machinery and uploaded as an ordinary still, on the
+ * cover's own leg.
+ *
+ * Everything that means "there is no still to keep" — no frame came
+ * back, the frame is over the still cap, the server refused it — ends
+ * [FirstFrameStill.Absent], never a failure the author meets: an error
+ * about a picture they did not ask for, on a step they never saw, has no
+ * way out worth offering. Only a transport fault is reported, because a
+ * retry can mend it.
+ */
+internal suspend fun uploadFirstFrame(
+    uri: String,
+    video: VideoProcessor,
+    media: MediaRepository,
+): FirstFrameStill {
+    val still = video.firstFrame(uri)?.takeUnless { it.overPictureCap() }
+        ?: return FirstFrameStill.Absent
+    return when (val outcome = media.awaitReady(media.uploadMedia(still))) {
+        is Outcome.Success -> if (outcome.value.state == MediaAssetState.READY) {
+            FirstFrameStill.Stored(outcome.value.id)
+        } else {
+            FirstFrameStill.Absent
+        }
+        is Outcome.Refused -> FirstFrameStill.Absent
+        is Outcome.Failed -> FirstFrameStill.Fault
+    }
+}
+
+/**
+ * The upload state a *resolved* asset settles into — one already past
+ * `awaitReady`, so never PROCESSING. Shared by every call site that
+ * uploads a picture, a clip, or a clip's cover
+ * (`uploadPicture`, `WizardUploader`, `ReplyWizardViewModel`): each
+ * only differs in which [UploadFailure] names a business refusal for
+ * its own kind of asset.
+ *
+ * FAILED is never retryable here: the bytes already made the round
+ * trip and the server refused them on inspection, so asking again would
+ * send the identical bytes into the identical answer. UNKNOWN — a
+ * server state this build was not shipped knowing about — is treated
+ * the same way, conservatively.
+ */
+internal fun MediaAssetView.toResolvedUpload(refused: UploadFailure): AssetUpload = when (state) {
+    MediaAssetState.READY -> AssetUpload.Done(id)
+    MediaAssetState.FAILED, MediaAssetState.UNKNOWN ->
+        AssetUpload.Failed(refused, failureReason, retryable = false)
+    MediaAssetState.PROCESSING -> error("awaitReady never returns Success while PROCESSING")
 }

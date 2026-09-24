@@ -147,6 +147,14 @@ export function StanceControl({
      "Current opinion" line above the field opens the timeline the sum was
      built from. Pure pass-through to `StanceStanding`. */
   onOpenHistory,
+  /* FIRST-CONNECTION MODE (the post-MVP chats integration round, jakob
+     2026-09-24). A seal that signs the reader's first record toward a target
+     — joining a chat, asking to join — hands the control the staged default
+     as its value so the face and pair read what will be signed. That value is
+     not a relationship yet, so there is nothing to walk back: the mode omits
+     the walk-away and changes nothing else. Additive — off by default, every
+     existing use renders exactly as before. */
+  firstConnection = false,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -520,7 +528,7 @@ export function StanceControl({
                 severed there is no relationship to walk away from, and the button
                 led only to a dialog saying so. It arrives with the first stance. */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
-              {(bundle.records > 0 || bundle.severed === true) && (
+              {!firstConnection && (bundle.records > 0 || bundle.severed === true) && (
                 <button
                   type="button"
                   onClick={openSeverance}

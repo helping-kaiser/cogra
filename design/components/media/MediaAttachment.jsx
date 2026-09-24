@@ -55,6 +55,14 @@ import { VideoTransport } from "./VideoControls.jsx";
      clip takes it in the same moment. Empty stage, several qualifying: topmost
      wins. A fling needs no clause: incumbents succeed faster than playback can
      start, and a clip that leaves before painting never leaves its still face.
+     THE SENSITIVE VEIL TAKES ITS CLIP OUT OF THE ROTATION (jakob 2026-09-24,
+     backlog item 103): a veiled clip has no playback and no sound-disc
+     presence. THE UNVEIL IS AN ELIGIBILITY CHANGE, NOT A SUSPENSION LIFT: a
+     sheet suspends the whole surface's stage so its dismissal decides from
+     empty, but the veil never stopped the surface's incumbent — the unveiled
+     clip joins the rotation exactly as a clip scrolling into view does,
+     changing nothing while an incumbent still qualifies. Preload stays on:
+     invisible, and it makes the unveil instant.
    · A CLIP KEEPS ITS OWN SHAPE, CLAMPED TO TALL (readme §13, the reel round).
      A clip's ratio is not chosen by an author the way a picture's crop is, so
      the crop vocabulary does not govern it: 16:9 and 1:1 clips display true, and
@@ -81,7 +89,12 @@ import { VideoTransport } from "./VideoControls.jsx";
      still was chosen or taken is an authoring fact. THE STILL IS STORED, NOT
      DERIVED (jakob 2026-09-23): the vertical path silently extracts frame 1
      at compose and uploads it, so a coverless clip's face never waits on
-     video data — it loads exactly as a picture loads. Where a clip yields no
+     video data — it loads exactly as a picture loads. FRAME 1 MEANS FRAME 0,
+     STRICTLY (jakob 2026-09-24): a ~1s still is a cover in the video, not
+     the start of it, and playback visibly jumps off it. THE PREVIEW FACE IS
+     THE STORED FACE (jakob 2026-09-24, backlog item 106): the compose
+     tiles wear this same frame 0 — the tray's claim to be the clip's face
+     holds to the frame. Where a clip yields no
      frame at all, `poster` and `src` are both absent and the reserved region's
      `label` stands — never a borrowed picture.
 

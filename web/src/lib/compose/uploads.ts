@@ -8,7 +8,13 @@
 
 import type { ApolloClient } from "@apollo/client";
 
-import { uploadMedia, uploadVideo, UploadPartsError } from "@/lib/api/media-api";
+import {
+  fetchMediaAttachmentStatus,
+  uploadMedia,
+  uploadVideo,
+  UploadPartsError,
+  type MediaAsset,
+} from "@/lib/api/media-api";
 import type { Outcome, UserError } from "@/lib/api/outcome";
 import type { AuthGuard } from "@/lib/session/guard";
 import { mediaRefusalMessage } from "@/lib/ui/error-messages";
@@ -16,16 +22,98 @@ import { pictureTooBig } from "@/lib/ui2/media/caps";
 import { compressVideo } from "@/lib/ui2/media/compress-video";
 import { encodeForUpload } from "@/lib/ui2/media/encode-image";
 import { stripVideoMetadata } from "@/lib/ui2/media/strip-video";
-import { TOO_BIG_PICTURE } from "./pick";
+import { TOO_BIG_PICTURE, type PickScale } from "./pick";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
 
 export type UploadStep = (next: AssetUpload) => void;
+
+/** Injectable timing, the way `write-signer.ts`'s `createWriteSigner` takes it. */
+export type UploadDeps = {
+  /** Injectable for tests; production uses the real timer. */
+  sleep?: (ms: number) => Promise<void>;
+};
+
+function realSleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * The media-poll's own interval — the seal-poll's idiom
+ * (`write-signer.ts`'s `SEAL_POLL_DELAY_MS`: sleep, then read, on a fixed
+ * interval), at the same 1-second spacing, but UNBOUNDED where the seal
+ * poll caps its attempts.
+ *
+ * A staged write that outruns its budget falls back to `resume()`, replayed
+ * from handshake material the app persists. A PROCESSING asset has no such
+ * fallback: `draft-store.ts`'s `afterReload` already resets anything short
+ * of `done` to `waiting` across a reload, so there is nowhere to resume a
+ * still-processing leg FROM. A fixed attempt budget would only strand the
+ * draft on a wait it can never finish, so this keeps sleeping until the
+ * server answers READY or FAILED — a closed tab simply stops polling,
+ * exactly as it already stops mid-upload.
+ */
+export const MEDIA_POLL_DELAY_MS = 1_000;
 
 function refusalFor(errors: readonly UserError[], subject: string): string {
   const first = errors[0];
   return first === undefined
     ? `The server refused that ${subject}.`
     : mediaRefusalMessage(first.code, subject);
+}
+
+/**
+ * From an upload leg's own answer to the step the reader sees.
+ *
+ * EVERY STILL COMES BACK READY (api-spec.md "Upload and gallery limits") —
+ * only a video the server has to re-encode reads PROCESSING — so a picture
+ * leg reading `media.state` here costs it nothing extra: the state is
+ * already on the response this call already made, and the branch falls
+ * through to `done` at once. A video that needs the wait is watched until
+ * the server settles it, on the poll `mediaAttachment` is meant for (the
+ * same query `stagedWrite` is read back through).
+ */
+async function awaitReady(
+  client: ApolloClient,
+  guard: AuthGuard,
+  media: MediaAsset,
+  step: UploadStep,
+  subject: string,
+  sleep: (ms: number) => Promise<void>,
+): Promise<void> {
+  if (media.state !== "PROCESSING") {
+    step({ kind: "done", mediaId: media.id });
+    return;
+  }
+  step({ kind: "processing", mediaId: media.id });
+  for (;;) {
+    await sleep(MEDIA_POLL_DELAY_MS);
+    const read = await guard.run(() => fetchMediaAttachmentStatus(client, media.id));
+    if (read.kind === "refused") {
+      step({ kind: "failed", message: refusalFor(read.errors, subject), retryable: true });
+      return;
+    }
+    if (read.kind === "failed" || read.value === null) {
+      // A transport fault, or the asset vanished mid-poll — either way this
+      // leg cannot see the server's answer, exactly as any other read fault.
+      step({ kind: "failed", message: "Couldn't reach the server.", retryable: true });
+      return;
+    }
+    if (read.value.state === "FAILED") {
+      // Not retryable: the bytes this leg already sent are what failed to
+      // become servable, and re-picking is what sends different ones.
+      step({
+        kind: "failed",
+        message: read.value.failureReason ?? "The server couldn't finish that upload.",
+        retryable: false,
+      });
+      return;
+    }
+    if (read.value.state === "READY") {
+      step({ kind: "done", mediaId: read.value.id });
+      return;
+    }
+    // Still PROCESSING: sleep and read again.
+  }
 }
 
 /**
@@ -70,7 +158,9 @@ export async function runUpload(
    */
   ratio: number | undefined,
   step: UploadStep,
+  deps: UploadDeps = {},
 ): Promise<void> {
+  const sleep = deps.sleep ?? realSleep;
   let encoded;
   try {
     step({ kind: "encoding" });
@@ -95,7 +185,7 @@ export async function runUpload(
   const uploaded = await guard.run(() => uploadMedia(client, { blob: encoded.blob }));
 
   if (uploaded.kind === "success") {
-    step({ kind: "done", mediaId: uploaded.value.id });
+    await awaitReady(client, guard, uploaded.value, step, "picture", sleep);
     return;
   }
   if (uploaded.kind === "refused") {
@@ -164,13 +254,17 @@ export async function runVideoUpload(
   onVideo: UploadStep,
   onCover: UploadStep,
   /**
-   * The destination's video cap — a post's or a comment's. A long clip is
-   * encoded at the rate that fits it, exactly as Android plans one.
+   * The destination — a post's or a comment's. A long clip is encoded at the
+   * rate that fits its cap, exactly as Android plans one; a clip that still
+   * comes out over it is refused in that destination's own sentence; and the
+   * upload names it to the server (`destination`), which sizes, re-encodes and
+   * validates the clip for that parent's cap.
    */
-  videoMaxBytes: number,
+  scale: PickScale,
+  deps: UploadDeps = {},
 ): Promise<void> {
   if (cover === null) {
-    await sendVideo(client, guard, video, onVideo, videoMaxBytes);
+    await sendVideo(client, guard, video, onVideo, scale, deps);
     return;
   }
   let encoded;
@@ -206,7 +300,7 @@ export async function runVideoUpload(
   }
   onCover({ kind: "done", mediaId: poster.value.id });
 
-  await sendVideo(client, guard, video, onVideo, videoMaxBytes);
+  await sendVideo(client, guard, video, onVideo, scale, deps);
 }
 
 /**
@@ -221,8 +315,10 @@ async function sendVideo(
   guard: AuthGuard,
   video: PickedAsset,
   onVideo: UploadStep,
-  videoMaxBytes: number,
+  scale: PickScale,
+  deps: UploadDeps = {},
 ): Promise<void> {
+  const sleep = deps.sleep ?? realSleep;
   // The compression and the strip are both reported as `encoding`: they are
   // the same stage in the same story — bytes being made ready — and inventing
   // a further state for either would put a word on screen that means nothing
@@ -230,7 +326,24 @@ async function sendVideo(
   onVideo({ kind: "encoding" });
   // Never throws: a browser that cannot encode, or an encode that fails, hands
   // back the picked bytes and the clip carries on exactly as it would have.
-  const compressed = await compressVideo(video.file, videoMaxBytes);
+  const compressed = await compressVideo(video.file, scale.videoMaxBytes);
+  // A picture that is not H.264 and was not encoded here — the pick found this
+  // browser able to, and the encode then failed or was refused — is one the
+  // server admits no other way. Saying so now spares the author the upload
+  // that would only earn that refusal. A failure mid-encode may pass on a
+  // second try; a refusal of the configuration will not.
+  if (
+    compressed.path !== "encoded" &&
+    compressed.videoCodec !== null &&
+    compressed.videoCodec !== "avc"
+  ) {
+    onVideo({
+      kind: "failed",
+      message: "This browser couldn't prepare that video.",
+      retryable: compressed.path === "failed",
+    });
+    return;
+  }
   let stripped;
   try {
     stripped = await stripVideoMetadata(compressed.blob);
@@ -243,14 +356,29 @@ async function sendVideo(
     return;
   }
 
+  // THE CAP IS WEIGHED HERE, ON WHAT WOULD BE SENT (jakob 2026-09-23: "what
+  // matters is the size after compression and before upload"). The pick lets
+  // an over-cap clip in wherever this browser can encode it down, so the size
+  // question is only settled now — the picture path's order exactly. A clip
+  // still over the cap here is one whose encode overshot or never happened;
+  // sending it would cost the whole upload to earn the server's refusal. Not
+  // retryable, like the picture's: the same clip comes out the same size.
+  if (stripped.blob.size > scale.videoMaxBytes) {
+    onVideo({ kind: "failed", message: scale.tooBigVideo, retryable: false });
+    return;
+  }
+
   onVideo({ kind: "uploading" });
   // THE CLIP IS THE BODY WORTH PROTECTING. A picture sent twice costs a
   // moment; a video sent twice is the whole wait, twice.
   await guard.prime();
-  const uploaded = await uploadVideo(client, guard, { blob: stripped.blob });
+  const uploaded = await uploadVideo(client, guard, {
+    blob: stripped.blob,
+    scale: scale.destination,
+  });
 
   if (uploaded.kind === "success") {
-    onVideo({ kind: "done", mediaId: uploaded.value.id });
+    await awaitReady(client, guard, uploaded.value, onVideo, "video", sleep);
     return;
   }
   if (uploaded.kind === "refused") {

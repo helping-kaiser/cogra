@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
+import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.token.MediaFrame
 
 /**
@@ -37,6 +38,14 @@ import com.cogra.core.designsystem.v2.token.MediaFrame
  *
  * A [item] with no clip in it draws nothing — there is no such thing as a
  * pinned picture.
+ *
+ * **Under a sensitive veil it is the poster alone** (jakob 2026-09-24, the
+ * pinned-clip veil ruling): the clip wears its veil in place, and a veiled
+ * clip is out of the stage ([LocalStageVeil], backlog item 103). No player is
+ * composed, so nothing claims [VideoStage], nothing plays behind the blur, and
+ * no transport stands under the veil — the face's only affordance is the
+ * reveal. The frame keeps its exact size either way, so revealing moves
+ * nothing, and the reveal composes the player, which claims the stage.
  */
 @Composable
 fun PinnedClip(
@@ -57,6 +66,14 @@ fun PinnedClip(
     testTag: String = PINNED_CLIP_TAG,
 ) {
     val videoUrl = item.videoUrl ?: return
+    // The clip's own shape, clamped to tall by the same rule every frame in
+    // the product obeys — the media law's true ratio, not a shape this surface
+    // invents. One frame for the poster and the player alike.
+    val frame = Modifier
+        .fillMaxWidth()
+        .aspectRatio(item.aspectRatio?.cappedToTallestTile() ?: 1f)
+        .heightIn(min = MediaFrame.MinHeight, max = maxHeight)
+    val veiled = LocalStageVeil.current
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -64,29 +81,33 @@ fun PinnedClip(
             .testTag(testTag),
         contentAlignment = Alignment.Center,
     ) {
-        VideoPlayer(
-            url = videoUrl,
-            // The cover is the clip's face until a frame of it exists.
-            posterUrl = item.imageModel(),
-            // Pinned still playing: the clip is the thing the reader came
-            // for, and arriving here claims the stage from whatever card
-            // was playing it.
-            autoplay = true,
-            durationMs = item.durationMs,
-            controls = VideoControls.Full,
-            contentScale = ContentScale.Crop,
-            // The clip's own shape, clamped to tall by the same rule every
-            // frame in the product obeys — the media law's true ratio, not a
-            // shape this surface invents.
-            videoAspectRatio = item.aspectRatio?.cappedToTallestTile(),
-            contentDescription = item.altText,
-            onOpenViewer = onOpenViewer,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(item.aspectRatio?.cappedToTallestTile() ?: 1f)
-                .heightIn(min = MediaFrame.MinHeight, max = maxHeight),
-            testTag = "${testTag}_video",
-        )
+        if (veiled) {
+            AsyncImage(
+                model = item.imageModel(),
+                // The veil speaks for what it covers; the frame says nothing.
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = frame.testTag("${testTag}_poster"),
+            )
+        } else {
+            VideoPlayer(
+                url = videoUrl,
+                // The cover is the clip's face until a frame of it exists.
+                posterUrl = item.imageModel(),
+                // Pinned still playing: the clip is the thing the reader came
+                // for, and arriving here claims the stage from whatever card
+                // was playing it.
+                autoplay = true,
+                durationMs = item.durationMs,
+                controls = VideoControls.Full,
+                contentScale = ContentScale.Crop,
+                videoAspectRatio = item.aspectRatio?.cappedToTallestTile(),
+                contentDescription = item.altText,
+                onOpenViewer = onOpenViewer,
+                modifier = frame,
+                testTag = "${testTag}_video",
+            )
+        }
     }
 }
 

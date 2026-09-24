@@ -282,6 +282,14 @@ data class Landing(
  * [cover] is a video's poster and null on a still. It answers with its
  * own [status], so a cover redacted on its own reads REDACTED here
  * while the video it covers still plays.
+ *
+ * [state] defaults to READY because every context that does not select
+ * the field — a feed, a profile, anything reading a parent's gallery —
+ * carries only READY assets by contract (schema.graphql
+ * `MediaAttachment.state`: "every asset a parent carries is READY");
+ * only the upload path itself, which does select it, ever reads
+ * anything else. [failureReason] is why, worded for the author, and is
+ * set only alongside a FAILED [state].
  */
 data class MediaAssetView(
     val id: String,
@@ -294,6 +302,8 @@ data class MediaAssetView(
     /** The clip's length, null on a still (D11 — derived, never sent). */
     val durationMs: Int? = null,
     val cover: MediaAssetView? = null,
+    val state: MediaAssetState = MediaAssetState.READY,
+    val failureReason: String? = null,
 ) {
     /**
      * Whether this asset plays rather than being drawn once.
@@ -340,6 +350,29 @@ data class MediaAssetView(
             }
         }
     }
+}
+
+/**
+ * Where an uploaded asset stands between its upload and its first use
+ * (api-spec.md "Media"; schema.graphql `MediaAttachmentState`).
+ *
+ * PROCESSING is a correctness backstop on Android, not the shipped path:
+ * the on-device pipeline re-encodes every video to the upload target
+ * before it ever leaves, so the server has nothing left to transcode and
+ * an upload answers READY at once in practice.
+ */
+enum class MediaAssetState {
+    /** Uploaded; the server is re-encoding it. Not attachable yet. */
+    PROCESSING,
+
+    /** The bytes are final — safe to attach to a placement. */
+    READY,
+
+    /** Could not be made servable; see the asset's own `failureReason`. */
+    FAILED,
+
+    /** A state this client version does not know — treated as still not ready. */
+    UNKNOWN,
 }
 
 /**
@@ -633,15 +666,13 @@ data class Page<T>(
 data class CommentPage(val page: Page<CommentView>, val total: Int)
 
 /**
- * The author's own sensitive mark on one node, read on its own.
- *
- * Not part of [PostView]: the veil a reader sees is the OR of this mark
- * and a moderator's verdict, and only this half is a thing an edit may
- * carry (api-spec.md "Two states, and the statuses are their OR"). The
- * edit form reads it so the record it prepares re-states it.
- */
-/**
  * One comment plus the author-only state an edit needs.
+ *
+ * The author's own sensitive mark on the node is not part of
+ * [PostView]: the veil a reader sees is the OR of this mark and a
+ * moderator's verdict, and only this half is a thing an edit may carry
+ * (api-spec.md "Two states, and the statuses are their OR"). The edit
+ * form reads it so the record it prepares re-states it.
  *
  * The mark rides beside the comment rather than on it because it is not
  * thread-readable: a card never shows it, and only its author's edit
@@ -700,7 +731,6 @@ data class PreparedContentView(
     val node: String,
     val writes: List<PreparedWriteView>,
 )
-
 
 // ---------------------------------------------------------------------
 // Profiles (slice 2.1 — api-spec.md "Actors", roadmap "Slice 2.1")

@@ -6,8 +6,9 @@
 //!
 //! **This reader validates; it never re-encodes.** Refusing what the
 //! server will not serve is its whole job, and what it learns proving an
-//! upload — the displayed canvas and the duration — is also what decides
-//! whether the clip is within the served target. A clip that is not is
+//! upload — the displayed canvas, the duration, and the signal the
+//! sequence parameter set states — is also what decides whether the clip
+//! is within the served target. A clip that is not is
 //! re-encoded by the ingest worker (`super::ingest_queue`), whose output comes
 //! back through this same reader before it is stored.
 //!
@@ -29,9 +30,97 @@
 
 use std::io::Cursor;
 
-use mp4::{MediaType, Mp4Reader, TrackType};
+use h264_reader::nal::sps::{ChromaFormat, SeqParameterSet};
+use h264_reader::nal::{Nal, RefNal, UnitType};
+use mp4::{MediaType, Mp4Reader, Mp4Track, TrackType};
 
 use super::{MAX_PIXEL_DIMENSION, MediaError, Probe};
+
+/// How a clip's samples map to light, as far as the served target cares.
+///
+/// The code points are ITU-T H.273's `TransferCharacteristics`, which the
+/// H.264 VUI carries verbatim: 16 is SMPTE ST 2084 (PQ, the HDR10
+/// transfer) and 18 is ARIB STD-B67 (HLG). Every other code — BT.709,
+/// BT.601, unspecified — is a standard-dynamic-range signal, which is the
+/// only kind the readers are served.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Transfer {
+    Sdr,
+    Pq,
+    Hlg,
+}
+
+impl Transfer {
+    const PQ: u8 = 16;
+    const HLG: u8 = 18;
+
+    fn from_h273(code: u8) -> Self {
+        match code {
+            Self::PQ => Self::Pq,
+            Self::HLG => Self::Hlg,
+            _ => Self::Sdr,
+        }
+    }
+
+    pub fn is_hdr(self) -> bool {
+        !matches!(self, Self::Sdr)
+    }
+}
+
+/// What a clip's sequence parameter set says about its samples.
+///
+/// Read off the `avcC` box the header probe walks anyway — the SPS rides
+/// it — so learning it decodes no frame. The VUI's colour description is
+/// where an encoder states the transfer its samples use, and the SPS's own
+/// chroma fields state the bit depth and chroma format.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Signal {
+    /// Bits per luma sample.
+    pub bit_depth: u8,
+    /// Whether chroma is subsampled 4:2:0.
+    pub chroma_420: bool,
+    pub transfer: Transfer,
+}
+
+impl Signal {
+    /// Whether the samples are what every reader is served: 8-bit 4:2:0
+    /// standard dynamic range, the profile every decoder plays.
+    pub fn is_served(&self) -> bool {
+        self.bit_depth == 8 && self.chroma_420 && !self.transfer.is_hdr()
+    }
+}
+
+/// The signal a video track's first sequence parameter set states.
+///
+/// `None` when the track carries no parsable SPS. That is not a refusal:
+/// this reader validates the container and its codecs, never the
+/// bitstream, and a clip whose SPS a parser cannot read is one ffmpeg will
+/// refuse at the re-encode if it is anything but ordinary.
+fn signal(track: &Mp4Track) -> Option<Signal> {
+    let avc1 = track.trak.mdia.minf.stbl.stsd.avc1.as_ref()?;
+    let bytes = avc1.avcc.sequence_parameter_sets.first()?.bytes.as_slice();
+    if bytes.is_empty() {
+        return None;
+    }
+    let nal = RefNal::new(bytes, &[], true);
+    if nal.header().ok()?.nal_unit_type() != UnitType::SeqParameterSet {
+        return None;
+    }
+    let sps = SeqParameterSet::from_bits(nal.rbsp_bits()).ok()?;
+    let transfer = sps
+        .vui_parameters
+        .as_ref()
+        .and_then(|vui| vui.video_signal_type.as_ref())
+        .and_then(|signal| signal.colour_description.as_ref())
+        .map_or(Transfer::Sdr, |colour| {
+            Transfer::from_h273(colour.transfer_characteristics)
+        });
+    Some(Signal {
+        bit_depth: sps.chroma_info.bit_depth_luma_minus8.saturating_add(8),
+        chroma_420: matches!(sps.chroma_info.chroma_format, ChromaFormat::YUV420),
+        transfer,
+    })
+}
 
 /// The single stored moving format.
 pub const MIME: &str = "video/mp4";
@@ -404,21 +493,38 @@ fn is_quarter_turn(a: i32, b: i32, c: i32, d: i32) -> bool {
     a == 0 && d == 0 && b != 0 && c != 0
 }
 
-/// The refusal gate for video: the container's tracks must be the codecs
-/// the policy admits, and nothing else may ride along.
+/// The refusal gate for video: the container's video track must be the
+/// one codec the policy admits, and nothing but video and audio tracks
+/// may ride along.
 ///
-/// H.264 video and AAC audio are the accepted pair, so every other track
-/// is refused rather than ignored — a stored file carrying a codec the
-/// readers were never promised is a render that fails on someone's
-/// device, and the upload is the only place that can still say no. A
-/// file with no video track at all is not a video whatever its brand
-/// says.
+/// **Video is H.264, whatever the readers get served — that is the one
+/// codec every reader decodes, and this server's ffmpeg cannot even
+/// decode the patent-excluded alternative it is most often asked about.**
+/// Audio is not held to a codec here: an audio track may carry anything
+/// this server's ffmpeg can turn into AAC, because the ingest transcoder
+/// is the true universal fallback for a client that could not produce
+/// AAC itself. This probe only records whether the audio it found
+/// already is AAC ([`Probe::audio_aac`]) — that fact is what
+/// [`super::process`] reads to decide whether a clip passes through
+/// untouched or is queued for the ingest worker, which re-encodes
+/// non-AAC audio and, per [`super::transcode`], can leave an
+/// already-in-target video stream copied rather than re-encoded. A
+/// codec ffmpeg genuinely cannot decode still fails, just later — the
+/// ingest job fails into `FAILED` with a reason its author reads,
+/// rather than the upload being refused on a guess about what the
+/// bytes are.
+///
+/// A stored file still needs a video track: a container carrying only
+/// sound, or a track that is neither audio nor video (a subtitle track,
+/// say), is refused — a stored file must always be a video, not a
+/// container shape the readers were never promised.
 pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
     let size = u64::try_from(bytes.len()).map_err(|_| MediaError::Undecodable)?;
     let mp4 = Mp4Reader::read_header(Cursor::new(bytes), size)
         .map_err(|_| MediaError::Malformed("the video container does not parse"))?;
 
-    let mut video: Option<(u32, u32)> = None;
+    let mut video: Option<(u32, u32, Option<Signal>)> = None;
+    let mut audio_aac = true;
     for track in mp4.tracks().values() {
         match track.track_type() {
             Ok(TrackType::Video) => {
@@ -428,27 +534,27 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
                 if video.is_none() {
                     let (width, height) = (u32::from(track.width()), u32::from(track.height()));
                     let matrix = &track.trak.tkhd.matrix;
-                    video = Some(if is_quarter_turn(matrix.a, matrix.b, matrix.c, matrix.d) {
+                    let (width, height) = if is_quarter_turn(matrix.a, matrix.b, matrix.c, matrix.d)
+                    {
                         (height, width)
                     } else {
                         (width, height)
-                    });
+                    };
+                    video = Some((width, height, signal(track)));
                 }
             }
             Ok(TrackType::Audio) => {
-                if !matches!(track.media_type(), Ok(MediaType::AAC)) {
-                    return Err(MediaError::Codec("the audio track is not AAC"));
-                }
+                audio_aac &= matches!(track.media_type(), Ok(MediaType::AAC));
             }
             _ => {
                 return Err(MediaError::Codec(
-                    "the file carries a track that is neither H.264 video nor AAC audio",
+                    "the file carries a track that is neither video nor audio",
                 ));
             }
         }
     }
 
-    let Some((width, height)) = video else {
+    let Some((width, height, signal)) = video else {
         return Err(MediaError::Codec("the file carries no video track"));
     };
     if width == 0 || height == 0 {
@@ -464,11 +570,13 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
         width,
         height,
         duration_ms: Some(u64::try_from(mp4.duration().as_millis()).unwrap_or(u64::MAX)),
+        signal,
+        audio_aac,
     })
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     fn ftyp(major: &[u8; 4], compatible: &[&[u8; 4]]) -> Vec<u8> {
@@ -635,6 +743,78 @@ mod tests {
             probed.duration_ms,
             Some(2_500),
             "the duration is read, never capped"
+        );
+    }
+
+    /// A movie whose track carries `sps` as its sequence parameter set.
+    pub(crate) fn h264_with_sps(sps: &[u8]) -> Vec<u8> {
+        movie(
+            mp4::MediaConfig::AvcConfig(mp4::AvcConfig {
+                width: 320,
+                height: 180,
+                seq_param_set: sps.to_vec(),
+                pic_param_set: vec![0x68, 0xCE, 0x3C, 0x80],
+            }),
+            2_500,
+        )
+    }
+
+    /// Three real Constrained Baseline SPSes, cut from 320 × 180 clips
+    /// libopenh264 encoded and `h264_metadata` tagged BT.2020 with each
+    /// transfer in turn: BT.709 (1), PQ (16) and HLG (18). They differ only
+    /// in the VUI byte that carries the transfer.
+    const SPS_BT709: [u8; 19] = [
+        0x67, 0x42, 0xC0, 0x14, 0x8C, 0x68, 0x14, 0x19, 0x79, 0xF0, 0x16, 0xA1, 0x20, 0x21, 0x20,
+        0xF0, 0x88, 0x46, 0xA0,
+    ];
+    pub(crate) const SPS_PQ: [u8; 19] = [
+        0x67, 0x42, 0xC0, 0x14, 0x8C, 0x68, 0x14, 0x19, 0x79, 0xF0, 0x16, 0xA1, 0x22, 0x01, 0x20,
+        0xF0, 0x88, 0x46, 0xA0,
+    ];
+    const SPS_HLG: [u8; 19] = [
+        0x67, 0x42, 0xC0, 0x14, 0x8C, 0x68, 0x14, 0x19, 0x79, 0xF0, 0x16, 0xA1, 0x22, 0x41, 0x20,
+        0xF0, 0x88, 0x46, 0xA0,
+    ];
+
+    /// A High 10 SPS, assembled by hand to ITU-T H.264 §7.3.2.1.1: profile
+    /// 110, level 3.0, 4:2:0 at ten bits luma and chroma, 320 × 240, no VUI.
+    const SPS_HIGH10: [u8; 10] = [0x67, 0x6E, 0x00, 0x1E, 0xA6, 0xCB, 0x40, 0xA0, 0xFC, 0x80];
+
+    /// The probe reads the transfer a clip's SPS states, and its bit depth
+    /// and chroma format: 8-bit 4:2:0 BT.709 is what readers are served, PQ
+    /// and HLG are HDR, ten bits is deeper than the target. A clip whose
+    /// SPS does not parse carries no signal rather than being refused.
+    ///
+    /// The probe reads a clip's transfer, bit depth and chroma format off its sequence parameter set.
+    /// ´claim:media:the-probe-reads-the-signal-off-the-sps´
+    #[test]
+    fn the_probe_reads_the_signal_its_sps_states() {
+        let signal = |sps: &[u8]| probe(&h264_with_sps(sps)).expect("an H.264 movie").signal;
+
+        let sdr = signal(&SPS_BT709).expect("a parsable SPS");
+        assert_eq!(sdr.transfer, Transfer::Sdr);
+        assert_eq!((sdr.bit_depth, sdr.chroma_420), (8, true));
+        assert!(sdr.is_served());
+
+        let pq = signal(&SPS_PQ).expect("a parsable SPS");
+        assert_eq!(pq.transfer, Transfer::Pq);
+        assert!(!pq.is_served(), "PQ is HDR");
+
+        let hlg = signal(&SPS_HLG).expect("a parsable SPS");
+        assert_eq!(hlg.transfer, Transfer::Hlg);
+        assert!(!hlg.is_served(), "HLG is HDR");
+
+        let deep = signal(&SPS_HIGH10).expect("a parsable SPS");
+        assert_eq!((deep.bit_depth, deep.chroma_420), (10, true));
+        assert_eq!(deep.transfer, Transfer::Sdr, "no VUI states no transfer");
+        assert!(!deep.is_served(), "ten bits is deeper than the target");
+
+        assert_eq!(
+            probe(&movie(h264(1920, 1080), 2_500))
+                .expect("a movie")
+                .signal,
+            None,
+            "a truncated SPS is no signal, not a refusal"
         );
     }
 
@@ -855,10 +1035,15 @@ mod tests {
         assert_eq!(before, after, "the same movie, minus what named its author");
     }
 
-    /// A container carrying any codec but H.264 video and AAC audio is refused, whatever its brand promised.
-    /// ´claim:media:only-h264-and-aac-are-admitted´
+    /// A container without an H.264 video track is refused, whatever its
+    /// brand promised — a codec ffmpeg cannot even decode (H.265, this
+    /// server's dev and CI builds being patent-excluded from it), and
+    /// sound with no picture at all.
+    ///
+    /// A container without an H.264 video track is refused, whatever else it carries.
+    /// ´claim:media:only-h264-video-is-admitted´
     #[test]
-    fn a_codec_outside_the_policy_is_refused() {
+    fn a_video_codec_outside_the_policy_is_refused() {
         let hevc = movie(
             mp4::MediaConfig::HevcConfig(mp4::HevcConfig {
                 width: 1920,
@@ -883,6 +1068,23 @@ mod tests {
         assert!(
             matches!(probe(&audio_only), Err(MediaError::Codec(_))),
             "sound alone is not a video"
+        );
+    }
+
+    /// The probe records whether an AAC track's audio is AAC — the fact
+    /// [`super::process`] reads to decide whether audio alone routes a
+    /// clip to the ingest worker. A video with no audio track at all
+    /// carries nothing for a re-encode to fix either.
+    ///
+    /// The probe reports whether a video's audio, if it carries one, is already AAC.
+    /// ´claim:media:the-probe-reports-whether-audio-is-aac´
+    #[test]
+    fn the_probe_reports_whether_audio_is_already_aac() {
+        assert!(
+            probe(&movie(h264(1920, 1080), 2_500))
+                .expect("a video with no audio track")
+                .audio_aac,
+            "nothing to transcode when there is no audio at all"
         );
     }
 }

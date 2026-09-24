@@ -17,6 +17,7 @@
 
 package com.cogra.feature.content.wizard
 
+import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.MediaProcessor
 
 /** A post's clip: the same hundred megabytes a full gallery costs. */
@@ -29,18 +30,25 @@ internal const val COMMENT_VIDEO_MAX_BYTES = 50L * 1024 * 1024
  * What a surface's clip costs and what a file over that cap is refused
  * as. A still's cap is not here: it is the same on both surfaces and it
  * is spent at the upload, on the encode's own bytes
- * (`com.cogra.domain.media.overPictureCap`).
+ * (`com.cogra.domain.media.overPictureCap`). [destination] is the same
+ * fact said to the server, which sizes the clip for that parent's cap.
  */
-internal data class PickScale(val videoMaxBytes: Long, val tooBigVideo: UploadFailure)
+internal data class PickScale(
+    val videoMaxBytes: Long,
+    val tooBigVideo: UploadFailure,
+    val destination: MediaDestination,
+)
 
 internal val POST_SCALE = PickScale(
     videoMaxBytes = POST_VIDEO_MAX_BYTES,
     tooBigVideo = UploadFailure.POST_VIDEO_TOO_BIG,
+    destination = MediaDestination.POST,
 )
 
 internal val COMMENT_SCALE = PickScale(
     videoMaxBytes = COMMENT_VIDEO_MAX_BYTES,
     tooBigVideo = UploadFailure.COMMENT_VIDEO_TOO_BIG,
+    destination = MediaDestination.COMMENT,
 )
 
 /**

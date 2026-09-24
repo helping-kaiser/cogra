@@ -17,7 +17,9 @@ package com.cogra.network
 import com.cogra.crypto.Family
 import com.cogra.domain.AccountState
 import com.cogra.domain.ErrorCode
+import com.cogra.domain.MediaAssetState
 import com.cogra.domain.WriteState
+import com.cogra.network.graphql.type.MediaAttachmentState
 import com.cogra.network.graphql.type.RecordFamily
 import com.cogra.network.graphql.type.StagedWriteState
 import com.google.common.truth.Truth.assertWithMessage
@@ -55,6 +57,11 @@ class EnumParityTest {
             "Family",
             RecordFamily.knownValues().map { it.rawValue },
             Family.entries.filter { it != Family.UNKNOWN }.map { it.name },
+        )
+        assertParity(
+            "MediaAssetState",
+            MediaAttachmentState.knownValues().map { it.rawValue },
+            MediaAssetState.entries.filter { it != MediaAssetState.UNKNOWN }.map { it.name },
         )
     }
 }

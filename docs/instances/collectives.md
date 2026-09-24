@@ -34,11 +34,11 @@ founding User:
 
 1. The founder writes the social contract (§6) — at minimum the
    act-as rules and the initial decision rules.
-2. The backend creates the Collective's **keypair and
+2. The creator's device creates the Collective's **keypair and
    address** (custody: §2).
-3. The admission debit is **treasury-funded** — Collectives draw
-   on the CoGra community treasury for their admission burns
-   ([economics.md](../primitive/economics.md)).
+3. The admission debit is **community-funded** — Collectives draw
+   on the community's admission fund for their admission burns
+   ([economics.md §7.2](../primitive/economics.md#72-the-admission-fund)).
 4. The Collective's own **Registration** record anchors its
    Actor + Profile pair; profile content (name, description,
    avatar digests) — and the social contract itself (§6) — ride
@@ -138,12 +138,12 @@ design error:
 |---|---|---|
 | **Protocol standing** | May its actor write to the shared graph at all? | L1's alone — the write rule over its balance and stamps, its standing from real endorsement. Membership never enters it. |
 | **Membership** | Who is in the Collective, with what role and stake? | CoGra's to define — a published fold over payload-marked records (§5); public on the shared graph, read by no L1 rule. |
-| **Subsidy** | Who pays its θ-debits? | Governed policy — Collectives draw on the community treasury, within the governed generosity and caps ([economics.md](../primitive/economics.md)). |
+| **Subsidy** | Who pays its θ-debits? | Governed policy — Collectives draw on the community's admission fund, within the governed generosity and caps ([economics.md](../primitive/economics.md)). |
 | **Self-funding** | Can it stand on its own? | Always open — an admission burn to the collective's address is funder-unconstrained; a self-funded Collective is indistinguishable from a subsidized one at the comparator. |
 
 A Collective the community defunds (severance netting its
 inbound stances to `(0,0)`) falls back to its own commitment
-rate — the standing its treasury-funded burns buy, every
+rate — the standing its community-funded burns buy, every
 relational lift gone (``prop:epoch:final-standing-embedding``) — no
 matter how healthy its internal membership; a thriving internal
 membership buys no protocol standing by itself. Each authority is
@@ -233,9 +233,8 @@ internal structure is public and replayable, tallies included.
   applies — summing would double-count the person.
 - **Sub-collectives:** a member may itself be a Collective; its
   membership records are authored by its own actor, recursively.
-- **Costs:** both sides' records are `θ`-priced acts — the
-  member's community-funded, the collective's treasury-funded
-  ([economics.md](../primitive/economics.md)).
+- **Costs:** both sides' records are `θ`-priced acts, both
+  community-funded ([economics.md](../primitive/economics.md)).
 
 **What is *not* membership:** real-stance Opinions between
 members and the collective's Profile — including the founding

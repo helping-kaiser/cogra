@@ -171,6 +171,7 @@ export function thumbState(asset: PickedAsset): Pick<PickedThumb, "progress" | "
     case "waiting":
     case "encoding":
     case "uploading":
+    case "processing":
       // No fraction is measured, so the ring turns rather than claiming one.
       return { progress: "indeterminate" };
     case "failed":
@@ -240,8 +241,9 @@ function BodyStrip({
           id: asset.id,
           // A VIDEO'S TILE STANDS FOR THE CLIP, and shows the clip's face:
           // the source preview is the video's blob URL, which an `<img>`
-          // cannot decode, so the still is the chosen cover where there is
-          // one and the clip's own first frame where there is not.
+          // cannot decode, so the still is the clip's own first frame —
+          // always, never the chosen cover, which rides the tile only as
+          // `coverSrc`'s inset mark below.
           src: isVideo ? clipFace : (previews[asset.id] ?? null),
           // The row draws the framing the author left the crop step with —
           // the source here would read as the crop having been discarded. A
