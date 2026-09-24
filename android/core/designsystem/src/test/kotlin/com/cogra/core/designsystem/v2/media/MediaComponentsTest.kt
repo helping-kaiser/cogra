@@ -1,5 +1,7 @@
 package com.cogra.core.designsystem.v2.media
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,12 +21,14 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.MediaShape
@@ -119,6 +123,40 @@ class MediaComponentsTest {
         }
 
         compose.onNodeWithText("Shows an injury").assertIsDisplayed()
+    }
+
+    /**
+     * THE WASH IS THE ONLY DOOR THROUGH THE VEIL
+     * (`design/components/honesty/SensitiveVeil.jsx`: the reveal is a
+     * full-tile button, and its handler's own comment reads "The veil is
+     * a decision, not a route: it must not also open the post it sits
+     * in"). A tap anywhere on the veil other than the button must not
+     * reach whatever the body underneath would otherwise do with it —
+     * the body is still composed (blurred in place, not unmounted), so
+     * without the wash owning the pointer input, Compose's hit test
+     * falls through to it.
+     */
+    @Test
+    fun tappingTheVeiledAreaAwayFromTheButtonDoesNotReachTheBodyBeneath() {
+        var bodyTapped = false
+        compose.setContent {
+            Cogra2PreviewTheme {
+                SensitiveVeil(veiled = true, onReveal = {}, testTag = "veil") {
+                    Box(
+                        Modifier
+                            .size(300.dp)
+                            .clickable { bodyTapped = true },
+                    )
+                }
+            }
+        }
+
+        // A corner of the veiled tile — well clear of the centred reveal
+        // button, but still squarely over the (blurred, still-composed)
+        // body underneath the wash.
+        compose.onNodeWithTag("veil").performTouchInput { click(Offset(8f, 8f)) }
+
+        assertThat(bodyTapped).isFalse()
     }
 
     // ---- The comment-scale veil ---------------------------------------
