@@ -82,7 +82,9 @@ const SOURCES: [(&str, &str); 3] = [
     ("src/beta.rs", "pub fn two() {}\n"),
 ];
 
-/// A corpus root of its own, carrying the four shapes and no label at all.
+/// A corpus root of its own, carrying the four shapes and no label at all,
+/// each tracked and none committed: the carrier is what git lists
+/// (´dec:lint:tracked-carrier´).
 fn temporary(name: &str) -> PathBuf {
     let at = std::env::temp_dir().join(format!("cogra-lint-{name}"));
     let _ = std::fs::remove_dir_all(&at);
@@ -93,6 +95,8 @@ fn temporary(name: &str) -> PathBuf {
         let leaf = path.rsplit('/').next().unwrap_or(path);
         std::fs::write(src.join(leaf), body).expect("a fixture source");
     }
+    git(&at, &["init", "-q"]);
+    git(&at, &["add", "-A"]);
     at
 }
 
@@ -303,8 +307,8 @@ fn git(at: &Path, args: &[&str]) {
 }
 
 /// (´dec:lint:fix-precondition´): a source the sweep would rewrite is dirty
-/// while it is untracked, dirty again once it is modified after a commit, and
-/// clean in between — which is the whole of what the precondition asks.
+/// while no commit holds it, dirty again once it is modified after a commit,
+/// and clean in between — which is the whole of what the precondition asks.
 ///
 /// The precondition reads the working tree of exactly the sources the sweep would rewrite.
 /// ´claim:sweep:the-precondition-reads-what-it-would-rewrite´
@@ -315,14 +319,12 @@ fn the_precondition_reads_the_working_tree_of_what_it_would_rewrite() {
     let touched = sweep.touches();
     assert_eq!(touched.len(), 3);
 
-    git(&at, &["init", "-q"]);
-    let untracked = fix::modified(&at, &touched).expect("git answers over a repository");
+    let uncommitted = fix::modified(&at, &touched).expect("git answers over a repository");
     assert_eq!(
-        untracked, touched,
-        "bytes git is not tracking cannot be recovered, so they are not clean"
+        uncommitted, touched,
+        "bytes no commit holds cannot be recovered, so they are not clean"
     );
 
-    git(&at, &["add", "-A"]);
     git(
         &at,
         &[
@@ -366,6 +368,7 @@ fn the_precondition_reads_the_working_tree_of_what_it_would_rewrite() {
 fn a_root_that_is_no_repository_cannot_answer_the_precondition() {
     let at = temporary("sweep-no-repository");
     let touched = swept(adoption(), &at).touches();
+    std::fs::remove_dir_all(at.join(".git")).expect("the fixture's repository is removable");
     let refused = fix::modified(&at, &touched).expect_err("no repository, so no answer");
     assert!(format!("{refused}").contains("git status"), "{refused}",);
     let _ = std::fs::remove_dir_all(&at);

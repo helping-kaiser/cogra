@@ -257,11 +257,13 @@ pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
     };
     let walked = walking.elapsed();
     let roots = crate::carrier::unmatched_roots(a, &sources);
+    let uncatalogued = crate::carrier::uncatalogued(a, &sources);
 
     let mut run = check_sources(a, sources);
     run.timing.record(Phase::Harvest, walked);
     run.findings.extend(failures);
     run.findings.extend(roots);
+    run.findings.extend(uncatalogued);
     run.findings.sort();
     Ok(run)
 }

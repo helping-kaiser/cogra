@@ -93,7 +93,26 @@ fn temporary(name: &str) -> PathBuf {
     std::fs::write(at.join("corpus-adoption.toml"), adoption_text()).expect("the adoption data");
     std::fs::write(src.join("lib.rs"), "mod alpha;\nmod inline { }\n").expect("two definitions");
     std::fs::write(src.join("alpha.rs"), "pub fn one() {}\n").expect("the backing file");
+    track(&at);
     at
+}
+
+/// Makes `root` a repository and tracks everything now standing in it: the
+/// carrier is what git lists (´dec:lint:tracked-carrier´).
+fn track(root: &Path) {
+    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
+        let done = std::process::Command::new("git")
+            .arg("-C")
+            .arg(root)
+            .args(args)
+            .output()
+            .expect("git runs");
+        assert!(
+            done.status.success(),
+            "git {args:?}: {}",
+            String::from_utf8_lossy(&done.stderr)
+        );
+    }
 }
 
 /// (´dec:lint:staged-profiles´): a staged profile is exactly what this run

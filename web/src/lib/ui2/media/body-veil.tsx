@@ -22,7 +22,26 @@
 // No `error` colouring and no warning glyph: a neutral wash of the standard
 // scrim and a plain `visibility` chip. A veiled post is not a failure.
 
-import { useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
+
+/**
+ * Whether the nearest enclosing `BodyVeil` currently veils this subtree.
+ *
+ * The content stays MOUNTED under the blur (see above), so a media surface
+ * inside it needs its own signal to know it must not claim the playback
+ * stage or draw its sound disc behind the veil — not being unmounted is not
+ * the same as being allowed to play (design/readme.md, backlog item 103:
+ * "a veiled clip sits fully out of the stage rotation — no playback, no
+ * sound-disc presence — because the veil is the reader's declared
+ * not-yet"). Read via `useVeiled()`; consumers outside any `BodyVeil` see
+ * `false`, the unveiled default.
+ */
+export const VeilContext = createContext(false);
+
+/** The nearest enclosing `BodyVeil`'s state, or `false` outside one. */
+export function useVeiled(): boolean {
+  return useContext(VeilContext);
+}
 
 export function BodyVeil({
   children,
@@ -48,7 +67,9 @@ export function BodyVeil({
   const [local, setLocal] = useState(false);
   const revealed = controlled ?? local;
 
-  if (revealed) return <>{children}</>;
+  if (revealed) {
+    return <VeilContext.Provider value={false}>{children}</VeilContext.Provider>;
+  }
 
   const reveal = (event: { preventDefault: () => void; stopPropagation: () => void }) => {
     // The veil is a decision, not a route: tapping it must not also open the
@@ -74,7 +95,7 @@ export function BodyVeil({
         style={{ filter: "blur(24px)", transform: "scale(1.06)" }}
         className="min-w-0 flex-1 overflow-hidden select-none"
       >
-        {children}
+        <VeilContext.Provider value={true}>{children}</VeilContext.Provider>
       </div>
       <button
         type="button"
