@@ -235,8 +235,14 @@ data class ReplyWizardState(
      * such id to wait for, so it never holds this up.
      */
     val uploadsComplete: Boolean
-        get() = uploadedIds.size == picked.size &&
-            (!isVideoComment || coverChoice is CoverChoice.None || coverMediaId != null)
+        get() = uploadedIds.size == picked.size && (!isVideoComment || coverSettled)
+
+    /**
+     * Whether the clip's face needs nothing more sent: none is wanted,
+     * or the one standing has its id.
+     */
+    val coverSettled: Boolean
+        get() = coverChoice is CoverChoice.None || coverMediaId != null
 
     /**
      * The stance pad is parked over the page, not a drawer.

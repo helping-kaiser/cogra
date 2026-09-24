@@ -1306,6 +1306,40 @@ class ComposeWizardViewModelTest {
     }
 
     /**
+     * A NEW FACE NEVER MOVES THE CLIP'S BYTES: the placement names the
+     * face at prepare, so a face chosen after the clip landed goes up on
+     * its own and the clip is not sent a second time.
+     */
+    @Test
+    fun aFaceChosenAfterTheClipLandedGoesUpAlone() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+        assertThat(media.order).containsExactly("video")
+
+        vm.onBack() // details -> cover
+        vm.onPickCoverFrame(0)
+        vm.onNext() // cover -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.order).containsExactly("video", "still").inOrder()
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun aJourneyWithNothingLeftToSendSendsNothing() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo(pickCover = true)
+        vm.onBack() // details -> cover
+        vm.onNext() // cover -> details, the same face standing
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+        assertThat(video.calls.count { it == "transcode" }).isEqualTo(1)
+    }
+
+    /**
      * AN ID BELONGS TO THE FACE IT WAS UPLOADED FOR. The author leaves
      * the stage with one face, steps back while it is still going up, and
      * chooses another; the first upload landing afterwards must not pose

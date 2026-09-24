@@ -71,9 +71,17 @@ internal class WizardUploader(
      * prepare, so the id has to exist by then rather than by the time
      * the clip goes up. [CoverChoice.None] is a settled answer rather
      * than a wait, so it skips straight to the clip's own bytes.
+     *
+     * A NEW FACE NEVER MOVES THE CLIP'S BYTES. The placement names the
+     * face at prepare, so a clip already on the server stays there while
+     * a face chosen afterwards — through the details door, or after
+     * stepping back — goes up on its own; and a journey with nothing left
+     * to send does nothing at all.
      */
     fun startVideoUpload() {
-        val clip = state.value.video ?: return
+        val current = state.value
+        val clip = current.video ?: return
+        if (clip.upload is AssetUpload.Done && current.coverSettled) return
         jobs.remove(clip.uri)?.cancel()
         jobs[clip.uri] = scope.launch {
             val choice = state.value.coverChoice
@@ -82,6 +90,7 @@ internal class WizardUploader(
                 else -> state.value.coverMediaId ?: uploadCover() ?: return@launch
             }
             state.update { it.withCoverIdFor(choice, coverId) }
+            if (state.value.video?.upload is AssetUpload.Done) return@launch
 
             state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(0)) }
             val processed = video.transcode(clip.uri, scale.videoMaxBytes) { percent ->

@@ -547,6 +547,67 @@ class ReplyWizardViewModelTest {
             .isEqualTo(vm.state.value.coverMediaId)
     }
 
+    /**
+     * AN ID BELONGS TO THE FACE IT WAS UPLOADED FOR: a face chosen after
+     * stepping back from the seal, while the previous one was still going
+     * up, must not inherit that upload's id when it lands.
+     */
+    @Test
+    fun aFaceReplacedWhileItsPredecessorUploadsNeverInheritsTheOldId() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onPickCoverFrame(0)
+        val gate = CompletableDeferred<Unit>()
+        media.stillGate = gate
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onSealBack()
+        vm.onPickCoverPicture("my-own.jpg")
+        gate.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+
+        media.stillGate = null
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(media.order.count { it == "still" }).isEqualTo(2)
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    /**
+     * A NEW FACE NEVER MOVES THE CLIP'S BYTES. The clip landed bare, and
+     * its transcoded copy went with the landing; a face chosen after
+     * stepping back still goes up — on its own, the clip left where it
+     * is — rather than being stranded for want of a copy it never needed.
+     */
+    @Test
+    fun aFaceChosenAfterTheClipLandedGoesUpAlone() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(media.order).containsExactly("clip")
+
+        vm.onSealBack()
+        vm.onPickCoverFrame(0)
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.order).containsExactly("clip", "still").inOrder()
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
     @Test
     fun aRefusedClipCarriesTheServersOwnWords() = runTest(dispatcher) {
         video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
@@ -729,5 +790,10 @@ class ReplyWizardViewModelTest {
         vm.onLeaveRequested()
 
         assertThat(vm.state.value.outcome).isEqualTo(ReplyOutcome.Signed("c1"))
+    }
+
+    private companion object {
+        /** A 16:9 clip — the shape whose cover row stands from the start. */
+        const val WIDE = 16f / 9f
     }
 }

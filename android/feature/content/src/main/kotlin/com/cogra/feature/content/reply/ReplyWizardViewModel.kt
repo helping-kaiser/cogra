@@ -285,15 +285,22 @@ class ReplyWizardViewModel @Inject constructor(
      * poster's id at prepare, so the id has to exist by then.
      * [CoverChoice.None] is a settled answer rather than a wait, so it
      * skips straight to the clip's own bytes.
+     *
+     * A NEW FACE NEVER MOVES THE CLIP'S BYTES. A clip already on the
+     * server stays there while a face chosen afterwards goes up on its
+     * own — which is also why the transcoded copy is only needed when
+     * the clip itself still has to be sent: it is dropped once the clip
+     * lands, and requiring it stranded a later face unsent.
      */
     private fun startVideoUpload() {
         val clip = _state.value.video ?: return
-        val processed = transcoded ?: return
-        val coverSettled = _state.value.coverChoice is CoverChoice.None || _state.value.coverMediaId != null
-        if (clip.upload is AssetUpload.Done && coverSettled) return
+        val clipLanded = clip.upload is AssetUpload.Done
+        if (clipLanded && _state.value.coverSettled) return
+        val processed = transcoded
+        if (!clipLanded && processed == null) return
         uploads.remove(clip.uri)?.cancel()
         uploads[clip.uri] = viewModelScope.launch {
-            _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
+            if (!clipLanded) _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
             val choice = _state.value.coverChoice
             val coverId = when (choice) {
                 CoverChoice.None -> null
@@ -302,29 +309,34 @@ class ReplyWizardViewModel @Inject constructor(
             // An id belongs to the face it was uploaded for: a face chosen
             // while this one was going up must not inherit its id.
             _state.update { if (it.coverChoice == choice) it.copy(coverMediaId = coverId) else it }
+            if (processed == null || _state.value.video?.upload is AssetUpload.Done) return@launch
+            sendClip(clip.uri, processed)
+        }
+    }
 
-            val sending = { progress: UploadProgress ->
-                uploadSession = progress.uploadId
-                _state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
+    /** The clip's own leg: its transcoded bytes, onto the resumable upload. */
+    private suspend fun sendClip(uri: String, processed: ProcessedVideo) {
+        val sending = { progress: UploadProgress ->
+            uploadSession = progress.uploadId
+            _state.update { it.withUpload(uri, AssetUpload.Sending(progress.percent)) }
+        }
+        // READY answers here at once — no extra request. `awaitReady`
+        // only starts polling for the backstop case, a PROCESSING
+        // asset (Android's own uploads are always within target).
+        when (val outcome = media.awaitReady(media.uploadVideo(processed, scale.destination, sending))) {
+            is Outcome.Success -> {
+                val resolved = outcome.value.toResolvedUpload(UploadFailure.REFUSED_VIDEO)
+                _state.update { it.withUpload(uri, resolved) }
+                clearTranscodedCacheUnlessRetryable(resolved, processed.path)
             }
-            // READY answers here at once — no extra request. `awaitReady`
-            // only starts polling for the backstop case, a PROCESSING
-            // asset (Android's own uploads are always within target).
-            when (val outcome = media.awaitReady(media.uploadVideo(processed, scale.destination, sending))) {
-                is Outcome.Success -> {
-                    val resolved = outcome.value.toResolvedUpload(UploadFailure.REFUSED_VIDEO)
-                    _state.update { it.withUpload(clip.uri, resolved) }
-                    clearTranscodedCacheUnlessRetryable(resolved, processed.path)
-                }
-                is Outcome.Refused -> _state.update {
-                    it.withUpload(
-                        clip.uri,
-                        AssetUpload.Failed(UploadFailure.REFUSED_VIDEO, outcome.errors.firstOrNull()?.message),
-                    )
-                }
-                is Outcome.Failed -> _state.update {
-                    it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
-                }
+            is Outcome.Refused -> _state.update {
+                it.withUpload(
+                    uri,
+                    AssetUpload.Failed(UploadFailure.REFUSED_VIDEO, outcome.errors.firstOrNull()?.message),
+                )
+            }
+            is Outcome.Failed -> _state.update {
+                it.withUpload(uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
             }
         }
     }

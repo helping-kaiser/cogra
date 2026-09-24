@@ -401,7 +401,14 @@ data class ComposeWizardState(
     val uploadsComplete: Boolean
         get() = picked.isNotEmpty() &&
             uploadedIds.size == picked.size &&
-            (!isVideoPost || coverChoice is CoverChoice.None || coverMediaId != null)
+            (!isVideoPost || coverSettled)
+
+    /**
+     * Whether the clip's face needs nothing more sent: none is wanted,
+     * or the one standing has its id.
+     */
+    val coverSettled: Boolean
+        get() = coverChoice is CoverChoice.None || coverMediaId != null
 
     /**
      * The body carries something publishable. The XOR is read here
