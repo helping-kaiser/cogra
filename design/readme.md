@@ -6143,7 +6143,14 @@ painted a frame.
   chosen, the taken frame 1 where none was; the COMPOSE WIZARD's
   own tiles are a different rule and always wear the clip's first
   frame, the chosen cover riding as the ringed inset only (the
-  video-cover round). No new boards; both rulings
+  video-cover round). **The rule holds at both scales** (jakob
+  2026-09-24, when the platforms' reply tiles diverged): the
+  reply composer's clip tile is an authoring tile like the
+  tray's — frame 0 as its face, the chosen frame as the ringed
+  inset — because a divergence between the two composers would
+  be invisible until it confused, and the inline cover row
+  already shows the chosen frame at full prominence right below
+  it. No new boards; both rulings
   land as contracts to the implementation session.
 
 ### The compose last-picture ruling — 2026-09-23
