@@ -6676,9 +6676,33 @@ Collective actor variant (§7); stickers, parked; general post audio, parked;
 and backlog item 34's container note — its chat chronicle is drawn (B1's
 `ChatHistory`), and its comment-redaction half stays owed where it was.
 
----
+### The indirect kinds are scope-served — 2026-09-24
 
-## 14. The canvases
+Backlog item 105's resolution (jakob, the fix session): the search
+rulings' three indirect kinds — messages, comments and offers — and
+api-spec's index were read against each other, and both survive
+because the 2026-08-28 ruling's own mechanics never asked for body
+search:
+
+- **Scope-served.** A message, comment or offer result exists only in
+  a **scoped** query (`@handle <text>`, `#tag <text>`): the remainder
+  matches name-class fields and titles — the scoped author's content
+  and the names of their acts' targets — joined through authorship.
+  **No body is ever indexed** for the global surface; the sheer mass
+  of body words would clog any default result mix, and a keyword
+  alone still surfaces nobody's conversation. In-chat body search
+  stays `chatSearch`'s, over plaintext only — encrypted bodies are
+  never searchable anywhere, since the backend holds ciphertext.
+- **All chats, never just the viewer's.** A scoped message result
+  reaches any plaintext chat — chats are public reads, so the scope
+  is the author, not the viewer's membership.
+- **The default mix carries the seven direct kinds.** Selecting an
+  indirect kind without a scope shows a quiet line pointing at the
+  scope operator instead of results (its string is a copy-voice
+  candidate, awaiting blessing).
+- `ExploreSearch` already draws exactly this — its rows are an
+  @-scoped query's indirect hits — so no board moves; api-spec gains
+  the scoped-join paragraph.
 
 The canonical tree draws one app and is graded as one thing. The editor
 it is reviewed in holds 200 files per canvas and publishes 16MB, and at
