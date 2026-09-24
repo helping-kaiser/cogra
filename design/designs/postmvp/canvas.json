@@ -15,7 +15,7 @@
       "x": 480,
       "y": 0,
       "w": 390,
-      "h": 820,
+      "h": 1180,
       "page": "push"
     },
     {
@@ -523,11 +523,155 @@
       "page": "chats"
     },
     {
+      "file": "ChatThreadReactions.dc.html",
+      "title": "A chat · opinions on its messages, the reaction trace",
+      "x": 0,
+      "y": 8232,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadReply.dc.html",
+      "title": "A chat · a reply, its quote on the foot and on the bubble",
+      "x": 480,
+      "y": 8232,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatMessageMenuOwn.dc.html",
+      "title": "A chat · your own message's acts, Remove among them",
+      "x": 960,
+      "y": 8232,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatMessageRemoveConfirm.dc.html",
+      "title": "A chat · removing your message, the think-twice dialog",
+      "x": 1440,
+      "y": 8232,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadRemoved.dc.html",
+      "title": "A chat · removed by its author, removed under the platform's rules",
+      "x": 1920,
+      "y": 8232,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadRecording.dc.html",
+      "title": "A chat · recording a voice note, slide to lock",
+      "x": 0,
+      "y": 9196,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadVoice.dc.html",
+      "title": "A chat · voice notes, readable and not",
+      "x": 480,
+      "y": 9196,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadSealedMedia.dc.html",
+      "title": "A chat · encrypted pictures, keyed and not",
+      "x": 960,
+      "y": 9196,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadPending.dc.html",
+      "title": "A chat · still settling, and a message that didn't land",
+      "x": 1440,
+      "y": 9196,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatThreadSentPost.dc.html",
+      "title": "A chat · a post sent into it",
+      "x": 1920,
+      "y": 9196,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatSendSheet.dc.html",
+      "title": "Send to a chat · what a post's share opens",
+      "x": 0,
+      "y": 10160,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatAskSheet.dc.html",
+      "title": "Asking to join · the request's sheet and its message",
+      "x": 480,
+      "y": 10160,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatNotifications.dc.html",
+      "title": "Notifications · the three chat kinds",
+      "x": 960,
+      "y": 10160,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatFeedCards.dc.html",
+      "title": "The feed · a chat card and a message card",
+      "x": 1440,
+      "y": 10160,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatSearchResults.dc.html",
+      "title": "Explore, searching · a chat among the results",
+      "x": 1920,
+      "y": 10160,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
+      "file": "ChatSaved.dc.html",
+      "title": "Saved · a chat message among what you kept",
+      "x": 0,
+      "y": 11124,
+      "w": 390,
+      "h": 844,
+      "page": "chats"
+    },
+    {
       "file": "MapPush.dc.html",
       "x": -1580,
       "y": 0,
       "w": 1160,
-      "h": 752,
+      "h": 911,
       "page": "push",
       "title": "Push notifications · flow map"
     },
@@ -545,7 +689,7 @@
       "x": -1870,
       "y": 0,
       "w": 1450,
-      "h": 4541,
+      "h": 6683,
       "page": "chats",
       "title": "Chats · flow map"
     }
@@ -589,6 +733,14 @@
       "y": 5032,
       "w": 560,
       "text": "CHATS GOVERNANCE — round B2 of the chats work, drawn 2026-09-23 and revised on jakob's canvas review 2026-09-24. The multi-voice acts, in messenger clothes: nothing here may look like a proposal. An act the actor's own say settles is INSTANT — a seal counting three things signed together, the change, its link and their own opinion for it. An act that needs more voices becomes a QUIET CARD IN THE THREAD at the moment it was proposed: a plain sentence, Disagree and Agree, and a count of the PEOPLE who agree — 2 of 5 so far. Both are real votes: every threshold reads what was cast, so a disagreement counts, and a decision whose against side crosses first FAILS for good — its outcome line says what stayed, as a passed one says what changed. No vote signs on a bare tap: each opens a small seal that says the vote in one sentence. A card's words open the DECISION WHOLE — what would change in full, the new picture included; every vote, who and which way; and your own, with Disagree instead and Take back your vote. The same decisions stand as rows under Open decisions on the details. THE COUNT CONVENTION, for review: cards count people and never show weight; the tally underneath is weighted by role, and the decision page shows both directions, with the arithmetic in geek mode. Nothing expires. Inviting is the inviter's own act, never a decision: a picker, then a seal counting one invitation per person. Joining is always the joiner's own record, one seal for three routes — open, invited, approved; an approval never joins anyone by itself. A request shows as a card the approver meets in the thread, with Approve. Role words open a sheet of the three roles; a version's removal is the chat's decision, and a removed version keeps its row under the chat's own mark.",
+      "page": "chats"
+    },
+    {
+      "id": "chats-integration",
+      "x": -340,
+      "y": 8232,
+      "w": 560,
+      "text": "CHATS INTEGRATION — round B3, drawn 2026-09-24, the round that closes the chats work. What a chat owes the rest of the product, and what the rest owes a chat. REACTIONS are the opinions already cast on a message: the faces aggregated with a count under the bubble, WhatsApp's shape, no new record and no emoji system; a tap opens Opinions on this. The foot takes a REPLY'S QUOTE, and a landed reply carries it. VOICE NOTES join as a chat-scale media kind: the mic stands where the arrow stands while the field is empty, hold to record with slide-to-lock, release to sign and send. AN ENCRYPTED MESSAGE ENCRYPTS ITS ATTACHMENTS on the device: a keyed reader sees the media with the quiet lock; a no-key reader gets a reserved tile with the lock and one friendly sentence — no expand to bytes, because cipher pixels are nothing, and no server path can ever process such a blob. A message PENDING shows whole, Still settling before its clock; one that expires leaves every reader's view and tells its author calmly. A REMOVED message is a mark where the bubble stood, and the author's removal never reads like the platform's. A POST'S SHARE opens Send to a chat first, the OS share one row away, and the sent post lands as a message citing it. The chat and the message become FEED CARDS; a chat is a SEARCH RESULT that opens its read surface for anyone; a message is SAVED like a comment. THREE NOTIFICATION KINDS — an invitation, a request awaiting you, your request approved — and push gains chat messages, which never write bell rows. ASK TO JOIN and INVITING each take an optional message, and an invited reader's explorer row says You're invited.",
       "page": "chats"
     }
   ],
