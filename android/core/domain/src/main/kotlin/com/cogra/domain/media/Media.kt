@@ -110,6 +110,20 @@ interface VideoProcessor {
     suspend fun coverFrames(uri: String, count: Int): List<VideoFrame>
 
     /**
+     * The clip's FIRST frame — the one playback starts on — shaped as a
+     * still exactly as an offered cover frame is.
+     *
+     * It is what a clip that skipped the cover step is stored with
+     * (design/readme.md "The feed-video rulings — 2026-09-23": "the
+     * first frame is stored, not derived"). [coverFrames] deliberately
+     * keeps away from the first frame, because an offered face that
+     * starts black is a poor offer; this is not an offer but the frame
+     * playback begins on, so a still of it can never differ from what
+     * the reader sees next. Null when no frame comes back.
+     */
+    suspend fun firstFrame(uri: String): ProcessedPicture?
+
+    /**
      * What the clip's header says, without decoding it.
      *
      * Null for anything that is not a readable video — which is how the
