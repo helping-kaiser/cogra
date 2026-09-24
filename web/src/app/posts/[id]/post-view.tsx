@@ -30,7 +30,14 @@ import { useNarrowShare } from "@/lib/ui/narrow-share";
 import { PageHeader } from "@/lib/ui/page-header";
 import { usePullToRefresh } from "@/lib/ui/pull-to-refresh";
 import { useScrollHost } from "@/lib/ui/scroll-host";
-import { galleryItems, hasVideo, payloadIsRedacted } from "@/lib/ui/post-media";
+import {
+  BodyRegion,
+  bodyIsSensitive,
+  galleryItems,
+  hasVideo,
+  payloadIsRedacted,
+  sensitiveSignature,
+} from "@/lib/ui/post-media";
 import { MediaViewer } from "@/lib/ui2/media/media-viewer";
 import { PinnedClip } from "@/lib/ui2/media/pinned-clip";
 import { PostCard } from "@/lib/ui/post-card";
@@ -287,6 +294,11 @@ export function PostView({
   // What survives is the skeleton the card draws: author, timestamp, thread
   // position, and the stance a reader can still take.
   const redacted = payloadIsRedacted(post);
+  // THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): the body veils as one and
+  // revealing moves nothing, so this is the same `sensitive` the card's own
+  // `BodyRegion` computes (`PostCard.tsx` — `!redacted && bodyIsSensitive`),
+  // read here too so the clip pinned above the card can share its veil.
+  const sensitive = !redacted && bodyIsSensitive(post);
   // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
   // the clip leaves the card body and pins above it, wearing the full
   // transport, and the card beneath is the post as it always reads. A post of
@@ -328,22 +340,35 @@ export function PostView({
       {/* THE CLIP PINS ABOVE THE CARD, edge to edge like the card's own media:
           the board stands it outside the detail column entirely
           (`PostDetailVideo.jsx:25-28`). */}
+      {/* THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive post's
+          clip veils IN PLACE, not demoted into the card, and ONE scope spans
+          both — `BodyRegion` keys the reveal on the post's own id and
+          sensitive signature, the same key the card's `BodyRegion` reads
+          (`PostCard.tsx`), so the shared store in `reveal.ts` answers for
+          both from one tap. */}
       {pinned && (
         <div className="-mx-6">
-          <PinnedClip
-            src={pinned.src}
-            mimeType={pinned.mimeType}
-            poster={pinned.poster}
-            altText={pinned.altText}
-            sourceRatio={pinned.sourceRatio}
-            durationMs={pinned.durationMs}
-            // The pinned clip's two routes into the viewer — the bar's
-            // fullscreen toggle and the clip's own tap (graph.json,
-            // `PostDetailVideo` via 19 and via 3). The clip is the post's one
-            // attachment, so the viewer opens on it.
-            onOpenViewer={() => setViewerAt(0)}
+          <BodyRegion
+            veiled={sensitive}
+            nodeId={post.id}
+            signature={sensitiveSignature(post)}
             testId="post-pinned-clip"
-          />
+          >
+            <PinnedClip
+              src={pinned.src}
+              mimeType={pinned.mimeType}
+              poster={pinned.poster}
+              altText={pinned.altText}
+              sourceRatio={pinned.sourceRatio}
+              durationMs={pinned.durationMs}
+              // The pinned clip's two routes into the viewer — the bar's
+              // fullscreen toggle and the clip's own tap (graph.json,
+              // `PostDetailVideo` via 19 and via 3). The clip is the post's one
+              // attachment, so the viewer opens on it.
+              onOpenViewer={() => setViewerAt(0)}
+              testId="post-pinned-clip"
+            />
+          </BodyRegion>
         </div>
       )}
       <div className="-mx-6">

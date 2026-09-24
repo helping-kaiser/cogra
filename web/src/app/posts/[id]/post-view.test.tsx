@@ -6,6 +6,7 @@ import { COMMENT_BODY_MAX_CHARS } from "@/lib/compose/reply-wizard";
 import { SENSITIVE_REASON_MAX_CHARS } from "@/lib/compose/wizard";
 import { createTokenStore } from "@/lib/session/token-store";
 import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
+import { forgetReveals } from "@/lib/ui2/media/reveal";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { startMswServer } from "@/test/msw";
@@ -291,6 +292,11 @@ describe("PostView", () => {
   beforeEach(() => {
     window.localStorage.clear();
     routerPush.mockClear();
+    // THE REVEAL IS A SESSION, A SUITE IS MANY SESSIONS (`reveal.ts`): every
+    // fixture in this file answers to the same post id, so a reveal one test
+    // clicks would otherwise stand for every later test that renders the
+    // same node id and sensitive signature.
+    forgetReveals();
   });
 
   // The narrow-share fold's own idiom (`post-card.test.tsx`): a test that
@@ -2050,6 +2056,12 @@ describe("PostView — references", () => {
     // Asking is the default; the tests that care about the dialog turn
     // it back on themselves.
     writeConfirmMultiAction(false);
+    // THE REVEAL IS A SESSION, A SUITE IS MANY SESSIONS (`reveal.ts`): this
+    // describe is its own top-level suite, sibling to `PostView` above, so
+    // it needs its own reset — a reveal one of its tests clicks would
+    // otherwise stand for every later test sharing the fixture's post id
+    // and sensitive signature (`the gallery`, below).
+    forgetReveals();
   });
 
   function referenceWrites(count: number) {
@@ -2243,6 +2255,58 @@ describe("PostView — references", () => {
         await screen.findByTestId("post-pinned-clip");
         expect(screen.getByTestId("post-pinned-clip-media-transport")).toBeInTheDocument();
         expect(screen.queryByTestId("post-pinned-clip-media-sound")).toBeNull();
+        // An unmarked post pins no veil over its clip.
+        expect(screen.queryByTestId("post-pinned-clip-veil")).toBeNull();
+      });
+
+      // THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive video
+      // post's clip veils IN PLACE — never demoted into the card — and ONE
+      // scope spans the clip and the card body, sharing the post's own
+      // reveal (`reveal.ts`) the way the card's own `BodyRegion` already
+      // does.
+      it("veils the pinned clip in place, mounted but wearing no transport or sound disc", async () => {
+        server.use(
+          ...withBody({
+            description: "One rubbing includes a dead seabird.",
+            attachments: [clip("m1")],
+            attachmentsStatus: "SENSITIVE",
+          }),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        await screen.findByTestId("post-pinned-clip-veil");
+        // Still mounted under the veil, the same contract `BodyVeil` keeps
+        // for every other veiled body — revealing must move nothing.
+        expect(screen.getByTestId("post-pinned-clip")).toBeInTheDocument();
+        // Nothing plays beneath a veil (backlog item 103): no transport bar
+        // to operate and no sound disc for a clip that cannot claim playback.
+        expect(screen.queryByTestId("post-pinned-clip-media-transport")).toBeNull();
+        expect(screen.queryByTestId("post-pinned-clip-media-sound")).toBeNull();
+        // The card's own body veils too — the same post, one sensitive state.
+        expect(screen.getByTestId("post-veil")).toBeInTheDocument();
+      });
+
+      it("answers one reveal for the pinned clip and the card together", async () => {
+        server.use(
+          ...withBody({
+            description: "One rubbing includes a dead seabird.",
+            attachments: [clip("m1")],
+            attachmentsStatus: "SENSITIVE",
+          }),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        const veil = await screen.findByTestId("post-pinned-clip-veil");
+        fireEvent.click(within(veil).getByRole("button"));
+
+        // The one tap on the clip's own face lifted the card's veil too.
+        expect(screen.queryByTestId("post-pinned-clip-veil")).toBeNull();
+        expect(screen.queryByTestId("post-veil")).toBeNull();
+        expect(screen.getByTestId("post-description")).toHaveTextContent(
+          "One rubbing includes a dead seabird.",
+        );
+        // Revealed, the clip stands with its ladder's second rung back.
+        expect(screen.getByTestId("post-pinned-clip-media-transport")).toBeInTheDocument();
       });
 
       it("leaves a post of pictures exactly where it was", async () => {
