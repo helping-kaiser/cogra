@@ -45,17 +45,7 @@ export function Screen() {
     <>
       <WizardHeader title="What you sign" leaveLabel="Leave — nobody is invited" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <ChatDisc image="post-photo.jpg" size={64} />
-          <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
-              Coast walkers
-            </span>
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-              Inviting two people into the chat.
-            </span>
-          </span>
-        </div>
+        <ChatSealSubject image="post-photo.jpg" name="Coast walkers" line="Inviting two people into the chat." />
 
         <ActsCard
           rows={[{ label: "Invitations", value: "Wren Aliyev, Nadia Rask", count: "2", countNoun: "invitation" }]}

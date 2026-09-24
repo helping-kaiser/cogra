@@ -2370,6 +2370,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="How signing works"', tag: "button" },
     { n: 2, find: ">Sign and send</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: ">Adjust</button>", tag: "button" },
   ],
   ChatsHelp: [
     { n: 1, find: ">Close</button>", tag: "button" },
@@ -2406,6 +2407,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: ">Sign and start the chat</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Your opinion on Low-tide walks', tag: "button" },
+    { n: 6, find: ">Choose your opinion on Low-tide walks</button>", tag: "button" },
   ],
 
   // ── The chat details round (post-MVP) ───────────────────────────────────
@@ -2548,6 +2551,41 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="How signing works"', tag: "button" },
     { n: 2, find: ">Sign and join</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: 'aria-label="Your opinion on Night fishing crew', tag: "button" },
+    { n: 4, find: ">Choose your opinion on Night fishing crew</button>", tag: "button" },
+  ],
+  // The pad over a seal marks only the pad's own controls, `PadStanding`'s way;
+  // the seal beneath is under the wash.
+  ChatJoinSealPad: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+    { n: 5, find: ">Walk it back</button>", tag: "button" },
+  ],
+  ChatMessagePad: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+  ],
+  // The opinions sheet's rows split person and value (`OpinionsRowDoors`'
+  // grammar), marked on the FIRST row, the repeated-element convention.
+  ChatMessageOpinions: [
+    { n: 1, find: ">Sol Ferreira</span>", tag: "button" },
+    { n: 2, find: 'aria-label="See how this opinion built"', tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ChatThreadRecordingLocked: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: ">Describe</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Delete the recording"', tag: "button" },
+    { n: 5, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 6, find: 'aria-label="Pause the recording"', tag: "button" },
+    { n: 7, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 9, find: ">Show the encrypted text</button>", tag: "button" },
   ],
   ChatThreadRequested: [
     { n: 1, find: 'aria-label="Back to all chats"', tag: "a" },
@@ -2624,7 +2662,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
     { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
     { n: 3, find: 'aria-label="Play — ', tag: "button", all: true },
-    { n: 4, find: 'aria-label="Position in the voice message"', tag: "span", all: true },
+    { n: 4, find: 'aria-label="Seek"', tag: "div", all: true },
     { n: 5, find: 'aria-label="Encrypt end to end"', tag: "button" },
     { n: 6, find: 'data-field="Message"', tag: "div" },
     { n: 7, find: 'aria-label="Record a voice message"', tag: "button" },
@@ -2678,7 +2716,7 @@ Object.assign(FLOW_MARKERS, {
   ChatThreadSentPost: [
     { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
     { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
-    { n: 3, find: 'aria-label="Sunday at the tide market — ', tag: "button" },
+    { n: 3, find: ">Sunday at the tide market<", tag: "button" },
     { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
     { n: 5, find: 'data-field="Message"', tag: "div" },
     { n: 6, find: 'aria-label="Record a voice message"', tag: "button" },
@@ -2701,6 +2739,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'data-field="Message"', tag: "div" },
     { n: 3, find: ">Sign and ask</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: 'aria-label="Your opinion on Harbour office', tag: "button" },
+    { n: 5, find: ">Choose your opinion on Harbour office</button>", tag: "button" },
   ],
   ChatNotifications: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -2710,16 +2750,25 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">@ada commented on your post</span>", tag: "button" },
     { n: 5, find: ">@tobias replied to your comment</span>", tag: "button" },
   ],
+  // Three real `PostCard`s: each card's own door (its text link) takes its own
+  // number because each lands somewhere different; the affordances every card
+  // repeats — the face, the score, the comments, the share, the ⋮ — are one
+  // number each across all three (`all`), the per-post convention.
   ChatFeedCards: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
-    { n: 2, find: 'aria-label="Sea wall market — open the chat"', tag: "button" },
-    { n: 3, find: 'aria-label="Give your opinion on Sea wall market"', tag: "button" },
-    { n: 3, find: ">Choose your opinion on Sea wall market</button>", tag: "button" },
-    { n: 4, find: ">Join</button>", tag: "button" },
-    { n: 5, find: 'aria-label="In Slipway repairs — open the chat at this message"', tag: "button" },
-    { n: 6, find: 'aria-label="Give your opinion on Juno Baptiste', tag: "button" },
-    { n: 6, find: ">Choose your opinion on Juno Baptiste", tag: "button" },
-    { n: 7, find: ">Open in the chat</button>", tag: "button" },
+    { n: 2, find: ">Sea wall market</h2>", tag: "a" },
+    { n: 3, find: ">Bring gloves", tag: "a" },
+    { n: 4, find: '<a href="/u/', tag: "a", all: true },
+    { n: 5, find: 'aria-label="Give your opinion on', tag: "button", all: true },
+    { n: 5, find: ">Choose your opinion on", tag: "button", all: true },
+    { n: 6, find: ">Post score</span>", tag: "button", all: true },
+    { n: 7, find: 'aria-label="4 comments"', tag: "button" },
+    { n: 7, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 7, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 8, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 9, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 10, find: ">Salt maps of the coast road —", tag: "a" },
+    { n: 11, find: '<a href="/t/', tag: "a", all: true },
   ],
   ChatSearchResults: [
     { n: 1, find: "harbour", tag: "div" },

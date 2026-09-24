@@ -1,15 +1,17 @@
 /* SEND TO A CHAT — what a post's share opens once chats exist (round B3 of the
    chats work, the integration round; backlog item 23, ruled in 2026-09-24).
 
-   THE SHARE ACT GAINS THE CHAT PATH, AND THE PATH LEADS. Backlog item 23
-   recorded that sending a post into a chat "likely ranks above sharing out of
-   the network entirely" (Instagram's send arrow), and jakob ruled it into the
-   share act rather than onto the action row: the share glyph keeps its slot,
-   and what it opens becomes this sheet — the reader's chats first, the
-   platform's own share one row away as `Share outside CoGra`. THE LANE'S CALL,
-   FLAGGED: the OS share sheet moves one tap deeper for every share, the price
-   of the chat path being the first thing a share offers. The sheet's head row
-   is `ChatPicker`'s head-row grammar (`New group chat` there).
+   THE SHARE ACT ALWAYS OPENS THIS SHEET (jakob's ruling, the fix pass,
+   2026-09-24 — a revision of the reel round's "one tap to the platform's own
+   sheet"). Backlog item 23 recorded that sending a post into a chat "likely
+   ranks above sharing out of the network entirely" (Instagram's send arrow);
+   jakob ruled the two into ONE act: every share glyph, on every card, detail
+   and reel, opens `Send to a chat`, and the platform's own share lives INSIDE
+   it as `Share outside CoGra`. There is no second symbol: the glyph is the
+   SHARE glyph everywhere (`ShareButton`), and the send arrow stays the seal's
+   alone — the one on this sheet's foot is the seal that signs the message. The
+   sheet's head row is `ChatPicker`'s head-row grammar (`New group chat`
+   there).
 
    A COMPACT CHAT PICKER: the reader's own chats in their list's order, each a
    choice row — the chat's disc, its name — so one pick is one chat. ONE CHAT
@@ -29,10 +31,12 @@
    Coast walkers` with `Open`, the staged-act snackbar's shape — the chat is
    one tap away, not forced on the reader mid-scroll (`ChatThreadSentPost`).
 
-   THE MIGRATION NOTE: the share glyph lives on canonical's cards and detail,
-   where its edge is the OS share sheet today. At migration that edge becomes
-   this sheet on every board that draws the glyph; until then the post beneath
-   is this tree's excerpt of the detail surface. */
+   THE POST BENEATH IS THE REAL DETAIL SURFACE: `DetailHeader` with the post's
+   ⋮ and the detail `PostCard`, inert under the sheet.
+
+   THE MIGRATION NOTE: the share glyph lives on canonical's cards, detail and
+   reel, where its edge is the OS share sheet today. At migration that edge
+   becomes this sheet on every board that draws the glyph. */
 export const FRAME = { width: 390, height: 844 };
 
 const SEND_CHATS = [
@@ -55,7 +59,11 @@ function SendChatLabel({ chat }) {
 export function Screen() {
   return (
     <>
-      <OpinionPostDetail />
+      <DetailHeader items={OWN_POST_MENU} />
+      <DetailColumn>
+        <PostCard {...SALT_MAPS_CURRENT} timestamp="12 September" variant="detail" score="9.10" comments={2} opinions={5} license={PUBLIC_DOMAIN} onOpenOpinions={() => {}} />
+      </DetailColumn>
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
       <BottomSheet open ariaLabel="Send to a chat" maxHeight="88%">
         <SheetTitle>Send to a chat</SheetTitle>
         <SearchBar placeholder="Search your chats" />

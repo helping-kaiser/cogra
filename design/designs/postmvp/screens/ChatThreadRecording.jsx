@@ -11,15 +11,15 @@
 
    THREE WAYS OUT, and only release signs. Release — the note is signed and
    sent, so the mic is a seal exactly as the arrow is. Slide left — the
-   recording is let go and nothing is signed. Slide up — the LOCKED state:
-   the length keeps running and the foot offers `Cancel`, `Describe` and the
-   send arrow as buttons, which is also where a plain tap on the mic starts
-   (the non-drag equivalent every drag gesture owes, readme §10). Stated, not
-   drawn.
+   recording is let go and nothing is signed. Slide up — the LOCKED state
+   (`ChatThreadRecordingLocked`): delete, the lock, pause and the send arrow as
+   buttons, which is also where a plain tap on the mic starts (the non-drag
+   equivalent every drag gesture owes, readme §10).
 
    THE QUIET LINE SAYS WHETHER THE NOTE WILL BE ENCRYPTED, because the lock
    toggle leaves the row while the finger is down and the chat's sticky choice
-   still decides. Coast walkers sits at plaintext, the fresh chat's default.
+   still decides a released note (jakob's ruling, the fix pass). Coast walkers
+   sits at plaintext, the fresh chat's default.
 
    THE THREAD ABOVE IS THE ORDINARY ONE, inert under the finger. */
 export function Screen() {

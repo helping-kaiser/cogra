@@ -1,4 +1,4 @@
-/* PUSH NOTIFICATIONS · the kinds — what the settings row opens
+/* PUSH NOTIFICATIONS · the kinds and their defaults — what the settings row opens
    (docs/implementation/notifications.md; jakob's rulings 2026-09-22, and the
    chats integration round's revision 2026-09-24).
 

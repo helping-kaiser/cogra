@@ -27,49 +27,6 @@
 
    THE FOOT IS EMPTY, SO IT CARRIES THE MIC (`MicSeal`): the voice note stands
    where the arrow stands until the first character is typed. */
-const MIRA_QUESTION_OPINIONS = [
-  { pDirected: 0.2, pInterest: 0.6 },
-  { pDirected: 0.25, pInterest: 0.95 },
-  { pDirected: 0.15, pInterest: 0.15 },
-];
-const OWN_CRUST_OPINIONS = [
-  { pDirected: 0.55, pInterest: 0.2 },
-  { pDirected: 0.6, pInterest: 0.25 },
-];
-const JUNO_BOOTS_OPINIONS = [{ pDirected: 0.95, pInterest: 0.9 }];
-const MIRA_SIX_OPINIONS = [
-  { pDirected: 0.55, pInterest: 0.2 },
-  { pDirected: 0.9, pInterest: 0.25 },
-  { pDirected: 0.5, pInterest: 0.25 },
-  { pDirected: 0.6, pInterest: 0.65 },
-  { pDirected: 0.15, pInterest: 0.2 },
-];
-
 export function Screen() {
-  return (
-    <>
-      <ChatThreadHeader name="Coast walkers" image="post-photo.jpg" />
-      <ChatThreadColumn>
-        <DayDivider>21 September</DayDivider>
-        <ChatBubble author={CHAT_KEL} when="19:02" sealed>
-          <ChatSealedNotice />
-        </ChatBubble>
-        <DayDivider>22 September</DayDivider>
-        <ChatBubble author={CHAT_MIRA} when="21:10" trace={MIRA_QUESTION_OPINIONS}>
-          Low tide's at six tomorrow — anyone walking the flats?
-        </ChatBubble>
-        <ChatBubble own when="21:31" trace={OWN_CRUST_OPINIONS}>
-          Crust held all the way past the slipway today.
-        </ChatBubble>
-        <DayDivider>23 September</DayDivider>
-        <ChatBubble author={CHAT_JUNO} when="08:05" sealed id="boots" trace={JUNO_BOOTS_OPINIONS}>
-          I'll bring the spare boots — tell me your size.
-        </ChatBubble>
-        <ChatBubble author={CHAT_MIRA} when="08:40" trace={MIRA_SIX_OPINIONS}>
-          Six it is. Meet at the harbour office.
-        </ChatBubble>
-      </ChatThreadColumn>
-      <ChatFoot />
-    </>
-  );
+  return <ReactionsThreadBody />;
 }

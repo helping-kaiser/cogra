@@ -18,9 +18,10 @@
    what the approver reads on the card (`ChatRequestApprove`) and in the
    notification row (`ChatNotifications`).
 
-   `Your opinion` IS THE REQUEST'S OWN STANCE, defaulted low like every normal
-   act and read, not edited — `ChatJoinSeal`'s row and its open question,
-   carried.
+   `Your opinion` IS THE REQUEST'S OWN STANCE, AND IT IS SET HERE (jakob's
+   ruling, the fix pass): the row holds `StanceControl` itself (`SealStance`),
+   defaulted low like every normal act, a tap opening the ordinary pad over the
+   sheet (`ChatJoinSealPad`'s master).
 
    THE ONE LINE says what a requester cannot guess: the request is public, and
    joining stays theirs — an approval never adds anyone (chats.md §4).
@@ -39,7 +40,7 @@ export function Screen() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 24px" }}>
           <ActsCard rows={[{ label: "Asking to join", value: "Harbour office", count: "1", countNoun: "request" }]} total="1 thing, signed" />
           <TextField label="Message" corner="Optional — the chat can read it" rows={1} value={HARBOUR_REQUEST_MESSAGE} />
-          <FactRow label="Your opinion" value={<OwnStanceReadout pDirected={0.1} />} last />
+          <FactRow label="Your opinion" value={<SealStance target="Harbour office" />} last />
           <QuietNote>Your request is public. Once it's approved, joining is yours to do.</QuietNote>
           <Button style={{ width: "100%" }}>Sign and ask</Button>
         </div>

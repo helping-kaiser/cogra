@@ -1,13 +1,13 @@
 /* A CHAT WITH VOICE NOTES — readable and not (round B3 of the chats work, the
    integration round; jakob 2026-09-24).
 
-   THE VOICE BUBBLE (`VoiceNote`): play, a scrub line, the length. The play
-   glyph sits in the bubble's own ink; the line is a hairline track whose
-   played part and thumb take `primary`; the length is tabular `label-small`.
-   A voice bubble takes the full media width, so every note's line is one
-   length to the thumb whatever the note's duration. The bubble keeps its
-   clock and, where encrypted, its quiet lock — a voice note is a message like
-   any other.
+   THE VOICE BUBBLE IS COMPACT (`VoiceNote`, jakob's canvas review, the fix
+   pass: "the tall block goes"): one 40px band — the play glyph in the bubble's
+   own ink, the video transport's own `Timeline` master on its surface tone,
+   the length under the line's start and the bubble's clock, with its quiet
+   lock where encrypted, at the same line's end. No separate clock line. A
+   voice bubble takes the full media width, so every note's line is one length
+   to the thumb whatever the note's duration.
 
    THREE FACES IN ONE FIXTURE:
    · PLAINTEXT — Mira's 0:42, heard by anyone who reads the chat;
@@ -39,12 +39,8 @@ export function Screen() {
           <NoKeyMedia kind="voice" />
         </ChatBubble>
         <DayDivider>23 September</DayDivider>
-        <ChatBubble author={CHAT_MIRA} when="07:31" fill>
-          <VoiceNote length="0:42" description="Mira on the tide: low water at six, the crust firm to the second marker" />
-        </ChatBubble>
-        <ChatBubble own when="07:40" sealed fill>
-          <VoiceNote length="0:18" />
-        </ChatBubble>
+        <ChatBubble author={CHAT_MIRA} when="07:31" voice={{ length: "0:42", description: "Mira on the tide: low water at six, the crust firm to the second marker" }} />
+        <ChatBubble own when="07:40" sealed voice={{ length: "0:18" }} />
         <ChatBubble author={CHAT_JUNO} when="07:52">
           Heard both — six at the harbour office.
         </ChatBubble>
