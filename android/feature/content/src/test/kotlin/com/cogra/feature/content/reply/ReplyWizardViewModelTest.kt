@@ -716,6 +716,58 @@ class ReplyWizardViewModelTest {
         assertThat(vm.state.value.canSign).isTrue()
     }
 
+    /**
+     * `ReplyVideoFailed`'s Retry: a fault is not an answer, so the clip
+     * goes up again on its own journey — not through the picture
+     * pipeline, which cannot read a video.
+     */
+    @Test
+    fun aFailedClipsRetryRunsTheClipsOwnJourney() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
+        media.clip = Outcome.Failed(IOException("down"))
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat((vm.state.value.picked.single().upload as AssetUpload.Failed).reason)
+            .isEqualTo(UploadFailure.TRANSPORT)
+
+        media.clip = Outcome.Success(ScriptedMedia.asset("v1"))
+        vm.onRetryUpload("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(media.order).containsExactly("clip", "clip")
+    }
+
+    /** A frame 1 lost to the network is retried with the clip, and extracted again. */
+    @Test
+    fun aFirstFrameLostToTheNetworkIsRetriedWithTheClip() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = TALL)
+        media.still = Outcome.Failed(IOException("down"))
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val failed = vm.state.value.picked.single().upload as AssetUpload.Failed
+        assertThat(failed.reason).isEqualTo(UploadFailure.TRANSPORT)
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        assertThat(media.order).doesNotContain("clip")
+
+        media.still = Outcome.Success(ScriptedMedia.asset("m1"))
+        vm.onRetryUpload("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(video.firstFrameAsks).isEqualTo(2)
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+    }
+
     @Test
     fun aRefusedClipCarriesTheServersOwnWords() = runTest(dispatcher) {
         video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)

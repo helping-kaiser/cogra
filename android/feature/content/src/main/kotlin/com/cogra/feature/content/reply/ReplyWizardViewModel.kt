@@ -238,6 +238,13 @@ class ReplyWizardViewModel @Inject constructor(
     fun onRetryUpload(uri: String) {
         val asset = _state.value.picked.firstOrNull { it.uri == uri } ?: return
         if (asset.upload is AssetUpload.Running) return
+        // A clip retries its own journey — its face, then its bytes —
+        // never the picture pipeline, which cannot read a video and so
+        // turned every clip retry into an "unreadable picture".
+        if (asset.isVideo) {
+            startVideoUpload()
+            return
+        }
         viewModelScope.launch { upload(uri, asset.sourceRatio ?: processor.aspectRatio(uri)) }
     }
 
