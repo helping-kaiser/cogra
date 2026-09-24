@@ -1172,6 +1172,15 @@
       "page": "media"
     },
     {
+      "file": "PostDetailVideoSensitive.dc.html",
+      "title": "Post · a video, sensitive and unrevealed",
+      "x": 1440,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
       "file": "ReaderPostMenu.dc.html",
       "title": "Post · the reader's menu",
       "x": 1920,

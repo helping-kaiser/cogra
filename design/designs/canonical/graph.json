@@ -1436,6 +1436,23 @@
     { "from": "PostDetailVideo", "via": 19, "kind": "advance", "label": "full screen", "to": [{ "board": "ViewerVideo", "case": "the transport's own way into the viewer — the clip tap is the other" }] },
     { "from": "PostDetailVideo", "via": 20, "kind": "advance", "label": "opinions on this post", "to": [{ "board": "PostOpinions", "case": "the same sheet, over this post (master board)" }] },
 
+    { "from": "PostDetailVideoSensitive", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back" }] },
+    { "from": "PostDetailVideoSensitive", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
+    { "from": "PostDetailVideoSensitive", "via": 3, "kind": "advance", "label": "the pinned clip's veil face", "to": [{ "board": "PostDetailVideo", "case": "the reveal — pinned clip and card unveil together, one SensitiveScope answering for both" }] },
+    { "from": "PostDetailVideoSensitive", "via": 4, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
+    { "from": "PostDetailVideoSensitive", "via": 5, "kind": "advance", "label": "the card's veil (Show)", "to": [{ "board": "PostDetailVideo", "case": "the reveal — pinned clip and card unveil together, one SensitiveScope answering for both" }] },
+    { "from": "PostDetailVideoSensitive", "via": 6, "kind": "advance", "label": "tags and references", "to": [{ "board": "RefsSheet" }] },
+    { "from": "PostDetailVideoSensitive", "via": 7, "kind": "advance", "label": "opinions on this post", "to": [{ "board": "PostOpinions", "case": "the same sheet, over this post (master board)" }] },
+    { "from": "PostDetailVideoSensitive", "via": 8, "kind": "advance", "label": "stance face", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }, { "board": "GuestGate", "case": "signed out — the join prompt over the post (master)" }] },
+    { "from": "PostDetailVideoSensitive", "via": 9, "kind": "detour", "label": "Post Score", "to": [{ "board": "FeedEntry" }] },
+    { "from": "PostDetailVideoSensitive", "via": 10, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
+    { "from": "PostDetailVideoSensitive", "via": 11, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "PostDetailVideoSensitive", "via": 12, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
+    { "from": "PostDetailVideoSensitive", "via": 13, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
+    { "from": "PostDetailVideoSensitive", "via": 14, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "PostDetailVideoSensitive", "via": 15, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "Wallet" }] },
+    { "from": "PostDetailVideoSensitive", "via": 16, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+
     { "from": "ViewerPicture", "via": 1, "kind": "back", "label": "close the viewer (X)", "to": [{ "terminal": "back", "case": "the X, or a swipe down" }] },
     { "from": "ViewerPicture", "via": 2, "kind": "detour", "label": "the viewer's pager", "to": [{ "terminal": "self", "case": "swipe — the same set the card pages, the dots reading position" }] },
 
