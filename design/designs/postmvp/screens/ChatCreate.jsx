@@ -44,12 +44,7 @@ export function Screen() {
       <PageHeader title="New group chat" backHref="#" backLabel="Back to the people you picked" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span
-            aria-hidden="true"
-            style={{ flex: "none", width: 64, height: 64, display: "grid", placeItems: "center", borderRadius: "var(--radius-full)", background: "var(--surface-container-high)", color: "var(--text-secondary)" }}
-          >
-            <Icon name="forum" size={28} />
-          </span>
+          <ChatDisc size={64} />
           <Button variant="outline" size="sm">Choose a picture</Button>
         </div>
         <TextField label="Name" corner="Optional" value="Low-tide walks" />
