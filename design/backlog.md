@@ -3444,6 +3444,25 @@ but autoplay-on-unveil vs cover-at-rest-on-unveil is a real choice,
 and preload is a second knob. Implementation is trivial once ruled
 (gate autoplay/preload on the veil state). Needs jakob.
 
+### 104 · The vertical pick caption promises a step that never comes · *design* · **ruled + recorded 2026-09-24**
+
+Surfaced by the implementation session's Android stored-frame work
+(the filing PR, #845, was closed unmerged, so the item lands here
+already ruled): `ComposePickVideo`'s tray caption — "A video is
+the whole post. Its cover comes next." — is untrue on the vertical
+path, where the shape keys the cover step out of the walk and the
+device takes frame 1 silently (readme §13, the stored first
+frame).
+
+**Ruled (jakob 2026-09-24): the vertical pick wears the
+already-blessed trim** — `A video is the whole post.` (blessed
+2026-09-14 as the edit's trim) — because the second sentence
+exists to preview the cover step, and the vertical path has none.
+No new line is minted. Recorded in copy-voice's staging family,
+the `ComposePickVideo` docblock, and the `PickTray` contract; the
+drawn board is the landscape case and stands. The client caption
+swap is the implementation session's, relayed as a contract.
+
 ### 105 · Search results the index cannot serve · *design + docs* · **open**
 
 Found by the chats integration lane 2026-09-24: canonical
