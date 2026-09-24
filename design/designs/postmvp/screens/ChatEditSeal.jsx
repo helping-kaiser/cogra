@@ -9,7 +9,7 @@
 
    THREE THINGS, SIGNED TOGETHER (jakob 2026-09-23, the fix pass — the
    founding seal's exact precedent). A change to a chat's metadata is always a
-   decision, even a solo admin's: the default map's `decision:set:metadata`
+   decision, even a solo admin's: the default map's ``decision:set:metadata``
    gate is > 50% of the weighted cast with a 10% quorum (chats.md §5), so the
    change is a proposal that passes on its proposer's own ballot. The reader
    therefore signs three records, and the card counts all three:

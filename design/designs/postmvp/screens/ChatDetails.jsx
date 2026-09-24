@@ -32,7 +32,7 @@
 
    EDIT CHAT FOLLOWS THE GOVERNANCE MAP, NOT A ROLE. Whether a reader may
    propose a change to the chat's name, picture and words is
-   `decision:set:metadata`'s eligibility — under the default map every active
+   ``decision:set:metadata``'s eligibility — under the default map every active
    member (chats.md §5) — so the button shows wherever the map makes the
    reader eligible and is absent wherever it does not. This fixture's reader
    is the founder and admin, for whom it is drawn present. Whether their voice

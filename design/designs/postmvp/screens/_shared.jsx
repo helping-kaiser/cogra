@@ -1887,7 +1887,7 @@ function ChatEventRow({ who, src, when, reason, children }) {
 /* THE DECISIONS CHAT — Salt-crust rubbings, where the reader is a plain
    member. The fixture moved off Coast walkers ON PURPOSE: there the reader is
    the founder and admin, and an admin's own say clears the metadata gate in
-   any chat this size (`decision:set:metadata`: > 50% of the cast, a 10% quorum
+   any chat this size (``decision:set:metadata``: > 50% of the cast, a 10% quorum
    — 5 of Coast walkers' 12 is 42%), so the reader's own pending change the
    round needs cannot honestly stand there. Here the reader weighs 1.
 
@@ -1903,7 +1903,7 @@ function ChatEventRow({ who, src, when, reason, children }) {
      still short. Juno agreeing would carry it (9 cast, all for); Tobias
      disagreeing would not end it (7 cast, 4 for and 3 against, neither side at
      two thirds).
-   · THE CHANGE (`decision:set:metadata`, > 50% of the cast, ≥ 10% quorum): a
+   · THE CHANGE (``decision:set:metadata``, > 50% of the cast, ≥ 10% quorum): a
      new name, a new picture and a new description in one decision. All six
      have a say, 14 by role; the quorum is 1.4. The reader (1), Ada (1) and Kel
      (1) agree; Mira (3) disagrees. 6 cast, past the quorum, and it stands at
