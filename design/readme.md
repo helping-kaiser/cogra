@@ -6098,11 +6098,19 @@ painted a frame.
   veiled clip sits fully out of the stage rotation — no playback,
   no sound-disc presence — because the veil is the reader's
   declared not-yet, and a clip playing behind a blur the reader
-  chose contradicts it. Unveiling re-elects the surface's stage
-  exactly as a sheet's dismissal does, so the unveiled clip
-  autoplays iff it wins — no knob of its own. Preloading stays
-  on: it is invisible, leaks nothing the veil hides, and makes
-  the unveil instant.
+  chose contradicts it. **The unveil is an eligibility change,
+  not a suspension lift** (jakob 2026-09-24, sharpened when the
+  first build read it as the sheet's from-empty re-election): a
+  sheet suspends the whole surface's stage, so its dismissal
+  decides from empty — but the veil never stopped the surface's
+  incumbent, so the unveiled clip joins the rotation exactly as a
+  clip scrolling into view does: it changes nothing while an
+  incumbent still qualifies, and takes the stage by the ordinary
+  law when the stage is empty or next re-evaluates. Anything else
+  could move playback between two *other* clips on an unveil,
+  which no reader asked for. Preloading stays on: it is
+  invisible, leaks nothing the veil hides, and makes the unveil
+  instant.
 - **The first frame is stored, not derived.** *"The coverless
   clip's face is its first frame"* was already the rule; what made
   it a 1–3s empty box in practice was that no still existed and
@@ -6110,7 +6118,13 @@ painted a frame.
   authoring fact is literal: on the vertical path, where the cover
   step is skipped, the device **silently extracts frame 1 and
   uploads it as the clip's still** — the frame-picker's own
-  extraction machinery, run without the step. Reading surfaces are
+  extraction machinery, run without the step. **Frame 1 means the
+  clip's frame 0, strictly** (jakob 2026-09-24, ruled when the
+  platforms diverged): a still taken from ~1s into the clip is a
+  cover *in* the video rather than the start of it, so playback
+  visibly jumps off it — the exact flash this ruling exists to
+  kill. A black or blurry opening frame is the clip's honest face,
+  and an author who wants a prettier one chooses a cover. Reading surfaces are
   always handed a stored still, coverless or not, and a loading
   clip loads exactly as a loading picture does. This cannot
   reintroduce the flash the no-cover ruling guards against: the
@@ -6676,9 +6690,33 @@ Collective actor variant (§7); stickers, parked; general post audio, parked;
 and backlog item 34's container note — its chat chronicle is drawn (B1's
 `ChatHistory`), and its comment-redaction half stays owed where it was.
 
----
+### The indirect kinds are scope-served — 2026-09-24
 
-## 14. The canvases
+Backlog item 105's resolution (jakob, the fix session): the search
+rulings' three indirect kinds — messages, comments and offers — and
+api-spec's index were read against each other, and both survive
+because the 2026-08-28 ruling's own mechanics never asked for body
+search:
+
+- **Scope-served.** A message, comment or offer result exists only in
+  a **scoped** query (`@handle <text>`, `#tag <text>`): the remainder
+  matches name-class fields and titles — the scoped author's content
+  and the names of their acts' targets — joined through authorship.
+  **No body is ever indexed** for the global surface; the sheer mass
+  of body words would clog any default result mix, and a keyword
+  alone still surfaces nobody's conversation. In-chat body search
+  stays `chatSearch`'s, over plaintext only — encrypted bodies are
+  never searchable anywhere, since the backend holds ciphertext.
+- **All chats, never just the viewer's.** A scoped message result
+  reaches any plaintext chat — chats are public reads, so the scope
+  is the author, not the viewer's membership.
+- **The default mix carries the seven direct kinds.** Selecting an
+  indirect kind without a scope shows a quiet line pointing at the
+  scope operator instead of results (its string is a copy-voice
+  candidate, awaiting blessing).
+- `ExploreSearch` already draws exactly this — its rows are an
+  @-scoped query's indirect hits — so no board moves; api-spec gains
+  the scoped-join paragraph.
 
 The canonical tree draws one app and is graded as one thing. The editor
 it is reviewed in holds 200 files per canvas and publishes 16MB, and at
