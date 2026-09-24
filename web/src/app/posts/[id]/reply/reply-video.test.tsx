@@ -9,7 +9,7 @@ import { graphql, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
-import { captureFrames } from "@/lib/ui2/media/video";
+import { captureFrameZero } from "@/lib/ui2/media/video";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
@@ -17,6 +17,9 @@ import { renderWithProviders } from "@/test/providers";
 import { ReplyWizard } from "./reply-wizard-view";
 
 const FRAME = new Blob([new Uint8Array([9]) as BlobPart], { type: "image/png" });
+// A frame distinct from `FRAME` above, so a test can tell the row's offers
+// apart from the silent still's own extraction by which blob rode the upload.
+const FRAME_ZERO = new Blob([new Uint8Array([0]) as BlobPart], { type: "image/png" });
 
 vi.mock("@/lib/ui2/media/video", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/ui2/media/video")>();
@@ -24,6 +27,9 @@ vi.mock("@/lib/ui2/media/video", async (importOriginal) => {
     ...actual,
     probeVideo: vi.fn(async () => ({ durationMs: 18_000, width: 1080, height: 1080 })),
     captureFrames: vi.fn(async () => [FRAME, FRAME, FRAME]),
+    // The silent still's own, independent extraction (FRAME 1 MEANS FRAME 0,
+    // STRICTLY, jakob 2026-09-24).
+    captureFrameZero: vi.fn(async () => FRAME_ZERO),
   };
 });
 
@@ -322,12 +328,13 @@ describe("a comment's video", () => {
     expect(await screen.findByTestId("reply-seal")).toBeInTheDocument();
   });
 
-  // The feed-video rulings, 2026-09-23: a clip that reaches upload with no
-  // chosen cover gets its own frame 1 uploaded silently, through the same
-  // leg a chosen cover would ride — HERE, "the cover step is skipped"
-  // structurally, since a comment's video never had one to walk at all.
+  // The feed-video rulings, 2026-09-23, sharpened 2026-09-24 ("FRAME 1 MEANS
+  // FRAME 0, STRICTLY"): a clip that reaches upload with no chosen cover
+  // gets its own frame 0 uploaded silently, through the same leg a chosen
+  // cover would ride — HERE, "the cover step is skipped" structurally,
+  // since a comment's video never had one to walk at all.
   describe("the silent auto-cover", () => {
-    it("uploads the clip's own frame 1 as its cover when nothing is chosen", async () => {
+    it("uploads the clip's own frame 0 as its cover when nothing is chosen", async () => {
       let calls = 0;
       server.use(
         graphql.mutation("UploadMedia", () => {
@@ -350,23 +357,29 @@ describe("a comment's video", () => {
           });
         }),
       );
+      const clip = aVideo();
       draw();
-      await pickFiles([aVideo()]);
+      await pickFiles([clip]);
       // No offer tapped — the row stays exactly as "keeps the clip faceless
       // when no offer is tapped" pins it. The still still goes up.
       await screen.findByTestId("reply-cover-frame-0");
 
-      // Two uploads land — the silent frame-1 still, then the clip itself —
+      // Two uploads land — the silent frame-0 still, then the clip itself —
       // where a coverless clip would have sent only the one.
       await waitFor(() => expect(calls).toBe(2));
       // And the row itself never learns of it: no offer reads as chosen.
       for (const tile of screen.getAllByTestId(/^reply-cover-frame-/)) {
         expect(tile).toHaveAttribute("aria-pressed", "false");
       }
+      // THE RIGHT EXTRACTION RAN: the silent still is `captureFrameZero`'s
+      // own read of the clip, never the row's tray capture.
+      expect(captureFrameZero).toHaveBeenCalledWith(clip);
     });
 
-    it("ships the clip with no still at all when extraction finds no frames", async () => {
-      vi.mocked(captureFrames).mockResolvedValueOnce([]);
+    it("ships the clip with no still at all when its own frame-0 extraction finds nothing", async () => {
+      // The row's own offers still succeed — a failure in the silent
+      // extraction alone must not touch what the tray shows to tap.
+      vi.mocked(captureFrameZero).mockResolvedValueOnce(null);
       let calls = 0;
       server.use(
         graphql.mutation("UploadMedia", () => {
@@ -392,9 +405,8 @@ describe("a comment's video", () => {
       draw();
       await pickFiles([aVideo()]);
 
-      // The board's own fallback for a clip that offered nothing, and no
-      // upload attempt for a cover that was never going to exist.
-      await screen.findByTestId("reply-cover-picture");
+      // The clip's own upload still lands — only the cover leg was skipped.
+      await screen.findByTestId("reply-cover-frame-0");
       await waitFor(() => expect(calls).toBe(1));
       // Settled: a second wait would only prove nothing else arrives.
       await new Promise((resolve) => setTimeout(resolve, 0));

@@ -1009,6 +1009,8 @@ fn checked_alt_text(raw: Option<&str>) -> Result<Option<String>, String> {
 /// placement, and this entry is where the author's statement about them is
 /// sealed (data-model.md "Media attachments"). The cover is witnessed by
 /// its digest rather than its id, the way the manifest names every asset.
+/// No caller can request a taken cover yet, so this entry always witnesses
+/// one as chosen.
 fn manifest_entry(
     asset: &store::MediaAttachment,
     alt_text: Option<String>,
@@ -1019,6 +1021,7 @@ fn manifest_entry(
         mime: asset.mime_type.clone(),
         alt_text,
         cover: cover.map(manifest_digest).transpose()?,
+        cover_taken: false,
     })
 }
 
