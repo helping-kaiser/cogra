@@ -264,12 +264,12 @@ typically notices. A single record's removal carries no such
 blast radius, so §1 runs without one.
 
 **The realization address stays with the person.** One account =
-one realization address, self-custodied — no part of the platform holds the key
-([ledger.md](../implementation/ledger.md)). Account deletion
-removes CoGra's identity association but does not — and cannot —
-touch the address or anything resting on it. The "no restore
-path" above is about the association and the PII, not about the
-person's off-platform continuity.
+one realization address, self-custodied — no part of the platform
+holds the key ([ledger.md](../implementation/ledger.md)). Account
+deletion removes CoGra's identity association but does not — and
+cannot — touch the address or anything resting on it. The "no
+restore path" above is about the association and the PII, not
+about the person's off-platform continuity.
 
 ## 6. Write ordering across stores
 
