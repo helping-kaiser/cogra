@@ -41,10 +41,11 @@ and the project's preferred base asset is Bitcoin. On Liquid, L-BTC
 *is* the native asset: the pair is CGT/L-BTC with no bridge, no
 wrapped asset, and no second chain anywhere in the money path.
 
-Liquid's operator model satisfies the no-single-operator requirement
-as token.md §1 states it: blocks are signed and the peg is managed
-by an 11-of-15 functionary federation, so no single operator can
-steal funds or permanently censor.
+Liquid's operator model satisfies the no-single-operator
+requirement as [token.md](../primitive/token.md) states it: blocks
+are signed and the peg is managed by an 11-of-15 functionary
+federation, so no single operator can steal funds or permanently
+censor.
 
 The cost of this choice is named openly: Liquid has no
 concentrated-liquidity DEX and no precedent for a protocol-run
