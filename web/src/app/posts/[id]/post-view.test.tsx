@@ -6,6 +6,7 @@ import { COMMENT_BODY_MAX_CHARS } from "@/lib/compose/reply-wizard";
 import { SENSITIVE_REASON_MAX_CHARS } from "@/lib/compose/wizard";
 import { createTokenStore } from "@/lib/session/token-store";
 import { writeConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
+import { forgetReveals } from "@/lib/ui2/media/reveal";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import { startMswServer } from "@/test/msw";
@@ -291,6 +292,11 @@ describe("PostView", () => {
   beforeEach(() => {
     window.localStorage.clear();
     routerPush.mockClear();
+    // THE REVEAL IS A SESSION, A SUITE IS MANY SESSIONS (`reveal.ts`): every
+    // fixture in this file answers to the same post id, so a reveal one test
+    // clicks would otherwise stand for every later test that renders the
+    // same node id and sensitive signature.
+    forgetReveals();
   });
 
   // The narrow-share fold's own idiom (`post-card.test.tsx`): a test that
@@ -2050,6 +2056,12 @@ describe("PostView — references", () => {
     // Asking is the default; the tests that care about the dialog turn
     // it back on themselves.
     writeConfirmMultiAction(false);
+    // THE REVEAL IS A SESSION, A SUITE IS MANY SESSIONS (`reveal.ts`): this
+    // describe is its own top-level suite, sibling to `PostView` above, so
+    // it needs its own reset — a reveal one of its tests clicks would
+    // otherwise stand for every later test sharing the fixture's post id
+    // and sensitive signature (`the gallery`, below).
+    forgetReveals();
   });
 
   function referenceWrites(count: number) {
