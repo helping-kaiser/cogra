@@ -4,7 +4,8 @@
 //! named there and carried here:
 //!
 //! - Money is numbers only: the B_i surface and θ-debits are integer
-//!   micro-unit balances, with no realization of the burn primitive behind them.
+//!   micro-unit balances, with no realization of the burn primitive
+//!   behind them.
 //! - Standing is partial: formation, the admission handshake, ordering,
 //!   causal keys, maturity, and the θ-ledger are implemented in full, but
 //!   the conserved standing solve of §11.3–11.5 is not — every act's
@@ -211,8 +212,8 @@ impl StandIn {
         Ok(self.host_key().await?.verifying_key().as_bytes().to_vec())
     }
 
-    /// The stand-in burn primitive: credit a committed burn to an
-    /// address — B_i and the residual balance both rise by the burned
+    /// The stand-in burn primitive: credit a committed admission burn to
+    /// an address — B_i and the residual balance both rise by the burned
     /// amount. Numbers only; no real reserve economy.
     pub async fn credit_burn(&self, address: &str, amount_micro: i64) -> Result<(), StandInError> {
         if amount_micro <= 0 {
@@ -310,15 +311,16 @@ impl StandIn {
 ///
 /// The seam is `api`'s `L1Boundary` — the two relay legs, the epoch read,
 /// the B_i read, the published θ. Everything here is stand-in-only:
-/// crediting a burn stands in for a realization of the burn primitive CoGra does not run,
-/// closing an epoch stands in for a clock the substrate keeps itself, and
-/// reading back a sealed act is a crash-recovery affordance the seam
-/// deliberately does not carry. At the swap each of these needs an answer
-/// of its own — a live realization, the substrate's own close, and a resumable
-/// bootstrap — and none of them is "one new implementation of the
-/// boundary".
+/// crediting an admission burn stands in for a realization of the burn
+/// primitive CoGra does not run, closing an epoch stands in for a clock the
+/// substrate keeps itself, and reading back a sealed act is a
+/// crash-recovery affordance the seam deliberately does not carry. At the
+/// swap each of these needs an answer of its own — a live realization, the
+/// substrate's own close, and a resumable bootstrap — and none of them is
+/// "one new implementation of the boundary".
 pub trait DevSubstrate {
-    /// Credit a committed burn to an address (the stand-in burn primitive).
+    /// Credit a committed admission burn to an address (the stand-in burn
+    /// primitive).
     fn credit_burn(
         &self,
         address: &str,
