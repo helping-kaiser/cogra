@@ -76,11 +76,12 @@ internal class WizardUploader(
         val clip = state.value.video ?: return
         jobs.remove(clip.uri)?.cancel()
         jobs[clip.uri] = scope.launch {
-            val coverId = when (state.value.coverChoice) {
+            val choice = state.value.coverChoice
+            val coverId = when (choice) {
                 CoverChoice.None -> null
                 else -> state.value.coverMediaId ?: uploadCover() ?: return@launch
             }
-            state.update { it.copy(coverMediaId = coverId) }
+            state.update { it.withCoverIdFor(choice, coverId) }
 
             state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(0)) }
             val processed = video.transcode(clip.uri, scale.videoMaxBytes) { percent ->

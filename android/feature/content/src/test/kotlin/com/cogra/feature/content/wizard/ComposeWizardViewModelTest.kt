@@ -38,6 +38,7 @@ import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -117,10 +118,14 @@ class ComposeWizardViewModelTest {
         var pollAnswers = mutableMapOf<String, Pair<MediaAssetState, String?>>()
         var pollCalls = 0
 
+        /** When set, a still upload blocks here until it is completed. */
+        var stillGate: CompletableDeferred<Unit>? = null
+
         override suspend fun uploadMedia(
             picture: ProcessedPicture,
         ): Outcome<MediaAssetView> {
             uploads += 1
+            stillGate?.await()
             val uri = pending.removeFirstOrNull().orEmpty()
             if (uri in failures) {
                 return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "too big")))
@@ -1298,6 +1303,44 @@ class ComposeWizardViewModelTest {
             .isEqualTo(CoverChoice.Picture("my-own.jpg"))
         // The uploaded cover is no longer the one the author means.
         assertThat(vm.state.value.coverMediaId).isNull()
+    }
+
+    /**
+     * AN ID BELONGS TO THE FACE IT WAS UPLOADED FOR. The author leaves
+     * the stage with one face, steps back while it is still going up, and
+     * chooses another; the first upload landing afterwards must not pose
+     * as the second face's id, or the next journey would skip uploading
+     * the face the author actually chose.
+     */
+    @Test
+    fun aFaceReplacedWhileItsPredecessorUploadsNeverInheritsTheOldId() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> cover
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onPickCoverFrame(0)
+        val gate = CompletableDeferred<Unit>()
+        media.stillGate = gate
+        vm.onNext() // cover -> details: frame 0 starts going up, and blocks
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onBack() // details -> cover
+        vm.onPickCoverFrame(1)
+        gate.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        // Frame 0 landed as m1, but frame 1 is the face now.
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.Frame(1))
+        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+
+        media.stillGate = null
+        vm.onNext() // cover -> details: the chosen face goes up in its own right
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m2")
+        assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
     @Test

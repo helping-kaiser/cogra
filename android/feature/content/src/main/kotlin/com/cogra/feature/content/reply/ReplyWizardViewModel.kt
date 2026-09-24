@@ -294,11 +294,14 @@ class ReplyWizardViewModel @Inject constructor(
         uploads.remove(clip.uri)?.cancel()
         uploads[clip.uri] = viewModelScope.launch {
             _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
-            val coverId = when (_state.value.coverChoice) {
+            val choice = _state.value.coverChoice
+            val coverId = when (choice) {
                 CoverChoice.None -> null
                 else -> _state.value.coverMediaId ?: uploadCover() ?: return@launch
             }
-            _state.update { it.copy(coverMediaId = coverId) }
+            // An id belongs to the face it was uploaded for: a face chosen
+            // while this one was going up must not inherit its id.
+            _state.update { if (it.coverChoice == choice) it.copy(coverMediaId = coverId) else it }
 
             val sending = { progress: UploadProgress ->
                 uploadSession = progress.uploadId

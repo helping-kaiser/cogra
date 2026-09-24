@@ -668,6 +668,18 @@ fun ComposeWizardState.clearedCover(): ComposeWizardState = copy(
 )
 
 /**
+ * Records the id a face landed as — only while that face still stands.
+ *
+ * AN ID BELONGS TO THE FACE IT WAS UPLOADED FOR. Choosing a new face
+ * drops the id, but the upload of the old one may still be in flight
+ * and land after it; written unconditionally, the old id would then
+ * pose as the new face's, and the next journey would skip uploading the
+ * face the author actually chose.
+ */
+fun ComposeWizardState.withCoverIdFor(choice: CoverChoice, id: String?): ComposeWizardState =
+    if (coverChoice == choice) copy(coverMediaId = id) else this
+
+/**
  * Drops a pick from the tray without touching the rest of the order.
  *
  * **THE LAST × GIVES THE PICK STEP BACK** (the video path's ruling,
