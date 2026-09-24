@@ -47,6 +47,19 @@ fn fixture(name: &str) -> PathBuf {
     for one in [REGISTRY, COMPANION] {
         std::fs::copy(root().join(one), at.join(one)).expect("a committed document");
     }
+    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
+        let done = Command::new("git")
+            .arg("-C")
+            .arg(&at)
+            .args(args)
+            .output()
+            .expect("git runs");
+        assert!(
+            done.status.success(),
+            "git {args:?}: {}",
+            String::from_utf8_lossy(&done.stderr)
+        );
+    }
     at
 }
 
