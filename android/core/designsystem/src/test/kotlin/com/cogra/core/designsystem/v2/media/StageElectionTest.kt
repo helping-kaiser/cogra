@@ -31,7 +31,10 @@ class StageElectionTest {
 
     @Test
     fun theGateItselfStillQualifies() {
-        val places = mapOf(ABOVE to at(top = 0f, visible = 1f), INCUMBENT to at(top = 500f, visible = StageElection.GATE))
+        val places = mapOf(
+            ABOVE to at(top = 0f, visible = 1f),
+            INCUMBENT to at(top = 500f, visible = StageElection.GATE),
+        )
 
         assertThat(StageElection.elect(INCUMBENT, places)).isEqualTo(INCUMBENT)
     }
@@ -78,7 +81,10 @@ class StageElectionTest {
 
     @Test
     fun clipsSideBySideInOneGalleryRankByTheirPage() {
-        val places = mapOf(BELOW to at(top = 100f, visible = 1f, page = 1), ABOVE to at(top = 100f, visible = 1f, page = 0))
+        val places = mapOf(
+            BELOW to at(top = 100f, visible = 1f, page = 1),
+            ABOVE to at(top = 100f, visible = 1f, page = 0),
+        )
 
         assertThat(StageElection.elect(null, places)).isEqualTo(ABOVE)
     }
