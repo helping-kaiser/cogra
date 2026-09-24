@@ -1,7 +1,7 @@
 // The on-device key ceremony (auth.md "Application" step 3), now a
 // logged-in step: the device mints the actor key and address, sends
-// only the public halves through `attachActorKey` — approval funds a
-// burn to the applicant's own address, so the address must exist before
+// only the public halves through `attachActorKey` — approval funds an
+// admission burn to the applicant's own address, so the address must exist before
 // approval — and the backup offer rides the same step. The sealed blob
 // uploads immediately after the attach; a failed upload parks it for a
 // retried flush.

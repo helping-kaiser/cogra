@@ -46,6 +46,8 @@ The walk is the whole cost. Reading and parsing 891 sources is essentially the e
 
 The suite is dominated by the corpus, not by the properties. The property lane is under a second of a twenty-second suite, and holds there at an explicit 256 cases as at the default; the four binaries that read the real tree are some 17.5 s of it. The concern the design encoded — a case count raised without notice — is real but small, and the term that actually grows is the number of full checks the suite performs.
 
+Running the suite from a worktree under `/mnt/d` needs the same care in the other direction: `cargo test -p cogra-linter` (or `--all`) must run with no `GIT_DIR`/`GIT_WORK_TREE` exported, or every fixture-repository test in the suite — not only the four corpus-reading binaries — reads or writes whichever repository those variables name instead of its own temporary root. Only the corpus-reading binaries ever need them at all, and only when the worktree's own `.git` file carries a Windows-style `gitdir:` path the distro's git cannot parse; scope them to that one `cargo test --test <name>` invocation, never to the whole session.
+
 **Decision (The lane builds debug)** · `dec:lint:ci-lane-debug`
 
 Both profiles were measured. On the distro's native filesystem the release binary checks the corpus in 0.30 s against debug's 2.41 s, a factor of about eight, which is the parsing being optimized. The lane still builds debug, because it compiles the crate in debug for the suite in any case: the check binary is a by-product there, where a release profile would be a second compilation of the crate and its dependencies and a second cache entry, bought for about two seconds of runtime. The measurement decides it, and it decides for debug.

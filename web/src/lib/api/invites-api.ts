@@ -76,7 +76,7 @@ export async function revokeInviteLink(
 }
 
 /**
- * The priced approval for one applicant: triggers the funding burn and
+ * The priced approval for one applicant: triggers the admission burn and
  * staged Registration backend-side and returns the inviter's Opinion
  * records to sign, adapted for the write signer.
  */

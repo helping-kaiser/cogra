@@ -13,9 +13,10 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use cogra_linter::{Adoption, Language, OwnerId, SourceFile, Walk, carrier};
+
+mod common;
 
 fn ruled() -> Adoption {
     Adoption::load(Path::new(concat!(
@@ -36,23 +37,6 @@ fn written(root: &Path, paths: &[&str]) {
     }
 }
 
-/// Makes `root` a repository and tracks everything now standing in it.
-fn track(root: &Path) {
-    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
-        let done = Command::new("git")
-            .arg("-C")
-            .arg(root)
-            .args(args)
-            .output()
-            .expect("git runs");
-        assert!(
-            done.status.success(),
-            "git {args:?}: {}",
-            String::from_utf8_lossy(&done.stderr)
-        );
-    }
-}
-
 /// A tree of empty-ish files at `paths`, under a root of its own, every one
 /// of them tracked.
 fn tree(name: &str, paths: &[&str]) -> PathBuf {
@@ -60,7 +44,7 @@ fn tree(name: &str, paths: &[&str]) -> PathBuf {
     let _ = fs::remove_dir_all(&root);
     fs::create_dir_all(&root).expect("the fixture root");
     written(&root, paths);
-    track(&root);
+    common::track(&root);
     root
 }
 
@@ -748,7 +732,7 @@ fn a_directory_link_outside_the_configured_roots_is_not_followed() {
     let Some(()) = link_dir(&target, &root.join("elsewhere")) else {
         return unprivileged("a_directory_link_outside_the_configured_roots_is_not_followed");
     };
-    track(&root);
+    common::track(&root);
     let adoption = ruled();
     let sources = Walk::new(&adoption, &root)
         .sources()
@@ -775,7 +759,7 @@ fn a_file_link_outside_the_configured_roots_is_not_read() {
     let Some(()) = link_file(&target.join("notes.md"), &root.join("borrowed.md")) else {
         return unprivileged("a_file_link_outside_the_configured_roots_is_not_read");
     };
-    track(&root);
+    common::track(&root);
     let adoption = ruled();
     let sources = Walk::new(&adoption, &root)
         .sources()

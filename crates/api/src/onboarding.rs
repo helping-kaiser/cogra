@@ -2,7 +2,7 @@
 //!
 //! The applicant-as-account admission flow (auth.md "Account lifecycle";
 //! invitations.md §4): link → registration (a real account + session) →
-//! the key ceremony as a logged-in attach → funding burn at approval →
+//! the key ceremony as a logged-in attach → admission burn at approval →
 //! staged Registration signed on the device → landing flips the account
 //! to member.
 //!
@@ -284,9 +284,9 @@ pub async fn resend_verification(
 /// second admission behind an unlandable record.
 ///
 /// The ceremony's two outputs must cohere: the submitted address has
-/// to be the one the submitted public key controls. Approval funds a burn
-/// to that address, and funding one the key cannot spend from would
-/// strand the admission (substrate.md §6).
+/// to be the one the submitted public key controls. Approval funds an
+/// admission burn to that address, and funding one the key cannot spend
+/// from would strand the admission (substrate.md §6).
 pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
@@ -362,7 +362,7 @@ pub struct Approval {
 }
 
 /// Approves applications: marks each approval, runs the admission
-/// sequence backend-side (funding burn + staged Registration), and
+/// sequence backend-side (admission burn + staged Registration), and
 /// prepares the inviter's own Opinion records — the vouch is the
 /// inviter's signature, never a server write (api-spec
 /// `approveApplicants`).
@@ -566,7 +566,7 @@ fn registration_payload(handle: &str) -> Vec<u8> {
 }
 
 /// Idempotently brings an approved application to "staged and fundable":
-/// the funding burn (guarded by the fresh address's zero burn history)
+/// the admission burn (guarded by the fresh address's zero burn history)
 /// and the staged Registration, staged under the applicant's own actor
 /// row. Also the repair path — a crash between approval and staging
 /// heals on the applicant's next status poll (`User.application`).

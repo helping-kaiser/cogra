@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, kind, handle, actor_pubkey, realization_address, created_at\n         FROM actors WHERE realization_address = $1",
+  "query": "SELECT id, kind, handle, actor_pubkey, realization_address, created_at\n         FROM actors WHERE handle = $1",
   "describe": {
     "columns": [
       {
@@ -48,5 +48,5 @@
       false
     ]
   },
-  "hash": "fe37a79e38e9c97c0b8042f65e4d0666453540bc51be743b0ef0b6d6dbd8f067"
+  "hash": "57a11b2b808a3878d71224328798f914411fdef43bbfd4bf5be6bdbbeb77b6ac"
 }

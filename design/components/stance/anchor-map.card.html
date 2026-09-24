@@ -40,7 +40,7 @@ const STRIP = 400;
    (±1, ±1) and a coordinate is a plain percentage of it. */
 const xOf = (pDirected) => 50 + pDirected * 50;
 const yOf = (pInterest) => 50 - pInterest * 50;
-const fmt = (v) => new Intl.NumberFormat(undefined, { signDisplay: "always", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+const fmt = (v) => new Intl.NumberFormat("en-US", { signDisplay: "always", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
 
 function Map2D() {
   return (

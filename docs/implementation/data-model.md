@@ -572,12 +572,12 @@ mention resolves to exactly one actor.
 -- place to 'redacted-user-{uuid}' per erasure.md — the
 -- sanctioned in-place redaction, not an edit path.
 CREATE TABLE actors (
-    id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    kind         TEXT        NOT NULL CHECK (kind IN ('user', 'collective', 'system')),
-    handle       TEXT        NOT NULL UNIQUE,
-    actor_pubkey BYTEA,
-    realization_address   TEXT,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    kind                TEXT        NOT NULL CHECK (kind IN ('user', 'collective', 'system')),
+    handle              TEXT        NOT NULL UNIQUE,
+    actor_pubkey        BYTEA,
+    realization_address TEXT,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CHECK (kind = 'user' OR (actor_pubkey IS NOT NULL AND realization_address IS NOT NULL))
 );
 

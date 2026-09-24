@@ -1,21 +1,21 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT a.id AS \"id!\", a.kind AS \"kind!\", a.handle AS \"handle!\",\n                  a.actor_pubkey, a.realization_address, a.created_at AS \"created_at!\"\n           FROM actors a\n           JOIN system_actor_keys k ON k.actor_id = a.id\n           WHERE a.kind = 'user'\n           ORDER BY a.created_at\n           LIMIT 1",
+  "query": "SELECT id, kind, handle, actor_pubkey, realization_address, created_at\n         FROM actors WHERE realization_address = ANY($1)",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "id!",
+        "name": "id",
         "type_info": "Uuid"
       },
       {
         "ordinal": 1,
-        "name": "kind!",
+        "name": "kind",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "handle!",
+        "name": "handle",
         "type_info": "Text"
       },
       {
@@ -30,12 +30,14 @@
       },
       {
         "ordinal": 5,
-        "name": "created_at!",
+        "name": "created_at",
         "type_info": "Timestamptz"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "TextArray"
+      ]
     },
     "nullable": [
       false,
@@ -46,5 +48,5 @@
       false
     ]
   },
-  "hash": "5c7444e6d71ad8287760e5c472f52b7654ced05aac6906a6192c2cfedd3a77f1"
+  "hash": "a910897203e74390b05672f43abdeb2d7400d7bee4b239ed71f5ee9e8b9f322c"
 }

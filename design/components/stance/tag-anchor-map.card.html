@@ -45,8 +45,8 @@ const FIELD = 560;
 const REL = TAG_RANGES.pDirected;
 const xOf = (pDirected) => ((pDirected - REL.min) / (REL.max - REL.min)) * 100;
 const yOf = (pInterest) => 100 - pInterest * 100;
-const rel = (v) => new Intl.NumberFormat(undefined, { signDisplay: "always", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
-const con = (v) => new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+const rel = (v) => new Intl.NumberFormat("en-US", { signDisplay: "always", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+const con = (v) => new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
 
 /* The three certainty bands, top down, and the floater after them. */
 const ROWS = [
