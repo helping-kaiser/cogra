@@ -23,7 +23,7 @@ mechanics live in each concept's own doc.
 
 | Concept | Primary | Mapping |
 |---|---|---|
-| User | gesture | An L1 **Actor + Profile** grounded pair, anchored by the actor's own Registration record. One account = one address. See [user.md](user.md). |
+| User | gesture | An L1 **Actor + Profile** grounded pair, anchored by the actor's own Registration record. One account = one realization address. See [user.md](user.md). |
 | Person ↔ actor map | off-graph | Identity association is terminal by L1 contract — the map from an actor to the person behind it lives in CoGra's service state, never on the shared graph. |
 | Account verification | off-graph | No User exists in CoGra before verification — an L2 registration rule; L1 sees only the Registration record once CoGra submits it. |
 | Email | off-graph | Authentication and recovery only. Admission is the θ-debit plus invitation (below), never an email check. |

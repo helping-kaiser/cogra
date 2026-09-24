@@ -303,7 +303,8 @@ by demand growth rather than calendar rewards to idle holders.
 
 Two pots receive the campaign equation's platform-side flow, and
 they are deliberately separate: **the team treasury** is the
-project's revenue; **the admission fund** is the community's. Separating them keeps each accountable — the team's
+project's revenue; **the admission fund** is the community's.
+Separating them keeps each accountable — the team's
 income is not raidable by subsidy policy, and the community's
 self-funding is not a discretionary line in the project's budget.
 
@@ -330,7 +331,7 @@ own liquidity, **not** from monetising user data.
 
 ### 6.2 The admission fund
 
-The reserve pool receives the `reserve_share·P` settlement line
+The fund receives the `reserve_share·P` settlement line
 ([economics.md §7.2](economics.md#72-the-admission-fund)) and
 exists for exactly one kind of outflow: **funding the community's
 admission burns**. CGT is converted at execution-time market
