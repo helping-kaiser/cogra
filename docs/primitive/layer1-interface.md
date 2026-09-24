@@ -2866,23 +2866,24 @@ axes, never conflated — the **price axis** ($\nu$, $\theta$) and the
 
 Price axis:
 
-- **Numéraire $\nu$ (`def:comparator:numeraire`).** The sole reserve→action
-  unit and the reserve-economy↔action-economy join; every reserve-denominated
+- **Numéraire $\nu$ (`def:comparator:numeraire`).** Burn units per
+  action-credit — the sole join between the burn units the primitive
+  records in and the action economy; every burn-denominated
   input is divided by $\nu$ before it meets a count (the $\theta$-debit
   applies this join per act). Governs the reduction and the stability
   operating point — structural; moving it is a *migration event*, not a dial
   turn.
 - **Safety price $\theta$ (`def:epoch:safety-threshold`).** The per-act
   **debited** price and the minimum burn value behind a write the
-  coupled dynamics certifiably tolerate (reserve/action). The **only** debited
+  coupled dynamics certifiably tolerate (burn units per action). The **only** debited
   object (W1). **An algorithmic output of the epoch computation, never a host
   input** — certificate $k$ carries $\theta^{(k+1)}$ (one-boundary lead),
-  governed by requirements R1–R7 (derivability, sufficiency, step-boundedness,
-  hysteresis, lead, publication, declared covariance); the algorithm is a
-  calibration deliverable. Chartered interim rule
+  governed by premises X1–X7 (derivability, sufficiency with X2b width
+  dominance, step-boundedness, hysteresis, lead, publication, declared
+  covariance); the algorithm is a calibration deliverable. Chartered interim rule
   $\theta^{(k+1)} = \nu\,\lambda_Q^{-1}\!\big(1/(m_\theta\, W_{\text{loc}}^{(k)})\big)$
   with **margin factor $m_\theta = 5/4$** (fence slack
-  $\mu = 1 - 1/m_\theta = 0.20$; R3 per-boundary step bound; R4 Schmitt
+  $\mu = 1 - 1/m_\theta = 0.20$; X3 per-boundary step bound; X4 Schmitt
   hysteresis; escalation to $m_\theta = 1.5$ if p95 one-boundary
   $W_{\text{loc}}$ growth exceeds $\sqrt{m_\theta} = 1.118$).
 
@@ -2937,7 +2938,7 @@ $(\nu, \rho_{\text{pol}}) \to (c\nu, \rho_{\text{pol}}/c)$ the door product
 $\rho_{\text{pol}}\nu$ (admission set, per-act door benchmark) is invariant,
 the gate axis $\{\rho_{\text{pol}}, \rho_{\text{act}}, \rho_{\text{ep}}\}$
 is exactly invariant (stamps and floors co-scale), and reduced quantities
-scale by $1/c$; W1/W2a are $\theta$-mediated per the R7 declaration. The
+scale by $1/c$; W1/W2a are $\theta$-mediated per the X7 declaration. The
 historical capacity-crush is dissolved: the retroactive repricing branch
 was deleted by the $\theta$-debit ledger — a consummated debit is never
 re-calculated, so there is **no frozen stock to crush**. The door product
@@ -3106,9 +3107,9 @@ objects live only in the boundary ledger** (§3).
 | $\prec$ (L1·closure), $\prec^*$ **(L1·verify)** | Authoritative-order precedence; identity-key refinement (audit tie-break only). | `def:graph:authoritative-act-order`, `def:epoch:log-position` |
 | $C^{\text{pre}}_q$, $V_q$, $\sigma^{\text{app}}_q$ | Proposal pre-commitment, host-sealed verified act, and approval witness of the admission handshake. | `def:graph:proposal-pre-commitment`, `def:graph:verified-act`, `def:graph:approval-witness` |
 | $\mathrm{deps}(q)$, dependency commitment | Actor-authored removable dependency projection and its retained binding commitment; tombstonable, reopenable for fraud proof **(L1·verify** when opened**)**. | `def:graph:act-dependency-projection`, `def:graph:ordering-fraud-proof` |
-| $\nu$ | Numéraire: the sole reserve→action unit and reserve-economy↔action-economy join (applied per act by the θ-debit); bond-kernel denominator. Structural; moving it is a migration event. | `def:comparator:numeraire` |
+| $\nu$ | Numéraire: burn units per action-credit, the sole join between the burn units the primitive records in and the action economy (applied per act by the θ-debit); bond-kernel denominator. Structural; moving it is a migration event. | `def:comparator:numeraire` |
 | $\rho_{\text{pol}}$ | Policy floor: the host's dimensionless gate-axis dial; announced at $k$, effective at $k+1$; valid iff $\rho_{\text{pol}}\nu \ge \theta$. Canonical default $1$. | `def:epoch:policy-floor` |
-| $\theta$ | Safety threshold (reserve/action): the minimum burn value behind a write the coupled dynamics tolerate. Algorithmic per-epoch output (R1–R7), one-boundary lead; never a host input. | `def:epoch:safety-threshold` |
+| $\theta$ | Safety threshold (burn units per action): the minimum burn value behind a write the coupled dynamics tolerate. Algorithmic per-epoch output (X1–X7), one-boundary lead; never a host input. | `def:epoch:safety-threshold` |
 | $\rho_\theta$, $\rho_{\text{eff}}$ | Safety floor $\theta/\nu$ (the wall: W2a, the activation-clamp key, the fence pin) and effective floor $\max(\rho_{\text{pol}}, \rho_\theta)$ (the door: W2b, the per-act door benchmark). | `def:epoch:safety-floor`, `def:epoch:participation-floor` |
 | $m_\theta$ | Chartered margin factor $5/4$: contraction-certificate margin (a rung certifies iff $m_\theta\,\mathcal{K}_k \le 1$), fence slack, escalation clause. | `def:epoch:safety-threshold` |
 | $\beta$, $\eta$ | Inverse temperature $2\ln 2 \approx 1.386$; bleed $0.05$ — binding (both enter the deployed core $Q$). | `ax:epoch:thermodynamic-boundary`, `def:graph:path-view-extraction` |
