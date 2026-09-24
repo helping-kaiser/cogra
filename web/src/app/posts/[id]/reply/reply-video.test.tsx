@@ -4,11 +4,12 @@
 // and the frame capture are stubbed while the container sniff and the 50 MiB
 // cap are left real, since those are the rules this composer is meant to apply.
 
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { captureFrames } from "@/lib/ui2/media/video";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
@@ -319,5 +320,86 @@ describe("a comment's video", () => {
     write("the words stand on their own");
     fireEvent.click(screen.getByTestId("reply-next"));
     expect(await screen.findByTestId("reply-seal")).toBeInTheDocument();
+  });
+
+  // The feed-video rulings, 2026-09-23: a clip that reaches upload with no
+  // chosen cover gets its own frame 1 uploaded silently, through the same
+  // leg a chosen cover would ride — HERE, "the cover step is skipped"
+  // structurally, since a comment's video never had one to walk at all.
+  describe("the silent auto-cover", () => {
+    it("uploads the clip's own frame 1 as its cover when nothing is chosen", async () => {
+      let calls = 0;
+      server.use(
+        graphql.mutation("UploadMedia", () => {
+          calls += 1;
+          return HttpResponse.json({
+            data: {
+              uploadMedia: {
+                __typename: "UploadMediaPayload",
+                media: {
+                  __typename: "MediaAttachment",
+                  id: `m${calls}`,
+                  url: "https://media.test/x.webp",
+                  altText: null,
+                  status: "NORMAL",
+                  options: { __typename: "MediaOptions", aspectRatio: "1:1" },
+                },
+                userErrors: [],
+              },
+            },
+          });
+        }),
+      );
+      draw();
+      await pickFiles([aVideo()]);
+      // No offer tapped — the row stays exactly as "keeps the clip faceless
+      // when no offer is tapped" pins it. The still still goes up.
+      await screen.findByTestId("reply-cover-frame-0");
+
+      // Two uploads land — the silent frame-1 still, then the clip itself —
+      // where a coverless clip would have sent only the one.
+      await waitFor(() => expect(calls).toBe(2));
+      // And the row itself never learns of it: no offer reads as chosen.
+      for (const tile of screen.getAllByTestId(/^reply-cover-frame-/)) {
+        expect(tile).toHaveAttribute("aria-pressed", "false");
+      }
+    });
+
+    it("ships the clip with no still at all when extraction finds no frames", async () => {
+      vi.mocked(captureFrames).mockResolvedValueOnce([]);
+      let calls = 0;
+      server.use(
+        graphql.mutation("UploadMedia", () => {
+          calls += 1;
+          return HttpResponse.json({
+            data: {
+              uploadMedia: {
+                __typename: "UploadMediaPayload",
+                media: {
+                  __typename: "MediaAttachment",
+                  id: `m${calls}`,
+                  url: "https://media.test/x.mp4",
+                  altText: null,
+                  status: "NORMAL",
+                  options: { __typename: "MediaOptions", aspectRatio: "1:1" },
+                },
+                userErrors: [],
+              },
+            },
+          });
+        }),
+      );
+      draw();
+      await pickFiles([aVideo()]);
+
+      // The board's own fallback for a clip that offered nothing, and no
+      // upload attempt for a cover that was never going to exist.
+      await screen.findByTestId("reply-cover-picture");
+      await waitFor(() => expect(calls).toBe(1));
+      // Settled: a second wait would only prove nothing else arrives.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(calls).toBe(1);
+      expect(screen.queryByTestId("reply-transport-error")).toBeNull();
+    });
   });
 });

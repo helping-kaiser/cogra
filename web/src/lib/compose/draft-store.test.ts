@@ -85,6 +85,71 @@ describe("the local draft", () => {
     });
   });
 
+  // `autoCover` carries a Blob exactly like `cover` does, and needs the same
+  // bytes-on-disk treatment — the in-memory IndexedDB this suite runs
+  // against does not clone Blobs, so a field left unconverted would come
+  // back broken rather than merely untested.
+  it("brings the silent auto-cover back the same way a chosen one comes back", async () => {
+    const state = draft(
+      (s) =>
+        wizardReducer(s, { type: "pick", assets: [{ id: "v0", file: new Blob(["v"]), kind: "video" }] }),
+      (s) =>
+        wizardReducer(s, {
+          type: "autoCover",
+          cover: { id: "auto0", file: new Blob(["frame-one"]), frame: 0, upload: { kind: "uploading" } },
+        }),
+    );
+    await composeDraftStore.save(state);
+
+    const restored = await composeDraftStore.load();
+    expect(restored!.autoCover).not.toBeNull();
+    expect(restored!.autoCover!.file).toBeInstanceOf(Blob);
+    expect(await restored!.autoCover!.file.text()).toBe("frame-one");
+    // In flight when the tab closed, so it starts again rather than being
+    // trusted to have landed.
+    expect(restored!.autoCover!.upload).toEqual({ kind: "waiting" });
+
+    const done = draft(
+      () => state,
+      (s) =>
+        wizardReducer(s, { type: "autoCoverUpload", upload: { kind: "done", mediaId: "m-auto0" } }),
+    );
+    await composeDraftStore.save(done);
+    expect((await composeDraftStore.load())!.autoCover!.upload).toEqual({
+      kind: "done",
+      mediaId: "m-auto0",
+    });
+  });
+
+  // A draft saved before this field existed carries no `autoCover` key at
+  // all — `undefined`, not `null` — and `restored()` has to read that as
+  // "none" rather than handing the wizard a field its own type promises will
+  // never be missing.
+  it("reads a draft with no auto-cover field at all as having none", async () => {
+    const legacyState: Record<string, unknown> = { ...emptyWizard(), cover: null };
+    delete legacyState.autoCover;
+    await new Promise<void>((resolve, reject) => {
+      const open = indexedDB.open("cogra.compose", 1);
+      open.onupgradeneeded = () => open.result.createObjectStore("draft");
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const db = open.result;
+        const tx = db.transaction("draft", "readwrite");
+        tx.objectStore("draft").put(
+          { schema: 1, savedAt: "2026-09-01T00:00:00Z", state: legacyState },
+          ACCOUNT_A,
+        );
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onabort = () => reject(tx.error);
+      };
+    });
+
+    expect((await composeDraftStore.load())!.autoCover).toBeNull();
+  });
+
   it("replaces rather than accumulates, and clears on demand", async () => {
     await composeDraftStore.save(draft(picked("a0")));
     await composeDraftStore.save(draft(picked("b0"), picked("b1")));
