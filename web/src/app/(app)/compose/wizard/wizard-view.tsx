@@ -436,6 +436,11 @@ export function ComposeWizard({
         if (capturing) return;
         const frame = frames[0];
         if (frame !== undefined) {
+          // THE RULE IS DISABLED DELIBERATELY, as `previews.ts` already does:
+          // the capture is an external system, and its settled frame set is
+          // exactly what this reads — there is no render-time or event-handler
+          // moment that could make this decision instead.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           dispatch({
             type: "autoCover",
             cover: { id: newComposeId(), file: frame, frame: 0, upload: { kind: "waiting" } },
