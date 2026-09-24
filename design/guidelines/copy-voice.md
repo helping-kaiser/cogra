@@ -2187,7 +2187,19 @@ mark's first line, `Removed by its author`.
 - The line under it: `Not encrypted — anyone can hear it. Release to sign and
   send; slide up to lock.` and, with the lock on, `Encrypted — only the chat's
   members can hear it. Release to sign and send; slide up to lock.`
-- The locked state's words, stated: `Cancel`, `Describe`, `Sign and send`.
+- Locked (the fix pass, drawn): the timer as held, `Describe` at its line's
+  end; `Delete the recording` (the `delete` glyph), the lock toggle's own
+  `Encrypt end to end`, `Pause the recording`, and the arrow's `Sign and
+  send`. The line: `Not encrypted — anyone can hear it. The lock beside
+  delete encrypts it.`, or `Encrypted — only the chat's members can hear it.`
+
+**A message's opinions.** The pad is the ordinary pad, named `Opinion pad for
+{sender}'s message`. The sheet is titled `Opinions on this message` (the
+post's `Opinions on this post`, one noun over), its rows the opinions page's.
+
+**The seals' opinion.** The row stays `Your opinion`; its value is the
+pressable face, named by the control's own words (`Your opinion on {chat}: …`).
+The message's own seal adds `Adjust`, the compose seal's word.
 
 **A voice note.** The play control is named `Play — {the author's
 description}`, or `Play — Voice message, 0:42` where there is none; the
@@ -2219,14 +2231,15 @@ for a message: `Its place in the chat stays, and so do the replies to it.` The
 platform's mark is unchanged: `Removed under the platform's rules` — `A passed
 proposal removed it. The decision is public.`
 
-**A post sent into a chat.** The sheet is `Send to a chat`; the field `Search
+**A post sent into a chat.** Every share glyph opens the sheet; its name for
+the ear stays `Share {target}`. The sheet is `Send to a chat`; the field `Search
 your chats`; the head row `Share outside CoGra` (candidates: `Share
 elsewhere`, `More ways to share`); the foot's field `Message`, cornered
 `Optional`; the line `Sends one message into {chat}, pointing to this post.`,
 and with the lock on it adds the reference's fact — candidate: `The lock
 seals your words, never which post you sent.` Signed, the snackbar says `Sent
-to {chat}` with `Open`. In the bubble the post reads as its title over `{author}
-· a post`, the block named `{title} — {author} · a post — open the post`.
+to {chat}` with `Open`. In the bubble the post reads as its reference row, its
+title over `{author} · a post`.
 
 **Asking to join.** The sheet `What you sign` with `How signing works`; the
 acts card `Asking to join` · the chat · `1 thing, signed` (spoken `1
@@ -2242,13 +2255,6 @@ it under `{name} invited you.`
 **The explorer's invited word.** `You're invited`. (Candidates: `Invited —
 join`, `Join — you're invited`.)
 
-**The feed cards.** The chat card's head is named `{chat} — open the chat`;
-under the name the policy line (`A group chat — anyone can join.`); the
-live-ness line `{n} members · last message {age}`, then the last message as
-the explorer previews it; the join `Join` or `Ask to join`. The message card's
-context line `in {chat}`, named `In {chat} — open the chat at this message`;
-its act `Open in the chat`.
-
 **Search and Saved.** A chat result's second line is its policy line. A saved
 message's row is the message's words, the sender's handle beside them, and
 `in {chat}` under them.
@@ -2258,7 +2264,13 @@ message quoted as the second line; `@saltorres asks to join {chat}` with the
 request's message; `{chat} approved your request to join` (candidate: `Your
 request to join {chat} was approved`). Push says the same words.
 
-**Push.** Three rows join `Announced right away`: `Invitations to chats`,
+**The feed cards.** Rebuilt on the real card (the fix pass), they speak the
+card's own words: no `Join` and no `Open in the chat` on a card. The chat
+card's second line: `{policy line} {n} members · last message {age}.`; the
+message card's: `in {chat}`.
+
+**Push.** The page's board is titled `Push notifications · the kinds and their
+defaults` (candidates: `… · what announces itself`, `… · every kind`). Three rows join `Announced right away`: `Invitations to chats`,
 `Requests to join your chats`, `Your requests to join approved`. A `Chats`
 group holds `New messages`, footnoted `A muted chat stays quiet here — mute
 one from its details or by holding its row.` A message's push: the chat's name
