@@ -3492,7 +3492,7 @@ paragraph). One string still owed: the quiet line an unscoped
 indirect-kind selection shows (copy-voice candidate, awaiting
 blessing).
 
-### 106 · Which frame the preview face means · *design* · **open**
+### 106 · Which frame the preview face means · *design* · **ruled + recorded 2026-09-24**
 
 Flagged by the implementation session 2026-09-24, building the
 frame-0 ruling on web: the STORED silent still is now strictly
@@ -3509,3 +3509,10 @@ settles it: either the preview face is the stored face (frame 0
 everywhere, web's preview extraction changes), or the preview
 face is the platform's cheap thumbnail and the record says so.
 No implementation action until ruled.
+
+**Ruled (jakob 2026-09-24): the preview face is the stored face.**
+The compose tiles' claim to wear the clip's first frame holds to
+frame 0 — web's preview extraction changes to match the stored
+still. Recorded in readme §13 (the stored first frame) and the
+`MediaAttachment` docblock; the web change is the implementation
+session's, relayed as a contract.

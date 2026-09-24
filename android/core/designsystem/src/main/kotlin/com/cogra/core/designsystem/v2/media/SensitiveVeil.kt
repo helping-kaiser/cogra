@@ -79,8 +79,10 @@ import com.cogra.core.designsystem.v2.token.Veil
  * veil says so to everything it covers through [LocalStageVeil], and the
  * content keeps ONE slot in the composition whether veiled or not — which is
  * what "stays mounted" means — so a clip is the same clip on both sides of
- * the reveal: the stage sees its veil lift and re-elects, as after a sheet's
- * dismissal ([StageElection]).
+ * the reveal: the reveal is an eligibility change, not a re-election, so the
+ * stage simply evaluates the now-unveiled clip like any other place —
+ * joining the rotation without displacing a qualifying incumbent
+ * ([StageElection]).
  *
  * @param reason the author's optional stated reason, shown on the veil when
  *   they self-marked the post (design/readme.md §13).
@@ -116,7 +118,7 @@ fun SensitiveVeil(
                 Modifier
             },
         ) {
-            CompositionLocalProvider(LocalStageVeil provides rememberStageVeil(veiled), content = content)
+            CompositionLocalProvider(LocalStageVeil provides veiled, content = content)
         }
 
         if (veiled) {
@@ -232,9 +234,10 @@ enum class SensitiveSource { Author, Platform }
  * panel — and the label and the source line are announced as one thing.
  *
  * **A replaced clip is off its stage outright** — nothing of the body is
- * composed under the block — and the reveal brings it onto the stage already
- * lifted ([LocalStageVeil]), so the stage re-elects exactly as for the
- * post's veil (jakob 2026-09-24, backlog item 103).
+ * composed under the block — and the reveal brings it onto the stage for the
+ * first time, unveiled: the stage evaluates it exactly like any other place
+ * joining the rotation, without displacing a qualifying incumbent
+ * ([StageElection], jakob 2026-09-24, backlog item 103).
  */
 @Composable
 fun SensitiveVeilCompact(
@@ -246,10 +249,9 @@ fun SensitiveVeilCompact(
     testTag: String? = null,
     content: @Composable () -> Unit,
 ) {
-    val stageVeil = rememberStageVeil(veiled)
     if (!veiled) {
         Box(modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)) {
-            CompositionLocalProvider(LocalStageVeil provides stageVeil, content = content)
+            CompositionLocalProvider(LocalStageVeil provides false, content = content)
         }
         return
     }

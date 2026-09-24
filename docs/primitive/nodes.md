@@ -71,7 +71,7 @@ Actor + Profile pair — L1 has no account types, and "active
 member" and "voter" are scoped subsets, never instance-free.
 
 - **User** — a person's account: one L1 **Actor + Profile**, one
-  address. The person ↔ actor association is CoGra service
+  realization address. The person ↔ actor association is CoGra service
   state, never graph state. No User exists before verification —
   an L2 registration rule. See [user.md](user.md).
 - **Collective** — a group acting through a single graph identity:

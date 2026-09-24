@@ -133,7 +133,8 @@ Until PeerNetworks Layer 1 ships, the backend runs an **L1 stand-in**
 behind the interface boundary: an implementation of the
 [layer1-interface.md](../primitive/layer1-interface.md) contract with
 two named simplifications. **Money** — the `B_i` surface and θ-debits
-honored as numbers, without a realization of the burn primitive behind them.
+honored as numbers, with no realization of the burn primitive
+behind them.
 **Standing** — formation, the admission handshake, ordering, causal
 keys, maturity, and the θ-ledger are implemented in full, but the
 conserved standing solve (layer1-interface.md §11.3–11.5) is not: every
@@ -274,7 +275,7 @@ write needs a landed, funded actor with a device-held key.
   superseding the earlier deferral to slice 2: the field is
   invite/auth-flow state, so it ships with the flow). The
   device-local answered-bit stays only as the dismissal memory.
-- Actor-identity uniqueness at the attach: one account per
+- Actor-identity uniqueness at the attach: one account per realization
   address — `attachActorKey` refuses a key already bound to a
   different account ([auth.md](auth.md#application-the-applicant-state)).
   Surfaced by the slice-1 hand test: a second account on a device

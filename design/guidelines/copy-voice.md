@@ -254,8 +254,8 @@ title, at most two short paragraphs, Close. The texts, verbatim
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
   and rides the same signature as your reply. / Nothing is signed until
   Set. Swap the input in settings if you prefer sliders or numbers.
-- **Your first opinion** (the vouch-back pad): Vouching back signs where
-  you stand on the person who vouched you in — your first opinion, and
+- **Your first opinion** (the vouch-back pad): Vouching back signs your
+  opinion of the person who vouched you in — your first one, and
   your feed grows from it. / The pad is how you shape what reaches you —
   for or against, and how much. Nothing is signed until Set.
 
@@ -266,8 +266,8 @@ title, at most two short paragraphs, Close. The texts, verbatim
   versions stay public under "Edited" unless you remove them. An edit
   never bumps the post as new. / Tag and citation changes ride the same signing,
   each as its own signed action. The license never changes.
-- **Citing**: A citation is its own signed action and carries where
-  you stand on what you cite. You can cite anything on CoGra — start
+- **Citing**: A citation is its own signed action and carries your
+  opinion of what you cite. You can cite anything on CoGra — start
   with @handle or #tag to reach comments, messages, and offers. /
   Comments and chat messages can also be cited from themselves —
   open one and choose "Cite in a new post".
@@ -958,11 +958,11 @@ you change it back. Both choices stay on this device.` *Stays on this
 device* is the theme group's own spelling for a client-local choice,
 said once under the group rather than inside either row.
 
-## Awaiting blessing — the geek round's review
+## The opinion pad and its surroundings
 
 The lines the review round wrote (jakob's rulings, 2026-09-11 evening).
 The naming law above is part of the same ruling and is written where it
-belongs; these are the new strings.
+belongs.
 
 **The gesture, said in the settings group.** `Giving an opinion` is the
 group, `A tap opens it; drift to where it feels right.` the pad's hint, and
@@ -1029,11 +1029,11 @@ round, named here so the review pass has them in one place: `Un-tag`,
 the edit body's `Withdrawn: #coastroad`, and the acts card's
 `Tags withdrawn` row label.
 
-## Awaiting blessing — the private-viewer-state round
+## Saved, History and hiding
 
 Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,
 `HistoryEmpty`, `SettingsHidden`, the three content menus and the
-settings page, and up for review in the same pass.
+settings page.
 
 **The reader's word is save** (jakob's ruling). The surface it fills is
 `Saved`, and the row in your own profile's ⋮ is that same word, so the
@@ -1076,11 +1076,11 @@ and each row carries `Unhide` and the moment of the hiding in the ages
 vocabulary (`Hidden 3d`, `Hidden 12.08.2026`) — the removal mark's own
 precedent: the word, then the ladder or the date.
 
-## Awaiting blessing — the caps-affordance round
+## Caps and their refusals
 
-Drawn on `ComposeDetailsCaps`, `ComposeWordsCaps` and `TagPickerRefused`,
-and up for review in the same pass. Two families: the count a capped
-field shows near its cap, and the refusal it shows past it.
+Drawn on `ComposeDetailsCaps`, `ComposeWordsCaps` and `TagPickerRefused`.
+Two families: the count a capped field shows near its cap, and the
+refusal it shows past it.
 
 **The count is two words, and the second one is the reader's side.**
 `6 left` while there is room, `7 over` past it — never `94/100`, which
@@ -1199,7 +1199,7 @@ button: nothing the reader can do from here fills it.
 is named. Not *Activity*, which describes a log, and not *Alerts*, which
 describes an emergency.
 
-## Awaiting blessing — the account-deletion round
+## Deleting the account
 
 Drawn on `Settings`, `DeleteAccount`, `DeleteAccountMail`,
 `FeedDeleting`, `DeleteAccountCanceled` and `ProfileDeleted`. This
@@ -1274,7 +1274,7 @@ A deleted account must not read as a moderation verdict, and it must not
 read as `This profile doesn't exist.` — someone was here, and the product
 never pretends otherwise.
 
-## Awaiting blessing — the review round
+## The deleted actor's face
 
 Drawn on `ProfileDeleted` and on every card and row a deleted actor
 authored, plus the snackbar `FeedHidden` fires. The rest of the round's
@@ -1308,7 +1308,7 @@ have changed their own feed and nothing else. `Undo` beside it: hiding
 is a comfort a reader may have meant for one post rather than for a
 person, and the way back costs nothing.
 
-## Awaiting blessing — the score-and-opinions round
+## The score drill-down and the opinions sheets
 
 Every new line on the Post score's four drill-down boards and on the two
 opinions sheets. The register the round was ruled into is paths, people
@@ -1413,12 +1413,11 @@ the screen carries it in its one line, under a header that reads
 fills either of them yet.
 
 
-## Awaiting blessing — the topic round
+## Topics
 
-Every new line the topic round drew: the tag page's stance row, *Your
+Every line the topic round drew: the tag page's stance row, *Your
 topics*, the feed filter's one-topic narrowing, *Cited by*, and the
-acts footer's zero. Ruled by jakob 2026-09-14; the words are this
-round's and up for review in the same pass.
+acts footer's zero. Ruled by jakob 2026-09-14.
 
 **The word "follow" never reaches the screen, on any surface.** The ban
 above (*Naming*, the notifications section: "*followed* would name a
@@ -1436,11 +1435,13 @@ because the door beside it already carries one (`5 held`). *Held* is the
 word for having a position on a topic, and it is the predicate said
 plainly: a topic is held while the netted pair is not nothing.
 
-**The empty list**: `No topics yet — say where you stand on one from its
-page.` The `Nothing here yet — write the first post.` shape: calm, and
-naming the one thing that would fill it — including where the gesture
-lives, because a reader with no topics has not met the tag page's row
-yet.
+**The empty list**: `No topics yet — say how you feel about one from
+its page.` The `Nothing here yet — write the first post.` shape: calm,
+and naming the one thing that would fill it — including where the
+gesture lives, because a reader with no topics has not met the tag
+page's row yet. *How you feel* is the pad's own register (`How much
+you like it`); the stand-wording is banned from the screen (jakob
+2026-09-24, amending this line at blessing).
 
 **The Affinity pad's six words.** The pad a topic's stance row opens
 fills the same two signed slots as an opinion's with different
@@ -1498,12 +1499,11 @@ master itself recorded as unruled:
   form and the long form are one sentence at two lengths and may not
   disagree about the plural.
 
-## Awaiting blessing — the invites round
+## Invites
 
 Every line the invites round drew: the queue, the teaching empty state,
 the create sheet, the fresh link, the approval pad and the close
-dialog. Ruled by jakob 2026-09-15; the words are this round's and up
-for review in the same pass.
+dialog. Ruled by jakob 2026-09-15.
 
 **The screen is `Invites`**, titled by the profile row that opens it,
 and its arrow says `Back to your profile` like every other private
@@ -1680,7 +1680,7 @@ primitive's freedom to reciprocate anyone stays in §2 and stays off the
 screen — no surface offers a choice of inviter, because no reader is
 asked to make one.
 
-## Awaiting blessing — the topic disconnects
+## Disconnecting from a topic
 
 **A person is walked back; a topic is DISCONNECTED from** (jakob
 2026-09-15, rejecting *walked back*, *let go* and *dropped* for the
@@ -1723,7 +1723,7 @@ every topic pad says `Disconnect`, wherever either stands.
 surface not even nearly.** They name the mechanic in the docs and the
 code; what a reader is told is what they are left with.
 
-## Awaiting blessing — the draft's discard
+## The draft's discard
 
 **The blocked roll's answer** (`ComposeDraftDiscard`, jakob 2026-09-15).
 Under an unanswered draft the picture roll is dimmed and out of reach; a
@@ -1745,7 +1745,7 @@ tap on it used to reach nothing, and now it raises this:
   new post` — what a screen reader meets where a sighted reader meets a
   dimmed grid.
 
-## Awaiting blessing — the change-histories round
+## Change histories
 
 The words of would-like #2 (post-MVP tree, 2026-09-22). Two kinds of
 history — a content chronicle and a stance timeline — and one law under
@@ -1868,20 +1868,19 @@ to be opened.
   see how it built`. Authoring doors are faces and fields; a history
   door is a readout.
 
-## Awaiting blessing — the search-scope line
+## The search-scope line
 
-One string from backlog item 105's ruling (readme §13, the indirect
-kinds are scope-served): with Messages, Comments or Offers selected
-and no scope in the query, the results region carries one quiet line
-where results would stand — the way, not an apology:
+From backlog item 105's ruling (readme §13, the indirect kinds are
+scope-served): with Messages, Comments or Offers selected and no
+scope in the query, the results region carries one quiet line where
+results would stand — the way, not an apology:
 
 - `Found through people and tags — start with @handle or #tag.`
 
-## Awaiting blessing — the chats round
+## Chats
 
 The words of would-like #3 (post-MVP tree, 2026-09-23: the base boards
-and the round's completion). Every string below is a candidate; none is
-blessed yet.
+and the round's completion).
 
 **The page.** `Chats` titles it; the faces are `Your chats` and `All
 chats`, a two-cell row named `Which chats` for the ear. The floating
@@ -1985,9 +1984,9 @@ together, or none does.`; the fact `Who can join` · `Invite only`; the
 line `A chat is public: its name, who is in it and who talks to whom
 are there for anyone to read.`; the act `Sign and start the chat`.
 
-### The chat details round — same day
+### Chat details
 
-Round B1's words (post-MVP tree, 2026-09-23). Candidates, none blessed.
+Round B1's words (post-MVP tree, 2026-09-23).
 
 **The details.** The page is titled `Chat details` — the row menu's word
 and the header door's (`{chat} — chat details`); its way back is `Back to
@@ -2061,10 +2060,10 @@ sheet's own pairing; `Leave` (quiet) and `Stay` (filled). It promises
 nothing about coming back, because whether a return needs a new
 invitation turns on the chat's rules.
 
-### The chats governance round — same day
+### Chat decisions
 
 Round B2's words (post-MVP tree, 2026-09-23, with jakob's fix pass of
-2026-09-24). Candidates, none blessed. The register: a decision is said as
+2026-09-24). The register: a decision is said as
 what a person wants, then how many people agree so far. `Vote` is the
 reader's own word for what they cast (jakob's, in the fix pass); proposal,
 ballot, tally, quorum and weight stay off the screen.
@@ -2171,10 +2170,9 @@ verdict. A removed chat version reads `A version stood here from 10
 September. Its name, picture and words were removed; the record of the
 change stays.`
 
-### The chats integration round — 2026-09-24
+### Chats across the product
 
-Round B3's words (post-MVP tree). Candidates, none blessed; where a string
-had real alternatives they are listed after it, the drawn one first.
+Round B3's words (post-MVP tree).
 
 **The reaction trace.** No printed word: the faces and the count of people
 (`👀🍿🙂 3`). Named for the ear `Opinions on this — {n} people: {the faces'
@@ -2189,7 +2187,7 @@ mark's first line, `Removed by its author`.
 
 **The mic and the recording.**
 
-- The mic is named `Record a voice message` (candidate: `Voice message`); a
+- The mic is named `Record a voice message`; a
   tap starts the recording — no gesture has words, because none exists.
 - Recording: the length is a live timer named `Recording, 0:14`; `Describe`
   at its line's end; `Delete the recording` (the `delete` glyph), the lock
@@ -2198,8 +2196,7 @@ mark's first line, `Removed by its author`.
   beside delete encrypts it.`, or `Encrypted — only the chat's members can
   hear it.`
 - Paused: the length reads `0:22 · Paused`, the timer named `Recording paused
-  at 0:22`; the middle control is `Keep recording` (candidates: `Resume`,
-  `Continue recording`), and it extends the same note.
+  at 0:22`; the middle control is `Keep recording`, and it extends the same note.
 
 **A message's opinions.** The pad is the ordinary pad, named `Opinion pad for
 {sender}'s message`. The sheet is titled `Opinions on this message` (the
@@ -2218,8 +2215,7 @@ length prints tabular, `0:42`.
 **Encrypted media, no key** — the text notice's family, the verb fitted to
 the kind:
 
-- `An encrypted picture — you don't have the key to see it.` (Candidates:
-  `… to open it.`, `… to read it.`)
+- `An encrypted picture — you don't have the key to see it.`
 - `An encrypted clip — you don't have the key to play it.`
 - `An encrypted voice message — you don't have the key to hear it.`
 
@@ -2227,9 +2223,9 @@ No `Show the encrypted …` for media.
 
 **Pending and didn't land.** A settling bubble reads `Still settling ·
 08:52`. The notice: `Your message didn't land`; `“{the words}” couldn't finish
-settling. Nothing was spent.`; `Dismiss` (quiet) and `Put it back` (filled).
-(Candidates for the second: `Back to the field`, `Try again` — the drawn one
-says it signs nothing.)
+settling. Nothing was spent.`; `Dismiss` (quiet) and `Try again` (filled) — the word people are used to
+(jakob 2026-09-24). It returns the words to the field, and the next send
+is the trying: nothing is re-signed on the tap.
 
 **Removing your message.** The own menu adds `Remove` among the acts. The
 dialog: `Remove this message?`; `Its words and anything it carries leave
@@ -2242,11 +2238,10 @@ proposal removed it. The decision is public.`
 
 **A post sent into a chat.** Every share glyph opens the sheet; its name for
 the ear stays `Share {target}`. The sheet is `Send to a chat`; the field `Search
-your chats`; the head row `Share outside CoGra` (candidates: `Share
-elsewhere`, `More ways to share`); the foot's field `Message`, cornered
+your chats`; the head row `Share outside CoGra`; the foot's field `Message`, cornered
 `Optional`; the line `Sends one message into {chat}, pointing to this post.`,
-and with the lock on it adds the reference's fact — candidate: `The lock
-seals your words, never which post you sent.` Signed, the snackbar says `Sent
+and with the lock on it adds `The lock seals your words, never which
+post you sent.` Signed, the snackbar says `Sent
 to {chat}` with `Open`. In the bubble the post reads as its reference row, its
 title over `{author} · a post`.
 
@@ -2261,8 +2256,7 @@ card quotes their message under `You asked to join`.
 cornered `Optional — public, with each invitation`. The invitee's foot quotes
 it under `{name} invited you.`
 
-**The explorer's invited word.** `You're invited`. (Candidates: `Invited —
-join`, `Join — you're invited`.)
+**The explorer's invited word.** `You're invited`.
 
 **Search and Saved.** A chat result's second line is its policy line. A saved
 message's row is the message's words, the sender's handle beside them, and
@@ -2270,19 +2264,18 @@ message's row is the message's words, the sender's handle beside them, and
 
 **The notification rows.** `@mira invited you to {chat}` with the invitation's
 message quoted as the second line; `@saltorres asks to join {chat}` with the
-request's message; `{chat} approved your request to join` (candidate: `Your
-request to join {chat} was approved`). Push says the same words.
+request's message; `{chat} approved your request to join`. Push says the same words.
 
 **The feed cards.** On the real card, with the card's own words: no `Join`
 and no `Open in the chat` on a card. The message card's author line is the
-sender's chip then `· in {chat}` (candidates: `in {chat}`, `· {chat}`); its
+sender's chip then `· in {chat}`; its
 body is the message as a bubble with its clock. The chat card's author line is
 the chat's name with its kind mark, named `a chat` for the ear, over the
 policy line (`A group chat — anyone can join.`); its body is the last message
 as a row, the sender over the words.
 
 **Push.** The page's board is titled `Push notifications · the kinds and their
-defaults` (candidates: `… · what announces itself`, `… · every kind`). Three rows join `Announced right away`: `Invitations to chats`,
+defaults`. Three rows join `Announced right away`: `Invitations to chats`,
 `Requests to join your chats`, `Your requests to join approved`. A `Chats`
 group holds `New messages`, footnoted `A muted chat stays quiet here — mute
 one from its details or by holding its row.` A message's push: the chat's name
