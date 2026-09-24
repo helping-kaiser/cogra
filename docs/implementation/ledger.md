@@ -19,14 +19,16 @@ record and pointers ([economics.md §10](../primitive/economics.md#10-the-settle
 Postgres carries display content and cached views; balances,
 escrow, transfers, and payouts live here
 ([architecture.md](architecture.md)). Admission money never
-appears on this rail — admission money is **L-BTC behind the L1
-boundary**, the same chain's native asset in the other economy,
-read by CoGra only as the scalar `B_i`
-([economics.md §1](../primitive/economics.md#1-the-two-economies));
-the two touch only at the reserve conversion below. Living on one
-chain is deliberate: a holder can swap earned CGT for L-BTC through
-the ladder to fund their own θ-debits, or give back to the
-community fund, without leaving Liquid.
+appears on this rail: CoGra reads it only as the scalar `B_i`
+([economics.md §1](../primitive/economics.md#1-the-two-economies)),
+and the two economies touch only at the reserve conversion below.
+**CoGra deploys against a realization whose external denomination
+is L-BTC on Liquid** — CoGra's deployment choice; the burn
+interface names no realization, and a denomination names none. The
+choice puts both economies on one chain: a holder can swap earned
+CGT for L-BTC through the ladder to fund their own θ-debits, or
+give back to the community's admission fund, without leaving
+Liquid.
 
 Design history: [Q20 (resolved)](../open-questions.md).
 
@@ -38,8 +40,9 @@ The chain choice follows the pairing requirement. CGT's base market
 must pair against an asset with **no issuer or custodian beyond the
 chain itself** ([token.md §4.1](../primitive/token.md#41-the-base-pair)),
 and the project's preferred base asset is Bitcoin. On Liquid, L-BTC
-*is* the native asset: the pair is CGT/L-BTC with no bridge, no
-wrapped asset, and no second chain anywhere in the money path.
+*is* the native asset: the pair is CGT/L-BTC with no bridge and no
+wrapped asset — and with admission money denominated in L-BTC too
+(above), no second chain anywhere in the money path.
 
 Liquid's operator model satisfies the no-single-operator
 requirement as [token.md](../primitive/token.md) states it: blocks
@@ -228,9 +231,9 @@ The admission fund's single outflow
 entirely inside the one chain: the pool's `reserve_share·P` inflow
 is swapped **CGT → L-BTC through the protocol's own ladder** — the
 reserve pool sells into the bid side like any other holder — and the
-resulting L-BTC executes **destination-addressed admission burns** at
+resulting L-BTC funds **destination-addressed admission burns** at
 members', system actors', and Collectives' own addresses, the
-funder-unconstrained burn L1 permits.
+funder-unconstrained burn L1 permits (``rem:gates:guild-funding``).
 
 - **Execution-time price, never a frozen rate.** Each settlement's
   reserve line converts at the market the ladder shows when the
@@ -238,15 +241,17 @@ funder-unconstrained burn L1 permits.
   CGT/L-BTC factor is ever quoted or held — a layer that freezes a
   conversion factor across its period inherits and can amplify
   within-cycle timing advantages, so no such factor exists.
-- **Publicly accounted.** CGT in, L-BTC out, burns executed — all
-  explicit on one chain. The steady-state target ("advertiser
-  revenue covers the community's admission costs") stays checkable in
-  realized terms, arithmetic over public transactions.
+- **Publicly accounted.** CGT in, L-BTC out, admission burns
+  executed — all explicit on one chain. The steady-state target
+  ("advertiser revenue covers the community's admission costs")
+  stays checkable in realized terms, arithmetic over public
+  transactions.
 
 There is no peg step, no exchange hop, and no custody boundary in
-this flow: CGT and the admission denomination live on the same chain, and
-the two economies still touch only here, in the one sanctioned
-direction ([economics.md §1](../primitive/economics.md#1-the-two-economies)).
+this flow: CGT and the admission denomination live on the same
+chain by CoGra's deployment choice (above), and the two economies
+still touch only here, in the one sanctioned direction
+([economics.md §1](../primitive/economics.md#1-the-two-economies)).
 
 ---
 
