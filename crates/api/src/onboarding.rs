@@ -291,20 +291,20 @@ pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
     actor_pubkey: Vec<u8>,
-    realization_address: String,
+    address: String,
 ) -> Result<(), OnboardingError> {
     let verifying =
         crypto::verifying_key_from_bytes(&actor_pubkey).ok_or(OnboardingError::BadInput {
             field: "actorPubkey",
             message: "not a valid public key".into(),
         })?;
-    if crypto::address_of(&verifying) != realization_address {
+    if crypto::address_of(&verifying) != address {
         return Err(OnboardingError::BadInput {
             field: "realizationAddress",
             message: "address does not belong to the submitted key".into(),
         });
     }
-    match store::attach_actor_key(pool, account_id, &actor_pubkey, &realization_address).await? {
+    match store::attach_actor_key(pool, account_id, &actor_pubkey, &address).await? {
         store::AttachOutcome::Attached => Ok(()),
         store::AttachOutcome::KeyInUse => Err(OnboardingError::ActorKeyInUse),
         store::AttachOutcome::Refused => Err(OnboardingError::Forbidden),
