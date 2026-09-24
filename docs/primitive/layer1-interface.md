@@ -284,8 +284,9 @@ output **or validity verdict** re-enters the decision of what may be written
 to $E$, and *terminal* otherwise. Each object carries exactly one of
 the **five tags** (`tbl:network:object-taxonomy`):
 
-- **(interface·input)** — originates below the comparator seam; cited at import,
-  never authored.
+- **(interface·input)** — originates below the comparator seam, in a
+  realization of the burn primitive, and is read at import through the burn
+  interface; cited, never authored.
 - **(L1·closure)** — at least one read-site re-enters admission; consume the
   published value, recompute only to audit. **⋆** marks a *straddler*: binding
   as a feedback input, yet freely readable downstream.
@@ -3061,8 +3062,9 @@ immutability invariant covers ledger entries).
 
 ## 14 Symbol ledger (Layer-1-tagged objects)
 
-Tag semantics (`app:symbols`): **(interface·input)** originates below the
-comparator seam, cited never authored; **(L1·closure)** at least one
+Tag semantics (`app:symbols`): **(interface·input)** originates below
+the comparator seam in a realization, read through the burn interface,
+cited never authored; **(L1·closure)** at least one
 read-site — output or validity verdict — re-enters admission; **⋆** marks a
 straddler; **(L1·verify)** evidence for reproducing or checking a closure
 output, consumed by no formula; **(L1·by-product)** a non-normative host
