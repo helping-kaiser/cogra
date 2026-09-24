@@ -626,6 +626,29 @@ class ComposeWizardStateTest {
         assertThat(again?.coverChoice).isEqualTo(CoverChoice.Frame(1))
     }
 
+    /**
+     * The skipped step's still is stored, not optional: the gate waits
+     * for its id — and a still that cannot be made settles to none, so
+     * the wait always ends.
+     */
+    @Test
+    fun theGateWaitsForTheFirstFrameUntilItLandsOrIsGivenUp() {
+        val skipped = checkNotNull(clipOfRatio(9f / 16f).advanced())
+            .withUpload("clip", AssetUpload.Done("video-1"))
+        assertThat(skipped.uploadsComplete).isFalse()
+        assertThat(skipped.copy(coverMediaId = "frame-1").uploadsComplete).isTrue()
+
+        val givenUp = skipped.withoutFirstFrame()
+        assertThat(givenUp.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(givenUp.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun givingUpTheFirstFrameNeverTouchesAChosenFace() {
+        val chosen = clipOfRatio(9f / 16f).copy(coverChoice = CoverChoice.Frame(0))
+        assertThat(chosen.withoutFirstFrame().coverChoice).isEqualTo(CoverChoice.Frame(0))
+    }
+
     @Test
     fun aNewClipForgetsTheFirstFrameItsPredecessorCarried() {
         val skipped = checkNotNull(clipOfRatio(9f / 16f).advanced())

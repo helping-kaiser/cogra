@@ -34,11 +34,13 @@ import com.cogra.feature.content.wizard.COMMENT_VIDEO_MAX_BYTES
 import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.CoverChoice
+import com.cogra.feature.content.wizard.FirstFrameStill
 import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.attachmentFieldIndex
 import com.cogra.feature.content.wizard.refusesVideo
 import com.cogra.feature.content.wizard.screenPicture
 import com.cogra.feature.content.wizard.toResolvedUpload
+import com.cogra.feature.content.wizard.uploadFirstFrame
 import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -299,19 +301,48 @@ class ReplyWizardViewModel @Inject constructor(
         val processed = transcoded
         if (!clipLanded && processed == null) return
         uploads.remove(clip.uri)?.cancel()
-        uploads[clip.uri] = viewModelScope.launch {
-            if (!clipLanded) _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
-            val choice = _state.value.coverChoice
-            val coverId = when (choice) {
-                CoverChoice.None, CoverChoice.FirstFrame -> null
-                else -> _state.value.coverMediaId ?: uploadCover() ?: return@launch
+        uploads[clip.uri] = viewModelScope.launch { runJourney(clip.uri, clipLanded, processed) }
+    }
+
+    /** The face leg, then — unless it already landed — the clip's own. */
+    private suspend fun runJourney(uri: String, clipLanded: Boolean, processed: ProcessedVideo?) {
+        if (!clipLanded) _state.update { it.withUpload(uri, AssetUpload.Running) }
+        val choice = _state.value.coverChoice
+        val coverId = when (choice) {
+            CoverChoice.None -> null
+            // A vertical clip nobody gave a face: frame 1 is its still.
+            CoverChoice.FirstFrame -> when (val still = firstFrameStill(uri)) {
+                is FirstFrameStill.Stored -> still.mediaId
+                FirstFrameStill.Absent -> null
+                FirstFrameStill.Fault -> return
             }
-            // An id belongs to the face it was uploaded for: a face chosen
-            // while this one was going up must not inherit its id.
-            _state.update { if (it.coverChoice == choice) it.copy(coverMediaId = coverId) else it }
-            if (processed == null || _state.value.video?.upload is AssetUpload.Done) return@launch
-            sendClip(clip.uri, processed)
+            else -> _state.value.coverMediaId ?: uploadCover() ?: return
         }
+        // An id belongs to the face it was uploaded for: a face chosen
+        // while this one was going up must not inherit its id.
+        _state.update { if (it.coverChoice == choice) it.copy(coverMediaId = coverId) else it }
+        if (processed == null || _state.value.video?.upload is AssetUpload.Done) return
+        sendClip(uri, processed)
+    }
+
+    /**
+     * Frame 1's id, reusing one already stored (`uploadFirstFrame`). An
+     * absent still settles the choice to none, silently; a fault lands on
+     * the clip's own failure line, where its retry extracts again.
+     */
+    private suspend fun firstFrameStill(uri: String): FirstFrameStill {
+        _state.value.coverMediaId?.let { return FirstFrameStill.Stored(it) }
+        val still = uploadFirstFrame(uri, video, media)
+        when (still) {
+            is FirstFrameStill.Stored -> Unit
+            FirstFrameStill.Absent -> _state.update {
+                if (it.coverChoice == CoverChoice.FirstFrame) it.copy(coverChoice = CoverChoice.None) else it
+            }
+            FirstFrameStill.Fault -> _state.update {
+                it.withUpload(uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
+            }
+        }
+        return still
     }
 
     /** The clip's own leg: its transcoded bytes, onto the resumable upload. */

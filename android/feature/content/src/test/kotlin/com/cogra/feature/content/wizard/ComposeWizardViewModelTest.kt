@@ -121,11 +121,15 @@ class ComposeWizardViewModelTest {
         /** When set, a still upload blocks here until it is completed. */
         var stillGate: CompletableDeferred<Unit>? = null
 
+        /** The network failing under the next still uploads. */
+        var stillTransportFault = false
+
         override suspend fun uploadMedia(
             picture: ProcessedPicture,
         ): Outcome<MediaAssetView> {
             uploads += 1
             stillGate?.await()
+            if (stillTransportFault) return Outcome.Failed(IOException("down"))
             val uri = pending.removeFirstOrNull().orEmpty()
             if (uri in failures) {
                 return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "too big")))
@@ -267,6 +271,14 @@ class ComposeWizardViewModelTest {
             } else {
                 List(count) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 100, 125)) }
             }
+
+        /** What frame 1 comes back as; null is a clip that gave none. */
+        var firstFrame: ProcessedPicture? = ProcessedPicture(ByteArray(4), 108, 192)
+
+        override suspend fun firstFrame(uri: String): ProcessedPicture? {
+            calls += "firstFrame"
+            return firstFrame
+        }
 
         /**
          * `clip*` is a wide 16:9 clip — the shape that walks the cover
@@ -1460,6 +1472,140 @@ class ComposeWizardViewModelTest {
 
         vm.onOpenCoverStep()
         assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+    }
+
+    // -- The stored first frame (the feed-video rulings, 2026-09-23) --
+
+    /**
+     * THE SKIPPED STEP STILL TAKES FRAME 1: extracted silently, uploaded
+     * on the face's own leg ahead of the clip, and named at prepare.
+     */
+    @Test
+    fun aSkippedClipIsStoredWithItsFirstFrame() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        assertThat(video.calls).contains("firstFrame")
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+
+        vm.onNext() // details -> seal
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m1")
+    }
+
+    /**
+     * When extraction fails the post ships without a still, SILENTLY: no
+     * failure reaches the author, and readers meet the neutral tile.
+     */
+    @Test
+    fun aClipThatGivesNoFirstFrameShipsBareAndSilently() = runTest(dispatcher) {
+        video.firstFrame = null
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(media.order).containsExactly("video")
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+
+        vm.onNext()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastAttachments.single().coverMediaId).isNull()
+    }
+
+    /** A frame the server will not keep is no still either — still silent. */
+    @Test
+    fun aRefusedFirstFrameShipsBareAndSilently() = runTest(dispatcher) {
+        media.failures.add("") // the still upload names no picked uri
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    /** SKIPPED IS NOT DECLINED: a clip that walked the step never takes frame 1. */
+    @Test
+    fun aClipThatWalkedTheStepAndDeclinedNeverTakesFrameOne() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        assertThat(video.calls).doesNotContain("firstFrame")
+        assertThat(media.order).containsExactly("video")
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+    }
+
+    /** The seal waits for frame 1 exactly as it waits for a chosen face. */
+    @Test
+    fun theSealWaitsForTheFirstFrameToLand() = runTest(dispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        media.stillGate = gate
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+        vm.onNext() // details -> seal
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Seal)
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+        assertThat(vm.state.value.canSign).isFalse()
+
+        gate.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+        assertThat(vm.state.value.canSign).isTrue()
+    }
+
+    /** CHOSEN COVER WINS: a face from the door replaces the stored frame 1. */
+    @Test
+    fun aFaceChosenThroughTheDoorReplacesTheFirstFrame() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+
+        vm.onOpenCoverStep()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onPickCoverFrame(2)
+        vm.onNext() // cover -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.Frame(2))
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m2")
+        assertThat(media.order).containsExactly("still", "video", "still").inOrder()
+
+        vm.onNext()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m2")
+    }
+
+    /**
+     * A network fault under frame 1 is a fault, not an answer: it rides
+     * the clip's own failure line, and the retry extracts again.
+     */
+    @Test
+    fun aFirstFrameLostToTheNetworkIsRetriedWithTheClip() = runTest(dispatcher) {
+        media.stillTransportFault = true
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        val failed = vm.state.value.picked.single().upload as AssetUpload.Failed
+        assertThat(failed.reason).isEqualTo(UploadFailure.TRANSPORT)
+        assertThat(failed.retryable).isTrue()
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        assertThat(media.order).doesNotContain("video")
+
+        media.stillTransportFault = false
+        vm.onRetryUpload("tall-clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(video.calls.count { it == "firstFrame" }).isEqualTo(2)
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
     }
 
     /**

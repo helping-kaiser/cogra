@@ -438,6 +438,10 @@ data class ComposeWizardState(
      * to land before the body counts as complete: the placement cannot
      * name an id that does not exist yet. [CoverChoice.None] carries no
      * such id to wait for, so it never holds this up.
+     *
+     * [CoverChoice.FirstFrame] does wait — the skipped step's still is
+     * stored, not optional — and the wait always ends: a still that
+     * cannot be made settles the choice to [CoverChoice.None].
      */
     val uploadsComplete: Boolean
         get() = picked.isNotEmpty() &&
@@ -449,9 +453,7 @@ data class ComposeWizardState(
      * or the one standing has its id.
      */
     val coverSettled: Boolean
-        get() = coverChoice is CoverChoice.None ||
-            coverChoice is CoverChoice.FirstFrame ||
-            coverMediaId != null
+        get() = coverChoice is CoverChoice.None || coverMediaId != null
 
     /**
      * The body carries something publishable. The XOR is read here
@@ -767,6 +769,14 @@ fun ComposeWizardState.clearedCover(): ComposeWizardState = copy(
  */
 fun ComposeWizardState.withCoverIdFor(choice: CoverChoice, id: String?): ComposeWizardState =
     if (coverChoice == choice) copy(coverMediaId = id) else this
+
+/**
+ * The skipped step's still could not be made: the clip ships without
+ * one, silently (`Cover · no frames came back` is what readers meet).
+ * A face chosen meanwhile through the door is left alone.
+ */
+fun ComposeWizardState.withoutFirstFrame(): ComposeWizardState =
+    if (coverChoice == CoverChoice.FirstFrame) copy(coverChoice = CoverChoice.None) else this
 
 /**
  * Drops a pick from the tray without touching the rest of the order.

@@ -77,6 +77,11 @@ internal class WizardUploader(
      * a face chosen afterwards — through the details door, or after
      * stepping back — goes up on its own; and a journey with nothing left
      * to send does nothing at all.
+     *
+     * A clip that skipped the cover step carries [CoverChoice.FirstFrame],
+     * and its face leg stores frame 1 ([uploadFirstFrame]) — on the same
+     * leg, in the same order, and waited on by the same gate as a chosen
+     * face.
      */
     fun startVideoUpload() {
         val current = state.value
@@ -86,55 +91,82 @@ internal class WizardUploader(
         jobs[clip.uri] = scope.launch {
             val choice = state.value.coverChoice
             val coverId = when (choice) {
-                CoverChoice.None, CoverChoice.FirstFrame -> null
+                CoverChoice.None -> null
+                CoverChoice.FirstFrame -> when (val still = firstFrameStill(clip.uri)) {
+                    is FirstFrameStill.Stored -> still.mediaId
+                    FirstFrameStill.Absent -> null
+                    FirstFrameStill.Fault -> return@launch
+                }
                 else -> state.value.coverMediaId ?: uploadCover() ?: return@launch
             }
             state.update { it.withCoverIdFor(choice, coverId) }
             if (state.value.video?.upload is AssetUpload.Done) return@launch
-
-            state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(0)) }
-            val processed = video.transcode(clip.uri, scale.videoMaxBytes) { percent ->
-                state.update { it.withUpload(clip.uri, AssetUpload.Transcoding(percent)) }
-            }
-            if (processed == null) {
-                state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.UNREADABLE_VIDEO)) }
-                return@launch
-            }
-            // The clip's half of the shared screening (`PickScale.kt`),
-            // which is why it runs here rather than at pick time.
-            if (scale.refusesVideo(processed.byteCount)) {
-                state.update { it.withUpload(clip.uri, AssetUpload.Failed(scale.tooBigVideo)) }
-                runCatching { File(processed.path).delete() }
-                return@launch
-            }
-
-            state.update { it.withUpload(clip.uri, AssetUpload.Running) }
-            val sending = { progress: UploadProgress ->
-                onUploadSessionStarted(progress.uploadId)
-                state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
-            }
-            // READY answers here at once — no extra request. `awaitReady`
-            // only starts polling for the backstop case, a PROCESSING
-            // asset (Android's own uploads are always within target).
-            when (val outcome = media.awaitReady(media.uploadVideo(processed, scale.destination, sending))) {
-                is Outcome.Success -> state.update {
-                    it.withUpload(clip.uri, outcome.value.toResolvedUpload(UploadFailure.REFUSED_VIDEO))
-                }
-                is Outcome.Refused -> state.update {
-                    it.withUpload(
-                        clip.uri,
-                        AssetUpload.Failed(UploadFailure.REFUSED_VIDEO, outcome.errors.firstOrNull()?.message),
-                    )
-                }
-                is Outcome.Failed -> state.update {
-                    it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
-                }
-            }
-            // The transcode's cache copy has served its purpose either
-            // way: the bytes are on the server, or the attempt failed
-            // and a retry re-encodes from the original.
-            runCatching { File(processed.path).delete() }
+            sendClip(clip.uri)
         }
+    }
+
+    /**
+     * Frame 1's id, reusing one already stored; an absent still settles
+     * the choice to none, silently, and a fault lands on the clip's own
+     * failure line, where its retry extracts again.
+     */
+    private suspend fun firstFrameStill(uri: String): FirstFrameStill {
+        state.value.coverMediaId?.let { return FirstFrameStill.Stored(it) }
+        val still = uploadFirstFrame(uri, video, media)
+        when (still) {
+            is FirstFrameStill.Stored -> Unit
+            FirstFrameStill.Absent -> state.update { it.withoutFirstFrame() }
+            FirstFrameStill.Fault -> state.update {
+                it.withUpload(uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
+            }
+        }
+        return still
+    }
+
+    /** The clip's own leg: re-encoded, weighed, then sent. */
+    private suspend fun sendClip(uri: String) {
+        state.update { it.withUpload(uri, AssetUpload.Transcoding(0)) }
+        val processed = video.transcode(uri, scale.videoMaxBytes) { percent ->
+            state.update { it.withUpload(uri, AssetUpload.Transcoding(percent)) }
+        }
+        if (processed == null) {
+            state.update { it.withUpload(uri, AssetUpload.Failed(UploadFailure.UNREADABLE_VIDEO)) }
+            return
+        }
+        // The clip's half of the shared screening (`PickScale.kt`),
+        // which is why it runs here rather than at pick time.
+        if (scale.refusesVideo(processed.byteCount)) {
+            state.update { it.withUpload(uri, AssetUpload.Failed(scale.tooBigVideo)) }
+            runCatching { File(processed.path).delete() }
+            return
+        }
+
+        state.update { it.withUpload(uri, AssetUpload.Running) }
+        val sending = { progress: UploadProgress ->
+            onUploadSessionStarted(progress.uploadId)
+            state.update { it.withUpload(uri, AssetUpload.Sending(progress.percent)) }
+        }
+        // READY answers here at once — no extra request. `awaitReady`
+        // only starts polling for the backstop case, a PROCESSING
+        // asset (Android's own uploads are always within target).
+        when (val outcome = media.awaitReady(media.uploadVideo(processed, scale.destination, sending))) {
+            is Outcome.Success -> state.update {
+                it.withUpload(uri, outcome.value.toResolvedUpload(UploadFailure.REFUSED_VIDEO))
+            }
+            is Outcome.Refused -> state.update {
+                it.withUpload(
+                    uri,
+                    AssetUpload.Failed(UploadFailure.REFUSED_VIDEO, outcome.errors.firstOrNull()?.message),
+                )
+            }
+            is Outcome.Failed -> state.update {
+                it.withUpload(uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
+            }
+        }
+        // The transcode's cache copy has served its purpose either
+        // way: the bytes are on the server, or the attempt failed
+        // and a retry re-encodes from the original.
+        runCatching { File(processed.path).delete() }
     }
 
     /**

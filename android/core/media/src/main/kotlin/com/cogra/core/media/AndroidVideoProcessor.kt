@@ -260,32 +260,39 @@ class AndroidVideoProcessor(
                 buildList {
                     repeat(count) { index ->
                         val atMs = coverFrameAtMs(duration, index, count)
-                        val bitmap = runCatching {
-                            reader.getFrameAtTime(
-                                atMs * 1_000L,
-                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC,
-                            )
-                        }.getOrNull() ?: return@repeat
-                        // A frame becomes a still the same way a picked
-                        // picture does — downscaled, re-encoded to WebP,
-                        // carrying no metadata — because that is exactly
-                        // what it is uploaded as.
-                        val processed = ImageProcessing.processBitmap(bitmap)
-                        add(
-                            VideoFrame(
-                                atMs = atMs,
-                                picture = ProcessedPicture(
-                                    processed.bytes,
-                                    processed.width,
-                                    processed.height,
-                                ),
-                            ),
-                        )
-                        bitmap.recycle()
+                        val still = stillAt(reader, atMs) ?: return@repeat
+                        add(VideoFrame(atMs = atMs, picture = still))
                     }
                 }
             }.orEmpty()
         }
+
+    /**
+     * Frame 1 exactly: time zero. The first frame of a stream is always a
+     * sync frame, so `OPTION_CLOSEST_SYNC` at zero lands on it — the same
+     * extraction the offered frames use, run at the start instead of at
+     * slice midpoints.
+     */
+    override suspend fun firstFrame(uri: String): ProcessedPicture? =
+        withContext(Dispatchers.IO) {
+            read(uri) { reader -> stillAt(reader, atMs = 0) }
+        }
+
+    /**
+     * One frame as a still, or null when the retriever gives none back.
+     *
+     * A frame becomes a still the same way a picked picture does —
+     * downscaled, re-encoded to WebP, carrying no metadata — because that
+     * is exactly what it is uploaded as.
+     */
+    private fun stillAt(reader: MediaMetadataRetriever, atMs: Int): ProcessedPicture? {
+        val bitmap = runCatching {
+            reader.getFrameAtTime(atMs * 1_000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+        }.getOrNull() ?: return null
+        val processed = ImageProcessing.processBitmap(bitmap)
+        bitmap.recycle()
+        return ProcessedPicture(processed.bytes, processed.width, processed.height)
+    }
 
     override suspend fun info(uri: String): VideoInfo? = withContext(Dispatchers.IO) {
         probe(uri)?.let { VideoInfo(it.durationMs, it.width.toFloat() / it.height.toFloat()) }

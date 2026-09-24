@@ -172,6 +172,15 @@ class ReplyWizardViewModelTest {
             return frames
         }
 
+        /** What frame 1 comes back as; null is a clip that gave none. */
+        var firstFrame: ProcessedPicture? = ProcessedPicture(ByteArray(2), 9, 16)
+        var firstFrameAsks = 0
+
+        override suspend fun firstFrame(uri: String): ProcessedPicture? {
+            firstFrameAsks += 1
+            return firstFrame
+        }
+
         override suspend fun transcode(
             uri: String,
             capBytes: Long,
@@ -632,6 +641,79 @@ class ReplyWizardViewModelTest {
         assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.Frame(0))
         assertThat(media.order).containsExactly("still", "clip").inOrder()
         assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+    }
+
+    // -- The stored first frame (the feed-video rulings, 2026-09-23) --
+
+    @Test
+    fun aVerticalReplyNobodyGaveAFaceIsStoredWithItsFirstFrame() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = TALL)
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(video.firstFrameAsks).isEqualTo(1)
+        assertThat(media.order).containsExactly("still", "clip").inOrder()
+        assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m1")
+    }
+
+    @Test
+    fun aVerticalReplyWhoseClipGivesNoFrameShipsBareAndSilently() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = TALL)
+        video.firstFrame = null
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(media.order).containsExactly("clip")
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    /** A clip whose row stood from the start and was declined takes no frame 1. */
+    @Test
+    fun aWideReplyLeftWithoutAFaceNeverTakesFrameOne() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(video.firstFrameAsks).isEqualTo(0)
+        assertThat(media.order).containsExactly("clip")
+    }
+
+    @Test
+    fun theReplySealWaitsForTheFirstFrameToLand() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = TALL)
+        val gate = CompletableDeferred<Unit>()
+        media.stillGate = gate
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.canSign).isFalse()
+
+        gate.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.canSign).isTrue()
     }
 
     @Test

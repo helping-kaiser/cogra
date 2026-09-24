@@ -15,6 +15,7 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.MediaRepository
+import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.awaitReady
 import com.cogra.domain.media.overPictureCap
 
@@ -91,6 +92,58 @@ internal suspend fun uploadPicture(
         is Outcome.Success -> outcome.value.toResolvedUpload(refused)
         is Outcome.Refused -> AssetUpload.Failed(refused, outcome.errors.firstOrNull()?.message)
         is Outcome.Failed -> AssetUpload.Failed(UploadFailure.TRANSPORT)
+    }
+}
+
+/** How the skipped step's still ended ([uploadFirstFrame]). */
+internal sealed interface FirstFrameStill {
+    /** Frame 1 is on the server: the clip names it as its still. */
+    data class Stored(val mediaId: String) : FirstFrameStill
+
+    /**
+     * No still could be made or kept. SILENT: the post ships without one
+     * and the reading surfaces' neutral tile stands (`Cover · no frames
+     * came back`) — the author chose nothing, so nothing is theirs to fix.
+     */
+    data object Absent : FirstFrameStill
+
+    /**
+     * The network failed underneath it — a fault, not an answer, so it
+     * rides the clip's own failure line and its retry, which extracts
+     * again.
+     */
+    data object Fault : FirstFrameStill
+}
+
+/**
+ * THE SKIPPED STEP STILL TAKES FRAME 1 (design/readme.md "The feed-video
+ * rulings — 2026-09-23"; `ComposeDetailsVideo.jsx`): skipping the cover
+ * step skips the CHOICE, not the still. Frame 1 is extracted with the
+ * frame picker's own machinery and uploaded as an ordinary still, on the
+ * cover's own leg.
+ *
+ * Everything that means "there is no still to keep" — no frame came
+ * back, the frame is over the still cap, the server refused it — ends
+ * [FirstFrameStill.Absent], never a failure the author meets: an error
+ * about a picture they did not ask for, on a step they never saw, has no
+ * way out worth offering. Only a transport fault is reported, because a
+ * retry can mend it.
+ */
+internal suspend fun uploadFirstFrame(
+    uri: String,
+    video: VideoProcessor,
+    media: MediaRepository,
+): FirstFrameStill {
+    val still = video.firstFrame(uri)?.takeUnless { it.overPictureCap() }
+        ?: return FirstFrameStill.Absent
+    return when (val outcome = media.awaitReady(media.uploadMedia(still))) {
+        is Outcome.Success -> if (outcome.value.state == MediaAssetState.READY) {
+            FirstFrameStill.Stored(outcome.value.id)
+        } else {
+            FirstFrameStill.Absent
+        }
+        is Outcome.Refused -> FirstFrameStill.Absent
+        is Outcome.Failed -> FirstFrameStill.Fault
     }
 }
 

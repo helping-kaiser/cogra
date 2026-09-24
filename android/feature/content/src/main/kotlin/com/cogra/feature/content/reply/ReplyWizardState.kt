@@ -251,9 +251,7 @@ data class ReplyWizardState(
      * or the one standing has its id.
      */
     val coverSettled: Boolean
-        get() = coverChoice is CoverChoice.None ||
-            coverChoice is CoverChoice.FirstFrame ||
-            coverMediaId != null
+        get() = coverChoice is CoverChoice.None || coverMediaId != null
 
     /**
      * Whether the clip's cover field is the door rather than the row —
