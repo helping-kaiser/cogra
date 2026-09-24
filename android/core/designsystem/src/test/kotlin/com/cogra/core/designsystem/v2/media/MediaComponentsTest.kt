@@ -96,6 +96,35 @@ class MediaComponentsTest {
         compose.onNodeWithTag("veil_reveal").assertDoesNotExist()
     }
 
+    /**
+     * The wash's own tap-anywhere-reveals handling
+     * (`tappingTheVeiledAreaAwayFromTheButtonDoesNotReachTheBodyBeneath`)
+     * sits BEHIND the button in the same hit path, so a tap on the button
+     * must still fire the reveal exactly once — not once from the button
+     * and once more from the wash underneath it.
+     */
+    @Test
+    fun tappingTheButtonRevealsExactlyOnce() {
+        var revealCount = 0
+        compose.setContent {
+            Cogra2PreviewTheme {
+                var veiled by remember { mutableStateOf(true) }
+                SensitiveVeil(
+                    veiled = veiled,
+                    onReveal = {
+                        revealCount++
+                        veiled = false
+                    },
+                    testTag = "veil",
+                ) { body("the secret body")() }
+            }
+        }
+
+        compose.onNodeWithTag("veil_reveal").performClick()
+
+        assertThat(revealCount).isEqualTo(1)
+    }
+
     @Test
     fun anUnveiledBodyIsJustTheBody() {
         compose.setContent {
