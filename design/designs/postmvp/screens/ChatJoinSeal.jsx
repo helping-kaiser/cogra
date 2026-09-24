@@ -25,11 +25,14 @@
    the backing was the invitation or the approval that already stands (§4,
    *Backing*). Nobody else signs anything for the reader to join.
 
-   `Your opinion` IS THE JOIN'S OWN STANCE. A Participant carries a real stance
-   toward the chat, defaulted low like every normal act (invitations.md §3,
-   `(+0.1, +0.1)`), read through `OwnStanceReadout` exactly as the message's
-   seal reads the message's. It reads; it does not edit — `ChatSignSheet`'s
-   open question, carried.
+   `Your opinion` IS THE JOIN'S OWN STANCE, AND THE READER SETS IT HERE (jakob's
+   ruling, the integration round's fix pass: "you should be able to express
+   your actual opinion when accepting an invite or creating a request"). A
+   Participant carries a real stance toward the chat, defaulted low like every
+   normal act (invitations.md §3, `(+0.1, +0.1)`), and the row holds
+   `StanceControl` itself (`SealStance`): the face that looks pressable, its
+   pair in geek mode, a tap opening the ordinary pad over the sheet
+   (`ChatJoinSealPad`). What the pad sets is what `Sign and join` signs.
 
    THE ONE LINE says the two things a joiner cannot guess: the membership is
    public, and joining starts a new key for the chat (every join rotates it,
@@ -39,21 +42,5 @@
    THE SURFACE BENEATH IS THE INVITED THREAD, whole and inert — the route the
    board draws. */
 export function Screen() {
-  return (
-    <>
-      <ChatThreadInvitedBody />
-      <BottomSheet open ariaLabel="What you sign" maxHeight="88%">
-        <SheetTitle trailing={<HelpDot ariaLabel="How signing works" />}>What you sign</SheetTitle>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 24px" }}>
-          <ActsCard rows={[{ label: "Joining", value: "Night fishing crew", count: "1", countNoun: "join" }]} total="1 thing, signed" />
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <FactRow label="Invited by" value="Mira Voss" />
-            <FactRow label="Your opinion" value={<OwnStanceReadout pDirected={0.1} />} last />
-          </div>
-          <QuietNote>Joining is public — your name joins the member list. Encrypted messages sent before you join stay closed to you.</QuietNote>
-          <Button style={{ width: "100%" }}>Sign and join</Button>
-        </div>
-      </BottomSheet>
-    </>
-  );
+  return <ChatJoinSealSheet />;
 }

@@ -22,11 +22,12 @@
    card's words open the decision whole (`ChatDecisionDetail`'s anatomy), as
    every card's do.
 
-   NO MESSAGE RIDES THIS REQUEST. Round A's `Ask to join` sends on one tap; the
-   composer for the request's optional message (the Join Request's payload,
-   layer1-interface.md's act payload schema) is round B3's (jakob 2026-09-24).
-   `ChatRequestApprove` draws the message on the approver's side as the record
-   can carry it.
+   THE REQUEST CARRIES THE READER'S MESSAGE (the chats integration round,
+   2026-09-24). `Ask to join` opens the request's own small sheet
+   (`ChatAskSheet`) with an optional field — the Join Request's payload,
+   layer1-interface.md's act payload schema — and what the reader wrote there
+   stands quoted under their card, as the approver reads it on theirs
+   (`ChatRequestApprove`).
 
    Withdrawing a request is not drawn: no record withdraws a Join Request in
    the docs.
@@ -37,7 +38,7 @@ export function Screen() {
   return (
     <>
       <ChatThreadHeader name="Harbour office" backLabel="Back to all chats" />
-      <HarbourOfficeThread after={<PendingCard>You asked to join</PendingCard>} />
+      <HarbourOfficeThread after={<PendingCard quote={HARBOUR_REQUEST_MESSAGE}>You asked to join</PendingCard>} />
       <ChatJoinFoot state="requested" />
     </>
   );

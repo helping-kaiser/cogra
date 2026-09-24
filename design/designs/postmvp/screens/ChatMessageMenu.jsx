@@ -13,12 +13,13 @@
    its card; a bubble wears nothing, so `Give your opinion` is a row here and
    opens the ordinary pad over the thread. And `Reply` — the messenger's reply,
    a new message in this chat that quotes this one (a Reference from the
-   message, chats.md §3); the foot takes the quote and the field is ready.
+   message, chats.md §3); the foot takes the quote and the field is ready
+   (`ChatThreadReply`, the chats integration round).
 
    NO EDIT ROW, EVER. Messages never edit (jakob; chats.md §8) — a correction is
    the next message. The reader's OWN message adds `Remove` beside these rows,
-   the per-content removal every kind carries (erasure.md §1); that variant is
-   stated here, not drawn.
+   the per-content removal every kind carries (erasure.md §1) — drawn by the
+   integration round as `ChatMessageMenuOwn`.
 
    THE MESSAGE HELD IS JUNO'S, the readable encrypted one: its menu is the same
    as a plaintext message's, because encryption hides the words from outsiders
