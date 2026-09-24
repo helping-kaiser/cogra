@@ -135,9 +135,9 @@ describe("what goes on the wire", () => {
 
   it("keeps the author's order, so the first picture leads", () => {
     expect(commentAttachmentClaims(done(pickInto(NO_COMMENT_MEDIA, picks(3))))).toEqual([
-      { mediaId: "m0", altText: null, coverMediaId: null },
-      { mediaId: "m1", altText: null, coverMediaId: null },
-      { mediaId: "m2", altText: null, coverMediaId: null },
+      { mediaId: "m0", altText: null, coverMediaId: null, coverTaken: null },
+      { mediaId: "m1", altText: null, coverMediaId: null, coverTaken: null },
+      { mediaId: "m2", altText: null, coverMediaId: null, coverTaken: null },
     ]);
   });
 });

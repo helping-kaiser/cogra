@@ -294,6 +294,7 @@ describe("the compose wizard", () => {
           isCover: boolean;
           altText: string | null;
           coverMediaId: string | null;
+          coverTaken: boolean | null;
         }[];
       };
     } | null = null;
@@ -357,8 +358,16 @@ describe("the compose wizard", () => {
         isCover: true,
         altText: "paper against the salt crust",
         coverMediaId: null,
+        coverTaken: null,
       },
-      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null, coverMediaId: null },
+      {
+        mediaId: "m-b",
+        displayOrder: 1,
+        isCover: false,
+        altText: null,
+        coverMediaId: null,
+        coverTaken: null,
+      },
     ]);
   });
 

@@ -132,6 +132,13 @@ export type GalleryEntryDraft = {
    * author left faceless — going without a cover is always possible.
    */
   coverMediaId?: string | null;
+  /**
+   * Whether the poster is a frame silently taken from the clip rather than a
+   * still the author chose. Null on a picture and on a clip with no cover —
+   * the question does not apply — mirroring `coverMediaId`'s own default.
+   * True is refused by the contract without a `coverMediaId` alongside it.
+   */
+  coverTaken?: boolean | null;
 };
 
 /**
@@ -152,6 +159,7 @@ export function attachmentInputs(entries: readonly GalleryEntryDraft[] | undefin
     isCover: index === 0,
     altText: entry.altText === null || entry.altText.trim() === "" ? null : entry.altText.trim(),
     coverMediaId: entry.coverMediaId ?? null,
+    coverTaken: entry.coverTaken ?? null,
   }));
 }
 

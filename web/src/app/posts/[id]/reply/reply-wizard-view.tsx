@@ -401,9 +401,7 @@ export function ReplyWizard({
         license: state.license,
         tags: state.tags,
         references: state.references,
-        attachments:
-          commentAttachmentClaims(state.media, effectiveCover(state.cover, state.autoCover)) ??
-          undefined,
+        attachments: commentAttachmentClaims(state.media, state.cover, state.autoCover) ?? undefined,
         stance: state.stance,
         sensitive: state.sensitive,
         sensitiveReason: state.sensitiveReason,

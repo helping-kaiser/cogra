@@ -86,7 +86,12 @@ function referenceClaim(
 }
 
 /** One picture as the detail read serves it, ready to be re-stated. */
-function attachment(id: string, altText: string | null = null) {
+function attachment(
+  id: string,
+  altText: string | null = null,
+  coverMediaId: string | null = null,
+  coverTaken = false,
+) {
   return {
     __typename: "MediaAttachment",
     id,
@@ -95,7 +100,17 @@ function attachment(id: string, altText: string | null = null) {
     status: "NORMAL",
     mimeType: "image/webp",
     options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
-    coverMedia: null,
+    coverMedia:
+      coverMediaId === null
+        ? null
+        : {
+            __typename: "MediaAttachment",
+            id: coverMediaId,
+            url: `https://media.test/${coverMediaId}.webp`,
+            status: "NORMAL",
+            options: { __typename: "MediaOptions", aspectRatio: "1:1" },
+          },
+    coverTaken,
   };
 }
 
@@ -452,13 +467,71 @@ describe("ComposeForm", () => {
         // gallery, so a placement that came back without its cover would
         // publish a version that had quietly lost one.
         attachments: [
-          { mediaId: "m-1", displayOrder: 0, isCover: true, altText: "A jetty", coverMediaId: null },
-          { mediaId: "m-2", displayOrder: 1, isCover: false, altText: null, coverMediaId: null },
+          {
+            mediaId: "m-1",
+            displayOrder: 0,
+            isCover: true,
+            altText: "A jetty",
+            coverMediaId: null,
+            // MediaAttachment.coverTaken is Boolean! — the server always
+            // answers false on a placement with no cover, never null.
+            coverTaken: false,
+          },
+          {
+            mediaId: "m-2",
+            displayOrder: 1,
+            isCover: false,
+            altText: null,
+            coverMediaId: null,
+            coverTaken: false,
+          },
         ],
         sensitive: false,
         sensitiveReason: null,
       },
     });
+  });
+
+  // THE EDIT ROUND-TRIP: `coverTaken` rides the loaded placement exactly as
+  // `coverMediaId` does (HT-18's own rule, applied to the newer bit) — an
+  // edit that dropped it would silently turn a silently-taken cover into a
+  // chosen one the moment the author saved anything else about the post.
+  it("re-states a silently-taken cover through the edit, never flipping it to chosen", async () => {
+    searchParams = new URLSearchParams("post=p1");
+    let editVariables: Record<string, unknown> | null = null;
+    server.use(
+      graphql.query("PostDetail", () =>
+        HttpResponse.json({
+          data: editablePost([], [], [attachment("m-1", null, "m-cover", true)]),
+        }),
+      ),
+      graphql.mutation("PreparePostEdit", ({ variables }) => {
+        editVariables = variables;
+        return HttpResponse.json({ data: preparedPayload("preparePostEdit", "p1") });
+      }),
+    );
+    renderWithProviders(<ComposeForm />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+
+    expect(await screen.findByTestId("compose-media")).toBeInTheDocument();
+    fireEvent.change(screen.getByTestId("compose-title"), { target: { value: "New title" } });
+    fireEvent.click(screen.getByTestId("compose-submit"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/p1"));
+    expect(
+      (editVariables as unknown as { input: { attachments: unknown } }).input.attachments,
+    ).toEqual([
+      {
+        mediaId: "m-1",
+        displayOrder: 0,
+        isCover: true,
+        altText: null,
+        coverMediaId: "m-cover",
+        coverTaken: true,
+      },
+    ]);
   });
 
   // THE EDIT SURFACE'S OWN SENSITIVE ROW (`_shared.jsx:1390`), where the

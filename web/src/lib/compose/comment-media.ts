@@ -19,7 +19,14 @@
 
 import type { GalleryEntryDraft } from "@/lib/api/content-api";
 import { CENTERED } from "@/lib/ui2/media/crop";
-import { kindOf, type AssetUpload, type CoverAsset, type MediaKind, type PickedAsset } from "./wizard";
+import {
+  effectiveCover,
+  kindOf,
+  type AssetUpload,
+  type CoverAsset,
+  type MediaKind,
+  type PickedAsset,
+} from "./wizard";
 
 /**
  * D9(ii): four per comment, checked whole before anything is staged.
@@ -183,15 +190,27 @@ export function commentGate(
  * The poster rides the clip's own placement, the same way a post's does, so
  * a cover the author chose but whose upload has not landed leaves the whole
  * gallery unresolved rather than publishing the clip faceless.
+ *
+ * `cover` and `autoCover` travel separately, RAW, rather than pre-resolved —
+ * only from the two together can this tell a silently TAKEN cover from a
+ * CHOSEN one, which `coverTaken` on the wire must state.
  */
 export function commentAttachmentClaims(
   media: CommentMedia,
-  /** The video's face, or null on a picture comment and a faceless clip. */
+  /** The video's face the author chose, or null on a picture comment. */
   cover: CoverAsset | null = null,
+  /** The silent frame-1 still — uploaded whether or not a face was chosen. */
+  autoCover: CoverAsset | null = null,
 ): readonly GalleryEntryDraft[] | null {
   if (media.length === 0) return null;
-  if (cover !== null && cover.upload.kind !== "done") return null;
-  const coverMediaId = cover?.upload.kind === "done" ? cover.upload.mediaId : null;
+  const effective = effectiveCover(cover, autoCover);
+  if (effective !== null && effective.upload.kind !== "done") return null;
+  const coverMediaId = effective?.upload.kind === "done" ? effective.upload.mediaId : null;
+  // TAKEN means the effective cover came from the silent leg with no author
+  // choice: `effectiveCover` always prefers a chosen `cover`, so reaching a
+  // non-null `coverMediaId` with `cover` still null can only mean `autoCover`
+  // supplied it.
+  const coverTaken = coverMediaId !== null && cover === null;
   const claims: GalleryEntryDraft[] = [];
   for (const asset of media) {
     if (asset.upload.kind !== "done") return null;
@@ -202,6 +221,7 @@ export function commentAttachmentClaims(
       mediaId: asset.upload.mediaId,
       altText: asset.altText.trim() === "" ? null : asset.altText.trim(),
       coverMediaId: kindOf(asset) === "video" ? coverMediaId : null,
+      coverTaken: kindOf(asset) === "video" ? coverTaken : null,
     });
   }
   return claims;
