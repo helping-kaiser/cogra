@@ -78,9 +78,8 @@ project owner; a fork sets its own genesis.
 Genesis begins with money and proceeds so that every record's
 preconditions already stand:
 
-1. **The genesis admission burn.** The operator burns L-BTC (Liquid
-   Bitcoin) into a realization of the burn primitive,
-   funding the addresses of everything in the cast
+1. **The genesis admission burns.** The operator funds admission
+   burns at the addresses of everything in the cast
    ([economics.md §7.2](economics.md#72-the-admission-fund)).
 2. **The Genesis Moderator registers** — the instance's first
    accepted record.
@@ -224,9 +223,10 @@ loss-limited by a pinned bound or by construction, per D4.4's
 "mundane knobs" framing.
 
 - **`reserve_share`** — the campaign-pool fraction carved for the
-  admission fund, genesis default `1%`. Hard-capped by a **pinned
-  ceiling in the published spec** — the ceiling itself is not a
-  parameter, so governance can never gut the contributor pool
+  community's admission fund, genesis default `1%`. Hard-capped by
+  a **pinned ceiling in the published spec** — the ceiling itself
+  is not a parameter, so governance can never gut the contributor
+  pool
   ([economics.md §7](economics.md#7-the-conservation-equation)).
 - **`n_eval_epochs`** — the post-window evaluation delay `N_eval`
   before campaign settlement
