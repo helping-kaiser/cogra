@@ -2201,7 +2201,8 @@ The message's own seal adds `Adjust`, the compose seal's word.
 
 **A voice note.** The play control is named `Play — {the author's
 description}`, or `Play — Voice message, 0:42` where there is none; the
-scrub line `Position in the voice message`, its value `0:00 of 0:42`. The
+scrub line `Position in the voice message`, its value spoken as
+"0:00 of 0:42", the Seek row's shape. The
 length prints tabular, `0:42`.
 
 **Encrypted media, no key** — the text notice's family, the verb fitted to
