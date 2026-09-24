@@ -14,7 +14,10 @@
    THE FOOT IS THE JOIN (`ChatJoinFoot`), worded by the chat's policy: this one
    takes requests, so `Ask to join`; an open chat reads `Join`; an invite-only
    chat has nothing to press and says so in one quiet line. No field, no lock,
-   no arrow — a non-member's message would never enter the transcript.
+   no arrow — a non-member's message would never enter the transcript. `Ask to
+   join` opens the request's small sheet with its optional message
+   (`ChatAskSheet`, the chats integration round) rather than sending on the
+   tap.
 
    A GUEST GETS THIS SAME FACE. Reading needs no account, so a guest arriving
    through the explorer reads this thread as drawn — ranked for them from the

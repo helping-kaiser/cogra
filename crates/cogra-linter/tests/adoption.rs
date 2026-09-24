@@ -551,7 +551,6 @@ fn the_signature_section_round_trips() {
         signature.prefixes.get(&prefix("ARCH")),
         Some(&OwnerId::new("doc.linter-architecture"))
     );
-    assert_eq!(signature.prefixes.len(), 11);
     let package = signature
         .families
         .iter()
@@ -599,7 +598,6 @@ fn the_package_family_derives_its_prefixes() {
 #[test]
 fn the_partition_section_round_trips() {
     let partition = ruled().partition;
-    assert_eq!(partition.rules.len(), 20);
     let first = &partition.rules[0];
     assert_eq!(first.order, 1);
     assert_eq!(
@@ -781,9 +779,12 @@ reserved_ungoverned = []
 #[test]
 fn the_reserved_kinds_section_round_trips() {
     let reserved = ruled().reserved_kinds;
-    assert_eq!(reserved.count, 36);
     assert_eq!(reserved.governed, vec![Kind::new("test"), Kind::new("mod")]);
-    assert_eq!(reserved.kinds().count(), 36);
+    assert_eq!(
+        reserved.kinds().count(),
+        reserved.count,
+        "the stated count is the set's own"
+    );
     assert!(reserved.contains(&Kind::new("test")));
     assert!(reserved.contains(&Kind::new("endpoint")));
     assert!(

@@ -60,27 +60,30 @@ applies to.
 Two moneys touch CoGra, on opposite sides of the L1 boundary, and
 they never mix:
 
-- **The admission economy** — the burn value behind `B_i` and
-  the θ-debit. Writing any record costs its author θ off their own
+- **The admission economy** — the burn value `B_i` behind the
+  θ-debit. Writing any record costs its author θ off their own
   balance; capacity is the balance
-  (``post:epoch:act-debit``). This money is the realization's:
-  CoGra consumes `B_i` and the burn benchmarks
-  (`B_W1`/`B_safety`/`B_door`,
+  (``post:epoch:act-debit``). Burn value is recorded by a
+  realization of the burn primitive beneath L1, which prices it in
+  its own external denomination at the unit cost `c_u` it
+  publishes (``post:comparator:burn-primitive``, R10). This money
+  is the realization's: CoGra consumes `B_i` and the burn
+  benchmarks (`B_W1`/`B_safety`/`B_door`,
   ``cor:epoch:universal-burn-benchmarks`` — gate benchmarks; there
-  is no universal admission price) through the interface and
-  never authors a realization's records
+  is no universal admission price) through the interface
   ([substrate-map.md §7](substrate-map.md#7-economics-and-feed-pointers)).
 - **The reward economy** — **CGT**, the advertisers' money spread
   over CoGra's users: terminal, CoGra's own, fully disconnected
-  from the burn value. "Burn" in CoGra vocabulary always means CGT
+  from burn value. "Burn" in CoGra vocabulary always means CGT
   supply destruction (§7), never the θ-debit — the admission side
   is named by L1's own term.
 
 The two connect at exactly one point, and only in one direction:
 the **admission fund** (§7.2) converts a share of campaign revenue
-into admission burns that fund members' θ-debits. An admission burn is
-funder-unconstrained and accrues to the member's own address
+into admission burns that fund members' θ-debits. An admission
+burn is funder-unconstrained and accrues to the member's own address
 whoever paid (``rem:gates:guild-funding``,
+``rem:comparator:destination-funding-non-transferability``,
 [layer1-interface.md §11.2](layer1-interface.md#112-commitment-rate));
 the comparator sees a funded member exactly as a self-funded one.
 System actors and Collectives draw on the same pool.
@@ -182,11 +185,11 @@ only; a campaign that could carry signal would be buying ranking
 directly, the feedback the no-AI invariant forbids.
 
 **Invariant: money never rides L1.** Amounts live on the rails —
-the realization's admission money, CGT reward money — and the graph carries
-pointers, never amounts. Here: the deposit sits in rail-side
-escrow, and per-contributor figures live in the settlement tree
-(§10). The
-anchor carries the public record and pointers.
+the realization's admission money, CGT reward money — and the
+graph carries pointers, never amounts. Here: the deposit sits in
+rail-side escrow, and per-contributor figures live in the
+settlement tree (§10). The anchor carries the public record and
+pointers.
 
 ### 3.1 Forbidden configurations
 
@@ -465,8 +468,11 @@ it spends at least
 — strictly positive, and strictly *more* loss-making as
 `reserve_share` rises. The reserve line is not extractable money:
 it becomes `B_i` capacity at members' addresses, spendable only as
-θ-debits, never withdrawable. The cap holds across concurrent
-campaigns (each settles its own equation; no shared pool state).
+θ-debits, never withdrawable — burn value carries no redemption
+and never moves between addresses
+(``post:comparator:burn-primitive``, R2, R3). The cap holds
+across concurrent campaigns (each settles its own equation; no
+shared pool state).
 Reputation (§7.4) adds enforcement on top of this mechanical
 guarantee, never in place of it.
 
@@ -475,7 +481,8 @@ guarantee, never in place of it.
 The `admission_fund` line accrues to a dedicated pool — **the
 community's admission fund**, distinct from the team treasury
 ([token.md §6](token.md#6-treasury)). Its outflows are exactly one
-kind: CGT converted to admission burns at members', system actors', and
+kind: CGT converted into admission burns at members', system
+actors', and
 Collectives' own addresses (``rem:gates:guild-funding``; conversion
 mechanics in [token.md](token.md)) — covering the θ-debits the
 community's members would otherwise pay out of pocket. **The
@@ -492,11 +499,17 @@ inviting at a human pace — never meets them, and an actor past
 them funds their own burns until the window turns, so neither
 invite floods nor act spam can drain what the community set aside.
 
-Because inflow (the settlement line) and outflow (on-chain burns)
-are both public, the steady-state target — **advertiser revenue
-covers the community's admission costs** — is a checkable claim, not a
-promise. The pool is seeded at genesis and open to top-ups; the
-discipline is on what leaves, not what enters.
+Because inflow (the settlement line) and outflow (the admission
+burns, publicly verifiable by definition,
+``def:comparator:burn-primitive``) are both public, the
+steady-state target — **advertiser revenue covers the community's
+admission costs** — is a checkable claim, not a promise. The pool
+is seeded at genesis and open to top-ups; the discipline is on what
+leaves, not what enters. It is one global pot that everyone pays
+into, the team treasury included as a contributor like any
+other. At the federation stage a community can leave the global
+pot and run its own to pay its admission fees
+([open-questions.md Q15](../open-questions.md)).
 
 ### 7.3 The inviter reward
 

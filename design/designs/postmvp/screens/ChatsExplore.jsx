@@ -26,6 +26,15 @@
    the chat's governance, which ships its default silently — nothing about it
    is said here.
 
+   AN INVITED READER'S ROW WEARS ITS OWN WORD (the chats integration round,
+   2026-09-24): Night fishing crew is invite only, and Mira has invited the
+   reader, so its slot says `You're invited` in the join's register where
+   `Invite only` would stand — the one fact that opens a shut chat to this
+   reader. The word lands where `Join` lands, the join's seal, on the invited
+   route's nouns. Tide tables now stands for the invite-only row a stranger
+   meets. `Ask to join` no longer sends on the tap: it opens the request's own
+   small sheet, with its optional message (`ChatAskSheet`).
+
    READING COMES FIRST. A row opens the chat itself — `ChatThreadReader`, the
    thread with the join where a member's foot would be — so a reader reads
    before deciding.
@@ -46,10 +55,10 @@ export function Screen() {
       <ChatsColumn>
         <ChatExploreRow name="Harbour office" preview={<NoKeyPreview sender="Kel Moreau" />} join="request" />
         <ChatExploreRow name="Sea wall market" image="gallery-honey.jpg" preview="Mira Voss: Honey is back on the stand from Saturday." join="open" />
-        <ChatExploreRow name="Night fishing crew" preview={<NoKeyPreview sender="Tobias Lindqvist" />} join="invite" />
+        <ChatExploreRow name="Night fishing crew" preview={<NoKeyPreview sender="Tobias Lindqvist" />} join="invited" />
         <ChatExploreRow name="Slipway repairs" preview="Juno Baptiste: Bring gloves — the new planks splinter." join="open" />
         <ChatExploreRow name="Birdwatch at the point" preview={<NoKeyPreview sender="Ada Okonkwo" />} join="request" />
-        <ChatExploreRow name="Tide tables" preview="Kel Moreau: Spring tides this weekend, lowest on Sunday." join="open" />
+        <ChatExploreRow name="Tide tables" preview="Kel Moreau: Spring tides this weekend, lowest on Sunday." join="invite" />
       </ChatsColumn>
       <NewChatFab />
       <BottomNav active={null} slots={ALL_SLOTS} inline />

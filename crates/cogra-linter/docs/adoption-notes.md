@@ -741,7 +741,39 @@ with — verified empirically, not only by construction, against the
 pre-fix code on an identical tree (2265 sources either way; see
 Measurements).
 
-**R29 — The carrier is the tracked corpus.** The carrier's base set is
+Reviewed 2026-09-24, R29 — the L1 author's linter at source commit
+416b136.
+
+**R29 — The 416b136 delta leaves the discipline where it was, and
+three small adoptions land from it.** The comparison is the working
+note at
+`tmp_research_files/2026-09-24-l1-update-review/linter-comparison/README.md`
+(``rep:notes:linter-comparison-416b136``). Its finding on the
+discipline: upstream, the design records this corpus's four
+discipline documents descend from are byte-identical to those of the
+export imported on 2026-08-31, and the package records are reflowed
+rather than rewritten. The code-side delta was ranked, and
+three items were adopted:
+
+- **The suite asserts no live-corpus count.** The module-census pin
+  broke Corpus lint on every added module. The tests now assert over
+  corpora they build themselves, and over this corpus they assert only
+  agreement and non-vacuity. The counts are what a run reports.
+- **`regenerate` refuses a write while the carrier disagrees with the
+  adoption data** (``dec:lint:regenerate-precondition``). This is the
+  prior study's writer-refusal row, re-derived rather than copied. A
+  stale register never refuses, because repairing one is what
+  regeneration is for.
+- **The four discipline documents carry a provenance note.** It names
+  the source workspace and its design-record number, the copy date,
+  and the amendments since. It also records the license situation: the
+  workspace's code is AGPL-3.0-only, and its design records state no
+  license of their own.
+
+What the comparison ranks beyond these is recorded there and ruled
+separately.
+
+**R30 — The carrier is the tracked corpus.** The carrier's base set is
 `git ls-files` at the root, cut by `[carrier]`'s rows; the two optional
 working-note roots, gitignored by design, are walked on disk
 (``dec:lint:tracked-carrier``). This closes the class R28 closed one
@@ -756,7 +788,7 @@ can. The listing is transplanted from the L1 author's linter
 (orchestration-linter 0.1.0, commit 416b136), with provenance at the
 function.
 
-**R30 — Every tracked file type is scanned or declared.**
+**R31 — Every tracked file type is scanned or declared.**
 `[scanned-regions]` is total over the tracked carrier
 (``dec:lint:catalogue-totality``): a type in no row fails the check.
 The split's rule: a comment-bearing type is scanned where a frontend

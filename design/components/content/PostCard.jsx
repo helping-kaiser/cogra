@@ -114,6 +114,16 @@ export function PostCard({
   citedBy = 0,
   onOpenCitedBy,
   menuItems = [],
+  /* TWO SLOTS FOR THE OTHER FEED KINDS (the post-MVP chats integration
+     round's final micro-fix, jakob 2026-09-24). A chat and a message ride the
+     feed in this same shell — header, ⋮, license, action row — but neither is
+     a post: `lead` stands where the author chip stands (a message's sender and
+     their chat; a chat's disc, name and kind mark), and `main` stands where the
+     text block stands (a message as its chat bubble; a chat as its last
+     message's row), inside the same door. Additive: given neither, the card
+     renders exactly as before. */
+  lead,
+  main,
 }) {
   const detail = variant === "detail";
   // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
@@ -234,9 +244,10 @@ export function PostCard({
     </div>
   );
 
+  const bodyBlock = main ?? textBlock;
   const linkedText =
     detail || !onOpen ? (
-      textBlock
+      bodyBlock
     ) : (
       <a
         href={href ?? "#"}
@@ -247,14 +258,14 @@ export function PostCard({
         className="cg-focus"
         style={{ display: "block", color: "inherit", textDecoration: "none" }}
       >
-        {textBlock}
+        {bodyBlock}
       </a>
     );
 
   const body = (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
-        {author && <ActorChip handle={author.handle} displayName={author.displayName} />}
+        {lead ?? (author && <ActorChip handle={author.handle} displayName={author.displayName} />)}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
           {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
           {/* ON A DETAIL SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW — a dot in

@@ -453,6 +453,11 @@ how do their spaces reconcile? Specifically:
   families, or lives off-graph.
 - **Transparency.** Reconciliation choices (alias, claim, merge)
   leave a visible trace on-graph.
+- **Admission funding can split.** One global admission fund pays
+  the community's admission burns until federation; at the
+  federation stage a community can leave it and run its own pot
+  for its fees
+  ([economics.md §7.2](primitive/economics.md#72-the-admission-fund)).
 - **Severance is local to the severing community.** Per
   [feed-ranking.md §8.3](primitive/feed-ranking.md#83-cascading-severance--and-its-locality), the math is
   per-viewer. Federation should not import or export severance

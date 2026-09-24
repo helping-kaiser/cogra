@@ -2160,3 +2160,122 @@ name nobody, and the platform's would dress the members' choice as a
 verdict. A removed chat version reads `A version stood here from 10
 September. Its name, picture and words were removed; the record of the
 change stays.`
+
+### The chats integration round — 2026-09-24
+
+Round B3's words (post-MVP tree). Candidates, none blessed; where a string
+had real alternatives they are listed after it, the drawn one first.
+
+**The reaction trace.** No printed word: the faces and the count of people
+(`👀🍿🙂 3`). Named for the ear `Opinions on this — {n} people: {the faces'
+words}; {the pairs}. See who` (`1 person` at one), the pairs spoken in both
+modes; geek mode paints the pairs after the count, `+N more` past three.
+
+**The reply.** The strip reads `Replying to {name}` over one line of the
+message; its × is `Cancel the reply`. A landed quote is the sender's name
+over one line, named `Replying to {name}: {line} — go to the message`; the
+reader's own quoted message is `You`. A removed message's quote reads the
+mark's first line, `Removed by its author`.
+
+**The mic and the recording.**
+
+- The mic is named `Record a voice message` (candidate: `Voice message`); a
+  tap starts the recording — no gesture has words, because none exists.
+- Recording: the length is a live timer named `Recording, 0:14`; `Describe`
+  at its line's end; `Delete the recording` (the `delete` glyph), the lock
+  toggle's own `Encrypt end to end`, `Pause the recording`, and the arrow's
+  `Sign and send`. The line: `Not encrypted — anyone can hear it. The lock
+  beside delete encrypts it.`, or `Encrypted — only the chat's members can
+  hear it.`
+- Paused: the length reads `0:22 · Paused`, the timer named `Recording paused
+  at 0:22`; the middle control is `Keep recording` (candidates: `Resume`,
+  `Continue recording`), and it extends the same note.
+
+**A message's opinions.** The pad is the ordinary pad, named `Opinion pad for
+{sender}'s message`. The sheet is titled `Opinions on this message` (the
+post's `Opinions on this post`, one noun over), its rows the opinions page's.
+
+**The seals' opinion.** The row stays `Your opinion`; its value is the
+pressable face, named by the control's own words (`Your opinion on {chat}: …`).
+The message's own seal adds `Adjust`, the compose seal's word.
+
+**A voice note.** The play control is named `Play — {the author's
+description}`, or `Play — Voice message, 0:42` where there is none; the
+scrub line `Position in the voice message`, its value spoken as
+"0:00 of 0:42", the Seek row's shape. The
+length prints tabular, `0:42`.
+
+**Encrypted media, no key** — the text notice's family, the verb fitted to
+the kind:
+
+- `An encrypted picture — you don't have the key to see it.` (Candidates:
+  `… to open it.`, `… to read it.`)
+- `An encrypted clip — you don't have the key to play it.`
+- `An encrypted voice message — you don't have the key to hear it.`
+
+No `Show the encrypted …` for media.
+
+**Pending and didn't land.** A settling bubble reads `Still settling ·
+08:52`. The notice: `Your message didn't land`; `“{the words}” couldn't finish
+settling. Nothing was spent.`; `Dismiss` (quiet) and `Put it back` (filled).
+(Candidates for the second: `Back to the field`, `Try again` — the drawn one
+says it signs nothing.)
+
+**Removing your message.** The own menu adds `Remove` among the acts. The
+dialog: `Remove this message?`; `Its words and anything it carries leave
+every reader's view. A visible mark stays in their place — “Removed by its
+author” — and replies to it keep pointing there.`; `This is immediate and
+permanent.`; `Remove` (quiet) and `Keep it` (filled). The mark's second line
+for a message: `Its place in the chat stays, and so do the replies to it.` The
+platform's mark is unchanged: `Removed under the platform's rules` — `A passed
+proposal removed it. The decision is public.`
+
+**A post sent into a chat.** Every share glyph opens the sheet; its name for
+the ear stays `Share {target}`. The sheet is `Send to a chat`; the field `Search
+your chats`; the head row `Share outside CoGra` (candidates: `Share
+elsewhere`, `More ways to share`); the foot's field `Message`, cornered
+`Optional`; the line `Sends one message into {chat}, pointing to this post.`,
+and with the lock on it adds the reference's fact — candidate: `The lock
+seals your words, never which post you sent.` Signed, the snackbar says `Sent
+to {chat}` with `Open`. In the bubble the post reads as its reference row, its
+title over `{author} · a post`.
+
+**Asking to join.** The sheet `What you sign` with `How signing works`; the
+acts card `Asking to join` · the chat · `1 thing, signed` (spoken `1
+request`); the field `Message`, cornered `Optional — the chat can read it`;
+`Your opinion` · the readout; the line `Your request is public. Once it's
+approved, joining is yours to do.`; the act `Sign and ask`. The reader's own
+card quotes their message under `You asked to join`.
+
+**Inviting, with a message.** On the invite seal, the field `Message`,
+cornered `Optional — public, with each invitation`. The invitee's foot quotes
+it under `{name} invited you.`
+
+**The explorer's invited word.** `You're invited`. (Candidates: `Invited —
+join`, `Join — you're invited`.)
+
+**Search and Saved.** A chat result's second line is its policy line. A saved
+message's row is the message's words, the sender's handle beside them, and
+`in {chat}` under them.
+
+**The notification rows.** `@mira invited you to {chat}` with the invitation's
+message quoted as the second line; `@saltorres asks to join {chat}` with the
+request's message; `{chat} approved your request to join` (candidate: `Your
+request to join {chat} was approved`). Push says the same words.
+
+**The feed cards.** On the real card, with the card's own words: no `Join`
+and no `Open in the chat` on a card. The message card's author line is the
+sender's chip then `· in {chat}` (candidates: `in {chat}`, `· {chat}`); its
+body is the message as a bubble with its clock. The chat card's author line is
+the chat's name with its kind mark, named `a chat` for the ear, over the
+policy line (`A group chat — anyone can join.`); its body is the last message
+as a row, the sender over the words.
+
+**Push.** The page's board is titled `Push notifications · the kinds and their
+defaults` (candidates: `… · what announces itself`, `… · every kind`). Three rows join `Announced right away`: `Invitations to chats`,
+`Requests to join your chats`, `Your requests to join approved`. A `Chats`
+group holds `New messages`, footnoted `A muted chat stays quiet here — mute
+one from its details or by holding its row.` A message's push: the chat's name
+as the title (the sender's in a 1:1) and the preview row's words as the body
+— `Mira Voss: Six it is.` — or `An encrypted message` where the device holds no
+key.

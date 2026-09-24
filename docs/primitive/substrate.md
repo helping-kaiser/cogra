@@ -274,8 +274,8 @@ insolvent actor (W1) restores capacity immediately by committing
 burns; re-crossing the wall (W2a) takes some combination of new
 burns and admissible vouch-positive connections from actors with
 source rates above the current standing — burns alone can
-suffice. Who funds these debits — genesis, pooled
-subsidies, treasury — is economics:
+suffice. Who funds these debits — genesis and the community's
+admission fund — is economics:
 [economics.md](economics.md).
 
 **Vocabulary.** The L1 admission price is the **θ-debit**, named by
@@ -338,11 +338,11 @@ CoGra-level outcomes as shared-graph records:
 
 Two genesis system actors exist — **The Moderator** (verdict
 gestures) and **The Publisher** (charter, platform documents,
-finalizations, role Tags) — burn-funded from the community
-treasury ([economics.md](economics.md)) and endorsed at bootstrap
-to clear the wall like any other actor. The full bootstrap cast —
-including **The Treasury**, an L1-registered account that
-materializes no outcomes — is
+finalizations, role Tags) — burn-funded from the community's
+admission fund ([economics.md](economics.md)) and endorsed at
+bootstrap to clear the wall like any other actor. The full
+bootstrap cast — including **The Treasury**, an L1-registered
+account that materializes no outcomes — is
 [network.md §2](network.md#2-creation). The burn is not optional:
 W1 reads only the actor's own balance — endorsement never pays an
 actor's θ, a zero-rate cohort cannot vouch itself above the wall,
