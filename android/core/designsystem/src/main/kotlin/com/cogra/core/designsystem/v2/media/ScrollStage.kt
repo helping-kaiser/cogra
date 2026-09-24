@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem.v2.media
 
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -18,7 +19,6 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.node.GlobalPositionAwareModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
-import androidx.compose.ui.node.OnUnplacedModifierNode
 import androidx.compose.ui.platform.InspectorInfo
 
 /**
@@ -98,9 +98,12 @@ internal object StageElection {
  *   in one pager share a top, and the gallery's own order ranks them.
  * @property visible how much of the frame is on screen, as a fraction of its
  *   own height.
+ * @property row the key of the lazy-list item the frame stands in
+ *   ([ScrollStageRow]), or null outside any — the part of the place the list,
+ *   not the frame, is the authority on.
  */
 @Immutable
-internal data class StagePlace(val top: Float, val page: Int, val visible: Float) {
+internal data class StagePlace(val top: Float, val page: Int, val visible: Float, val row: Any? = null) {
     val qualifies: Boolean get() = visible >= StageElection.GATE
 }
 
@@ -115,9 +118,27 @@ internal data class StagePlace(val top: Float, val page: Int, val visible: Float
  * Only [holder] is composed from, and it changes only when the stage does,
  * so a scroll recomposes the two frames that swapped and nothing else
  * (developer.android.com/develop/ui/compose/side-effects, `snapshotFlow`).
+ *
+ * **The list says which rows are there; the frames say where they stand.** A
+ * lazy list keeps rows it has just scrolled away composed but UNPLACED, ready
+ * to come back, and an unplaced node gets no callback at all — no detach, no
+ * reset, no position — so a row flung out in one frame would keep its last
+ * place, fully visible, and hold the stage forever. The node-level hook for
+ * unplacement (`OnUnplacedModifierNode`) is internal to Compose UI 1.9, and
+ * Compose's own `onVisibilityChanged` does not see unplacement either: its
+ * rect bookkeeping drops a node only on detach or deactivation. What the
+ * platform does document for "which items are showing" is the list's own
+ * `LazyListState.layoutInfo` (developer.android.com/develop/ui/compose/lists,
+ * "React to scroll position"), rewritten on every measure pass. So when
+ * [placedRows] is given, a place counts only while its row is among the rows
+ * the list laid out in that same pass; a frame's geometry is always fresh
+ * while its row is placed, because a placed row that moves reports again.
+ *
+ * @param placedRows the keys of the rows the list placed in its latest pass,
+ *   read inside the election's snapshot; null for a stage with no list.
  */
 @Stable
-internal class ScrollStage {
+internal class ScrollStage(private val placedRows: (() -> Set<Any>)? = null) {
 
     private val places = mutableStateMapOf<Any, StagePlace>()
 
@@ -138,9 +159,24 @@ internal class ScrollStage {
     /** How much of [key]'s frame was last on screen, for the trace. */
     fun visibleOf(key: Any): Float = places[key]?.visible ?: 0f
 
-    /** Re-decides the stage every time a clip's place changes. */
+    /**
+     * A clip's page or row changed without its frame moving — so without a
+     * new report — and the place it stands in keeps its geometry.
+     */
+    fun amend(key: Any, page: Int, row: Any?) {
+        val place = places[key] ?: return
+        if (place.page != page || place.row != row) places[key] = place.copy(page = page, row = row)
+    }
+
+    /** Re-decides the stage every time a clip's place, or the list's rows, change. */
     suspend fun run() {
-        snapshotFlow { places.toMap() }.collect { holder = StageElection.elect(holder, it) }
+        snapshotFlow { standing() }.collect { holder = StageElection.elect(holder, it) }
+    }
+
+    /** The places that count now: all of them, less those whose row the list did not place. */
+    private fun standing(): Map<Any, StagePlace> {
+        val rows = placedRows?.invoke() ?: return places.toMap()
+        return places.filterValues { it.row == null || it.row in rows }
     }
 }
 
@@ -150,10 +186,21 @@ internal class ScrollStage {
  */
 internal val LocalScrollStage = staticCompositionLocalOf<ScrollStage?> { null }
 
-/** A stage, and the election that keeps it decided for as long as it is composed. */
+/**
+ * The key of the lazy-list row this composition stands in, provided by
+ * [ScrollStageRow]. Null outside any.
+ */
+internal val LocalScrollStageRow = staticCompositionLocalOf<Any?> { null }
+
+/**
+ * A stage, and the election that keeps it decided for as long as it is
+ * composed. With [list], only clips in the rows it placed may hold it.
+ */
 @Composable
-internal fun rememberScrollStage(): ScrollStage {
-    val stage = remember { ScrollStage() }
+internal fun rememberScrollStage(list: LazyListState? = null): ScrollStage {
+    val stage = remember(list) {
+        ScrollStage(list?.let { { it.layoutInfo.visibleItemsInfo.mapTo(HashSet()) { item -> item.key } } })
+    }
     LaunchedEffect(stage) { stage.run() }
     return stage
 }
@@ -162,57 +209,68 @@ internal fun rememberScrollStage(): ScrollStage {
  * Gives a scroll surface its one stage: every clip composed inside [content]
  * competes for it, and none outside does.
  *
- * Wrap the scrolling list itself. A sheet raised over a list is a surface of
- * its own and hosts its own — a comment thread over the feed does not share
- * the feed's stage — while a post's clips and a comment's clips inside one
- * list do share it, which is the law's "the same one".
+ * Wrap the scrolling list itself, handing over its [list] state, and wrap each
+ * row that can hold a clip in a [ScrollStageRow] under the row's own key — the
+ * list's layout is what says which of those rows are still on screen. A sheet
+ * raised over a list is a surface of its own and hosts its own — a comment
+ * thread over the feed does not share the feed's stage — while a post's clips
+ * and a comment's clips inside one list do share it, which is the law's "the
+ * same one".
  */
 @Composable
-fun ScrollStageHost(content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalScrollStage provides rememberScrollStage(), content = content)
+fun ScrollStageHost(list: LazyListState, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalScrollStage provides rememberScrollStage(list), content = content)
+}
+
+/**
+ * One row of a [ScrollStageHost]'s list, under the same [key] the row was
+ * given in the list (`items(..., key = ...)`): a clip inside it counts for the
+ * stage only while the list has this row placed.
+ */
+@Composable
+fun ScrollStageRow(key: Any, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalScrollStageRow provides key, content = content)
 }
 
 /**
  * Puts this frame on [stage] under [key]: its place after every layout pass
- * that moves it, and its departure the moment it stops being placed.
+ * that moves it, and its departure when it leaves the composition.
  *
  * Measured through layout rather than a scroll listener: `boundsInWindow` is
  * already clipped to what is on screen, so its height against the frame's own
  * is the fraction showing, and `positionInWindow` is where the frame starts
  * whether or not it is clipped.
  *
- * **Leaving is not the same as leaving the composition.** A lazy list keeps
- * rows it has just scrolled away composed but unplaced, ready to come back,
- * and a row flung out in one frame never gets a pass that measures it off
- * screen — its last place, fully visible, would stand forever and the stage
- * would never pass on. So the frame leaves when it is UNPLACED, which Compose
- * reports on its own node (`OnUnplacedModifierNode`), as well as when it is
- * detached; a row brought back is placed again and reports again.
+ * A row the list stops placing without disposing it is not this node's to
+ * notice — it gets no callback — and is answered by the list's own layout
+ * through [row] ([ScrollStage]).
  */
-internal fun Modifier.standOn(stage: ScrollStage, key: Any, page: Int): Modifier =
-    this then StandOnElement(stage, key, page)
+internal fun Modifier.standOn(stage: ScrollStage, key: Any, page: Int, row: Any?): Modifier =
+    this then StandOnElement(stage, key, page, row)
 
-private data class StandOnElement(val stage: ScrollStage, val key: Any, val page: Int) :
+private data class StandOnElement(val stage: ScrollStage, val key: Any, val page: Int, val row: Any?) :
     ModifierNodeElement<StandOnNode>() {
-    override fun create() = StandOnNode(stage, key, page)
+    override fun create() = StandOnNode(stage, key, page, row)
 
     override fun update(node: StandOnNode) {
         if (node.stage !== stage || node.key !== key) node.leave()
         node.stage = stage
         node.key = key
         node.page = page
+        node.row = row
+        stage.amend(key, page, row)
     }
 
     override fun InspectorInfo.inspectableProperties() {
         name = "standOn"
         properties["page"] = page
+        properties["row"] = row
     }
 }
 
-private class StandOnNode(var stage: ScrollStage, var key: Any, var page: Int) :
+private class StandOnNode(var stage: ScrollStage, var key: Any, var page: Int, var row: Any?) :
     Modifier.Node(),
-    GlobalPositionAwareModifierNode,
-    OnUnplacedModifierNode {
+    GlobalPositionAwareModifierNode {
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
         val height = coordinates.size.height
@@ -221,10 +279,8 @@ private class StandOnNode(var stage: ScrollStage, var key: Any, var page: Int) :
         } else {
             (coordinates.boundsInWindow().height / height.toFloat()).coerceIn(0f, 1f)
         }
-        stage.report(key, StagePlace(top = coordinates.positionInWindow().y, page = page, visible = visible))
+        stage.report(key, StagePlace(top = coordinates.positionInWindow().y, page = page, visible = visible, row = row))
     }
-
-    override fun onUnplaced() = leave()
 
     override fun onDetach() = leave()
 

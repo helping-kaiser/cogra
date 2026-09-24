@@ -155,8 +155,8 @@ private fun GalleryFrame(
     // ([StageElection]): the incumbent keeps it while past 70%, the topmost
     // qualifying clip takes it the moment the incumbent drops, and nothing
     // plays when nothing qualifies. The frame's part is to say where it
-    // stands, every layout pass, and to leave when it stops being placed
-    // ([standOn]).
+    // stands, every layout pass, and which list row it stands in, so the
+    // list can say when that row is no longer placed ([standOn]).
     val key = remember(videoUrl) { Any() }
     // **COMPOSITION NEVER READS THE PLACE, ONLY THE DECISION.** A clip's
     // place is rewritten on every layout pass, which while a list is
@@ -177,7 +177,7 @@ private fun GalleryFrame(
             .heightIn(min = MediaFrame.MinHeight, max = maxHeight)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .then(if (videoUrl != null) Modifier.standOn(stage, key, page) else Modifier),
+            .then(if (videoUrl != null) Modifier.standOn(stage, key, page, LocalScrollStageRow.current) else Modifier),
     ) {
         // Symptom (b) is about this number on the way back: the clip
         // should resume if it is in the viewport and must not start if

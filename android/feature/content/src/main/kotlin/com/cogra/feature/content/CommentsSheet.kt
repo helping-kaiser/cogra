@@ -48,6 +48,7 @@ import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
 import com.cogra.core.designsystem.v2.atom.sheetCeilingHeight
 import com.cogra.core.designsystem.v2.media.ScrollStageHost
+import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SensitiveSource
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
@@ -325,7 +326,7 @@ private fun CommentsList(
     // for one — the playing clip keeps it while past 70%, and the topmost
     // qualifying clip takes it the moment it drops. The sheet is a scroll
     // surface of its own, so it does not share the stage of the list below.
-    ScrollStageHost {
+    ScrollStageHost(listState) {
         LazyColumn(
             state = listState,
             modifier = modifier.testTag("comments_list"),
@@ -348,22 +349,26 @@ private fun CommentsList(
                 }
             }
             items(state.comments, key = { it.id }) { comment ->
-                CommentThread(
-                    comment = comment,
-                    depth = 0,
-                    state = state,
-                    viewerId = viewerId,
-                    signedIn = signedIn,
-                    onLoadMoreReplies = onLoadMoreReplies,
-                    onReplyTo = onReplyTo,
-                    onEditComment = onEditComment,
-                    onReveal = onReveal,
-                    onOpenActor = onOpenActor,
-                    onOpenTopic = onOpenTopic,
-                    onReference = onReference,
-                    onLicense = onLicense,
-                    stanceControl = stanceControl,
-                )
+                // The row's key again, so the stage can ask the list whether
+                // this thread — replies and all — is still placed.
+                ScrollStageRow(comment.id) {
+                    CommentThread(
+                        comment = comment,
+                        depth = 0,
+                        state = state,
+                        viewerId = viewerId,
+                        signedIn = signedIn,
+                        onLoadMoreReplies = onLoadMoreReplies,
+                        onReplyTo = onReplyTo,
+                        onEditComment = onEditComment,
+                        onReveal = onReveal,
+                        onOpenActor = onOpenActor,
+                        onOpenTopic = onOpenTopic,
+                        onReference = onReference,
+                        onLicense = onLicense,
+                        stanceControl = stanceControl,
+                    )
+                }
             }
             if (state.hasMore) {
                 item { MoreComments(state, onLoadMoreComments) }

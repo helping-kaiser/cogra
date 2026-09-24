@@ -10,6 +10,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
@@ -169,6 +172,36 @@ class ScrollStageTest {
     }
 
     /**
+     * (b) An incumbent pushed out of view with no scroll at all — the row above
+     * it grew — leaves the stage too: the list stops placing its row, which
+     * is the same silence a fling leaves.
+     */
+    @Test
+    fun anIncumbentPushedOutOfViewWithoutAScrollLeavesTheStage() {
+        // Not zero: an empty row cannot anchor the scroll, and the list would
+        // keep A's place by anchoring on A instead.
+        var above by mutableStateOf(10.dp)
+        compose.setContent {
+            OneSurface(height = 300.dp) {
+                LazyColumn(state = list, modifier = Modifier.size(WIDTH, 300.dp).testTag(LIST)) {
+                    item(key = GAP) { Spacer(Modifier.height(above)) }
+                    items(listOf(A, B), key = { it }) { row -> ScrollStageRow(row) { Clip(row) } }
+                }
+            }
+        }
+        compose.waitForIdle()
+        assertOnStage(A)
+
+        // A and B both below the viewport now.
+        above = 300.dp
+        compose.waitForIdle()
+
+        assertThat(list.firstVisibleItemIndex).isEqualTo(0)
+        assertThat(VideoStage.holding?.owner).isNull()
+        assertThat(playingFrames()).isEmpty()
+    }
+
+    /**
      * One stage per surface, whatever the clips belong to: two galleries in
      * one row — a post's and the comment under it — compete for the same one.
      */
@@ -176,12 +209,13 @@ class ScrollStageTest {
     fun clipsInsideOneRowCompeteForTheSurfacesOneStage() {
         compose.setContent {
             OneSurface(height = 400.dp) {
-                list = rememberLazyListState()
                 LazyColumn(state = list, modifier = Modifier.size(WIDTH, 400.dp).testTag(LIST)) {
-                    item {
-                        Column {
-                            Clip(A)
-                            Clip(B)
+                    item(key = A) {
+                        ScrollStageRow(A) {
+                            Column {
+                                Clip(A)
+                                Clip(B)
+                            }
                         }
                     }
                 }
@@ -195,10 +229,13 @@ class ScrollStageTest {
     private fun show(vararg rows: String, height: Dp = 300.dp) {
         compose.setContent {
             OneSurface(height = height) {
-                list = rememberLazyListState()
                 LazyColumn(state = list, modifier = Modifier.size(WIDTH, height).testTag(LIST)) {
-                    items(rows.toList()) { row ->
-                        if (row == GAP) Spacer(Modifier.height(GAP_HEIGHT)) else Clip(row)
+                    items(rows.toList(), key = { it }) { row ->
+                        if (row == GAP) {
+                            Spacer(Modifier.height(GAP_HEIGHT))
+                        } else {
+                            ScrollStageRow(row) { Clip(row) }
+                        }
                     }
                 }
             }
@@ -206,12 +243,17 @@ class ScrollStageTest {
         compose.waitForIdle()
     }
 
-    /** One scroll surface at a density of 1, so a unit of scroll is a unit of layout. */
+    /**
+     * One scroll surface at a density of 1, so a unit of scroll is a unit of
+     * layout — its stage hosted on the list, the way the feed and the thread
+     * host theirs.
+     */
     @Composable
     private fun OneSurface(height: Dp, content: @Composable () -> Unit) {
+        list = rememberLazyListState()
         CompositionLocalProvider(LocalDensity provides Density(1f)) {
             Cogra2PreviewTheme {
-                ScrollStageHost {
+                ScrollStageHost(list) {
                     Column(Modifier.size(WIDTH, height)) { content() }
                 }
             }

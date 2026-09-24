@@ -53,6 +53,7 @@ import com.cogra.core.designsystem.v2.atom.CograBandChats
 import com.cogra.core.designsystem.v2.atom.CograBandIdentity
 import com.cogra.core.designsystem.v2.media.PreloadClips
 import com.cogra.core.designsystem.v2.media.ScrollStageHost
+import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.LicenseChoice
@@ -352,7 +353,7 @@ fun FeedScreen(
                         // "The feed-video rulings"): its clips compete for one,
                         // the playing clip keeps it while past 70%, and the
                         // topmost qualifying clip takes it the moment it drops.
-                        ScrollStageHost {
+                        ScrollStageHost(listState) {
                             // A feed post spans the screen edge to edge,
                             // and 8dp of surface between cards is the seam
                             // (design/readme.md §13). Only the rows that are
@@ -383,21 +384,25 @@ fun FeedScreen(
                                     }
                                 }
                                 items(state.posts, key = { it.id }) { post ->
-                                    PostCard(
-                                        post = post,
-                                        onClick = { onOpenPost(post.id) },
-                                        onOpenComments = { commentsFor = post.id },
-                                        onOpenPost = onOpenPost,
-                                        onOpenActor = onOpenActor,
-                                        onOpenTopic = onOpenTopic,
-                                        onShare = onShare,
-                                        viewerId = viewerId,
-                                        onEdit = onEditPost,
-                                        onCite = onCitePost,
-                                        revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
-                                        onReveal = { onReveal(post.id, post.sensitiveMark()) },
-                                        stanceControl = stanceControl,
-                                    )
+                                    // The row's key again, so the stage can ask
+                                    // the list whether this card is still placed.
+                                    ScrollStageRow(post.id) {
+                                        PostCard(
+                                            post = post,
+                                            onClick = { onOpenPost(post.id) },
+                                            onOpenComments = { commentsFor = post.id },
+                                            onOpenPost = onOpenPost,
+                                            onOpenActor = onOpenActor,
+                                            onOpenTopic = onOpenTopic,
+                                            onShare = onShare,
+                                            viewerId = viewerId,
+                                            onEdit = onEditPost,
+                                            onCite = onCitePost,
+                                            revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
+                                            onReveal = { onReveal(post.id, post.sensitiveMark()) },
+                                            stanceControl = stanceControl,
+                                        )
+                                    }
                                 }
                                 // The slot the next page fills. At rest it draws
                                 // nothing — the page comes because the reader
