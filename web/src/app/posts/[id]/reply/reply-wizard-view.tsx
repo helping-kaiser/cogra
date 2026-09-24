@@ -151,6 +151,13 @@ export function ReplyWizard({
   const [silentCover, setSilentCover] = useState<{ file: Blob; frame: Blob | null } | null>(null);
   const forSilentCover = silentCover !== null && silentCover.file === videoFile ? silentCover : null;
   const silentCovering = videoFile !== null && forSilentCover === null;
+  // THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog item 106):
+  // the clip's face wherever no cover has been chosen is this frame 0, never
+  // `framePreviews[0]` — the row's own ~1s "opening" offer. Where a cover HAS
+  // been chosen, the tile keeps showing that choice (`coverPreview`/the
+  // chosen frame) exactly as it always has; this is only the coverless
+  // fallback the ruling names.
+  const clipFace = useObjectUrl(forSilentCover?.frame ?? null);
 
   useEffect(() => {
     if (videoFile === null) return;
@@ -508,6 +515,7 @@ export function ReplyWizard({
           state={state}
           previews={previews}
           framePreviews={framePreviews}
+          clipFace={clipFace}
           capturing={capturing}
           durationMs={durationMs}
           refusals={refusals}
@@ -572,7 +580,7 @@ export function ReplyWizard({
           describing === null
             ? null
             : isVideoReply(state)
-              ? coverPreview
+              ? (coverPreview ?? clipFace)
               : (previews[describing] ?? null)
         }
         crop={state.media.find((asset) => asset.id === describing)?.crop ?? null}
