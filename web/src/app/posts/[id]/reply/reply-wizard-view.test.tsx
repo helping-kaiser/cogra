@@ -503,7 +503,14 @@ describe("the reply wizard", () => {
       fireEvent.click(screen.getByTestId("reply-sign"));
       await waitFor(() => expect(variables).not.toBeNull());
       expect(variables!.input.attachments).toEqual([
-        { mediaId: "m1", displayOrder: 0, isCover: true, altText: null, coverMediaId: null },
+        {
+          mediaId: "m1",
+          displayOrder: 0,
+          isCover: true,
+          altText: null,
+          coverMediaId: null,
+          coverTaken: null,
+        },
       ]);
     });
 

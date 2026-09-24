@@ -216,6 +216,13 @@ data class PickedAsset(
      * erases a covered clip's cover on edit.
      */
     val coverMediaId: String? = null,
+    /**
+     * Whether [coverMediaId] is a frame the load found taken rather than
+     * a still its author chose — carried through exactly like
+     * [coverMediaId] itself: the edit surfaces draw no cover picker, so
+     * this is only ever the fact the load read, never authored here.
+     */
+    val coverTaken: Boolean = false,
 ) {
     val mediaId: String? get() = (upload as? AssetUpload.Done)?.mediaId
 

@@ -587,6 +587,11 @@ class ReplyWizardViewModel @Inject constructor(
                                 mediaId = it,
                                 altText = asset.altText.ifBlank { null },
                                 coverMediaId = current.coverMediaId.takeIf { _ -> asset.isVideo },
+                                // TAKEN (frame 1, silently) vs CHOSEN —
+                                // the fact `storesFirstFrame` already
+                                // names, gated the same way as the id
+                                // itself so a picture post never claims it.
+                                coverTaken = current.coverChoice.storesFirstFrame.takeIf { asset.isVideo } ?: false,
                             )
                         }
                     },

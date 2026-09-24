@@ -298,8 +298,59 @@ describe("preparePostEdit", () => {
       sensitive: false,
     });
     expect((variables as unknown as { input: { attachments: unknown } }).input.attachments).toEqual([
-      { mediaId: "m-1", displayOrder: 0, isCover: true, altText: "A jetty", coverMediaId: null },
-      { mediaId: "m-2", displayOrder: 1, isCover: false, altText: null, coverMediaId: null },
+      {
+        mediaId: "m-1",
+        displayOrder: 0,
+        isCover: true,
+        altText: "A jetty",
+        coverMediaId: null,
+        coverTaken: null,
+      },
+      {
+        mediaId: "m-2",
+        displayOrder: 1,
+        isCover: false,
+        altText: null,
+        coverMediaId: null,
+        coverTaken: null,
+      },
+    ]);
+  });
+
+  it("carries a silently-taken cover onto the wire, distinct from a chosen one", async () => {
+    let variables: { input: { attachments: unknown } } | null = null;
+    server.use(
+      graphql.mutation("PreparePostEdit", ({ variables: v }) => {
+        variables = v as typeof variables;
+        return HttpResponse.json({
+          data: {
+            preparePostEdit: {
+              __typename: "PrepareContentPayload",
+              node: "p1",
+              writes: [],
+              userErrors: [],
+            },
+          },
+        });
+      }),
+    );
+    await preparePostEdit(client(), {
+      id: "p1",
+      title: null,
+      description: null,
+      content: "",
+      attachments: [{ mediaId: "m-v", altText: null, coverMediaId: "m-c", coverTaken: true }],
+      sensitive: false,
+    });
+    expect(variables!.input.attachments).toEqual([
+      {
+        mediaId: "m-v",
+        displayOrder: 0,
+        isCover: true,
+        altText: null,
+        coverMediaId: "m-c",
+        coverTaken: true,
+      },
     ]);
   });
 });
@@ -399,8 +450,16 @@ describe("prepareComment", () => {
         isCover: true,
         altText: "the sea wall at dusk",
         coverMediaId: null,
+        coverTaken: null,
       },
-      { mediaId: "m-b", displayOrder: 1, isCover: false, altText: null, coverMediaId: null },
+      {
+        mediaId: "m-b",
+        displayOrder: 1,
+        isCover: false,
+        altText: null,
+        coverMediaId: null,
+        coverTaken: null,
+      },
     ]);
   });
 

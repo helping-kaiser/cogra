@@ -302,6 +302,13 @@ data class MediaAssetView(
     /** The clip's length, null on a still (D11 — derived, never sent). */
     val durationMs: Int? = null,
     val cover: MediaAssetView? = null,
+    /**
+     * True when [cover] is a frame taken from this clip rather than a
+     * still its author chose (schema.graphql `MediaAttachment.coverTaken`).
+     * False on a chosen cover, on an asset without one, and outside a
+     * placement — never meaningful without [cover].
+     */
+    val coverTaken: Boolean = false,
     val state: MediaAssetState = MediaAssetState.READY,
     val failureReason: String? = null,
 ) {
@@ -394,11 +401,18 @@ enum class MediaAssetState {
  * clip the author left faceless: going without a cover is always
  * possible. It is a different question from the gallery's own cover,
  * which the list's order decides.
+ *
+ * [coverTaken] says whether [coverMediaId] names a frame taken from the
+ * clip rather than a still the author chose (schema.graphql
+ * `AttachmentInput.coverTaken`) — the bytes cannot say which, so the
+ * client states it. Meaningless without a cover, so it rides only
+ * alongside a non-null [coverMediaId]; the server refuses it otherwise.
  */
 data class AttachmentClaim(
     val mediaId: String,
     val altText: String? = null,
     val coverMediaId: String? = null,
+    val coverTaken: Boolean = false,
 )
 
 /**

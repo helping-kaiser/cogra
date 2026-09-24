@@ -873,6 +873,9 @@ private fun List<AttachmentClaim>.toInput(): Optional<List<AttachmentInput>?> =
                 isCover = Optional.present(index == 0),
                 altText = Optional.presentIfNotNull(claim.altText),
                 coverMediaId = Optional.presentIfNotNull(claim.coverMediaId),
+                // The contract refuses `coverTaken` on a placement naming
+                // no cover, so it rides only alongside a `coverMediaId`.
+                coverTaken = if (claim.coverMediaId != null) Optional.present(claim.coverTaken) else Optional.Absent,
             )
         },
     )
@@ -896,6 +899,9 @@ private fun List<AttachmentClaim>.toEditInput(): Optional<List<AttachmentInput>?
                 isCover = Optional.present(index == 0),
                 altText = Optional.presentIfNotNull(claim.altText),
                 coverMediaId = Optional.presentIfNotNull(claim.coverMediaId),
+                // The contract refuses `coverTaken` on a placement naming
+                // no cover, so it rides only alongside a `coverMediaId`.
+                coverTaken = if (claim.coverMediaId != null) Optional.present(claim.coverTaken) else Optional.Absent,
             )
         },
     )
@@ -922,6 +928,9 @@ private fun List<AttachmentClaim>.toCommentInput(): Optional<List<AttachmentInpu
                 displayOrder = index,
                 altText = Optional.presentIfNotNull(claim.altText),
                 coverMediaId = Optional.presentIfNotNull(claim.coverMediaId),
+                // The contract refuses `coverTaken` on a placement naming
+                // no cover, so it rides only alongside a `coverMediaId`.
+                coverTaken = if (claim.coverMediaId != null) Optional.present(claim.coverTaken) else Optional.Absent,
             )
         },
     )

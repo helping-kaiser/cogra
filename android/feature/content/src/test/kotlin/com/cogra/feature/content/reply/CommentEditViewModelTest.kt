@@ -373,6 +373,7 @@ class CommentEditViewModelTest {
                                 status = FieldStatus.NORMAL,
                                 aspectRatio = 16f / 9f,
                             ),
+                            coverTaken = true,
                         ),
                     ),
                 ),
@@ -385,7 +386,49 @@ class CommentEditViewModelTest {
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(content.lastAttachments).containsExactly(AttachmentClaim("m1", null, "cover-1"))
+        assertThat(content.lastAttachments)
+            .containsExactly(AttachmentClaim("m1", null, "cover-1", coverTaken = true))
+    }
+
+    /**
+     * A chosen cover's `coverTaken` is the same kind of state as a taken
+     * one's — carried through, never flipped by the round trip (PR #874).
+     */
+    @Test
+    fun anEditKeepsAChosenCoversNotTakenFlagThrough() = runTest(dispatcher) {
+        content.loaded = Outcome.Success(
+            CommentForEdit(
+                comment = testComment("c1").copy(
+                    attachments = listOf(
+                        MediaAssetView(
+                            id = "m1",
+                            url = "https://media/m1",
+                            altText = null,
+                            status = FieldStatus.NORMAL,
+                            aspectRatio = 16f / 9f,
+                            durationMs = 12_000,
+                            cover = MediaAssetView(
+                                id = "cover-1",
+                                url = "https://media/cover-1",
+                                altText = null,
+                                status = FieldStatus.NORMAL,
+                                aspectRatio = 16f / 9f,
+                            ),
+                            coverTaken = false,
+                        ),
+                    ),
+                ),
+                selfMark = SelfMarkView(sensitive = false, reason = null),
+            ),
+        )
+        val vm = opened()
+
+        vm.onBodyChange("Reworded")
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastAttachments)
+            .containsExactly(AttachmentClaim("m1", null, "cover-1", coverTaken = false))
     }
 
     /** No cover was ever chosen, so the edit re-states none. */

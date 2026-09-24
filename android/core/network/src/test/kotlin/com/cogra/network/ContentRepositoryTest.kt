@@ -109,6 +109,7 @@ class ContentRepositoryTest {
         durationMs: Int? = null,
         coverId: String? = null,
         coverStatus: String = "NORMAL",
+        coverTaken: Boolean = false,
     ) = """
         {"__typename":"MediaAttachment","id":"$id","url":"https://media/$id",
          "altText":${altText?.let { "\"$it\"" } ?: "null"},
@@ -116,7 +117,7 @@ class ContentRepositoryTest {
          "mimeType":"$mimeType",
          "options":{"__typename":"MediaOptions","aspectRatio":${aspectRatio?.let { "\"$it\"" } ?: "null"},
                     "durationMs":${durationMs ?: "null"}},
-         "coverMedia":${coverJson(coverId, coverStatus)}}
+         "coverMedia":${coverJson(coverId, coverStatus)},"coverTaken":$coverTaken}
     """.trimIndent()
 
     private fun coverJson(id: String?, status: String) = id?.let {
@@ -494,6 +495,39 @@ class ContentRepositoryTest {
         assertThat(body).contains("\"displayOrder\":1")
         assertThat(body).contains("\"isCover\":true")
         assertThat(body).contains("\"isCover\":false")
+    }
+
+    /**
+     * `coverTaken` rides only alongside a `coverMediaId` (PR #874's
+     * contract: the server refuses it on a placement naming no cover),
+     * so the field is entirely absent on a claim with no cover rather
+     * than serialized as `false`.
+     */
+    @Test
+    fun coverTakenRidesOnlyAlongsideACoverMediaId() = runTest {
+        enqueue(
+            """{"data":{"preparePostEdit":{"__typename":"PrepareContentPayload",
+               "node":"p1",
+               "writes":[{"__typename":"PreparedWrite","id":"w1","family":"PUBLISH",
+                          "canonicalProposal":"AA==","gcAfterEpochs":8}],
+               "userErrors":[]}}}""",
+        )
+        repo().preparePostEdit(
+            "p1",
+            title = "T",
+            description = null,
+            content = null,
+            attachments = listOf(
+                AttachmentClaim("m1", coverMediaId = "cover-1", coverTaken = true),
+                AttachmentClaim("m2"),
+            ),
+        )
+        val body = server.takeRequest().body.readUtf8()
+        assertThat(body).contains("\"coverMediaId\":\"cover-1\"")
+        assertThat(body).contains("\"coverTaken\":true")
+        // m2 names no cover, so the refused combination never rides.
+        val m2 = body.substringAfter("\"mediaId\":\"m2\"")
+        assertThat(m2).doesNotContain("\"coverTaken\"")
     }
 
     /**

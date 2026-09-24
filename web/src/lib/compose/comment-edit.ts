@@ -30,6 +30,13 @@ export type EditPicture =
        * publish a new version that quietly lost the clip's face.
        */
       readonly coverMediaId: string | null;
+      /**
+       * Whether that poster is a silently taken frame rather than a chosen
+       * still. Carried through for the same reason `coverMediaId` is: an
+       * edit that dropped it would silently turn a taken cover into a
+       * chosen one on the next save.
+       */
+      readonly coverTaken: boolean | null;
     }
   /** Chosen in this editor; it uploads like any other comment picture. */
   | { readonly kind: "added"; readonly asset: PickedAsset };
@@ -52,6 +59,7 @@ export function galleryOf(
     url: string;
     altText?: string | null;
     coverMedia?: { id: string } | null;
+    coverTaken?: boolean | null;
   }[],
 ): EditGallery {
   return attachments.map((attachment) => ({
@@ -60,6 +68,7 @@ export function galleryOf(
     url: attachment.url,
     altText: attachment.altText ?? "",
     coverMediaId: attachment.coverMedia?.id ?? null,
+    coverTaken: attachment.coverTaken ?? null,
   }));
 }
 
@@ -197,6 +206,7 @@ export function editClaims(gallery: EditGallery): readonly GalleryEntryDraft[] |
         mediaId: picture.mediaId,
         altText: picture.altText.trim() === "" ? null : picture.altText.trim(),
         coverMediaId: picture.coverMediaId,
+        coverTaken: picture.coverTaken,
       });
       continue;
     }
@@ -205,6 +215,7 @@ export function editClaims(gallery: EditGallery): readonly GalleryEntryDraft[] |
       mediaId: picture.asset.upload.mediaId,
       altText: picture.asset.altText.trim() === "" ? null : picture.asset.altText.trim(),
       coverMediaId: null,
+      coverTaken: null,
     });
   }
   return claims;
