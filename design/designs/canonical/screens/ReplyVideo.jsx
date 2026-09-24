@@ -27,6 +27,13 @@
    same counter row a comment's pictures wear, reading the video instead. The
    cover takes none of its own: it is the video's face, not a second picture.
 
+   THE TILE IS AN AUTHORING TILE, AT THIS SCALE TOO (jakob 2026-09-24): it
+   always wears the clip's frame 0, and a frame chosen in the row below rides
+   as the ringed inset in its corner — the post tray's own rule (readme §13,
+   the stored first frame), because one attachment is one tile and the row
+   already shows the chosen frame at full prominence. This board draws the
+   unpicked state; the inset idiom is ComposePickVideoCover's.
+
    THE ADD CONTROL IS GONE AND A LINE SAYS WHY (jakob 2026-09-03): "A video is
    the whole comment. Give it a cover below." An absent control explains
    nothing on its own, and the reader who came to add a second thing deserves

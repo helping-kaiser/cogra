@@ -36,6 +36,7 @@ import {
   attachmentClaims,
   bodyContent,
   COVER_FROM_PICTURE,
+  effectiveCover,
   emptyWizard,
   isVideoPost,
   sealGate,
@@ -46,7 +47,7 @@ import {
   type WizardAction,
   type WizardState,
 } from "@/lib/compose/wizard";
-import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
+import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import { newComposeId } from "@/lib/compose/ids";
 import { POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import {
@@ -182,6 +183,13 @@ export function ComposeWizard({
   const frames = mine?.frames ?? NO_FRAMES;
   const framePreviews = mine?.urls ?? NO_URLS;
   const capturing = videoFile !== null && captured?.file !== videoFile;
+  // THE SILENT STILL'S OWN EXTRACTION, kept apart from the tray's offers
+  // above. FRAME 1 MEANS FRAME 0, STRICTLY (jakob, 2026-09-24): a coverless
+  // clip's stored face is `captureFrameZero`'s read of the clip's true
+  // start, never `frames[0]` — which stays the tray's ~1s "opening" tile.
+  const [silentCover, setSilentCover] = useState<{ file: Blob; frame: Blob | null } | null>(null);
+  const forSilentCover = silentCover !== null && silentCover.file === videoFile ? silentCover : null;
+  const silentCovering = videoFile !== null && forSilentCover === null;
   useRevokeOnChange(framePreviews);
   // The files that did not get in. Not part of the draft — a refused file never
   // joined the batch — so this is view state, and it PERSISTS until the author
@@ -199,8 +207,12 @@ export function ComposeWizard({
   // own bytes, so the pick tray, the details tile, and the describe sheet all
   // need this still in its place — null while extraction has not landed or
   // found nothing, which draws the neutral tile rather than a borrowed
-  // picture.
-  const clipFace = framePreviews[0] ?? null;
+  // picture. THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog
+  // item 106): this is `forSilentCover`'s frame 0, never `framePreviews[0]` —
+  // the tray's own ~1s offer — because a tray face that differs from what
+  // every reader will see is a lie in the one place the author is deciding
+  // whether they need a cover.
+  const clipFace = useObjectUrl(forSilentCover?.frame ?? null);
 
   // The badge's number AND the clip's shape, read off the clip as soon as it is
   // picked rather than waiting for the cover screen — the details row shows the
@@ -262,6 +274,24 @@ export function ComposeWizard({
       cancelled = true;
     };
   }, [videoFile, captured]);
+
+  // A SECOND, INDEPENDENT EXTRACTION for the silent still alone — never tied
+  // to the tray's capture above, so retiming the tray's offers can never
+  // retime what a coverless clip stores (`captureFrameZero`'s own docblock).
+  useEffect(() => {
+    if (videoFile === null || silentCover?.file === videoFile) return;
+    let cancelled = false;
+    void captureFrameZero(videoFile)
+      .then((frame) => {
+        if (!cancelled) setSilentCover({ file: videoFile, frame });
+      })
+      .catch(() => {
+        if (!cancelled) setSilentCover({ file: videoFile, frame: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [videoFile, silentCover]);
 
   const chooseCover = (file: Blob, frame: number) => {
     // A new face is a new upload: the old one may already be on the server, and
@@ -419,17 +449,53 @@ export function ComposeWizard({
       if (video.upload.kind !== "waiting" || started.current.has(video.id)) {
         return;
       }
+
+      // THE STORED FRAME, NOT A CHOICE (the feed-video rulings, 2026-09-23,
+      // sharpened 2026-09-24; `ComposeDetailsVideo.jsx`'s docblock). Nothing
+      // was picked, so before this clip goes up faceless the silent
+      // extraction gets one chance to hand back the clip's own frame 0 —
+      // through the same cover leg a chosen face would ride. This only
+      // decides once: `autoCover` staying null is what lets the branch below
+      // tell "never tried" from "tried and failed".
+      if (cover === null && state.autoCover === null) {
+        // Waiting for the silent extraction to settle rather than for a
+        // cover to exist — the same distinction `capturing` draws for the
+        // tray. Deciding early would read "not back yet" as "never coming"
+        // and ship the clip faceless on a capture that was about to hand
+        // back a perfectly good frame.
+        if (silentCovering) return;
+        const frame = forSilentCover?.frame ?? undefined;
+        if (frame !== undefined) {
+          // THE RULE IS DISABLED DELIBERATELY, as `previews.ts` already does:
+          // the capture is an external system, and its settled frame set is
+          // exactly what this reads — there is no render-time or event-handler
+          // moment that could make this decision instead.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          dispatch({
+            type: "autoCover",
+            cover: { id: newComposeId(), file: frame, frame: 0, upload: { kind: "waiting" } },
+          });
+          return;
+        }
+        // No frames came back at all: falls through and uploads faceless,
+        // exactly as an author-skipped cover always has.
+      }
+
+      const effective = effectiveCover(cover, state.autoCover);
       started.current.add(video.id);
-      if (cover !== null) started.current.add(cover.id);
+      if (effective !== null) started.current.add(effective.id);
       void runVideoUpload(
         client,
         guard,
         video,
-        cover,
+        effective,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
-        (upload) => dispatch({ type: "coverUpload", upload }),
-        POST_SCALE.videoMaxBytes,
-        POST_SCALE.destination,
+        // A CHOSEN COVER'S PROGRESS IS THE ONLY ONE EVER DRAWN. The auto-cover
+        // has no screen of its own, so its steps land on `autoCoverUpload`
+        // where only the gate and `attachmentClaims` read them — never on
+        // `coverUpload`, which is what the (nonexistent) cover UI would watch.
+        (upload) => dispatch({ type: cover !== null ? "coverUpload" : "autoCoverUpload", upload }),
+        POST_SCALE,
       );
       return;
     }
@@ -441,7 +507,19 @@ export function ComposeWizard({
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
-  }, [uploading, state.assets, video, cover, ratio, client, guard, dispatch]);
+  }, [
+    uploading,
+    state.assets,
+    state.autoCover,
+    video,
+    cover,
+    silentCovering,
+    forSilentCover,
+    ratio,
+    client,
+    guard,
+    dispatch,
+  ]);
 
   const retry = (id: string) => {
     started.current.delete(id);
@@ -483,6 +561,12 @@ export function ComposeWizard({
       // lands on the cover screen, and the face is what may be about to change.
       cover:
         current.cover === null ? null : { ...current.cover, upload: { kind: "waiting" as const } },
+      // The silent one resets the same way, so a re-tried clip re-tries its
+      // stored frame too rather than standing on a stale done or failed.
+      autoCover:
+        current.autoCover === null
+          ? null
+          : { ...current.autoCover, upload: { kind: "waiting" as const } },
     }));
   };
 

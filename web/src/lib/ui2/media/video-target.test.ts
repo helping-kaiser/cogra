@@ -16,6 +16,7 @@ import {
   MAX_SHORT_SIDE_PX,
   STANDARD_VIDEO_BPS,
   containerBitrate,
+  fitsAtFloor,
   outputSize,
   planVideo,
   richerThan,
@@ -93,6 +94,46 @@ describe("videoBitrateForClip — VideoBitrate.forClip", () => {
     expect(videoBitrateForClip(240_000, postCap)).toBe(3_087_633);
     expect(videoBitrateForClip(200_000, commentCap)).toBe(1_801_380);
     expect(videoBitrateForClip(240_000, commentCap)).toBe(1_479_817);
+  });
+
+  it("gives the picture what a carried-across sound track leaves", () => {
+    // The Android rate is the default: naming 128 kbps changes nothing.
+    expect(videoBitrateForClip(388_000, postCap, AUDIO_BPS)).toBe(1_861_051);
+    // A 256 kbps AAC track copied untouched takes 128 kbps more of the budget…
+    expect(videoBitrateForClip(388_000, postCap, 256_000)).toBe(1_733_051);
+    // …and a leaner one gives it back.
+    expect(videoBitrateForClip(388_000, postCap, 96_000)).toBe(1_893_051);
+  });
+});
+
+// The pick's one question of an over-cap clip. Pinned at the millisecond the
+// answer turns: (1 Mbps floor + sound) × length against the cap's bits.
+describe("fitsAtFloor — the provably unfittable clip", () => {
+  it("turns where the floor rate and encoded sound fill a post's cap", () => {
+    // 838 860 800 bits ÷ 1 128 000 bps = 743.67 s.
+    expect(fitsAtFloor(743_670, postCap, AUDIO_BPS)).toBe(true);
+    expect(fitsAtFloor(743_671, postCap, AUDIO_BPS)).toBe(false);
+  });
+
+  it("turns at half the length for a comment's half cap", () => {
+    expect(fitsAtFloor(371_835, commentCap, AUDIO_BPS)).toBe(true);
+    expect(fitsAtFloor(371_836, commentCap, AUDIO_BPS)).toBe(false);
+  });
+
+  it("counts a copied sound at its own rate, and a silent clip at none", () => {
+    expect(fitsAtFloor(667_882, postCap, 256_000)).toBe(true);
+    expect(fitsAtFloor(667_883, postCap, 256_000)).toBe(false);
+    expect(fitsAtFloor(838_860, postCap, 0)).toBe(true);
+    expect(fitsAtFloor(838_861, postCap, 0)).toBe(false);
+  });
+
+  it("lets a clip of unknown length through to the check on the encoded bytes", () => {
+    expect(fitsAtFloor(0, postCap, AUDIO_BPS)).toBe(true);
+    expect(fitsAtFloor(Number.NaN, postCap, AUDIO_BPS)).toBe(true);
+  });
+
+  it("agrees with the plan: past the turn, the plan is already at the floor", () => {
+    expect(videoBitrateForClip(743_671, postCap)).toBe(FLOOR_VIDEO_BPS);
   });
 });
 

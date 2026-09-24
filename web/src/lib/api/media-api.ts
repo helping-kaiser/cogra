@@ -17,9 +17,11 @@ import {
   AbortMediaUploadDocument,
   BeginMediaUploadDocument,
   CompleteMediaUploadDocument,
+  MediaAttachmentStatusDocument,
   UploadMediaDocument,
   type MediaScale,
   type MediaUploadKind,
+  type MediaAttachmentStatusQuery,
   type UploadMediaMutation,
 } from "@/__generated__/graphql";
 import { graphqlUri } from "@/lib/graphql-uri";
@@ -28,10 +30,36 @@ import type { AuthGuard } from "@/lib/session/guard";
 import { RESUMABLE_THRESHOLD_BYTES } from "@/lib/ui2/media/caps";
 import { OUTPUT_TYPE } from "@/lib/ui2/media/encode-image";
 import { createPartUploader, uploadsOrigin, type PartUploader } from "./part-uploader";
-import { failed, payloadOutcome, type Outcome } from "./outcome";
+import { failed, fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 
 /** The asset as the contract hands it back — the id an attachment then names. */
 export type MediaAsset = NonNullable<UploadMediaMutation["uploadMedia"]["media"]>;
+
+/** The same asset, read back mid-poll — `MediaAttachmentStatus`'s own shape. */
+export type MediaAttachmentStatus = NonNullable<MediaAttachmentStatusQuery["mediaAttachment"]>;
+
+/**
+ * Reads one of the viewer's own uploads back — how a caller learns that an
+ * asset it uploaded as PROCESSING has become READY (or FAILED). Polled the
+ * way `fetchStagedWrite` polls `stagedWrite` (`writes-api.ts`).
+ *
+ * null: the id names no asset of this session's viewer (unknown id, somebody
+ * else's asset, or no session) — the schema's own null, not a refusal.
+ */
+export async function fetchMediaAttachmentStatus(
+  client: ApolloClient,
+  id: string,
+): Promise<Outcome<MediaAttachmentStatus | null>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: MediaAttachmentStatusDocument,
+      variables: { id },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  return success(fetched.value.mediaAttachment);
+}
 
 /**
  * The server is told a filename because a multipart part carries one, and a

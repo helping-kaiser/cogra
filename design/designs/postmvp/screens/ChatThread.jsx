@@ -3,10 +3,10 @@
    idiom, the three faces a message can wear, and the foot that seals.
 
    THE HEADER IS THE CHAT'S PICTURE AND NAME, AND IT IS A DOOR
-   (`ChatThreadHeader`) — to the chat's detail surface: members, description,
-   mute, leave, the history of its name and picture. That surface is the one
-   destination this round leaves undrawn on purpose. The header PINS: the list
-   collapses, the thread never does.
+   (`ChatThreadHeader`) — to the chat's detail surface (`ChatDetails`, the
+   chat details round): members, description, mute, leave, the history of its
+   name and picture. The header PINS: the list collapses, the thread never
+   does.
 
    A GROUP, so authorship shows: Kel, Mira and Juno on the left, each run
    opened by its author's name and closed by their face; the reader's own

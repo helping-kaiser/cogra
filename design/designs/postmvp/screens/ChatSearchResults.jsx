@@ -1,0 +1,55 @@
+/* EXPLORE, SEARCHING — a chat among the results (round B3 of the chats work,
+   the integration round).
+
+   A CHAT IS A RESULT KIND. Chat `name` is in the global index (api-spec.md,
+   *What is indexed*), so a query that matches a chat's name returns the chat
+   as a row in the search's own grammar — `ReferenceRow` at chat kind: the
+   `forum` mark, the name, the policy line as its second line, and the
+   viewer-relative rank on the edge where the ranked rows carry it.
+
+   A CHAT RESULT OPENS THE CHAT'S READ SURFACE, FOR ANYONE (ruled): the thread
+   itself — read from outside with the join at the foot for a non-member or a
+   guest (`ChatThreadReader`), the member's own thread for a member. Chats are
+   public reads, so no result needs a gate before it is read.
+
+   WHAT IS NOT HERE, AND A CONTRADICTION FLAGGED. Messages are not a global
+   search kind: api-spec.md excludes chat messages from the global index —
+   "casual conversation doesn't surface to strangers by keyword" — and gives
+   them the scoped `chatSearch` (`ChatSearchIn`). Canonical's `ExploreSearch`
+   draws a message row (`in Coast walkers`), and a comment row, which the same
+   paragraph also rules out ("a comment ... is not a searchable kind"). This
+   board follows the contract and draws no message row; canonical's board is
+   the design backlog's to reconcile, not this round's to edit.
+
+   THE MIGRATION NOTE: the search surface is canonical's. At migration the chat
+   row joins `ExploreSearch` and this excerpt goes — and canonical's
+   `RefsSheet` gap re-wires with it: its chat and message rows point at "the
+   referenced node's own surface (… chat — not designed)", and at migration
+   those two rows land on the chat's read surface and on the thread scrolled to
+   the message, the destinations this round's rows already take. */
+function SearchTriggerRow() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, padding: "0 16px 8px 16px" }}>
+      <FilterTrigger reading="Everything" ariaLabel="What the search shows" />
+      <HelpDot ariaLabel="How searching works" />
+    </div>
+  );
+}
+
+export function Screen() {
+  return (
+    <>
+      <div style={{ flex: "none", paddingTop: 12 }}>
+        <SearchBar query="harbour" />
+        <SearchTriggerRow />
+      </div>
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <ReferenceRow kind="chat" name="Harbour office" sub={CHAT_POLICY_LINE.request} rank="4.10" onOpen={() => {}} />
+        <ReferenceRow kind="person" name="Harbour Rowing Club" sub="@rowingclub" rank="2.80" onOpen={() => {}} />
+        <ReferenceRow kind="chat" name="Harbour seal watch" sub={CHAT_POLICY_LINE.open} rank="1.90" onOpen={() => {}} />
+        <ReferenceRow kind="post" name="Harbour lights at dusk" src="post-photo.jpg" rank="1.20" onOpen={() => {}} />
+      </div>
+      <BottomNav active="search" slots={ALL_SLOTS} inline />
+    </>
+  );
+}

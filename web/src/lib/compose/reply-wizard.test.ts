@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { PUBLIC_DOMAIN } from "@/lib/license";
 import { newReferenceDraft } from "@/lib/references/draft";
-import { COMMENT_ATTACHMENT_CAP } from "./comment-media";
+import { COMMENT_ATTACHMENT_CAP, commentAttachmentClaims } from "./comment-media";
 import {
   advanceGate,
   COMMENT_BODY_MAX_CHARS,
@@ -20,7 +20,7 @@ import {
   type ReplyState,
   type ReplyTarget,
 } from "./reply-wizard";
-import { SENSITIVE_REASON_MAX_CHARS } from "./wizard";
+import { effectiveCover, SENSITIVE_REASON_MAX_CHARS } from "./wizard";
 
 const POST_TARGET: ReplyTarget = {
   id: "post-1",
@@ -212,6 +212,85 @@ describe("the gate", () => {
       upload: { kind: "done", mediaId: "m-v0" },
     });
     expect(sealGate(uploaded).ok).toBe(true);
+  });
+});
+
+// The feed-video rulings, 2026-09-23, applied to the reply composer exactly
+// as to the post wizard: a video that reaches upload with no chosen cover
+// gets its own frame 1 uploaded silently, through the same leg. A failed
+// attempt reads as none at all, and a chosen cover always wins over it.
+describe("the silent auto-cover", () => {
+  function withVideo(): ReplyState {
+    return reduce(withWords(), {
+      type: "pick",
+      assets: [{ id: "v0", file: new Blob(["v"], { type: "video/mp4" }), kind: "video" }],
+    });
+  }
+
+  function autoChosen(): ReplyAction {
+    return {
+      type: "autoCover",
+      cover: {
+        id: "auto0",
+        file: new Blob(["f"], { type: "image/png" }),
+        frame: 0,
+        upload: { kind: "waiting" },
+      },
+    };
+  }
+
+  it("lets a chosen cover win over the silent one", () => {
+    const state = reduce(withVideo(), autoChosen(), {
+      type: "cover",
+      cover: { id: "c0", file: new Blob(["c"]), frame: 0, upload: { kind: "waiting" } },
+    });
+    expect(effectiveCover(state.cover, state.autoCover)).toBe(state.cover);
+  });
+
+  it("counts a pending auto-cover among the uploads the seal waits for", () => {
+    const state = reduce(withVideo(), autoChosen(), {
+      type: "upload",
+      id: "v0",
+      upload: { kind: "done", mediaId: "m-v0" },
+    });
+    const gate = sealGate(state);
+    expect(gate.ok === false && gate.reason).toBe("The video is still uploading.");
+    // Unresolved either way: signing now would name no poster for a clip
+    // whose still might land a moment later.
+    expect(
+      commentAttachmentClaims(state.media, effectiveCover(state.cover, state.autoCover)),
+    ).toBeNull();
+
+    const done = reduce(state, {
+      type: "autoCoverUpload",
+      upload: { kind: "done", mediaId: "m-auto0" },
+    });
+    expect(sealGate(done).ok).toBe(true);
+    expect(
+      commentAttachmentClaims(done.media, effectiveCover(done.cover, done.autoCover)),
+    ).toEqual([{ mediaId: "m-v0", altText: null, coverMediaId: "m-auto0" }]);
+  });
+
+  it("treats a failed auto-cover as none at all, not as a refusal to report", () => {
+    const state = reduce(withVideo(), autoChosen(), {
+      type: "upload",
+      id: "v0",
+      upload: { kind: "done", mediaId: "m-v0" },
+    });
+    const failed = reduce(state, {
+      type: "autoCoverUpload",
+      upload: { kind: "failed", message: "nope", retryable: true },
+    });
+    // Ships exactly as a comment's clip that never had a cover at all.
+    expect(sealGate(failed).ok).toBe(true);
+    expect(
+      commentAttachmentClaims(failed.media, effectiveCover(failed.cover, failed.autoCover)),
+    ).toEqual([{ mediaId: "m-v0", altText: null, coverMediaId: null }]);
+  });
+
+  it("takes the silent face with the clip when the clip is removed", () => {
+    const state = reduce(withVideo(), autoChosen(), { type: "unpick", id: "v0" });
+    expect(state.autoCover).toBeNull();
   });
 });
 

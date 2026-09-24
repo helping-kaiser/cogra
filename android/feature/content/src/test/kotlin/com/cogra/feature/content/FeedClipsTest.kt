@@ -30,6 +30,18 @@ class FeedClipsTest {
         assertThat(FeedClips.of(listOf(removed, video(2))).urls).containsExactly(clipOf(2))
     }
 
+    /**
+     * PRELOADING STAYS ON under the veil (jakob 2026-09-24, backlog item 103):
+     * invisible, it leaks nothing the veil hides, and it makes the unveil
+     * instant. The veil takes the clip off the stage, never off this list.
+     */
+    @Test
+    fun aVeiledClipIsStillPreloaded() {
+        val veiled = video(1).copy(attachmentsStatus = FieldStatus.SENSITIVE)
+
+        assertThat(FeedClips.of(listOf(veiled, video(2))).urls).containsExactly(clipOf(1), clipOf(2)).inOrder()
+    }
+
     @Test
     fun aClipSeenTwiceIsListedWhereTheReaderFirstMeetsIt() {
         val again = video(4).copy(attachments = video(1).attachments)

@@ -11,28 +11,36 @@
 //
 // WHY THE SNIFF IS BYTES AND NOT `file.type`. A File's `type` is the operating
 // system's guess from the extension; renaming `clip.mkv` to `clip.mp4` produces
-// a File that claims `video/mp4` and is not one. The server reads the container
-// header, so the client reads the same header — the `ftyp` box at offset 4 and
-// the brand list after it — and the two agree by construction because the brand
-// set below is copied from the server's own.
-// (ISO/IEC 14496-12 §4.3 defines the FileTypeBox; the server's `sniff` is the
-// reference implementation this mirrors.)
+// a File that claims `video/mp4` and is not one. So the header is read — the
+// `ftyp` box at offset 4 and the brand list after it
+// (ISO/IEC 14496-12 §4.3 defines the FileTypeBox).
 //
-// WHAT THE CLIENT DELIBERATELY DOES NOT CHECK: the codecs. Reading whether the
-// video track is H.264 means parsing the sample-description boxes, and a wrong
-// answer here is worse than no answer — refusing a file the server would have
-// taken is a defect the reader cannot work around. The container check catches
-// the common mistake (a `.mkv`, a `.mov`); a codec the server refuses comes
-// back as the server's own words, which is exactly how every other refusal on
-// this surface already reads.
+// TWO CONTAINERS COME IN; ONE GOES OUT. An iPhone records QuickTime, and the
+// web app is built mostly for iOS (jakob, 2026-09-23), so a `.mov` is picked as
+// readily as an `.mp4`. It never reaches the server as one: every clip is
+// rewritten into a fresh MP4 before upload — by the encode, or by the strip's
+// remux, which needs no WebCodecs — so the server still only ever sees the
+// container its own brand set (copied below, verbatim) describes. A QuickTime
+// file announces itself with the major brand `qt  ` (Apple's QuickTime File
+// Format spec, "File type compatibility atom"), which is exactly the test
+// mediabunny's `QTFF` reader applies — so what is accepted here is what the
+// strip can read. A pre-`ftyp` QuickTime file, which neither reader opens, is
+// refused like any other unknown container.
 //
 // THE CAPS AND THE REFUSAL WORDING ARE NOT HERE. They belong to the pick
 // screening (`lib/compose/pick.ts`), which is where a batch is judged file by
 // file and where the board's own sentences live. This module answers questions
 // about one file's bytes; it decides nothing.
 
-/** The one accepted moving format, matching the server's `video::MIME`. */
+/** The one moving format that is uploaded, matching the server's `video::MIME`. */
 export const VIDEO_TYPE = "video/mp4";
+
+/**
+ * The video types the file picker offers: MP4, and the QuickTime an iPhone
+ * records. Narrower than `video/*` on purpose — a container that is neither
+ * would only be refused a step later.
+ */
+export const PICKABLE_VIDEO_TYPES = "video/mp4,video/quicktime";
 
 /**
  * The `ftyp` brands an MP4 may announce — the server's `BRANDS`, verbatim.
@@ -42,6 +50,9 @@ export const VIDEO_TYPE = "video/mp4";
  * separates the container clients are asked to produce from its relatives.
  */
 const BRANDS = ["isom", "iso2", "iso4", "iso6", "mp41", "mp42", "avc1"] as const;
+
+/** The major brand of a QuickTime movie. */
+const QUICKTIME_BRAND = "qt  ";
 
 /** `ftyp` at offset 4, four bytes of size before it, the major brand after. */
 const HEADER_LEN = 12;
@@ -57,10 +68,12 @@ function ascii(bytes: Uint8Array, from: number, to: number): string {
  * strictest brand it meets as the major one and lists the rest, so a file that
  * merely mentions `mp42` among its compatible brands is an MP4 whatever it
  * leads with. The declared box size bounds the list so a corrupt header cannot
- * walk the whole file.
+ * walk the whole file. A QuickTime major brand is QuickTime whatever it lists
+ * beside it — the readers treat it so, and `sniffContainer` says so.
  */
 export function sniffMp4(bytes: Uint8Array): boolean {
   if (bytes.length < HEADER_LEN || ascii(bytes, 4, 8) !== "ftyp") return false;
+  if (ascii(bytes, 8, 12) === QUICKTIME_BRAND) return false;
   const declared =
     (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
   const end = Math.max(HEADER_LEN, Math.min(declared >>> 0, bytes.length));
@@ -70,12 +83,25 @@ export function sniffMp4(bytes: Uint8Array): boolean {
   return false;
 }
 
+/** A picked clip's container, as far as the pick is concerned. */
+export type PickedContainer = "mp4" | "quicktime";
+
+/** Which accepted container these leading bytes open, or null for neither. */
+export function sniffContainer(bytes: Uint8Array): PickedContainer | null {
+  if (sniffMp4(bytes)) return "mp4";
+  if (bytes.length >= HEADER_LEN && ascii(bytes, 4, 8) === "ftyp" && ascii(bytes, 8, 12) === QUICKTIME_BRAND) {
+    return "quicktime";
+  }
+  return null;
+}
+
 /** Enough of the file to carry `ftyp` and a generous compatible-brand list. */
 const SNIFF_BYTES = 256;
 
-export async function looksLikeMp4(file: Blob): Promise<boolean> {
+/** The picked file's container, read from its bytes. */
+export async function pickedContainer(file: Blob): Promise<PickedContainer | null> {
   const head = await file.slice(0, SNIFF_BYTES).arrayBuffer();
-  return sniffMp4(new Uint8Array(head));
+  return sniffContainer(new Uint8Array(head));
 }
 
 /** A picked file the composer should treat as the moving kind rather than a still. */
@@ -172,7 +198,9 @@ export const FRAME_POINTS = [0.1, 0.5, 0.9] as const;
 
 /**
  * `CoverRow` asks for four offers ("FOUR FRAMES, NOT THREE: 1s, 10%, 50%,
- * 90%") and the first is selected when the screen opens.
+ * 90%"); none of them is selected until the author taps one (design #781,
+ * `cover-row.test.tsx`: "rings and dims no frame when no cover has been
+ * picked yet").
  */
 const FIRST_FRAME_SECONDS = 1;
 
@@ -247,45 +275,57 @@ function attachOffscreen(video: HTMLVideoElement): () => void {
   };
 }
 
+/**
+ * Attach a video element to `url` and wait until it has a frame to draw.
+ *
+ * Shared by every capture below — `captureFrames` and `captureFrameZero`
+ * each open their own element rather than one decoding two jobs, so the
+ * still a coverless clip stores can never be a stale read of a video an
+ * unrelated capture already tore down.
+ */
+function loadForCapture(video: HTMLVideoElement, url: string, deadline: number): Promise<void> {
+  video.preload = "auto";
+  video.muted = true;
+  // Required for the element to decode frames without being in the document on
+  // mobile Safari, which otherwise hands back a blank canvas.
+  video.playsInline = true;
+  return new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const finish = (error?: Error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (error) reject(error);
+      else resolve();
+    };
+    // NO EVENT IS GUARANTEED HERE EITHER: a clip this browser cannot read
+    // fires `error`, but a browser that simply never schedules either event
+    // for a Blob URL previously hung this promise forever — the same class
+    // of bug `seekTo` fixes below, one step earlier in the pipeline.
+    const timer = setTimeout(
+      () => finish(new Error("this browser couldn't read that video")),
+      Math.max(0, deadline - Date.now()),
+    );
+    video.addEventListener("loadeddata", () => finish(), { once: true });
+    video.addEventListener(
+      "error",
+      () => finish(new Error("this browser couldn't read that video")),
+      { once: true },
+    );
+    video.src = url;
+  });
+}
+
 export async function captureFrames(
   file: Blob,
   fractions: readonly number[] = FRAME_POINTS,
 ): Promise<readonly Blob[]> {
   const url = URL.createObjectURL(file);
   const video = document.createElement("video");
-  video.preload = "auto";
-  video.muted = true;
-  // Required for the element to decode frames without being in the document on
-  // mobile Safari, which otherwise hands back a blank canvas.
-  video.playsInline = true;
   const detach = attachOffscreen(video);
   const deadline = Date.now() + CAPTURE_DEADLINE_MS;
   try {
-    await new Promise<void>((resolve, reject) => {
-      let settled = false;
-      const finish = (error?: Error) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        if (error) reject(error);
-        else resolve();
-      };
-      // NO EVENT IS GUARANTEED HERE EITHER: a clip this browser cannot read
-      // fires `error`, but a browser that simply never schedules either event
-      // for a Blob URL previously hung this promise forever — the same class
-      // of bug `seekTo` fixes below, one step earlier in the pipeline.
-      const timer = setTimeout(
-        () => finish(new Error("this browser couldn't read that video")),
-        Math.max(0, deadline - Date.now()),
-      );
-      video.addEventListener("loadeddata", () => finish(), { once: true });
-      video.addEventListener(
-        "error",
-        () => finish(new Error("this browser couldn't read that video")),
-        { once: true },
-      );
-      video.src = url;
-    });
+    await loadForCapture(video, url, deadline);
     const duration = video.duration;
     const length = Number.isFinite(duration) && duration > 0 ? duration : 0;
     const frames: Blob[] = [];
@@ -295,6 +335,38 @@ export async function captureFrames(
       if (frame) frames.push(frame);
     }
     return frames;
+  } finally {
+    detach();
+    video.removeAttribute("src");
+    video.load();
+    URL.revokeObjectURL(url);
+  }
+}
+
+/**
+ * The silent auto-cover's still — the clip's true frame 0, never the ~1-second
+ * "opening" offer `captureFrames` leads with. FRAME 1 MEANS FRAME 0, STRICTLY
+ * (jakob, 2026-09-24; `design/readme.md` §13 and the `MediaAttachment`
+ * docblock): a still pulled from a second into the clip is a cover *in* the
+ * video rather than the start of it, so playback visibly jumps off it —
+ * exactly the flash the stored-still ruling exists to kill. The black- or
+ * blurry-opening-frame cost is accepted; an author who wants a prettier face
+ * chooses a cover instead.
+ *
+ * A SEPARATE EXTRACTION, DELIBERATELY. The picker's own "1s" tile keeps its
+ * place in `frameTimes` — this changes only what a coverless clip stores in
+ * silence, never what the tray offers a reader to tap. Android draws the
+ * same line: `AndroidVideoProcessor.firstFrame()` reads time zero for the
+ * silent still, independently of the frames its own picker offers past it.
+ */
+export async function captureFrameZero(file: Blob): Promise<Blob | null> {
+  const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  const detach = attachOffscreen(video);
+  const deadline = Date.now() + CAPTURE_DEADLINE_MS;
+  try {
+    await loadForCapture(video, url, deadline);
+    return await frameAt(video, 0);
   } finally {
     detach();
     video.removeAttribute("src");

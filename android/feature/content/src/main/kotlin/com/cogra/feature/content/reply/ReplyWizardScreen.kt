@@ -123,6 +123,7 @@ fun ReplyWizardRoute(
                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
             )
         },
+        onOpenCoverRow = viewModel::onOpenCoverRow,
         onDismissRefusal = viewModel::onDismissRefusal,
         onRetryUpload = viewModel::onRetryUpload,
         onKeepWriting = viewModel::onKeepWriting,
@@ -183,6 +184,7 @@ internal fun ReplyWizardScreen(
     onAltTextChange: (String, String) -> Unit,
     onPickCoverFrame: (Int) -> Unit,
     onOpenCoverPicker: () -> Unit,
+    onOpenCoverRow: () -> Unit,
     onDismissRefusal: (Int) -> Unit,
     onRetryUpload: (String) -> Unit,
     onKeepWriting: () -> Unit,
@@ -274,6 +276,7 @@ internal fun ReplyWizardScreen(
                                 onDescribePictures = onDescribePictures,
                                 onPickCoverFrame = onPickCoverFrame,
                                 onPickCoverPicture = onOpenCoverPicker,
+                                onOpenCoverRow = onOpenCoverRow,
                                 onDismissRefusal = onDismissRefusal,
                                 onRetryUpload = onRetryUpload,
                             )

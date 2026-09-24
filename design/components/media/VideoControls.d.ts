@@ -55,6 +55,8 @@ export interface TimelineProps {
   duration?: string;
   /** The stream's rung: a 3px hairline with no knob, no glyphs. */
   thin?: boolean;
+  /** The ground the timeline lies on: `media` (default) over footage, `surface` on a fill — a voice note's bubble. */
+  tone?: "media" | "surface";
 }
 
 export declare function Timeline(props: TimelineProps): JSX.Element;

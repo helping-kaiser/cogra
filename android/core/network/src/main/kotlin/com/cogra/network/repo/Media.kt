@@ -9,7 +9,9 @@ import com.apollographql.apollo.api.DefaultUpload
 import com.apollographql.apollo.api.Optional
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
+import com.cogra.domain.map
 import com.cogra.domain.media.MediaDestination
+import com.cogra.domain.media.MediaReadiness
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.PartFailure
 import com.cogra.domain.media.ProcessedPicture
@@ -17,9 +19,11 @@ import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.RESUMABLE_THRESHOLD_BYTES
 import com.cogra.domain.media.UploadProgress
 import com.cogra.network.auth.AuthGuard
+import com.cogra.network.fetch
 import com.cogra.network.graphql.AbortMediaUploadMutation
 import com.cogra.network.graphql.BeginMediaUploadMutation
 import com.cogra.network.graphql.CompleteMediaUploadMutation
+import com.cogra.network.graphql.MediaAttachmentQuery
 import com.cogra.network.graphql.UploadMediaMutation
 import com.cogra.network.graphql.type.MediaScale
 import com.cogra.network.graphql.type.MediaUploadKind
@@ -87,7 +91,7 @@ class MediaRepositoryImpl @Inject constructor(
             // A null asset beside empty userErrors is a server fault,
             // which is what `payload` turns it into — never a success
             // carrying nothing.
-            data.uploadMedia.media?.mediaFields?.toDomain()
+            data.uploadMedia.media?.toDomain()
         }
     }
 
@@ -137,7 +141,7 @@ class MediaRepositoryImpl @Inject constructor(
         client.mutation(
             UploadMediaMutation(UploadMediaInput(file = upload, scale = Optional.present(scale))),
         ).payloadOutcome({ it.uploadMedia.userErrors.map { e -> e.userErrorFields } }) { data ->
-            data.uploadMedia.media?.mediaFields?.toDomain()
+            data.uploadMedia.media?.toDomain()
         }
     }
 
@@ -197,7 +201,7 @@ class MediaRepositoryImpl @Inject constructor(
                     uploadId = opened.id,
                 ),
             ).payloadOutcome({ it.completeMediaUpload.userErrors.map { e -> e.userErrorFields } }) { data ->
-                data.completeMediaUpload.media?.mediaFields?.toDomain()
+                data.completeMediaUpload.media?.toDomain()
             }
         }
     }
@@ -208,6 +212,10 @@ class MediaRepositoryImpl @Inject constructor(
         runCatching {
             client.mutation(AbortMediaUploadMutation(uploadId = uploadId)).execute()
         }
+    }
+
+    override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> = guard.run {
+        client.query(MediaAttachmentQuery(id = id)).fetch().map { it.mediaAttachment?.toDomain() }
     }
 }
 

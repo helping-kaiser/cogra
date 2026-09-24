@@ -29,8 +29,8 @@ pub struct GenesisInput {
     /// Charter payload (network.md §3 "Platform guidelines").
     pub guidelines_version: String,
     pub guidelines_hash: String,
-    /// The genesis admission burn per cast address, micro-units (the stand-in
-    /// burn primitive honors it as numbers).
+    /// The genesis admission burn per cast address, micro-units (the
+    /// stand-in burn primitive honors it as numbers).
     pub burn_per_account_micro: i64,
 }
 
@@ -211,8 +211,8 @@ async fn ingest_or_refuse(boundary: &StandInBoundary, pool: &PgPool) -> Result<(
     ))
 }
 
-/// Runs the bootstrap. Takes the stand-in directly: the genesis admission burn
-/// and the genesis epoch close are substrate-side operations the seam
+/// Runs the bootstrap. Takes the stand-in directly: the genesis admission
+/// burn and the genesis epoch close are substrate-side operations the seam
 /// deliberately does not carry (with the real Layer 1 both happen on the
 /// substrate's side of the boundary).
 ///

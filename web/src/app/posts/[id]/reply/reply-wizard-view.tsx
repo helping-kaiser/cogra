@@ -42,7 +42,7 @@ import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { commentAttachmentClaims } from "@/lib/compose/comment-media";
 import { COMMENT_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
-import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
+import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import {
   advanceGate,
   commentBodyProblem,
@@ -61,7 +61,7 @@ import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
-import { COVER_FROM_PICTURE } from "@/lib/compose/wizard";
+import { COVER_FROM_PICTURE, effectiveCover } from "@/lib/compose/wizard";
 import { TransportError } from "@/lib/ui/transport-error";
 import { ReplyComposeStep } from "./reply-compose-step";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
@@ -144,6 +144,20 @@ export function ReplyWizard({
   const framePreviews = mine?.urls ?? NO_URLS;
   const capturing = videoFile !== null && captured?.file !== videoFile;
   useRevokeOnChange(framePreviews);
+  // THE SILENT STILL'S OWN EXTRACTION, kept apart from the row's offers
+  // above. FRAME 1 MEANS FRAME 0, STRICTLY (jakob, 2026-09-24): a coverless
+  // clip's stored face is `captureFrameZero`'s read of the clip's true
+  // start, never `frames[0]` — which stays the row's ~1s "opening" tile.
+  const [silentCover, setSilentCover] = useState<{ file: Blob; frame: Blob | null } | null>(null);
+  const forSilentCover = silentCover !== null && silentCover.file === videoFile ? silentCover : null;
+  const silentCovering = videoFile !== null && forSilentCover === null;
+  // THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog item 106):
+  // the clip's face wherever no cover has been chosen is this frame 0, never
+  // `framePreviews[0]` — the row's own ~1s "opening" offer. Where a cover HAS
+  // been chosen, the tile keeps showing that choice (`coverPreview`/the
+  // chosen frame) exactly as it always has; this is only the coverless
+  // fallback the ruling names.
+  const clipFace = useObjectUrl(forSilentCover?.frame ?? null);
 
   useEffect(() => {
     if (videoFile === null) return;
@@ -186,27 +200,82 @@ export function ReplyWizard({
     };
   }, [videoFile, captured, dispatch]);
 
-  // THE UPLOADS WAIT FOR THE CAPTURE TO SETTLE, NOT FOR A COVER TO EXIST, and
-  // the difference is the whole bug. A comment's face is taken off the clip the
-  // moment it lands, so `cover === null` means one of two opposite things — the
-  // frames are still being pulled, or there were none to pull. Read as "not
-  // ready" it is right once and wrong forever after: a clip whose capture found
-  // nothing sat at "waiting" with no message and no retry. `capturing` is the
-  // question actually being asked, and it answers false either way.
+  // A SECOND, INDEPENDENT EXTRACTION for the silent still alone — never tied
+  // to the row's capture above, so retiming the row's offers can never
+  // retime what a coverless clip stores (`captureFrameZero`'s own docblock).
+  useEffect(() => {
+    if (videoFile === null || silentCover?.file === videoFile) return;
+    let cancelled = false;
+    void captureFrameZero(videoFile)
+      .then((frame) => {
+        if (!cancelled) setSilentCover({ file: videoFile, frame });
+      })
+      .catch(() => {
+        if (!cancelled) setSilentCover({ file: videoFile, frame: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [videoFile, silentCover]);
+
+  // THE UPLOADS WAIT FOR BOTH CAPTURES TO SETTLE, NOT FOR A COVER TO EXIST,
+  // and the difference is the whole bug. A comment's face is taken off the
+  // clip the moment it lands, so `cover === null` means one of two opposite
+  // things — the extractions are still running, or they found nothing.
+  // Read as "not ready" it is right once and wrong forever after: a clip
+  // whose capture found nothing sat at "waiting" with no message and no
+  // retry. `capturing`/`silentCovering` are the questions actually being
+  // asked, and each answers false either way.
   useEffect(() => {
     if (video !== undefined) {
-      if (capturing || video.upload.kind !== "waiting" || started.current.has(video.id)) return;
+      if (
+        capturing ||
+        silentCovering ||
+        video.upload.kind !== "waiting" ||
+        started.current.has(video.id)
+      ) {
+        return;
+      }
+
+      // THE STORED FRAME, NOT A CHOICE (the feed-video rulings, 2026-09-23,
+      // sharpened 2026-09-24). Nothing was picked and the silent extraction
+      // has already settled (the guard above), so before this clip goes up
+      // faceless it gets one chance to fill from its own frame 0, through
+      // the same cover leg a chosen face would ride. Deciding only while
+      // `autoCover` is still null is what tells "never tried" from "tried
+      // and failed".
+      if (cover === null && state.autoCover === null) {
+        const frame = forSilentCover?.frame ?? undefined;
+        if (frame !== undefined) {
+          // THE RULE IS DISABLED DELIBERATELY, as `previews.ts` already does:
+          // the capture is an external system, and its settled frame set is
+          // exactly what this reads — there is no render-time or event-handler
+          // moment that could make this decision instead.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          dispatch({
+            type: "autoCover",
+            cover: { id: crypto.randomUUID(), file: frame, frame: 0, upload: { kind: "waiting" } },
+          });
+          return;
+        }
+        // No frames came back at all: falls through and uploads faceless,
+        // exactly as an author-skipped cover always has.
+      }
+
+      const effective = effectiveCover(cover, state.autoCover);
       started.current.add(video.id);
-      if (cover !== null) started.current.add(cover.id);
+      if (effective !== null) started.current.add(effective.id);
       void runVideoUpload(
         client,
         guard,
         video,
-        cover,
+        effective,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
-        (upload) => dispatch({ type: "coverUpload", upload }),
-        COMMENT_SCALE.videoMaxBytes,
-        COMMENT_SCALE.destination,
+        // The auto-cover has no row of its own to watch it, so its steps land
+        // on `autoCoverUpload` — never on `coverUpload`, which is what the
+        // (nonexistent) chosen-cover UI would read.
+        (upload) => dispatch({ type: cover !== null ? "coverUpload" : "autoCoverUpload", upload }),
+        COMMENT_SCALE,
       );
       return;
     }
@@ -218,7 +287,18 @@ export function ReplyWizard({
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
-  }, [state.media, video, cover, capturing, client, guard, dispatch]);
+  }, [
+    state.media,
+    video,
+    cover,
+    state.autoCover,
+    capturing,
+    silentCovering,
+    forSilentCover,
+    client,
+    guard,
+    dispatch,
+  ]);
 
   const chooseCover = (file: Blob, frame: number) => {
     // A new face is a new upload: the old one may already be on the server, and
@@ -321,7 +401,9 @@ export function ReplyWizard({
         license: state.license,
         tags: state.tags,
         references: state.references,
-        attachments: commentAttachmentClaims(state.media, state.cover) ?? undefined,
+        attachments:
+          commentAttachmentClaims(state.media, effectiveCover(state.cover, state.autoCover)) ??
+          undefined,
         stance: state.stance,
         sensitive: state.sensitive,
         sensitiveReason: state.sensitiveReason,
@@ -433,6 +515,7 @@ export function ReplyWizard({
           state={state}
           previews={previews}
           framePreviews={framePreviews}
+          clipFace={clipFace}
           capturing={capturing}
           durationMs={durationMs}
           refusals={refusals}
@@ -497,7 +580,7 @@ export function ReplyWizard({
           describing === null
             ? null
             : isVideoReply(state)
-              ? coverPreview
+              ? (coverPreview ?? clipFace)
               : (previews[describing] ?? null)
         }
         crop={state.media.find((asset) => asset.id === describing)?.crop ?? null}

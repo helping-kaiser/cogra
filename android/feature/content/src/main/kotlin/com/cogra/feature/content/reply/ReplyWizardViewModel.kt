@@ -15,6 +15,7 @@ import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
+import com.cogra.domain.media.awaitReady
 import com.cogra.domain.media.overPictureCap
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
@@ -33,10 +34,14 @@ import com.cogra.feature.content.wizard.COMMENT_VIDEO_MAX_BYTES
 import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.uploadPicture
 import com.cogra.feature.content.wizard.CoverChoice
+import com.cogra.feature.content.wizard.FirstFrameStill
 import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.attachmentFieldIndex
 import com.cogra.feature.content.wizard.refusesVideo
 import com.cogra.feature.content.wizard.screenPicture
+import com.cogra.feature.content.wizard.storesFirstFrame
+import com.cogra.feature.content.wizard.toResolvedUpload
+import com.cogra.feature.content.wizard.uploadFirstFrame
 import java.io.File
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -234,6 +239,13 @@ class ReplyWizardViewModel @Inject constructor(
     fun onRetryUpload(uri: String) {
         val asset = _state.value.picked.firstOrNull { it.uri == uri } ?: return
         if (asset.upload is AssetUpload.Running) return
+        // A clip retries its own journey — its face, then its bytes —
+        // never the picture pipeline, which cannot read a video and so
+        // turned every clip retry into an "unreadable picture".
+        if (asset.isVideo) {
+            startVideoUpload()
+            return
+        }
         viewModelScope.launch { upload(uri, asset.sourceRatio ?: processor.aspectRatio(uri)) }
     }
 
@@ -280,45 +292,105 @@ class ReplyWizardViewModel @Inject constructor(
      * Two standalone uploads where a cover was chosen, in this order
      * because the cover is the cheap leg: a refused cover is learned at
      * once rather than after fifty megabytes. The placement names the
-     * poster's id at prepare, so the id has to exist by then.
-     * [CoverChoice.None] is a settled answer rather than a wait, so it
-     * skips straight to the clip's own bytes.
+     * poster's id at prepare, so the id has to exist by then. A clip
+     * with no face chosen — the door left shut or the row left untouched
+     * alike ([storesFirstFrame]) — stores frame 1 on that leg instead.
+     *
+     * A NEW FACE NEVER MOVES THE CLIP'S BYTES. A clip already on the
+     * server stays there while a face chosen afterwards goes up on its
+     * own — which is also why the transcoded copy is only needed when
+     * the clip itself still has to be sent: it is dropped once the clip
+     * lands, and requiring it stranded a later face unsent.
      */
     private fun startVideoUpload() {
         val clip = _state.value.video ?: return
-        val processed = transcoded ?: return
-        val coverSettled = _state.value.coverChoice is CoverChoice.None || _state.value.coverMediaId != null
-        if (clip.upload is AssetUpload.Done && coverSettled) return
+        val clipLanded = clip.upload is AssetUpload.Done
+        if (clipLanded && _state.value.coverSettled) return
+        val processed = transcoded
+        if (!clipLanded && processed == null) return
         uploads.remove(clip.uri)?.cancel()
-        uploads[clip.uri] = viewModelScope.launch {
-            _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
-            val coverId = when (_state.value.coverChoice) {
-                CoverChoice.None -> null
-                else -> _state.value.coverMediaId ?: uploadCover() ?: return@launch
-            }
-            _state.update { it.copy(coverMediaId = coverId) }
+        uploads[clip.uri] = viewModelScope.launch { runJourney(clip.uri, clipLanded, processed) }
+    }
 
-            val sending = { progress: UploadProgress ->
-                uploadSession = progress.uploadId
-                _state.update { it.withUpload(clip.uri, AssetUpload.Sending(progress.percent)) }
+    /** The face leg, then — unless it already landed — the clip's own. */
+    private suspend fun runJourney(uri: String, clipLanded: Boolean, processed: ProcessedVideo?) {
+        if (!clipLanded) _state.update { it.withUpload(uri, AssetUpload.Running) }
+        val choice = _state.value.coverChoice
+        val coverId = when {
+            // A clip nobody gave a face: frame 1 is its still.
+            choice.storesFirstFrame -> when (val still = firstFrameStill(uri)) {
+                is FirstFrameStill.Stored -> still.mediaId
+                FirstFrameStill.Absent -> null
+                FirstFrameStill.Fault -> return
             }
-            when (val outcome = media.uploadVideo(processed, scale.destination, sending)) {
-                is Outcome.Success -> {
-                    _state.update { it.withUpload(clip.uri, AssetUpload.Done(outcome.value.id)) }
-                    runCatching { File(processed.path).delete() }
-                    transcoded = null
-                }
-                is Outcome.Refused -> _state.update {
-                    it.withUpload(
-                        clip.uri,
-                        AssetUpload.Failed(UploadFailure.REFUSED_VIDEO, outcome.errors.firstOrNull()?.message),
-                    )
-                }
-                is Outcome.Failed -> _state.update {
-                    it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
-                }
+            choice is CoverChoice.None || choice is CoverChoice.NoStill -> null
+            else -> _state.value.coverMediaId ?: uploadCover() ?: return
+        }
+        // An id belongs to the face it was uploaded for: a face chosen
+        // while this one was going up must not inherit its id.
+        _state.update { if (it.coverChoice == choice) it.copy(coverMediaId = coverId) else it }
+        if (processed == null || _state.value.video?.upload is AssetUpload.Done) return
+        sendClip(uri, processed)
+    }
+
+    /**
+     * Frame 1's id, reusing one already stored (`uploadFirstFrame`). An
+     * absent still settles to [CoverChoice.NoStill], silently; a fault
+     * lands on the clip's own failure line, where its retry extracts
+     * again.
+     */
+    private suspend fun firstFrameStill(uri: String): FirstFrameStill {
+        _state.value.coverMediaId?.let { return FirstFrameStill.Stored(it) }
+        val still = uploadFirstFrame(uri, video, media)
+        when (still) {
+            is FirstFrameStill.Stored -> Unit
+            FirstFrameStill.Absent -> _state.update {
+                if (it.coverChoice.storesFirstFrame) it.copy(coverChoice = CoverChoice.NoStill) else it
+            }
+            FirstFrameStill.Fault -> _state.update {
+                it.withUpload(uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
             }
         }
+        return still
+    }
+
+    /** The clip's own leg: its transcoded bytes, onto the resumable upload. */
+    private suspend fun sendClip(uri: String, processed: ProcessedVideo) {
+        val sending = { progress: UploadProgress ->
+            uploadSession = progress.uploadId
+            _state.update { it.withUpload(uri, AssetUpload.Sending(progress.percent)) }
+        }
+        // READY answers here at once — no extra request. `awaitReady`
+        // only starts polling for the backstop case, a PROCESSING
+        // asset (Android's own uploads are always within target).
+        when (val outcome = media.awaitReady(media.uploadVideo(processed, scale.destination, sending))) {
+            is Outcome.Success -> {
+                val resolved = outcome.value.toResolvedUpload(UploadFailure.REFUSED_VIDEO)
+                _state.update { it.withUpload(uri, resolved) }
+                clearTranscodedCacheUnlessRetryable(resolved, processed.path)
+            }
+            is Outcome.Refused -> _state.update {
+                it.withUpload(
+                    uri,
+                    AssetUpload.Failed(UploadFailure.REFUSED_VIDEO, outcome.errors.firstOrNull()?.message),
+                )
+            }
+            is Outcome.Failed -> _state.update {
+                it.withUpload(uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
+            }
+        }
+    }
+
+    /**
+     * A retryable failure keeps the transcoded file for a fast retry;
+     * READY and a non-retryable FAILED both have nothing left to retry
+     * for, so the cache copy has served its purpose either way.
+     */
+    private fun clearTranscodedCacheUnlessRetryable(resolved: AssetUpload, path: String) {
+        val stillRetryable = resolved is AssetUpload.Failed && resolved.retryable
+        if (stillRetryable) return
+        runCatching { File(path).delete() }
+        transcoded = null
     }
 
     /**
@@ -329,15 +401,16 @@ class ReplyWizardViewModel @Inject constructor(
      * framed to the clip's own shape: a poster that is not the video's
      * shape would letterbox the thing it stands in for.
      *
-     * Never called for [CoverChoice.None] — [startVideoUpload] skips
-     * straight past it — so that branch is unreached in practice; it
-     * fails loudly rather than silently if that invariant ever breaks.
+     * Never called for [CoverChoice.None] or [CoverChoice.FirstFrame] —
+     * [startVideoUpload] routes both elsewhere — so that branch is
+     * unreached in practice; it fails loudly rather than silently if
+     * that invariant ever breaks.
      */
     private suspend fun uploadCover(): String? {
         val state = _state.value
         val clip = state.video ?: return null
         val picture = when (val choice = state.coverChoice) {
-            CoverChoice.None -> null
+            CoverChoice.None, CoverChoice.FirstFrame, CoverChoice.NoStill -> null
             is CoverChoice.Frame -> state.coverFrames.getOrNull(choice.index)?.picture
             is CoverChoice.Picture -> processor.process(
                 choice.uri,
@@ -354,8 +427,16 @@ class ReplyWizardViewModel @Inject constructor(
             _state.update { it.withUpload(clip.uri, AssetUpload.Failed(UploadFailure.PICTURE_TOO_BIG)) }
             return null
         }
-        return when (val outcome = media.uploadMedia(picture)) {
-            is Outcome.Success -> outcome.value.id
+        // READY answers here at once — no extra request. `awaitReady`
+        // only starts polling for the backstop case, a PROCESSING cover.
+        return when (val outcome = media.awaitReady(media.uploadMedia(picture))) {
+            is Outcome.Success -> when (val resolved = outcome.value.toResolvedUpload(UploadFailure.REFUSED_COVER)) {
+                is AssetUpload.Done -> resolved.mediaId
+                else -> {
+                    _state.update { it.withUpload(clip.uri, resolved) }
+                    null
+                }
+            }
             is Outcome.Refused -> {
                 _state.update {
                     it.withUpload(
@@ -376,6 +457,13 @@ class ReplyWizardViewModel @Inject constructor(
 
     fun onPickCoverFrame(index: Int) =
         _state.update { it.copy(coverChoice = CoverChoice.Frame(index), coverMediaId = null) }
+
+    /**
+     * A vertical clip's "Add a cover": the door gives way to the row it
+     * stands in for (`ReplyVideoFailed` → `ReplyVideo`). The frames were
+     * lifted at pick, so the row opens already offering them.
+     */
+    fun onOpenCoverRow() = _state.update { it.copy(coverRowOpen = true) }
 
     /**
      * A cover of the author's own. The id is dropped with the choice: a

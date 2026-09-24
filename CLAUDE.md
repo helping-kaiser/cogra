@@ -53,8 +53,9 @@ it. One store: **PostgreSQL**, partitioned by truth relationship —
 the L1 record mirror (cached, rebuildable from the published
 ordered sequence), overlay caches of published fold rules, and
 authoritative L2 state (display content, identity association).
-Money lives on the rails — the realization's admission money and the **CGT
-rail** (balances, transfers, payouts); the graph carries
+Money lives on the rails — admission money (burn value, recorded
+beneath L1 and read as `B_i`) and the **CGT rail** (balances,
+transfers, payouts); the graph carries
 pointers, never amounts. See
 [docs/implementation/architecture.md](docs/implementation/architecture.md)
 and, for the rail, [docs/implementation/ledger.md](docs/implementation/ledger.md).
@@ -78,6 +79,8 @@ Crates:
 | `l1-standin` | the L1 stand-in behind the seam — formation, admission handshake, ordering, θ-ledger, epoch publication; replaced wholesale when the real Layer 1 ships |
 | `postgres-store` | SQLx queries, migrations, the record mirror, display-content CRUD |
 | `common` | Shared domain types, error types, the L1 seam data model (`common::l1`) |
+| `cogra-interchange` | First-party CBOR + CDDL library implementing the interchange conventions — deterministic data language, envelope, namespace labels, versions, theories, acceptance |
+| `cogra-linter` | the corpus linter (`cogra-lint`) — walks Markdown prose and platform source, mechanically discharges the four discipline documents' checkable obligations |
 | `ranker` | planned, not yet in `crates/` — pure feed-ranking math; one implementation for backend, miner container, and on-device (UniFFI) |
 
 Docs are layered:

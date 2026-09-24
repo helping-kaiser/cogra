@@ -17,6 +17,7 @@ import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.inFlight
 import com.cogra.feature.content.wizard.pickedPictures
+import com.cogra.feature.content.wizard.settledWith
 import com.cogra.feature.content.wizard.withAltText
 import com.cogra.feature.content.wizard.withSourceRatio
 import com.cogra.feature.content.wizard.withUpload
@@ -139,14 +140,23 @@ data class ReplyWizardState(
      * Starts at [CoverChoice.None]: extraction may still be running, may
      * come back with nothing to offer, or the author may simply move on
      * to the seal before it resolves — every one of those is a settled
-     * "no cover" rather than a wait, so `Next` never blocks on this
-     * (jakob 2026-09-10, the video-cover round). Frame extraction
-     * auto-settles [CoverChoice.None] on the first offered frame once it
-     * succeeds, while the author is still on the composer and has not
-     * chosen otherwise.
+     * "no face" rather than a wait, so `Next` never blocks on this
+     * (jakob 2026-09-10, the video-cover round). Extraction offers and
+     * never chooses. A vertical clip starts at [CoverChoice.FirstFrame]
+     * instead: there is no step to skip at comment scale, so the row is
+     * what gives way. Either way a clip with no face chosen is stored
+     * with its first frame.
      */
     val coverChoice: CoverChoice = CoverChoice.None,
     val coverMediaId: String? = null,
+
+    /**
+     * Whether a vertical clip's door has been opened onto the cover row
+     * (`ReplyVideoFailed` → `ReplyVideo`: "the row is what the door
+     * opens"). A horizontal or square clip wears the row from the start
+     * and never reads this.
+     */
+    val coverRowOpen: Boolean = false,
 
     /**
      * Files the composer would not take (`ReplyMediaErrors`). Nothing
@@ -229,14 +239,26 @@ data class ReplyWizardState(
     /**
      * Every pick has an id: the gallery can be attached as it stands.
      *
-     * A clip's face is optional, but a face that was chosen still has to
-     * land before the clip counts as complete: the placement cannot
-     * name an id that does not exist yet. [CoverChoice.None] carries no
-     * such id to wait for, so it never holds this up.
+     * A clip's face is optional, but its still is not: a chosen face, or
+     * the first frame a face-less clip is stored with, has to land before
+     * the clip counts as complete — the placement cannot name an id that
+     * does not exist yet. The wait always ends: a still that cannot be
+     * made settles to [CoverChoice.NoStill].
      */
     val uploadsComplete: Boolean
-        get() = uploadedIds.size == picked.size &&
-            (!isVideoComment || coverChoice is CoverChoice.None || coverMediaId != null)
+        get() = uploadedIds.size == picked.size && (!isVideoComment || coverSettled)
+
+    /** Whether the clip's still needs nothing more sent (`settledWith`). */
+    val coverSettled: Boolean
+        get() = coverChoice.settledWith(coverMediaId)
+
+    /**
+     * Whether the clip's cover field is the door rather than the row —
+     * a vertical clip's default at comment scale (design/readme.md §13
+     * "Comment scale inherits at its scale"), until the author opens it.
+     */
+    val coverDoorShowing: Boolean
+        get() = video?.isVerticalClip == true && !coverRowOpen
 
     /**
      * The stance pad is parked over the page, not a drawer.
@@ -372,6 +394,7 @@ fun ReplyWizardState.clearedCover(): ReplyWizardState = copy(
     coverFrames = emptyList(),
     coverChoice = CoverChoice.None,
     coverMediaId = null,
+    coverRowOpen = false,
 )
 
 // ---------------------------------------------------------------------
@@ -430,7 +453,14 @@ fun ReplyWizardState.addPick(
     // at comment caps. A clip is the whole body, so it replaces whatever
     // was there rather than being refused beside it: the file the author
     // just chose is the one they meant.
-    if (picking.isVideo) return copy(picked = listOf(picking)).clearedCover()
+    // A vertical clip carries its first frame as its still from the
+    // moment it is staged: the composer opens on the door, and there is
+    // no step to skip, so staging is where the skip happens.
+    if (picking.isVideo) {
+        return copy(picked = listOf(picking)).clearedCover().let {
+            if (picking.isVerticalClip) it.copy(coverChoice = CoverChoice.FirstFrame) else it
+        }
+    }
     if (isVideoComment) return copy(picked = listOf(picking)).clearedCover()
     if (!canAddPicture) return this
     return copy(picked = picked + picking)

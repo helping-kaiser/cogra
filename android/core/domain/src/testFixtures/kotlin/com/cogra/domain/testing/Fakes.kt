@@ -33,6 +33,7 @@ import com.cogra.domain.MediaFieldUpdate
 import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.MediaProcessor
+import com.cogra.domain.media.MediaReadiness
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
@@ -546,6 +547,9 @@ open class ThrowingMediaRepository : MediaRepository {
     override suspend fun abortUpload(uploadId: String) {
         abortedUploads += uploadId
     }
+
+    override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> =
+        throw UnsupportedOperationException()
 }
 
 /** Media-processor base: the pipeline throws until a test scripts it. */
@@ -566,6 +570,8 @@ open class ThrowingVideoProcessor : VideoProcessor {
 
     override suspend fun coverFrames(uri: String, count: Int): List<VideoFrame> =
         throw UnsupportedOperationException()
+
+    override suspend fun firstFrame(uri: String): ProcessedPicture? = throw UnsupportedOperationException()
 
     override suspend fun info(uri: String): VideoInfo? = throw UnsupportedOperationException()
 }

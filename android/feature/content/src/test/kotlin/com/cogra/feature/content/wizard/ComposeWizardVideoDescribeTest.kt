@@ -56,6 +56,7 @@ class ComposeWizardVideoDescribeTest {
             onCropsChanged = {},
             onPickCoverFrame = {},
             onOpenCoverPicker = {},
+            onOpenCoverStep = {},
             onDismissRefusal = {},
             onTitleChange = {},
             onDescriptionChange = {},

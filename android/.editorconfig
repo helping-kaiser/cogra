@@ -39,3 +39,14 @@ ktlint_standard_function-signature = disabled
 #   dense on purpose — most are three-branch `Outcome` matches read as a
 #   single shape.
 ktlint_standard_blank-line-between-when-conditions = disabled
+# - `class-signature` is `function-signature`'s twin for constructors:
+#   it wants any signature that fits under max_line_length collapsed to
+#   one line, which is the single-line style this codebase does not
+#   write in (every multi-param constructor here is one param per line
+#   with a trailing comma). Confirmed 2026-09-23: adding one more
+#   properly-formatted multi-line constructor to `Media.kt`/`Models.kt`
+#   (core:domain) made the rule newly flag every *other*, untouched
+#   multi-line constructor already in that file — not just the new one
+#   — so this is not a rule this codebase's style can pass at all, the
+#   same conclusion `function-signature` reached above.
+ktlint_standard_class-signature = disabled

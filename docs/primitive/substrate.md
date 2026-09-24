@@ -12,11 +12,12 @@ the two disagree, the interface doc governs.
 
 ## 1. The layer stack
 
-- **The burn primitive** (beneath the stack rather than a layer of it) — the frame source. Exports the
-  burn record; the admission money lives here. Layer 1 reads it
-  only as the per-actor scalar `B_i` — cumulative, non-decreasing,
-  publicly auditable. CoGra never authors a realization's records; it reads
-  burn value through L1's interface.
+- **The burn primitive** — the frame source, beneath the stack
+  rather than a layer of it: a non-repayable, publicly verifiable,
+  costly action and the record it leaves. The admission money lives
+  in a *realization* of it; Layer 1 reads it only as the per-actor
+  scalar `B_i` — cumulative, non-decreasing, publicly auditable —
+  and CoGra reads it only through L1's interface.
 - **Layer 1 (PeerNetworks)** — the shared public graph
   `G = (V, E)` and the binding surface: the accepted edge set, the
   declared constants, the burn snapshot, the admission rules,
@@ -54,7 +55,8 @@ What CoGra **consumes as published** (recompute only to audit):
 
 - the accepted edge set `E_k` and the epoch certificates;
 - the declared and derived constants;
-- the burn snapshot `B_i` (a realization's burn value, surfaced by L1);
+- the burn snapshot `B_i` (a realization's burn value, surfaced by
+  L1);
 - the admission rules — formation (with the approval handshake
   and the authoritative act order), the proposed final state, the
   conserved standing package, the final gates (the two-gate write
@@ -109,8 +111,9 @@ storage — partitioned around the L1 seam:
 - **Blob storage.** Media bytes, verifiable against the digests
   committed in payloads (§7).
 
-Money sits in none of these. The admission money is the realization's, read
-only as `B_i`; CoGra's own reward economy has its own rail —
+Money sits in none of these. The admission money is the
+realization's, read only as `B_i`; CoGra's own reward economy has
+its own rail —
 [economics.md](economics.md), [token.md](token.md),
 [ledger.md](../implementation/ledger.md).
 
@@ -274,8 +277,8 @@ insolvent actor (W1) restores capacity immediately by committing
 burns; re-crossing the wall (W2a) takes some combination of new
 burns and admissible vouch-positive connections from actors with
 source rates above the current standing — burns alone can
-suffice. Who funds these debits — genesis, pooled
-subsidies, treasury — is economics:
+suffice. Who funds these debits — the community's admission
+fund, from genesis on — is economics:
 [economics.md](economics.md).
 
 **Vocabulary.** The L1 admission price is the **θ-debit**, named by
@@ -338,11 +341,11 @@ CoGra-level outcomes as shared-graph records:
 
 Two genesis system actors exist — **The Moderator** (verdict
 gestures) and **The Publisher** (charter, platform documents,
-finalizations, role Tags) — burn-funded from the community
-treasury ([economics.md](economics.md)) and endorsed at bootstrap
-to clear the wall like any other actor. The full bootstrap cast —
-including **The Treasury**, an L1-registered account that
-materializes no outcomes — is
+finalizations, role Tags) — burn-funded from the community's
+admission fund ([economics.md](economics.md)) and endorsed at
+bootstrap to clear the wall like any other actor. The full
+bootstrap cast — including **The Treasury**, an L1-registered
+account that materializes no outcomes — is
 [network.md §2](network.md#2-creation). The burn is not optional:
 W1 reads only the actor's own balance — endorsement never pays an
 actor's θ, a zero-rate cohort cannot vouch itself above the wall,

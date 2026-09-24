@@ -57,6 +57,12 @@ mutation UploadMedia($input: UploadMediaInput!) {
   uploadMedia(input: $input) {
     media {
       ...MediaFields
+      # Not on the shared fragment (which every feed/profile read also
+      # spreads): every asset a parent carries is READY, so only the
+      # upload path itself, which selects these two directly, ever reads
+      # anything else (schema.graphql `MediaAttachment.state`).
+      state
+      failureReason
     }
     userErrors {
       ...UserErrorFields
@@ -92,10 +98,26 @@ mutation CompleteMediaUpload($uploadId: UUID!) {
   completeMediaUpload(input: { uploadId: $uploadId }) {
     media {
       ...MediaFields
+      # See `UploadMedia`'s own comment: not on the shared fragment.
+      state
+      failureReason
     }
     userErrors {
       ...UserErrorFields
     }
+  }
+}
+
+# Polls one of the viewer's own uploads the way `stagedWrite` is polled
+# (writes.graphql `StagedWrite`) — whether a PROCESSING asset has settled.
+# Selects nothing beyond the gate's own question: the wizard never shows
+# the server's rendition before the seal, so `url`/`options` would only
+# spend budget nothing here reads.
+query MediaAttachment($id: UUID!) {
+  mediaAttachment(id: $id) {
+    id
+    state
+    failureReason
   }
 }
 

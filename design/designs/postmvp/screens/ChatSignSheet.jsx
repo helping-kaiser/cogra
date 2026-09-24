@@ -17,11 +17,15 @@
    over the thread and goes back down. `Sign and send` at the foot is the arrow
    said in words — sending from here is the same act as a tap on the arrow.
 
-   IT READS; IT DOES NOT EDIT. The post seal's facts carry `Change` and
-   `Adjust`; these carry nothing, because the lock toggle beside the field is
-   the message's one per-message choice (jakob) and the license is the
-   account's default. Whether a reader may retune one message's license or
-   opinion from here is left open (flagged in the round's report).
+   THE OPINION IS ADJUSTABLE HERE; THE LICENSE READS (the integration round's
+   fix pass, jakob's seal ruling: the opinion a reader signs must be one they
+   can set where they sign). A message is the reader's own content, so its
+   opinion names a valence only — the one-axis table — and the row takes the
+   compose seal's own grammar, canonical `ComposeSeal`'s exactly:
+   `OwnStanceReadout` with `Adjust`, which opens the one-axis pad over the
+   sheet. The license stays a plain fact — the lock toggle is the message's
+   one per-message choice (jakob) and the license is the account's default;
+   whether one message's license may be retuned here stays open.
 
    ONE MARKUP, TWO PAINTINGS (the geek-mode round). The opinion row is the one
    pair-shaped fact, and `OwnStanceReadout` already draws the face AND the
@@ -43,7 +47,7 @@ export function Screen() {
             <FactRow label="Into" value="Coast walkers" />
             <FactRow label="Encrypted" value="No — anyone can read it" />
             <FactRow label="License" value="Public domain — your default" />
-            <FactRow label="Your opinion" value={<OwnStanceReadout pDirected={0.1} />} last />
+            <FactRow label="Your opinion" value={<OwnStanceReadout pDirected={0.1} />} action="Adjust" last />
           </div>
           <Button style={{ width: "100%" }}>Sign and send</Button>
         </div>

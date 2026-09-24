@@ -16,7 +16,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.atom.CograTextField
-import com.cogra.core.designsystem.v2.atom.InlineAction
 import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.DescribeSubject
 import com.cogra.core.designsystem.v2.compose.PickedPicture
@@ -100,12 +99,16 @@ internal fun ColumnScope.DetailsStepBody(
             )
         }
 
-        // The vertical/no-cover default's door only. Once a face is
-        // chosen the cover rides the clip's own tile above instead, never
-        // a second field (`ComposeDetailsVideo.jsx:19-21`, design/readme.md
-        // §13 "The cover's tile"). A gallery has no such field: its cover
-        // is its order.
-        if (state.isVideoPost && state.coverModel() == null) CoverField(onCover)
+        // The vertical/no-cover default's door only — a clip that SKIPPED
+        // the cover step for its shape. A clip that came through the step
+        // shows no door: its face is chosen, or declined, and the step is
+        // one Back away (`ComposeDetailsVideo.jsx:19-21`). Once a face is
+        // chosen through the door it rides the clip's own tile above
+        // instead, never a second field (design/readme.md §13 "The cover's
+        // tile"). A gallery has no such field: its cover is its order.
+        if (state.skipsCoverStep && state.coverModel() == null) {
+            CoverDoor(onOpen = onCover, testTag = "wizard_cover_door")
+        }
 
         TitleField(state.title, state.titleTooLong, onTitleChange)
         DescriptionField(state.description, state.descriptionTooLong, onDescriptionChange)
@@ -125,36 +128,6 @@ internal fun ColumnScope.DetailsStepBody(
                     .testTag("wizard_upload_footnote"),
             )
         }
-    }
-}
-
-/**
- * The vertical/no-cover default's door — the details board's Cover field
- * where no face has been chosen (`ComposeDetailsVideo.jsx` lines 19-21,
- * design/readme.md §13 "The cover's tile"). A clip that walked the cover
- * step and has a face shows no Cover section at all — the caller only
- * reaches here when [ComposeWizardState.coverModel] is null.
- */
-@Composable
-private fun CoverField(onCover: () -> Unit) {
-    // The details board's own section rhythm, off the 4dp grid like the
-    // column that holds it.
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(
-            text = "Cover",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        InlineAction(
-            text = "Add a cover",
-            onClick = onCover,
-            testTag = "wizard_cover_door",
-        )
-        Text(
-            text = "It plays the moment it is on screen, so it starts on its own first frame.",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
@@ -234,7 +207,11 @@ private fun UploadFailures(
             // The server's own words where it gave any, so a refusal that
             // names the file says so rather than reading as a generic fault.
             message = failure.text(),
-            onRetry = { onRetry(asset.uri) },
+            // Not retryable once the server accepted the bytes and only
+            // then refused them on inspection (a PROCESSING asset gone
+            // FAILED): the same bytes would only earn the same answer, so
+            // the way out is picking a different file, not this link.
+            onRetry = { onRetry(asset.uri) }.takeIf { failure.retryable },
             onRemove = { onRemove(index) },
             testTag = "wizard_upload_failed_$index",
         )

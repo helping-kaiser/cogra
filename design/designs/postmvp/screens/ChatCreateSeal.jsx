@@ -18,6 +18,13 @@
    and it ships its default silently (jakob): the seal names who can join,
    which the founder chose, and nothing about who decides.
 
+   THE FOUNDER'S OWN OPINION ON THE CHAT IS SET HERE (the integration round's
+   fix pass; the lane's reading of jakob's seal ruling, flagged). The founding
+   IS the founder's Participant, and a Participant carries a real stance toward
+   the chat (chats.md §4), so the seal gains the `Your opinion` row every
+   join-shaped seal now carries: `StanceControl` itself, defaulted low, a tap
+   opening the ordinary pad over the page (`ChatJoinSealPad`'s master).
+
    THE ONE LINE SAYS WHAT A FOUNDER FROM ANY OTHER MESSENGER CANNOT GUESS: the
    chat is public, and so is who is in it (chats.md §1).
 
@@ -28,22 +35,7 @@ export function Screen() {
     <>
       <WizardHeader title="What you sign" leaveLabel="Leave — nothing is started" stageLabel="Last step" help="How signing works" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span
-            aria-hidden="true"
-            style={{ flex: "none", width: 64, height: 64, display: "grid", placeItems: "center", borderRadius: "var(--radius-full)", background: "var(--surface-container-high)", color: "var(--text-secondary)" }}
-          >
-            <Icon name="forum" size={28} />
-          </span>
-          <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>
-              Low-tide walks
-            </span>
-            <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-              A new group chat — invite only.
-            </span>
-          </span>
-        </div>
+        <ChatSealSubject name="Low-tide walks" line="A new group chat — invite only." />
 
         <ActsCard
           rows={[
@@ -54,7 +46,10 @@ export function Screen() {
           note="They land together, or none does."
         />
 
-        <FactRow label="Who can join" value="Invite only" last />
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <FactRow label="Who can join" value="Invite only" />
+          <FactRow label="Your opinion" value={<SealStance target="Low-tide walks" />} last />
+        </div>
 
         <QuietNote>A chat is public: its name, who is in it and who talks to whom are there for anyone to read.</QuietNote>
 

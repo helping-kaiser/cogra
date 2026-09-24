@@ -45,7 +45,13 @@ import {
   type CommentMedia,
   type Gate,
 } from "./comment-media";
-import { sensitiveReasonProblem, type AssetUpload, type CoverAsset, type MediaKind } from "./wizard";
+import {
+  effectiveCover,
+  sensitiveReasonProblem,
+  type AssetUpload,
+  type CoverAsset,
+  type MediaKind,
+} from "./wizard";
 
 export type ReplyStep = "compose" | "seal";
 
@@ -82,6 +88,14 @@ export type ReplyState = {
    * the clip's own placement, which is also why it takes no description.
    */
   readonly cover: CoverAsset | null;
+  /**
+   * The stored still nobody chose — the feed-video rulings, 2026-09-23,
+   * applied here exactly as on the post wizard: kept apart from `cover` so
+   * ReplyVideo's cover row keeps reading `cover` alone for "has a face been
+   * chosen", while this carries the silent frame-1 upload through the same
+   * cover leg. See `wizard.ts`'s `effectiveCover`.
+   */
+  readonly autoCover: CoverAsset | null;
   readonly tags: readonly TagDraft[];
   readonly references: readonly ReferenceDraft[];
   readonly license: License;
@@ -119,6 +133,7 @@ export function emptyReply(target: ReplyTarget): ReplyState {
     words: "",
     media: NO_COMMENT_MEDIA,
     cover: null,
+    autoCover: null,
     tags: [],
     references: [],
     license: PUBLIC_DOMAIN,
@@ -191,7 +206,7 @@ export function sealGate(state: ReplyState): Gate {
     const reasonIssue = sensitiveReasonProblem(state.sensitiveReason);
     if (reasonIssue !== null) return { ok: false, reason: reasonIssue };
   }
-  return commentGate(state.words, state.media, state.cover);
+  return commentGate(state.words, state.media, effectiveCover(state.cover, state.autoCover));
 }
 
 /** Whether the composer is standing in ReplyVideo rather than ReplyPicturesWeb. */
@@ -249,6 +264,8 @@ export type ReplyAction =
   | { type: "unpick"; id: string }
   | { type: "cover"; cover: CoverAsset | null }
   | { type: "coverUpload"; upload: AssetUpload }
+  | { type: "autoCover"; cover: CoverAsset | null }
+  | { type: "autoCoverUpload"; upload: AssetUpload }
   | { type: "altText"; id: string; altText: string }
   | { type: "upload"; id: string; upload: AssetUpload }
   | { type: "tags"; tags: readonly TagDraft[] }
@@ -274,8 +291,14 @@ export function replyReducer(state: ReplyState, action: ReplyAction): ReplyState
       const media = removeFrom(state.media, action.id);
       // ReplyVideo's remove-× leads back to ReplyCompose — "the video leaves,
       // the composer is words again" — so the face goes with the clip. A cover
-      // left behind would upload for a video no longer in the comment.
-      return { ...state, media, cover: media.length === 0 ? null : state.cover };
+      // left behind would upload for a video no longer in the comment, and
+      // the silent one goes with it for the same reason.
+      return {
+        ...state,
+        media,
+        cover: media.length === 0 ? null : state.cover,
+        autoCover: media.length === 0 ? null : state.autoCover,
+      };
     }
 
     case "cover":
@@ -285,6 +308,14 @@ export function replyReducer(state: ReplyState, action: ReplyAction): ReplyState
       return state.cover === null
         ? state
         : { ...state, cover: { ...state.cover, upload: action.upload } };
+
+    case "autoCover":
+      return { ...state, autoCover: action.cover };
+
+    case "autoCoverUpload":
+      return state.autoCover === null
+        ? state
+        : { ...state, autoCover: { ...state.autoCover, upload: action.upload } };
 
     case "altText":
       return {

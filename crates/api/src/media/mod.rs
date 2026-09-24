@@ -99,6 +99,13 @@ pub struct Probe {
     /// chroma format, transfer. Absent on a still, and on a clip whose
     /// sequence parameter set does not parse.
     pub signal: Option<video::Signal>,
+    /// Whether the container's audio, if it carries one, is already AAC.
+    /// `true` on a still and on a video with no audio track — there is
+    /// nothing about audio for a re-encode to fix. This is a fact, never
+    /// a refusal: [`video::probe`] admits any audio codec, and this is
+    /// what [`process`] reads to decide whether audio alone routes a
+    /// clip to the ingest worker.
+    pub audio_aac: bool,
 }
 
 /// What the byte pipeline can refuse, and why. Every variant is a
@@ -376,9 +383,16 @@ pub struct ProcessedAsset {
     /// a single-frame picture, which is what `durationMs` reads.
     pub duration_ms: Option<u64>,
     /// Whether these bytes must be re-encoded before they may be served:
-    /// a video outside the target [`transcode::within_target`] states.
-    /// Always false on a still.
+    /// a video outside the target [`transcode::within_target`] states, an
+    /// HDR or otherwise unserved signal, or audio that is not already
+    /// AAC. Always false on a still.
     pub needs_transcode: bool,
+    /// Whether the bytes' audio, if any, is already AAC — carried
+    /// through from [`Probe::audio_aac`] so the ingest worker can assert
+    /// its own rendition really is AAC before it is stored
+    /// (`ingest_queue::run_job`), the witness guarantee's last gate.
+    /// Always true on a still.
+    pub audio_aac: bool,
 }
 
 impl ProcessedAsset {
@@ -431,6 +445,9 @@ fn gcd(a: u32, b: u32) -> u32 {
 /// states are all it takes — so a clip already within target costs nothing
 /// beyond this call. A clip that is HDR, deeper than 8 bits, or not 4:2:0
 /// is outside the target whatever its rate: readers are served 8-bit SDR.
+/// Audio that is not already AAC routes a clip to re-encoding the same
+/// way, whatever its rate or canvas: the ingest worker is what turns it
+/// into the AAC readers are promised.
 pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaError> {
     let format = Format::of(bytes).ok_or(MediaError::Unsupported)?;
     let limit = format.cap(caps);
@@ -446,7 +463,8 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
             probe.duration_ms,
             stripped.len() as u64,
             caps.video_bytes as u64,
-        ) || probe.signal.is_some_and(|signal| !signal.is_served()));
+        ) || probe.signal.is_some_and(|signal| !signal.is_served())
+            || !probe.audio_aac);
     Ok(ProcessedAsset {
         digest: Sha256::digest(&stripped).into(),
         bytes: stripped,
@@ -455,6 +473,7 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
         mime: format.mime,
         duration_ms: probe.duration_ms,
         needs_transcode,
+        audio_aac: probe.audio_aac,
     })
 }
 
@@ -621,9 +640,13 @@ pub struct AttachmentDraft {
     pub alt_text: Option<String>,
     /// The still that stands in for this clip before playback — an asset
     /// this author uploaded, either a frame the client cut out of the
-    /// video or a picture chosen instead. Only a video placement takes
-    /// one; a video may always go without.
+    /// video or a picture chosen instead, and `cover_taken` says which.
+    /// Only a video placement takes one; a video may always go without.
     pub cover_media_id: Option<Uuid>,
+    /// Whether that still was taken from the clip rather than chosen by
+    /// the author — an authoring fact the manifest witnesses beside the
+    /// cover it qualifies, so it is refused without a cover or a video.
+    pub cover_taken: bool,
 }
 
 /// A field-level refusal carrying the path into the input that names the
@@ -743,6 +766,7 @@ struct EntryDraft {
     id: Uuid,
     alt_text: Option<String>,
     cover: Option<Uuid>,
+    cover_taken: bool,
 }
 
 /// The half of gallery planning that reads only what the client sent:
@@ -758,6 +782,8 @@ struct EntryDraft {
 /// A placement naming itself as its poster is refused here rather than
 /// left to the junction's own CHECK: a constraint violation would surface
 /// as a server error instead of the field refusal the author can act on.
+/// A taken mark with no cover to qualify is refused here for the same
+/// reason — the manifest and the junction each refuse that shape too.
 fn gallery_entries(
     kind: GalleryKind,
     drafts: &[AttachmentDraft],
@@ -807,10 +833,17 @@ fn gallery_entries(
                 "an attachment cannot be its own cover",
             ));
         }
+        if draft.cover_taken && draft.cover_media_id.is_none() {
+            return Err(GalleryError::at(
+                gallery_path(i, "coverTaken"),
+                "a taken cover needs the coverMediaId it was taken as",
+            ));
+        }
         entries.push(EntryDraft {
             id: draft.media_id,
             alt_text,
             cover: draft.cover_media_id,
+            cover_taken: draft.cover_taken,
         });
     }
 
@@ -850,7 +883,12 @@ fn resolve_gallery(
             }
         }
         let cover = resolve_cover(author, i, entry, asset, rows)?;
-        manifest.push(manifest_entry(asset, entry.alt_text.clone(), cover)?);
+        manifest.push(manifest_entry(
+            asset,
+            entry.alt_text.clone(),
+            cover,
+            entry.cover_taken,
+        )?);
     }
     Ok(PlannedGallery {
         attachment_ids: entries.iter().map(|entry| entry.id).collect(),
@@ -861,8 +899,9 @@ fn resolve_gallery(
 /// The poster this placement names, checked against its own row.
 ///
 /// The cover arrives as an ordinary uploaded asset — either a frame the
-/// client pulled out of the video or a picture the author chose instead,
-/// which the server cannot tell apart and has no reason to. There is no
+/// client took out of the video or a picture the author chose instead.
+/// The bytes do not say which, so the client states it in `coverTaken`
+/// and the manifest witnesses the statement beside the cover. There is no
 /// server-side frame extraction: that would be a decoder in the upload
 /// path, and the upload path decodes nothing it does not have to.
 ///
@@ -870,8 +909,8 @@ fn resolve_gallery(
 /// it:
 ///
 /// 1. **A cover on something that is not a video.** A still is not covered
-///    by anything, so naming one is a mistake worth reporting rather than
-///    a value worth ignoring.
+///    by anything, so naming one — or marking one taken — is a mistake
+///    worth reporting rather than a value worth ignoring.
 /// 2. **An asset that is not there.**
 /// 3. **Someone else's asset.** The same anti-hijack rule a gallery entry
 ///    runs (data-model.md "Why parents point at attachments"): a cover
@@ -890,6 +929,12 @@ fn resolve_cover<'a>(
     asset: &store::MediaAttachment,
     rows: &'a [store::MediaAttachment],
 ) -> Result<Option<&'a store::MediaAttachment>, GalleryError> {
+    if entry.cover_taken && asset.mime_type != video::MIME {
+        return Err(GalleryError::at(
+            gallery_path(index, "coverTaken"),
+            "only a video's cover can be taken",
+        ));
+    }
     let Some(id) = entry.cover else {
         return Ok(None);
     };
@@ -985,20 +1030,27 @@ fn checked_alt_text(raw: Option<&str>) -> Result<Option<String>, String> {
 /// duration) stays out: an author signs what they wrote, never a
 /// measurement.
 ///
-/// The description and the poster come from the caller rather than from
-/// the asset row, because the row holds neither: both are facts about this
-/// placement, and this entry is where the author's statement about them is
-/// sealed (data-model.md "Media attachments"). The cover is witnessed by
-/// its digest rather than its id, the way the manifest names every asset.
+/// The description, the poster and whether it was taken come from the
+/// caller rather than from the asset row, because the row holds none of
+/// them: all three are facts about this placement, and this entry is where
+/// the author's statement about them is sealed (data-model.md "Media
+/// attachments"). The cover is witnessed by its digest rather than its id,
+/// the way the manifest names every asset.
+///
+/// The taken mark is sealed only beside a cover. Planning refuses the
+/// other shape before this point; tying the two here as well keeps every
+/// entry this builds one the envelope's decoder accepts.
 fn manifest_entry(
     asset: &store::MediaAttachment,
     alt_text: Option<String>,
     cover: Option<&store::MediaAttachment>,
+    cover_taken: bool,
 ) -> Result<common::envelope::MediaAsset, GalleryPlanError> {
     Ok(common::envelope::MediaAsset {
         digest: manifest_digest(asset)?,
         mime: asset.mime_type.clone(),
         alt_text,
+        cover_taken: cover_taken && cover.is_some(),
         cover: cover.map(manifest_digest).transpose()?,
     })
 }
@@ -1078,7 +1130,7 @@ fn checked_profile_image(
             GalleryError::at(path, "a profile picture must be an image, not a video").into(),
         );
     }
-    manifest_entry(asset, None, None)
+    manifest_entry(asset, None, None, false)
 }
 
 /// The asset one profile image slot's manifest entry names, resolved the
@@ -1119,7 +1171,10 @@ pub async fn resolve_profile_image(
 /// asset is gone renders as one fewer picture, not as a post that will not
 /// load. A *cover* digest with no row is thinner still: the placement is
 /// written without a poster rather than dropped, because the clip is the
-/// body and the still that fronts it is not.
+/// body and the still that fronts it is not. The taken mark goes with the
+/// poster it qualifies: a placement written without its cover is written
+/// unmarked too, since a mark describing a still that is not there says
+/// nothing (and the junction refuses it).
 ///
 /// Posters are looked up in the same round trip, and by digest for the
 /// same reason the entries are: the manifest names assets by their bytes,
@@ -1146,10 +1201,14 @@ pub async fn resolve_manifest(
     Ok(manifest
         .iter()
         .filter_map(|entry| {
-            id_of(&entry.digest).map(|attachment_id| store::GalleryPlacement {
-                attachment_id,
-                alt_text: entry.alt_text.clone(),
-                cover_media_id: entry.cover.as_ref().and_then(|c| id_of(c)),
+            id_of(&entry.digest).map(|attachment_id| {
+                let cover_media_id = entry.cover.as_ref().and_then(|c| id_of(c));
+                store::GalleryPlacement {
+                    attachment_id,
+                    alt_text: entry.alt_text.clone(),
+                    cover_media_id,
+                    cover_taken: entry.cover_taken && cover_media_id.is_some(),
+                }
             })
         })
         .collect())
@@ -1340,6 +1399,7 @@ mod planning_tests {
             is_cover: None,
             alt_text: None,
             cover_media_id: None,
+            cover_taken: false,
         }
     }
 
@@ -1348,6 +1408,14 @@ mod planning_tests {
             id,
             alt_text: None,
             cover,
+            cover_taken: false,
+        }
+    }
+
+    fn taken(id: Uuid, cover: Option<Uuid>) -> EntryDraft {
+        EntryDraft {
+            cover_taken: true,
+            ..entry(id, cover)
         }
     }
 
@@ -1543,6 +1611,74 @@ mod planning_tests {
         assert_eq!(planned.manifest.len(), 1);
         assert_eq!(
             planned.manifest[0].cover.expect("a witnessed poster"),
+            still.digest.as_slice()
+        );
+        assert!(!planned.manifest[0].cover_taken, "absent reads as chosen");
+    }
+
+    /// The taken mark qualifies a cover, so it is refused on a placement
+    /// that names none and on one that is not a video — each at the
+    /// placement's own `coverTaken`, before anything is sealed.
+    ///
+    /// A taken mark is refused without a cover and on anything but a video, at the placement's coverTaken.
+    /// ´claim:media:a-taken-mark-needs-a-covered-video´
+    #[test]
+    fn a_taken_mark_needs_a_covered_video() {
+        let mut uncovered = draft(Uuid::new_v4(), 0);
+        uncovered.cover_taken = true;
+        let refusal = gallery_entries(GalleryKind::Post, &[uncovered])
+            .expect_err("a taken mark with no cover");
+        assert_eq!(refusal.path, gallery_path(0, "coverTaken"));
+        assert_eq!(
+            refusal.message,
+            "a taken cover needs the coverMediaId it was taken as"
+        );
+
+        let author = Uuid::new_v4();
+        let picture = asset(author, webp::MIME);
+        let still = asset(author, webp::MIME);
+        match resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &[taken(picture.id, Some(still.id))],
+            &[picture.clone(), still.clone()],
+        )
+        .expect_err("a taken mark on a picture")
+        {
+            GalleryPlanError::BadInput(e) => {
+                assert_eq!(e.path, gallery_path(0, "coverTaken"));
+                assert_eq!(e.message, "only a video's cover can be taken");
+            }
+            GalleryPlanError::Internal(e) => panic!("expected a field refusal, got {e}"),
+        }
+    }
+
+    /// A taken cover is sealed as key 4 beside the cover it qualifies, and
+    /// a chosen one leaves the mark out — the planner is where the
+    /// author's statement becomes the witnessed one.
+    ///
+    /// A taken cover is witnessed in the manifest entry beside its cover digest.
+    /// ´claim:media:a-taken-cover-is-witnessed-beside-its-cover´
+    #[test]
+    fn a_taken_cover_is_witnessed_beside_its_cover() {
+        let author = Uuid::new_v4();
+        let video = asset(author, video::MIME);
+        let still = store::MediaAttachment {
+            digest: vec![9u8; 32],
+            ..asset(author, webp::MIME)
+        };
+        let planned = resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &[taken(video.id, Some(still.id))],
+            &[video.clone(), still.clone()],
+        )
+        .expect("a clip covered by its own frame");
+        assert!(planned.manifest[0].cover_taken);
+        assert_eq!(
+            planned.manifest[0]
+                .cover
+                .expect("the cover the mark qualifies"),
             still.digest.as_slice()
         );
     }
@@ -1806,6 +1942,7 @@ mod tests {
             mime: webp::MIME,
             duration_ms: None,
             needs_transcode: false,
+            audio_aac: true,
         }
         .aspect_ratio()
     }
