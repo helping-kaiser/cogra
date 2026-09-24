@@ -866,8 +866,7 @@
       "kind": "advance",
       "label": "the mic — Record a voice message (the field is empty)",
       "to": [
-        { "board": "ChatThreadRecording", "case": "press and hold — the recording foot; release signs and sends the note" },
-        { "board": "ChatThreadRecordingLocked", "case": "a tap — the recording starts locked, hands-free: delete, the lock, pause and the send arrow as buttons" }
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
       ]
     },
     {
@@ -1334,8 +1333,7 @@
       "kind": "advance",
       "label": "the mic — Record a voice message (the field is empty)",
       "to": [
-        { "board": "ChatThreadRecording", "case": "press and hold — the recording foot (master: the recording's anatomy)" },
-        { "board": "ChatThreadRecordingLocked", "case": "a tap — the recording starts locked, hands-free: delete, the lock, pause and the send arrow as buttons" }
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
       ]
     },
     {
@@ -1668,8 +1666,7 @@
       "kind": "advance",
       "label": "the mic — Record a voice message (the field is empty)",
       "to": [
-        { "board": "ChatThreadRecording", "case": "press and hold — the recording foot (master: the recording's anatomy)" },
-        { "board": "ChatThreadRecordingLocked", "case": "a tap — the recording starts locked, hands-free: delete, the lock, pause and the send arrow as buttons" }
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
       ]
     },
     {
@@ -1876,8 +1873,7 @@
       "kind": "advance",
       "label": "the mic — Record a voice message (the field is empty)",
       "to": [
-        { "board": "ChatThreadRecording", "case": "press and hold — the recording foot; release signs and sends the note" },
-        { "board": "ChatThreadRecordingLocked", "case": "a tap — the recording starts locked, hands-free: delete, the lock, pause and the send arrow as buttons" }
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
       ]
     },
     {
@@ -1974,17 +1970,6 @@
       ]
     },
     {
-      "from": "ChatThreadRecording",
-      "via": 1,
-      "kind": "advance",
-      "label": "the held mic — release, slide left, or slide up",
-      "to": [
-        { "board": "ChatThreadVoice", "case": "release — the note is signed and sent, sealed or not by the chat's sticky lock, and lands as a voice bubble (master: the voice bubble's anatomy)" },
-        { "terminal": "self", "case": "slide left — the recording is let go, nothing signed; the foot returns" },
-        { "board": "ChatThreadRecordingLocked", "case": "slide up onto the lock — the locked, hands-free state, the lock toggle back and flippable" }
-      ]
-    },
-    {
       "from": "ChatThreadVoice",
       "via": 1,
       "kind": "back",
@@ -2032,8 +2017,7 @@
       "kind": "advance",
       "label": "the mic — Record a voice message (the field is empty)",
       "to": [
-        { "board": "ChatThreadRecording", "case": "press and hold — the recording foot; release signs and sends the note" },
-        { "board": "ChatThreadRecordingLocked", "case": "a tap — the recording starts locked, hands-free: delete, the lock, pause and the send arrow as buttons" }
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
       ]
     },
     {
@@ -2084,8 +2068,7 @@
       "kind": "advance",
       "label": "the mic — Record a voice message (the field is empty)",
       "to": [
-        { "board": "ChatThreadRecording", "case": "press and hold — the recording foot; release signs and sends the note" },
-        { "board": "ChatThreadRecordingLocked", "case": "a tap — the recording starts locked, hands-free: delete, the lock, pause and the send arrow as buttons" }
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
       ]
     },
     {
@@ -2143,8 +2126,7 @@
       "kind": "advance",
       "label": "the mic — Record a voice message (the field is empty)",
       "to": [
-        { "board": "ChatThreadRecording", "case": "press and hold — the recording foot; release signs and sends the note" },
-        { "board": "ChatThreadRecordingLocked", "case": "a tap — the recording starts locked, hands-free: delete, the lock, pause and the send arrow as buttons" }
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
       ]
     },
     {
@@ -2205,8 +2187,7 @@
       "kind": "advance",
       "label": "the mic — Record a voice message (the field is empty)",
       "to": [
-        { "board": "ChatThreadRecording", "case": "press and hold — the recording foot; release signs and sends the note" },
-        { "board": "ChatThreadRecordingLocked", "case": "a tap — the recording starts locked, hands-free: delete, the lock, pause and the send arrow as buttons" }
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
       ]
     },
     {
@@ -2344,8 +2325,7 @@
       "kind": "advance",
       "label": "the mic — Record a voice message (the field is empty)",
       "to": [
-        { "board": "ChatThreadRecording", "case": "press and hold — the recording foot; release signs and sends the note" },
-        { "board": "ChatThreadRecordingLocked", "case": "a tap — the recording starts locked, hands-free: delete, the lock, pause and the send arrow as buttons" }
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
       ]
     },
     {
@@ -2793,49 +2773,49 @@
       "to": [{ "terminal": "back", "case": "the sheet goes down over the thread" }]
     },
     {
-      "from": "ChatThreadRecordingLocked",
+      "from": "ChatThreadRecording",
       "via": 1,
       "kind": "back",
       "label": "back arrow",
       "to": [{ "terminal": "back", "case": "the recording is let go, nothing signed, and the thread closes" }]
     },
     {
-      "from": "ChatThreadRecordingLocked",
+      "from": "ChatThreadRecording",
       "via": 2,
       "kind": "advance",
       "label": "the header — the chat's picture and name",
       "to": [{ "board": "ChatDetails", "case": "the chat's details; the recording is let go (master: the details' anatomy)" }]
     },
     {
-      "from": "ChatThreadRecordingLocked",
+      "from": "ChatThreadRecording",
       "via": 3,
       "kind": "advance",
       "label": "Describe",
       "to": [{ "terminal": "canonical", "case": "the describe sheet, audio's shape — canonical's DescribeSheet; the description rides the note" }]
     },
     {
-      "from": "ChatThreadRecordingLocked",
+      "from": "ChatThreadRecording",
       "via": 4,
       "kind": "advance",
       "label": "Delete the recording",
       "to": [{ "terminal": "self", "case": "the recording is let go, nothing signed; the foot returns to the field and the mic" }]
     },
     {
-      "from": "ChatThreadRecordingLocked",
+      "from": "ChatThreadRecording",
       "via": 5,
       "kind": "advance",
       "label": "the lock toggle — Encrypt end to end",
       "to": [{ "terminal": "self", "case": "the lock fills or empties — the note will be sealed by what it says when the arrow is pressed; sticky for the chat" }]
     },
     {
-      "from": "ChatThreadRecordingLocked",
+      "from": "ChatThreadRecording",
       "via": 6,
       "kind": "advance",
       "label": "Pause the recording",
-      "to": [{ "terminal": "self", "case": "the recording pauses; the same button resumes it, its glyph the mic" }]
+      "to": [{ "board": "ChatThreadRecordingPaused", "case": "the recording pauses; the middle control flips to play, Keep recording" }]
     },
     {
-      "from": "ChatThreadRecordingLocked",
+      "from": "ChatThreadRecording",
       "via": 7,
       "kind": "advance",
       "label": "the send arrow — Sign and send",
@@ -2845,14 +2825,80 @@
       ]
     },
     {
-      "from": "ChatThreadRecordingLocked",
+      "from": "ChatThreadRecording",
       "via": 8,
       "kind": "advance",
       "label": "the header's search glyph — Search in this chat",
       "to": [{ "board": "ChatSearchIn", "case": "search within this chat; the recording is let go (master: the search's anatomy)" }]
     },
     {
-      "from": "ChatThreadRecordingLocked",
+      "from": "ChatThreadRecording",
+      "via": 9,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the recording is let go, nothing signed, and the thread closes" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details; the recording is let go (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 3,
+      "kind": "advance",
+      "label": "Describe",
+      "to": [{ "terminal": "canonical", "case": "the describe sheet, audio's shape — canonical's DescribeSheet; the description rides the note" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 4,
+      "kind": "advance",
+      "label": "Delete the recording",
+      "to": [{ "terminal": "self", "case": "the recording is let go, nothing signed; the foot returns to the field and the mic" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 5,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties — the note will be sealed by what it says when the arrow is pressed; sticky for the chat" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 6,
+      "kind": "advance",
+      "label": "Keep recording",
+      "to": [{ "board": "ChatThreadRecording", "case": "recording goes on into the same note — the audio extends and the length counts on from where it paused" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 7,
+      "kind": "advance",
+      "label": "the send arrow — Sign and send",
+      "to": [
+        { "board": "ChatThreadVoice", "case": "the paused note is signed and sent as it is, sealed by the lock's state (master: the voice bubble's anatomy)" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat; the recording is let go (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
       "via": 9,
       "kind": "advance",
       "label": "Show the encrypted text",
