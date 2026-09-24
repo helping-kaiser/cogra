@@ -248,6 +248,16 @@
     <string name="content_upload_comment_video_too_big">That video is too big — a comment\'s video can be up to 50 MB.</string>
     <string name="content_upload_transport">The upload could not reach the server.</string>
 
+    <!-- The staged-clip tray caption for a VERTICAL clip: the shape whose
+         cover step is skipped (`ComposeWizardState.skipsCoverStep`), so the
+         full caption's second sentence — which previews that step — would
+         be a false promise. Blessed verbatim as the edit's own trim in
+         design/guidelines/copy-voice.md "Staging a video", extended to the
+         vertical pick by jakob 2026-09-24 (backlog item 104); see also
+         design/components/compose/PickTray.prompt.md "The clip caption is
+         the shape's." Non-vertical clips keep the full caption unchanged. -->
+    <string name="content_video_body_caption_vertical">A video is the whole post.</string>
+
     <!-- The comment an edit was opened on has since gone. -->
     <string name="content_comment_gone">That comment is no longer there.</string>
 
