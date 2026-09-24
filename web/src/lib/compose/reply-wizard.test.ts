@@ -247,6 +247,22 @@ describe("the silent auto-cover", () => {
     expect(effectiveCover(state.cover, state.autoCover)).toBe(state.cover);
   });
 
+  it("sends a chosen cover as CHOSEN, never as taken, even over a silent one waiting behind it", () => {
+    const state = reduce(
+      withVideo(),
+      autoChosen(),
+      {
+        type: "cover",
+        cover: { id: "c0", file: new Blob(["c"]), frame: 0, upload: { kind: "waiting" } },
+      },
+      { type: "upload", id: "v0", upload: { kind: "done", mediaId: "m-v0" } },
+      { type: "coverUpload", upload: { kind: "done", mediaId: "m-c0" } },
+    );
+    expect(commentAttachmentClaims(state.media, state.cover, state.autoCover)).toEqual([
+      { mediaId: "m-v0", altText: null, coverMediaId: "m-c0", coverTaken: false },
+    ]);
+  });
+
   it("counts a pending auto-cover among the uploads the seal waits for", () => {
     const state = reduce(withVideo(), autoChosen(), {
       type: "upload",
@@ -257,18 +273,18 @@ describe("the silent auto-cover", () => {
     expect(gate.ok === false && gate.reason).toBe("The video is still uploading.");
     // Unresolved either way: signing now would name no poster for a clip
     // whose still might land a moment later.
-    expect(
-      commentAttachmentClaims(state.media, effectiveCover(state.cover, state.autoCover)),
-    ).toBeNull();
+    expect(commentAttachmentClaims(state.media, state.cover, state.autoCover)).toBeNull();
 
     const done = reduce(state, {
       type: "autoCoverUpload",
       upload: { kind: "done", mediaId: "m-auto0" },
     });
     expect(sealGate(done).ok).toBe(true);
-    expect(
-      commentAttachmentClaims(done.media, effectiveCover(done.cover, done.autoCover)),
-    ).toEqual([{ mediaId: "m-v0", altText: null, coverMediaId: "m-auto0" }]);
+    // No author choice at all — the silent leg alone supplied it, so the
+    // contract's `coverTaken` must say TAKEN.
+    expect(commentAttachmentClaims(done.media, done.cover, done.autoCover)).toEqual([
+      { mediaId: "m-v0", altText: null, coverMediaId: "m-auto0", coverTaken: true },
+    ]);
   });
 
   it("treats a failed auto-cover as none at all, not as a refusal to report", () => {
@@ -283,9 +299,9 @@ describe("the silent auto-cover", () => {
     });
     // Ships exactly as a comment's clip that never had a cover at all.
     expect(sealGate(failed).ok).toBe(true);
-    expect(
-      commentAttachmentClaims(failed.media, effectiveCover(failed.cover, failed.autoCover)),
-    ).toEqual([{ mediaId: "m-v0", altText: null, coverMediaId: null }]);
+    expect(commentAttachmentClaims(failed.media, failed.cover, failed.autoCover)).toEqual([
+      { mediaId: "m-v0", altText: null, coverMediaId: null, coverTaken: false },
+    ]);
   });
 
   it("takes the silent face with the clip when the clip is removed", () => {

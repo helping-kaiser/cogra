@@ -253,6 +253,7 @@ function ComposeFormInner({ store }: { store: IdentityStore }) {
             mediaId: attachment.id,
             altText: attachment.altText ?? null,
             coverMediaId: attachment.coverMedia?.id ?? null,
+            coverTaken: attachment.coverTaken,
           })),
     [loadedPost],
   );

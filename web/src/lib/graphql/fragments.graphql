@@ -91,6 +91,12 @@ fragment MediaFields on MediaAttachment {
       aspectRatio
     }
   }
+  # True when `coverMedia` is a frame silently taken from the clip rather
+  # than a still the author chose — false on a chosen cover, on a placement
+  # without one, and outside a placement. An edit must re-state it exactly
+  # as it does `coverMedia`, or a taken cover would silently read as chosen
+  # on the next save.
+  coverTaken
 }
 
 # A post as every card and every detail read draws it.

@@ -471,6 +471,11 @@ export function attachmentClaims(state: WizardState): readonly GalleryEntryDraft
   const cover = effectiveCover(state.cover, state.autoCover);
   if (cover !== null && cover.upload.kind !== "done") return null;
   const coverMediaId = cover?.upload.kind === "done" ? cover.upload.mediaId : null;
+  // TAKEN means the effective cover came from the silent leg with no author
+  // choice at all: `effectiveCover` always prefers a chosen `state.cover`, so
+  // reaching a non-null `coverMediaId` with `state.cover` still null can only
+  // mean `autoCover` supplied it.
+  const coverTaken = coverMediaId !== null && state.cover === null;
   const claims: GalleryEntryDraft[] = [];
   for (const asset of state.assets) {
     if (asset.upload.kind !== "done") return null;
@@ -481,6 +486,7 @@ export function attachmentClaims(state: WizardState): readonly GalleryEntryDraft
       mediaId: asset.upload.mediaId,
       altText: asset.altText.trim() === "" ? null : asset.altText.trim(),
       coverMediaId: kindOf(asset) === "video" ? coverMediaId : null,
+      coverTaken: kindOf(asset) === "video" ? coverTaken : null,
     });
   }
   return claims;

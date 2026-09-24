@@ -35,7 +35,7 @@ const bytes = (n: number) => new Blob([new Uint8Array(n) as BlobPart]);
 
 /** The gallery these ids make, undescribed — the default in these fixtures. */
 const claims = (...mediaIds: readonly string[]) =>
-  mediaIds.map((mediaId) => ({ mediaId, altText: null, coverMediaId: null }));
+  mediaIds.map((mediaId) => ({ mediaId, altText: null, coverMediaId: null, coverTaken: null }));
 
 function run(state: WizardState, ...actions: readonly WizardAction[]): WizardState {
   return actions.reduce(wizardReducer, state);
@@ -667,8 +667,10 @@ describe("a video post", () => {
     });
     // One entry — the clip. The poster rides its placement, never a gallery
     // entry of its own, which is what keeps the counting rule one rule.
+    // A cover this author picked is CHOSEN, never TAKEN — the bit the
+    // contract's `coverTaken` carries.
     expect(attachmentClaims(withPoster)).toEqual([
-      { mediaId: "m-v0", altText: null, coverMediaId: "m-c0" },
+      { mediaId: "m-v0", altText: null, coverMediaId: "m-c0", coverTaken: false },
     ]);
   });
 
@@ -678,7 +680,9 @@ describe("a video post", () => {
       id: "v0",
       upload: { kind: "done", mediaId: "m-v0" },
     });
-    expect(attachmentClaims(done)).toEqual(claims("m-v0"));
+    expect(attachmentClaims(done)).toEqual([
+      { mediaId: "m-v0", altText: null, coverMediaId: null, coverTaken: false },
+    ]);
   });
 
   it("takes the face with the clip when the clip is removed", () => {
@@ -723,8 +727,10 @@ describe("the silent auto-cover", () => {
     });
     expect(uploadsPending(done)).toBe(0);
     expect(sealGate(done).ok).toBe(true);
+    // No author choice at all — the silent leg alone supplied it, so the
+    // contract's `coverTaken` must say TAKEN.
     expect(attachmentClaims(done)).toEqual([
-      { mediaId: "m-v0", altText: null, coverMediaId: "m-auto0" },
+      { mediaId: "m-v0", altText: null, coverMediaId: "m-auto0", coverTaken: true },
     ]);
   });
 
@@ -744,7 +750,9 @@ describe("the silent auto-cover", () => {
     expect(uploadsPending(failed)).toBe(0);
     expect(uploadsFailed(failed)).toBe(0);
     expect(sealGate(failed).ok).toBe(true);
-    expect(attachmentClaims(failed)).toEqual(claims("m-v0"));
+    expect(attachmentClaims(failed)).toEqual([
+      { mediaId: "m-v0", altText: null, coverMediaId: null, coverTaken: false },
+    ]);
   });
 
   it("takes the silent face with the clip when the clip is removed", () => {

@@ -23,6 +23,17 @@ const ATTACHMENTS = [
   { id: "m2", url: "https://media.test/2.webp", altText: null },
 ];
 
+/** A video whose cover the server names, taken silently or chosen by the author. */
+const videoAttachment = (coverTaken: boolean) => [
+  {
+    id: "v1",
+    url: "https://media.test/v1.mp4",
+    altText: null,
+    coverMedia: { id: "c1" },
+    coverTaken,
+  },
+];
+
 function picked(count: number, from = 0) {
   return Array.from({ length: count }, (_, index) => ({
     id: `new-${index + from}`,
@@ -105,8 +116,8 @@ describe("what the edit leaves standing", () => {
 
   it("re-states the kept pictures by their own media ids", () => {
     expect(editClaims(galleryOf(ATTACHMENTS))).toEqual([
-      { mediaId: "m1", altText: "A film camera", coverMediaId: null },
-      { mediaId: "m2", altText: null, coverMediaId: null },
+      { mediaId: "m1", altText: "A film camera", coverMediaId: null, coverTaken: null },
+      { mediaId: "m2", altText: null, coverMediaId: null, coverTaken: null },
     ]);
   });
 
@@ -116,12 +127,32 @@ describe("what the edit leaves standing", () => {
 
   it("names an added picture by the id its upload came back with", () => {
     const gallery = landed(addTo(galleryOf([]), picked(1)), "new-0", "m9");
-    expect(editClaims(gallery)).toEqual([{ mediaId: "m9", altText: null, coverMediaId: null }]);
+    expect(editClaims(gallery)).toEqual([
+      { mediaId: "m9", altText: null, coverMediaId: null, coverTaken: null },
+    ]);
   });
 
   it("sends a blank description as none, so a reader is told nothing rather than nothing-at-all", () => {
     const gallery = withAltText(landed(addTo(galleryOf([]), picked(1)), "new-0", "m9"), "new-0", "   ");
-    expect(editClaims(gallery)).toEqual([{ mediaId: "m9", altText: null, coverMediaId: null }]);
+    expect(editClaims(gallery)).toEqual([
+      { mediaId: "m9", altText: null, coverMediaId: null, coverTaken: null },
+    ]);
+  });
+
+  // THE EDIT ROUND-TRIP: `coverTaken` rides the kept placement exactly as
+  // `coverMediaId` does. Dropping it here would silently turn a silently
+  // TAKEN cover into a CHOSEN one on the very next save — the one direction
+  // this must never fail in, per `coverMediaId`'s own doc comment above.
+  it("re-states a silently-taken cover through the edit", () => {
+    expect(editClaims(galleryOf(videoAttachment(true)))).toEqual([
+      { mediaId: "v1", altText: null, coverMediaId: "c1", coverTaken: true },
+    ]);
+  });
+
+  it("re-states a chosen cover through the edit, never flipping it to taken", () => {
+    expect(editClaims(galleryOf(videoAttachment(false)))).toEqual([
+      { mediaId: "v1", altText: null, coverMediaId: "c1", coverTaken: false },
+    ]);
   });
 });
 
