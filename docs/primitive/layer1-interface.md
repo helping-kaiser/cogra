@@ -492,9 +492,11 @@ Layer 1 / operator provides: the public append-only graph
 (`post:introduction:public-accessibility` … `post:introduction:epoch-edge-set`),
 the commitment ledger and standing-compilation infrastructure, and the
 epoch machinery (PN full §6, `subsec:epoch:epoch-boundary`). Publishes the
-binding constants and the host-cached raw defaults (§6 below). The
-operator's economic inflow is the realization's minting fee — the sole
-protocol-level value flow to the operator; no protocol-level fee is
+binding constants and the host-cached raw defaults (§6 below). From its
+foundation the network reads only the interface constants a realization
+publishes — $B_{\max}$ (R9), $c_{\mathrm{u}}$ (R10), and the R11 operator
+bound; nothing else a realization publishes enters a network formula. The
+network levies no protocol-level fee of its own; no protocol-level fee is
 extracted from content transactions, advertising spend, or guild reward
 pools.
 
@@ -509,9 +511,12 @@ parameters, reward distribution schedule, and bridge composition rule;
 scores, and standing values are public.
 
 Burn consumption (`def:transport:commitment-via-burn`, PN full §8): $B_i \in \mathbb{R}_{\ge 0}$ is
-the cumulative reserve-denominated value committed by actor $i$, read from
-the burn primitive. All formulas consume $B_i$ as a non-negative, non-decreasing,
-publicly auditable scalar; no surface quantity appears. Burn
+the cumulative burn-denominated value committed by actor $i$, read from
+the burn primitive; costliness and irrevocability are inherited at the
+network's sampling depth (R8). During bootstrapping, aggregate $B_i$ is
+capacity-bounded by $B_{\max}$. All formulas consume $B_i$ as a
+non-negative, non-decreasing, publicly auditable scalar; no surface
+quantity appears. Burn
 granularity (`rem:transport:burn-granularity`): compliant implementations must support precision
 such that the reduced rate $\hat{r}_i = r_i/\nu$ is representable
 to at least 8 significant figures.
@@ -548,8 +553,12 @@ Stated independently of any mechanism that achieves them.
   published.
 - **Irrevocability (`post:introduction:irrevocability`).** A ledger entry,
   once published, cannot be reversed, removed, or reduced. The monotone
-  non-decrease of the committed quantity $B_i$ is a property of the burn primitive the
-  network reads, not a network primitive.
+  non-decrease of the committed quantity $B_i$ is a property of the burn
+  primitive the network reads, not a network primitive: what a burn
+  destroys is priced at the instant it occurs and its record is never
+  removed (R8), so successive pinned values at an address cannot fall
+  (R4(b)); the network's frame stability at its own sampling depth follows
+  (`lem:comparator:frame-stability`).
 - **Authoritative Ordering (`post:introduction:authoritative-act-order`).**
   The host chooses a total **authoritative order** over the accepted
   authored acts of each epoch and assigns each act a logical time by its
