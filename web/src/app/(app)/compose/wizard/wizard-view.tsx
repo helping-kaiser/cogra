@@ -207,8 +207,12 @@ export function ComposeWizard({
   // own bytes, so the pick tray, the details tile, and the describe sheet all
   // need this still in its place — null while extraction has not landed or
   // found nothing, which draws the neutral tile rather than a borrowed
-  // picture.
-  const clipFace = framePreviews[0] ?? null;
+  // picture. THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog
+  // item 106): this is `forSilentCover`'s frame 0, never `framePreviews[0]` —
+  // the tray's own ~1s offer — because a tray face that differs from what
+  // every reader will see is a lie in the one place the author is deciding
+  // whether they need a cover.
+  const clipFace = useObjectUrl(forSilentCover?.frame ?? null);
 
   // The badge's number AND the clip's shape, read off the clip as soon as it is
   // picked rather than waiting for the cover screen — the details row shows the

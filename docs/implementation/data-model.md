@@ -197,9 +197,14 @@ author signs nothing they did not author. Gallery order is the
 array position, so no index rides that could disagree with the
 order it is stored in. The nested map runs the same reserved-key
 discipline the outer envelope runs: an unknown key is refused
-rather than ignored, so a v2 field cannot be silently dropped by
-a v1 reader that would then render an asset it did not fully
-understand.
+rather than ignored.
+
+That refusal is what lets both maps grow additively. A new field
+is a new key assigned under schema version 1 — manifest keys 3
+and 4 each arrived that way — and every reader refuses a key above
+the highest it knows, so a reader older than a field refuses the
+payload rather than dropping the field and rendering an asset it
+did not fully understand.
 
 Key 11 carries the profile's avatar — its one image — as that same
 per-asset map, one deep: the same reader renders a gallery and
@@ -939,12 +944,13 @@ gallery rows and renders as it stood.
 ```sql
 -- Junction: post versions → attachments (ordered, optionally a cover,
 -- each entry carrying its witnessed description and, for a video, the
--- poster it is covered by). display_order, is_cover, alt_text and
--- cover_media_id are parent-version facts about the relationship, not
--- properties of the asset — each caches what the version's manifest
--- witnessed (array position; per-asset map keys 2 and 3), which is why
--- the same asset can read differently in two parents and why an edit
--- can change a cover without touching an immutable clip row.
+-- poster it is covered by and whether that poster was taken).
+-- display_order, is_cover, alt_text, cover_media_id and cover_taken are
+-- parent-version facts about the relationship, not properties of the
+-- asset — each caches what the version's manifest witnessed (array
+-- position; per-asset map keys 2, 3 and 4), which is why the same asset
+-- can read differently in two parents and why an edit can change a
+-- cover without touching an immutable clip row.
 CREATE TABLE post_attachments (
     post_version_id BIGINT   NOT NULL
         REFERENCES post_versions(version_id) ON DELETE CASCADE,
@@ -954,11 +960,13 @@ CREATE TABLE post_attachments (
     alt_text        TEXT,
     cover_media_id  UUID     REFERENCES media_attachments(id)
         CHECK (cover_media_id IS NULL OR cover_media_id <> attachment_id),
+    cover_taken     BOOLEAN  NOT NULL DEFAULT FALSE,
+    CHECK (NOT cover_taken OR cover_media_id IS NOT NULL),
     PRIMARY KEY (post_version_id, attachment_id)
 );
 
 -- Junction: comment versions → attachments (ordered, described, a
--- video carrying its poster).
+-- video carrying its poster and whether it was taken).
 CREATE TABLE comment_attachments (
     comment_version_id BIGINT   NOT NULL
         REFERENCES comment_versions(version_id) ON DELETE CASCADE,
@@ -967,6 +975,8 @@ CREATE TABLE comment_attachments (
     alt_text           TEXT,
     cover_media_id     UUID     REFERENCES media_attachments(id)
         CHECK (cover_media_id IS NULL OR cover_media_id <> attachment_id),
+    cover_taken        BOOLEAN  NOT NULL DEFAULT FALSE,
+    CHECK (NOT cover_taken OR cover_media_id IS NOT NULL),
     PRIMARY KEY (comment_version_id, attachment_id)
 );
 
@@ -1521,7 +1531,10 @@ A video's cover (the poster) is a `cover_media_id` foreign key to
 parent-version fact about the placement, not a property of the
 asset, which is why an edit can name a different cover without
 touching a clip whose row is immutable once ready. An entry may
-not name itself as its own poster. The poster is redacted with its
+not name itself as its own poster. `cover_taken` sits beside it on
+the same terms, caching manifest key 4: true when the poster is a
+frame taken from the clip rather than a still the author chose, and
+never true on a row without a poster. The poster is redacted with its
 video and the removal cascade can see the link. The junction-side
 `is_cover` is a different concern: it selects which attachment leads
 a multi-asset parent.

@@ -400,13 +400,24 @@ describe("picking a video", () => {
     const videoUrl = URL.createObjectURL(clip);
     expect(thumb).toHaveAttribute("src");
     expect(thumb.getAttribute("src")).not.toBe(videoUrl);
+    // THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog item
+    // 106): the tray's tile stands the clip on `captureFrameZero`'s own
+    // frame 0, never the tray's ~1s "opening" offer — FRAME and FRAME_ZERO
+    // are deliberately different blobs above, so this pins the right bytes
+    // for the right reason.
+    expect(thumb.getAttribute("src")).toBe(URL.createObjectURL(FRAME_ZERO));
+    expect(thumb.getAttribute("src")).not.toBe(URL.createObjectURL(FRAME));
   });
 
   // W5: the details tile used to show the CHOSEN COVER as its face, so with
   // the inset mark the cover appeared twice. The face is always the clip's
   // own first frame; the chosen cover — a different frame here — rides only
-  // the inset mark (jakob's hand-test ruling 2026-09-23).
-  it("keeps the details tile on the first frame even when a different frame is chosen as cover", async () => {
+  // the inset mark (jakob's hand-test ruling 2026-09-23). THE PREVIEW FACE
+  // IS THE STORED FACE (jakob 2026-09-24, backlog item 106) sharpens "first
+  // frame" to `captureFrameZero`'s own frame 0, never the tray's ~1s offer —
+  // proven here by choosing a tray frame OTHER than frame 0 as cover: the
+  // tile stays on FRAME_ZERO, not on `frames[0]`.
+  it("keeps the details tile on frame 0 even when a different frame is chosen as cover", async () => {
     distinctObjectUrls();
     const frames = [0, 1, 2, 3].map(
       (n) => new Blob([new Uint8Array([n]) as BlobPart], { type: "image/png" }),
@@ -425,7 +436,7 @@ describe("picking a video", () => {
       .getByTestId("wizard-picked-row-thumb-0-cover-mark")
       .querySelector("img");
 
-    expect(tileImage).toHaveAttribute("src", URL.createObjectURL(frames[0]!));
+    expect(tileImage).toHaveAttribute("src", URL.createObjectURL(FRAME_ZERO));
     expect(coverMarkImage).toHaveAttribute("src", URL.createObjectURL(frames[2]!));
   });
 
@@ -434,10 +445,16 @@ describe("picking a video", () => {
   it("shows the clip's own first frame in the describe sheet, not the video's bytes", async () => {
     distinctObjectUrls();
     const clip = aVideo();
+    const frames = [0, 1, 2, 3].map(
+      (n) => new Blob([new Uint8Array([n]) as BlobPart], { type: "image/png" }),
+    );
+    vi.mocked(captureFrames).mockResolvedValueOnce(frames);
     render();
     await pickFiles([clip]);
     fireEvent.click(await screen.findByTestId("wizard-next"));
-    fireEvent.click(await screen.findByTestId("wizard-cover-frame-0"));
+    // A tray frame OTHER than frame 0, so the sheet's face and the tray's
+    // opening offer can never be the same URL by coincidence (item 106).
+    fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
     fireEvent.click(screen.getByTestId("wizard-next"));
 
     fireEvent.click(await screen.findByTestId("wizard-describe-counter"));
@@ -447,6 +464,12 @@ describe("picking a video", () => {
     const videoUrl = URL.createObjectURL(clip);
     expect(image).not.toBeNull();
     expect(image!.getAttribute("src")).not.toBe(videoUrl);
+    // THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog item
+    // 106): the describe sheet stands the clip on `captureFrameZero`'s own
+    // frame 0, never the tray's own `frames[0]` opening offer nor the
+    // chosen cover (`frames[2]` here).
+    expect(image!.getAttribute("src")).toBe(URL.createObjectURL(FRAME_ZERO));
+    expect(image!.getAttribute("src")).not.toBe(URL.createObjectURL(frames[2]!));
   });
 
   it("asks for one description of the video, and none of its cover", async () => {
