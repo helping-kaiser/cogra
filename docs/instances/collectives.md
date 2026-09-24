@@ -34,7 +34,7 @@ founding User:
 
 1. The founder writes the social contract (§6) — at minimum the
    act-as rules and the initial decision rules.
-2. The backend creates the Collective's **keypair and
+2. The creator's device creates the Collective's **keypair and
    address** (custody: §2).
 3. The admission debit is **community-funded** — Collectives draw
    on the community's admission fund for their admission burns

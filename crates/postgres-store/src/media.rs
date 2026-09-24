@@ -530,21 +530,27 @@ pub struct GalleryEntry {
     /// Distinct from `is_cover`, which answers which attachment *leads* a
     /// multi-asset parent rather than what covers a single one.
     pub cover_media_id: Option<Uuid>,
+    /// Whether that poster was taken from the clip rather than chosen by
+    /// its author — witnessed beside the cover it qualifies, so it is only
+    /// ever true on a placement that names one.
+    pub cover_taken: bool,
 }
 
 /// One entry of a gallery as it is written: the asset, the description the
-/// record witnessed for it, and the poster it named.
+/// record witnessed for it, the poster it named, and whether that poster
+/// was taken.
 ///
-/// All three come out of the payload envelope's manifest at promotion,
+/// All four come out of the payload envelope's manifest at promotion,
 /// never out of the request that produced it — the digest names the asset,
-/// per-asset map key 2 names the description and key 3 the cover
-/// (data-model.md "The payload envelope"). That is what makes a gallery
-/// rebuildable from the record.
+/// per-asset map key 2 names the description, key 3 the cover and key 4
+/// the taken mark (data-model.md "The payload envelope"). That is what
+/// makes a gallery rebuildable from the record.
 #[derive(Debug, Clone)]
 pub struct GalleryPlacement {
     pub attachment_id: Uuid,
     pub alt_text: Option<String>,
     pub cover_media_id: Option<Uuid>,
+    pub cover_taken: bool,
 }
 
 /// Writes one version's gallery, in order.
@@ -556,8 +562,8 @@ pub struct GalleryPlacement {
 /// witnessed record disagree about what a reader sees. `alt_text` is the
 /// same fact said twice for the same reason — the row caches what the
 /// manifest entry carried, so a read serves the version's own description
-/// without decoding a payload. `cover_media_id` rides along on the same
-/// terms, from per-asset map key 3.
+/// without decoding a payload. `cover_media_id` and `cover_taken` ride
+/// along on the same terms, from per-asset map keys 3 and 4.
 ///
 /// Idempotent on re-running the write that produced it: a retried
 /// pre-sign re-inserts the same rows onto the same version.
@@ -569,20 +575,21 @@ pub async fn attach_to_post_version(
     if gallery.is_empty() {
         return Ok(());
     }
-    let (ids, orders, alts, covers) = split_placements(gallery)?;
+    let (ids, orders, alts, covers, taken) = split_placements(gallery)?;
     sqlx::query!(
         "INSERT INTO post_attachments
              (post_version_id, attachment_id, display_order, is_cover, alt_text,
-              cover_media_id)
-         SELECT $1, a.id, a.ord, a.ord = 0, a.alt, a.cover
-         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[])
-              AS a(id, ord, alt, cover)
+              cover_media_id, cover_taken)
+         SELECT $1, a.id, a.ord, a.ord = 0, a.alt, a.cover, a.taken
+         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[], $6::bool[])
+              AS a(id, ord, alt, cover, taken)
          ON CONFLICT (post_version_id, attachment_id) DO NOTHING",
         post_version_id,
         &ids,
         &orders,
         &alts as &[Option<String>],
         &covers as &[Option<Uuid>],
+        &taken,
     )
     .execute(&mut **tx)
     .await?;
@@ -600,38 +607,46 @@ pub async fn attach_to_comment_version(
     if gallery.is_empty() {
         return Ok(());
     }
-    let (ids, orders, alts, covers) = split_placements(gallery)?;
+    let (ids, orders, alts, covers, taken) = split_placements(gallery)?;
     sqlx::query!(
         "INSERT INTO comment_attachments
              (comment_version_id, attachment_id, display_order, alt_text,
-              cover_media_id)
-         SELECT $1, a.id, a.ord, a.alt, a.cover
-         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[])
-              AS a(id, ord, alt, cover)
+              cover_media_id, cover_taken)
+         SELECT $1, a.id, a.ord, a.alt, a.cover, a.taken
+         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[], $6::bool[])
+              AS a(id, ord, alt, cover, taken)
          ON CONFLICT (comment_version_id, attachment_id) DO NOTHING",
         comment_version_id,
         &ids,
         &orders,
         &alts as &[Option<String>],
         &covers as &[Option<Uuid>],
+        &taken,
     )
     .execute(&mut **tx)
     .await?;
     Ok(())
 }
 
-/// The four parallel arrays one gallery is bound as.
-type GalleryArrays = (Vec<Uuid>, Vec<i16>, Vec<Option<String>>, Vec<Option<Uuid>>);
+/// The five parallel arrays one gallery is bound as.
+type GalleryArrays = (
+    Vec<Uuid>,
+    Vec<i16>,
+    Vec<Option<String>>,
+    Vec<Option<Uuid>>,
+    Vec<bool>,
+);
 
-/// The gallery as the four parallel arrays `unnest` zips back together.
+/// The gallery as the five parallel arrays `unnest` zips back together.
 /// One `unnest` over parallel arrays is what keeps the whole gallery one
 /// statement, and the arrays have to be built before the query borrows
 /// them.
 ///
-/// All four are built in one pass so their lengths cannot diverge:
-/// `unnest` pads the short arrays of a ragged set with NULL, and both
-/// `attachment_id` and `display_order` are `NOT NULL`, so a divergence is
-/// either a refused statement or wrong rows — never a visible mismatch.
+/// All five are built in one pass so their lengths cannot diverge:
+/// `unnest` pads the short arrays of a ragged set with NULL, and
+/// `attachment_id`, `display_order` and `cover_taken` are `NOT NULL`, so a
+/// divergence is either a refused statement or wrong rows — never a
+/// visible mismatch.
 ///
 /// `display_order` is a `smallint`, so a gallery longer than `i16::MAX` is
 /// refused rather than wrapped. A wrapped index would restart the ordering
@@ -642,6 +657,7 @@ fn split_placements(gallery: &[GalleryPlacement]) -> Result<GalleryArrays, sqlx:
     let mut orders = Vec::with_capacity(gallery.len());
     let mut alts = Vec::with_capacity(gallery.len());
     let mut covers = Vec::with_capacity(gallery.len());
+    let mut taken = Vec::with_capacity(gallery.len());
     for (index, placement) in gallery.iter().enumerate() {
         let order = i16::try_from(index).map_err(|_| {
             sqlx::Error::Encode(
@@ -656,8 +672,9 @@ fn split_placements(gallery: &[GalleryPlacement]) -> Result<GalleryArrays, sqlx:
         orders.push(order);
         alts.push(placement.alt_text.clone());
         covers.push(placement.cover_media_id);
+        taken.push(placement.cover_taken);
     }
-    Ok((ids, orders, alts, covers))
+    Ok((ids, orders, alts, covers, taken))
 }
 
 struct GalleryRow {
@@ -674,6 +691,7 @@ struct GalleryRow {
     alt_text: Option<String>,
     options: serde_json::Value,
     cover_media_id: Option<Uuid>,
+    cover_taken: bool,
     state: AssetState,
     failure_reason: Option<String>,
     redaction_reason: Option<String>,
@@ -704,6 +722,7 @@ fn gallery_entry(row: GalleryRow) -> (i64, GalleryEntry) {
             is_cover: row.is_cover,
             alt_text: row.alt_text,
             cover_media_id: row.cover_media_id,
+            cover_taken: row.cover_taken,
         },
     )
 }
@@ -721,7 +740,7 @@ pub async fn post_galleries(
     let rows = sqlx::query_as!(
         GalleryRow,
         r#"SELECT j.post_version_id AS "version_id!", j.display_order,
-                  j.is_cover, j.alt_text, j.cover_media_id,
+                  j.is_cover, j.alt_text, j.cover_media_id, j.cover_taken,
                   m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
                   m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
@@ -747,7 +766,7 @@ pub async fn comment_galleries(
     let rows = sqlx::query_as!(
         GalleryRow,
         r#"SELECT j.comment_version_id AS "version_id!", j.display_order,
-                  FALSE AS "is_cover!", j.alt_text, j.cover_media_id,
+                  FALSE AS "is_cover!", j.alt_text, j.cover_media_id, j.cover_taken,
                   m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
                   m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
@@ -1201,23 +1220,27 @@ mod placement_tests {
             attachment_id: Uuid::from_u128(n),
             alt_text: alt.map(str::to_string),
             cover_media_id: cover.map(Uuid::from_u128),
+            cover_taken: false,
         }
     }
 
-    /// The four arrays are one gallery said four ways, so they have to
+    /// The five arrays are one gallery said five ways, so they have to
     /// come out the same length and in the same order — `unnest` pads a
-    /// ragged set with NULL, and two of the four columns are NOT NULL.
+    /// ragged set with NULL, and three of the five columns are NOT NULL.
     ///
-    /// A gallery's four bound arrays agree on length and on order.
+    /// A gallery's five bound arrays agree on length and on order.
     /// ´claim:media:a-gallerys-arrays-cannot-diverge´
     #[test]
-    fn the_four_arrays_agree_on_length_and_order() {
+    fn the_five_arrays_agree_on_length_and_order() {
         let gallery = [
             placement(1, Some("first"), None),
-            placement(2, None, Some(9)),
+            GalleryPlacement {
+                cover_taken: true,
+                ..placement(2, None, Some(9))
+            },
             placement(3, Some("third"), None),
         ];
-        let (ids, orders, alts, covers) = split_placements(&gallery).expect("fits");
+        let (ids, orders, alts, covers, taken) = split_placements(&gallery).expect("fits");
         assert_eq!(
             ids,
             vec![Uuid::from_u128(1), Uuid::from_u128(2), Uuid::from_u128(3)]
@@ -1228,6 +1251,7 @@ mod placement_tests {
             vec![Some("first".to_string()), None, Some("third".to_string())]
         );
         assert_eq!(covers, vec![None, Some(Uuid::from_u128(9)), None]);
+        assert_eq!(taken, vec![false, true, false]);
     }
 
     /// Position is the order and index 0 is the cover, so the first

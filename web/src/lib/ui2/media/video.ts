@@ -198,7 +198,9 @@ export const FRAME_POINTS = [0.1, 0.5, 0.9] as const;
 
 /**
  * `CoverRow` asks for four offers ("FOUR FRAMES, NOT THREE: 1s, 10%, 50%,
- * 90%") and the first is selected when the screen opens.
+ * 90%"); none of them is selected until the author taps one (design #781,
+ * `cover-row.test.tsx`: "rings and dims no frame when no cover has been
+ * picked yet").
  */
 const FIRST_FRAME_SECONDS = 1;
 
@@ -273,45 +275,57 @@ function attachOffscreen(video: HTMLVideoElement): () => void {
   };
 }
 
+/**
+ * Attach a video element to `url` and wait until it has a frame to draw.
+ *
+ * Shared by every capture below — `captureFrames` and `captureFrameZero`
+ * each open their own element rather than one decoding two jobs, so the
+ * still a coverless clip stores can never be a stale read of a video an
+ * unrelated capture already tore down.
+ */
+function loadForCapture(video: HTMLVideoElement, url: string, deadline: number): Promise<void> {
+  video.preload = "auto";
+  video.muted = true;
+  // Required for the element to decode frames without being in the document on
+  // mobile Safari, which otherwise hands back a blank canvas.
+  video.playsInline = true;
+  return new Promise<void>((resolve, reject) => {
+    let settled = false;
+    const finish = (error?: Error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      if (error) reject(error);
+      else resolve();
+    };
+    // NO EVENT IS GUARANTEED HERE EITHER: a clip this browser cannot read
+    // fires `error`, but a browser that simply never schedules either event
+    // for a Blob URL previously hung this promise forever — the same class
+    // of bug `seekTo` fixes below, one step earlier in the pipeline.
+    const timer = setTimeout(
+      () => finish(new Error("this browser couldn't read that video")),
+      Math.max(0, deadline - Date.now()),
+    );
+    video.addEventListener("loadeddata", () => finish(), { once: true });
+    video.addEventListener(
+      "error",
+      () => finish(new Error("this browser couldn't read that video")),
+      { once: true },
+    );
+    video.src = url;
+  });
+}
+
 export async function captureFrames(
   file: Blob,
   fractions: readonly number[] = FRAME_POINTS,
 ): Promise<readonly Blob[]> {
   const url = URL.createObjectURL(file);
   const video = document.createElement("video");
-  video.preload = "auto";
-  video.muted = true;
-  // Required for the element to decode frames without being in the document on
-  // mobile Safari, which otherwise hands back a blank canvas.
-  video.playsInline = true;
   const detach = attachOffscreen(video);
   const deadline = Date.now() + CAPTURE_DEADLINE_MS;
   try {
-    await new Promise<void>((resolve, reject) => {
-      let settled = false;
-      const finish = (error?: Error) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        if (error) reject(error);
-        else resolve();
-      };
-      // NO EVENT IS GUARANTEED HERE EITHER: a clip this browser cannot read
-      // fires `error`, but a browser that simply never schedules either event
-      // for a Blob URL previously hung this promise forever — the same class
-      // of bug `seekTo` fixes below, one step earlier in the pipeline.
-      const timer = setTimeout(
-        () => finish(new Error("this browser couldn't read that video")),
-        Math.max(0, deadline - Date.now()),
-      );
-      video.addEventListener("loadeddata", () => finish(), { once: true });
-      video.addEventListener(
-        "error",
-        () => finish(new Error("this browser couldn't read that video")),
-        { once: true },
-      );
-      video.src = url;
-    });
+    await loadForCapture(video, url, deadline);
     const duration = video.duration;
     const length = Number.isFinite(duration) && duration > 0 ? duration : 0;
     const frames: Blob[] = [];
@@ -321,6 +335,38 @@ export async function captureFrames(
       if (frame) frames.push(frame);
     }
     return frames;
+  } finally {
+    detach();
+    video.removeAttribute("src");
+    video.load();
+    URL.revokeObjectURL(url);
+  }
+}
+
+/**
+ * The silent auto-cover's still — the clip's true frame 0, never the ~1-second
+ * "opening" offer `captureFrames` leads with. FRAME 1 MEANS FRAME 0, STRICTLY
+ * (jakob, 2026-09-24; `design/readme.md` §13 and the `MediaAttachment`
+ * docblock): a still pulled from a second into the clip is a cover *in* the
+ * video rather than the start of it, so playback visibly jumps off it —
+ * exactly the flash the stored-still ruling exists to kill. The black- or
+ * blurry-opening-frame cost is accepted; an author who wants a prettier face
+ * chooses a cover instead.
+ *
+ * A SEPARATE EXTRACTION, DELIBERATELY. The picker's own "1s" tile keeps its
+ * place in `frameTimes` — this changes only what a coverless clip stores in
+ * silence, never what the tray offers a reader to tap. Android draws the
+ * same line: `AndroidVideoProcessor.firstFrame()` reads time zero for the
+ * silent still, independently of the frames its own picker offers past it.
+ */
+export async function captureFrameZero(file: Blob): Promise<Blob | null> {
+  const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  const detach = attachOffscreen(video);
+  const deadline = Date.now() + CAPTURE_DEADLINE_MS;
+  try {
+    await loadForCapture(video, url, deadline);
+    return await frameAt(video, 0);
   } finally {
     detach();
     video.removeAttribute("src");

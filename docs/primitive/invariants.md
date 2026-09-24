@@ -120,8 +120,8 @@ most useful one.
   success metric and the payout weight are the default feed formula;
   per-viewer personal layers never enter the payout sum.
 - [Money never rides L1](economics.md#3-the-campaign-record) —
-  amounts live on the rails (the realization's admission money, CGT reward
-  money); the graph carries pointers, never amounts.
+  amounts live on the rails (the realization's admission money,
+  CGT reward money); the graph carries pointers, never amounts.
 
 ---
 

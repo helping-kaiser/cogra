@@ -389,6 +389,7 @@ mod tests {
             mime: mime.into(),
             alt_text: alt_text.map(Into::into),
             cover: None,
+            cover_taken: false,
         }
     }
 
@@ -697,7 +698,7 @@ mod tests {
             Value::Array(vec![media_entry(vec![
                 (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
                 (ASSET_KEY_MIME, Value::Text("image/webp".into())),
-                (4, Value::Uint(1080)),
+                (5, Value::Uint(1080)),
             ])]),
             "unknown media entry field",
         );
@@ -747,6 +748,7 @@ mod tests {
                     mime: "video/mp4".into(),
                     alt_text: None,
                     cover,
+                    cover_taken: false,
                 }],
                 ..cogra(None, None, Some("a clip"))
             };
@@ -771,6 +773,96 @@ mod tests {
             };
             assert_eq!(carries_key, cover.is_some());
         }
+    }
+
+    /// A taken cover and a chosen one are two states of the same covered
+    /// entry, and both survive the round trip — the chosen one leaving
+    /// key 4 out entirely, so "chosen" encodes like a still's absent
+    /// cover-taken mark.
+    ///
+    /// A taken cover and a chosen one round-trip as two states of the same entry, the chosen one leaving the key out.
+    /// ´claim:envelope:a-taken-cover-round-trips-in-both-states´
+    #[test]
+    fn manifest_round_trips_a_taken_cover() {
+        for cover_taken in [false, true] {
+            let content = CograContent {
+                media: vec![MediaAsset {
+                    digest: [1; MEDIA_DIGEST_LEN],
+                    mime: "video/mp4".into(),
+                    alt_text: None,
+                    cover: Some([9; MEDIA_DIGEST_LEN]),
+                    cover_taken,
+                }],
+                ..cogra(None, None, Some("a clip"))
+            };
+            let bytes = content.clone().encode_payload();
+            assert_eq!(
+                CograContent::decode_payload(&bytes).expect("valid"),
+                content
+            );
+            let carries_key = match Envelope::decode(&bytes)
+                .expect("valid")
+                .extensions
+                .get(&COGRA_GUILD_KEY)
+            {
+                Some(Value::Map(guild)) => match guild.get(&COGRA_KEY_MEDIA) {
+                    Some(Value::Array(entries)) => match &entries[0] {
+                        Value::Map(entry) => entry.contains_key(&ASSET_KEY_COVER_TAKEN),
+                        _ => panic!("an entry map"),
+                    },
+                    _ => panic!("a manifest array"),
+                },
+                _ => panic!("the guild map"),
+            };
+            assert_eq!(carries_key, cover_taken);
+        }
+    }
+
+    /// A taken mark names an authoring fact about a specific cover, so an
+    /// entry that carries the mark without the cover it describes is
+    /// refused rather than read as "no cover, somehow taken".
+    ///
+    /// A taken mark without a cover is refused rather than treated as meaningless.
+    /// ´claim:envelope:a-taken-mark-without-a-cover-is-refused´
+    #[test]
+    fn manifest_rejects_a_taken_mark_without_a_cover() {
+        refuses_media(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text("video/mp4".into())),
+                (ASSET_KEY_COVER_TAKEN, Value::Bool(true)),
+            ])]),
+            "media cover-taken requires a cover",
+        );
+    }
+
+    /// The taken mark has exactly one legal encoding: presence already
+    /// means true, so an in-band `false` is a redundant second encoding
+    /// of "chosen" and a non-boolean value is not the mark at all — both
+    /// refuse rather than being coerced into a reading.
+    ///
+    /// The taken mark's only legal value is the canonical true, so a false or non-boolean value refuses.
+    /// ´claim:envelope:the-taken-marks-only-legal-value-is-canonical-true´
+    #[test]
+    fn manifest_rejects_a_non_canonical_taken_mark() {
+        refuses_media(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text("video/mp4".into())),
+                (ASSET_KEY_COVER, Value::Bytes(vec![9; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_COVER_TAKEN, Value::Bool(false)),
+            ])]),
+            "media cover-taken must be omitted rather than false",
+        );
+        refuses_media(
+            Value::Array(vec![media_entry(vec![
+                (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_MIME, Value::Text("video/mp4".into())),
+                (ASSET_KEY_COVER, Value::Bytes(vec![9; MEDIA_DIGEST_LEN])),
+                (ASSET_KEY_COVER_TAKEN, Value::Uint(1)),
+            ])]),
+            "media cover-taken must be a boolean",
+        );
     }
 
     /// An asset carries a well-sized digest or it is refused, nothing else identifying it.
@@ -1015,7 +1107,7 @@ mod tests {
             Value::Array(vec![media_entry(vec![
                 (ASSET_KEY_DIGEST, Value::Bytes(vec![1; MEDIA_DIGEST_LEN])),
                 (ASSET_KEY_MIME, Value::Text("image/webp".into())),
-                (4, Value::Uint(1)),
+                (5, Value::Uint(1)),
             ])]),
             "unknown media entry field",
         );

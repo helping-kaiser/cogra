@@ -3481,17 +3481,18 @@ impl MediaAttachmentState {
 /// service, verifiable against the digest committed in the referencing
 /// payload envelope.
 ///
-/// The asset row is the whole of it except `altText` and `coverMedia`,
-/// which are facts about the *placement* rather than about the bytes: a
-/// gallery entry carries the description and the poster its version's
-/// manifest witnessed, and the same asset can read differently in two
-/// parents (data-model.md "Media attachments"). Outside a placement — a
-/// fresh upload, a profile picture — there is neither a description nor a
-/// poster to serve.
+/// The asset row is the whole of it except `altText`, `coverMedia` and
+/// `coverTaken`, which are facts about the *placement* rather than about
+/// the bytes: a gallery entry carries the description, the poster and the
+/// poster's provenance its version's manifest witnessed, and the same
+/// asset can read differently in two parents (data-model.md "Media
+/// attachments"). Outside a placement — a fresh upload, a profile picture
+/// — there is neither a description nor a poster to serve.
 pub struct MediaAttachmentType {
     pub asset: postgres_store::media::MediaAttachment,
     pub alt_text: Option<String>,
     pub cover_media_id: Option<Uuid>,
+    pub cover_taken: bool,
 }
 
 impl MediaAttachmentType {
@@ -3502,16 +3503,18 @@ impl MediaAttachmentType {
             asset,
             alt_text: None,
             cover_media_id: None,
+            cover_taken: false,
         }
     }
 
-    /// One gallery entry: the asset, and the description and poster this
-    /// version's junction row cached from its manifest.
+    /// One gallery entry: the asset, and the description, poster and
+    /// taken mark this version's junction row cached from its manifest.
     fn placement(entry: postgres_store::media::GalleryEntry) -> Self {
         Self {
             asset: entry.asset,
             alt_text: entry.alt_text,
             cover_media_id: entry.cover_media_id,
+            cover_taken: entry.cover_taken,
         }
     }
 }
@@ -3656,6 +3659,17 @@ impl MediaAttachmentType {
             .load_one(id)
             .await?
             .map(MediaAttachmentType::asset))
+    }
+
+    /// True when `coverMedia` is a frame taken from the clip rather than a
+    /// still its author chose — the authoring fact the version's manifest
+    /// witnessed beside the cover (data-model.md, per-asset map key 4).
+    ///
+    /// Resolved from the junction row, like `coverMedia`, and only ever
+    /// true where the placement names a cover: false on a chosen cover,
+    /// on a placement without one, and outside a placement.
+    async fn cover_taken(&self) -> bool {
+        self.cover_taken
     }
 
     /// The account that uploaded the asset.

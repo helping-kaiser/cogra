@@ -484,13 +484,21 @@ struct AttachmentInput {
     /// correcting it is a new version of the parent, never a re-upload.
     alt_text: Option<String>,
     /// The video's poster — an asset this author uploaded, either a frame
-    /// the client cut out of the clip or a picture chosen instead. Only a
-    /// video placement takes one, and a video may always go without.
+    /// the client cut out of the clip or a picture chosen instead, and
+    /// `coverTaken` says which. Only a video placement takes one, and a
+    /// video may always go without.
     ///
     /// Authored here for the same reason `altText` is: it is a fact about
     /// this placement, so changing the cover is a new version of the
     /// parent rather than a re-upload of the clip.
     cover_media_id: Option<Uuid>,
+    /// True when the cover is a frame taken from the clip rather than a
+    /// still the author chose; absent or null reads as chosen. The bytes
+    /// cannot say which, so the author's client states it and the
+    /// manifest witnesses it beside the cover (data-model.md, per-asset
+    /// map key 4). Refused without a `coverMediaId`, and refused on a
+    /// placement that is not a video.
+    cover_taken: Option<bool>,
 }
 
 impl AttachmentInput {
@@ -501,6 +509,7 @@ impl AttachmentInput {
             is_cover: self.is_cover,
             alt_text: self.alt_text.clone(),
             cover_media_id: self.cover_media_id,
+            cover_taken: self.cover_taken.unwrap_or(false),
         }
     }
 }

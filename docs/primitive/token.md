@@ -284,7 +284,7 @@ run.
   deflationary regime.
 
 Beside burn, campaign flow also *sells* CGT: the admission fund
-(§6.2) converts its `reserve_share·P` inflow out of CGT entirely.
+(§6.2) converts its settlement inflow out of CGT entirely.
 Conversion is market flow, not supply change — it moves units, the
 way any holder's sale does — so the trajectory above is set by
 release and burn alone.
@@ -303,9 +303,13 @@ by demand growth rather than calendar rewards to idle holders.
 
 Two pots receive the campaign equation's platform-side flow, and
 they are deliberately separate: **the team treasury** is the
-project's revenue; **the admission fund** is the community's. Separating them keeps each accountable — the team's
-income is not raidable by subsidy policy, and the community's
-self-funding is not a discretionary line in the project's budget.
+project's revenue; **the admission fund** is the community's.
+Separating them keeps each accountable — the team's
+income is not raidable by subsidy policy, the one exception being
+the settlement carve of
+[economics.md §7](economics.md#7-the-conservation-equation),
+bounded by the pinned ceiling; and the community's self-funding is
+not a discretionary line in the project's budget.
 
 ### 6.1 The team treasury
 
@@ -317,7 +321,8 @@ launches on central hardware, so real infra costs must be covered).
 
 It accrues from two streams:
 
-- **Campaign treasury share** — `0.02%·D + 1.98%·P` per settlement
+- **Campaign treasury share** —
+  `0.02%·D + (1 − reserve_share)·1.98%·P` per settlement
   ([economics.md §7](economics.md#7-the-conservation-equation)),
   already CGT-denominated.
 - **Ladder spread** — the realized spread income swept from the
@@ -330,8 +335,10 @@ own liquidity, **not** from monetising user data.
 
 ### 6.2 The admission fund
 
-The reserve pool receives the `reserve_share·P` settlement line
-([economics.md §7.2](economics.md#72-the-admission-fund)) and
+The fund receives the `admission_fund` settlement line
+([economics.md §7.2](economics.md#72-the-admission-fund)) —
+`reserve_share·P` from the contributor pool plus the same fraction
+of the treasury's and the inviter's `P`-scaled shares — and
 exists for exactly one kind of outflow: **funding the community's
 admission burns**. CGT is converted at execution-time market
 price — chunked, publicly accounted, never at a frozen internal
@@ -345,13 +352,14 @@ funded member's own `B_i`.
   per-member caps that govern the outflow. The community that pays
   the fee governs both sides of it.
 - **The steady-state target is checkable**: advertiser revenue
-  covers the community's admission costs when the pool's public
+  covers the community's admission costs when the pool's settlement
   inflow keeps pace with its burn outflow — arithmetic, not a
-  promise.
-- **Seeded at genesis, open to top-ups.** The genesis admission
-  burns that instantiate the network are funded directly at
-  launch; the pool then carries ongoing admission. Anything may
-  flow in; only admission funding flows out.
+  promise. The genesis seed and top-ups are a separately reported
+  inflow line and never count toward it.
+- **Seeded at genesis, open to top-ups.** The operator's genesis
+  funding is the pool's first inflow, and the admission burns
+  that instantiate the network draw from it. Anything may flow
+  in; only admission funding flows out.
 
 The conversion crosses the two-economy boundary in the only
 sanctioned direction and place
