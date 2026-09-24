@@ -1250,7 +1250,7 @@ script_note = "RULED 2026-08-26: both extensions are Kotlin here. KotlinParser.g
 
 [[scanned-regions.language]]
 language   = "javascript"
-extensions = [".js", ".mjs"]
+extensions = [".js", ".mjs", ".jsx"]
 frontend   = "swc_ecma_parser"
 slice      = 2
 scanned    = ["line comments (//)", "block comments (/* ... */)", "JSDoc block comments (/** ... */)"]
@@ -1286,18 +1286,6 @@ languages  = ["text", "jpeg", "png", "ico", "truetype", "version-pin"]
 extensions = [".txt", ".jpg", ".png", ".ico", ".ttf"]
 names      = [".nvmrc", "LICENSE-CODE", "LICENSE-DOCS"]
 reason     = "data, binary and asset formats carry no comment to scan: plain text, raster images, fonts, and a version pin. Files stay in the carrier and stay owned, carrying no occurrences"
-
-# ADDED 2026-09-24: JSX, declared though a frontend reads it. The
-# javascript row's parser reads .jsx (EsSyntax jsx), and the tree's only
-# .jsx files are design/'s prototypes, whose comments cite doc labels in
-# backtick form: the first scan reported seven label-backtick-in-code
-# findings in design/designs/postmvp/screens/. Moving .jsx to the
-# javascript row is the design owner's ruling, taken with that sweep.
-[[scanned-regions.none]]
-languages  = ["jsx"]
-extensions = [".jsx"]
-reason     = "design prototypes, not yet swept for the label syntax of scanned code; the javascript row reads the type once the design owner moves it there. Files stay in the carrier and stay owned, carrying no occurrences"
-
 
 ####################################################################
 # [head-recognition] — which regions are environment heads

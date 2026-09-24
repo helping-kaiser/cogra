@@ -832,7 +832,7 @@ fn the_scanned_region_section_round_trips() {
         vec![Box::from(".kt"), Box::from(".kts")],
         "both file shapes are Kotlin, and one grammar root reads them"
     );
-    assert_eq!(scanned.none.len(), 4);
+    assert_eq!(scanned.none.len(), 3);
     assert_eq!(scanned.none[0].languages.len(), 8);
     assert!(
         scanned.none[0].names.is_empty(),
@@ -855,6 +855,7 @@ fn every_tracked_type_is_scanned_or_declared() {
         ("web/vitest.config.mts", "typescript"),
         ("design/_build/bundle.mjs", "javascript"),
         ("design/_ds_bundle.js", "javascript"),
+        ("design/designs/entry/screens/Welcome.jsx", "javascript"),
     ] {
         assert_eq!(
             scanned.language_of(Path::new(path)),
@@ -863,7 +864,6 @@ fn every_tracked_type_is_scanned_or_declared() {
         );
     }
     for path in [
-        "design/designs/entry/screens/Welcome.jsx",
         "design/thumbnail.html",
         "design/styles.css",
         "android/app/src/main/AndroidManifest.xml",
