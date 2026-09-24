@@ -505,7 +505,9 @@ burns, publicly verifiable by definition,
 steady-state target — **advertiser revenue covers the community's
 admission costs** — is a checkable claim, not a promise. The pool
 is seeded at genesis and open to top-ups; the discipline is on what
-leaves, not what enters.
+leaves, not what enters. It is one global pot that everyone pays
+into, the team treasury included as a contributor like any
+other.
 
 ### 7.3 The inviter reward
 
