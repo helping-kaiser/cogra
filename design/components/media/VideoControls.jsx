@@ -97,8 +97,15 @@ function TransportButton({ label, glyph, size = 22, box = 32, onClick, style }) 
 
 /* THE TIMELINE. A slider, not a progress bar — it reports where the clip is and
    it is how the reader moves it, which is why it carries the knob and the
-   slider role rather than a bare filled track. */
-export function Timeline({ progress = 0, elapsed, duration, thin = false }) {
+   slider role rather than a bare filled track.
+
+   `tone` (the chats integration round's fix pass, post-MVP, 2026-09-24): the
+   unplayed track is translucent white because a timeline lies over footage —
+   `media`, the default, unchanged. A voice note's timeline lies on a bubble's
+   fill, where that white vanishes, so `surface` draws the unplayed track in
+   the field-border ink instead. Played part and knob are `primary` either way:
+   one transport, two grounds. */
+export function Timeline({ progress = 0, elapsed, duration, thin = false, tone = "media" }) {
   const at = Math.max(0, Math.min(1, progress));
   return (
     <div
@@ -128,7 +135,7 @@ export function Timeline({ progress = 0, elapsed, duration, thin = false }) {
           right: 0,
           height: "3px",
           borderRadius: "var(--radius-full)",
-          background: "rgba(255,255,255,0.32)",
+          background: tone === "surface" ? "var(--border-field)" : "rgba(255,255,255,0.32)",
         }}
       />
       <span

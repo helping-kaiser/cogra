@@ -2206,6 +2206,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">People landing through your invites</span>", tag: "button" },
     { n: 10, find: ">Your application approved</span>", tag: "button" },
     { n: 11, find: ">Your application closed</span>", tag: "button" },
+    { n: 12, find: ">Invitations to chats</span>", tag: "button" },
+    { n: 13, find: ">Requests to join your chats</span>", tag: "button" },
+    { n: 14, find: ">Your requests to join approved</span>", tag: "button" },
+    { n: 15, find: ">New messages</span>", tag: "button" },
   ],
   NotificationsOffer: [
     { n: 1, find: ">Want these announced as they happen?<", tag: "button" },
@@ -2306,6 +2310,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Join</button>", tag: "button" },
     { n: 7, find: ">Ask to join</button>", tag: "button" },
     { n: 8, find: 'aria-label="New chat"', tag: "button" },
+    { n: 9, find: ">You&#x27;re invited</button>", tag: "button" },
   ],
   // The foot's field is found by its wrapper — a replaced element cannot host
   // the badge (`TextField`'s own note) — and the seal by its accessible name.
@@ -2365,6 +2370,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="How signing works"', tag: "button" },
     { n: 2, find: ">Sign and send</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: ">Adjust</button>", tag: "button" },
   ],
   ChatsHelp: [
     { n: 1, find: ">Close</button>", tag: "button" },
@@ -2376,7 +2382,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'alt="A pot of dark honey', tag: "div" },
     { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
     { n: 5, find: 'data-field="Message"', tag: "div" },
-    { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 6, find: 'aria-label="Record a voice message"', tag: "button" },
     { n: 7, find: 'aria-label="Turn sound on"', tag: "button" },
     { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
   ],
@@ -2401,6 +2407,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: ">Sign and start the chat</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Your opinion on Low-tide walks', tag: "button" },
+    { n: 6, find: ">Choose your opinion on Low-tide walks</button>", tag: "button" },
   ],
 
   // ── The chat details round (post-MVP) ───────────────────────────────────
@@ -2482,7 +2490,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Agree — Mira Voss wants to remove Kel Moreau from the chat"', tag: "button" },
     { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
     { n: 5, find: 'data-field="Message"', tag: "div" },
-    { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 6, find: 'aria-label="Record a voice message"', tag: "button" },
     { n: 7, find: 'aria-label="Search in this chat"', tag: "button" },
     { n: 8, find: ' — see the decision"', tag: "button", all: true },
     { n: 9, find: 'aria-label="Disagree — Mira Voss wants to remove Kel Moreau from the chat"', tag: "button" },
@@ -2530,6 +2538,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: ">Sign and invite</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
+    { n: 6, find: 'data-field="Message"', tag: "div" },
   ],
   ChatThreadInvited: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -2542,6 +2551,51 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="How signing works"', tag: "button" },
     { n: 2, find: ">Sign and join</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: 'aria-label="Your opinion on Night fishing crew', tag: "button" },
+    { n: 4, find: ">Choose your opinion on Night fishing crew</button>", tag: "button" },
+  ],
+  // The pad over a seal marks only the pad's own controls, `PadStanding`'s way;
+  // the seal beneath is under the wash.
+  ChatJoinSealPad: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+  ],
+  ChatMessagePad: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 3, find: ">Cancel</button>", tag: "button" },
+    { n: 4, find: ">Set</button>", tag: "button" },
+  ],
+  // The opinions sheet's rows split person and value (`OpinionsRowDoors`'
+  // grammar), marked on the FIRST row, the repeated-element convention.
+  ChatMessageOpinions: [
+    { n: 1, find: ">Sol Ferreira</span>", tag: "button" },
+    { n: 2, find: 'aria-label="See how this opinion built"', tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ChatThreadRecording: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: ">Describe</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Delete the recording"', tag: "button" },
+    { n: 5, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 6, find: 'aria-label="Pause the recording"', tag: "button" },
+    { n: 7, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 9, find: ">Show the encrypted text</button>", tag: "button" },
+  ],
+  ChatThreadRecordingPaused: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: ">Describe</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Delete the recording"', tag: "button" },
+    { n: 5, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 6, find: 'aria-label="Keep recording"', tag: "button" },
+    { n: 7, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 9, find: ">Show the encrypted text</button>", tag: "button" },
   ],
   ChatThreadRequested: [
     { n: 1, find: 'aria-label="Back to all chats"', tag: "a" },
@@ -2563,7 +2617,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Approve — Sal Torres asks to join"', tag: "button" },
     { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
     { n: 5, find: 'data-field="Message"', tag: "div" },
-    { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 6, find: 'aria-label="Record a voice message"', tag: "button" },
     { n: 7, find: 'aria-label="Search in this chat"', tag: "button" },
     { n: 8, find: ' — see the decision"', tag: "button" },
   ],
@@ -2582,5 +2636,163 @@ Object.assign(FLOW_MARKERS, {
   ChatHistoryRemoved: [
     { n: 1, find: 'aria-label="Back to chat details"', tag: "a" },
     { n: 2, find: ">Remove this version</button>", tag: "button" },
+  ],
+
+  // ── The chats integration round (post-MVP) ──────────────────────────────
+  // An empty foot carries the mic where the arrow stood, found by its
+  // accessible name. A trace, a play control and a quote door recur per
+  // bubble and are one edge each (`all`), the repeated-element convention. A
+  // stance face and its skip-link are one control and one number
+  // (`ChatDetails`' pair). Excerpts of canonical surfaces number only the
+  // round's own controls and the rows standing beside them.
+  ChatThreadReactions: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: ">Show the encrypted text</button>", tag: "button" },
+    { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 5, find: 'data-field="Message"', tag: "div" },
+    { n: 6, find: 'aria-label="Record a voice message"', tag: "button" },
+    { n: 7, find: 'data-message="boots"', tag: "div" },
+    { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 9, find: 'aria-label="Opinions on this — ', tag: "button", all: true },
+  ],
+  ChatThreadReply: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 4, find: 'data-field="Message"', tag: "div" },
+    { n: 5, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 6, find: 'aria-label="Cancel the reply"', tag: "button" },
+    { n: 7, find: 'aria-label="Replying to Mira Voss: ', tag: "button" },
+    { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 9, find: 'data-message="boots"', tag: "div" },
+  ],
+  ChatThreadVoice: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: 'aria-label="Play — ', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Seek"', tag: "div", all: true },
+    { n: 5, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 6, find: 'data-field="Message"', tag: "div" },
+    { n: 7, find: 'aria-label="Record a voice message"', tag: "button" },
+    { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
+  ],
+  ChatThreadSealedMedia: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: 'alt="A pot of dark honey', tag: "div" },
+    { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 5, find: 'data-field="Message"', tag: "div" },
+    { n: 6, find: 'aria-label="Record a voice message"', tag: "button" },
+    { n: 7, find: 'aria-label="Search in this chat"', tag: "button" },
+  ],
+  ChatThreadPending: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: ">Dismiss</button>", tag: "button" },
+    { n: 4, find: ">Put it back</button>", tag: "button" },
+    { n: 5, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 6, find: 'data-field="Message"', tag: "div" },
+    { n: 7, find: 'aria-label="Record a voice message"', tag: "button" },
+    { n: 8, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 9, find: 'data-message="boots"', tag: "div" },
+  ],
+  ChatThreadRemoved: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: 'aria-label="Replying to You: ', tag: "button" },
+    { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 5, find: 'data-field="Message"', tag: "div" },
+    { n: 6, find: 'aria-label="Record a voice message"', tag: "button" },
+    { n: 7, find: 'aria-label="Search in this chat"', tag: "button" },
+  ],
+  ChatMessageMenuOwn: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">Give your opinion</button>", tag: "button" },
+    { n: 4, find: ">Reply</button>", tag: "button" },
+    { n: 5, find: ">Remove</button>", tag: "button" },
+    { n: 6, find: ">Cited by</button>", tag: "button" },
+    { n: 7, find: ">Opinions on this</button>", tag: "button" },
+    { n: 8, find: ">License terms</button>", tag: "button" },
+    { n: 9, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ChatMessageRemoveConfirm: [
+    { n: 1, find: ">Remove</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
+  ],
+  ChatThreadSentPost: [
+    { n: 1, find: 'aria-label="Back to your chats"', tag: "a" },
+    { n: 2, find: 'aria-label="Coast walkers — chat details"', tag: "button" },
+    { n: 3, find: ">Sunday at the tide market<", tag: "button" },
+    { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 5, find: 'data-field="Message"', tag: "div" },
+    { n: 6, find: 'aria-label="Record a voice message"', tag: "button" },
+    { n: 7, find: 'aria-label="Search in this chat"', tag: "button" },
+    { n: 8, find: 'data-message="boots"', tag: "div" },
+  ],
+  // The sheet marks only its own controls, `ChatSignSheet`'s way; a chat row
+  // is marked on its FIRST row, the repeated-element convention.
+  ChatSendSheet: [
+    { n: 1, find: ">Search your chats<", tag: "div" },
+    { n: 2, find: ">Share outside CoGra</span>", tag: "button" },
+    { n: 3, find: ">Coast walkers</span>", tag: "label" },
+    { n: 4, find: 'aria-label="Encrypt end to end"', tag: "button" },
+    { n: 5, find: 'data-field="Message"', tag: "div" },
+    { n: 6, find: 'aria-label="Sign and send"', tag: "button" },
+    { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  ChatAskSheet: [
+    { n: 1, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 2, find: 'data-field="Message"', tag: "div" },
+    { n: 3, find: ">Sign and ask</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: 'aria-label="Your opinion on Harbour office', tag: "button" },
+    { n: 5, find: ">Choose your opinion on Harbour office</button>", tag: "button" },
+  ],
+  ChatNotifications: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">@mira invited you to Night fishing crew</span>", tag: "button" },
+    { n: 3, find: ">@saltorres asks to join Headland honey</span>", tag: "button" },
+    { n: 4, find: ">Harbour office approved your request to join</span>", tag: "button" },
+    { n: 5, find: ">@ada commented on your post</span>", tag: "button" },
+    { n: 5, find: ">@tobias replied to your comment</span>", tag: "button" },
+  ],
+  // Three real `PostCard`s: each card's own door (its text link) takes its own
+  // number because each lands somewhere different; the affordances every card
+  // repeats — the face, the score, the comments, the share, the ⋮ — are one
+  // number each across all three (`all`), the per-post convention.
+  ChatFeedCards: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 2, find: ">Honey is back on the stand from Saturday.<", tag: "a" },
+    { n: 3, find: ">Six it is. Meet at the harbour office.", tag: "a" },
+    { n: 4, find: '<a href="/u/', tag: "a", all: true },
+    { n: 5, find: 'aria-label="Give your opinion on', tag: "button", all: true },
+    { n: 5, find: ">Choose your opinion on", tag: "button", all: true },
+    { n: 6, find: ">Post score</span>", tag: "button", all: true },
+    { n: 7, find: 'aria-label="4 comments"', tag: "button" },
+    { n: 7, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 7, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 8, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 9, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 10, find: ">Salt maps of the coast road —", tag: "a" },
+    { n: 11, find: '<a href="/t/', tag: "a", all: true },
+  ],
+  ChatSearchResults: [
+    { n: 1, find: "harbour", tag: "div" },
+    { n: 2, find: 'aria-label="What the search shows"', tag: "button" },
+    { n: 3, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 4, find: ">Harbour office<", tag: "button" },
+    { n: 4, find: ">Harbour seal watch<", tag: "button" },
+    { n: 5, find: ">Harbour Rowing Club<", tag: "button" },
+    { n: 5, find: ">Harbour lights at dusk<", tag: "button" },
+  ],
+  ChatSaved: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">Six it is. Meet at the harbour office.<", tag: "button" },
+    { n: 3, find: 'aria-label="Unsave"', tag: "button", all: true },
+    { n: 4, find: ">Salt maps of the coast road<", tag: "button" },
+    { n: 4, find: ">The third headland light is real<", tag: "button" },
   ],
 });
