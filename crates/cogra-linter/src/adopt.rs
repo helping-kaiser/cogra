@@ -1133,10 +1133,53 @@ impl ScannedRegions {
                 entry
                     .extensions
                     .iter()
-                    .any(|extension| name.len() > extension.len() && name.ends_with(&**extension))
+                    .any(|extension| has_extension(&name, extension))
             })
             .map(|entry| entry.language.clone())
     }
+
+    /// Whether a `[[scanned-regions.none]]` row declares this file's type:
+    /// one of its extensions ends the file's name, or one of its names is
+    /// the name entire.
+    #[must_use]
+    pub fn declares_unscanned(&self, path: &Path) -> bool {
+        let Some(name) = path.file_name().map(|name| name.to_string_lossy()) else {
+            return false;
+        };
+        self.none.iter().any(|row| {
+            row.extensions
+                .iter()
+                .any(|extension| has_extension(&name, extension))
+                || row.names.iter().any(|whole| **whole == *name)
+        })
+    }
+
+    /// Whether the catalogue answers for this file at all: a frontend reads
+    /// its type, or a row declares that none does (´dec:lint:catalogue-totality´).
+    ///
+    /// ```
+    /// use cogra_linter::Adoption;
+    /// use std::path::Path;
+    ///
+    /// # let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-adoption.toml");
+    /// # let adoption = Adoption::load(Path::new(path)).expect("ruled adoption data");
+    /// let catalogue = &adoption.scanned_regions;
+    ///
+    /// assert!(catalogue.catalogues(Path::new("web/scripts/dev.mjs")));
+    /// assert!(catalogue.catalogues(Path::new("migrations/0001_init.sql")));
+    /// assert!(catalogue.catalogues(Path::new("android/gradlew")));
+    /// assert!(!catalogue.catalogues(Path::new("tools/probe.py")));
+    /// ```
+    #[must_use]
+    pub fn catalogues(&self, path: &Path) -> bool {
+        self.language_of(path).is_some() || self.declares_unscanned(path)
+    }
+}
+
+/// Whether `extension` ends `name` and leaves a stem before it, so `.md`
+/// answers for `README.md` and not for a file named `.md`.
+fn has_extension(name: &str, extension: &str) -> bool {
+    name.len() > extension.len() && name.ends_with(extension)
 }
 
 /// One language with a frontend, and which of its regions participate.
@@ -1168,6 +1211,13 @@ pub struct UnscannedLanguages {
     pub languages: Vec<Language>,
     /// The extensions that name them.
     pub extensions: Vec<Box<str>>,
+    /// Whole file names, for the types an extension cannot name: a
+    /// `Makefile`, a `.gitignore`. The selector shape follows the L1
+    /// author's comment-leader catalogue (orchestration-linter 0.1.0, commit
+    /// 416b136, `leader.rs`), where a selector that is not a suffix answers
+    /// for the final path component entire.
+    #[serde(default)]
+    pub names: Vec<Box<str>>,
     /// Why no frontend reads them.
     pub reason: Box<str>,
 }
