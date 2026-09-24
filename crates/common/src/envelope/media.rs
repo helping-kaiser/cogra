@@ -3,7 +3,8 @@
 //! Key 5 is the media manifest: an array of per-asset maps carrying the
 //! digest of the bytes, the type they are to be read as, the alt text
 //! describing them, and — for a video — the digest of the still that
-//! covers it, with array position carrying gallery order. It commits
+//! covers it and whether that still was chosen or taken, with array
+//! position carrying gallery order. It commits
 //! what a reader needs to render honestly and nothing a server measured —
 //! aspect ratio, size, and duration are derived, so they stay out of what
 //! the author signs. The nested map runs the same reserved-key discipline
@@ -25,6 +26,7 @@ pub(super) const ASSET_KEY_DIGEST: u64 = 0;
 pub(super) const ASSET_KEY_MIME: u64 = 1;
 pub(super) const ASSET_KEY_ALT_TEXT: u64 = 2;
 pub(super) const ASSET_KEY_COVER: u64 = 3;
+pub(super) const ASSET_KEY_COVER_TAKEN: u64 = 4;
 
 /// SHA-256, the algorithm the manifest's digests are (data-model.md
 /// `media_attachments`). The length is the only place the choice appears
@@ -34,19 +36,26 @@ pub const MEDIA_DIGEST_LEN: usize = 32;
 
 /// One asset in the media manifest (guild key 5).
 ///
-/// The four fields are what a reader needs to render the asset honestly:
+/// The five fields are what a reader needs to render the asset honestly:
 /// which bytes (`digest`), what to read them as (`mime`), what the
-/// picture is of (`alt_text`), and which still stands in for a clip that
-/// is not playing (`cover`). Alt text rides here rather than staying
-/// Postgres-side because it is what a blind reader *reads* — leaving it
-/// unwitnessed while the body is witnessed would make the accessible
-/// rendering the only one a reader cannot check against the record.
+/// picture is of (`alt_text`), which still stands in for a clip that is
+/// not playing (`cover`), and whether that still was chosen or taken
+/// (`cover_taken`). Alt text rides here rather than staying Postgres-side
+/// because it is what a blind reader *reads* — leaving it unwitnessed
+/// while the body is witnessed would make the accessible rendering the
+/// only one a reader cannot check against the record.
 ///
 /// The cover rides here for the parallel reason: the poster is the face
 /// the post wears at rest, so an author signs it as they sign the body,
 /// and an edit that names a different one is a new version saying so. It
 /// is a digest rather than an id because the manifest names assets by
 /// their bytes throughout.
+///
+/// `cover_taken` marks that the cover is the system's own first frame
+/// rather than a still the author picked — an authoring fact riding
+/// alongside the cover it describes, so it can never outlive the digest
+/// it qualifies: absent without a cover, and absent (never an in-band
+/// `false`) when the author chose the still themselves.
 ///
 /// Everything a server measured — aspect ratio, byte size, duration —
 /// stays out: the author signs what they wrote, never a measurement.
@@ -58,6 +67,7 @@ pub struct MediaAsset {
     pub mime: String,
     pub alt_text: Option<String>,
     pub cover: Option<[u8; MEDIA_DIGEST_LEN]>,
+    pub cover_taken: bool,
 }
 
 impl MediaAsset {
@@ -71,6 +81,9 @@ impl MediaAsset {
         if let Some(cover) = &self.cover {
             map.insert(ASSET_KEY_COVER, Value::Bytes(cover.to_vec()));
         }
+        if self.cover_taken {
+            map.insert(ASSET_KEY_COVER_TAKEN, Value::Bool(true));
+        }
         Value::Map(map)
     }
 
@@ -83,7 +96,7 @@ impl MediaAsset {
             return Err(EnvelopeError::Guild("media entry must be a map"));
         };
         for key in map.keys() {
-            if *key > ASSET_KEY_COVER {
+            if *key > ASSET_KEY_COVER_TAKEN {
                 return Err(EnvelopeError::Guild("unknown media entry field"));
             }
         }
@@ -119,11 +132,29 @@ impl MediaAsset {
             ),
             Some(_) => return Err(EnvelopeError::Guild("media cover must be a digest")),
         };
+        let cover_taken = match map.get(&ASSET_KEY_COVER_TAKEN) {
+            None => false,
+            Some(value) => {
+                if cover.is_none() {
+                    return Err(EnvelopeError::Guild("media cover-taken requires a cover"));
+                }
+                match value {
+                    Value::Bool(true) => true,
+                    Value::Bool(false) => {
+                        return Err(EnvelopeError::Guild(
+                            "media cover-taken must be omitted rather than false",
+                        ));
+                    }
+                    _ => return Err(EnvelopeError::Guild("media cover-taken must be a boolean")),
+                }
+            }
+        };
         Ok(Self {
             digest,
             mime,
             alt_text,
             cover,
+            cover_taken,
         })
     }
 }

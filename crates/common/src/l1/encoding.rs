@@ -101,6 +101,13 @@ impl Encoder {
         self.out.push(0xF6);
         self
     }
+
+    /// The two single-byte simple values RFC 8949 reserves for booleans
+    /// (major type 7, values 20 and 21) — the only forms either admits.
+    pub fn bool(&mut self, v: bool) -> &mut Self {
+        self.out.push(if v { 0xF5 } else { 0xF4 });
+        self
+    }
 }
 
 /// Decode failures over the subset.
@@ -244,6 +251,22 @@ impl<'a> Decoder<'a> {
                 .try_into()
                 .map_err(|_| DecodeError::Truncated(at))?,
         )))
+    }
+
+    /// A boolean, accepted only as the exact single byte RFC 8949 fixes
+    /// for it — any other byte, including another major-type-7 simple
+    /// value, is refused rather than coerced.
+    pub fn bool(&mut self) -> Result<bool, DecodeError> {
+        let at = self.pos;
+        match self.byte()? {
+            0xF4 => Ok(false),
+            0xF5 => Ok(true),
+            b => Err(DecodeError::WrongType {
+                at,
+                expected: "bool",
+                found: b >> 5,
+            }),
+        }
     }
 
     /// A text item or the null sentinel.
@@ -400,6 +423,28 @@ mod tests {
             }),
             [0xFB, 0x80, 0, 0, 0, 0, 0, 0, 0]
         );
+    }
+
+    /// A boolean is written as RFC 8949's dedicated one-byte simple value, never as an integer standing in for one.
+    /// ´claim:encoding:a-boolean-is-written-as-its-dedicated-simple-value´
+    #[test]
+    fn golden_bool() {
+        assert_eq!(
+            enc(|e| {
+                e.bool(false);
+            }),
+            [0xF4]
+        );
+        assert_eq!(
+            enc(|e| {
+                e.bool(true);
+            }),
+            [0xF5]
+        );
+        let mut d = Decoder::new(&[0xF5, 0xF4]);
+        assert!(d.bool().expect("valid"));
+        assert!(!d.bool().expect("valid"));
+        d.finish().expect("valid");
     }
 
     /// One value encodes to one byte string, every time it is written.
