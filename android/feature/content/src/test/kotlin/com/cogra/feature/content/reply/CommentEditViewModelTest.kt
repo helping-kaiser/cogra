@@ -347,6 +347,76 @@ class CommentEditViewModelTest {
         assertThat(content.lastAttachments).containsExactly(AttachmentClaim("m1", "A picture"))
     }
 
+    /**
+     * A covered clip's cover rides the edit unchanged: the screen draws
+     * no cover picker, so the loaded cover is the only source for it,
+     * and dropping it on the way to the signed claim would silently
+     * erase it (root CLAUDE.md "never erase silently").
+     */
+    @Test
+    fun anEditKeepsTheClipsCoverThrough() = runTest(dispatcher) {
+        content.loaded = Outcome.Success(
+            CommentForEdit(
+                comment = testComment("c1").copy(
+                    attachments = listOf(
+                        MediaAssetView(
+                            id = "m1",
+                            url = "https://media/m1",
+                            altText = null,
+                            status = FieldStatus.NORMAL,
+                            aspectRatio = 16f / 9f,
+                            durationMs = 12_000,
+                            cover = MediaAssetView(
+                                id = "cover-1",
+                                url = "https://media/cover-1",
+                                altText = null,
+                                status = FieldStatus.NORMAL,
+                                aspectRatio = 16f / 9f,
+                            ),
+                        ),
+                    ),
+                ),
+                selfMark = SelfMarkView(sensitive = false, reason = null),
+            ),
+        )
+        val vm = opened()
+
+        vm.onBodyChange("Reworded")
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastAttachments).containsExactly(AttachmentClaim("m1", null, "cover-1"))
+    }
+
+    /** No cover was ever chosen, so the edit re-states none. */
+    @Test
+    fun anEditOfAnUncoveredClipSendsNoCover() = runTest(dispatcher) {
+        content.loaded = Outcome.Success(
+            CommentForEdit(
+                comment = testComment("c1").copy(
+                    attachments = listOf(
+                        MediaAssetView(
+                            id = "m1",
+                            url = "https://media/m1",
+                            altText = null,
+                            status = FieldStatus.NORMAL,
+                            aspectRatio = 16f / 9f,
+                            durationMs = 12_000,
+                        ),
+                    ),
+                ),
+                selfMark = SelfMarkView(sensitive = false, reason = null),
+            ),
+        )
+        val vm = opened()
+
+        vm.onBodyChange("Reworded")
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(content.lastAttachments).containsExactly(AttachmentClaim("m1", null))
+    }
+
     @Test
     fun aRefusalOnAChipLandsOnThatChip() = runTest(dispatcher) {
         val vm = opened()
