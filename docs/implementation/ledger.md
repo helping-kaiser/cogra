@@ -230,7 +230,7 @@ The admission fund's single outflow
 ([token.md §6.2](../primitive/token.md#62-the-admission-fund)) runs
 entirely inside the one chain: the pool's `reserve_share·P` inflow
 is swapped **CGT → L-BTC through the protocol's own ladder** — the
-reserve pool sells into the bid side like any other holder — and the
+fund sells into the bid side like any other holder — and the
 resulting L-BTC funds **destination-addressed admission burns** at
 members', system actors', and Collectives' own addresses, the
 funder-unconstrained burn L1 permits (``rem:gates:guild-funding``).
