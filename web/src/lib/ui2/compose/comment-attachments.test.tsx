@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { CommentAttachments, commentDropHandlers } from "./comment-attachments";
 import { NO_COMMENT_MEDIA, pickInto, withUpload } from "@/lib/compose/comment-media";
+import type { CoverAsset } from "@/lib/compose/wizard";
 
 const file = (name = "one.jpg") =>
   new File([new Uint8Array([1]) as BlobPart], name, { type: "image/jpeg" });
@@ -117,6 +118,58 @@ describe("the comment picture row", () => {
     const props = show({ media: media(1), previews: previews(1) });
     fireEvent.click(screen.getByTestId("comment-media-c0-remove"));
     expect(props.onRemove).toHaveBeenCalledWith("c0");
+  });
+});
+
+const videoMedia = () =>
+  pickInto(NO_COMMENT_MEDIA, [{ id: "v0", file: file("clip.mp4"), kind: "video" }]);
+
+const aCover = (frame: number): CoverAsset => ({
+  id: "cover0",
+  file: file("frame.jpg"),
+  frame,
+  upload: { kind: "done", mediaId: "cover-media-0" },
+});
+
+describe("the reply tile's face and inset", () => {
+  // THE RULE HOLDS AT BOTH SCALES (readme §13, 2026-09-24): the reply tile is
+  // an authoring tile like the post tray's — frame 0 as its face, always, the
+  // chosen frame riding as the ringed inset rather than replacing the face.
+  it("wears the clip's stored frame 0 as its face with no cover chosen", () => {
+    show({ media: videoMedia(), clipFace: "blob:frame-zero" });
+    expect(screen.getByTestId("comment-media-v0-image")).toHaveAttribute(
+      "src",
+      "blob:frame-zero",
+    );
+  });
+
+  it("keeps the clip's stored frame 0 as its face once a cover is chosen", () => {
+    show({
+      media: videoMedia(),
+      clipFace: "blob:frame-zero",
+      cover: aCover(2),
+      framePreviews: ["blob:f0", "blob:f1", "blob:f2"],
+    });
+    expect(screen.getByTestId("comment-media-v0-image")).toHaveAttribute(
+      "src",
+      "blob:frame-zero",
+    );
+  });
+
+  it("shows the chosen frame in the tile's ringed inset", () => {
+    show({
+      media: videoMedia(),
+      clipFace: "blob:frame-zero",
+      cover: aCover(2),
+      framePreviews: ["blob:f0", "blob:f1", "blob:f2"],
+    });
+    const inset = screen.getByTestId("comment-media-v0-cover-mark");
+    expect(inset.querySelector("img")).toHaveAttribute("src", "blob:f2");
+  });
+
+  it("draws no inset while no cover has been chosen", () => {
+    show({ media: videoMedia(), clipFace: "blob:frame-zero" });
+    expect(screen.queryByTestId("comment-media-v0-cover-mark")).not.toBeInTheDocument();
   });
 });
 

@@ -151,12 +151,14 @@ export function ReplyWizard({
   const [silentCover, setSilentCover] = useState<{ file: Blob; frame: Blob | null } | null>(null);
   const forSilentCover = silentCover !== null && silentCover.file === videoFile ? silentCover : null;
   const silentCovering = videoFile !== null && forSilentCover === null;
-  // THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog item 106):
-  // the clip's face wherever no cover has been chosen is this frame 0, never
-  // `framePreviews[0]` — the row's own ~1s "opening" offer. Where a cover HAS
-  // been chosen, the tile keeps showing that choice (`coverPreview`/the
-  // chosen frame) exactly as it always has; this is only the coverless
-  // fallback the ruling names.
+  // THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog item 106),
+  // and THE RULE HOLDS AT BOTH SCALES (readme §13, same date): the composer
+  // tile's face is this frame 0 always, never `framePreviews[0]` — the row's
+  // own ~1s "opening" offer — and never displaced by a chosen cover, which
+  // instead rides the tile as `CommentAttachments`' ringed inset. The
+  // describe sheet below is a different, deliberately drawn scale
+  // (ComposeDescribeVideo: "the cover ... is the video's face") and keeps
+  // showing the chosen cover in place of `clipFace` there.
   const clipFace = useObjectUrl(forSilentCover?.frame ?? null);
 
   useEffect(() => {
@@ -580,7 +582,11 @@ export function ReplyWizard({
           describing === null
             ? null
             : isVideoReply(state)
-              ? (coverPreview ?? clipFace)
+              ? // Out of scope for "the rule holds at both scales" (readme §13):
+                // ComposeDescribeVideo draws this sheet with one face, the
+                // chosen cover replacing `clipFace` outright — no ringed
+                // inset at this scale.
+                (coverPreview ?? clipFace)
               : (previews[describing] ?? null)
         }
         crop={state.media.find((asset) => asset.id === describing)?.crop ?? null}
