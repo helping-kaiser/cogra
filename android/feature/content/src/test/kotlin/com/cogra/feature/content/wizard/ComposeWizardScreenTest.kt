@@ -492,13 +492,37 @@ class ComposeWizardScreenTest {
 
     // CW-06 (`ComposePickVideo`'s `PickTray`): one clip is not a set to
     // reorder, so the tray drops Show all and carries the caption this state
-    // needs instead of the sheet.
+    // needs instead of the sheet. A square clip keeps a cover step, so it
+    // gets the full caption.
     @Test
     fun theTraySwapsInTheClipsOwnCaptionAndDropsShowAll() {
         compose.setContent { Wizard(withVideoPicked) }
 
         compose.onNodeWithTag("wizard_picked_count").assertTextEquals("Picked · 1")
         compose.onNodeWithText("A video is the whole post. Its cover comes next.").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_show_all").assertDoesNotExist()
+    }
+
+    private val withVerticalVideoPicked = ComposeWizardState(
+        mode = BodyMode.Media,
+        picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+        deviceMedia = listOf(
+            DeviceMedia("clip", 0.5625f, durationMs = 42_000),
+            DeviceMedia("other", 1f),
+        ),
+    )
+
+    // jakob's ruling 2026-09-24, backlog item 104 (design/guidelines/copy-voice.md
+    // "Staging a video"; design/components/compose/PickTray.prompt.md "The clip
+    // caption is the shape's."): a vertical clip skips the cover step, so its
+    // second sentence — which previews that step — would be a false promise,
+    // and the tray wears the trim instead of the full caption.
+    @Test
+    fun theTrayTrimsTheCaptionForAVerticalClip() {
+        compose.setContent { Wizard(withVerticalVideoPicked) }
+
+        compose.onNodeWithText("A video is the whole post.").assertIsDisplayed()
+        compose.onNodeWithText("A video is the whole post. Its cover comes next.").assertDoesNotExist()
         compose.onNodeWithTag("wizard_show_all").assertDoesNotExist()
     }
 
