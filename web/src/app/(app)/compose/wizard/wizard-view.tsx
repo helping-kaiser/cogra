@@ -36,6 +36,7 @@ import {
   attachmentClaims,
   bodyContent,
   COVER_FROM_PICTURE,
+  effectiveCover,
   emptyWizard,
   isVideoPost,
   sealGate,
@@ -419,15 +420,51 @@ export function ComposeWizard({
       if (video.upload.kind !== "waiting" || started.current.has(video.id)) {
         return;
       }
+
+      // THE STORED FRAME, NOT A CHOICE (the feed-video rulings, 2026-09-23;
+      // `ComposeDetailsVideo.jsx`'s docblock). Nothing was picked, so before
+      // this clip goes up faceless the capture gets one chance to hand back
+      // its own frame 1 — silently, through the same cover leg a chosen face
+      // would ride. This only decides once: `autoCover` staying null is what
+      // lets the branch below tell "never tried" from "tried and failed".
+      if (cover === null && state.autoCover === null) {
+        // Waiting for the offers to settle rather than for a cover to exist —
+        // the same distinction `capturing` already draws for the tray and the
+        // details tile. Deciding early would read "no frames yet" as "no
+        // frames ever" and ship the clip faceless on a capture that was about
+        // to hand back a perfectly good one.
+        if (capturing) return;
+        const frame = frames[0];
+        if (frame !== undefined) {
+          // THE RULE IS DISABLED DELIBERATELY, as `previews.ts` already does:
+          // the capture is an external system, and its settled frame set is
+          // exactly what this reads — there is no render-time or event-handler
+          // moment that could make this decision instead.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          dispatch({
+            type: "autoCover",
+            cover: { id: newComposeId(), file: frame, frame: 0, upload: { kind: "waiting" } },
+          });
+          return;
+        }
+        // No frames came back at all: falls through and uploads faceless,
+        // exactly as an author-skipped cover always has.
+      }
+
+      const effective = effectiveCover(cover, state.autoCover);
       started.current.add(video.id);
-      if (cover !== null) started.current.add(cover.id);
+      if (effective !== null) started.current.add(effective.id);
       void runVideoUpload(
         client,
         guard,
         video,
-        cover,
+        effective,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
-        (upload) => dispatch({ type: "coverUpload", upload }),
+        // A CHOSEN COVER'S PROGRESS IS THE ONLY ONE EVER DRAWN. The auto-cover
+        // has no screen of its own, so its steps land on `autoCoverUpload`
+        // where only the gate and `attachmentClaims` read them — never on
+        // `coverUpload`, which is what the (nonexistent) cover UI would watch.
+        (upload) => dispatch({ type: cover !== null ? "coverUpload" : "autoCoverUpload", upload }),
         POST_SCALE,
       );
       return;
@@ -440,7 +477,19 @@ export function ComposeWizard({
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
-  }, [uploading, state.assets, video, cover, ratio, client, guard, dispatch]);
+  }, [
+    uploading,
+    state.assets,
+    state.autoCover,
+    video,
+    cover,
+    capturing,
+    frames,
+    ratio,
+    client,
+    guard,
+    dispatch,
+  ]);
 
   const retry = (id: string) => {
     started.current.delete(id);
@@ -482,6 +531,12 @@ export function ComposeWizard({
       // lands on the cover screen, and the face is what may be about to change.
       cover:
         current.cover === null ? null : { ...current.cover, upload: { kind: "waiting" as const } },
+      // The silent one resets the same way, so a re-tried clip re-tries its
+      // stored frame too rather than standing on a stale done or failed.
+      autoCover:
+        current.autoCover === null
+          ? null
+          : { ...current.autoCover, upload: { kind: "waiting" as const } },
     }));
   };
 

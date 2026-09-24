@@ -131,13 +131,14 @@ const ALLOWED: Gate = { ok: true };
  * post wizard's cover screen ("nothing blocks you to go without a cover") was
  * unqualified, so it reaches this comment-scale gate too — the contract, the
  * database, and the backend accept a null `coverMediaId` on a comment's video
- * exactly as they do on a post's. Auto-default to the first captured frame is
- * untouched; this only removes the refusal for the case nothing filled it.
+ * exactly as they do on a post's. The caller passes the video's face already
+ * resolved through `effectiveCover` — the chosen cover, the silent frame-1
+ * still, or null once neither exists — so this gate never distinguishes them.
  */
 export function commentGate(
   words: string,
   media: CommentMedia,
-  /** The video's face, auto-filled by capture when it succeeds. */
+  /** The video's face, already resolved through `effectiveCover`. */
   cover: CoverAsset | null = null,
 ): Gate {
   if (words.trim() === "") return { ok: false, reason: "A comment needs words." };
