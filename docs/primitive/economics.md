@@ -412,11 +412,11 @@ Every campaign conserves its deposit. Per campaign, in CGT:
 ```
 D              = contributors + treasury + burn + admission_fund + inviter + refund
 
-contributors   = (0.95 − reserve_share) · P      (split per §8)
-treasury       = 0.0002 · D + 0.0198 · P
+contributors   = (0.95 − reserve_share) · P                     (split per §8)
+treasury       = 0.0002 · D + (1 − reserve_share) · 0.0198 · P
 burn           = 0.0003 · D + 0.0197 · P
-admission_fund = reserve_share · P               (§7.2)
-inviter        = 0.0100 · P                      (§7.3)
+admission_fund = reserve_share · (P + 0.0198 · P + 0.0100 · P)  (§7.2)
+inviter        = (1 − reserve_share) · 0.0100 · P               (§7.3)
 refund         = 0.9995 · (D − P)
 ```
 
@@ -426,10 +426,14 @@ treasury, plus a **scaling-on-`P` share** across the five outflows.
 `1%`), bounded to a pinned ceiling so governance can dial the
 community's self-funding up or down but never gut the contributor
 pool; the value in force at settlement applies and is recorded in
-the settlement payload (§10).
+the settlement payload (§10). It carves the admission fund's line
+from every `P`-scaled earning line — `reserve_share·P` from the
+contributor pool, the same fraction of the treasury's and the
+inviter's `P`-scaled shares — so the team treasury pays in like
+every other earner; the flat floor is never carved.
 
-- At `P = D`, `reserve_share = 1%`: `94%` contributors, `2%`
-  treasury, `2%` burn, `1%` reserve, `1%` inviter.
+- At `P = D`, `reserve_share = 1%`: `94%` contributors, `1.9802%`
+  treasury, `2%` burn, `1.0298%` reserve, `0.99%` inviter.
 - At `P = 0` (refund-only): `99.95%` refunded, `0.02%·D` treasury,
   `0.03%·D` burn; reserve and inviter get nothing — nobody earned,
   and the community taxes earnings, not failures. The floor is
@@ -449,8 +453,8 @@ and scales with all of it, campaigns, tips, and purchases alike
 ### 7.1 The strict cap
 
 **Total-to-graph `< D` always.** Contributors and
-inviters together take `(0.95 − reserve_share)·P + 0.01·P ≤
-0.96·P`, and `P ≤ D`, so
+inviters together take `(0.95 − reserve_share)·P +
+(1 − reserve_share)·0.01·P ≤ 0.96·P`, and `P ≤ D`, so
 
 ```
 total-to-graph ≤ 0.96·P ≤ 0.96·D < D.
@@ -464,9 +468,10 @@ it spends at least
 0.0005·D + (0.0495 + reserve_share)·P
 ```
 
-(less the inviter's `0.01·P` if it also controls the inviter slot)
-— strictly positive, and strictly *more* loss-making as
-`reserve_share` rises. The reserve line is not extractable money:
+(less the inviter's `(1 − reserve_share)·0.01·P` if it also
+controls the inviter slot)
+— strictly positive, and for `P > 0` strictly *more* loss-making
+as `reserve_share` rises. The reserve line is not extractable money:
 it becomes `B_i` capacity at members' addresses, spendable only as
 θ-debits, never withdrawable — burn value carries no redemption
 and never moves between addresses
@@ -480,7 +485,10 @@ guarantee, never in place of it.
 
 The `admission_fund` line accrues to a dedicated pool — **the
 community's admission fund**, distinct from the team treasury
-([token.md §6](token.md#6-treasury)). Its outflows are exactly one
+([token.md §6](token.md#6-treasury)) — an accounting separation
+under one key-holder
+([ledger.md "Keys"](../implementation/ledger.md#keys)). Its
+outflows are exactly one
 kind: CGT converted into admission burns at members', system
 actors', and
 Collectives' own addresses (``rem:gates:guild-funding``; conversion
@@ -499,24 +507,27 @@ inviting at a human pace — never meets them, and an actor past
 them funds their own burns until the window turns, so neither
 invite floods nor act spam can drain what the community set aside.
 
-Because inflow (the settlement line) and outflow (the admission
-burns, publicly verifiable by definition,
-``def:comparator:burn-primitive``) are both public, the
-steady-state target — **advertiser revenue covers the community's
-admission costs** — is a checkable claim, not a promise. The pool
-is seeded at genesis and open to top-ups; the discipline is on what
-leaves, not what enters. It is one global pot that everyone pays
-into, the team treasury included as a contributor like any
-other. At the federation stage a community can leave the global
-pot and run its own to pay its admission fees
-([open-questions.md Q15](../open-questions.md)).
+Because inflow and outflow (the admission burns, publicly
+verifiable by definition, ``def:comparator:burn-primitive``) are
+both public, the steady-state target — **advertiser revenue covers
+the community's admission costs** — is a checkable claim, not a
+promise: **settlement inflow against burn outflow**. The pool is
+seeded at genesis and open to top-ups; the seed and top-ups start
+the engine and are reported as a separate public inflow line, so
+the target measures campaign revenue alone. The discipline is on
+what leaves, not what enters. It is one global pot that everyone
+pays into, the team treasury included as a contributor like any
+other. A community can leave the global pot and run its own for
+its admission fees — pool splitting, a later stage of its own
+([open-questions.md Q55](../open-questions.md#q55--community-pool-splitting)).
 
 ### 7.3 The inviter reward
 
-Each earner's **inviter** receives `0.01·P` sized by that earner's
-own payout share — carved from what would otherwise burn (burn
-drops from 3% to 2% of `P` at full payout; the contributor pool is
-untouched).
+Each earner's **inviter** receives `(1 − reserve_share)·0.01·P`
+sized by that earner's own payout share — a `1%` share carved from
+what would otherwise burn (burn drops from 3% to 2% of `P` at full
+payout; the contributor pool is untouched), less the admission
+fund's carve (§7).
 
 - **Pure-`P`.** At `P = 0` nobody earned, so no inviter is paid.
 - **Single-hop and permanent.** The inviter is the one actor whose
@@ -525,8 +536,9 @@ untouched).
   ([invitations.md](invitations.md)); never a chain,
   so no pyramid dynamic. The relation is permanent, so the inviter
   earns over the invitee's lifetime — the bring-real-users
-  incentive. Genesis members have no inviter; their 1% falls back
-  to burn. **Collectives likewise have no inviter** — their 1%
+  incentive. Genesis members have no inviter; their whole `0.01·P`
+  falls back to burn — no inviter earned, so the fund carves
+  nothing from it. **Collectives likewise have no inviter** — their 1%
   falls back to burn, deliberately: a collective's makeup drifts
   over years, so neither its founder's inviter nor anyone else
   holds a permanent claim on its earnings; and since the share is

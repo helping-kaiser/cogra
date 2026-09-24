@@ -38,6 +38,7 @@ pub enum Value {
     Uint(u64),
     Text(String),
     Bytes(Vec<u8>),
+    Bool(bool),
     Array(Vec<Value>),
     Map(BTreeMap<u64, Value>),
 }
@@ -53,6 +54,9 @@ impl Value {
             }
             Value::Bytes(b) => {
                 e.bytes(b);
+            }
+            Value::Bool(v) => {
+                e.bool(*v);
             }
             Value::Array(items) => {
                 e.array(items.len() as u64);
@@ -80,6 +84,7 @@ impl Value {
             Some(0) => Ok(Value::Uint(d.uint()?)),
             Some(2) => Ok(Value::Bytes(d.bytes()?)),
             Some(3) => Ok(Value::Text(d.text()?)),
+            Some(7) => Ok(Value::Bool(d.bool()?)),
             Some(4) => {
                 let len = d.array()?;
                 let mut items = Vec::new();
