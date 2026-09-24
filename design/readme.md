@@ -6617,7 +6617,7 @@ slots.
 - **Pending and didn't-land (design.md §9).** A message still settling shows
   whole with `Still settling ·` before its clock; one that expires leaves
   every reader's view and its author gets a calm notice where it stood —
-  `Nothing was spent.`, `Dismiss` and `Put it back`.
+  `Nothing was spent.`, `Dismiss` and `Try again`.
 - **Removed messages (round A's docblock, drawn).** The author's own `Remove`
   sits among the acts on their own bubble's menu, behind the post's confirm
   with the nouns swapped; the removed message is `RedactedContent` where the
@@ -6654,7 +6654,7 @@ slots.
   opinion row too; the approval row names the chat as its actor; the chat rows speak handles, the
   list's grammar; the three new push kinds default on, by analogy; the
   invitation's message field sits on the seal; the explorer's word is
-  `You're invited`; `Put it back` returns the words without signing.
+  `You're invited`; `Try again` returns the words without signing.
 - **The componentization law (jakob, the fix pass: "we want actual
   components. ALWAYS!").** A board mounts the real master wherever one
   exists; hand-drawn look-alikes stand only in explicit show-me-options

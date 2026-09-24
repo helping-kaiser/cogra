@@ -63,7 +63,7 @@ pub async fn insert_actor(
     kind: &str,
     handle: &str,
     actor_pubkey: &[u8],
-    realization_address: &str,
+    address: &str,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
         "INSERT INTO actors (id, kind, handle, actor_pubkey, realization_address)
@@ -72,7 +72,7 @@ pub async fn insert_actor(
         kind,
         handle,
         actor_pubkey,
-        realization_address,
+        address,
     )
     .execute(conn)
     .await?;

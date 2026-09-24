@@ -2940,8 +2940,9 @@ function ChatFootRecording({ length, sealed = false, paused = false }) {
    bubble fill, because it is no longer a message and nobody else sees it; the
    words it carried quoted so the author knows which one; `Nothing was spent.`,
    the post's own reassurance; and two answers, the post card's pair: `Dismiss`
-   quiet, `Put it back` filled — the words return to the field, and the arrow
-   signs as always, so nothing is re-signed on this tap. */
+   quiet, `Try again` filled (jakob 2026-09-24, the word people are used to) — the
+   words return to the field, and the arrow signs as always, so nothing is
+   re-signed on this tap: the next send is the trying. */
 function DidntLand({ words }) {
   return (
     <div role="status" style={{ alignSelf: "flex-end", maxWidth: "78%", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 4, padding: "10px 12px 8px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-large)" }}>
@@ -2951,7 +2952,7 @@ function DidntLand({ words }) {
         <Button variant="text" size="sm">
           Dismiss
         </Button>
-        <Button size="sm">Put it back</Button>
+        <Button size="sm">Try again</Button>
       </div>
     </div>
   );
