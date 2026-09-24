@@ -1413,12 +1413,11 @@ the screen carries it in its one line, under a header that reads
 fills either of them yet.
 
 
-## Awaiting blessing — the topic round
+## Topics
 
-Every new line the topic round drew: the tag page's stance row, *Your
+Every line the topic round drew: the tag page's stance row, *Your
 topics*, the feed filter's one-topic narrowing, *Cited by*, and the
-acts footer's zero. Ruled by jakob 2026-09-14; the words are this
-round's and up for review in the same pass.
+acts footer's zero. Ruled by jakob 2026-09-14.
 
 **The word "follow" never reaches the screen, on any surface.** The ban
 above (*Naming*, the notifications section: "*followed* would name a
@@ -1436,11 +1435,13 @@ because the door beside it already carries one (`5 held`). *Held* is the
 word for having a position on a topic, and it is the predicate said
 plainly: a topic is held while the netted pair is not nothing.
 
-**The empty list**: `No topics yet — say where you stand on one from its
-page.` The `Nothing here yet — write the first post.` shape: calm, and
-naming the one thing that would fill it — including where the gesture
-lives, because a reader with no topics has not met the tag page's row
-yet.
+**The empty list**: `No topics yet — say how you feel about one from
+its page.` The `Nothing here yet — write the first post.` shape: calm,
+and naming the one thing that would fill it — including where the
+gesture lives, because a reader with no topics has not met the tag
+page's row yet. *How you feel* is the pad's own register (`How much
+you like it`); the stand-wording is banned from the screen (jakob
+2026-09-24, amending this line at blessing).
 
 **The Affinity pad's six words.** The pad a topic's stance row opens
 fills the same two signed slots as an opinion's with different
@@ -1498,12 +1499,11 @@ master itself recorded as unruled:
   form and the long form are one sentence at two lengths and may not
   disagree about the plural.
 
-## Awaiting blessing — the invites round
+## Invites
 
 Every line the invites round drew: the queue, the teaching empty state,
 the create sheet, the fresh link, the approval pad and the close
-dialog. Ruled by jakob 2026-09-15; the words are this round's and up
-for review in the same pass.
+dialog. Ruled by jakob 2026-09-15.
 
 **The screen is `Invites`**, titled by the profile row that opens it,
 and its arrow says `Back to your profile` like every other private
