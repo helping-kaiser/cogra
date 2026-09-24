@@ -35,13 +35,19 @@ import org.robolectric.shadows.ShadowLog
  * The feed and the comment thread over it are two [ScrollStageHost]s. Each
  * elects its own clip ([StageElection]), and visibility is measured in the
  * frame's own window, so a feed clip under the raised sheet still qualifies
- * and keeps the feed's stage. The two elections know nothing of each other;
- * what reconciles them is [VideoStage]'s claim.
+ * by geometry alone. Left to that, the two elections would know nothing of
+ * each other and the player would go to whichever claimed last.
  *
- * **These pin what happens today, before any law covers it.** The sheet here
- * is an overlay in the same window rather than a `ModalBottomSheet`: what is
- * being pinned is the ordering of two hosts' claims on one player, which is
- * the same whichever window the second host stands in.
+ * **A sheet over a surface suspends that surface's stage** (jakob 2026-09-24,
+ * `design/readme.md`, "The feed-video rulings"). The feed's host is told the
+ * sheet is up, holds nobody, and its clip surrenders; the sheet's stage then
+ * decides by the law. When the sheet drops, the feed's stage is decided
+ * afresh and its clip claims the player anew.
+ *
+ * The sheet here is an overlay in the same window rather than a
+ * `ModalBottomSheet`: what is pinned is how two hosts' claims on one player
+ * are ordered, which is the same whichever window the second host stands in
+ * (`FeedSheetStageTest` runs the real screens).
  *
  * **The geometry is [ScrollStageTest]'s.** The feed list is 300 units tall at
  * a density of 1 and every clip is a 200-unit square: A shows whole and B
@@ -61,6 +67,8 @@ class SheetOverStageTest {
 
     private var sheetOpen by mutableStateOf(false)
 
+    private var sheetClips = listOf(SHEET_S)
+
     @Before
     fun captureLogs() {
         ShadowLog.clear()
@@ -74,93 +82,106 @@ class SheetOverStageTest {
     }
 
     /**
-     * (a) A clip in the sheet plays — because its player composes after the
-     * feed's and the last claim wins, not because anything decided it should.
-     * The feed's election still names its own clip: two stages, each sure it
-     * is the one playing.
+     * The sheet's clip plays by the law: the feed's stage holds nobody while
+     * the sheet is up, so the sheet's is the only election naming a clip.
      */
     @Test
-    fun aSheetClipTakesTheOnePlayerFromTheFeedClipByClaimingLast() {
+    fun aRaisedSheetSuspendsTheFeedsStageAndItsOwnStageDecidesWhatPlays() {
         showFeedUnderSheet()
         assertHolds(FEED_A)
 
         openSheet()
 
         assertHolds(SHEET_S)
-        assertThat(playingFrames()).containsExactly(trace(FEED_A), trace(SHEET_S))
+        assertThat(playingFrames()).containsExactly(trace(SHEET_S))
     }
 
     /**
-     * (c) The two domains do not steal the player back and forth. The feed
-     * frame claims from an effect keyed on its clip and its token, and
-     * re-claims only a stage left UNOWNED on its own clip — so a stage owned
-     * by the sheet's clip gives it nothing to re-fire on, however the feed's
-     * list moves underneath.
+     * The suspension is the sheet's being there, not its having a clip: a
+     * thread with nothing to play still stops the clip under it — surrendered
+     * and paused, the one player parked on it rather than released.
      */
     @Test
-    fun theFeedDoesNotClaimThePlayerBackWhileTheSheetIsOpen() {
+    fun aSheetWithNothingToPlayStillStopsTheClipUnderIt() {
+        showFeedUnderSheet()
+        val player = VideoStage.holding?.player
+
+        openSheet(clips = emptyList())
+
+        assertThat(playingFrames()).isEmpty()
+        val parked = VideoStage.holding
+        assertThat(parked?.url).isEqualTo(url(FEED_A))
+        assertThat(parked?.owner).isNull()
+        assertThat(parked?.player).isSameInstanceAs(player)
+        assertThat(parked?.player?.playWhenReady).isFalse()
+    }
+
+    /**
+     * The feed's list moving under the sheet re-reports every place, and the
+     * suspended stage still holds nobody: no clip under the sheet claims.
+     */
+    @Test
+    fun theFeedStaysSuspendedWhileItsListMovesUnderTheSheet() {
         showFeedUnderSheet()
         openSheet()
 
-        // The list moves under the sheet; A stays past the gate and elected.
+        // A and B both at 150/200 — past the gate by geometry alone.
         scrollFeedTo(HALF_OF_EACH)
 
         assertHolds(SHEET_S)
+        assertThat(playingFrames()).containsExactly(trace(SHEET_S))
         assertThat(claimsOf(FEED_A)).isEqualTo(1)
-        assertThat(claimsOf(SHEET_S)).isEqualTo(1)
+        assertThat(claimsOf(FEED_B)).isEqualTo(0)
     }
 
     /**
-     * (b) The sheet closes and the feed's clip does not come back. Its claim
-     * effect ran when it took the stage and has nothing to run on again: the
-     * stage is parked on the sheet's clip, owned by nobody, and the "unowned"
-     * re-claim answers only a stage parked on the frame's OWN clip. The feed
-     * still elects A, so A sits on its cover.
+     * Dropping the sheet lifts the suspension, and the feed's stage is decided
+     * at once: A, still the topmost qualifying clip, claims the parked player
+     * anew.
      */
     @Test
-    fun afterTheSheetClosesTheFeedClipKeepsItsStageButNotThePlayer() {
+    fun droppingTheSheetHandsTheFeedsStageBackAtOnce() {
         showFeedUnderSheet()
+        val player = VideoStage.holding?.player
         openSheet()
 
         closeSheet()
 
+        assertHolds(FEED_A)
         assertThat(playingFrames()).containsExactly(trace(FEED_A))
-        val parked = VideoStage.holding
-        assertThat(parked?.url).isEqualTo(url(SHEET_S))
-        assertThat(parked?.owner).isNull()
-        assertThat(claimsOf(FEED_A)).isEqualTo(1)
-        assertThat(lastPoster(FEED_A)).endsWith("no clip on stage")
+        assertThat(claimsOf(FEED_A)).isEqualTo(2)
+        assertThat(VideoStage.holding?.player).isSameInstanceAs(player)
     }
 
     /**
-     * (b) …and incumbency keeps every other feed clip off the stage for as
-     * long as the frozen one qualifies. Only when A falls below the gate is
-     * the feed's stage re-decided, and B, newly elected, claims fresh.
+     * The stage the sheet drops back to is an EMPTY one: the clip that played
+     * before the sheet stopped and is no incumbent, so the law's topmost
+     * qualifying clip takes it — here A, over B which had held it.
      */
     @Test
-    fun incumbencyKeepsTheFeedDeadUntilTheFrozenClipLeavesTheGate() {
+    fun theStageAfterTheSheetIsDecidedFromEmptyNotByTheOldIncumbent() {
         showFeedUnderSheet()
-        openSheet()
-        closeSheet()
-
-        // A and B both at 150/200: A keeps the feed's stage, frozen.
-        scrollFeedTo(HALF_OF_EACH)
-
-        assertThat(playingFrames()).containsExactly(trace(FEED_A))
-        assertThat(VideoStage.holding?.url).isEqualTo(url(SHEET_S))
-        assertThat(VideoStage.holding?.owner).isNull()
-
-        // A down to 50/200: the stage goes to B, which claims.
+        // B takes the stage below A, and keeps it scrolling back while both qualify.
         scrollFeedTo(PAST_A)
-
+        scrollFeedTo(HALF_OF_EACH)
         assertHolds(FEED_B)
+
+        openSheet()
+        closeSheet()
+
+        assertHolds(FEED_A)
     }
 
     /**
      * The detail's pinned clip is not a stage at all — it composes its player
-     * unconditionally — and a sheet's clip takes the player from it the same
-     * way. When the sheet closes the pinned clip is not handed it back, and
-     * the transport, which is drawn from a player, is gone with it.
+     * unconditionally — so no suspension reaches it, and a sheet's clip takes
+     * the player from it by claiming last. When the sheet closes the pinned
+     * clip is not handed it back, and the transport, which is drawn from a
+     * player, is gone with it.
+     *
+     * PINNED AS IT STANDS, NOT AS RULED: the stage law speaks of a scroll
+     * surface's stage, and what the pinned clip does under a sheet — and how it
+     * comes back — is flagged to design rather than invented here.
      */
     @Test
     fun aPinnedClipUnderTheSheetLosesThePlayerAndIsNotHandedItBack() {
@@ -188,7 +209,8 @@ class SheetOverStageTest {
         compose.setContent {
             Surfaces {
                 feed = rememberLazyListState()
-                ScrollStageHost(feed) {
+                // The surface that raises the sheet is the one that knows it is up.
+                ScrollStageHost(feed, suspended = sheetOpen) {
                     LazyColumn(state = feed, modifier = Modifier.size(WIDTH, HEIGHT)) {
                         items(listOf(FEED_A, FEED_B), key = { it }) { row -> ScrollStageRow(row) { Clip(row) } }
                     }
@@ -200,7 +222,7 @@ class SheetOverStageTest {
 
     /**
      * The base surface, and over it — while [sheetOpen] — a sheet that is a
-     * scroll surface of its own with its own stage and one clip on it, whole.
+     * scroll surface of its own with its own stage and [sheetClips] on it.
      */
     @Composable
     private fun Surfaces(base: @Composable () -> Unit) {
@@ -212,7 +234,7 @@ class SheetOverStageTest {
                         val thread = rememberLazyListState()
                         ScrollStageHost(thread) {
                             LazyColumn(state = thread, modifier = Modifier.size(WIDTH, HEIGHT)) {
-                                items(listOf(SHEET_S), key = { it }) { row -> ScrollStageRow(row) { Clip(row) } }
+                                items(sheetClips, key = { it }) { row -> ScrollStageRow(row) { Clip(row) } }
                             }
                         }
                     }
@@ -229,7 +251,8 @@ class SheetOverStageTest {
     private fun clipItem(name: String) =
         MediaItem(url = null, aspectRatio = 1f, videoUrl = url(name), durationMs = 5_000)
 
-    private fun openSheet() {
+    private fun openSheet(clips: List<String> = listOf(SHEET_S)) {
+        sheetClips = clips
         sheetOpen = true
         compose.waitForIdle()
     }
@@ -266,8 +289,6 @@ class SheetOverStageTest {
     /** How many times a surface showing [name] claimed the one player. */
     private fun claimsOf(name: String): Int =
         traces().count { it.startsWith("handover ${trace(name)} ") && "claimed" in it }
-
-    private fun lastPoster(name: String): String? = traces().lastOrNull { it.startsWith("poster") && trace(name) in it }
 
     private fun trace(name: String) = VideoTrace.clip(url(name))
 

@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -134,11 +135,27 @@ internal data class StagePlace(val top: Float, val page: Int, val visible: Float
  * the list laid out in that same pass; a frame's geometry is always fresh
  * while its row is placed, because a placed row that moves reports again.
  *
+ * **A sheet over the surface suspends its stage** (jakob 2026-09-24,
+ * `design/readme.md`, "The feed-video rulings": "a clip behind a sheet is not
+ * on screen in the law's sense"). Visibility is measured in the frame's own
+ * window, so a clip under a raised sheet still stands past the gate — the
+ * geometry cannot see the sheet, and the surface that raised it has to say so.
+ * While [suspended] answers true nobody holds the stage, and that is not a
+ * clause of the election but the absence of one: the elected frame drops its
+ * player and surrenders it, exactly as when it leaves the gate. When the
+ * suspension lifts, the stage is decided afresh from an empty stage — the
+ * law's topmost qualifying clip, claiming the player anew.
+ *
  * @param placedRows the keys of the rows the list placed in its latest pass,
  *   read inside the election's snapshot; null for a stage with no list.
+ * @param suspended whether a sheet covers the surface, read inside the same
+ *   snapshot.
  */
 @Stable
-internal class ScrollStage(private val placedRows: (() -> Set<Any>)? = null) {
+internal class ScrollStage(
+    private val placedRows: (() -> Set<Any>)? = null,
+    private val suspended: () -> Boolean = { false },
+) {
 
     private val places = mutableStateMapOf<Any, StagePlace>()
 
@@ -168,9 +185,13 @@ internal class ScrollStage(private val placedRows: (() -> Set<Any>)? = null) {
         if (place.page != page || place.row != row) places[key] = place.copy(page = page, row = row)
     }
 
-    /** Re-decides the stage every time a clip's place, or the list's rows, change. */
+    /**
+     * Re-decides the stage every time a clip's place, the list's rows, or the
+     * suspension change — and holds nobody while the surface is suspended.
+     */
     suspend fun run() {
-        snapshotFlow { standing() }.collect { holder = StageElection.elect(holder, it) }
+        snapshotFlow { if (suspended()) null else standing() }
+            .collect { standing -> holder = standing?.let { StageElection.elect(holder, it) } }
     }
 
     /** The places that count now: all of them, less those whose row the list did not place. */
@@ -194,12 +215,20 @@ internal val LocalScrollStageRow = staticCompositionLocalOf<Any?> { null }
 
 /**
  * A stage, and the election that keeps it decided for as long as it is
- * composed. With [list], only clips in the rows it placed may hold it.
+ * composed. With [list], only clips in the rows it placed may hold it; while
+ * [suspended], none may.
  */
 @Composable
-internal fun rememberScrollStage(list: LazyListState? = null): ScrollStage {
+internal fun rememberScrollStage(list: LazyListState? = null, suspended: Boolean = false): ScrollStage {
+    // The latest answer, read by the long-lived election rather than restarting
+    // it (developer.android.com/develop/ui/compose/side-effects,
+    // `rememberUpdatedState`): the stage keeps its places across a suspension.
+    val covered = rememberUpdatedState(suspended)
     val stage = remember(list) {
-        ScrollStage(list?.let { { it.layoutInfo.visibleItemsInfo.mapTo(HashSet()) { item -> item.key } } })
+        ScrollStage(
+            placedRows = list?.let { { it.layoutInfo.visibleItemsInfo.mapTo(HashSet()) { item -> item.key } } },
+            suspended = { covered.value },
+        )
     }
     LaunchedEffect(stage) { stage.run() }
     return stage
@@ -216,10 +245,18 @@ internal fun rememberScrollStage(list: LazyListState? = null): ScrollStage {
  * thread over the feed does not share the feed's stage — while a post's clips
  * and a comment's clips inside one list do share it, which is the law's "the
  * same one".
+ *
+ * **Raising the sheet suspends the stage beneath it** (jakob 2026-09-24,
+ * `design/readme.md`, "The feed-video rulings": "a sheet over a surface
+ * suspends that surface's stage"). The surface that owns the sheet's open
+ * state passes it as [suspended]: its playing clip stops, and the sheet's own
+ * stage then decides by the law what plays — not whichever player happened to
+ * claim last. Dismissing the sheet lifts it, and the stage is decided again
+ * as if the list had scrolled.
  */
 @Composable
-fun ScrollStageHost(list: LazyListState, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalScrollStage provides rememberScrollStage(list), content = content)
+fun ScrollStageHost(list: LazyListState, suspended: Boolean = false, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalScrollStage provides rememberScrollStage(list, suspended), content = content)
 }
 
 /**
