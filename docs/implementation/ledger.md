@@ -285,6 +285,13 @@ state witnessed. Losing the key and its recovery code loses the CGT
 at that address; CoGra cannot recover it and never could — the same
 responsibility line auth.md draws for the actor key.
 
+**The operator holds the admission fund's key**, as it holds the
+team treasury's
+([network.md "The cast"](../primitive/network.md#the-cast)). The
+fund/treasury separation
+([token.md §6](../primitive/token.md#6-treasury)) is an accounting
+separation under one key-holder, both sides publicly provable.
+
 Build-time candidate: **LWK** (Blockstream's Rust Liquid wallet kit,
 with UniFFI bindings) fits the existing Rust + UniFFI stack for
 backend and Android alike — to be verified when the rail is built.

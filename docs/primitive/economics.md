@@ -485,7 +485,10 @@ guarantee, never in place of it.
 
 The `admission_fund` line accrues to a dedicated pool — **the
 community's admission fund**, distinct from the team treasury
-([token.md §6](token.md#6-treasury)). Its outflows are exactly one
+([token.md §6](token.md#6-treasury)) — an accounting separation
+under one key-holder
+([ledger.md "Keys"](../implementation/ledger.md#keys)). Its
+outflows are exactly one
 kind: CGT converted into admission burns at members', system
 actors', and
 Collectives' own addresses (``rem:gates:guild-funding``; conversion
@@ -504,13 +507,15 @@ inviting at a human pace — never meets them, and an actor past
 them funds their own burns until the window turns, so neither
 invite floods nor act spam can drain what the community set aside.
 
-Because inflow (the settlement line) and outflow (the admission
-burns, publicly verifiable by definition,
-``def:comparator:burn-primitive``) are both public, the
-steady-state target — **advertiser revenue covers the community's
-admission costs** — is a checkable claim, not a promise. The pool
-is seeded at genesis and open to top-ups; the discipline is on what
-leaves, not what enters. It is one global pot that everyone pays
+Because inflow and outflow (the admission burns, publicly
+verifiable by definition, ``def:comparator:burn-primitive``) are
+both public, the steady-state target — **advertiser revenue covers
+the community's admission costs** — is a checkable claim, not a
+promise: **settlement inflow against burn outflow**. The pool is
+seeded at genesis and open to top-ups; the seed and top-ups start
+the engine and are reported as a separate public inflow line, so
+the target measures campaign revenue alone. The discipline is on
+what leaves, not what enters. It is one global pot that everyone pays
 into, the team treasury included as a contributor like any
 other. A community can leave the global pot and run its own for
 its admission fees — pool splitting, a later stage of its own

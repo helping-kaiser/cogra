@@ -352,9 +352,10 @@ funded member's own `B_i`.
   per-member caps that govern the outflow. The community that pays
   the fee governs both sides of it.
 - **The steady-state target is checkable**: advertiser revenue
-  covers the community's admission costs when the pool's public
+  covers the community's admission costs when the pool's settlement
   inflow keeps pace with its burn outflow — arithmetic, not a
-  promise.
+  promise. The genesis seed and top-ups are a separately reported
+  inflow line and never count toward it.
 - **Seeded at genesis, open to top-ups.** The operator's genesis
   funding is the pool's first inflow, and the admission burns
   that instantiate the network draw from it. Anything may flow
