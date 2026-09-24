@@ -179,9 +179,14 @@ A manifest entry is a nested integer-keyed map: key 0 the
 **mime** they are to be read as (tstr), key 2 the **alt text**
 describing them (tstr, omitted when there is none), key 3 the
 **cover digest** for a video (32-byte bstr, omitted on a still and
-on a video shown without a poster). That is what a reader needs to
-render honestly — which bytes, what type, what the picture is of,
-and which still stands in for a clip that is not playing. The cover
+on a video shown without a poster), key 4 the **cover-taken** mark
+(bool, present only alongside key 3, refused otherwise) recording
+that the cover is the system's own first frame rather than one the
+author chose — absent means chosen, and the only legal in-band
+value is `true`. That is what a reader needs to render honestly —
+which bytes, what type, what the picture is of, which still stands
+in for a clip that is not playing, and whether that still was
+chosen or taken. The cover
 is witnessed because it is the face the post wears at rest: an
 author signs the face as they sign the body, and an edit that
 changes it is a new version saying so. Alt text is witnessed

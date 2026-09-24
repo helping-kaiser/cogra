@@ -47,7 +47,7 @@ import {
   type WizardAction,
   type WizardState,
 } from "@/lib/compose/wizard";
-import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
+import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import { newComposeId } from "@/lib/compose/ids";
 import { POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import {
@@ -183,6 +183,13 @@ export function ComposeWizard({
   const frames = mine?.frames ?? NO_FRAMES;
   const framePreviews = mine?.urls ?? NO_URLS;
   const capturing = videoFile !== null && captured?.file !== videoFile;
+  // THE SILENT STILL'S OWN EXTRACTION, kept apart from the tray's offers
+  // above. FRAME 1 MEANS FRAME 0, STRICTLY (jakob, 2026-09-24): a coverless
+  // clip's stored face is `captureFrameZero`'s read of the clip's true
+  // start, never `frames[0]` — which stays the tray's ~1s "opening" tile.
+  const [silentCover, setSilentCover] = useState<{ file: Blob; frame: Blob | null } | null>(null);
+  const forSilentCover = silentCover !== null && silentCover.file === videoFile ? silentCover : null;
+  const silentCovering = videoFile !== null && forSilentCover === null;
   useRevokeOnChange(framePreviews);
   // The files that did not get in. Not part of the draft — a refused file never
   // joined the batch — so this is view state, and it PERSISTS until the author
@@ -263,6 +270,24 @@ export function ComposeWizard({
       cancelled = true;
     };
   }, [videoFile, captured]);
+
+  // A SECOND, INDEPENDENT EXTRACTION for the silent still alone — never tied
+  // to the tray's capture above, so retiming the tray's offers can never
+  // retime what a coverless clip stores (`captureFrameZero`'s own docblock).
+  useEffect(() => {
+    if (videoFile === null || silentCover?.file === videoFile) return;
+    let cancelled = false;
+    void captureFrameZero(videoFile)
+      .then((frame) => {
+        if (!cancelled) setSilentCover({ file: videoFile, frame });
+      })
+      .catch(() => {
+        if (!cancelled) setSilentCover({ file: videoFile, frame: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [videoFile, silentCover]);
 
   const chooseCover = (file: Blob, frame: number) => {
     // A new face is a new upload: the old one may already be on the server, and
@@ -421,20 +446,21 @@ export function ComposeWizard({
         return;
       }
 
-      // THE STORED FRAME, NOT A CHOICE (the feed-video rulings, 2026-09-23;
-      // `ComposeDetailsVideo.jsx`'s docblock). Nothing was picked, so before
-      // this clip goes up faceless the capture gets one chance to hand back
-      // its own frame 1 — silently, through the same cover leg a chosen face
-      // would ride. This only decides once: `autoCover` staying null is what
-      // lets the branch below tell "never tried" from "tried and failed".
+      // THE STORED FRAME, NOT A CHOICE (the feed-video rulings, 2026-09-23,
+      // sharpened 2026-09-24; `ComposeDetailsVideo.jsx`'s docblock). Nothing
+      // was picked, so before this clip goes up faceless the silent
+      // extraction gets one chance to hand back the clip's own frame 0 —
+      // through the same cover leg a chosen face would ride. This only
+      // decides once: `autoCover` staying null is what lets the branch below
+      // tell "never tried" from "tried and failed".
       if (cover === null && state.autoCover === null) {
-        // Waiting for the offers to settle rather than for a cover to exist —
-        // the same distinction `capturing` already draws for the tray and the
-        // details tile. Deciding early would read "no frames yet" as "no
-        // frames ever" and ship the clip faceless on a capture that was about
-        // to hand back a perfectly good one.
-        if (capturing) return;
-        const frame = frames[0];
+        // Waiting for the silent extraction to settle rather than for a
+        // cover to exist — the same distinction `capturing` draws for the
+        // tray. Deciding early would read "not back yet" as "never coming"
+        // and ship the clip faceless on a capture that was about to hand
+        // back a perfectly good frame.
+        if (silentCovering) return;
+        const frame = forSilentCover?.frame ?? undefined;
         if (frame !== undefined) {
           // THE RULE IS DISABLED DELIBERATELY, as `previews.ts` already does:
           // the capture is an external system, and its settled frame set is
@@ -483,8 +509,8 @@ export function ComposeWizard({
     state.autoCover,
     video,
     cover,
-    capturing,
-    frames,
+    silentCovering,
+    forSilentCover,
     ratio,
     client,
     guard,

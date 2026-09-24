@@ -861,10 +861,7 @@ ranks into the reader's feed. The system's voice for the same reason
 `Deleted account` is — it is the product saying what the tap does when
 it cannot say whose.
 
-## Awaiting blessing — the parked-rulings round
-
-Drawn, and up for review in the same pass. Kept apart from the blessed
-lines above until then.
+## A card's media description
 
 **A card's media description names the kind of thing it has.** The
 description is what a screen reader is given for a post card's body, so
@@ -877,12 +874,11 @@ looking alike until one plays:
   it, and the eye reads it off the cover.
 - `1 picture` · `4 pictures` — a picture post, the count alone.
 
-## Awaiting blessing — the tag round
+## Tagging
 
 Drawn on `TagPage`, `TagPageEmpty`, `TagPicker`, `TagPickerTyping` and
-`TagPair`, and up for review in the same pass. The naming law above is
-part of the same ruling and is written where it belongs; these are the
-new lines.
+`TagPair`. The naming law above is part of the same ruling and is
+written where it belongs.
 
 **The page carries no preamble.** The list opens directly under the
 title (jakob's review removed the explanatory line): the rows say what
@@ -939,12 +935,12 @@ carries how much the post is about that tag. / Names are lowercased,
 and a name can hold letters, digits, dot, dash and underscore. Tap a
 tag you have added to set how it relates.`
 
-## Awaiting blessing — the geek-mode round
+## The exact-values setting
 
 Drawn on `Settings` (and the two sheet boards that draw the page
-beneath them), and up for review in the same pass. The mode itself
-draws nothing new — it decides whether the numbers already on every
-board are painted — so the round's whole copy surface is one row.
+beneath them). The mode itself draws nothing new — it decides whether
+the numbers already on every board are painted — so its whole copy
+surface is one row.
 
 **The setting says what it shows, not how it works.** `Show exact
 values` — the switch in Settings' Reading group. *Exact* is the word
@@ -962,11 +958,11 @@ you change it back. Both choices stay on this device.` *Stays on this
 device* is the theme group's own spelling for a client-local choice,
 said once under the group rather than inside either row.
 
-## Awaiting blessing — the geek round's review
+## The opinion pad and its surroundings
 
 The lines the review round wrote (jakob's rulings, 2026-09-11 evening).
 The naming law above is part of the same ruling and is written where it
-belongs; these are the new strings.
+belongs.
 
 **The gesture, said in the settings group.** `Giving an opinion` is the
 group, `A tap opens it; drift to where it feels right.` the pad's hint, and
@@ -1033,11 +1029,11 @@ round, named here so the review pass has them in one place: `Un-tag`,
 the edit body's `Withdrawn: #coastroad`, and the acts card's
 `Tags withdrawn` row label.
 
-## Awaiting blessing — the private-viewer-state round
+## Saved, History and hiding
 
 Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,
 `HistoryEmpty`, `SettingsHidden`, the three content menus and the
-settings page, and up for review in the same pass.
+settings page.
 
 **The reader's word is save** (jakob's ruling). The surface it fills is
 `Saved`, and the row in your own profile's ⋮ is that same word, so the
@@ -1080,11 +1076,11 @@ and each row carries `Unhide` and the moment of the hiding in the ages
 vocabulary (`Hidden 3d`, `Hidden 12.08.2026`) — the removal mark's own
 precedent: the word, then the ladder or the date.
 
-## Awaiting blessing — the caps-affordance round
+## Caps and their refusals
 
-Drawn on `ComposeDetailsCaps`, `ComposeWordsCaps` and `TagPickerRefused`,
-and up for review in the same pass. Two families: the count a capped
-field shows near its cap, and the refusal it shows past it.
+Drawn on `ComposeDetailsCaps`, `ComposeWordsCaps` and `TagPickerRefused`.
+Two families: the count a capped field shows near its cap, and the
+refusal it shows past it.
 
 **The count is two words, and the second one is the reader's side.**
 `6 left` while there is room, `7 over` past it — never `94/100`, which
@@ -1203,7 +1199,7 @@ button: nothing the reader can do from here fills it.
 is named. Not *Activity*, which describes a log, and not *Alerts*, which
 describes an emergency.
 
-## Awaiting blessing — the account-deletion round
+## Deleting the account
 
 Drawn on `Settings`, `DeleteAccount`, `DeleteAccountMail`,
 `FeedDeleting`, `DeleteAccountCanceled` and `ProfileDeleted`. This
@@ -1278,7 +1274,7 @@ A deleted account must not read as a moderation verdict, and it must not
 read as `This profile doesn't exist.` — someone was here, and the product
 never pretends otherwise.
 
-## Awaiting blessing — the review round
+## The deleted actor's face
 
 Drawn on `ProfileDeleted` and on every card and row a deleted actor
 authored, plus the snackbar `FeedHidden` fires. The rest of the round's
@@ -1312,7 +1308,7 @@ have changed their own feed and nothing else. `Undo` beside it: hiding
 is a comfort a reader may have meant for one post rather than for a
 person, and the way back costs nothing.
 
-## Awaiting blessing — the score-and-opinions round
+## The score drill-down and the opinions sheets
 
 Every new line on the Post score's four drill-down boards and on the two
 opinions sheets. The register the round was ruled into is paths, people
@@ -1417,12 +1413,11 @@ the screen carries it in its one line, under a header that reads
 fills either of them yet.
 
 
-## Awaiting blessing — the topic round
+## Topics
 
-Every new line the topic round drew: the tag page's stance row, *Your
+Every line the topic round drew: the tag page's stance row, *Your
 topics*, the feed filter's one-topic narrowing, *Cited by*, and the
-acts footer's zero. Ruled by jakob 2026-09-14; the words are this
-round's and up for review in the same pass.
+acts footer's zero. Ruled by jakob 2026-09-14.
 
 **The word "follow" never reaches the screen, on any surface.** The ban
 above (*Naming*, the notifications section: "*followed* would name a
@@ -1440,11 +1435,13 @@ because the door beside it already carries one (`5 held`). *Held* is the
 word for having a position on a topic, and it is the predicate said
 plainly: a topic is held while the netted pair is not nothing.
 
-**The empty list**: `No topics yet — say where you stand on one from its
-page.` The `Nothing here yet — write the first post.` shape: calm, and
-naming the one thing that would fill it — including where the gesture
-lives, because a reader with no topics has not met the tag page's row
-yet.
+**The empty list**: `No topics yet — say how you feel about one from
+its page.` The `Nothing here yet — write the first post.` shape: calm,
+and naming the one thing that would fill it — including where the
+gesture lives, because a reader with no topics has not met the tag
+page's row yet. *How you feel* is the pad's own register (`How much
+you like it`); the stand-wording is banned from the screen (jakob
+2026-09-24, amending this line at blessing).
 
 **The Affinity pad's six words.** The pad a topic's stance row opens
 fills the same two signed slots as an opinion's with different
@@ -1502,12 +1499,11 @@ master itself recorded as unruled:
   form and the long form are one sentence at two lengths and may not
   disagree about the plural.
 
-## Awaiting blessing — the invites round
+## Invites
 
 Every line the invites round drew: the queue, the teaching empty state,
 the create sheet, the fresh link, the approval pad and the close
-dialog. Ruled by jakob 2026-09-15; the words are this round's and up
-for review in the same pass.
+dialog. Ruled by jakob 2026-09-15.
 
 **The screen is `Invites`**, titled by the profile row that opens it,
 and its arrow says `Back to your profile` like every other private
@@ -1872,12 +1868,12 @@ to be opened.
   see how it built`. Authoring doors are faces and fields; a history
   door is a readout.
 
-## Awaiting blessing — the search-scope line
+## The search-scope line
 
-One string from backlog item 105's ruling (readme §13, the indirect
-kinds are scope-served): with Messages, Comments or Offers selected
-and no scope in the query, the results region carries one quiet line
-where results would stand — the way, not an apology:
+From backlog item 105's ruling (readme §13, the indirect kinds are
+scope-served): with Messages, Comments or Offers selected and no
+scope in the query, the results region carries one quiet line where
+results would stand — the way, not an apology:
 
 - `Found through people and tags — start with @handle or #tag.`
 

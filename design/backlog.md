@@ -3491,3 +3491,28 @@ scope-served") and api-spec's Search section (the scoped-join
 paragraph). One string still owed: the quiet line an unscoped
 indirect-kind selection shows (copy-voice candidate, awaiting
 blessing).
+
+### 106 · Which frame the preview face means · *design* · **ruled + recorded 2026-09-24**
+
+Flagged by the implementation session 2026-09-24, building the
+frame-0 ruling on web: the STORED silent still is now strictly
+frame 0 on both platforms, but web's UI-only preview faces — the
+pick tray's tile, the details tile, the describe sheet — still
+derive from the ~1-second frame. So a coverless clip's preview
+face and stored face can differ on web. The record is ambiguous:
+the wizard-tile rule says the tiles "always wear the clip's first
+frame" (readme §13, the stored still's scoping), and "first frame
+means frame 0, strictly" now exists as a phrase — but that
+strictness was ruled for the STORED still's no-flash rationale,
+which a tray affordance doesn't carry. One line from jakob
+settles it: either the preview face is the stored face (frame 0
+everywhere, web's preview extraction changes), or the preview
+face is the platform's cheap thumbnail and the record says so.
+No implementation action until ruled.
+
+**Ruled (jakob 2026-09-24): the preview face is the stored face.**
+The compose tiles' claim to wear the clip's first frame holds to
+frame 0 — web's preview extraction changes to match the stored
+still. Recorded in readme §13 (the stored first frame) and the
+`MediaAttachment` docblock; the web change is the implementation
+session's, relayed as a contract.

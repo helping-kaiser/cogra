@@ -54,10 +54,15 @@ import { Icon } from "../navigation/Icon.jsx";
 
 const RevealContext = React.createContext(null);
 
-/** Wrap a post so one reveal answers for all of its sensitive content. */
+/** Wrap a post so one reveal answers for all of its sensitive content. A scope
+ *  inside a scope would shadow the outer one and split the post's one decision
+ *  into two, so a nested SensitiveScope defers to the ambient scope — the post
+ *  has exactly one, wherever the outermost wrapper stands. */
 export function SensitiveScope({ children }) {
+  const ambient = React.useContext(RevealContext);
   const [revealed, setRevealed] = React.useState(false);
   const value = React.useMemo(() => ({ revealed, reveal: () => setRevealed(true) }), [revealed]);
+  if (ambient) return children;
   return <RevealContext.Provider value={value}>{children}</RevealContext.Provider>;
 }
 
